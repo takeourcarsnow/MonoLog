@@ -46,16 +46,43 @@ export const supabaseApi: Api = {
   const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).single();
       // If there's no profile row yet (or an error), synthesize a minimal profile from the auth user so UI reflects signed-in state
       if (profErr || !profile) {
-        const synth: any = {
+        // synthesize and upsert a profile row so the DB and UI are in sync
+        const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
+        const synthDisplay = user.user_metadata?.name || user.email?.split("@")[0] || user.id;
+        const synthAvatar = user.user_metadata?.avatar_url || "";
+        const joinedAt = new Date().toISOString();
+        const upsertObj: any = {
           id: user.id,
-          username: user.user_metadata?.username || user.email?.split("@")[0] || user.id,
-          displayName: user.user_metadata?.name || user.email?.split("@")[0] || user.id,
-          avatarUrl: user.user_metadata?.avatar_url || "",
-          joinedAt: new Date().toISOString(),
+          username: synthUsername,
+          display_name: synthDisplay,
+          avatar_url: synthAvatar,
+          joined_at: joinedAt,
         };
-        return synth as any;
+        // perform upsert (creates a DB profile if missing)
+        try {
+          await sb.from("users").upsert(upsertObj);
+        } catch (e) {
+          // ignore upsert errors, still return synthesized profile
+        }
+        return {
+          id: user.id,
+          username: synthUsername,
+          displayName: synthDisplay,
+          avatarUrl: synthAvatar,
+          joinedAt,
+        } as any;
       }
-      return profile || null;
+      // map snake_case DB columns to the app's User shape if necessary
+      const mapped = {
+        id: profile.id,
+        username: (profile.username || profile.user_name || "") as string,
+        displayName: (profile.displayName || profile.display_name || profile.displayname || "") as string,
+        avatarUrl: (profile.avatarUrl || profile.avatar_url || "") as string,
+        bio: profile.bio,
+        joinedAt: profile.joinedAt || profile.joined_at,
+        following: profile.following,
+      } as any;
+      return mapped;
     } catch (e) {
       return null;
     }
@@ -121,22 +148,160 @@ export const supabaseApi: Api = {
     return data || null;
   },
 
-  async updateUser() { throw new Error("NI"); },
-  async updateCurrentUser() { throw new Error("NI"); },
+  async updateUser(id: string, patch: Partial<User>) {
+    const sb = getClient();
+    const upd: any = {};
+    if (patch.username !== undefined) upd.username = patch.username;
+    if (patch.displayName !== undefined) upd.display_name = patch.displayName;
+    if (patch.avatarUrl !== undefined) upd.avatar_url = patch.avatarUrl;
+    if (patch.bio !== undefined) upd.bio = patch.bio;
+    const { error, data } = await sb.from("users").update(upd).eq("id", id).select("*").limit(1).single();
+    if (error) throw error;
+    const profile = data as any;
+    return {
+      id: profile.id,
+      username: profile.username || profile.user_name,
+      displayName: profile.displayName || profile.display_name,
+      avatarUrl: profile.avatarUrl || profile.avatar_url,
+      bio: profile.bio,
+      joinedAt: profile.joinedAt || profile.joined_at,
+    } as any;
+  },
 
-  async getPostsByDate() { return []; },
-  async getPost() { return null; },
-  async updatePost() { throw new Error("NI"); },
-  async deletePost() { return false; },
+  async updateCurrentUser(patch: Partial<User>) {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const user = (userData as any)?.user;
+    if (!user) throw new Error("Not logged in");
+    const upsertObj: any = { id: user.id };
+    if (patch.username !== undefined) upsertObj.username = patch.username;
+    if (patch.displayName !== undefined) upsertObj.display_name = patch.displayName;
+    if (patch.avatarUrl !== undefined) upsertObj.avatar_url = patch.avatarUrl;
+    if (patch.bio !== undefined) upsertObj.bio = patch.bio;
+    const { error, data } = await sb.from("users").upsert(upsertObj).select("*").limit(1).single();
+    if (error) throw error;
+    const profile = data as any;
+    return {
+      id: profile.id,
+      username: profile.username || profile.user_name,
+      displayName: profile.displayName || profile.display_name,
+      avatarUrl: profile.avatarUrl || profile.avatar_url,
+      bio: profile.bio,
+      joinedAt: profile.joinedAt || profile.joined_at,
+    } as any;
+  },
+
+  async getPostsByDate(dateKey: string) {
+    const sb = getClient();
+    const start = new Date(dateKey + "T00:00:00.000Z");
+    const end = new Date(start);
+    end.setDate(start.getDate() + 1);
+    const { data, error } = await sb.from("posts").select("*, users:users(*)").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      userId: row.user_id || row.userId,
+      imageUrl: row.image_url || row.imageUrl,
+      alt: row.alt || "",
+      caption: row.caption || "",
+      createdAt: row.created_at || row.createdAt,
+      public: !!row.public,
+      user: {
+        id: row.users?.id || row.user_id,
+        username: row.users?.username || row.users?.user_name || "",
+        displayName: row.users?.displayName || row.users?.display_name || "",
+        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
+      },
+      commentsCount: row.comments_count || row.commentsCount || 0,
+    }));
+  },
+
+  async getPost(id: string) {
+    const sb = getClient();
+    const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("id", id).limit(1).single();
+    if (error) return null;
+    const row = data as any;
+    return {
+      id: row.id,
+      userId: row.user_id || row.userId,
+      imageUrl: row.image_url || row.imageUrl,
+      alt: row.alt || "",
+      caption: row.caption || "",
+      createdAt: row.created_at || row.createdAt,
+      public: !!row.public,
+      user: {
+        id: row.users?.id || row.user_id,
+        username: row.users?.username || row.users?.user_name || "",
+        displayName: row.users?.displayName || row.users?.display_name || "",
+        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
+      },
+      commentsCount: row.comments_count || row.commentsCount || 0,
+    } as any;
+  },
+
+  async updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }) {
+    const sb = getClient();
+    const updates: any = {};
+    if (patch.caption !== undefined) updates.caption = patch.caption;
+    if (patch.alt !== undefined) updates.alt = patch.alt;
+    if (patch.public !== undefined) updates.public = patch.public;
+    const { error } = await sb.from("posts").update(updates).eq("id", id);
+    if (error) throw error;
+    return await (this as any).getPost(id) as any;
+  },
+
+  async deletePost(id: string) {
+    const sb = getClient();
+    const { data: post } = await sb.from("posts").select("image_url, imageUrl").eq("id", id).limit(1).single();
+    const imageUrl = (post as any)?.image_url || (post as any)?.imageUrl;
+    if (imageUrl) {
+      try {
+        const base = SUPABASE.url.replace(/\/$/, '') + "/storage/v1/object/public/posts/";
+        if (typeof imageUrl === "string" && imageUrl.startsWith(base)) {
+          const path = decodeURIComponent(imageUrl.slice(base.length));
+          await sb.storage.from("posts").remove([path]);
+        }
+      } catch (e) {
+        console.warn("Failed to remove storage object for deleted post", e);
+      }
+    }
+    await sb.from("comments").delete().eq("post_id", id);
+    const { error } = await sb.from("posts").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  },
 
   async getComments(postId: string) {
     const sb = getClient();
-    const { data, error } = await sb.from("comments").select("*, users:users(id,username,displayName,avatarUrl)").eq("postId", postId).order("createdAt", { ascending: true });
+    const { data, error } = await sb.from("comments").select("*, users:users(*)").eq("post_id", postId).order("created_at", { ascending: true });
     if (error) throw error;
-    return (data || []).map((c: any) => ({ ...c, user: c.users || {} }));
+    return (data || []).map((c: any) => ({
+      id: c.id,
+      postId: c.post_id || c.postId,
+      userId: c.user_id || c.userId,
+      text: c.text,
+      createdAt: c.created_at || c.createdAt,
+      user: {
+        id: c.users?.id || c.user_id,
+        username: c.users?.username || c.users?.user_name || "",
+        displayName: c.users?.displayName || c.users?.display_name || "",
+        avatarUrl: c.users?.avatarUrl || c.users?.avatar_url || "",
+      }
+    }));
   },
 
-  async addComment() { throw new Error("NI"); },
+  async addComment(postId: string, text: string) {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const user = (userData as any)?.user;
+    if (!user) throw new Error("Not logged in");
+    if (!text?.trim()) throw new Error("Empty");
+    const id = uid();
+    const created_at = new Date().toISOString();
+    const { error } = await sb.from("comments").insert({ id, post_id: postId, user_id: user.id, text: text.trim(), created_at });
+    if (error) throw error;
+    return { id, postId, userId: user.id, text: text.trim(), createdAt: created_at, user: { id: user.id, username: user.user_metadata?.username || user.email?.split("@")[0] || user.id, displayName: user.user_metadata?.name || user.email?.split("@")[0] || user.id, avatarUrl: user.user_metadata?.avatar_url || "" } } as any;
+  },
 
   async canPostToday() {
     const sb = getClient();
@@ -190,11 +355,30 @@ export const supabaseApi: Api = {
     }
 
     if ((todays || []).length && replace) {
-      // delete existing posts for today (and their comments)
+      // delete existing posts for today (and their comments) and cleanup storage objects
       const ids = (todays || []).map((p: any) => p.id);
-      await sb.from("comments").delete().in("postId", ids);
+      const imageUrls = (todays || []).map((p: any) => p.image_url || p.imageUrl);
+      // delete comments
+      await sb.from("comments").delete().in("post_id", ids).or(`post_id.in.(${ids.map((i:any)=>`'${i}'`).join(',')})`);
+      // attempt to remove storage objects for each image_url that points to our posts bucket
+      try {
+        const base = SUPABASE.url.replace(/\/$/, '') + "/storage/v1/object/public/posts/";
+        const toRemove: string[] = [];
+        for (const u of imageUrls) {
+          if (!u) continue;
+          if (typeof u === "string" && u.startsWith(base)) {
+            const path = decodeURIComponent(u.slice(base.length));
+            toRemove.push(path);
+          }
+        }
+        if (toRemove.length) {
+          await sb.storage.from("posts").remove(toRemove);
+        }
+      } catch (e) {
+        console.warn("Failed to remove storage objects for replaced posts", e);
+      }
+      // finally delete post rows
       await sb.from("posts").delete().in("id", ids);
-      // Note: we don't attempt to delete storage objects here (optional)
     }
 
     // Convert data URL to Blob/File if necessary and upload to storage

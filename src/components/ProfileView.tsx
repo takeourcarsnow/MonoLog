@@ -121,16 +121,27 @@ function EditProfile() {
               const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
 
               const sb = getSupabaseClient();
-              const { data: userData } = await sb.auth.getUser();
+              const { data: userData, error: authErr } = await sb.auth.getUser();
+              console.debug("auth.getUser result", { userData, authErr });
               const user = (userData as any)?.user;
               if (!user) throw new Error("Not logged in");
               const path = `avatars/${user.id}/${file.name}`;
+              console.debug("Uploading avatar to storage", { path, fileName: file.name, fileSize: file.size, fileType: file.type });
               const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
+              console.debug("storage.upload result", { uploadData, uploadErr });
               if (uploadErr) throw uploadErr;
-              const { data: urlData } = sb.storage.from("posts").getPublicUrl(path);
-              const publicUrl = urlData.publicUrl;
-              // persist avatar URL to profile
-              await api.updateCurrentUser({ avatarUrl: publicUrl });
+              const urlRes = sb.storage.from("posts").getPublicUrl(path);
+              console.debug("storage.getPublicUrl result", urlRes);
+              const publicUrl = urlRes.data.publicUrl;
+              // persist avatar URL to profile (log payload/result)
+              console.debug("Calling api.updateCurrentUser", { avatarUrl: publicUrl });
+              try {
+                const upd = await api.updateCurrentUser({ avatarUrl: publicUrl });
+                console.debug("api.updateCurrentUser success", { upd });
+              } catch (e) {
+                console.error("api.updateCurrentUser failed", e);
+                throw e;
+              }
               // refresh local bio to ensure UI reflects latest profile (optional)
             } catch (e: any) {
               console.error(e);

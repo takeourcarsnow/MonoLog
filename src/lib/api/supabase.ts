@@ -203,8 +203,14 @@ export const supabaseApi: Api = {
     if (patch.displayName !== undefined) upsertObj.display_name = patch.displayName;
     if (patch.avatarUrl !== undefined) upsertObj.avatar_url = patch.avatarUrl;
     if (patch.bio !== undefined) upsertObj.bio = patch.bio;
-    const { error, data } = await sb.from("users").upsert(upsertObj).select("*").limit(1).single();
-    if (error) throw error;
+    console.debug("users.upsert payload", { upsertObj });
+    const res = await sb.from("users").upsert(upsertObj).select("*").limit(1).single();
+    console.debug("users.upsert result", res);
+    const { error, data } = res as any;
+    if (error) {
+      console.error("users.upsert error", error);
+      throw error;
+    }
     const profile = data as any;
     return {
       id: profile.id,

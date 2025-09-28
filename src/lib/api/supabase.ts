@@ -1,0 +1,27 @@
+import type { Api } from "../types";
+
+export const supabaseApi: Api = {
+  async init() { throw new Error("Supabase mode not implemented. Switch CONFIG.mode to 'local'."); },
+  async seed() { throw new Error("Not available in supabase mode"); },
+  async getUsers() { return []; },
+  async getCurrentUser() { return null; },
+  async loginAs() { return null; },
+  async follow() {},
+  async unfollow() {},
+  async isFollowing() { return false; },
+  async getExploreFeed() { return []; },
+  async getFollowingFeed() { return []; },
+  async getUserPosts() { return []; },
+  async getUser() { return null; },
+  async updateUser() { throw new Error("NI"); },
+  async updateCurrentUser() { throw new Error("NI"); },
+  async getPostsByDate() { return []; },
+  async getPost() { return null; },
+  async canPostToday() { return { allowed: false }; },
+  async createOrReplaceToday() { throw new Error("NI"); },
+  async updatePost() { throw new Error("NI"); },
+  async deletePost() { return false; },
+  async getComments() { return []; },
+  async addComment() { throw new Error("NI"); },
+  async calendarStats() { return { counts: {}, mine: new Set() }; },
+};

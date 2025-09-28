@@ -1,0 +1,154 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { api } from "@/lib/api";
+import { compressImage } from "@/lib/image";
+import { CONFIG } from "@/lib/config";
+import { useRouter } from "next/navigation";
+
+export function Uploader() {
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const [alt, setAlt] = useState("");
+  const [caption, setCaption] = useState("");
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
+  const [processing, setProcessing] = useState(false);
+  const [canReplace, setCanReplace] = useState(false);
+  const dropRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      const can = await api.canPostToday();
+      setCanReplace(!can.allowed);
+    })();
+  }, []);
+
+  const setDrag = (on: boolean) => {
+    dropRef.current?.classList.toggle("dragover", on);
+  };
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+    setProcessing(true);
+    try {
+      const url = await compressImage(file);
+      setDataUrl(url);
+      if (!alt && caption) setAlt(caption);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to process image");
+      setDataUrl(null);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function publish(replace: boolean) {
+    if (!dataUrl) return alert("Please select an image");
+    try {
+      await api.createOrReplaceToday({
+        imageUrl: dataUrl,
+        caption,
+        alt: alt || caption || "Daily photo",
+        replace,
+        public: visibility === "public",
+      });
+      router.push("/profile");
+    } catch (e: any) {
+      if (e?.code === "LIMIT") {
+        alert("You already posted today. Tap 'Replace today’s post' to replace it.");
+      } else {
+        alert(e?.message || "Failed to publish");
+      }
+    }
+  }
+
+  return (
+    <div className="uploader view-fade">
+      <div className="toolbar">
+        <strong>Post your photo for today</strong>
+        <div className="dim">One photo per day</div>
+      </div>
+
+      <div
+        className="drop"
+        ref={dropRef}
+        tabIndex={0}
+        aria-label="Drop an image or click to select"
+        onClick={() => fileInputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
+        onDrop={async (e) => {
+          e.preventDefault(); setDrag(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file) await handleFile(file);
+        }}
+      >
+        Drop image here or click to select
+        <div className="dim" style={{ marginTop: 6 }}>
+          JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
+        </div>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          capture="environment"
+          onChange={async () => {
+            const file = fileInputRef.current?.files?.[0];
+            if (file) await handleFile(file);
+          }}
+        />
+      </div>
+
+      <div className={`preview ${dataUrl ? "" : "hidden"}`}>
+        <img alt="Preview" src={dataUrl || ""} />
+      </div>
+
+      <input
+        className="input"
+        type="text"
+        placeholder="Alt text (describe your photo for accessibility)"
+        value={alt}
+        onChange={e => setAlt(e.target.value)}
+      />
+      <input
+        className="input"
+        type="text"
+        placeholder="Caption (optional)"
+        value={caption}
+        onChange={e => setCaption(e.target.value)}
+      />
+      <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
+        <span className="dim">Visibility:</span>
+        <select
+          className="visibility-select"
+          aria-label="Post visibility"
+          value={visibility}
+          onChange={e => setVisibility(e.target.value as any)}
+        >
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+      </label>
+
+      <div>
+        <button className="btn primary" onClick={() => publish(false)} disabled={processing}>
+          {processing ? "Processing…" : canReplace ? "Publish (new day)" : "Publish"}
+        </button>
+        <button
+          className={`btn ghost replace ${canReplace ? "" : "hidden"}`}
+          onClick={() => publish(true)}
+          style={{ marginLeft: 8 }}
+          disabled={processing}
+        >
+          Replace today’s post
+        </button>
+      </div>
+    </div>
+  );
+}

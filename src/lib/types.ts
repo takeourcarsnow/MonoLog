@@ -1,0 +1,69 @@
+export type User = {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string;
+  bio?: string;
+  joinedAt: string;
+  following?: string[];
+};
+
+export type Post = {
+  id: string;
+  userId: string;
+  imageUrl: string;
+  alt: string;
+  caption: string;
+  createdAt: string;
+  public: boolean;
+};
+
+export type HydratedPost = Post & {
+  user: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
+  commentsCount: number;
+};
+
+export type Comment = {
+  id: string;
+  postId: string;
+  userId: string;
+  text: string;
+  createdAt: string;
+};
+
+export type CalendarStats = { counts: Record<string, number>, mine: Set<string> };
+
+export interface Api {
+  init(): Promise<void>;
+  seed(data: { users: User[]; posts: Post[]; comments: Comment[] }): Promise<void>;
+
+  getUsers(): Promise<User[]>;
+  getCurrentUser(): Promise<User | null>;
+  loginAs(userId: string): Promise<User | null>;
+
+  follow(userId: string): Promise<void>;
+  unfollow(userId: string): Promise<void>;
+  isFollowing(userId: string): Promise<boolean>;
+
+  getExploreFeed(): Promise<HydratedPost[]>;
+  getFollowingFeed(): Promise<HydratedPost[]>;
+  getUserPosts(userId: string): Promise<HydratedPost[]>;
+  getUser(id: string): Promise<User | null>;
+
+  updateUser(id: string, patch: Partial<User>): Promise<User>;
+  updateCurrentUser(patch: Partial<User>): Promise<User>;
+
+  getPostsByDate(dateKey: string): Promise<HydratedPost[]>;
+  getPost(id: string): Promise<HydratedPost | null>;
+
+  canPostToday(): Promise<{ allowed: boolean; reason?: string }>;
+  createOrReplaceToday(input: { imageUrl: string; caption?: string; alt?: string; replace?: boolean; public?: boolean }): Promise<HydratedPost>;
+
+  updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }): Promise<HydratedPost>;
+  deletePost(id: string): Promise<boolean>;
+
+  getComments(postId: string): Promise<(Comment & { user: User | {} })[]>;
+  addComment(postId: string, text: string): Promise<Comment & { user: User }>;
+
+  calendarStats(opts: { year: number; monthIdx: number }): Promise<CalendarStats>;
+}

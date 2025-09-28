@@ -12,27 +12,51 @@ import { SignOutButton } from "@/components/SignOut";
 export function ProfileView({ userId }: { userId?: string }) {
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<HydratedPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState<boolean | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const isOther = !!userId;
 
   useEffect(() => {
+    let mounted = true;
     (async () => {
-      // determine signed-in user (if any) so we can tell if the viewed profile is the owner
-      const me = await api.getCurrentUser();
-      setCurrentUserId(me?.id || null);
+      setLoading(true);
+      try {
+        // determine signed-in user (if any) so we can tell if the viewed profile is the owner
+        const me = await api.getCurrentUser();
+        if (!mounted) return;
+        setCurrentUserId(me?.id || null);
 
-      const u = userId ? await api.getUser(userId) : me;
-      if (!u) { setUser(null); return; }
-      setUser(u);
-      setPosts(await api.getUserPosts(u.id));
-      if (userId) setFollowing(await api.isFollowing(u.id));
+        const u = userId ? await api.getUser(userId) : me;
+        if (!mounted) return;
+        if (!u) { setUser(null); setPosts([]); if (userId) setFollowing(false); return; }
+        setUser(u);
+        setPosts(await api.getUserPosts(u.id));
+        if (userId) setFollowing(await api.isFollowing(u.id));
+      } catch (e) {
+        // swallow and let UI show not-found if appropriate
+      } finally {
+        if (mounted) setLoading(false);
+      }
     })();
+    return () => { mounted = false; };
   }, [userId]);
 
   const [showAuth, setShowAuth] = useState(false);
 
   if (!user) {
+    // while loading, show a neutral skeleton instead of 'User not found'
+    if (loading) {
+      return (
+        <div className="view-fade">
+          <div className="card skeleton" style={{ height: 120, maxWidth: 800, margin: '24px auto' }} />
+          <div className="grid" aria-label="User posts">
+            <div className="tile skeleton" style={{ height: 160 }} />
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="empty" style={{ position: "relative" }}>
         <div>User not found. Pick an account from the Account menu to get started.</div>

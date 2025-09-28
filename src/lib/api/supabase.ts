@@ -203,12 +203,13 @@ export const supabaseApi: Api = {
     if (patch.displayName !== undefined) upsertObj.display_name = patch.displayName;
     if (patch.avatarUrl !== undefined) upsertObj.avatar_url = patch.avatarUrl;
     if (patch.bio !== undefined) upsertObj.bio = patch.bio;
-    console.debug("users.upsert payload", { upsertObj });
+    const safe = (v: any) => { try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } } };
+    console.debug("users.upsert payload", safe(upsertObj));
     const res = await sb.from("users").upsert(upsertObj).select("*").limit(1).single();
-    console.debug("users.upsert result", res);
+    console.debug("users.upsert result (stringified)", safe(res));
     const { error, data } = res as any;
     if (error) {
-      console.error("users.upsert error", error);
+      console.error("users.upsert error", { message: error.message || error, code: error.code || error?.status || null, details: error.details || error?.error || null, full: error });
       throw error;
     }
     const profile = data as any;

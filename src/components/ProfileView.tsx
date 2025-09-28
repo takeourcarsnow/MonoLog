@@ -122,34 +122,38 @@ function EditProfile() {
 
               const sb = getSupabaseClient();
               const { data: userData, error: authErr } = await sb.auth.getUser();
-              console.debug("auth.getUser result", { userData, authErr });
+              // stringify helpers for paste-friendly logs
+              const s = (v: any) => {
+                try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } }
+              };
+              console.debug("auth.getUser result", s({ userData, authErr }));
               const user = (userData as any)?.user;
               if (!user) throw new Error("Not logged in");
               const path = `avatars/${user.id}/${file.name}`;
               console.debug("Uploading avatar to storage", { path, fileName: file.name, fileSize: file.size, fileType: file.type });
               const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
-              console.debug("storage.upload result", { uploadData, uploadErr });
+              console.debug("storage.upload result (stringified)", s({ uploadData, uploadErr }));
               if (uploadErr) {
                 try {
-                  console.error("storage.upload error details", {
+                  console.error("storage.upload error details (stringified)", s({
                     message: (uploadErr as any)?.message || uploadErr,
                     status: (uploadErr as any)?.status || (uploadErr as any)?.statusCode || null,
                     details: (uploadErr as any)?.details || (uploadErr as any)?.error || null,
                     full: uploadErr,
-                  });
+                  }));
                 } catch (ee) {
                   console.error("Failed to stringify uploadErr", ee, uploadErr);
                 }
                 throw uploadErr;
               }
               const urlRes = sb.storage.from("posts").getPublicUrl(path);
-              console.debug("storage.getPublicUrl result", urlRes);
+              console.debug("storage.getPublicUrl result (stringified)", s(urlRes));
               const publicUrl = urlRes.data.publicUrl;
               // persist avatar URL to profile (log payload/result)
               console.debug("Calling api.updateCurrentUser", { avatarUrl: publicUrl });
               try {
                 const upd = await api.updateCurrentUser({ avatarUrl: publicUrl });
-                console.debug("api.updateCurrentUser success", { upd });
+                console.debug("api.updateCurrentUser success (stringified)", s(upd));
               } catch (e) {
                 console.error("api.updateCurrentUser failed", e);
                 throw e;

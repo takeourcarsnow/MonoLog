@@ -129,7 +129,19 @@ function EditProfile() {
               console.debug("Uploading avatar to storage", { path, fileName: file.name, fileSize: file.size, fileType: file.type });
               const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
               console.debug("storage.upload result", { uploadData, uploadErr });
-              if (uploadErr) throw uploadErr;
+              if (uploadErr) {
+                try {
+                  console.error("storage.upload error details", {
+                    message: (uploadErr as any)?.message || uploadErr,
+                    status: (uploadErr as any)?.status || (uploadErr as any)?.statusCode || null,
+                    details: (uploadErr as any)?.details || (uploadErr as any)?.error || null,
+                    full: uploadErr,
+                  });
+                } catch (ee) {
+                  console.error("Failed to stringify uploadErr", ee, uploadErr);
+                }
+                throw uploadErr;
+              }
               const urlRes = sb.storage.from("posts").getPublicUrl(path);
               console.debug("storage.getPublicUrl result", urlRes);
               const publicUrl = urlRes.data.publicUrl;

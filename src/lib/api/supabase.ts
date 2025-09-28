@@ -121,7 +121,7 @@ export const supabaseApi: Api = {
 
   async getUserPosts(userId: string) {
     const sb = getClient();
-  const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("userId", userId).order("created_at", { ascending: false });
+  const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("user_id", userId).order("created_at", { ascending: false });
     if (error) throw error;
     return (data || []).map((row: any) => ({
       id: row.id,
@@ -316,9 +316,9 @@ export const supabaseApi: Api = {
     const { data, error } = await sb
       .from("posts")
       .select("id")
-      .eq("userId", user.id)
-      .gte("createdAt", start.toISOString())
-      .lt("createdAt", end.toISOString())
+      .eq("user_id", user.id)
+      .gte("created_at", start.toISOString())
+      .lt("created_at", end.toISOString())
       .limit(1);
     if (error) throw error;
     const exists = (data || []).length > 0;
@@ -332,8 +332,8 @@ export const supabaseApi: Api = {
     const user = (userData as any)?.user;
     if (!user) throw new Error("Not logged in");
 
-    // ensure profile exists in users table
-    await sb.from("users").upsert({ id: user.id, username: user.user_metadata?.username || user.email?.split("@")[0] || user.id, displayName: user.user_metadata?.name || user.email?.split("@")[0] || user.id, avatarUrl: user.user_metadata?.avatar_url || "", joinedAt: new Date().toISOString() });
+  // ensure profile exists in users table (use snake_case column names)
+  await sb.from("users").upsert({ id: user.id, username: user.user_metadata?.username || user.email?.split("@")[0] || user.id, display_name: user.user_metadata?.name || user.email?.split("@")[0] || user.id, avatar_url: user.user_metadata?.avatar_url || "", joined_at: new Date().toISOString() });
 
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -342,10 +342,10 @@ export const supabaseApi: Api = {
 
     const { data: todays, error: todaysErr } = await sb
       .from("posts")
-      .select("id, imageUrl")
-      .eq("userId", user.id)
-      .gte("createdAt", start.toISOString())
-      .lt("createdAt", end.toISOString());
+      .select("id, image_url")
+      .eq("user_id", user.id)
+      .gte("created_at", start.toISOString())
+      .lt("created_at", end.toISOString());
     if (todaysErr) throw todaysErr;
 
     if ((todays || []).length && !replace) {
@@ -409,8 +409,8 @@ export const supabaseApi: Api = {
   const { error: insertErr } = await sb.from("posts").insert({ id, user_id: user.id, image_url: finalUrl, alt: alt || "", caption: caption || "", created_at: new Date().toISOString(), public: !!isPublic });
     if (insertErr) throw insertErr;
 
-    // fetch profile for hydration
-    const { data: profile } = await sb.from("users").select("id,username,displayName,avatarUrl").eq("id", user.id).limit(1).single();
+  // fetch profile for hydration (map snake_case)
+  const { data: profile } = await sb.from("users").select("id,username,display_name,avatar_url").eq("id", user.id).limit(1).single();
 
     const post: HydratedPost = {
       id,
@@ -423,8 +423,8 @@ export const supabaseApi: Api = {
       user: {
         id: profile?.id || user.id,
         username: profile?.username || "",
-        displayName: profile?.displayName || "",
-        avatarUrl: profile?.avatarUrl || "",
+        displayName: profile?.display_name || "",
+        avatarUrl: profile?.avatar_url || "",
       },
       commentsCount: 0,
     };
@@ -434,15 +434,15 @@ export const supabaseApi: Api = {
 
   async calendarStats({ year, monthIdx }) {
     const sb = getClient();
-    // This implementation assumes posts.createdAt is a timestamp
+    // This implementation assumes posts.created_at is a timestamp
     const start = new Date(year, monthIdx, 1).toISOString();
     const end = new Date(year, monthIdx + 1, 1).toISOString();
-    const { data, error } = await sb.from("posts").select("createdAt").gte("createdAt", start).lt("createdAt", end);
+    const { data, error } = await sb.from("posts").select("created_at").gte("created_at", start).lt("created_at", end);
     if (error) throw error;
     const map: Record<string, number> = {};
     const mine = new Set<string>();
     for (const p of data || []) {
-      const dk = new Date(p.createdAt).toISOString().slice(0, 10);
+      const dk = new Date(p.created_at).toISOString().slice(0, 10);
       map[dk] = (map[dk] || 0) + 1;
     }
     return { counts: map, mine } as CalendarStats;

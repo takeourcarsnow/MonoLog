@@ -35,6 +35,11 @@ export function getSupabaseClient() {
   return getClient();
 }
 
+// also export a named helper for other modules to access the raw supabase client
+export function getSupabaseClientRaw() {
+  return getClient();
+}
+
 export const supabaseApi: Api = {
   async init() {
     // client is lazy-initialized on first call

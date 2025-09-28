@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useEffect, useRef, useState } from "react";
+import { api, getSupabaseClient } from "@/lib/api";
+import { compressImage } from "@/lib/image";
+import { uid } from "@/lib/id";
 import type { HydratedPost, User } from "@/lib/types";
 import Link from "next/link";
 
@@ -78,6 +80,8 @@ function EditProfile() {
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState("");
   const [original, setOriginal] = useState("");
+  const [processing, setProcessing] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -93,6 +97,53 @@ function EditProfile() {
 
   return (
     <div>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileRef}
+          style={{ display: "none" }}
+          onChange={async () => {
+            const f = fileRef.current?.files?.[0];
+            if (!f) return;
+            setProcessing(true);
+            try {
+              // compress to data URL then upload to storage
+              const dataUrl = await compressImage(f);
+              // convert dataUrl -> File
+              const parts = dataUrl.split(',');
+              const meta = parts[0];
+              const mime = meta.split(':')[1].split(';')[0];
+              const bstr = atob(parts[1]);
+              let n = bstr.length;
+              const u8arr = new Uint8Array(n);
+              while (n--) u8arr[n] = bstr.charCodeAt(n);
+              const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
+
+              const sb = getSupabaseClient();
+              const { data: userData } = await sb.auth.getUser();
+              const user = (userData as any)?.user;
+              if (!user) throw new Error("Not logged in");
+              const path = `avatars/${user.id}/${file.name}`;
+              const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
+              if (uploadErr) throw uploadErr;
+              const { data: urlData } = sb.storage.from("posts").getPublicUrl(path);
+              const publicUrl = urlData.publicUrl;
+              // persist avatar URL to profile
+              await api.updateCurrentUser({ avatarUrl: publicUrl });
+              // refresh local bio to ensure UI reflects latest profile (optional)
+            } catch (e: any) {
+              console.error(e);
+              alert(e?.message || "Failed to upload avatar");
+            } finally {
+              setProcessing(false);
+            }
+          }}
+        />
+        <button className="btn" onClick={() => fileRef.current?.click()} disabled={processing}>
+          {processing ? "Uploading…" : "Change Avatar"}
+        </button>
+      </div>
       <div>
         <textarea
           className="bio-editor"

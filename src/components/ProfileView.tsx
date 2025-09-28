@@ -70,7 +70,12 @@ export function ProfileView({ userId }: { userId?: string }) {
           {!isOther ? (
             <>
               <Link className="btn" href="/upload">New Post</Link>
-              <EditProfile />
+                <EditProfile onSaved={async () => {
+                  // refresh the profile and posts after an edit so UI reflects changes immediately
+                  const me = await api.getCurrentUser();
+                  setUser(me);
+                  if (me) setPosts(await api.getUserPosts(me.id));
+                }} />
               {/* show sign out only when the viewed profile belongs to the signed-in user */}
               {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
             </>
@@ -106,7 +111,7 @@ export function ProfileView({ userId }: { userId?: string }) {
   );
 }
 
-function EditProfile() {
+function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {}) {
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState("");
   const [original, setOriginal] = useState("");
@@ -232,7 +237,7 @@ function EditProfile() {
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
         <button
           className="btn save-bio"
-          onClick={async () => {
+              onClick={async () => {
             // basic validation
             const uname = username.trim();
             if (!uname) { alert("Username cannot be empty"); return; }
@@ -240,6 +245,7 @@ function EditProfile() {
             try {
               await api.updateCurrentUser({ username: uname, displayName: displayName.trim() || undefined, bio: bio.trim() });
               setEditing(false);
+              try { await onSaved?.(); } catch (e) { /* ignore parent refresh errors */ }
             } catch (e: any) {
               alert(e?.message || "Failed to update profile");
             } finally {

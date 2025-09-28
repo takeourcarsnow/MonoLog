@@ -171,7 +171,17 @@ export const supabaseApi: Api = {
     const sb = getClient();
     const { data, error } = await sb.from("users").select("*").eq("id", id).limit(1).single();
     if (error) return null;
-    return data || null;
+    const profile = data as any;
+    // map snake_case DB columns (or other variants) to the app's User shape
+    return {
+      id: profile.id,
+      username: profile.username || profile.user_name || "",
+      displayName: profile.displayName || profile.display_name || "",
+      avatarUrl: profile.avatarUrl || profile.avatar_url || "",
+      bio: profile.bio,
+      joinedAt: profile.joinedAt || profile.joined_at,
+      following: profile.following,
+    } as any;
   },
 
   async updateUser(id: string, patch: Partial<User>) {

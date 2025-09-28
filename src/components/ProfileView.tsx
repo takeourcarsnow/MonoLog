@@ -6,16 +6,22 @@ import { compressImage } from "@/lib/image";
 import { uid } from "@/lib/id";
 import type { HydratedPost, User } from "@/lib/types";
 import Link from "next/link";
+import { SignOutButton } from "@/components/SignOut";
 
 export function ProfileView({ userId }: { userId?: string }) {
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [following, setFollowing] = useState<boolean | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const isOther = !!userId;
 
   useEffect(() => {
     (async () => {
-      const u = userId ? await api.getUser(userId) : await api.getCurrentUser();
+      // determine signed-in user (if any) so we can tell if the viewed profile is the owner
+      const me = await api.getCurrentUser();
+      setCurrentUserId(me?.id || null);
+
+      const u = userId ? await api.getUser(userId) : me;
       if (!u) { setUser(null); return; }
       setUser(u);
       setPosts(await api.getUserPosts(u.id));
@@ -43,6 +49,8 @@ export function ProfileView({ userId }: { userId?: string }) {
             <>
               <Link className="btn" href="/upload">New Post</Link>
               <EditProfile />
+              {/* show sign out only when the viewed profile belongs to the signed-in user */}
+              {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
             </>
           ) : (
             <button

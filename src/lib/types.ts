@@ -65,5 +65,8 @@ export interface Api {
   getComments(postId: string): Promise<(Comment & { user: User | {} })[]>;
   addComment(postId: string, text: string): Promise<Comment & { user: User }>;
 
+  // sign out the current user (client-side)
+  signOut(): Promise<void>;
+
   calendarStats(opts: { year: number; monthIdx: number }): Promise<CalendarStats>;
 }

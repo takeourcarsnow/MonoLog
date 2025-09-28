@@ -489,4 +489,12 @@ export const supabaseApi: Api = {
     }
     return { counts: map, mine } as CalendarStats;
   },
+  async signOut() {
+    try {
+      const sb = getClient();
+      await sb.auth.signOut();
+    } catch (e) {
+      console.warn("supabase.signOut failed", e);
+    }
+  },
 };

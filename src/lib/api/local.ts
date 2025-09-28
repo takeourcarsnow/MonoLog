@@ -236,4 +236,8 @@ export const localApi: Api = {
     );
     return { counts: map, mine: myKeys };
   },
+  async signOut() {
+    cache.currentUserId = null;
+    persist();
+  },
 };

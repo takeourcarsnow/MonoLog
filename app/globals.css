@@ -29,20 +29,7 @@
   --safe-bottom: env(safe-area-inset-bottom);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="system"] {
-    --bg: #0c0c0e;
-    --bg-elev: #141418;
-    --text: #f7f7f7;
-    --muted: #9ca3af;
-    --primary: #60a5fa;
-    --primary-weak: #0b2547;
-    --accent: #34d399;
-    --danger: #f87171;
-    --border: #1f2937;
-    --shadow: 0 8px 30px rgba(0,0,0,.35);
-  }
-}
+/* Prefer the user's OS preference only when no explicit saved preference exists - handled in JS init */
 :root[data-theme="dark"] {
   --bg: #0c0c0e;
   --bg-elev: #141418;

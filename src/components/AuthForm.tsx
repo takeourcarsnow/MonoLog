@@ -31,6 +31,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
       // close modal and refresh
       onClose?.();
       router.refresh();
+      try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
     } catch (err: any) {
       alert(err?.message || String(err));
     } finally {

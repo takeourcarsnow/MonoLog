@@ -20,6 +20,7 @@ export function SignOutButton() {
           router.push("/explore");
           // refresh to ensure UI updates
           router.refresh();
+          try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
         }
       }}
     >

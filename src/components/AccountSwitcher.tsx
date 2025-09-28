@@ -15,6 +15,12 @@ export function AccountSwitcher() {
     (async () => {
       setMe(await api.getCurrentUser());
     })();
+    const onAuth = async () => {
+      setShowAuth(false);
+      setMe(await api.getCurrentUser());
+    };
+    window.addEventListener("auth:changed", onAuth);
+    return () => { window.removeEventListener("auth:changed", onAuth); };
   }, []);
 
   const current = me;
@@ -37,7 +43,7 @@ export function AccountSwitcher() {
         ) : "Account"}
       </button>
 
-      {showAuth ? (
+        {showAuth ? (
         <>
           <div
             className="auth-overlay"

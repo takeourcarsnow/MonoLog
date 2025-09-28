@@ -14,6 +14,22 @@ function getClient() {
   return supabase;
 }
 
+// helper to log Supabase errors in the browser console with context
+function logSupabaseError(context: string, res: { data?: any; error?: any }) {
+  try {
+    if (typeof window === "undefined") return;
+    if (!res) return;
+    const { error, data } = res as any;
+    if (error) {
+      // provide a concise, copyable object
+      console.error(`Supabase error (${context})`, { message: error.message || error, code: error.code || error?.status || null, details: error.details || error, data });
+    }
+  } catch (e) {
+    // swallow logging errors
+    console.error("Failed to log supabase error", e);
+  }
+}
+
 // export the client accessor for UI components (auth flows) to call
 export function getSupabaseClient() {
   return getClient();
@@ -31,6 +47,7 @@ export const supabaseApi: Api = {
   async getUsers() {
     const sb = getClient();
     const { data, error } = await sb.from("users").select("*");
+    logSupabaseError("getUsers", { data, error });
     if (error) throw error;
     return data || [];
   },
@@ -39,6 +56,7 @@ export const supabaseApi: Api = {
     try {
       const sb = getClient();
   const { data: userData, error: userErr } = await sb.auth.getUser();
+  logSupabaseError("auth.getUser", { data: userData, error: userErr });
   if (userErr) return null;
   const user = (userData as any)?.user;
       if (!user) return null;
@@ -97,6 +115,7 @@ export const supabaseApi: Api = {
   async getExploreFeed() {
     const sb = getClient();
   const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("public", true).order("created_at", { ascending: false });
+  logSupabaseError("getExploreFeed", { data, error });
     if (error) throw error;
     const posts: HydratedPost[] = (data || []).map((row: any) => ({
       id: row.id,
@@ -122,6 +141,7 @@ export const supabaseApi: Api = {
   async getUserPosts(userId: string) {
     const sb = getClient();
   const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("user_id", userId).order("created_at", { ascending: false });
+  logSupabaseError("getUserPosts", { data, error });
     if (error) throw error;
     return (data || []).map((row: any) => ({
       id: row.id,
@@ -196,8 +216,9 @@ export const supabaseApi: Api = {
     const start = new Date(dateKey + "T00:00:00.000Z");
     const end = new Date(start);
     end.setDate(start.getDate() + 1);
-    const { data, error } = await sb.from("posts").select("*, users:users(*)").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).order("created_at", { ascending: false });
-    if (error) throw error;
+  const { data, error } = await sb.from("posts").select("*, users:users(*)").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).order("created_at", { ascending: false });
+  logSupabaseError("getPostsByDate", { data, error });
+  if (error) throw error;
     return (data || []).map((row: any) => ({
       id: row.id,
       userId: row.user_id || row.userId,
@@ -218,8 +239,9 @@ export const supabaseApi: Api = {
 
   async getPost(id: string) {
     const sb = getClient();
-    const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("id", id).limit(1).single();
-    if (error) return null;
+  const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("id", id).limit(1).single();
+  logSupabaseError("getPost", { data, error });
+  if (error) return null;
     const row = data as any;
     return {
       id: row.id,
@@ -252,7 +274,8 @@ export const supabaseApi: Api = {
 
   async deletePost(id: string) {
     const sb = getClient();
-    const { data: post } = await sb.from("posts").select("image_url, imageUrl").eq("id", id).limit(1).single();
+    const { data: post, error: postErr } = await sb.from("posts").select("*").eq("id", id).limit(1).single();
+    logSupabaseError("deletePost.fetchPost", { data: post, error: postErr });
     const imageUrl = (post as any)?.image_url || (post as any)?.imageUrl;
     if (imageUrl) {
       try {
@@ -265,9 +288,11 @@ export const supabaseApi: Api = {
         console.warn("Failed to remove storage object for deleted post", e);
       }
     }
-    await sb.from("comments").delete().eq("post_id", id);
-    const { error } = await sb.from("posts").delete().eq("id", id);
-    if (error) throw error;
+    const { data: delCommentsData, error: delCommentsErr } = await sb.from("comments").delete().eq("post_id", id);
+    logSupabaseError("deletePost.deleteComments", { data: delCommentsData, error: delCommentsErr });
+    const { data: delPostData, error: delPostErr } = await sb.from("posts").delete().eq("id", id);
+    logSupabaseError("deletePost.deletePostRow", { data: delPostData, error: delPostErr });
+    if (delPostErr) throw delPostErr;
     return true;
   },
 
@@ -332,8 +357,9 @@ export const supabaseApi: Api = {
     const user = (userData as any)?.user;
     if (!user) throw new Error("Not logged in");
 
-  // ensure profile exists in users table (use snake_case column names)
-  await sb.from("users").upsert({ id: user.id, username: user.user_metadata?.username || user.email?.split("@")[0] || user.id, display_name: user.user_metadata?.name || user.email?.split("@")[0] || user.id, avatar_url: user.user_metadata?.avatar_url || "", joined_at: new Date().toISOString() });
+    // ensure profile exists in users table (use snake_case column names)
+    const { data: upsertProfileData, error: upsertProfileErr } = await sb.from("users").upsert({ id: user.id, username: user.user_metadata?.username || user.email?.split("@")[0] || user.id, display_name: user.user_metadata?.name || user.email?.split("@")[0] || user.id, avatar_url: user.user_metadata?.avatar_url || "", joined_at: new Date().toISOString() });
+    logSupabaseError("createOrReplaceToday.upsertUser", { data: upsertProfileData, error: upsertProfileErr });
 
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -342,12 +368,10 @@ export const supabaseApi: Api = {
 
     const { data: todays, error: todaysErr } = await sb
       .from("posts")
-      .select("id, image_url")
+      .select("*")
       .eq("user_id", user.id)
       .gte("created_at", start.toISOString())
       .lt("created_at", end.toISOString());
-    if (todaysErr) throw todaysErr;
-
     if ((todays || []).length && !replace) {
       const err: any = new Error("Already posted today");
       err.code = "LIMIT";
@@ -358,8 +382,9 @@ export const supabaseApi: Api = {
       // delete existing posts for today (and their comments) and cleanup storage objects
       const ids = (todays || []).map((p: any) => p.id);
       const imageUrls = (todays || []).map((p: any) => p.image_url || p.imageUrl);
-      // delete comments
-      await sb.from("comments").delete().in("post_id", ids).or(`post_id.in.(${ids.map((i:any)=>`'${i}'`).join(',')})`);
+  // delete comments
+  const { data: delCommentsData, error: delCommentsErr } = await sb.from("comments").delete().in("post_id", ids).or(`post_id.in.(${ids.map((i:any)=>`'${i}'`).join(',')})`);
+  logSupabaseError("createOrReplaceToday.deleteComments", { data: delCommentsData, error: delCommentsErr });
       // attempt to remove storage objects for each image_url that points to our posts bucket
       try {
         const base = SUPABASE.url.replace(/\/$/, '') + "/storage/v1/object/public/posts/";
@@ -372,13 +397,15 @@ export const supabaseApi: Api = {
           }
         }
         if (toRemove.length) {
-          await sb.storage.from("posts").remove(toRemove);
+          const { data: remData, error: remErr } = await sb.storage.from("posts").remove(toRemove);
+          logSupabaseError("createOrReplaceToday.storage.remove", { data: remData, error: remErr });
         }
       } catch (e) {
         console.warn("Failed to remove storage objects for replaced posts", e);
       }
       // finally delete post rows
-      await sb.from("posts").delete().in("id", ids);
+      const { data: delPostsData, error: delPostsErr } = await sb.from("posts").delete().in("id", ids);
+      logSupabaseError("createOrReplaceToday.deletePosts", { data: delPostsData, error: delPostsErr });
     }
 
     // Convert data URL to Blob/File if necessary and upload to storage
@@ -396,7 +423,8 @@ export const supabaseApi: Api = {
         const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
 
         const path = `${user.id}/${file.name}`;
-        const { error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
+        const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
+        logSupabaseError("createOrReplaceToday.storage.upload", { data: uploadData, error: uploadErr });
         if (uploadErr) throw uploadErr;
         const { data: urlData } = sb.storage.from("posts").getPublicUrl(path);
         finalUrl = urlData.publicUrl;
@@ -406,11 +434,13 @@ export const supabaseApi: Api = {
     }
 
     const id = uid();
-  const { error: insertErr } = await sb.from("posts").insert({ id, user_id: user.id, image_url: finalUrl, alt: alt || "", caption: caption || "", created_at: new Date().toISOString(), public: !!isPublic });
+  const { data: insertData, error: insertErr } = await sb.from("posts").insert({ id, user_id: user.id, image_url: finalUrl, alt: alt || "", caption: caption || "", created_at: new Date().toISOString(), public: !!isPublic });
+    logSupabaseError("createOrReplaceToday.insertPost", { data: insertData, error: insertErr });
     if (insertErr) throw insertErr;
 
   // fetch profile for hydration (map snake_case)
-  const { data: profile } = await sb.from("users").select("id,username,display_name,avatar_url").eq("id", user.id).limit(1).single();
+  const { data: profile, error: profErr } = await sb.from("users").select("id,username,display_name,avatar_url").eq("id", user.id).limit(1).single();
+    logSupabaseError("createOrReplaceToday.fetchProfile", { data: profile, error: profErr });
 
     const post: HydratedPost = {
       id,

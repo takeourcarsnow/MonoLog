@@ -30,6 +30,47 @@ function logSupabaseError(context: string, res: { data?: any; error?: any }) {
   }
 }
 
+// small helpers to normalize DB rows to app types and to safely stringify debug objects
+function safeStringify(v: any) {
+  try {
+    return JSON.stringify(v, null, 2);
+  } catch (e) {
+    try { return String(v); } catch { return "[unserializable]"; }
+  }
+}
+
+function mapProfileToUser(profile: any) {
+  if (!profile) return null;
+  return {
+    id: profile.id,
+    username: profile.username || profile.user_name || "",
+    displayName: profile.displayName || profile.display_name || "",
+    avatarUrl: profile.avatarUrl || profile.avatar_url || "",
+    bio: profile.bio,
+    joinedAt: profile.joinedAt || profile.joined_at,
+    following: profile.following,
+  } as any;
+}
+
+function mapRowToHydratedPost(row: any): HydratedPost {
+  return {
+    id: row.id,
+    userId: row.user_id || row.userId,
+    imageUrl: row.image_url || row.imageUrl,
+    alt: row.alt || "",
+    caption: row.caption || "",
+    createdAt: row.created_at || row.createdAt,
+    public: !!row.public,
+    user: {
+      id: row.users?.id || row.user_id,
+      username: row.users?.username || row.users?.user_name || "",
+      displayName: row.users?.displayName || row.users?.display_name || "",
+      avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
+    },
+    commentsCount: row.comments_count || row.commentsCount || 0,
+  } as HydratedPost;
+}
+
 // export the client accessor for UI components (auth flows) to call
 export function getSupabaseClient() {
   return getClient();
@@ -68,7 +109,7 @@ export const supabaseApi: Api = {
       // try to find a matching profile in users table
   const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).single();
       // If there's no profile row yet (or an error), synthesize a minimal profile from the auth user so UI reflects signed-in state
-      if (profErr || !profile) {
+  if (profErr || !profile) {
         // synthesize and upsert a profile row so the DB and UI are in sync
         const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
         const synthDisplay = user.user_metadata?.name || user.email?.split("@")[0] || user.id;
@@ -96,17 +137,7 @@ export const supabaseApi: Api = {
           joinedAt,
         } as any;
       }
-      // map snake_case DB columns to the app's User shape if necessary
-      const mapped = {
-        id: profile.id,
-        username: (profile.username || profile.user_name || "") as string,
-        displayName: (profile.displayName || profile.display_name || profile.displayname || "") as string,
-        avatarUrl: (profile.avatarUrl || profile.avatar_url || "") as string,
-        bio: profile.bio,
-        joinedAt: profile.joinedAt || profile.joined_at,
-        following: profile.following,
-      } as any;
-      return mapped;
+      return mapProfileToUser(profile) as any;
     } catch (e) {
       return null;
     }
@@ -164,23 +195,7 @@ export const supabaseApi: Api = {
   const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("public", true).order("created_at", { ascending: false });
   logSupabaseError("getExploreFeed", { data, error });
     if (error) throw error;
-    const posts: HydratedPost[] = (data || []).map((row: any) => ({
-      id: row.id,
-      userId: row.user_id || row.userId,
-      imageUrl: row.image_url || row.imageUrl,
-      alt: row.alt || "",
-      caption: row.caption || "",
-      createdAt: row.created_at || row.createdAt,
-      public: !!row.public,
-      user: {
-        id: row.users?.id || row.user_id,
-        username: row.users?.username || row.users?.user_name || "",
-        displayName: row.users?.displayName || row.users?.display_name || "",
-        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
-      },
-      commentsCount: row.comments_count || row.commentsCount || 0,
-    }));
-    return posts;
+    return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },
 
   async getFollowingFeed() {
@@ -198,23 +213,7 @@ export const supabaseApi: Api = {
     const { data, error } = await sb.from("posts").select("*, users:users(*)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
     logSupabaseError("getFollowingFeed", { data, error });
     if (error) throw error;
-    const posts: HydratedPost[] = (data || []).map((row: any) => ({
-      id: row.id,
-      userId: row.user_id || row.userId,
-      imageUrl: row.image_url || row.imageUrl,
-      alt: row.alt || "",
-      caption: row.caption || "",
-      createdAt: row.created_at || row.createdAt,
-      public: !!row.public,
-      user: {
-        id: row.users?.id || row.user_id,
-        username: row.users?.username || row.users?.user_name || "",
-        displayName: row.users?.displayName || row.users?.display_name || "",
-        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
-      },
-      commentsCount: row.comments_count || row.commentsCount || 0,
-    }));
-    return posts;
+    return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },
 
   async getUserPosts(userId: string) {
@@ -222,22 +221,7 @@ export const supabaseApi: Api = {
   const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("user_id", userId).order("created_at", { ascending: false });
   logSupabaseError("getUserPosts", { data, error });
     if (error) throw error;
-    return (data || []).map((row: any) => ({
-      id: row.id,
-      userId: row.user_id || row.userId,
-      imageUrl: row.image_url || row.imageUrl,
-      alt: row.alt || "",
-      caption: row.caption || "",
-      createdAt: row.created_at || row.createdAt,
-      public: !!row.public,
-      user: {
-        id: row.users?.id || row.user_id,
-        username: row.users?.username || row.users?.user_name || "",
-        displayName: row.users?.displayName || row.users?.display_name || "",
-        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
-      },
-      commentsCount: row.comments_count || row.commentsCount || 0,
-    }));
+    return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },
 
   async getUser(id: string) {
@@ -245,16 +229,7 @@ export const supabaseApi: Api = {
     const { data, error } = await sb.from("users").select("*").eq("id", id).limit(1).single();
     if (error) return null;
     const profile = data as any;
-    // map snake_case DB columns (or other variants) to the app's User shape
-    return {
-      id: profile.id,
-      username: profile.username || profile.user_name || "",
-      displayName: profile.displayName || profile.display_name || "",
-      avatarUrl: profile.avatarUrl || profile.avatar_url || "",
-      bio: profile.bio,
-      joinedAt: profile.joinedAt || profile.joined_at,
-      following: profile.following,
-    } as any;
+    return mapProfileToUser(profile) as any;
   },
 
   async updateUser(id: string, patch: Partial<User>) {

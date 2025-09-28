@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type { User } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { CONFIG } from "@/lib/config";
+import dynamic from "next/dynamic";
+
+const AuthForm = dynamic(() => import("./AuthForm").then(m => m.AuthForm), { ssr: false });
 
 export function AccountSwitcher() {
   const [me, setMe] = useState<User | null>(null);
@@ -53,6 +57,17 @@ export function AccountSwitcher() {
             padding: 8, display: "block", zIndex: 999, minWidth: 220
           }}
         >
+          {CONFIG.mode === "supabase" && !current ? (
+            <div style={{ padding: 8 }}>
+              <AuthForm onClose={async () => {
+                setOpen(false);
+                const m = await api.getCurrentUser();
+                setMe(m);
+                router.refresh();
+              }} />
+            </div>
+          ) : null}
+
           {users.map(u => (
             <div
               key={u.id}

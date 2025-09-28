@@ -16,7 +16,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="light">
+    // Render with a temporary `no-transitions` class so styles/transitions are
+    // suppressed on the server-rendered page. The inline script removes the
+    // class immediately after applying the correct theme.
+    <html lang="en" className="no-transitions">
+      <head>
+        <script
+          id="theme-init"
+          dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);}else{try{var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');document.documentElement.setAttribute('data-theme',(m&&m.matches)?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} }catch(e){} })();` }}
+        />
+      </head>
       <body>
         <a href="#view" className="skip-link">Skip to content</a>
         <div id="app-root">

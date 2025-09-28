@@ -348,3 +348,11 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* When rendering initially, the html element may have .no-transitions to
+   suppress animations while theme is applied. This must be present in the
+   server CSS to prevent hydration mismatches. */
+.no-transitions, .no-transitions * , .no-transitions *::before, .no-transitions *::after {
+  transition: none !important;
+  animation: none !important;
+}

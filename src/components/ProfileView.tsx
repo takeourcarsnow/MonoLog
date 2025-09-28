@@ -108,6 +108,11 @@ export function ProfileView({ userId }: { userId?: string }) {
               className="btn follow-btn"
               aria-pressed={!!following || false}
               onClick={async () => {
+                const cur = await api.getCurrentUser();
+                if (!cur) {
+                  setShowAuth(true);
+                  return;
+                }
                 if (!following) {
                   await api.follow(user.id);
                   setFollowing(true);

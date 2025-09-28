@@ -7,6 +7,7 @@ import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Comments } from "./Comments";
+import { AuthForm } from "./AuthForm";
 
 export function PostCard({ post: initial }: { post: HydratedPost }) {
   const [post, setPost] = useState<HydratedPost>(initial);
@@ -14,6 +15,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   const [count, setCount] = useState<number>(initial.commentsCount || 0);
   const [isMe, setIsMe] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const [editing, setEditing] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -64,22 +66,38 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
           </div>
         </Link>
         <div style={{ marginLeft: "auto" }}>
-          {!isMe ? (
-            <button
-              className="btn"
-              aria-pressed={isFollowing}
-              onClick={async () => {
-                if (await api.isFollowing(post.userId)) {
-                  await api.unfollow(post.userId);
-                  setIsFollowing(false);
-                } else {
-                  await api.follow(post.userId);
-                  setIsFollowing(true);
-                }
-              }}
-            >
-              {isFollowing ? "Following" : "Follow"}
-            </button>
+              {!isMe ? (
+                <>
+                  <button
+                    className="btn"
+                    aria-pressed={isFollowing}
+                    onClick={async () => {
+                      const cur = await api.getCurrentUser();
+                      if (!cur) {
+                        // prompt sign in / sign up
+                        setShowAuth(true);
+                        return;
+                      }
+                      if (await api.isFollowing(post.userId)) {
+                        await api.unfollow(post.userId);
+                        setIsFollowing(false);
+                      } else {
+                        await api.follow(post.userId);
+                        setIsFollowing(true);
+                      }
+                    }}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </button>
+                  {showAuth ? (
+                    <>
+                      <div onClick={() => setShowAuth(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
+                      <div style={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 50, background: "var(--bg)", padding: 16, borderRadius: 8 }}>
+                        <AuthForm onClose={() => setShowAuth(false)} />
+                      </div>
+                    </>
+                  ) : null}
+                </>
           ) : (
             <>
               {!editing && (

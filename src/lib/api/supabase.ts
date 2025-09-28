@@ -72,15 +72,16 @@ export const supabaseApi: Api = {
         // synthesize and upsert a profile row so the DB and UI are in sync
         const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
         const synthDisplay = user.user_metadata?.name || user.email?.split("@")[0] || user.id;
-        const synthAvatar = user.user_metadata?.avatar_url || "";
+        const synthAvatar = user.user_metadata?.avatar_url;
         const joinedAt = new Date().toISOString();
         const upsertObj: any = {
           id: user.id,
           username: synthUsername,
           display_name: synthDisplay,
-          avatar_url: synthAvatar,
           joined_at: joinedAt,
         };
+        // only set avatar_url when the auth metadata has one; avoid overwriting an existing DB value with an empty string
+        if (synthAvatar) upsertObj.avatar_url = synthAvatar;
         // perform upsert (creates a DB profile if missing)
         try {
           await sb.from("users").upsert(upsertObj);
@@ -370,7 +371,15 @@ export const supabaseApi: Api = {
     if (!user) throw new Error("Not logged in");
 
     // ensure profile exists in users table (use snake_case column names)
-    const { data: upsertProfileData, error: upsertProfileErr } = await sb.from("users").upsert({ id: user.id, username: user.user_metadata?.username || user.email?.split("@")[0] || user.id, display_name: user.user_metadata?.name || user.email?.split("@")[0] || user.id, avatar_url: user.user_metadata?.avatar_url || "", joined_at: new Date().toISOString() });
+    // preserve existing avatar_url in the DB if the auth metadata doesn't include one
+    const upsertProfile: any = {
+      id: user.id,
+      username: user.user_metadata?.username || user.email?.split("@")[0] || user.id,
+      display_name: user.user_metadata?.name || user.email?.split("@")[0] || user.id,
+      joined_at: new Date().toISOString(),
+    };
+    if (user.user_metadata?.avatar_url) upsertProfile.avatar_url = user.user_metadata.avatar_url;
+    const { data: upsertProfileData, error: upsertProfileErr } = await sb.from("users").upsert(upsertProfile);
     logSupabaseError("createOrReplaceToday.upsertUser", { data: upsertProfileData, error: upsertProfileErr });
 
     const start = new Date();

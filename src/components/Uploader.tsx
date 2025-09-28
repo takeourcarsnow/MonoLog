@@ -2,16 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { compressImage } from "@/lib/image";
+import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import { CONFIG } from "@/lib/config";
 import { useRouter } from "next/navigation";
 
 export function Uploader() {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [alt, setAlt] = useState("");
   const [caption, setCaption] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [processing, setProcessing] = useState(false);
+  const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const [canReplace, setCanReplace] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,8 +36,12 @@ export function Uploader() {
       return;
     }
     setProcessing(true);
+    setOriginalSize(file.size);
+    setCompressedSize(null);
     try {
       const url = await compressImage(file);
+      const bytes = approxDataUrlBytes(url);
+      setCompressedSize(bytes);
       setDataUrl(url);
       if (!alt && caption) setAlt(caption);
     } catch (e) {
@@ -49,6 +55,10 @@ export function Uploader() {
 
   async function publish(replace: boolean) {
     if (!dataUrl) return alert("Please select an image");
+    const maxBytes = CONFIG.imageMaxSizeMB * 1024 * 1024;
+    if (compressedSize && compressedSize > maxBytes) {
+      return alert(`Compressed image is too large (${Math.round(compressedSize/1024)} KB). Try a smaller photo or reduce quality.`);
+    }
     try {
       await api.createOrReplaceToday({
         imageUrl: dataUrl,
@@ -109,6 +119,14 @@ export function Uploader() {
         <img alt="Preview" src={dataUrl || ""} />
       </div>
 
+      <div style={{ marginTop: 8 }}>
+        {originalSize ? <div className="dim">Original: {Math.round(originalSize/1024)} KB</div> : null}
+        {compressedSize ? <div className="dim">Compressed: {Math.round(compressedSize/1024)} KB</div> : null}
+        {compressedSize && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024 ? (
+          <div className="warn">Compressed image exceeds the maximum of {CONFIG.imageMaxSizeMB} MB. Please resize or choose a smaller file.</div>
+        ) : null}
+      </div>
+
       <input
         className="input"
         type="text"
@@ -137,7 +155,7 @@ export function Uploader() {
       </label>
 
       <div>
-        <button className="btn primary" onClick={() => publish(false)} disabled={processing}>
+        <button className="btn primary" onClick={() => publish(false)} disabled={processing || (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024)}>
           {processing ? "Processing…" : canReplace ? "Publish (new day)" : "Publish"}
         </button>
         <button

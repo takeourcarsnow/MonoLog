@@ -37,6 +37,17 @@ npm run dev
 # then open http://localhost:3000
 ```
 
+## Environment
+
+MonoLog can run purely in local mode (default) or point to a Supabase backend.
+
+1. Copy `.env.example` to `.env.local` and edit values.
+2. Toggle backend mode with `NEXT_PUBLIC_MODE=local` or `NEXT_PUBLIC_MODE=supabase`.
+
+If you use Supabase, set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from your project settings. These anon keys are safe for client usage but never publish service_role keys from a client app.
+
+Example file is included at the project root as `.env.example`.
+
 Available npm scripts (from `package.json`)
 - `dev` — start Next.js in development mode
 - `build` — build the production app

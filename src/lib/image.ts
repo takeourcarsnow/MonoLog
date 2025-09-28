@@ -81,3 +81,6 @@ export async function compressImage(fileOrDataUrl: File | string, maxEdge = CONF
 
   return out;
 }
+
+// exported for UI helpers (approximate compressed size in bytes)
+export { approxDataUrlBytes };

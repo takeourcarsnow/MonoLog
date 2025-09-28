@@ -1,10 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { api } from "@/lib/api";
 import type { HydratedPost } from "@/lib/types";
-import { PostCard } from "./PostCard";
 import Link from "next/link";
+
+const PostCard = dynamic(() => import("./PostCard").then(m => m.PostCard), { ssr: false });
+
+const fetcher = async () => {
+  return await api.getExploreFeed();
+};
 
 function ViewToggle({ title, selected, onSelect }: { title: string; selected: "list" | "grid"; onSelect: (v: "list" | "grid") => void }) {
   return (
@@ -22,21 +29,12 @@ function ViewToggle({ title, selected, onSelect }: { title: string; selected: "l
 }
 
 export function ExploreView() {
-  const [posts, setPosts] = useState<HydratedPost[]>([]);
+  const { data: posts = [], isLoading } = useSWR<HydratedPost[]>("/explore", fetcher, { revalidateOnFocus: true });
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("exploreView") as any)) || "grid");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      const data = await api.getExploreFeed();
-      setPosts(data);
-      setLoading(false);
-    })();
-  }, []);
 
   const render = () => {
-    if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
-    if (!posts.length) return <div className="empty">No posts yet. Be the first to post your daily photo!</div>;
+  if (isLoading) return <div className="card skeleton" style={{ height: 240 }} />;
+  if (!posts.length) return <div className="empty">No posts yet. Be the first to post your daily photo!</div>;
     if (view === "grid") {
       return (
         <div className="grid">

@@ -114,9 +114,50 @@ export const supabaseApi: Api = {
 
   async loginAs() { return null; },
 
-  async follow() { /* implement application logic with follow table if desired */ },
-  async unfollow() { /* implement application logic with follow table if desired */ },
-  async isFollowing() { return false; },
+  async follow(userId: string) {
+    const sb = getClient();
+    // ensure logged in
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) throw new Error("Not logged in");
+
+    // fetch current following list
+    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+    if (profErr) {
+      // if profile missing, try upserting a minimal profile and continue
+      await sb.from("users").upsert({ id: me.id });
+    }
+    const current: string[] = (profile && profile.following) || [];
+    if (!current.includes(userId)) current.push(userId);
+    const { error } = await sb.from("users").update({ following: current }).eq("id", me.id);
+    if (error) throw error;
+  },
+  async unfollow(userId: string) {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) throw new Error("Not logged in");
+
+    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+    if (profErr) {
+      // nothing to do
+      return;
+    }
+    const current: string[] = (profile && profile.following) || [];
+    const updated = current.filter((id: string) => id !== userId);
+    const { error } = await sb.from("users").update({ following: updated }).eq("id", me.id);
+    if (error) throw error;
+  },
+  async isFollowing(userId: string) {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) return false;
+    const { data: profile, error } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+    if (error || !profile) return false;
+    const current: string[] = profile.following || [];
+    return !!current.includes(userId);
+  },
 
   async getExploreFeed() {
     const sb = getClient();
@@ -142,7 +183,39 @@ export const supabaseApi: Api = {
     return posts;
   },
 
-  async getFollowingFeed() { return []; },
+  async getFollowingFeed() {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) return [];
+
+    // load following list from profile
+    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+    if (profErr || !profile) return [];
+    const ids: string[] = profile.following || [];
+    if (!ids.length) return [];
+
+    const { data, error } = await sb.from("posts").select("*, users:users(*)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
+    logSupabaseError("getFollowingFeed", { data, error });
+    if (error) throw error;
+    const posts: HydratedPost[] = (data || []).map((row: any) => ({
+      id: row.id,
+      userId: row.user_id || row.userId,
+      imageUrl: row.image_url || row.imageUrl,
+      alt: row.alt || "",
+      caption: row.caption || "",
+      createdAt: row.created_at || row.createdAt,
+      public: !!row.public,
+      user: {
+        id: row.users?.id || row.user_id,
+        username: row.users?.username || row.users?.user_name || "",
+        displayName: row.users?.displayName || row.users?.display_name || "",
+        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
+      },
+      commentsCount: row.comments_count || row.commentsCount || 0,
+    }));
+    return posts;
+  },
 
   async getUserPosts(userId: string) {
     const sb = getClient();

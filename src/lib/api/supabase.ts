@@ -429,16 +429,31 @@ export const supabaseApi: Api = {
     if (!user) throw new Error("Not logged in");
 
     // ensure profile exists in users table (use snake_case column names)
-    // preserve existing avatar_url in the DB if the auth metadata doesn't include one
-    const upsertProfile: any = {
-      id: user.id,
-      username: user.user_metadata?.username || user.email?.split("@")[0] || user.id,
-      display_name: user.user_metadata?.name || user.email?.split("@")[0] || user.id,
-      joined_at: new Date().toISOString(),
-    };
-    if (user.user_metadata?.avatar_url) upsertProfile.avatar_url = user.user_metadata.avatar_url;
-    const { data: upsertProfileData, error: upsertProfileErr } = await sb.from("users").upsert(upsertProfile);
-    logSupabaseError("createOrReplaceToday.upsertUser", { data: upsertProfileData, error: upsertProfileErr });
+    // If a profile already exists, avoid overwriting user-provided fields (username/display_name/avatar).
+    const { data: existingProfile, error: existingProfileErr } = await sb.from("users").select("id,username,display_name,avatar_url").eq("id", user.id).limit(1).single();
+    if (!existingProfileErr && existingProfile) {
+      // Profile exists: only populate any missing fields from auth metadata (do not overwrite existing values)
+      const upsertProfile: any = { id: user.id };
+      if ((!existingProfile.username || existingProfile.username === null || existingProfile.username === "") && user.user_metadata?.username) upsertProfile.username = user.user_metadata.username;
+      if ((!existingProfile.display_name || existingProfile.display_name === null || existingProfile.display_name === "") && user.user_metadata?.name) upsertProfile.display_name = user.user_metadata.name;
+      if ((!existingProfile.avatar_url || existingProfile.avatar_url === null || existingProfile.avatar_url === "") && user.user_metadata?.avatar_url) upsertProfile.avatar_url = user.user_metadata.avatar_url;
+      // Only call upsert when we actually have something to add
+      if (Object.keys(upsertProfile).length > 1) {
+        const { data: upsertProfileData, error: upsertProfileErr } = await sb.from("users").upsert(upsertProfile);
+        logSupabaseError("createOrReplaceToday.upsertUser", { data: upsertProfileData, error: upsertProfileErr });
+      }
+    } else {
+      // No existing profile: create one with sensible defaults derived from auth metadata or email
+      const upsertProfile: any = {
+        id: user.id,
+        username: user.user_metadata?.username || user.email?.split("@")[0] || user.id,
+        display_name: user.user_metadata?.name || user.email?.split("@")[0] || user.id,
+        joined_at: new Date().toISOString(),
+      };
+      if (user.user_metadata?.avatar_url) upsertProfile.avatar_url = user.user_metadata.avatar_url;
+      const { data: upsertProfileData, error: upsertProfileErr } = await sb.from("users").upsert(upsertProfile);
+      logSupabaseError("createOrReplaceToday.upsertUser", { data: upsertProfileData, error: upsertProfileErr });
+    }
 
     const start = new Date();
     start.setHours(0, 0, 0, 0);

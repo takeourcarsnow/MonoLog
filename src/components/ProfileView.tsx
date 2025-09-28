@@ -6,6 +6,7 @@ import { compressImage } from "@/lib/image";
 import { uid } from "@/lib/id";
 import type { HydratedPost, User } from "@/lib/types";
 import Link from "next/link";
+import { AuthForm } from "@/components/AuthForm";
 import { SignOutButton } from "@/components/SignOut";
 
 export function ProfileView({ userId }: { userId?: string }) {
@@ -29,8 +30,29 @@ export function ProfileView({ userId }: { userId?: string }) {
     })();
   }, [userId]);
 
+  const [showAuth, setShowAuth] = useState(false);
+
   if (!user) {
-    return <div className="empty">User not found. Pick an account from the Account menu to get started.</div>;
+    return (
+      <div className="empty" style={{ position: "relative" }}>
+        <div>User not found. Pick an account from the Account menu to get started.</div>
+        <div style={{ marginTop: 12 }}>
+          <button className="btn" onClick={() => setShowAuth(true)}>Sign in / Sign up</button>
+        </div>
+
+        {showAuth ? (
+          <>
+            <div
+              onClick={() => setShowAuth(false)}
+              style={{ position: "fixed", inset: 0, zIndex: 40 }}
+            />
+            <div style={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 50, background: "var(--bg)", padding: 16, borderRadius: 8 }}>
+              <AuthForm onClose={() => setShowAuth(false)} />
+            </div>
+          </>
+        ) : null}
+      </div>
+    );
   }
 
   return (

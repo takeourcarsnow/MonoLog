@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { User } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { AuthForm } from "@/components/AuthForm";
 
 export function AccountSwitcher() {
   const [me, setMe] = useState<User | null>(null);
   const router = useRouter();
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -21,7 +23,10 @@ export function AccountSwitcher() {
     <div className="account-switcher" style={{ position: "relative" }}>
       <button
         className="btn"
-        onClick={() => router.push("/profile")}
+        onClick={() => {
+          if (current) return router.push("/profile");
+          setShowAuth(true);
+        }}
         aria-label="Open profile"
       >
         {current ? (
@@ -31,6 +36,22 @@ export function AccountSwitcher() {
           </span>
         ) : "Account"}
       </button>
+
+      {showAuth ? (
+        <>
+          <div
+            className="auth-overlay"
+            onClick={() => setShowAuth(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 40 }}
+          />
+          <div
+            className="auth-popover"
+            style={{ position: "absolute", right: 0, marginTop: 8, zIndex: 50, background: "var(--bg)", padding: 12, borderRadius: 8, boxShadow: "0 6px 18px rgba(0,0,0,0.6)" }}
+          >
+            <AuthForm onClose={() => setShowAuth(false)} />
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

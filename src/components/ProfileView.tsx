@@ -110,6 +110,10 @@ function EditProfile() {
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState("");
   const [original, setOriginal] = useState("");
+  const [username, setUsername] = useState("");
+  const [originalUsername, setOriginalUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [originalDisplayName, setOriginalDisplayName] = useState("");
   const [processing, setProcessing] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -118,6 +122,10 @@ function EditProfile() {
       const me = await api.getCurrentUser();
       setBio(me?.bio || "");
       setOriginal(me?.bio || "");
+      setUsername(me?.username || "");
+      setOriginalUsername(me?.username || "");
+      setDisplayName(me?.displayName || "");
+      setOriginalDisplayName(me?.displayName || "");
     })();
   }, []);
 
@@ -201,28 +209,54 @@ function EditProfile() {
           {processing ? "Uploading…" : "Change Avatar"}
         </button>
       </div>
-      <div>
-        <textarea
-          className="bio-editor"
-          rows={3}
-          style={{ width: 320 }}
-          value={bio}
-          onChange={e => setBio(e.target.value)}
-        />
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <span className="dim">Display name</span>
+          <input className="input" type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Display name" />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <span className="dim">Username (used in @handle)</span>
+          <input className="input" type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="username" />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <span className="dim">Bio</span>
+          <textarea
+            className="bio-editor"
+            rows={3}
+            style={{ width: 320 }}
+            value={bio}
+            onChange={e => setBio(e.target.value)}
+          />
+        </label>
       </div>
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
         <button
           className="btn save-bio"
           onClick={async () => {
-            await api.updateCurrentUser({ bio: bio.trim() });
-            setEditing(false);
+            // basic validation
+            const uname = username.trim();
+            if (!uname) { alert("Username cannot be empty"); return; }
+            setProcessing(true);
+            try {
+              await api.updateCurrentUser({ username: uname, displayName: displayName.trim() || undefined, bio: bio.trim() });
+              setEditing(false);
+            } catch (e: any) {
+              alert(e?.message || "Failed to update profile");
+            } finally {
+              setProcessing(false);
+            }
           }}
         >
           Save
         </button>
         <button
           className="btn cancel-bio"
-          onClick={() => { setBio(original); setEditing(false); }}
+          onClick={() => {
+            setBio(original);
+            setUsername(originalUsername);
+            setDisplayName(originalDisplayName);
+            setEditing(false);
+          }}
         >
           Cancel
         </button>

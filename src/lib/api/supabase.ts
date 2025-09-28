@@ -69,23 +69,23 @@ export const supabaseApi: Api = {
 
   async getExploreFeed() {
     const sb = getClient();
-    const { data, error } = await sb.from("posts").select("*, users:users(id,username,displayName,avatarUrl)").eq("public", true).order("createdAt", { ascending: false });
+  const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("public", true).order("created_at", { ascending: false });
     if (error) throw error;
     const posts: HydratedPost[] = (data || []).map((row: any) => ({
       id: row.id,
-      userId: row.userId,
-      imageUrl: row.imageUrl,
+      userId: row.user_id || row.userId,
+      imageUrl: row.image_url || row.imageUrl,
       alt: row.alt || "",
       caption: row.caption || "",
-      createdAt: row.createdAt,
+      createdAt: row.created_at || row.createdAt,
       public: !!row.public,
       user: {
-        id: row.users?.id || row.userId,
-        username: row.users?.username || "",
-        displayName: row.users?.displayName || "",
-        avatarUrl: row.users?.avatarUrl || "",
+        id: row.users?.id || row.user_id,
+        username: row.users?.username || row.users?.user_name || "",
+        displayName: row.users?.displayName || row.users?.display_name || "",
+        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
       },
-      commentsCount: row.comments_count || 0,
+      commentsCount: row.comments_count || row.commentsCount || 0,
     }));
     return posts;
   },
@@ -94,23 +94,23 @@ export const supabaseApi: Api = {
 
   async getUserPosts(userId: string) {
     const sb = getClient();
-    const { data, error } = await sb.from("posts").select("*, users:users(id,username,displayName,avatarUrl)").eq("userId", userId).order("createdAt", { ascending: false });
+  const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("userId", userId).order("created_at", { ascending: false });
     if (error) throw error;
     return (data || []).map((row: any) => ({
       id: row.id,
-      userId: row.userId,
-      imageUrl: row.imageUrl,
+      userId: row.user_id || row.userId,
+      imageUrl: row.image_url || row.imageUrl,
       alt: row.alt || "",
       caption: row.caption || "",
-      createdAt: row.createdAt,
+      createdAt: row.created_at || row.createdAt,
       public: !!row.public,
       user: {
-        id: row.users?.id || row.userId,
-        username: row.users?.username || "",
-        displayName: row.users?.displayName || "",
-        avatarUrl: row.users?.avatarUrl || "",
+        id: row.users?.id || row.user_id,
+        username: row.users?.username || row.users?.user_name || "",
+        displayName: row.users?.displayName || row.users?.display_name || "",
+        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
       },
-      commentsCount: row.comments_count || 0,
+      commentsCount: row.comments_count || row.commentsCount || 0,
     }));
   },
 
@@ -222,7 +222,7 @@ export const supabaseApi: Api = {
     }
 
     const id = uid();
-    const { error: insertErr } = await sb.from("posts").insert({ id, userId: user.id, imageUrl: finalUrl, alt: alt || "", caption: caption || "", createdAt: new Date().toISOString(), public: !!isPublic });
+  const { error: insertErr } = await sb.from("posts").insert({ id, user_id: user.id, image_url: finalUrl, alt: alt || "", caption: caption || "", created_at: new Date().toISOString(), public: !!isPublic });
     if (insertErr) throw insertErr;
 
     // fetch profile for hydration

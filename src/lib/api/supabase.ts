@@ -72,6 +72,28 @@ function mapRowToHydratedPost(row: any): HydratedPost {
   } as HydratedPost;
 }
 
+// Safe helper to select specific fields from the users table.
+// Some deployments / schema versions may not have columns like `favorites` or `following`.
+// If the initial select fails with a 400 / schema-cache error, fall back to selecting '*' so
+// callers can still get a profile row (without the requested field) and continue.
+async function selectUserFields(sb: SupabaseClient, id: string, fields: string) {
+  try {
+    const res: any = await sb.from("users").select(fields).eq("id", id).limit(1).single();
+    // If Supabase returns an error about missing column, try fallback to select('*')
+    if (res?.error) {
+      const msg = String(res.error?.message || res.error || "");
+      if (res.error?.status === 400 || /Could not find the/i.test(msg) || /column .* does not exist/i.test(msg)) {
+        const fallback: any = await sb.from("users").select("*").eq("id", id).limit(1).single();
+        return fallback;
+      }
+    }
+    return res;
+  } catch (e) {
+    // In case the client throws, return a shaped object similar to Supabase responses
+    return { data: null, error: e } as any;
+  }
+}
+
 // export the client accessor for UI components (auth flows) to call
 export function getSupabaseClient() {
   return getClient();
@@ -154,7 +176,7 @@ export const supabaseApi: Api = {
     if (!me) throw new Error("Not logged in");
 
     // fetch current following list
-    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+    const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "following");
     if (profErr) {
       // if profile missing, try upserting a minimal profile and continue
       await sb.from("users").upsert({ id: me.id });
@@ -196,8 +218,8 @@ export const supabaseApi: Api = {
     const { data: userData } = await sb.auth.getUser();
     const me = (userData as any)?.user;
     if (!me) throw new Error("Not logged in");
-    const { data: profile, error: profErr } = await sb.from("users").select("favorites").eq("id", me.id).limit(1).single();
-    let current: string[] = (profile && profile.favorites) || [];
+  const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
+  let current: string[] = (profile && profile.favorites) || [];
     if (!current.includes(postId)) current.push(postId);
     const { error } = await sb.from("users").update({ favorites: current }).eq("id", me.id);
     if (error) throw error;
@@ -207,8 +229,8 @@ export const supabaseApi: Api = {
     const { data: userData } = await sb.auth.getUser();
     const me = (userData as any)?.user;
     if (!me) throw new Error("Not logged in");
-    const { data: profile, error: profErr } = await sb.from("users").select("favorites").eq("id", me.id).limit(1).single();
-    let current: string[] = (profile && profile.favorites) || [];
+  const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
+  let current: string[] = (profile && profile.favorites) || [];
     current = current.filter((id: string) => id !== postId);
     const { error } = await sb.from("users").update({ favorites: current }).eq("id", me.id);
     if (error) throw error;
@@ -218,7 +240,7 @@ export const supabaseApi: Api = {
     const { data: userData } = await sb.auth.getUser();
     const me = (userData as any)?.user;
     if (!me) return false;
-    const { data: profile, error } = await sb.from("users").select("favorites").eq("id", me.id).limit(1).single();
+  const { data: profile, error } = await selectUserFields(sb, me.id, "favorites");
     if (error || !profile) return false;
     const current: string[] = profile.favorites || [];
     return !!current.includes(postId);
@@ -228,7 +250,7 @@ export const supabaseApi: Api = {
     const { data: userData } = await sb.auth.getUser();
     const me = (userData as any)?.user;
     if (!me) return [];
-    const { data: profile, error: profErr } = await sb.from("users").select("favorites").eq("id", me.id).limit(1).single();
+  const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
     if (profErr || !profile) return [];
     const ids: string[] = profile.favorites || [];
     if (!ids.length) return [];

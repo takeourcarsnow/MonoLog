@@ -14,6 +14,8 @@ import { useToast } from "./Toast";
 export function PostCard({ post: initial }: { post: HydratedPost }) {
   const [post, setPost] = useState<HydratedPost>(initial);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsMounted, setCommentsMounted] = useState(false);
+  const commentsRef = useRef<HTMLDivElement | null>(null);
   const [count, setCount] = useState<number>(initial.commentsCount || 0);
   const [isMe, setIsMe] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -286,7 +288,73 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                 className="action comments-toggle"
                 aria-expanded={commentsOpen}
                 aria-controls={`comments-${post.id}`}
-                onClick={() => setCommentsOpen(v => !v)}
+                onClick={() => {
+                  // If not mounted, mount and animate open
+                  if (!commentsMounted) {
+                    setCommentsMounted(true);
+
+                    // Wait for the element to be mounted and painted, then trigger the measured-height open animation
+                    if (typeof window !== "undefined") {
+                      requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                          const el = commentsRef.current;
+                          if (!el) return;
+                          const node = el as HTMLDivElement;
+                          // ensure starting styles
+                          node.style.maxHeight = '0px';
+                          node.style.opacity = '0';
+                          node.style.transform = 'translateY(-6px)';
+                          // force layout
+                          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                          node.offsetHeight;
+                          const h = node.scrollHeight;
+                          // set the open class so aria and css reflect the open state
+                          setCommentsOpen(true);
+                          // then set measured max-height to trigger the transition (CSS handles duration)
+                          node.style.maxHeight = h + 'px';
+                          node.style.opacity = '1';
+                          node.style.transform = 'translateY(0)';
+
+                          function onEnd(e: TransitionEvent) {
+                            if (e.propertyName !== 'max-height') return;
+                            node.style.maxHeight = '';
+                            node.removeEventListener('transitionend', onEnd as any);
+                          }
+                          node.addEventListener('transitionend', onEnd as any);
+                        });
+                      });
+                    } else {
+                      // fallback
+                      setTimeout(() => setCommentsOpen(true), 8);
+                    }
+                  } else {
+                    // Closing: set aria state, then animate to 0 and unmount on finish
+                    setCommentsOpen(false);
+                    const el = commentsRef.current;
+                    if (!el) {
+                      setCommentsMounted(false);
+                      return;
+                    }
+                    const node = el as HTMLDivElement;
+                    // set current height then animate to 0
+                    node.style.maxHeight = node.scrollHeight + 'px';
+                    // force layout
+                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                    node.offsetHeight;
+                    node.style.maxHeight = '0px';
+                    node.style.opacity = '0';
+                    node.style.transform = 'translateY(-6px)';
+
+                    function onEnd(e: TransitionEvent) {
+                      if (e.propertyName !== 'max-height') return;
+                      node.removeEventListener('transitionend', onEnd as any);
+                      // cleanup
+                      node.style.maxHeight = '';
+                      setCommentsMounted(false);
+                    }
+                    node.addEventListener('transitionend', onEnd as any);
+                  }
+                }}
                 title="Toggle comments"
               >
                 💬 {count}
@@ -313,12 +381,12 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                       toast.show(e?.message || "Failed to toggle favorite");
                     }
                   }}
-                >
-                  {isFavorite ? "★" : "☆"}
+                  >
+                  <span className="star" aria-hidden="true">{isFavorite ? "★" : "☆"}</span>
                 </button>
             </div>
-            {commentsOpen && (
-              <div className="comments" id={`comments-${post.id}`}>
+            {commentsMounted && (
+              <div className={`comments ${commentsOpen ? "open" : ""}`} id={`comments-${post.id}`} ref={commentsRef}>
                 <Comments postId={post.id} onCountChange={setCount} />
               </div>
             )}

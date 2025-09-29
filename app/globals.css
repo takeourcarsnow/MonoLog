@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand:wght@400;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -247,6 +248,27 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .card-media { background: #00000006; overflow: hidden; max-width: 100%; }
 .card-media img { width: 100%; height: auto; object-fit: contain; display: block; background: var(--bg); }
 
+/* Subtle frame for photos in feed / explore
+   - uses an inset 1px ring to emulate a photo frame without changing layout
+   - applies to single images, carousel slides, and grid tiles
+*/
+.card-media img,
+.carousel-slide img,
+.grid .tile img {
+  border-radius: 10px;
+  background-clip: padding-box; /* keep the inset ring sharp */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border), transparent 58%), 0 8px 20px rgba(0,0,0,0.04);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+/* Slightly emphasize the frame on hover/focus for affordance without being loud */
+.card:hover .card-media img,
+.card-media:hover img,
+.grid .tile:hover img,
+.carousel-slide img:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border), transparent 40%), 0 12px 30px rgba(0,0,0,0.06);
+}
+
 /* Carousel: horizontally scrollable set of images for posts with multiple images */
 .card-media .carousel {
   display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
@@ -338,7 +360,11 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .card:focus-within { outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 4px; border-radius: 8px; }
 
 .card-body { padding: 10px 12px; display: grid; gap: 10px; }
-.caption { font-size: 14px; }
+.caption {
+  font-size: 15px;
+  font-family: 'Patrick Hand', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  line-height: 1.35;
+}
 .actions { display: flex; align-items: center; gap: 10px; }
 .action {
   display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
@@ -346,6 +372,39 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 .action:hover { background: color-mix(in srgb, var(--primary-weak), transparent 70%); color: var(--text); }
+
+/* Favorite (star) animation and color feedback */
+.action.favorite { transition: transform 220ms var(--transition-mid), color 220ms var(--transition-mid); }
+.action.favorite .star { display: inline-block; font-size: 16px; line-height: 1; transition: transform 220ms cubic-bezier(.2,.8,.2,1), color 220ms var(--transition-mid), text-shadow 220ms var(--transition-mid); color: color-mix(in srgb, var(--muted), transparent 20%); }
+.action.favorite.active { color: var(--primary); }
+.action.favorite.active .star { animation: starPop 420ms cubic-bezier(.2,.8,.2,1); color: var(--primary); text-shadow: 0 6px 18px rgba(37,99,235,0.18); }
+
+@keyframes starPop {
+  0% { transform: scale(0.9) rotate(-6deg); }
+  40% { transform: scale(1.18) rotate(6deg); }
+  70% { transform: scale(0.98) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Comments open/close animation */
+.comments {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: max-height 200ms var(--transition-mid), opacity 180ms var(--transition-mid), transform 180ms var(--transition-mid);
+}
+.comments.open {
+  opacity: 1;
+  transform: translateY(0);
+  /* large max-height to accommodate comment list; keeps transition smooth */
+  max-height: 1200px;
+}
+.comments.closing {
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+}
 
 .comment-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .input {

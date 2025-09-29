@@ -78,15 +78,13 @@ function mapRowToHydratedPost(row: any): HydratedPost {
 // callers can still get a profile row (without the requested field) and continue.
 async function selectUserFields(sb: SupabaseClient, id: string, fields: string) {
   try {
-    const res: any = await sb.from("users").select(fields).eq("id", id).limit(1).single();
-    // If Supabase returns an error about missing column, try fallback to select('*')
-    if (res?.error) {
-      const msg = String(res.error?.message || res.error || "");
-      if (res.error?.status === 400 || /Could not find the/i.test(msg) || /column .* does not exist/i.test(msg)) {
-        const fallback: any = await sb.from("users").select("*").eq("id", id).limit(1).single();
-        return fallback;
-      }
-    }
+    // To avoid triggering a 400 from the REST schema cache when requesting a column
+    // that may not exist, fetch the entire profile first (select('*')). This is
+    // safe and prevents the Supabase REST API from returning a Bad Request for
+    // unknown columns. If callers specifically need only the requested fields,
+    // they can still read them from the returned row.
+    const res: any = await sb.from("users").select("*").eq("id", id).limit(1).single();
+    if (res?.error) return res;
     return res;
   } catch (e) {
     // In case the client throws, return a shaped object similar to Supabase responses

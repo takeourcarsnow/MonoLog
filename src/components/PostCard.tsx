@@ -19,6 +19,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   const [count, setCount] = useState<number>(initial.commentsCount || 0);
   const [isMe, setIsMe] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  
   const [isFavorite, setIsFavorite] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -138,7 +139,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   return (
     <article className="card">
       <div className="card-head">
-        <Link className="user-link" href={`/profile/${post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
+  <Link className="user-link" href={`/profile/${post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
           <img className="avatar" src={post.user.avatarUrl} alt={post.user.displayName} />
           <div className="user-line">
             <span className="username">{post.user.displayName}</span>
@@ -149,21 +150,20 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
               {!isMe ? (
                 <>
                   <button
-                    className="btn"
+                    className="btn follow-btn"
                     aria-pressed={isFollowing}
                     onClick={async () => {
                       const cur = await api.getCurrentUser();
                       if (!cur) {
-                        // prompt sign in / sign up
                         setShowAuth(true);
                         return;
                       }
-                      if (await api.isFollowing(post.userId)) {
-                        await api.unfollow(post.userId);
-                        setIsFollowing(false);
-                      } else {
+                      if (!isFollowing) {
                         await api.follow(post.userId);
                         setIsFollowing(true);
+                      } else {
+                        await api.unfollow(post.userId);
+                        setIsFollowing(false);
                       }
                     }}
                   >

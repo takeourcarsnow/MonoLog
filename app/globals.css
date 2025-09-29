@@ -757,6 +757,43 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   gap: 12px; /* increased spacing between avatar and name */
 }
 
+/* Followed user ring + subtle pop animation */
+/* Subtle follow ring that stays close to the button and pops gently */
+.btn.following {
+  position: relative; /* create stacking context for ring */
+  transition: transform 200ms var(--transition-mid), background 200ms var(--transition-mid);
+}
+.btn.following::after {
+  content: "";
+  position: absolute; inset: 0; /* match button box */
+  margin: -6px; /* keep ring tight but visible */
+  border-radius: 999px;
+  pointer-events: none;
+  border: 2px solid rgba(34,197,94,0.06); /* subtle outline */
+  box-shadow: 0 6px 14px rgba(34,197,94,0.06); /* gentle glow */
+  opacity: 1;
+  transform: scale(1);
+}
+.btn.following-anim::after {
+  animation: followPop 420ms cubic-bezier(.2,.8,.2,1);
+}
+.btn.unfollow-anim::after {
+  animation: unfollowPop 420ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes followPop {
+  0% { transform: scale(.96); opacity: .0; }
+  40% { transform: scale(1.06); opacity: 1; }
+  70% { transform: scale(1.02); opacity: .95; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes unfollowPop {
+  0% { transform: scale(1); opacity: 1; }
+  40% { transform: scale(.96); opacity: .8; }
+  70% { transform: scale(.98); opacity: .4; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
 /* Profile header layout refinements */
 .profile-header {
   padding: 16px;

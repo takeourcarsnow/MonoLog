@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,9 +14,97 @@ const tabs = [
 
 export function NavBarClient() {
   const pathname = usePathname();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, visible: false });
+  const [pop, setPop] = useState(false);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const update = () => {
+      // Find the icon element inside the active tab so the circular indicator
+      // can sit directly behind it and slide between icons.
+      const activeIcon = container.querySelector<HTMLElement>(`[href='${pathname}'] .ic`);
+      if (!activeIcon) {
+        setIndicator(i => ({ ...i, visible: false }));
+        return;
+      }
+      const iconRect = activeIcon.getBoundingClientRect();
+      const parentRect = container.getBoundingClientRect();
+      const iconLeft = iconRect.left - parentRect.left;
+      const iconTop = iconRect.top - parentRect.top;
+
+      // circle size (match .ic visual size plus a little padding)
+      const size = 44;
+      const left = Math.round(iconLeft + (iconRect.width - size) / 2);
+      const top = Math.round(iconTop + (iconRect.height - size) / 2);
+      setIndicator({ left, width: size, visible: true });
+      // store top as part of width field? Keep indicator state small — we'll set top via CSS variable
+      if (container) container.style.setProperty("--indicator-top", `${top}px`);
+      if (!prefersReduced) {
+        // trigger a short pop animation
+        setPop(true);
+        window.clearTimeout((update as any)._t);
+        (update as any)._t = window.setTimeout(() => setPop(false), 420);
+      }
+    };
+
+    // Stabilization: re-run measurements a few times after changes to catch
+    // late layout shifts (font/image loads, async content). We use small
+    // timeouts plus rAF to keep the indicator centered.
+    let to1: number | null = null;
+    let to2: number | null = null;
+    let raf1: number | null = null;
+    const stabilize = () => {
+      // immediate
+      update();
+      // next frame
+      raf1 = window.requestAnimationFrame(() => update());
+      // then in short intervals to catch slower shifts
+      to1 = window.setTimeout(() => update(), 80) as unknown as number;
+      to2 = window.setTimeout(() => update(), 220) as unknown as number;
+    };
+
+    // Observe size changes to container or active icon for robust updates
+    const ro = new ResizeObserver(() => {
+      update();
+      stabilize();
+    });
+    ro.observe(container);
+
+    // Also observe the active icon specifically (if it changes size)
+    const observeActiveIcon = () => {
+      const activeIcon = container.querySelector<HTMLElement>(`[href='${pathname}'] .ic`);
+      if (activeIcon) ro.observe(activeIcon);
+    };
+
+    // initial measure + stabilization
+    update();
+    stabilize();
+
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+
+    // re-observe when pathname changes (active icon element will differ)
+    observeActiveIcon();
+
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+      window.clearTimeout((update as any)._t);
+      if (to1) window.clearTimeout(to1);
+      if (to2) window.clearTimeout(to2);
+      if (raf1) window.cancelAnimationFrame(raf1);
+      try { ro.disconnect(); } catch (e) { /* ignore */ }
+    };
+  }, [pathname]);
+
   return (
     <nav className="tabbar" aria-label="Primary">
-      <div className="tabbar-inner" role="tablist">
+      <div className="tabbar-inner" role="tablist" ref={containerRef}>
         {tabs.map(t => {
           const isActive = pathname === t.href;
           return (
@@ -32,6 +121,13 @@ export function NavBarClient() {
             </Link>
           );
         })}
+
+        {/* moving indicator */}
+        <span
+          aria-hidden
+          className={`tab-indicator ${pop ? "pop" : ""} ${indicator.visible ? "visible" : ""}`}
+          style={{ left: indicator.left ? `${indicator.left}px` : undefined, width: indicator.width ? `${indicator.width}px` : undefined }}
+        />
       </div>
     </nav>
   );

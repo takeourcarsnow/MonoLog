@@ -188,13 +188,32 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .tab-item[aria-current="page"] { color: var(--text); font-weight: 700; }
 .tab-item .ic {
   width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center;
-  transition: transform var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+  position: relative; z-index: 2; /* sit above the moving indicator */
 }
 .tab-item[aria-current="page"] .ic {
-  background: var(--primary);
-  transform: translateY(-10px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.16);
+  transform: translateY(-6px); /* slightly lift the icon when active */
   color: white;
+}
+/* Improve contrast for icons (including emoji or image-based icons).
+   - add a subtle drop shadow to all icons so they read against both light and colored backgrounds
+   - for active icons (on the colored indicator) add a light halo/text-shadow to increase perceived contrast
+   - slightly scale the active icon for a clearer visual cue */
+.tab-item .ic,
+.tab-item .ic img,
+.tab-item .ic svg {
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.08));
+  -webkit-font-smoothing: antialiased;
+}
+.tab-item[aria-current="page"] .ic {
+  transform: translateY(-6px) scale(1.06);
+  color: white;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.12);
+}
+.tab-item[aria-current="page"] .ic img,
+.tab-item[aria-current="page"] .ic svg {
+  /* further lift image/svg icons visually above the indicator */
+  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.12));
 }
 
 /* make the active label smaller and centered under the raised icon */
@@ -204,6 +223,42 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 /* extra breathing room so raised icon doesn't overlap the border */
 .tabbar { padding-top: 8px; }
+
+/* Moving indicator for bottom nav: sits behind active tab and animates between positions */
+.tabbar-inner { position: relative; }
+/* Circular sliding indicator that moves behind icons. Positioned using left
+   and a CSS variable for top so it can sit under the icon row. */
+.tab-indicator {
+  position: absolute;
+  left: 0;
+  top: var(--indicator-top, 6px);
+  width: 44px; height: 44px; border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 12px 30px rgba(37,99,235,0.12);
+  pointer-events: none;
+  transform-origin: center;
+  opacity: 0;
+  transition: left 260ms var(--transition-mid), width 260ms var(--transition-mid), opacity 160ms var(--transition-fast), transform 220ms cubic-bezier(.2,.7,.2,1);
+  z-index: 1; /* behind icons (icons have z-index:2) */
+}
+.tab-indicator.visible { opacity: 1; }
+.tab-indicator.pop { transform: translateY(-4px) scale(1.02); }
+
+/* soft center highlight in the indicator to raise icon contrast (very subtle) */
+.tab-indicator::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 28px; height: 28px; border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* when user prefers reduced motion, use a simple fade without translate/scale */
+@media (prefers-reduced-motion: reduce) {
+  .tab-indicator { transition: opacity 120ms linear; transform: none !important; }
+}
 
 .feed { display: grid; gap: 14px; }
 .card {

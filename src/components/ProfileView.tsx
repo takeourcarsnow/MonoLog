@@ -45,6 +45,44 @@ export function ProfileView({ userId }: { userId?: string }) {
   }, [userId]);
 
   const [showAuth, setShowAuth] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+  const toast = useToast();
+
+  // handle avatar file selection directly in the profile view so we don't
+  // need to open the edit panel just to change avatar
+  const handleAvatarChange = async () => {
+    const f = avatarInputRef.current?.files?.[0];
+    if (!f) return;
+    try {
+      // reuse compress/upload flow from EditProfile
+      const dataUrl = await compressImage(f);
+      const parts = dataUrl.split(',');
+      const meta = parts[0];
+      const mime = meta.split(':')[1].split(';')[0];
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) u8arr[n] = bstr.charCodeAt(n);
+      const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
+
+      const sb = getSupabaseClient();
+      const { data: userData } = await sb.auth.getUser();
+      const userObj = (userData as any)?.user;
+      if (!userObj) throw new Error("Not logged in");
+      const path = `avatars/${userObj.id}/${file.name}`;
+      const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const urlRes = sb.storage.from("posts").getPublicUrl(path);
+      const publicUrl = urlRes.data.publicUrl;
+      await api.updateCurrentUser({ avatarUrl: publicUrl });
+      // refresh user in UI
+      const me = await api.getCurrentUser();
+      setUser(me);
+    } catch (e: any) {
+      try { toast.show(e?.message || "Failed to upload avatar"); } catch (_) { /* ignore */ }
+    }
+  };
 
   if (!user) {
     // while loading, show a neutral skeleton instead of 'User not found'
@@ -107,7 +145,23 @@ export function ProfileView({ userId }: { userId?: string }) {
     <div className="view-fade">
       <div className="profile-header toolbar">
         <div className="profile-left" style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
+          {/* make avatar clickable for the signed-in profile owner to change avatar */}
+          {currentUserId && user?.id === currentUserId ? (
+            <>
+              <button
+                className="avatar-button"
+                data-tooltip="Change avatar"
+                aria-label="Change avatar"
+                onClick={() => avatarInputRef.current?.click()}
+                type="button"
+              >
+                <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
+              </button>
+              <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} />
+            </>
+          ) : (
+            <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
+          )}
           <div>
             <div className="username">{user.displayName}</div>
             <div className="dim">@{user.username} • joined {new Date(user.joinedAt).toLocaleDateString()}</div>
@@ -118,12 +172,12 @@ export function ProfileView({ userId }: { userId?: string }) {
               {!isOther ? (
                 <>
                   <Link className="btn" href="/upload">New Post</Link>
-                <EditProfile onSaved={async () => {
-                  // refresh the profile and posts after an edit so UI reflects changes immediately
-                  const me = await api.getCurrentUser();
-                  setUser(me);
-                  if (me) setPosts(await api.getUserPosts(me.id));
-                }} />
+                  <EditProfile onSaved={async () => {
+                    // refresh the profile and posts after an edit so UI reflects changes immediately
+                    const me = await api.getCurrentUser();
+                    setUser(me);
+                    if (me) setPosts(await api.getUserPosts(me.id));
+                  }} />
               {/* show sign out only when the viewed profile belongs to the signed-in user */}
               {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
             </>
@@ -191,6 +245,7 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
       setOriginalDisplayName(me?.displayName || "");
     })();
   }, []);
+
 
   const toast = useToast();
 

@@ -610,6 +610,84 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .profile-left { min-width: 0; }
 .profile-left .username { font-size: 18px; }
 
+/* Make avatar clickable without showing native button chrome */
+.avatar-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-block;
+  line-height: 0;
+  cursor: pointer;
+  position: relative; /* required for tooltip positioning */
+  transition: transform 160ms var(--transition-fast), box-shadow 160ms var(--transition-fast);
+}
+.avatar-button:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%); outline-offset: 4px; border-radius: 10px; }
+
+/* actionable avatar hover highlight and subtle lift */
+.avatar-button .profile-avatar {
+  transition: transform 180ms var(--transition-fast), box-shadow 180ms var(--transition-fast);
+  will-change: transform, box-shadow;
+}
+.avatar-button:hover .profile-avatar,
+.avatar-button:focus .profile-avatar {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.28);
+}
+
+/* gentle idle pulse to indicate the avatar is actionable (not on touch devices) */
+@media (hover: hover) {
+  .avatar-button[data-tooltip] .profile-avatar { animation: idlePulse 4.2s ease-in-out infinite 1s; }
+  @keyframes idlePulse {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-2px) scale(1.01); }
+    100% { transform: translateY(0) scale(1); }
+  }
+}
+
+/* Tooltip: only show on devices that support hover to avoid interfering with touch */
+@media (hover: hover) {
+  .avatar-button[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: -36px;
+    right: 0;
+    background: var(--bg-elev);
+    color: var(--muted);
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 160ms var(--transition-fast), transform 160ms var(--transition-fast);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 80;
+  }
+  .avatar-button[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    top: -22px;
+    right: 12px;
+    width: 10px; height: 10px; background: var(--bg-elev);
+    border-left: 1px solid var(--border); border-top: 1px solid var(--border);
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 120ms var(--transition-fast);
+    z-index: 79;
+  }
+  .avatar-button:hover[data-tooltip]::after,
+  .avatar-button:focus[data-tooltip]::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .avatar-button:hover[data-tooltip]::before,
+  .avatar-button:focus[data-tooltip]::before {
+    opacity: 1;
+  }
+}
+
 /* keep action buttons grouped and anchored so overlays can align to them */
 .profile-actions {
   white-space: nowrap;

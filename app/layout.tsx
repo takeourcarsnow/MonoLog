@@ -1,6 +1,11 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { AppShell } from "@/components/AppShell";
+import dynamic from "next/dynamic";
+
+// AppShell is a client component that uses next/navigation hooks. Dynamically
+// load it on the client only to avoid calling client-only hooks during server
+// rendering which can cause `useContext` to be null in dev/hydration.
+const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.AppShell), { ssr: false });
 
 export const metadata: Metadata = {
   title: "MonoLog — one photo a day",
@@ -19,7 +24,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // Render with a temporary `no-transitions` class so styles/transitions are
     // suppressed on the server-rendered page. The inline script removes the
     // class immediately after applying the correct theme.
-    <html lang="en" className="no-transitions">
+    /*
+      suppressHydrationWarning: The server intentionally renders the
+      `no-transitions` class on <html> to prevent transition flashes while
+      the inline script applies the user's theme. The client then removes
+      that class immediately which would otherwise trigger a React
+      hydration mismatch warning — using suppressHydrationWarning here
+      documents and silences that expected mismatch.
+    */
+    <html lang="en" className="no-transitions" suppressHydrationWarning>
       <head>
         <script
           id="theme-init"

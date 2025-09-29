@@ -158,6 +158,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
     const onPointerDown = (ev: PointerEvent) => {
+      // stop propagation so AppShell swipe/mouse handlers don't react
+      ev.stopPropagation?.();
       try { (ev.target as Element).setPointerCapture(ev.pointerId); } catch {}
       const p = getPointerPos(ev);
       // If clicked inside selection, prepare to move; otherwise start drawing a new selection
@@ -170,6 +172,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     };
 
     const onPointerMove = (ev: PointerEvent) => {
+      // prevent parent handlers from interpreting this as a swipe/drag
+      ev.stopPropagation?.();
       const p = getPointerPos(ev);
       if (!dragging.current) return;
       if (dragging.current.mode === 'pan') {
@@ -225,6 +229,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     };
 
     const onPointerUp = (ev: PointerEvent) => {
+      // prevent parent handlers from interpreting this as a swipe/drag
+      ev.stopPropagation?.();
       try { (ev.target as Element).releasePointerCapture(ev.pointerId); } catch {}
       dragging.current = null;
       draw();
@@ -288,40 +294,51 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   }
 
   return (
-    <div ref={containerRef} tabIndex={0} onKeyDown={(e) => { if ((e as any).key === 'Enter') { applyEdit(); } }} className="image-editor" style={{ width: '100%', maxWidth: 820, margin: '0 auto', background: '#0b0b0b', color: '#fff', padding: 12, borderRadius: 8 }}>
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      onKeyDown={(e) => { if ((e as any).key === 'Enter') { applyEdit(); } }}
+      className="image-editor"
+      style={{ width: '100%', maxWidth: 820, margin: '0 auto', background: 'var(--bg-elev)', color: 'var(--text)', padding: 12, paddingBottom: 'calc(96px + var(--safe-bottom))', borderRadius: 8, overflow: 'visible' }}
+      
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 12, flexWrap: 'wrap' }}>
-        <button className="btn ghost" onClick={onCancel} aria-label="back" style={{ color: '#fff', background: 'transparent', border: 'none' }}>◀</button>
+  <button type="button" className="btn ghost" onClick={onCancel} aria-label="back" style={{ color: 'var(--text)', background: 'transparent', border: 'none' }}>◀</button>
         <div style={{ fontSize: 14, fontWeight: 600 }}>Edit</div>
         <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <button className="btn primary" onClick={applyEdit} style={{ padding: '8px 14px', borderRadius: 8, background: '#fff', color: '#000', fontWeight: 600 }}>Confirm</button>
+          <button type="button" className="btn primary" onClick={applyEdit} style={{ padding: '8px 14px', borderRadius: 8, background: 'var(--primary)', color: '#fff', fontWeight: 600 }}>Confirm</button>
         </div>
       </div>
 
-      <div style={{ position: 'relative', background: '#000', padding: 8, borderRadius: 8 }}>
-        <canvas ref={canvasRef} style={{ width: '100%', height: 360, touchAction: 'none', display: 'block', borderRadius: 6 }} />
+  <div style={{ position: 'relative', background: 'var(--bg)', padding: 8, borderRadius: 8 }}>
+        <canvas
+          ref={canvasRef}
+          style={{ width: '100%', height: 360, touchAction: 'none', display: 'block', borderRadius: 6 }}
+          
+        />
 
         <div style={{ position: 'absolute', right: 12, top: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button title="Rotate 90°" onClick={bakeRotate90} style={{ background: 'rgba(255,255,255,0.06)', color: '#fff', border: 'none', padding: 8, borderRadius: 8 }}>⤾</button>
+          <button type="button" title="Rotate 90°" onClick={bakeRotate90} style={{ background: 'color-mix(in srgb, var(--bg-elev), transparent 8%)', color: 'var(--text)', border: 'none', padding: 8, borderRadius: 8 }}>⤾</button>
         </div>
 
-        <div style={{ position: 'absolute', left: 12, bottom: 12, background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '6px 8px', borderRadius: 6 }}>
+  <div style={{ position: 'absolute', left: 12, bottom: 12, background: 'color-mix(in srgb, var(--bg-elev), transparent 40%)', color: 'var(--text)', padding: '6px 8px', borderRadius: 6 }}>
           <div style={{ fontSize: 11, opacity: 0.9 }}>Drag to crop; drag inside selection to move it</div>
         </div>
         {/* floating confirm button inside the canvas area so it's always visible */}
         <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 30 }}>
-          <button aria-label="Confirm crop" title="Confirm crop (Enter)" onClick={applyEdit} style={{ padding: '8px 12px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
+          <button type="button" aria-label="Confirm crop" title="Confirm crop (Enter)" onClick={applyEdit} style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--primary)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
         </div>
       </div>
 
       {/* aspect ratio presets */}
-    <div style={{ display: 'flex', gap: 8, marginTop: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+  <div style={{ display: 'flex', gap: 8, marginTop: 10, justifyContent: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 80, paddingBottom: 8 }}>
           {[
           { label: 'Free', v: null },
           { label: '1:1', v: 1 },
           { label: '3:4', v: 3 / 4 },
           { label: '4:5', v: 4 / 5 }
         ].map(r => (
-          <button key={r.label} onClick={() => {
+              <button type="button" key={r.label} onClick={() => {
             cropRatio.current = r.v;
             // compute selection centered inside the displayed image rect
             const canvas = canvasRef.current;
@@ -357,18 +374,18 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
               const y = (rect.height - h) / 2;
               setSel({ x, y, w, h });
             }
-          }} style={{ padding: '6px 10px', borderRadius: 6, background: cropRatio.current === r.v ? 'rgba(255,255,255,0.12)' : 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.06)' }}>{r.label}</button>
+              }} style={{ padding: '8px 12px', minWidth: 60, minHeight: 36, fontSize: 14, borderRadius: 8, background: cropRatio.current === r.v ? 'var(--primary)' : 'var(--bg-elev)', color: cropRatio.current === r.v ? '#fff' : 'var(--text)', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', zIndex: 40 }}>{r.label}</button>
         ))}
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button className="btn ghost" onClick={resetAll} style={{ padding: '8px 12px', borderRadius: 8 }}>Reset</button>
+          <button type="button" className="btn ghost" onClick={resetAll} style={{ padding: '8px 12px', borderRadius: 8 }}>Reset</button>
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button className="btn" onClick={() => { setImageSrc(originalRef.current); }} style={{ padding: '8px 12px', borderRadius: 8, background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.06)' }}>Original</button>
-          <button aria-label="Confirm crop" title="Confirm crop (Enter)" onClick={applyEdit} style={{ padding: '8px 12px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
+          <button type="button" className="btn" onClick={() => { setImageSrc(originalRef.current); }} style={{ padding: '8px 12px', borderRadius: 8, background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.06)' }}>Original</button>
+          <button type="button" aria-label="Confirm crop" title="Confirm crop (Enter)" onClick={applyEdit} style={{ padding: '8px 12px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
         </div>
       </div>
     </div>

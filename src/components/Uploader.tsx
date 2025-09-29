@@ -7,7 +7,6 @@ import { CONFIG } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { useToast } from "./Toast";
 import ImageEditor from "./ImageEditor";
-
 export function Uploader() {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
@@ -48,11 +47,16 @@ export function Uploader() {
       const bytes = approxDataUrlBytes(url);
       setCompressedSize(bytes);
       setDataUrl(url);
+      // ensure any previously-open editor is closed when a new file is chosen
+      setEditing(false);
+      // clear the file input so selecting the same file again will fire change
+      try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
       if (!alt && caption) setAlt(caption);
     } catch (e) {
       console.error(e);
       toast.show("Failed to process image");
       setDataUrl(null);
+      try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
     } finally {
       setProcessing(false);
     }
@@ -122,7 +126,6 @@ export function Uploader() {
           accept="image/*"
           ref={fileInputRef}
           style={{ display: "none" }}
-          capture="environment"
           onChange={async () => {
             const file = fileInputRef.current?.files?.[0];
             if (file) await handleFile(file);
@@ -200,15 +203,24 @@ export function Uploader() {
       <div className="form-row">
         <label className="vis-label">
           <span className="dim">Visibility</span>
-          <select
-            className="visibility-select"
-            aria-label="Post visibility"
-            value={visibility}
-            onChange={e => setVisibility(e.target.value as any)}
-          >
-            <option value="public">Public</option>
-            <option value="private">Private</option>
-          </select>
+          <div role="radiogroup" aria-label="Post visibility" style={{ display: 'inline-flex', gap: 8 }}>
+            <button
+              type="button"
+              className={`btn ${visibility === 'public' ? 'active' : ''}`}
+              aria-pressed={visibility === 'public'}
+              onClick={() => setVisibility('public')}
+            >
+              Public
+            </button>
+            <button
+              type="button"
+              className={`btn ${visibility === 'private' ? 'active' : ''}`}
+              aria-pressed={visibility === 'private'}
+              onClick={() => setVisibility('private')}
+            >
+              Private
+            </button>
+          </div>
         </label>
 
         <div className="btn-group">

@@ -145,19 +145,33 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 .tabbar-inner {
   max-width: var(--maxw);
-  margin: 0 auto; padding: 8px 12px;
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+  margin: 0 auto; padding: 6px 8px; /* tighter padding */
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
 }
 .tab-item {
-  display: grid; place-items: center; gap: 4px;
-  color: var(--muted); font-size: 11px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  color: var(--muted); font-size: 12px; padding: 4px 2px;
 }
-.tab-item[aria-current="page"] { color: var(--text); font-weight: 600; }
+.tab-item span { line-height: 1; }
+.tab-item[aria-current="page"] { color: var(--text); font-weight: 700; }
 .tab-item .ic {
-  width: 24px; height: 24px; border-radius: 12px; display: grid; place-items: center;
-  transition: transform var(--transition-fast), background var(--transition-fast);
+  width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center;
+  transition: transform var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
 }
-.tab-item[aria-current="page"] .ic { background: var(--primary-weak); transform: translateY(-2px); }
+.tab-item[aria-current="page"] .ic {
+  background: var(--primary);
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.16);
+  color: white;
+}
+
+/* make the active label smaller and centered under the raised icon */
+.tab-item[aria-current="page"] {
+  padding-top: 2px; /* reduce top padding so label sits closer to icon */
+}
+
+/* extra breathing room so raised icon doesn't overlap the border */
+.tabbar { padding-top: 8px; }
 
 .feed { display: grid; gap: 14px; }
 .card {

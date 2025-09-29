@@ -1,38 +1,11 @@
-"use client";
+import dynamic from "next/dynamic";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-const tabs = [
-  { href: "/feed", label: "Feed", icon: "🏠" },
-  { href: "/explore", label: "Explore", icon: "🧭" },
-  { href: "/upload", label: "Post", icon: "➕" },
-  { href: "/calendar", label: "Calendar", icon: "🗓️" },
-  { href: "/profile", label: "Profile", icon: "👤" },
-];
+// Dynamically import the client-side NavBar to avoid calling client-only
+// hooks during server rendering (fixes 'useContext of null' errors).
+const NavBarClient = dynamic(() => import("./NavBarClient"), { ssr: false });
 
 export function NavBar() {
-  const pathname = usePathname();
-  return (
-    <nav className="tabbar" aria-label="Primary">
-      <div className="tabbar-inner" role="tablist">
-        {tabs.map(t => {
-          const isActive = pathname === t.href;
-          return (
-            <Link
-              key={t.href}
-              className={`tab-item ${isActive ? "active" : ""}`}
-              href={t.href}
-              role="tab"
-              aria-current={isActive ? "page" : undefined}
-              aria-label={t.label}
-            >
-              <div className="ic">{t.icon}</div>
-              <div>{t.label}</div>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
-  );
+  return <NavBarClient />;
 }
+
+export default NavBar;

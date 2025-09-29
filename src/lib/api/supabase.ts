@@ -49,6 +49,7 @@ function mapProfileToUser(profile: any) {
     bio: profile.bio,
     joinedAt: profile.joinedAt || profile.joined_at,
     following: profile.following,
+    favorites: profile.favorites,
   } as any;
 }
 
@@ -188,6 +189,52 @@ export const supabaseApi: Api = {
     if (error || !profile) return false;
     const current: string[] = profile.following || [];
     return !!current.includes(userId);
+  },
+
+  async favoritePost(postId: string) {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) throw new Error("Not logged in");
+    const { data: profile, error: profErr } = await sb.from("users").select("favorites").eq("id", me.id).limit(1).single();
+    let current: string[] = (profile && profile.favorites) || [];
+    if (!current.includes(postId)) current.push(postId);
+    const { error } = await sb.from("users").update({ favorites: current }).eq("id", me.id);
+    if (error) throw error;
+  },
+  async unfavoritePost(postId: string) {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) throw new Error("Not logged in");
+    const { data: profile, error: profErr } = await sb.from("users").select("favorites").eq("id", me.id).limit(1).single();
+    let current: string[] = (profile && profile.favorites) || [];
+    current = current.filter((id: string) => id !== postId);
+    const { error } = await sb.from("users").update({ favorites: current }).eq("id", me.id);
+    if (error) throw error;
+  },
+  async isFavorite(postId: string) {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) return false;
+    const { data: profile, error } = await sb.from("users").select("favorites").eq("id", me.id).limit(1).single();
+    if (error || !profile) return false;
+    const current: string[] = profile.favorites || [];
+    return !!current.includes(postId);
+  },
+  async getFavoritePosts() {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) return [];
+    const { data: profile, error: profErr } = await sb.from("users").select("favorites").eq("id", me.id).limit(1).single();
+    if (profErr || !profile) return [];
+    const ids: string[] = profile.favorites || [];
+    if (!ids.length) return [];
+    const { data, error } = await sb.from("posts").select("*, users:users(*)").in("id", ids);
+    if (error) throw error;
+    return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },
 
   async getExploreFeed() {

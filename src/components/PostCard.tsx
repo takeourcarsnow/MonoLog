@@ -15,6 +15,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   const [count, setCount] = useState<number>(initial.commentsCount || 0);
   const [isMe, setIsMe] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [editing, setEditing] = useState(false);
   const router = useRouter();
@@ -26,6 +27,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
       setIsMe(cur?.id === post.userId);
       if (cur?.id !== post.userId) {
         setIsFollowing(await api.isFollowing(post.userId));
+        setIsFavorite(await api.isFavorite(post.id));
       }
     })();
   }, [post.userId]);
@@ -148,6 +150,31 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
               >
                 💬 {count}
               </button>
+                <button
+                  className={`action favorite ${isFavorite ? "active" : ""}`}
+                  aria-pressed={isFavorite}
+                  title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                  onClick={async () => {
+                    const cur = await api.getCurrentUser();
+                    if (!cur) {
+                      setShowAuth(true);
+                      return;
+                    }
+                    try {
+                      if (await api.isFavorite(post.id)) {
+                        await api.unfavoritePost(post.id);
+                        setIsFavorite(false);
+                      } else {
+                        await api.favoritePost(post.id);
+                        setIsFavorite(true);
+                      }
+                    } catch (e: any) {
+                      alert(e?.message || "Failed to toggle favorite");
+                    }
+                  }}
+                >
+                  {isFavorite ? "★" : "☆"}
+                </button>
             </div>
             {commentsOpen && (
               <div className="comments" id={`comments-${post.id}`}>

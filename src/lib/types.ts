@@ -6,6 +6,7 @@ export type User = {
   bio?: string;
   joinedAt: string;
   following?: string[];
+  favorites?: string[];
 };
 
 export type Post = {
@@ -44,6 +45,12 @@ export interface Api {
   follow(userId: string): Promise<void>;
   unfollow(userId: string): Promise<void>;
   isFollowing(userId: string): Promise<boolean>;
+
+  // favorites
+  favoritePost(postId: string): Promise<void>;
+  unfavoritePost(postId: string): Promise<void>;
+  isFavorite(postId: string): Promise<boolean>;
+  getFavoritePosts(): Promise<HydratedPost[]>;
 
   getExploreFeed(): Promise<HydratedPost[]>;
   getFollowingFeed(): Promise<HydratedPost[]>;

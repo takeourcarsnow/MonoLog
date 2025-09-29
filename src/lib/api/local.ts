@@ -90,6 +90,33 @@ export const localApi: Api = {
     return !!me?.following?.includes(userId);
   },
 
+  async favoritePost(postId: string) {
+    const me = getUserById(cache.currentUserId);
+    if (!me) throw new Error("Not logged in");
+    me.favorites = me.favorites || [];
+    if (!me.favorites.includes(postId)) {
+      me.favorites.push(postId);
+      persist();
+    }
+  },
+  async unfavoritePost(postId: string) {
+    const me = getUserById(cache.currentUserId);
+    if (!me) throw new Error("Not logged in");
+    me.favorites = (me.favorites || []).filter(id => id !== postId);
+    persist();
+  },
+  async isFavorite(postId: string) {
+    const me = getUserById(cache.currentUserId);
+    if (!me) return false;
+    return !!me.favorites?.includes(postId);
+  },
+  async getFavoritePosts() {
+    const me = getUserById(cache.currentUserId);
+    if (!me) return [];
+    const favs = new Set(me.favorites || []);
+    return cache.posts.filter(p => favs.has(p.id)).map(hydratePost);
+  },
+
   async getExploreFeed() {
     const me = getUserById(cache.currentUserId);
     return cache.posts

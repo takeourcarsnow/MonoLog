@@ -70,6 +70,7 @@ export function Uploader() {
     if (compressedSize && compressedSize > maxBytes) {
       return toast.show(`Compressed image is too large (${Math.round(compressedSize/1024)} KB). Try a smaller photo or reduce quality.`);
     }
+    setProcessing(true);
     try {
       await api.createOrReplaceToday({
         imageUrl: dataUrl,
@@ -78,6 +79,7 @@ export function Uploader() {
         replace,
         public: visibility === "public",
       });
+      // navigation will unmount this component; no need to clear processing here
       router.push("/profile");
     } catch (e: any) {
       if (e?.code === "LIMIT") {
@@ -85,6 +87,7 @@ export function Uploader() {
       } else {
         toast.show(e?.message || "Failed to publish");
       }
+      setProcessing(false);
     }
   }
 
@@ -104,12 +107,13 @@ export function Uploader() {
           tabIndex={0}
           role="button"
           aria-label="Drop an image or click to select"
-          onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+          onClick={() => { if (!processing) fileInputRef.current?.click(); }}
+          onKeyDown={(e) => { if (!processing && (e.key === 'Enter' || e.key === ' ')) fileInputRef.current?.click(); }}
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
           onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
           onDrop={async (e) => {
             e.preventDefault(); setDrag(false);
+            if (processing) return;
             const file = e.dataTransfer.files?.[0];
             if (file) await handleFile(file);
           }}
@@ -123,6 +127,8 @@ export function Uploader() {
               JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
             </div>
           </div>
+
+          {/* removed duplicate processing overlay (global overlay covers it) */}
 
           <input
             type="file"
@@ -182,6 +188,23 @@ export function Uploader() {
         </div>
       </div>
 
+      {/* global processing overlay (covers preview / drop area) */}
+      {processing ? (
+        <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, pointerEvents: 'auto' }}>
+          <div role="status" aria-live="polite" style={{ background: 'rgba(0,0,0,0.45)', color: '#fff', padding: 18, borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <svg width={56} height={56} viewBox="0 0 50 50" aria-hidden>
+              <g fill="none" stroke="#fff" strokeWidth={4} strokeLinecap="round">
+                <path d="M25 5 a20 20 0 0 1 0 40" strokeOpacity={0.18} />
+                <path d="M25 5 a20 20 0 0 1 0 40">
+                  <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite" />
+                </path>
+              </g>
+            </svg>
+            <div style={{ fontWeight: 700 }}>Processing…</div>
+          </div>
+        </div>
+      ) : null}
+
       <div style={{ marginTop: 8 }}>
         {originalSize ? <div className="dim">Original: {Math.round(originalSize/1024)} KB</div> : null}
         {compressedSize ? <div className="dim">Compressed: {Math.round(compressedSize/1024)} KB</div> : null}
@@ -208,6 +231,25 @@ export function Uploader() {
         >
           {alt ? 'Edit alt' : 'Add alt text'}
         </button>
+        {dataUrl ? (
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => {
+              if (processing) return;
+              setDataUrl(null);
+              setOriginalSize(null);
+              setCompressedSize(null);
+              setAlt("");
+              setCaption("");
+              setEditing(false);
+              try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
+            }}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            Change photo
+          </button>
+        ) : null}
       </div>
 
       {showAltInput ? (

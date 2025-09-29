@@ -1,6 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
 type Props = {
@@ -13,13 +14,13 @@ export function Comments({ postId, onCountChange }: Props) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const list = await api.getComments(postId);
     setComments(list);
     onCountChange?.(list.length);
-  };
+  }, [postId, onCountChange]);
 
-  useEffect(() => { load(); }, [postId]);
+  useEffect(() => { load(); }, [load]);
 
   return (
     <div>
@@ -46,7 +47,7 @@ export function Comments({ postId, onCountChange }: Props) {
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={async (e) => {
-            if (e.key === "Enter") {
+              if (e.key === "Enter") {
               if (!text.trim()) return;
               setSending(true);
               await api.addComment(postId, text);
@@ -58,7 +59,7 @@ export function Comments({ postId, onCountChange }: Props) {
         />
         <button
           className="btn primary"
-          onClick={async () => {
+            onClick={async () => {
             if (!text.trim()) return;
             setSending(true);
             await api.addComment(postId, text);

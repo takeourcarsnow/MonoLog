@@ -10,13 +10,19 @@ const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.A
 export const metadata: Metadata = {
   title: "MonoLog — one photo a day",
   description: "Daily photo journal.",
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0f0f10" },
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" }
-  ],
+  // themeColor must be placed in the `viewport` export in Next.js 14+
   other: {
     "color-scheme": "light dark"
   }
+};
+
+// Move themeColor into the viewport export to satisfy Next.js metadata rules
+export const viewport = {
+  // themeColor supports an array with media queries
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f10" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" }
+  ]
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

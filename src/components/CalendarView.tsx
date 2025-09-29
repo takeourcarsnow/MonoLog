@@ -17,12 +17,14 @@ export function CalendarView() {
   const [loadingDay, setLoadingDay] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
-  const loadStats = async (year = curYear, month = curMonth) => {
-    const s = await api.calendarStats({ year, monthIdx: month });
-    setStats({ counts: s.counts, mine: s.mine });
-  };
-
-  useEffect(() => { loadStats(); }, [curYear, curMonth]);
+  // Load stats whenever the current month/year changes. Inline the async call
+  // so we don't need to include the `loadStats` function in the dependency list.
+  useEffect(() => {
+    (async () => {
+      const s = await api.calendarStats({ year: curYear, monthIdx: curMonth });
+      setStats({ counts: s.counts, mine: s.mine });
+    })();
+  }, [curYear, curMonth]);
 
   const showDay = async (dk: string) => {
     setSelectedDay(dk);

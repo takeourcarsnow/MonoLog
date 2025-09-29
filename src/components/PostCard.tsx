@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -31,7 +32,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
         setIsFavorite(await api.isFavorite(post.id));
       }
     })();
-  }, [post.userId]);
+  }, [post.userId, post.id]);
 
   // If the hydrated post doesn't include an avatarUrl (possible for older rows),
   // fetch the user's profile and fill it in so the avatar renders consistently
@@ -58,7 +59,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
 
   const userLine = useMemo(() => {
     return `@${post.user.username} • ${formatRelative(post.createdAt)} ${lock}`;
-  }, [post]);
+  }, [post.user.username, post.createdAt, lock]);
 
   return (
     <article className="card">

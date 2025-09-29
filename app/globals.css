@@ -946,6 +946,34 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .view-toggle { display:flex; justify-content:space-between; align-items:center; gap:12px; padding: 8px 10px; background: transparent; }
 .view-toggle .btn { padding: 6px 10px; }
 
+/* Uploader: blurred preview while processing */
+.preview img {
+  /* make unblur feel subtle and intentional: longer, smoother filter transition */
+  transition: filter 560ms cubic-bezier(.2,.7,.2,1), transform 300ms var(--transition-fast), opacity 360ms var(--transition-mid);
+  will-change: filter, transform, opacity;
+}
+.preview.processing img {
+  /* slightly stronger blur while processing and a gentle scale/opacity change */
+  filter: blur(10px) saturate(0.92) opacity(0.88);
+  transform: scale(1.01);
+}
+.preview-badge {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  background: color-mix(in srgb, var(--bg-elev), var(--primary) 6%);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 70;
+}
+.preview-badge svg { width: 16px; height: 16px; color: var(--primary); }
+
 /* feed/explore grid variations */
 .feed.grid-view { padding: 4px 0; }
 .feed.grid-view .grid { gap: 8px; grid-template-columns: repeat(3, 1fr); }

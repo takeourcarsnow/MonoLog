@@ -169,38 +169,15 @@ export const supabaseApi: Api = {
   async loginAs() { return null; },
 
   async follow(userId: string) {
-    const sb = getClient();
-    // ensure logged in
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
-    if (!me) throw new Error("Not logged in");
-
-    // fetch current following list
-    const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "following");
-    if (profErr) {
-      // if profile missing, try upserting a minimal profile and continue
-      await sb.from("users").upsert({ id: me.id });
-    }
-    const current: string[] = (profile && profile.following) || [];
-    if (!current.includes(userId)) current.push(userId);
-    const { error } = await sb.from("users").update({ following: current }).eq("id", me.id);
-    if (error) throw error;
+    // Call server endpoint to perform the follow operation with service role privileges
+    const res = await fetch('/api/users/follow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: (await this.getCurrentUser())?.id, targetId: userId }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Failed to follow');
   },
   async unfollow(userId: string) {
-    const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
-    if (!me) throw new Error("Not logged in");
-
-    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
-    if (profErr) {
-      // nothing to do
-      return;
-    }
-    const current: string[] = (profile && profile.following) || [];
-    const updated = current.filter((id: string) => id !== userId);
-    const { error } = await sb.from("users").update({ following: updated }).eq("id", me.id);
-    if (error) throw error;
+    const res = await fetch('/api/users/unfollow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: (await this.getCurrentUser())?.id, targetId: userId }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Failed to unfollow');
   },
   async isFollowing(userId: string) {
     const sb = getClient();
@@ -214,43 +191,28 @@ export const supabaseApi: Api = {
   },
 
   async favoritePost(postId: string) {
-    const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
-    if (!me) throw new Error("Not logged in");
-  const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
-  let current: string[] = (profile && profile.favorites) || [];
-    if (!current.includes(postId)) current.push(postId);
-    const { error } = await sb.from("users").update({ favorites: current }).eq("id", me.id);
-    if (error) throw error;
+    const res = await fetch('/api/posts/favorite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: (await this.getCurrentUser())?.id, postId }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Failed to favorite');
   },
   async unfavoritePost(postId: string) {
-    const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
-    if (!me) throw new Error("Not logged in");
-  const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
-  let current: string[] = (profile && profile.favorites) || [];
-    current = current.filter((id: string) => id !== postId);
-    const { error } = await sb.from("users").update({ favorites: current }).eq("id", me.id);
-    if (error) throw error;
+    const res = await fetch('/api/posts/unfavorite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: (await this.getCurrentUser())?.id, postId }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Failed to unfavorite');
   },
   async isFavorite(postId: string) {
-    const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
-    if (!me) return false;
-  const { data: profile, error } = await selectUserFields(sb, me.id, "favorites");
-    if (error || !profile) return false;
-    const current: string[] = profile.favorites || [];
-    return !!current.includes(postId);
+    const cur = await this.getCurrentUser();
+    if (!cur) return false;
+    const posts = await this.getFavoritePosts();
+    return posts.some(p => p.id === postId);
   },
   async getFavoritePosts() {
+    // Keep this read operation client-side (reads are safe with anon key)
     const sb = getClient();
     const { data: userData } = await sb.auth.getUser();
     const me = (userData as any)?.user;
     if (!me) return [];
-  const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
+    const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
     if (profErr || !profile) return [];
     const ids: string[] = profile.favorites || [];
     if (!ids.length) return [];
@@ -268,17 +230,15 @@ export const supabaseApi: Api = {
   },
 
   async getFollowingFeed() {
+    // Use client-side reads for feed; follow list comes from users table
     const sb = getClient();
     const { data: userData } = await sb.auth.getUser();
     const me = (userData as any)?.user;
     if (!me) return [];
-
-    // load following list from profile
     const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
     if (profErr || !profile) return [];
     const ids: string[] = profile.following || [];
     if (!ids.length) return [];
-
     const { data, error } = await sb.from("posts").select("*, users:users(*)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
     logSupabaseError("getFollowingFeed", { data, error });
     if (error) throw error;
@@ -372,37 +332,16 @@ export const supabaseApi: Api = {
   },
 
   async updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }) {
-    const sb = getClient();
-    const updates: any = {};
-    if (patch.caption !== undefined) updates.caption = patch.caption;
-    if (patch.alt !== undefined) updates.alt = patch.alt;
-    if (patch.public !== undefined) updates.public = patch.public;
-    const { error } = await sb.from("posts").update(updates).eq("id", id);
-    if (error) throw error;
+    const res = await fetch('/api/posts/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, patch }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Failed to update post');
     return await (this as any).getPost(id) as any;
   },
 
   async deletePost(id: string) {
-    const sb = getClient();
-    const { data: post, error: postErr } = await sb.from("posts").select("*").eq("id", id).limit(1).single();
-    logSupabaseError("deletePost.fetchPost", { data: post, error: postErr });
-    const imageUrl = (post as any)?.image_url || (post as any)?.imageUrl;
-    if (imageUrl) {
-      try {
-        const base = SUPABASE.url.replace(/\/$/, '') + "/storage/v1/object/public/posts/";
-        if (typeof imageUrl === "string" && imageUrl.startsWith(base)) {
-          const path = decodeURIComponent(imageUrl.slice(base.length));
-          await sb.storage.from("posts").remove([path]);
-        }
-      } catch (e) {
-        console.warn("Failed to remove storage object for deleted post", e);
-      }
-    }
-    const { data: delCommentsData, error: delCommentsErr } = await sb.from("comments").delete().eq("post_id", id);
-    logSupabaseError("deletePost.deleteComments", { data: delCommentsData, error: delCommentsErr });
-    const { data: delPostData, error: delPostErr } = await sb.from("posts").delete().eq("id", id);
-    logSupabaseError("deletePost.deletePostRow", { data: delPostData, error: delPostErr });
-    if (delPostErr) throw delPostErr;
+    const res = await fetch('/api/posts/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Failed to delete post');
     return true;
   },
 
@@ -426,19 +365,13 @@ export const supabaseApi: Api = {
   },
 
   async addComment(postId: string, text: string) {
-    const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const user = (userData as any)?.user;
-    if (!user) throw new Error("Not logged in");
-    if (!text?.trim()) throw new Error("Empty");
-    const id = uid();
-    const created_at = new Date().toISOString();
-  const { error } = await sb.from("comments").insert({ id, post_id: postId, user_id: user.id, text: text.trim(), created_at });
-  if (error) throw error;
-  // prefer explicit name, otherwise fall back to username (or email local-part / id)
-  const commentSynthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-  const commentSynthDisplay = user.user_metadata?.name || commentSynthUsername;
-  return { id, postId, userId: user.id, text: text.trim(), createdAt: created_at, user: { id: user.id, username: commentSynthUsername, displayName: commentSynthDisplay, avatarUrl: user.user_metadata?.avatar_url || "" } } as any;
+    const cur = await this.getCurrentUser();
+    if (!cur) throw new Error('Not logged in');
+    if (!text?.trim()) throw new Error('Empty');
+    const res = await fetch('/api/comments/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: cur.id, postId, text }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Failed to add comment');
+    return { id: json.id, postId, userId: cur.id, text: text.trim(), createdAt: json.created_at, user: { id: cur.id, username: cur.username || '', displayName: cur.displayName || '', avatarUrl: cur.avatarUrl || '' } } as any;
   },
 
   async canPostToday() {
@@ -465,151 +398,32 @@ export const supabaseApi: Api = {
   },
 
   async createOrReplaceToday({ imageUrl, imageUrls, caption, alt, replace = false, public: isPublic = true }) {
-    const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const user = (userData as any)?.user;
-    if (!user) throw new Error("Not logged in");
+    const cur = await this.getCurrentUser();
+    if (!cur) throw new Error('Not logged in');
 
-    // ensure profile exists in users table (use snake_case column names)
-    // If a profile already exists, avoid overwriting user-provided fields (username/display_name/avatar).
-    const { data: existingProfile, error: existingProfileErr } = await sb.from("users").select("id,username,display_name,avatar_url").eq("id", user.id).limit(1).single();
-    if (!existingProfileErr && existingProfile) {
-      // Profile exists: only populate any missing fields from auth metadata (do not overwrite existing values)
-      const upsertProfile: any = { id: user.id };
-      const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-      if ((!existingProfile.username || existingProfile.username === null || existingProfile.username === "") && user.user_metadata?.username) upsertProfile.username = user.user_metadata.username;
-      // if display_name is missing, prefer an explicit name, otherwise default to the username
-  if ((!existingProfile.display_name || existingProfile.display_name === null || existingProfile.display_name === "")) {
-        if (user.user_metadata?.name) upsertProfile.display_name = user.user_metadata.name;
-        else upsertProfile.display_name = synthUsername;
-      }
-      if ((!existingProfile.avatar_url || existingProfile.avatar_url === null || existingProfile.avatar_url === "") && user.user_metadata?.avatar_url) upsertProfile.avatar_url = user.user_metadata.avatar_url;
-      // Only call upsert when we actually have something to add
-      if (Object.keys(upsertProfile).length > 1) {
-        const { data: upsertProfileData, error: upsertProfileErr } = await sb.from("users").upsert(upsertProfile);
-        logSupabaseError("createOrReplaceToday.upsertUser", { data: upsertProfileData, error: upsertProfileErr });
-      }
-    } else {
-      // No existing profile: create one with sensible defaults derived from auth metadata or email
-      const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-      const upsertProfile: any = {
-        id: user.id,
-        username: synthUsername,
-        // default display name to the username when no explicit name metadata exists
-        display_name: user.user_metadata?.name || synthUsername,
-        joined_at: new Date().toISOString(),
-      };
-      if (user.user_metadata?.avatar_url) upsertProfile.avatar_url = user.user_metadata.avatar_url;
-      const { data: upsertProfileData, error: upsertProfileErr } = await sb.from("users").upsert(upsertProfile);
-      logSupabaseError("createOrReplaceToday.upsertUser", { data: upsertProfileData, error: upsertProfileErr });
-    }
-
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 1);
-
-    const { data: todays, error: todaysErr } = await sb
-      .from("posts")
-      .select("*")
-      .eq("user_id", user.id)
-      .gte("created_at", start.toISOString())
-      .lt("created_at", end.toISOString());
-    if ((todays || []).length && !replace) {
-      const err: any = new Error("Already posted today");
-      err.code = "LIMIT";
-      throw err;
-    }
-
-    if ((todays || []).length && replace) {
-      // delete existing posts for today (and their comments) and cleanup storage objects
-      const ids = (todays || []).map((p: any) => p.id);
-      // gather all image urls from posts (support image_urls array or legacy image_url)
-      const existingImageUrls: string[] = [];
-      for (const p of (todays || [])) {
-        if (p.image_urls && Array.isArray(p.image_urls)) existingImageUrls.push(...p.image_urls);
-        else if (p.image_urls && typeof p.image_urls === 'string') {
-          try { existingImageUrls.push(...JSON.parse(p.image_urls)); } catch { existingImageUrls.push(p.image_urls); }
-        } else if (p.image_url) existingImageUrls.push(p.image_url);
-        else if (p.imageUrl) existingImageUrls.push(p.imageUrl);
-      }
-  // delete comments
-  const { data: delCommentsData, error: delCommentsErr } = await sb.from("comments").delete().in("post_id", ids).or(`post_id.in.(${ids.map((i:any)=>`'${i}'`).join(',')})`);
-  logSupabaseError("createOrReplaceToday.deleteComments", { data: delCommentsData, error: delCommentsErr });
-      // attempt to remove storage objects for each image_url that points to our posts bucket
-      try {
-        const base = SUPABASE.url.replace(/\/$/, '') + "/storage/v1/object/public/posts/";
-        const toRemove: string[] = [];
-        for (const u of existingImageUrls) {
-          if (!u) continue;
-          if (typeof u === "string" && u.startsWith(base)) {
-            const path = decodeURIComponent(u.slice(base.length));
-            toRemove.push(path);
-          }
-        }
-        if (toRemove.length) {
-          const { data: remData, error: remErr } = await sb.storage.from("posts").remove(toRemove);
-          logSupabaseError("createOrReplaceToday.storage.remove", { data: remData, error: remErr });
-        }
-      } catch (e) {
-        console.warn("Failed to remove storage objects for replaced posts", e);
-      }
-      // finally delete post rows
-      const { data: delPostsData, error: delPostsErr } = await sb.from("posts").delete().in("id", ids);
-      logSupabaseError("createOrReplaceToday.deletePosts", { data: delPostsData, error: delPostsErr });
-    }
-    // Convert any data URLs to storage uploads, collect final public URLs
+    // For uploads, convert any data URLs via the server storage endpoint so the server can store via service role
     const inputs: string[] = imageUrls && imageUrls.length ? imageUrls.slice(0, 5) : imageUrl ? [imageUrl] : [];
     const finalUrls: string[] = [];
     for (const img of inputs) {
       if (!img) continue;
-      let final = img as string;
-      try {
-        if (typeof img === "string" && img.startsWith("data:")) {
-          const parts = img.split(",");
-          const meta = parts[0];
-          const mime = meta.split(":")[1].split(";")[0] || "image/jpeg";
-          const bstr = atob(parts[1]);
-          let n = bstr.length;
-          const u8arr = new Uint8Array(n);
-          while (n--) u8arr[n] = bstr.charCodeAt(n);
-          const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
-          const path = `${user.id}/${file.name}`;
-          const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
-          logSupabaseError("createOrReplaceToday.storage.upload", { data: uploadData, error: uploadErr });
-          if (!uploadErr) {
-            const { data: urlData } = sb.storage.from("posts").getPublicUrl(path);
-            final = urlData.publicUrl;
-          }
-        }
-      } catch (e) {
-        console.warn("Storage upload failed for image, storing data-url or remote url directly", e);
+      if (typeof img === 'string' && img.startsWith('data:')) {
+        const uploadRes = await fetch('/api/storage/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: cur.id, dataUrl: img }) });
+        const up = await uploadRes.json();
+        if (!uploadRes.ok) {
+          console.warn('Server upload failed, falling back to data-url', up?.error);
+          finalUrls.push(img as string);
+        } else finalUrls.push(up.publicUrl);
+      } else {
+        finalUrls.push(img as string);
       }
-      finalUrls.push(final);
     }
 
-    const id = uid();
-    const insertObj: any = { id, user_id: user.id, alt: alt || "", caption: caption || "", created_at: new Date().toISOString(), public: !!isPublic };
-    if (finalUrls.length === 1) insertObj.image_url = finalUrls[0];
-    else if (finalUrls.length > 1) insertObj.image_urls = finalUrls;
-
-    const { data: insertData, error: insertErr } = await sb.from("posts").insert(insertObj).select("*").limit(1).single();
-    logSupabaseError("createOrReplaceToday.insertPost", { data: insertData, error: insertErr });
-    if (insertErr) throw insertErr;
-
-    // hydrate result row
-    const row = insertData as any;
-    const profile = (await sb.from("users").select("id,username,display_name,avatar_url").eq("id", user.id).limit(1).single()).data as any;
-    const post: HydratedPost = mapRowToHydratedPost(row) as any;
-    // ensure user info populated
-    post.user = {
-      id: profile?.id || user.id,
-      username: profile?.username || "",
-      displayName: profile?.display_name || "",
-      avatarUrl: profile?.avatar_url || "",
-    } as any;
-    post.commentsCount = 0;
-    return post;
+    // call server create endpoint
+    const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: cur.id, imageUrls: finalUrls, caption, alt, replace, public: isPublic }) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || 'Failed to create post');
+    return json.post as any;
+    
   },
 
   async calendarStats({ year, monthIdx }) {

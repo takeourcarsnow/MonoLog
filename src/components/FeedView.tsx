@@ -15,8 +15,36 @@ function ViewToggle({ selected, onSelect }: { selected: "list" | "grid"; onSelec
         <div className="dim">Only people you follow</div>
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <button className={`btn ${selected === "list" ? "primary" : ""}`} onClick={() => onSelect("list")} title="List view">List</button>
-        <button className={`btn ${selected === "grid" ? "primary" : ""}`} onClick={() => onSelect("grid")} title="Grid view">Grid</button>
+        <button
+          className={`btn ${selected === "list" ? "primary" : ""}`}
+          onClick={() => onSelect("list")}
+          title="List view"
+          aria-pressed={selected === "list"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <rect x="3" y="5" width="4" height="4" rx="1" />
+            <rect x="3" y="11" width="4" height="4" rx="1" />
+            <rect x="3" y="17" width="4" height="4" rx="1" />
+          </svg>
+          <span className="sr-only">List view</span>
+        </button>
+        <button
+          className={`btn ${selected === "grid" ? "primary" : ""}`}
+          onClick={() => onSelect("grid")}
+          title="Grid view"
+          aria-pressed={selected === "grid"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="8" rx="1" />
+            <rect x="13" y="3" width="8" height="8" rx="1" />
+            <rect x="3" y="13" width="8" height="8" rx="1" />
+            <rect x="13" y="13" width="8" height="8" rx="1" />
+          </svg>
+          <span className="sr-only">Grid view</span>
+        </button>
       </div>
     </div>
   );

@@ -9,18 +9,21 @@ import { useRouter } from "next/navigation";
 import { useToast } from "./Toast";
 import ImageEditor from "./ImageEditor";
 export function Uploader() {
-  const [showAltInput, setShowAltInput] = useState(false);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [dataUrls, setDataUrls] = useState<string[]>([]);
-  const [alt, setAlt] = useState("");
+  const [alt, setAlt] = useState<string | string[]>("");
   const [caption, setCaption] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [processing, setProcessing] = useState(false);
+  const [previewLoaded, setPreviewLoaded] = useState(false);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
-  const [canReplace, setCanReplace] = useState(false);
+  const [canPost, setCanPost] = useState<boolean | null>(null);
+  const [nextAllowedAt, setNextAllowedAt] = useState<number | null>(null);
+  const [remaining, setRemaining] = useState<string>("");
   const [editing, setEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number>(0);
+  const [editingAlt, setEditingAlt] = useState<string>("");
   const dropRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileActionRef = useRef<'append' | 'replace'>('append');
@@ -41,12 +44,57 @@ export function Uploader() {
     if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
   }, [index]);
 
+  // when entering edit mode, populate editingAlt for the current index
+  useEffect(() => {
+    if (editing) {
+      const cur = Array.isArray(alt) ? alt[editingIndex] || "" : (alt || "");
+      setEditingAlt(cur as string);
+    }
+  }, [editing, editingIndex, alt]);
+
   useEffect(() => {
     (async () => {
       const can = await api.canPostToday();
-      setCanReplace(!can.allowed);
+      setCanPost(can.allowed);
+      if (!can.allowed) {
+        // compute local start of next day (when posting becomes allowed again)
+        const now = new Date();
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+        const next = new Date(start);
+        next.setDate(start.getDate() + 1);
+        setNextAllowedAt(next.getTime());
+      }
     })();
   }, []);
+
+  // update remaining countdown every second when nextAllowedAt is known
+  useEffect(() => {
+    if (!nextAllowedAt) return;
+    function fmt(ms: number) {
+      if (ms <= 0) return "00:00:00";
+      const total = Math.floor(ms / 1000);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+    // set initial
+    setRemaining(fmt(nextAllowedAt - Date.now()));
+    const id = setInterval(() => {
+      const ms = nextAllowedAt - Date.now();
+      if (ms <= 0) {
+        setCanPost(true);
+        setNextAllowedAt(null);
+        setRemaining("");
+        clearInterval(id);
+        return;
+      }
+      setRemaining(fmt(ms));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [nextAllowedAt]);
 
   const toast = useToast();
 
@@ -84,8 +132,10 @@ export function Uploader() {
         const next = [...d, url].slice(0, 5);
         return next;
       });
+      // mark preview as not yet loaded so blur remains until the <img> onLoad fires
+      setPreviewLoaded(false);
       // set the primary preview to the first image
-      if (!dataUrl) setDataUrl(url);
+  if (!dataUrl) { setDataUrl(url); setPreviewLoaded(false); }
       // ensure any previously-open editor is closed when a new file is chosen
       setEditing(false);
       // clear the file input so selecting the same file again will fire change
@@ -190,10 +240,11 @@ export function Uploader() {
                     copy[replaceAt] = url;
                     return copy;
                   });
-                  if (replaceAt === 0) setDataUrl(url);
+                  if (replaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
                 } else {
                   // no array yet, just set primary preview
                   setDataUrl(url);
+                  setPreviewLoaded(false);
                   setDataUrls([url]);
                 }
                 setOriginalSize(approxDataUrlBytes(f as any));
@@ -215,45 +266,81 @@ export function Uploader() {
         }}
       />
 
-      <div className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${editing ? 'editing' : ''}`}>
+  <div className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${editing ? 'editing' : ''} ${(processing || !previewLoaded) ? 'processing' : ''}`}>
         <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
+          {processing ? (
+            <div className="preview-badge" role="status" aria-live="polite">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+                <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 2a10 10 0 1 0 10 10" strokeOpacity={0.28} />
+                  <path d="M12 2a10 10 0 0 0 0 20">
+                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite" />
+                  </path>
+                </g>
+              </svg>
+              <span>Processing…</span>
+            </div>
+          ) : null}
           {editing && (dataUrls[editingIndex] || dataUrl) ? (
             <div style={{ width: '100%' }}>
-              <ImageEditor
-                initialDataUrl={(dataUrls[editingIndex] || dataUrl) as string}
-                onCancel={() => setEditing(false)}
-                onApply={async (newUrl) => {
-                  setEditing(false);
-                  // run through the same compression pipeline to ensure final image obeys limits
-                  setProcessing(true);
-                  try {
-                    const compressed = await compressImage(newUrl as any);
-                    // replace the edited image at editingIndex
-                    setDataUrls(d => {
-                      const copy = [...d];
-                      copy[editingIndex] = compressed;
-                      return copy;
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Alt text (describe your photo for accessibility)"
+                  value={editingAlt}
+                  onChange={e => setEditingAlt(e.target.value)}
+                />
+                <ImageEditor
+                  initialDataUrl={(dataUrls[editingIndex] || dataUrl) as string}
+                  onCancel={() => setEditing(false)}
+                  onApply={async (newUrl) => {
+                    // persist alt for this image
+                    setAlt(prev => {
+                      if (Array.isArray(prev)) {
+                        const copy = [...prev];
+                        copy[editingIndex] = editingAlt || "";
+                        return copy;
+                      }
+                      // if single string but multiple images, convert to array
+                      if (dataUrls.length > 1) {
+                        const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
+                        return arr;
+                      }
+                      return editingAlt || "";
                     });
-                    // if editing the main preview index, update dataUrl too
-                    if (editingIndex === 0) setDataUrl(compressed);
-                    setCompressedSize(approxDataUrlBytes(compressed));
-                    // approximate original size from dataurl length
-                    setOriginalSize(approxDataUrlBytes(newUrl));
-                  } catch (e) {
-                    console.error(e);
-                    // fallback to the edited url directly
-                    setDataUrls(d => {
-                      const copy = [...d];
-                      copy[editingIndex] = newUrl as string;
-                      return copy;
-                    });
-                    if (editingIndex === 0) setDataUrl(newUrl as string);
-                    setCompressedSize(approxDataUrlBytes(newUrl as string));
-                  } finally {
-                    setProcessing(false);
-                  }
-                }}
-              />
+                    setEditing(false);
+                    // run through the same compression pipeline to ensure final image obeys limits
+                    setProcessing(true);
+                    try {
+                      const compressed = await compressImage(newUrl as any);
+                      // replace the edited image at editingIndex
+                      setDataUrls(d => {
+                        const copy = [...d];
+                        copy[editingIndex] = compressed;
+                        return copy;
+                      });
+                      // if editing the main preview index, update dataUrl too
+                      if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
+                      setCompressedSize(approxDataUrlBytes(compressed));
+                      // approximate original size from dataurl length
+                      setOriginalSize(approxDataUrlBytes(newUrl));
+                    } catch (e) {
+                      console.error(e);
+                      // fallback to the edited url directly
+                      setDataUrls(d => {
+                        const copy = [...d];
+                        copy[editingIndex] = newUrl as string;
+                        return copy;
+                      });
+                      if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
+                      setCompressedSize(approxDataUrlBytes(newUrl as string));
+                    } finally {
+                      setProcessing(false);
+                    }
+                  }}
+                />
+              </div>
             </div>
           ) : (
             <>
@@ -282,8 +369,8 @@ export function Uploader() {
                           touchStartX.current = null; touchDeltaX.current = 0;
                         }} role="list">
                           {dataUrls.map((u, idx) => (
-                            <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`Preview ${idx+1} of ${dataUrls.length}`} style={{ position: 'relative' }}>
-                              <img alt={(Array.isArray(alt) ? alt[idx] : alt) || `Preview ${idx+1}`} src={u} />
+            <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`Preview ${idx+1} of ${dataUrls.length}`} style={{ position: 'relative' }}>
+                          <img alt={(Array.isArray(alt) ? (alt[idx] || '') : (alt || `Preview ${idx+1}`))} src={u} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
                               <button
                                 className="btn"
                                 style={{ position: 'absolute', right: 8, bottom: 8 }}
@@ -307,7 +394,7 @@ export function Uploader() {
                     </div>
               ) : (
                 <div>
-                  <img alt={alt || 'Preview'} src={dataUrls[0] || dataUrl || ""} />
+                  <img alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')} src={dataUrls[0] || dataUrl || ""} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
                   { (dataUrl || dataUrls.length === 1) ? (
                     <button
                       className="btn"
@@ -338,22 +425,7 @@ export function Uploader() {
            Keeping the code minimal prevents overlap/clipping at odd zoom levels. */}
       </div>
 
-      {/* global processing overlay (covers preview / drop area) */}
-      {processing ? (
-        <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, pointerEvents: 'auto' }}>
-          <div role="status" aria-live="polite" style={{ background: 'rgba(0,0,0,0.45)', color: '#fff', padding: 18, borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <svg width={56} height={56} viewBox="0 0 50 50" aria-hidden>
-              <g fill="none" stroke="#fff" strokeWidth={4} strokeLinecap="round">
-                <path d="M25 5 a20 20 0 0 1 0 40" strokeOpacity={0.18} />
-                <path d="M25 5 a20 20 0 0 1 0 40">
-                  <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite" />
-                </path>
-              </g>
-            </svg>
-            <div style={{ fontWeight: 700 }}>Processing…</div>
-          </div>
-        </div>
-      ) : null}
+      {/* When processing, blur the visible preview and show a small badge instead of the fullscreen overlay */}
 
       <div style={{ marginTop: 8 }}>
         {compressedSize != null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024 ? (
@@ -370,15 +442,7 @@ export function Uploader() {
           onChange={e => setCaption(e.target.value)}
           style={{ flex: 1 }}
         />
-        <button
-          type="button"
-          className="btn ghost"
-          onClick={() => setShowAltInput(v => !v)}
-          aria-pressed={showAltInput}
-          style={{ whiteSpace: 'nowrap' }}
-        >
-          {alt ? 'Edit alt' : 'Add alt text'}
-        </button>
+        {/* alt editing moved into the photo editor so it only shows when editing a specific image */}
         {dataUrl ? (
           <button
             type="button"
@@ -410,15 +474,7 @@ export function Uploader() {
         ) : null}
       </div>
 
-      {showAltInput ? (
-        <input
-          className="input"
-          type="text"
-          placeholder="Alt text (describe your photo for accessibility)"
-          value={alt}
-          onChange={e => setAlt(e.target.value)}
-        />
-      ) : null}
+      {/* alt editing appears inside the ImageEditor modal when editing a photo */}
       <div className="form-row">
         <label className="vis-label">
           <span className="dim">Visibility</span>
@@ -469,16 +525,24 @@ export function Uploader() {
         </label>
 
         <div className="btn-group">
-          <button className="btn primary" onClick={() => publish(false)} disabled={processing || (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024)}>
-            {processing ? "Processing…" : canReplace ? "Publish (new day)" : "Publish"}
-          </button>
           <button
-            className={`btn ghost replace ${canReplace ? "" : "hidden"}`}
-            onClick={() => publish(true)}
-            disabled={processing}
+            className="btn primary"
+            onClick={() => publish(false)}
+            disabled={
+              processing ||
+              (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024) ||
+              (canPost === false)
+            }
           >
-            Replace
+            {processing
+              ? "Processing…"
+              : canPost === false
+              ? nextAllowedAt
+                ? `Publish (in ${remaining})`
+                : "Publish (new day)"
+              : "Publish"}
           </button>
+          {/* replace button removed */}
         </div>
       </div>
 

@@ -118,7 +118,6 @@ export function ProfileView({ userId }: { userId?: string }) {
               {!isOther ? (
                 <>
                   <Link className="btn" href="/upload">New Post</Link>
-                  <Link className="btn" href="/favorites">Favorites</Link>
                 <EditProfile onSaved={async () => {
                   // refresh the profile and posts after an edit so UI reflects changes immediately
                   const me = await api.getCurrentUser();

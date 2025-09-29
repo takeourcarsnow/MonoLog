@@ -316,6 +316,11 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   .carousel-dots .dot { width: 7px; height: 7px; }
 }
 
+/* Make profile avatar a bit smaller on narrow screens so header actions fit */
+@media (max-width: 640px) {
+  .profile-avatar { width: 56px; height: 56px; border-radius: 12px; }
+}
+
 /* Uploader-specific carousel/thumbnail layout to avoid interfering with post card styles */
 .uploader .preview-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .uploader .preview-inner .carousel { width: 100%; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
@@ -435,6 +440,38 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   .form-row { flex-direction: column; align-items: stretch; }
   .btn-group { justify-content: stretch; }
   .visibility-select { width: 100%; }
+}
+
+/* Uploader-specific mobile improvements: avoid overlap with bottom tabbar, tighten dropzone and thumbnails */
+@media (max-width: 640px) {
+  /* give uploader extra bottom padding so buttons/inputs aren't hidden behind tabbar */
+  .uploader { padding-bottom: calc(96px + var(--safe-bottom)); }
+
+  /* slightly smaller drop area to fit mobile screens comfortably */
+  .drop { min-height: 140px; padding: 12px; }
+  .drop-icon { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; }
+  .drop-text { font-size: 14px; }
+
+  /* reduce preview max height to keep controls visible and avoid large images pushing buttons off-screen */
+  .preview-inner { max-height: 56vh; }
+  .preview img { max-height: 52vh; }
+
+  /* make thumbnail strip smaller and easier to tap */
+  .uploader .thumbs img { width: 56px; height: 56px; }
+
+  /* stack publish/replace buttons and make them full-width for easier tapping */
+  .btn-group { display: flex; flex-direction: column; gap: 8px; }
+  .btn-group .btn { width: 100%; display: inline-flex; justify-content: center; }
+
+  /* center visibility controls under the caption input on small screens */
+  .form-row .vis-label { align-items: center; width: 100%; }
+  .form-row .vis-label [role="radiogroup"] { display: flex !important; justify-content: center; width: 100%; gap: 8px; }
+
+  /* inputs stretch to full width and have comfortable spacing */
+  .input { font-size: 15px; padding: 12px; }
+
+  /* reduce carousel control sizes on small screens */
+  .carousel-arrow { width: 34px; height: 34px; }
 }
 
 /* small helper: visually hidden but available to screen readers */

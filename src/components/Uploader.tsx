@@ -50,6 +50,19 @@ export function Uploader() {
 
   const toast = useToast();
 
+  // Log size stats to the console only (no UI display)
+  useEffect(() => {
+    if (originalSize != null) {
+      try { console.info(`Original: ${Math.round(originalSize / 1024)} KB`); } catch {}
+    }
+  }, [originalSize]);
+
+  useEffect(() => {
+    if (compressedSize != null) {
+      try { console.info(`Compressed: ${Math.round(compressedSize / 1024)} KB`); } catch {}
+    }
+  }, [compressedSize]);
+
   const setDrag = (on: boolean) => {
     dropRef.current?.classList.toggle("dragover", on);
   };
@@ -341,8 +354,6 @@ export function Uploader() {
       ) : null}
 
       <div style={{ marginTop: 8 }}>
-        {originalSize != null ? <div className="dim">Original: {Math.round(originalSize/1024)} KB</div> : null}
-        {compressedSize != null ? <div className="dim">Compressed: {Math.round(compressedSize/1024)} KB</div> : null}
         {compressedSize != null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024 ? (
           <div className="warn">Compressed image exceeds the maximum of {CONFIG.imageMaxSizeMB} MB. Please resize or choose a smaller file.</div>
         ) : null}

@@ -143,9 +143,9 @@ export function FeedView() {
     <div className="view-fade">
       <ViewToggle selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("feedView", v); }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <div className="dim">Loaded: {posts.length}</div>
         {loadingMore ? <div className="dim">Loading more…</div> : null}
       </div>
+        {loadingMore ? <div className="dim">Loading more…</div> : null}
       <div className="feed">{render()}</div>
     </div>
   );

@@ -203,7 +203,6 @@ export function ExploreView() {
         onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("exploreView", v); }}
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <div className="dim">Loaded: {posts.length}</div>
         {loadingMore ? <div className="dim">Loading more…</div> : null}
       </div>
       <div className="feed">{render()}</div>

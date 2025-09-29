@@ -155,11 +155,16 @@ export function ProfileView({ userId }: { userId?: string }) {
 
       <div style={{ height: 8 }} />
       <div className="grid" aria-label="User posts">
-        {posts.map(p => (
-          <Link key={p.id} className="tile" href={`/post/${p.id}`}>
-            <img loading="lazy" src={p.imageUrl} alt={p.alt || "Photo"} />
-          </Link>
-        ))}
+        {posts.map(p => {
+          const urls = (p as any).imageUrls || ((p as any).imageUrl ? [(p as any).imageUrl] : []);
+          const src = urls[0] || (p as any).imageUrl || "";
+          const alts = Array.isArray(p.alt) ? p.alt : [p.alt || ""];
+          return (
+            <Link key={p.id} className="tile" href={`/post/${p.id}`}>
+              <img loading="lazy" src={src} alt={alts[0] || "Photo"} />
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

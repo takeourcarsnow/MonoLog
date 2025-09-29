@@ -57,7 +57,8 @@ function mapRowToHydratedPost(row: any): HydratedPost {
   return {
     id: row.id,
     userId: row.user_id || row.userId,
-    imageUrl: row.image_url || row.imageUrl,
+    // prefer image_urls column (JSON/array) or legacy image_url
+    imageUrls: row.image_urls || row.image_urls_json || row.image_urls_jsonb || (row.image_url ? [row.image_url] : undefined) || (row.imageUrl ? [row.imageUrl] : undefined),
     alt: row.alt || "",
     caption: row.caption || "",
     createdAt: row.created_at || row.createdAt,
@@ -358,22 +359,7 @@ export const supabaseApi: Api = {
   const { data, error } = await sb.from("posts").select("*, users:users(*)").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).order("created_at", { ascending: false });
   logSupabaseError("getPostsByDate", { data, error });
   if (error) throw error;
-    return (data || []).map((row: any) => ({
-      id: row.id,
-      userId: row.user_id || row.userId,
-      imageUrl: row.image_url || row.imageUrl,
-      alt: row.alt || "",
-      caption: row.caption || "",
-      createdAt: row.created_at || row.createdAt,
-      public: !!row.public,
-      user: {
-        id: row.users?.id || row.user_id,
-        username: row.users?.username || row.users?.user_name || "",
-        displayName: row.users?.displayName || row.users?.display_name || "",
-        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
-      },
-      commentsCount: row.comments_count || row.commentsCount || 0,
-    }));
+    return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },
 
   async getPost(id: string) {
@@ -382,22 +368,7 @@ export const supabaseApi: Api = {
   logSupabaseError("getPost", { data, error });
   if (error) return null;
     const row = data as any;
-    return {
-      id: row.id,
-      userId: row.user_id || row.userId,
-      imageUrl: row.image_url || row.imageUrl,
-      alt: row.alt || "",
-      caption: row.caption || "",
-      createdAt: row.created_at || row.createdAt,
-      public: !!row.public,
-      user: {
-        id: row.users?.id || row.user_id,
-        username: row.users?.username || row.users?.user_name || "",
-        displayName: row.users?.displayName || row.users?.display_name || "",
-        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
-      },
-      commentsCount: row.comments_count || row.commentsCount || 0,
-    } as any;
+    return mapRowToHydratedPost(row) as any;
   },
 
   async updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }) {
@@ -493,7 +464,7 @@ export const supabaseApi: Api = {
     return { allowed: true };
   },
 
-  async createOrReplaceToday({ imageUrl, caption, alt, replace = false, public: isPublic = true }) {
+  async createOrReplaceToday({ imageUrl, imageUrls, caption, alt, replace = false, public: isPublic = true }) {
     const sb = getClient();
     const { data: userData } = await sb.auth.getUser();
     const user = (userData as any)?.user;
@@ -553,7 +524,15 @@ export const supabaseApi: Api = {
     if ((todays || []).length && replace) {
       // delete existing posts for today (and their comments) and cleanup storage objects
       const ids = (todays || []).map((p: any) => p.id);
-      const imageUrls = (todays || []).map((p: any) => p.image_url || p.imageUrl);
+      // gather all image urls from posts (support image_urls array or legacy image_url)
+      const existingImageUrls: string[] = [];
+      for (const p of (todays || [])) {
+        if (p.image_urls && Array.isArray(p.image_urls)) existingImageUrls.push(...p.image_urls);
+        else if (p.image_urls && typeof p.image_urls === 'string') {
+          try { existingImageUrls.push(...JSON.parse(p.image_urls)); } catch { existingImageUrls.push(p.image_urls); }
+        } else if (p.image_url) existingImageUrls.push(p.image_url);
+        else if (p.imageUrl) existingImageUrls.push(p.imageUrl);
+      }
   // delete comments
   const { data: delCommentsData, error: delCommentsErr } = await sb.from("comments").delete().in("post_id", ids).or(`post_id.in.(${ids.map((i:any)=>`'${i}'`).join(',')})`);
   logSupabaseError("createOrReplaceToday.deleteComments", { data: delCommentsData, error: delCommentsErr });
@@ -561,7 +540,7 @@ export const supabaseApi: Api = {
       try {
         const base = SUPABASE.url.replace(/\/$/, '') + "/storage/v1/object/public/posts/";
         const toRemove: string[] = [];
-        for (const u of imageUrls) {
+        for (const u of existingImageUrls) {
           if (!u) continue;
           if (typeof u === "string" && u.startsWith(base)) {
             const path = decodeURIComponent(u.slice(base.length));
@@ -579,58 +558,57 @@ export const supabaseApi: Api = {
       const { data: delPostsData, error: delPostsErr } = await sb.from("posts").delete().in("id", ids);
       logSupabaseError("createOrReplaceToday.deletePosts", { data: delPostsData, error: delPostsErr });
     }
-
-    // Convert data URL to Blob/File if necessary and upload to storage
-    let finalUrl = imageUrl;
-    try {
-      // Only attempt upload if imageUrl looks like a data URL
-      if (typeof imageUrl === "string" && imageUrl.startsWith("data:")) {
-        const parts = imageUrl.split(",");
-        const meta = parts[0];
-        const mime = meta.split(":")[1].split(";")[0];
-        const bstr = atob(parts[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) u8arr[n] = bstr.charCodeAt(n);
-        const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
-
-        const path = `${user.id}/${file.name}`;
-        const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
-        logSupabaseError("createOrReplaceToday.storage.upload", { data: uploadData, error: uploadErr });
-        if (uploadErr) throw uploadErr;
-        const { data: urlData } = sb.storage.from("posts").getPublicUrl(path);
-        finalUrl = urlData.publicUrl;
+    // Convert any data URLs to storage uploads, collect final public URLs
+    const inputs: string[] = imageUrls && imageUrls.length ? imageUrls.slice(0, 5) : imageUrl ? [imageUrl] : [];
+    const finalUrls: string[] = [];
+    for (const img of inputs) {
+      if (!img) continue;
+      let final = img as string;
+      try {
+        if (typeof img === "string" && img.startsWith("data:")) {
+          const parts = img.split(",");
+          const meta = parts[0];
+          const mime = meta.split(":")[1].split(";")[0] || "image/jpeg";
+          const bstr = atob(parts[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) u8arr[n] = bstr.charCodeAt(n);
+          const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
+          const path = `${user.id}/${file.name}`;
+          const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
+          logSupabaseError("createOrReplaceToday.storage.upload", { data: uploadData, error: uploadErr });
+          if (!uploadErr) {
+            const { data: urlData } = sb.storage.from("posts").getPublicUrl(path);
+            final = urlData.publicUrl;
+          }
+        }
+      } catch (e) {
+        console.warn("Storage upload failed for image, storing data-url or remote url directly", e);
       }
-    } catch (e) {
-      console.warn("Storage upload failed, falling back to storing imageUrl directly", e);
+      finalUrls.push(final);
     }
 
     const id = uid();
-  const { data: insertData, error: insertErr } = await sb.from("posts").insert({ id, user_id: user.id, image_url: finalUrl, alt: alt || "", caption: caption || "", created_at: new Date().toISOString(), public: !!isPublic });
+    const insertObj: any = { id, user_id: user.id, alt: alt || "", caption: caption || "", created_at: new Date().toISOString(), public: !!isPublic };
+    if (finalUrls.length === 1) insertObj.image_url = finalUrls[0];
+    else if (finalUrls.length > 1) insertObj.image_urls = finalUrls;
+
+    const { data: insertData, error: insertErr } = await sb.from("posts").insert(insertObj).select("*").limit(1).single();
     logSupabaseError("createOrReplaceToday.insertPost", { data: insertData, error: insertErr });
     if (insertErr) throw insertErr;
 
-  // fetch profile for hydration (map snake_case)
-  const { data: profile, error: profErr } = await sb.from("users").select("id,username,display_name,avatar_url").eq("id", user.id).limit(1).single();
-    logSupabaseError("createOrReplaceToday.fetchProfile", { data: profile, error: profErr });
-
-    const post: HydratedPost = {
-      id,
-      userId: user.id,
-      imageUrl: finalUrl,
-      alt: alt || "",
-      caption: caption || "",
-      createdAt: new Date().toISOString(),
-      public: !!isPublic,
-      user: {
-        id: profile?.id || user.id,
-        username: profile?.username || "",
-        displayName: profile?.display_name || "",
-        avatarUrl: profile?.avatar_url || "",
-      },
-      commentsCount: 0,
-    };
-
+    // hydrate result row
+    const row = insertData as any;
+    const profile = (await sb.from("users").select("id,username,display_name,avatar_url").eq("id", user.id).limit(1).single()).data as any;
+    const post: HydratedPost = mapRowToHydratedPost(row) as any;
+    // ensure user info populated
+    post.user = {
+      id: profile?.id || user.id,
+      username: profile?.username || "",
+      displayName: profile?.display_name || "",
+      avatarUrl: profile?.avatar_url || "",
+    } as any;
+    post.commentsCount = 0;
     return post;
   },
 

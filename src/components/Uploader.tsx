@@ -12,6 +12,7 @@ export function Uploader() {
   const [showAltInput, setShowAltInput] = useState(false);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
+  const [dataUrls, setDataUrls] = useState<string[]>([]);
   const [alt, setAlt] = useState("");
   const [caption, setCaption] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
@@ -19,9 +20,26 @@ export function Uploader() {
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const [canReplace, setCanReplace] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number>(0);
   const dropRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileActionRef = useRef<'append' | 'replace'>('append');
+  const replaceIndexRef = useRef<number | null>(null);
+   const [index, setIndex] = useState<number>(0);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef<number>(0);
   const router = useRouter();
+
+  // keep index within bounds when number of images changes
+  useEffect(() => {
+    if (index >= dataUrls.length) setIndex(Math.max(0, dataUrls.length - 1));
+  }, [dataUrls.length]);
+
+  // apply transform when index changes
+  useEffect(() => {
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+  }, [index]);
 
   useEffect(() => {
     (async () => {
@@ -48,7 +66,13 @@ export function Uploader() {
       const url = await compressImage(file);
       const bytes = approxDataUrlBytes(url);
       setCompressedSize(bytes);
-      setDataUrl(url);
+      // append to array (max 5)
+      setDataUrls(d => {
+        const next = [...d, url].slice(0, 5);
+        return next;
+      });
+      // set the primary preview to the first image
+      if (!dataUrl) setDataUrl(url);
       // ensure any previously-open editor is closed when a new file is chosen
       setEditing(false);
       // clear the file input so selecting the same file again will fire change
@@ -65,7 +89,8 @@ export function Uploader() {
   }
 
   async function publish(replace: boolean) {
-    if (!dataUrl) return toast.show("Please select an image");
+    const images = dataUrls.length ? dataUrls : dataUrl ? [dataUrl] : [];
+    if (!images.length) return toast.show("Please select at least one image");
     const maxBytes = CONFIG.imageMaxSizeMB * 1024 * 1024;
     if (compressedSize && compressedSize > maxBytes) {
       return toast.show(`Compressed image is too large (${Math.round(compressedSize/1024)} KB). Try a smaller photo or reduce quality.`);
@@ -73,7 +98,7 @@ export function Uploader() {
     setProcessing(true);
     try {
       await api.createOrReplaceToday({
-        imageUrl: dataUrl,
+        imageUrls: images.slice(0, 5),
         caption,
         alt: alt || caption || "Daily photo",
         replace,
@@ -100,7 +125,7 @@ export function Uploader() {
         </div>
       </div>
 
-      {!dataUrl && (
+      {!dataUrl && !dataUrls.length && (
         <div
           className="drop"
           ref={dropRef}
@@ -119,36 +144,70 @@ export function Uploader() {
           }}
         >
           <div className="drop-inner">
-            <div className="drop-icon" aria-hidden>
-              +
-            </div>
+            <div className="drop-icon" aria-hidden>+</div>
             <div className="drop-text">Drop image here or click to select</div>
-            <div className="dim" style={{ marginTop: 6 }}>
-              JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
-            </div>
+            <div className="dim" style={{ marginTop: 6 }}>JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB</div>
           </div>
-
-          {/* removed duplicate processing overlay (global overlay covers it) */}
-
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            onChange={async () => {
-              const file = fileInputRef.current?.files?.[0];
-              if (file) await handleFile(file);
-            }}
-          />
         </div>
       )}
 
-      <div className={`preview ${dataUrl ? "" : "hidden"}`}>
-        <div className="preview-inner" style={{ position: 'relative' }}>
-          {editing && dataUrl ? (
+      {/* Hidden file input (always rendered so other controls can open it) */}
+      <input
+        id="uploader-file-input"
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        multiple
+        style={{ display: "none" }}
+        onChange={async () => {
+          const files = Array.from(fileInputRef.current?.files || []);
+          if (fileActionRef.current === 'replace') {
+            // replace only the first selected file at the provided index
+            const f = files[0];
+            if (f) {
+              setProcessing(true);
+              try {
+                const url = await compressImage(f);
+                const bytes = approxDataUrlBytes(url);
+                setCompressedSize(bytes);
+                const replaceAt = replaceIndexRef.current ?? (dataUrls.length ? index : 0);
+                if (dataUrls.length) {
+                  setDataUrls(d => {
+                    const copy = [...d];
+                    copy[replaceAt] = url;
+                    return copy;
+                  });
+                  if (replaceAt === 0) setDataUrl(url);
+                } else {
+                  // no array yet, just set primary preview
+                  setDataUrl(url);
+                  setDataUrls([url]);
+                }
+                setOriginalSize(approxDataUrlBytes(f as any));
+              } catch (e) {
+                console.error(e);
+                toast.show('Failed to process replacement image');
+              } finally {
+                setProcessing(false);
+              }
+            }
+            // reset action
+            fileActionRef.current = 'append';
+            replaceIndexRef.current = null;
+          } else {
+            for (const f of files.slice(0, 5)) {
+              await handleFile(f);
+            }
+          }
+        }}
+      />
+
+      <div className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${editing ? 'editing' : ''}`}>
+        <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
+          {editing && (dataUrls[editingIndex] || dataUrl) ? (
             <div style={{ width: '100%' }}>
               <ImageEditor
-                initialDataUrl={dataUrl}
+                initialDataUrl={(dataUrls[editingIndex] || dataUrl) as string}
                 onCancel={() => setEditing(false)}
                 onApply={async (newUrl) => {
                   setEditing(false);
@@ -156,15 +215,27 @@ export function Uploader() {
                   setProcessing(true);
                   try {
                     const compressed = await compressImage(newUrl as any);
-                    setDataUrl(compressed);
+                    // replace the edited image at editingIndex
+                    setDataUrls(d => {
+                      const copy = [...d];
+                      copy[editingIndex] = compressed;
+                      return copy;
+                    });
+                    // if editing the main preview index, update dataUrl too
+                    if (editingIndex === 0) setDataUrl(compressed);
                     setCompressedSize(approxDataUrlBytes(compressed));
                     // approximate original size from dataurl length
                     setOriginalSize(approxDataUrlBytes(newUrl));
                   } catch (e) {
                     console.error(e);
                     // fallback to the edited url directly
-                    setDataUrl(newUrl);
-                    setCompressedSize(approxDataUrlBytes(newUrl));
+                    setDataUrls(d => {
+                      const copy = [...d];
+                      copy[editingIndex] = newUrl as string;
+                      return copy;
+                    });
+                    if (editingIndex === 0) setDataUrl(newUrl as string);
+                    setCompressedSize(approxDataUrlBytes(newUrl as string));
                   } finally {
                     setProcessing(false);
                   }
@@ -173,19 +244,83 @@ export function Uploader() {
             </div>
           ) : (
             <>
-              <img alt={alt || 'Preview'} src={dataUrl || ""} />
-              {dataUrl ? (
-                <button
-                  className="btn"
-                  style={{ position: 'absolute', right: 8, bottom: 8 }}
-                  onClick={() => setEditing(true)}
-                >
-                  Edit photo
-                </button>
-              ) : null}
+              {dataUrls.length > 1 ? (
+                    <div style={{ width: '100%' }}>
+                      <div className="carousel-wrapper" tabIndex={0} onKeyDown={(e) => {
+                        if (e.key === 'ArrowLeft') setIndex(i => Math.max(0, i - 1));
+                        if (e.key === 'ArrowRight') setIndex(i => Math.min(dataUrls.length - 1, i + 1));
+                      }}>
+                        <div className="edge-area left" />
+                        <div className="edge-area right" />
+                        <div className="carousel-track" ref={trackRef} onTouchStart={(e) => {
+                          touchStartX.current = e.touches[0].clientX; touchDeltaX.current = 0;
+                        }} onTouchMove={(e) => {
+                          if (touchStartX.current == null) return;
+                          touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+                          if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
+                        }} onTouchEnd={() => {
+                          if (touchStartX.current == null) return;
+                          const delta = touchDeltaX.current; const threshold = 40;
+                          if (delta > threshold) setIndex(i => Math.max(0, i - 1));
+                          else if (delta < -threshold) setIndex(i => Math.min(dataUrls.length - 1, i + 1));
+                          else if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+                          touchStartX.current = null; touchDeltaX.current = 0;
+                        }} role="list">
+                          {dataUrls.map((u, idx) => (
+                            <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`Preview ${idx+1} of ${dataUrls.length}`} style={{ position: 'relative' }}>
+                              <img alt={(Array.isArray(alt) ? alt[idx] : alt) || `Preview ${idx+1}`} src={u} />
+                              <button
+                                className="btn"
+                                style={{ position: 'absolute', right: 8, bottom: 8 }}
+                                onClick={() => { setEditingIndex(idx); setEditing(true); setIndex(idx); }}
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+                        <button className="carousel-arrow left" onClick={() => setIndex(i => Math.max(0, i - 1))} aria-label="Previous image">‹</button>
+                        <button className="carousel-arrow right" onClick={() => setIndex(i => Math.min(dataUrls.length - 1, i + 1))} aria-label="Next image">›</button>
+
+                        <div className="carousel-dots" aria-hidden="false">
+                          {dataUrls.map((_, i) => (
+                            <button key={i} className={`dot ${i === index ? 'active' : ''}`} onClick={() => setIndex(i)} aria-label={`Show preview ${i + 1}`} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+              ) : (
+                <div>
+                  <img alt={alt || 'Preview'} src={dataUrls[0] || dataUrl || ""} />
+                  { (dataUrl || dataUrls.length === 1) ? (
+                    <button
+                      className="btn"
+                      style={{ position: 'absolute', right: 8, bottom: 8 }}
+                      onClick={() => { setEditingIndex(0); setEditing(true); }}
+                    >
+                      Edit photo
+                    </button>
+                  ) : null }
+                </div>
+              )}
             </>
           )}
         </div>
+
+        {/* thumbnail strip placed outside preview-inner so it isn't clipped */}
+        {dataUrls.length > 1 ? (
+          <div className="thumbs">
+            {dataUrls.map((u, idx) => (
+              <button key={idx} type="button" onClick={() => { setIndex(idx); }} aria-pressed={index === idx} style={{ border: index === idx ? '2px solid var(--primary)' : '1px solid var(--border)' }}>
+                <img src={u} alt={`thumb-${idx}`} />
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {/* The explicit "Exit edit" button was removed because Cancel performs the same action.
+           Keeping the code minimal prevents overlap/clipping at odd zoom levels. */}
       </div>
 
       {/* global processing overlay (covers preview / drop area) */}
@@ -206,9 +341,9 @@ export function Uploader() {
       ) : null}
 
       <div style={{ marginTop: 8 }}>
-        {originalSize ? <div className="dim">Original: {Math.round(originalSize/1024)} KB</div> : null}
-        {compressedSize ? <div className="dim">Compressed: {Math.round(compressedSize/1024)} KB</div> : null}
-        {compressedSize && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024 ? (
+        {originalSize != null ? <div className="dim">Original: {Math.round(originalSize/1024)} KB</div> : null}
+        {compressedSize != null ? <div className="dim">Compressed: {Math.round(compressedSize/1024)} KB</div> : null}
+        {compressedSize != null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024 ? (
           <div className="warn">Compressed image exceeds the maximum of {CONFIG.imageMaxSizeMB} MB. Please resize or choose a smaller file.</div>
         ) : null}
       </div>
@@ -237,13 +372,23 @@ export function Uploader() {
             className="btn ghost"
             onClick={() => {
               if (processing) return;
+              // prepare to replace the currently visible image
+              fileActionRef.current = 'replace';
+              replaceIndexRef.current = dataUrls.length ? index : 0;
               setDataUrl(null);
               setOriginalSize(null);
               setCompressedSize(null);
               setAlt("");
               setCaption("");
               setEditing(false);
-              try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
+              try {
+                if (fileInputRef.current) {
+                  // clear previous value so selecting the same file again will fire change
+                  (fileInputRef.current as HTMLInputElement).value = "";
+                }
+              } catch (e) {}
+              // open file picker so the user can choose a replacement
+              try { fileInputRef.current?.click(); } catch (e) {}
             }}
             style={{ whiteSpace: 'nowrap' }}
           >

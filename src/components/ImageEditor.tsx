@@ -26,6 +26,12 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     anchorY?: number;
   }>(null);
   const [sel, setSel] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [exposure, setExposure] = useState<number>(1);
+  const [contrast, setContrast] = useState<number>(1);
+  const [saturation, setSaturation] = useState<number>(1);
+  const [temperature, setTemperature] = useState<number>(0); // -100..100 mapped to hue-rotate
+  const [vignette, setVignette] = useState<number>(0); // 0..1
+  const [controlsOpen, setControlsOpen] = useState<boolean>(false);
   // default behavior: drag to create/move crop selection.
   const cropRatio = useRef<number | null>(null); // null = free
 
@@ -128,7 +134,25 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       left = offset.x; top = offset.y;
     }
 
-    ctx.drawImage(img, left, top, dispW, dispH);
+  // Apply color adjustments via canvas filter for live preview
+    // temperature mapped to hue-rotate degrees (-30..30 deg)
+    const hue = Math.round((temperature / 100) * 30);
+    const filter = `brightness(${exposure}) contrast(${contrast}) saturate(${saturation}) hue-rotate(${hue}deg)`;
+  ctx.filter = filter;
+  ctx.drawImage(img, left, top, dispW, dispH);
+  ctx.filter = 'none';
+    // optional vignette overlay
+    if (vignette > 0) {
+      const r = info?.rect || canvas.getBoundingClientRect();
+      const g = ctx.createRadialGradient(r.width / 2, r.height / 2, Math.min(r.width, r.height) * 0.2, r.width / 2, r.height / 2, Math.max(r.width, r.height) * 0.8);
+      g.addColorStop(0, `rgba(0,0,0,0)`);
+      g.addColorStop(1, `rgba(0,0,0,${Math.min(0.85, vignette)})`);
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, r.width, r.height);
+      ctx.restore();
+    }
 
     if (sel) {
       ctx.save();
@@ -261,6 +285,20 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     setOffset({ x: 0, y: 0 });
   }
 
+  async function bakeRotateMinus90() {
+    const img = imgRef.current; if (!img) return;
+    const tmp = document.createElement('canvas');
+    tmp.width = img.naturalHeight; tmp.height = img.naturalWidth;
+    const t = tmp.getContext('2d')!;
+    t.translate(tmp.width / 2, tmp.height / 2);
+    t.rotate(-Math.PI / 2);
+    t.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    const dataUrl = tmp.toDataURL('image/png');
+    setImageSrc(dataUrl);
+    setSel(null);
+    setOffset({ x: 0, y: 0 });
+  }
+
   function resetAll() {
     setImageSrc(originalRef.current);
     setSel(null); setOffset({ x: 0, y: 0 });
@@ -284,12 +322,15 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       srcH = Math.min(srcH, img.naturalHeight - srcY);
     }
 
-    const out = document.createElement('canvas');
-    out.width = srcW; out.height = srcH;
-    const octx = out.getContext('2d')!;
-    octx.imageSmoothingQuality = 'high';
-    octx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-    const dataUrl = out.toDataURL('image/jpeg', 0.92);
+  const out = document.createElement('canvas');
+  out.width = srcW; out.height = srcH;
+  const octx = out.getContext('2d')!;
+  octx.imageSmoothingQuality = 'high';
+  // Apply color adjustments to exported image
+  octx.filter = `brightness(${exposure}) contrast(${contrast}) saturate(${saturation})`;
+  octx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
+  octx.filter = 'none';
+  const dataUrl = out.toDataURL('image/jpeg', 0.92);
     onApply(dataUrl);
   }
 
@@ -297,7 +338,11 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     <div
       ref={containerRef}
       tabIndex={0}
-      onKeyDown={(e) => { if ((e as any).key === 'Enter') { applyEdit(); } }}
+      onKeyDown={(e) => {
+        const k = (e as any).key;
+        if (k === 'Enter') { applyEdit(); }
+        if (k === 'Escape') { onCancel(); }
+      }}
       className="image-editor"
       style={{ width: '100%', maxWidth: 820, margin: '0 auto', background: 'var(--bg-elev)', color: 'var(--text)', padding: 12, paddingBottom: 'calc(96px + var(--safe-bottom))', borderRadius: 8, overflow: 'visible' }}
       
@@ -305,7 +350,10 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 12, flexWrap: 'wrap' }}>
   <button type="button" className="btn ghost" onClick={onCancel} aria-label="back" style={{ color: 'var(--text)', background: 'transparent', border: 'none' }}>◀</button>
         <div style={{ fontSize: 14, fontWeight: 600 }}>Edit</div>
-        <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button type="button" title="Rotate -90°" onClick={bakeRotateMinus90} style={{ padding: '8px 10px', borderRadius: 8, background: 'transparent', border: 'none' }}>⤺</button>
+          <button type="button" title="Rotate +90°" onClick={bakeRotate90} style={{ padding: '8px 10px', borderRadius: 8, background: 'transparent', border: 'none' }}>⤾</button>
+          <button type="button" className="btn ghost" onClick={onCancel} style={{ padding: '8px 12px', borderRadius: 8 }}>Cancel</button>
           <button type="button" className="btn primary" onClick={applyEdit} style={{ padding: '8px 14px', borderRadius: 8, background: 'var(--primary)', color: '#fff', fontWeight: 600 }}>Confirm</button>
         </div>
       </div>
@@ -317,9 +365,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
           
         />
 
-        <div style={{ position: 'absolute', right: 12, top: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button type="button" title="Rotate 90°" onClick={bakeRotate90} style={{ background: 'color-mix(in srgb, var(--bg-elev), transparent 8%)', color: 'var(--text)', border: 'none', padding: 8, borderRadius: 8 }}>⤾</button>
-        </div>
+        {/* header rotate buttons now handle rotate; removed tiny top-right rotate button to improve discoverability */}
 
   <div style={{ position: 'absolute', left: 12, bottom: 12, background: 'color-mix(in srgb, var(--bg-elev), transparent 40%)', color: 'var(--text)', padding: '6px 8px', borderRadius: 6 }}>
           <div style={{ fontSize: 11, opacity: 0.9 }}>Drag to crop; drag inside selection to move it</div>
@@ -330,12 +376,33 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
         </div>
       </div>
 
+      {/* Color adjustment controls */}
+      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr', marginTop: 12, maxWidth: 820, margin: '12px auto 0' }}>
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ width: 110 }}>Exposure</span>
+          <input type="range" min={0.5} max={1.8} step={0.01} value={exposure} onChange={(e) => { setExposure(Number(e.target.value)); draw(); }} />
+          <span style={{ width: 48, textAlign: 'right' }}>{exposure.toFixed(2)}</span>
+        </label>
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ width: 110 }}>Contrast</span>
+          <input type="range" min={0.5} max={1.8} step={0.01} value={contrast} onChange={(e) => { setContrast(Number(e.target.value)); draw(); }} />
+          <span style={{ width: 48, textAlign: 'right' }}>{contrast.toFixed(2)}</span>
+        </label>
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ width: 110 }}>Saturation</span>
+          <input type="range" min={0} max={2} step={0.01} value={saturation} onChange={(e) => { setSaturation(Number(e.target.value)); draw(); }} />
+          <span style={{ width: 48, textAlign: 'right' }}>{saturation.toFixed(2)}</span>
+        </label>
+      </div>
+
       {/* aspect ratio presets */}
   <div style={{ display: 'flex', gap: 8, marginTop: 10, justifyContent: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 80, paddingBottom: 8 }}>
           {[
           { label: 'Free', v: null },
+          { label: '16:9', v: 16 / 9 },
+          { label: '4:3', v: 4 / 3 },
+          { label: '3:2', v: 3 / 2 },
           { label: '1:1', v: 1 },
-          { label: '3:4', v: 3 / 4 },
           { label: '4:5', v: 4 / 5 }
         ].map(r => (
               <button type="button" key={r.label} onClick={() => {
@@ -374,7 +441,12 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
               const y = (rect.height - h) / 2;
               setSel({ x, y, w, h });
             }
-              }} style={{ padding: '8px 12px', minWidth: 60, minHeight: 36, fontSize: 14, borderRadius: 8, background: cropRatio.current === r.v ? 'var(--primary)' : 'var(--bg-elev)', color: cropRatio.current === r.v ? '#fff' : 'var(--text)', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', zIndex: 40 }}>{r.label}</button>
+              }} style={{ padding: '8px 12px', minWidth: 60, minHeight: 36, fontSize: 14, borderRadius: 8, background: cropRatio.current === r.v ? 'var(--primary)' : 'var(--bg-elev)', color: cropRatio.current === r.v ? '#fff' : 'var(--text)', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', zIndex: 40 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ display: 'inline-block', width: 40, height: 18, background: 'rgba(0,0,0,0.06)', borderRadius: 4, border: '1px solid rgba(0,0,0,0.04)', boxSizing: 'border-box', flex: 'none', transform: 'translateY(1px)', }} aria-hidden />
+                  <span>{r.label}</span>
+                </span>
+              </button>
         ))}
       </div>
 

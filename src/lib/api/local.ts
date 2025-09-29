@@ -49,7 +49,10 @@ function getUserById(id: string | null) {
 function hydratePost(post: Post): HydratedPost {
   const user = getUserById(post.userId) || { username: "unknown", avatarUrl: "", id: "unknown", displayName: "unknown" } as any;
   const comments = cache.comments.filter(c => c.postId === post.id);
-  return { ...post, user, commentsCount: comments.length };
+  // normalize: ensure imageUrls exists for consumers
+  const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+  const alt = (post as any).alt;
+  return { ...post, imageUrls, alt, user, commentsCount: comments.length } as any;
 }
 
 export const localApi: Api = {
@@ -174,7 +177,7 @@ export const localApi: Api = {
     return { allowed: true };
   },
 
-  async createOrReplaceToday({ imageUrl, caption, alt, replace = false, public: isPublic = true }) {
+  async createOrReplaceToday({ imageUrl, imageUrls, caption, alt, replace = false, public: isPublic = true }) {
     const me = getUserById(cache.currentUserId);
     if (!me) throw new Error("Not logged in");
     const now = new Date();
@@ -194,7 +197,8 @@ export const localApi: Api = {
     const post: Post = {
       id: uid(),
       userId: me.id,
-      imageUrl,
+      // prefer imageUrls if provided, otherwise fall back to legacy imageUrl
+      imageUrls: imageUrls && imageUrls.length ? imageUrls.slice(0, 5) : imageUrl ? [imageUrl] : [],
       alt: alt || "",
       caption: caption || "",
       createdAt: now.toISOString(),

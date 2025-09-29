@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
 import { formatRelative } from "@/lib/date";
@@ -60,6 +60,53 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   const userLine = useMemo(() => {
     return `@${post.user.username} • ${formatRelative(post.createdAt)} ${lock}`;
   }, [post.user.username, post.createdAt, lock]);
+
+  // Normalize image urls and alt text for rendering
+  const imageUrls: string[] = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+  const alts: string[] = Array.isArray(post.alt) ? post.alt : [post.alt || ""];
+
+  // Carousel state for multi-image posts
+  const [index, setIndex] = useState(0);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef<number>(0);
+
+  useEffect(() => {
+    // clamp index when images change
+    if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1));
+  }, [imageUrls.length]);
+
+  useEffect(() => {
+    if (!trackRef.current) return;
+    trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+  }, [index]);
+
+  const prev = () => setIndex(i => (i <= 0 ? 0 : i - 1));
+  const next = () => setIndex(i => (i >= imageUrls.length - 1 ? imageUrls.length - 1 : i + 1));
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current == null) return;
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+    // apply a slight drag transform for feel
+    if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
+  };
+  const onTouchEnd = () => {
+    if (touchStartX.current == null) return;
+    const delta = touchDeltaX.current;
+    const threshold = 40; // px
+    if (delta > threshold) prev();
+    else if (delta < -threshold) next();
+    else {
+      // snap back
+      if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+    }
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+  };
 
   return (
     <article className="card">
@@ -132,12 +179,45 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
       </div>
 
       <div className="card-media">
-        <img
-          loading="lazy"
-          src={post.imageUrl}
-          alt={post.alt || "Photo"}
-          onLoad={e => (e.currentTarget.classList.add("loaded"))}
-        />
+        {imageUrls.length > 1 ? (
+          <div className="carousel-wrapper" onKeyDown={(e) => {
+            if (e.key === "ArrowLeft") prev();
+            if (e.key === "ArrowRight") next();
+          }} tabIndex={0}>
+            {/* invisible edge areas: hovering these will reveal the nearby arrow control */}
+            <div className="edge-area left" />
+            <div className="edge-area right" />
+
+            <div className="carousel-track" ref={trackRef} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} role="list">
+              {imageUrls.map((u: string, idx: number) => (
+                <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`${idx + 1} of ${imageUrls.length}`}>
+                  <img
+                    loading="lazy"
+                    src={u}
+                    alt={alts[idx] || `Photo ${idx + 1}`}
+                    onLoad={e => (e.currentTarget.classList.add("loaded"))}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button className="carousel-arrow left" onClick={prev} aria-label="Previous image">‹</button>
+            <button className="carousel-arrow right" onClick={next} aria-label="Next image">›</button>
+
+            <div className="carousel-dots" aria-hidden="false">
+              {imageUrls.map((_, i) => (
+                <button key={i} className={`dot ${i === index ? "active" : ""}`} onClick={() => setIndex(i)} aria-label={`Show image ${i + 1}`} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <img
+            loading="lazy"
+            src={imageUrls[0]}
+            alt={alts[0] || "Photo"}
+            onLoad={e => (e.currentTarget.classList.add("loaded"))}
+          />
+        )}
       </div>
 
       <div className="card-body">

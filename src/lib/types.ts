@@ -12,8 +12,12 @@ export type User = {
 export type Post = {
   id: string;
   userId: string;
-  imageUrl: string;
-  alt: string;
+  // Support one or more images. Older data may still include `imageUrl`.
+  imageUrls?: string[];
+  // legacy single-image field (optional)
+  imageUrl?: string;
+  // For accessibility: either a single alt for the primary image or an array matching imageUrls
+  alt?: string | string[];
   caption: string;
   createdAt: string;
   public: boolean;
@@ -64,7 +68,8 @@ export interface Api {
   getPost(id: string): Promise<HydratedPost | null>;
 
   canPostToday(): Promise<{ allowed: boolean; reason?: string }>;
-  createOrReplaceToday(input: { imageUrl: string; caption?: string; alt?: string; replace?: boolean; public?: boolean }): Promise<HydratedPost>;
+  // Accept either a single `imageUrl` (legacy) or `imageUrls` (array up to 5 urls).
+  createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; replace?: boolean; public?: boolean }): Promise<HydratedPost>;
 
   updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }): Promise<HydratedPost>;
   deletePost(id: string): Promise<boolean>;

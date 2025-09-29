@@ -40,16 +40,18 @@ export async function seedIfNeeded(api: Api) {
     for (let j = 0; j < u.length; j++) {
       if (Math.random() < 0.5) continue;
       const d = new Date(now - dayOffset * 86400000 - Math.floor(Math.random()* 10) * 3600000);
-      const imageUrl = sampleImages[(dayOffset + j) % sampleImages.length];
+      // pick 1-3 images for this post to demonstrate multi-image support
+      const count = 1 + Math.floor(Math.random() * 3);
+      const imgs = Array.from({ length: count }).map((_, k) => sampleImages[(dayOffset + j + k) % sampleImages.length]);
       posts.push({
         id: `p_${dayOffset}_${j}`,
         userId: u[j].id,
-        imageUrl,
-        alt: "Daily photo",
+        imageUrls: imgs,
+        alt: imgs.map((_, idx) => `Daily photo ${idx+1}`),
         caption: ["mood","on the way","tiny moment","quiet light","city hum","morning breeze","notes from today"][ (dayOffset+j) % 7 ],
         createdAt: d.toISOString(),
         public: true,
-      });
+      } as any);
     }
   }
 

@@ -769,10 +769,59 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .day .d { font-weight: 700; font-size: 13px; }
 .day .count { font-size: 11px; color: var(--muted); }
 .day.today { outline: 2px solid color-mix(in srgb, var(--accent), transparent 60%); }
-.day.mine { background: color-mix(in srgb, var(--accent), transparent 86%); }
+
+/* make day a positioned container so we can add subtle indicators */
+.day { position: relative; }
+
+/* subtle indicator for days that include the current user's posts
+   - keep the day's base appearance unchanged and add a small accent dot
+     in the top-right so it's discoverable but not loud */
+.day.mine::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  opacity: 0.96;
+  pointer-events: none;
+}
+
+/* Legend styles used in the calendar header */
+.calendar-legend .legend-dot {
+  display: inline-block;
+  width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.calendar-legend .legend-dot.post { background: var(--primary); }
+.calendar-legend .legend-dot.mine { background: var(--accent); }
 
 /* selected day styling */
 .day.selected { border-color: var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.08); background: color-mix(in srgb, var(--primary-weak), transparent 86%); }
+
+/* make selected animation a gentle scale + ring so it's obvious without being loud */
+.day.selected {
+  transform: translateY(-4px) scale(1.01);
+  transition: transform 240ms var(--transition-mid), box-shadow 220ms var(--transition-fast), border-color 220ms var(--transition-fast);
+}
+
+/* skeleton placeholder for stats loading */
+.day.skeleton { background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 80%), color-mix(in srgb, var(--bg-elev), transparent 60%)); color: transparent; }
+.day.skeleton .dot, .day.skeleton .count { opacity: 0; }
+
+/* Today badge: small rounded pill near the date number to improve discoverability */
+.today-badge {
+  font-size: 11px; color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 68%); padding: 4px 6px; border-radius: 999px; justify-self: start; align-self: start; margin-top: 4px; font-weight: 700;
+}
+
+/* slightly larger touch targets and clearer spacing for mobile */
+@media (max-width: 640px) {
+  .day { padding: 10px; min-height: 76px; border-radius: 12px; }
+  .calendar-grid { gap: 8px; }
+  .day .d { font-size: 15px; }
+}
 
 /* small dot indicator for days with posts */
 .day .dot {

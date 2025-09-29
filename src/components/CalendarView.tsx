@@ -13,6 +13,7 @@ export function CalendarView() {
   const [curYear, setYear] = useState(now.getFullYear());
   const [curMonth, setMonth] = useState(now.getMonth());
   const [stats, setStats] = useState<{ counts: Record<string, number>; mine: Set<string> }>({ counts: {}, mine: new Set() });
+  const [loadingStats, setLoadingStats] = useState(false);
   const [dayPosts, setDayPosts] = useState<HydratedPost[] | null>(null);
   const [loadingDay, setLoadingDay] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -21,17 +22,32 @@ export function CalendarView() {
   // so we don't need to include the `loadStats` function in the dependency list.
   useEffect(() => {
     (async () => {
-      const s = await api.calendarStats({ year: curYear, monthIdx: curMonth });
-      setStats({ counts: s.counts, mine: s.mine });
+      try {
+        setLoadingStats(true);
+        const s = await api.calendarStats({ year: curYear, monthIdx: curMonth });
+        setStats({ counts: s.counts, mine: s.mine });
+      } finally {
+        setLoadingStats(false);
+      }
     })();
   }, [curYear, curMonth]);
 
   const showDay = async (dk: string) => {
+    // toggle selection: clicking the same day again will close the feed
+    if (selectedDay === dk) {
+      setSelectedDay(null);
+      setDayPosts(null);
+      return;
+    }
+
     setSelectedDay(dk);
     setLoadingDay(true);
-    const posts = await api.getPostsByDate(dk);
-    setDayPosts(posts);
-    setLoadingDay(false);
+    try {
+      const posts = await api.getPostsByDate(dk);
+      setDayPosts(posts);
+    } finally {
+      setLoadingDay(false);
+    }
   };
 
   const matrix = monthMatrix(curYear, curMonth);
@@ -63,7 +79,7 @@ export function CalendarView() {
         <div className="calendar-weekdays">
           {weekdays.map(d => <div key={d} className="dim" style={{ textAlign: "center" }}>{d}</div>)}
         </div>
-        <div className="dim" style={{ padding: "0 2px 6px" }}>Tap a day to see all public posts</div>
+        {/* helper + legend moved to bottom of the calendar for improved layout */}
         <div className="calendar-grid" id="grid" aria-label="Month grid">
           {matrix.map((d, idx) => {
             if (!d) return <div className="day" key={idx} style={{ visibility: "hidden" }} />;
@@ -77,6 +93,7 @@ export function CalendarView() {
               isToday ? "today" : "",
               isMine ? "mine" : "",
               count > 0 ? "has-posts" : "",
+              loadingStats ? "skeleton" : "",
               isSelected ? "selected" : "",
             ].join(" ").trim();
 
@@ -86,15 +103,30 @@ export function CalendarView() {
                 className={className}
                 role="button" tabIndex={0}
                 aria-pressed={isSelected}
+                aria-label={`${d.getDate()} ${new Date(dk).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })} — ${count} public post${count===1? '' : 's'}${isMine ? ', includes your posts' : ''}`}
                 onClick={() => showDay(dk)}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === "") && showDay(dk)}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && showDay(dk)}
               >
                 <div className="d">{d.getDate()}</div>
-                <div className="count">{count} post{count===1 ? "" : "s"}</div>
+                {isToday ? <div className="today-badge">Today</div> : null}
+                <div className="count">{count > 0 ? `${count} post${count===1 ? '' : 's'}` : ''}</div>
                 {count > 0 ? <div className="dot" aria-hidden /> : null}
               </div>
             );
           })}
+        </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '6px 2px 0' }}>
+          <div className="dim">Tap a day to see all public posts</div>
+          <div className="calendar-legend" aria-hidden style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div className="legend-item" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+              <span className="legend-dot post" />
+              <span className="dim">Public posts</span>
+            </div>
+            <div className="legend-item" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+              <span className="legend-dot mine" />
+              <span className="dim">Your posts</span>
+            </div>
+          </div>
         </div>
       </div>
       <div className="feed" id="day-feed">
@@ -105,11 +137,11 @@ export function CalendarView() {
           </div>
         ) : null}
 
-        {loadingDay ? <div className="dim">Loading…</div> : (
-          dayPosts ? (dayPosts.length ? dayPosts.map(p => <PostCard key={p.id} post={p} />)
-                  : <div className="empty">No public posts for that day.</div>)
-                  : <div className="dim">Select a day to view posts</div>
-        )}
+  {loadingDay ? <div className="dim">Loading…</div> : (
+    dayPosts ? (dayPosts.length ? dayPosts.map(p => <PostCard key={p.id} post={p} />)
+      : <div className="empty">No public posts for that day.</div>)
+      : null
+  )}
       </div>
     </div>
   );

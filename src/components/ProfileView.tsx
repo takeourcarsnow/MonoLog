@@ -131,7 +131,7 @@ export function ProfileView({ userId }: { userId?: string }) {
               onClick={() => setShowAuth(false)}
               style={{ position: "fixed", inset: 0, zIndex: 40 }}
             />
-            <div style={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 50, background: "var(--bg)", padding: 16, borderRadius: 8 }}>
+            <div role="dialog" aria-modal="true" aria-label="Sign in or sign up" style={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 50, background: "var(--bg)", padding: 16, borderRadius: 8 }}>
               <AuthForm onClose={() => setShowAuth(false)} />
             </div>
           </>

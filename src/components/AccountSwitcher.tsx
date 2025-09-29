@@ -38,7 +38,7 @@ export function AccountSwitcher() {
       >
         {current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <img src={current.avatarUrl} alt="" className="avatar" style={{ width: 22, height: 22 }} />
+            <img src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" style={{ width: 22, height: 22 }} />
             <span>{current.displayName}</span>
           </span>
         ) : "Account"}
@@ -53,6 +53,9 @@ export function AccountSwitcher() {
           />
           <div
             className="auth-popover"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sign in or sign up"
             style={{ position: "absolute", right: 0, marginTop: 8, zIndex: 50, background: "var(--bg)", padding: 12, borderRadius: 8, boxShadow: "0 6px 18px rgba(0,0,0,0.6)" }}
           >
             <AuthForm onClose={() => setShowAuth(false)} />

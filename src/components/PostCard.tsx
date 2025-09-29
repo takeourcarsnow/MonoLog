@@ -172,7 +172,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                   {showAuth ? (
                     <>
                       <div onClick={() => setShowAuth(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
-                      <div style={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 50, background: "var(--bg)", padding: 16, borderRadius: 8 }}>
+                      <div role="dialog" aria-modal="true" aria-label="Sign in or sign up" style={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 50, background: "var(--bg)", padding: 16, borderRadius: 8 }}>
                         <AuthForm onClose={() => setShowAuth(false)} />
                       </div>
                     </>
@@ -197,14 +197,8 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
               >
                 Delete
               </button>
-              {showDeleteConfirm && (
-                <div
-                  ref={popRef}
-                  className="confirm-popover"
-                  role="dialog"
-                  aria-label="Confirm delete"
-                  aria-modal={false}
-                >
+                  {showDeleteConfirm && (
+                <div ref={popRef} className="confirm-popover" role="dialog" aria-label="Confirm delete" aria-modal={true}>
                   <div className="confirm-popover-arrow" aria-hidden="true" />
                   <div className="confirm-popover-body">
                     <div className="confirm-message">Delete this post? This cannot be undone.</div>
@@ -426,6 +420,7 @@ function Editor({ post, onCancel, onSave }: {
         className="edit-caption input"
         type="text"
   placeholder="Tell your story (if you feel like it)"
+  aria-label="Edit caption"
         value={caption}
         onChange={e => setCaption(e.target.value)}
       />

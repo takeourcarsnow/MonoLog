@@ -59,6 +59,28 @@ export function ProfileView({ userId }: { userId?: string }) {
       );
     }
 
+    // while not loading, prefer the upload-style sign-in prompt when the
+    // viewer is not signed in and they're looking at their own profile.
+    if (!loading && !isOther && !currentUserId) {
+      return (
+        <div className="view-fade" style={{ maxWidth: 520, margin: "24px auto" }}>
+          <div style={{ marginBottom: 12 }}>
+            <strong>Please sign in to post</strong>
+            <div className="dim">You must be signed in to upload photos.</div>
+          </div>
+          <AuthForm onClose={async () => {
+            // refresh authenticated user state after sign-in
+            const me = await api.getCurrentUser();
+            setCurrentUserId(me?.id || null);
+            if (me) {
+              setUser(me);
+              setPosts(await api.getUserPosts(me.id));
+            }
+          }} />
+        </div>
+      );
+    }
+
     return (
       <div className="empty" style={{ position: "relative" }}>
         <div>User not found. Pick an account from the Account menu to get started.</div>

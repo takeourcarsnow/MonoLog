@@ -8,6 +8,7 @@ import type { HydratedPost, User } from "@/lib/types";
 import Link from "next/link";
 import { AuthForm } from "@/components/AuthForm";
 import { SignOutButton } from "@/components/SignOut";
+import { useToast } from "./Toast";
 
 export function ProfileView({ userId }: { userId?: string }) {
   const [user, setUser] = useState<User | null>(null);
@@ -82,7 +83,7 @@ export function ProfileView({ userId }: { userId?: string }) {
   return (
     <div className="view-fade">
       <div className="profile-header toolbar">
-        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+        <div className="profile-left" style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
           <div>
             <div className="username">{user.displayName}</div>
@@ -90,10 +91,11 @@ export function ProfileView({ userId }: { userId?: string }) {
             {user.bio ? <div className="dim" style={{ marginTop: 6 }}>{user.bio}</div> : null}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {!isOther ? (
-            <>
-              <Link className="btn" href="/upload">New Post</Link>
+        <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {!isOther ? (
+                <>
+                  <Link className="btn" href="/upload">New Post</Link>
+                  <Link className="btn" href="/favorites">Favorites</Link>
                 <EditProfile onSaved={async () => {
                   // refresh the profile and posts after an edit so UI reflects changes immediately
                   const me = await api.getCurrentUser();
@@ -163,12 +165,14 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
     })();
   }, []);
 
+  const toast = useToast();
+
   if (!editing) {
     return <button className="btn edit-profile-btn" onClick={() => setEditing(true)}>Edit Profile</button>;
   }
 
   return (
-    <div>
+    <div className="edit-panel" role="dialog" aria-label="Edit profile">
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
         <input
           type="file"
@@ -231,9 +235,9 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
                 throw e;
               }
               // refresh local bio to ensure UI reflects latest profile (optional)
-            } catch (e: any) {
+              } catch (e: any) {
               console.error(e);
-              alert(e?.message || "Failed to upload avatar");
+              toast.show(e?.message || "Failed to upload avatar");
             } finally {
               setProcessing(false);
             }
@@ -242,7 +246,7 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
         <button className="btn" onClick={() => fileRef.current?.click()} disabled={processing}>
           {processing ? "Uploading…" : "Change Avatar"}
         </button>
-      </div>
+  </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <span className="dim">Display name</span>
@@ -262,40 +266,42 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
             onChange={e => setBio(e.target.value)}
           />
         </label>
-      </div>
+  </div>
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-        <button
-          className="btn save-bio"
+        <div className="edit-actions" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button
+            className="btn save-bio"
               onClick={async () => {
-            // basic validation
-            const uname = username.trim();
-            if (!uname) { alert("Username cannot be empty"); return; }
-            setProcessing(true);
-            try {
-              await api.updateCurrentUser({ username: uname, displayName: displayName.trim() || undefined, bio: bio.trim() });
-              setEditing(false);
-              try { await onSaved?.(); } catch (e) { /* ignore parent refresh errors */ }
-            } catch (e: any) {
-              alert(e?.message || "Failed to update profile");
-            } finally {
-              setProcessing(false);
-            }
-          }}
+              // basic validation
+              const uname = username.trim();
+              if (!uname) { toast.show("Username cannot be empty"); return; }
+              setProcessing(true);
+                try {
+                  await api.updateCurrentUser({ username: uname, displayName: displayName.trim() || undefined, bio: bio.trim() });
+                  setEditing(false);
+                  try { await onSaved?.(); } catch (e) { /* ignore parent refresh errors */ }
+                } catch (e: any) {
+                  toast.show(e?.message || "Failed to update profile");
+                } finally {
+                  setProcessing(false);
+                }
+            }}
         >
           Save
-        </button>
-        <button
-          className="btn cancel-bio"
-          onClick={() => {
-            setBio(original);
-            setUsername(originalUsername);
-            setDisplayName(originalDisplayName);
-            setEditing(false);
-          }}
-        >
-          Cancel
-        </button>
+          </button>
+          <button
+            className="btn cancel-bio"
+            onClick={() => {
+              setBio(original);
+              setUsername(originalUsername);
+              setDisplayName(originalDisplayName);
+              setEditing(false);
+            }}
+          >
+            Cancel
+          </button>
+        </div>
       </div>
-    </div>
+      </div>
   );
 }

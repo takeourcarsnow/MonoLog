@@ -8,6 +8,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Comments } from "./Comments";
 import { AuthForm } from "./AuthForm";
+import { useToast } from "./Toast";
 
 export function PostCard({ post: initial }: { post: HydratedPost }) {
   const [post, setPost] = useState<HydratedPost>(initial);
@@ -52,6 +53,8 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   }, [post.user?.id, post.user?.avatarUrl]);
 
   const lock = post.public ? "" : "🔒";
+
+  const toast = useToast();
 
   const userLine = useMemo(() => {
     return `@${post.user.username} • ${formatRelative(post.createdAt)} ${lock}`;
@@ -116,7 +119,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                     // Let parent remove it from list; here we just hide
                     (document.getElementById(`post-${post.id}`)?.remove?.());
                   } catch (e: any) {
-                    alert(e?.message || "Failed to delete post");
+                    toast.show(e?.message || "Failed to delete post");
                   }
                 }}
               >
@@ -169,7 +172,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                         setIsFavorite(true);
                       }
                     } catch (e: any) {
-                      alert(e?.message || "Failed to toggle favorite");
+                      toast.show(e?.message || "Failed to toggle favorite");
                     }
                   }}
                 >
@@ -192,7 +195,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                 setPost(updated);
                 setEditing(false);
               } catch (e: any) {
-                alert(e?.message || "Failed to update post");
+                toast.show(e?.message || "Failed to update post");
               }
             }}
           />

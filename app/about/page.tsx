@@ -3,24 +3,25 @@
 export default function AboutPage() {
   return (
     <div className="card view-fade" style={{ padding: 18 }}>
-      <h2>Welcome to MonoLog</h2>
-      <p className="dim">
-  MonoLog is a tiny, local-first prototype for keeping a simple daily photo journal — one photo per day.
-  It&apos;s designed for low-friction posting and focused discovery.
-      </p>
-      <h3>How it works</h3>
+      <h2>About MonoLog</h2>
+      <p className="dim">MonoLog is a minimal, local-first daily photo journal: one photo per day. It focuses on simplicity, low friction posting, and a calm way to capture small moments.</p>
+
+      <h3>Quick tour</h3>
       <ul>
-        <li>Post one photo per day from the <strong>Post</strong> tab.</li>
-        <li>Explore public posts from everyone, or follow people to see them in your <strong>Feed</strong>.</li>
-        <li>Use the calendar to browse posts by date.</li>
+        <li><strong>Post</strong> — add today’s photo. One photo per day keeps the app simple and focused.</li>
+        <li><strong>Feed</strong> — follow accounts and see posts from people you follow.</li>
+        <li><strong>Explore</strong> — browse public posts from the community (if you enable public mode).</li>
+        <li><strong>Calendar</strong> — jump to posts by date for quick review.</li>
       </ul>
-      <h3>Local-first</h3>
-      <p className="dim">
-        This demo stores data in your browser (local storage). To try multiple users, use the Account menu to switch between accounts.
-      </p>
-  <p className="dim">It&apos;s intentionally minimal — a starting point for a personal daily-photo app.</p>
-      <div style={{ marginTop: 12 }}>
-        <a className="btn" href="/explore">Get started</a>
+
+      <h3>Local-first & privacy</h3>
+      <p className="dim">By default MonoLog stores data in your browser (LocalStorage). That means your posts stay on your device unless you opt into a remote backend. For remote persistence across devices, configure the Supabase mode in the environment variables.</p>
+
+      <p className="dim">This project is intentionally small — a starting point for a personal daily-photo practice or a prototype for a larger product.</p>
+
+      <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+        <a className="btn primary" href="/upload">Post</a>
+        <a className="btn" href="/explore">Explore</a>
       </div>
     </div>
   );

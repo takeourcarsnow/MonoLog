@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import { CONFIG } from "@/lib/config";
 import { useRouter } from "next/navigation";
+import { useToast } from "./Toast";
 
 export function Uploader() {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -26,13 +27,15 @@ export function Uploader() {
     })();
   }, []);
 
+  const toast = useToast();
+
   const setDrag = (on: boolean) => {
     dropRef.current?.classList.toggle("dragover", on);
   };
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      toast.show("Please select an image file");
       return;
     }
     setProcessing(true);
@@ -46,7 +49,7 @@ export function Uploader() {
       if (!alt && caption) setAlt(caption);
     } catch (e) {
       console.error(e);
-      alert("Failed to process image");
+      toast.show("Failed to process image");
       setDataUrl(null);
     } finally {
       setProcessing(false);
@@ -54,10 +57,10 @@ export function Uploader() {
   }
 
   async function publish(replace: boolean) {
-    if (!dataUrl) return alert("Please select an image");
+    if (!dataUrl) return toast.show("Please select an image");
     const maxBytes = CONFIG.imageMaxSizeMB * 1024 * 1024;
     if (compressedSize && compressedSize > maxBytes) {
-      return alert(`Compressed image is too large (${Math.round(compressedSize/1024)} KB). Try a smaller photo or reduce quality.`);
+      return toast.show(`Compressed image is too large (${Math.round(compressedSize/1024)} KB). Try a smaller photo or reduce quality.`);
     }
     try {
       await api.createOrReplaceToday({
@@ -70,9 +73,9 @@ export function Uploader() {
       router.push("/profile");
     } catch (e: any) {
       if (e?.code === "LIMIT") {
-        alert("You already posted today. Tap 'Replace today’s post' to replace it.");
+        toast.show("You already posted today. Tap 'Replace today’s post' to replace it.");
       } else {
-        alert(e?.message || "Failed to publish");
+        toast.show(e?.message || "Failed to publish");
       }
     }
   }
@@ -80,16 +83,20 @@ export function Uploader() {
   return (
     <div className="uploader view-fade">
       <div className="toolbar">
-        <strong>Post your photo for today</strong>
-        <div className="dim">One photo per day</div>
+        <div>
+          <strong>Post your photo for today</strong>
+          <div className="dim">One photo per day</div>
+        </div>
       </div>
 
       <div
         className="drop"
         ref={dropRef}
         tabIndex={0}
+        role="button"
         aria-label="Drop an image or click to select"
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
         onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
         onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
         onDrop={async (e) => {
@@ -98,10 +105,16 @@ export function Uploader() {
           if (file) await handleFile(file);
         }}
       >
-        Drop image here or click to select
-        <div className="dim" style={{ marginTop: 6 }}>
-          JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
+        <div className="drop-inner">
+          <div className="drop-icon" aria-hidden>
+            +
+          </div>
+          <div className="drop-text">Drop image here or click to select</div>
+          <div className="dim" style={{ marginTop: 6 }}>
+            JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
+          </div>
         </div>
+
         <input
           type="file"
           accept="image/*"
@@ -116,7 +129,9 @@ export function Uploader() {
       </div>
 
       <div className={`preview ${dataUrl ? "" : "hidden"}`}>
-        <img alt="Preview" src={dataUrl || ""} />
+        <div className="preview-inner">
+          <img alt={alt || 'Preview'} src={dataUrl || ""} />
+        </div>
       </div>
 
       <div style={{ marginTop: 8 }}>
@@ -141,31 +156,36 @@ export function Uploader() {
         value={caption}
         onChange={e => setCaption(e.target.value)}
       />
-      <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
-        <span className="dim">Visibility:</span>
-        <select
-          className="visibility-select"
-          aria-label="Post visibility"
-          value={visibility}
-          onChange={e => setVisibility(e.target.value as any)}
-        >
-          <option value="public">Public</option>
-          <option value="private">Private</option>
-        </select>
-      </label>
+      <div className="form-row">
+        <label className="vis-label">
+          <span className="dim">Visibility</span>
+          <select
+            className="visibility-select"
+            aria-label="Post visibility"
+            value={visibility}
+            onChange={e => setVisibility(e.target.value as any)}
+          >
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </label>
 
-      <div>
-        <button className="btn primary" onClick={() => publish(false)} disabled={processing || (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024)}>
-          {processing ? "Processing…" : canReplace ? "Publish (new day)" : "Publish"}
-        </button>
-        <button
-          className={`btn ghost replace ${canReplace ? "" : "hidden"}`}
-          onClick={() => publish(true)}
-          style={{ marginLeft: 8 }}
-          disabled={processing}
-        >
-          Replace today’s post
-        </button>
+        <div className="btn-group">
+          <button className="btn primary" onClick={() => publish(false)} disabled={processing || (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024)}>
+            {processing ? "Processing…" : canReplace ? "Publish (new day)" : "Publish"}
+          </button>
+          <button
+            className={`btn ghost replace ${canReplace ? "" : "hidden"}`}
+            onClick={() => publish(true)}
+            disabled={processing}
+          >
+            Replace
+          </button>
+        </div>
+      </div>
+
+      <div aria-live="polite" className="sr-only status">
+        {/* screen-reader updates for processing/errors */}
       </div>
     </div>
   );

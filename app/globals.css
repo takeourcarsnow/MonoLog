@@ -146,7 +146,7 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .tabbar-inner {
   max-width: var(--maxw);
   margin: 0 auto; padding: 6px 8px; /* tighter padding */
-  display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; /* 5 columns so Post sits center */
 }
 .tab-item {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
@@ -271,6 +271,87 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .preview { overflow: hidden; border-radius: var(--radius); }
 .preview img { width: 100%; display: block; }
 
+/* Enhanced uploader styles */
+.drop { display: grid; place-items: center; min-height: 160px; cursor: pointer; }
+.drop-inner { display: grid; place-items: center; gap: 6px; }
+.drop-icon { width: 62px; height: 62px; border-radius: 18px; display: grid; place-items: center; font-weight: 700; color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 28%); border: 1px dashed color-mix(in srgb, var(--primary), transparent 70%); font-size: 28px; }
+.drop-text { font-weight: 600; }
+
+.preview { display: none; }
+.preview img { width: 100%; height: auto; object-fit: cover; display: block; }
+.preview-inner { max-height: 480px; overflow: hidden; border-radius: 14px; border: 1px solid var(--border); }
+.preview:not(.hidden) { display: block; }
+
+.form-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 6px; }
+.form-row .vis-label { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.visibility-select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+
+.btn-group { display: flex; gap: 8px; align-items: center; }
+.btn.primary { padding: 10px 14px; border-radius: 12px; font-weight: 700; }
+.btn.ghost.replace { padding: 10px 12px; }
+
+.hidden { display: none !important; }
+
+/* Mobile: stack form row */
+@media (max-width: 640px) {
+  .form-row { flex-direction: column; align-items: stretch; }
+  .btn-group { justify-content: stretch; }
+  .visibility-select { width: 100%; }
+}
+
+/* small helper: visually hidden but available to screen readers */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Auth form styles (sign in / sign up popup) */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 260px;
+}
+.auth-toggle { display: flex; gap: 8px; }
+.auth-toggle .btn { border-radius: 999px; padding: 6px 12px; }
+.auth-toggle .btn.active { background: var(--bg); border: 1px solid color-mix(in srgb, var(--primary), transparent 70%); box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+
+.auth-form .input {
+  width: 100%;
+  background: color-mix(in srgb, var(--bg-elev), transparent 8%);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text);
+}
+.auth-form .input::placeholder { color: color-mix(in srgb, var(--muted), transparent 20%); }
+
+.auth-actions { display: flex; gap: 8px; }
+.auth-actions .btn { padding: 8px 12px; border-radius: 999px; }
+.auth-actions .btn.ghost { background: transparent; border-color: var(--border); }
+
+/* slightly tighter layout when displayed inside Account dropdown */
+.card .auth-form { min-width: 220px; }
+
+/* Toast notifications (used via ToastProvider/useToast) */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(72px + var(--safe-bottom));
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--bg-elev), transparent 8%);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  z-index: 9999;
+  font-weight: 600;
+  animation: toastIn 260ms var(--transition-mid) both;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(.995); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
 .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; background: var(--bg-elev); border: 1px solid var(--border); padding: 2px 6px; border-radius: 6px; }
 
 .calendar { display: grid; gap: 8px; width: 100%; box-sizing: border-box; margin-bottom: 36px; }
@@ -306,6 +387,81 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 /* ensure anchors used as user links have a clear focus ring */
 .user-link:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 60%); outline-offset: 4px; border-radius: 999px; }
+
+/* make user links (avatar + name) more spacious */
+.user-link {
+  display: flex; /* redundant with some inline styles but safe to keep */
+  align-items: center;
+  gap: 12px; /* increased spacing between avatar and name */
+}
+
+/* Profile header layout refinements */
+.profile-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.profile-left { min-width: 0; }
+.profile-left .username { font-size: 18px; }
+
+/* keep action buttons grouped and anchored so overlays can align to them */
+.profile-actions {
+  white-space: nowrap;
+  position: relative; /* anchor for .edit-panel */
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Edit profile overlay panel to avoid pushing layout when toggling edit mode */
+.edit-panel {
+  position: absolute;
+  right: 0; /* align to the actions group's right edge */
+  top: calc(100% + 8px);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  z-index: 30;
+  width: 360px;
+  opacity: 0;
+  transform: translateY(-6px) scale(.995);
+  transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast);
+  animation: popIn 220ms var(--transition-mid) both;
+}
+
+/* caret arrow pointing to the actions group */
+.edit-panel::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 14px;
+  width: 14px;
+  height: 14px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 6px rgba(0,0,0,0.04);
+}
+
+/* cap the panel height and allow scrolling for small screens or long content */
+.edit-panel { max-height: 60vh; overflow: auto; }
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(-8px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Small screens: make edit panel full-width below actions */
+@media (max-width: 680px) {
+  .edit-panel { position: static; transform: none; width: 100%; box-shadow: none; border: none; padding: 0; margin-top: 8px; }
+}
+
+/* ensure buttons in actions are vertically aligned and have consistent spacing */
+.profile-actions .btn { vertical-align: middle; }
 
 /* improve toolbar density on small screens */
 .toolbar { padding: 10px; }

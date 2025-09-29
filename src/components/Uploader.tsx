@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "./Toast";
 import ImageEditor from "./ImageEditor";
 export function Uploader() {
+  const [showAltInput, setShowAltInput] = useState(false);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [alt, setAlt] = useState("");
@@ -95,43 +96,45 @@ export function Uploader() {
         </div>
       </div>
 
-      <div
-        className="drop"
-        ref={dropRef}
-        tabIndex={0}
-        role="button"
-        aria-label="Drop an image or click to select"
-        onClick={() => fileInputRef.current?.click()}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
-        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-        onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
-        onDrop={async (e) => {
-          e.preventDefault(); setDrag(false);
-          const file = e.dataTransfer.files?.[0];
-          if (file) await handleFile(file);
-        }}
-      >
-        <div className="drop-inner">
-          <div className="drop-icon" aria-hidden>
-            +
-          </div>
-          <div className="drop-text">Drop image here or click to select</div>
-          <div className="dim" style={{ marginTop: 6 }}>
-            JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
-          </div>
-        </div>
-
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          style={{ display: "none" }}
-          onChange={async () => {
-            const file = fileInputRef.current?.files?.[0];
+      {!dataUrl && (
+        <div
+          className="drop"
+          ref={dropRef}
+          tabIndex={0}
+          role="button"
+          aria-label="Drop an image or click to select"
+          onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
+          onDrop={async (e) => {
+            e.preventDefault(); setDrag(false);
+            const file = e.dataTransfer.files?.[0];
             if (file) await handleFile(file);
           }}
-        />
-      </div>
+        >
+          <div className="drop-inner">
+            <div className="drop-icon" aria-hidden>
+              +
+            </div>
+            <div className="drop-text">Drop image here or click to select</div>
+            <div className="dim" style={{ marginTop: 6 }}>
+              JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
+            </div>
+          </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={async () => {
+              const file = fileInputRef.current?.files?.[0];
+              if (file) await handleFile(file);
+            }}
+          />
+        </div>
+      )}
 
       <div className={`preview ${dataUrl ? "" : "hidden"}`}>
         <div className="preview-inner" style={{ position: 'relative' }}>
@@ -186,20 +189,35 @@ export function Uploader() {
         ) : null}
       </div>
 
-      <input
-        className="input"
-        type="text"
-        placeholder="Alt text (describe your photo for accessibility)"
-        value={alt}
-        onChange={e => setAlt(e.target.value)}
-      />
-      <input
-        className="input"
-        type="text"
-        placeholder="Caption (optional)"
-        value={caption}
-        onChange={e => setCaption(e.target.value)}
-      />
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          className="input"
+          type="text"
+          placeholder="Caption (optional)"
+          value={caption}
+          onChange={e => setCaption(e.target.value)}
+          style={{ flex: 1 }}
+        />
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={() => setShowAltInput(v => !v)}
+          aria-pressed={showAltInput}
+          style={{ whiteSpace: 'nowrap' }}
+        >
+          {alt ? 'Edit alt' : 'Add alt text'}
+        </button>
+      </div>
+
+      {showAltInput ? (
+        <input
+          className="input"
+          type="text"
+          placeholder="Alt text (describe your photo for accessibility)"
+          value={alt}
+          onChange={e => setAlt(e.target.value)}
+        />
+      ) : null}
       <div className="form-row">
         <label className="vis-label">
           <span className="dim">Visibility</span>

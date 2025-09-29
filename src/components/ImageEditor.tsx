@@ -378,16 +378,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
         ))}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button type="button" className="btn ghost" onClick={resetAll} style={{ padding: '8px 12px', borderRadius: 8 }}>Reset</button>
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button type="button" className="btn" onClick={() => { setImageSrc(originalRef.current); }} style={{ padding: '8px 12px', borderRadius: 8, background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.06)' }}>Original</button>
-          <button type="button" aria-label="Confirm crop" title="Confirm crop (Enter)" onClick={applyEdit} style={{ padding: '8px 12px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
-        </div>
-      </div>
+      {/* Bottom controls removed per request */}
     </div>
   );
 }

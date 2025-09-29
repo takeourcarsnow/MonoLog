@@ -412,6 +412,11 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
 }
 .input:focus { outline: 2px solid color-mix(in srgb, var(--primary), transparent 60%); border-color: var(--primary); }
+.bio-editor {
+  width: 100%; border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+  resize: vertical;
+}
 .input-wrapper { position: relative; }
 .input-ghost-placeholder {
   position: absolute;

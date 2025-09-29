@@ -20,8 +20,32 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const deleteBtnRef = useRef<HTMLButtonElement | null>(null);
+  const popRef = useRef<HTMLDivElement | null>(null);
+  const [isPressingDelete, setIsPressingDelete] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Close the anchored confirm when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!showDeleteConfirm) return;
+    function onDoc(e: MouseEvent) {
+      const target = e.target as Node | null;
+      if (popRef.current && !popRef.current.contains(target) && deleteBtnRef.current && !deleteBtnRef.current.contains(target)) {
+        setShowDeleteConfirm(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowDeleteConfirm(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [showDeleteConfirm]);
 
   useEffect(() => {
     (async () => {
@@ -119,7 +143,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
             <span className="dim">{userLine}</span>
           </div>
         </Link>
-        <div style={{ marginLeft: "auto" }}>
+  <div style={{ marginLeft: "auto", position: "relative" }}>
               {!isMe ? (
                 <>
                   <button
@@ -158,22 +182,54 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                 <button className="btn" onClick={() => setEditing(true)}>Edit</button>
               )}
               <button
-                className="btn ghost"
-                onClick={async () => {
-                  if (!confirm("Delete this post? This cannot be undone.")) return;
-                  try {
-                    await api.deletePost(post.id);
-                    // If viewing single post page, go back to profile
-                    if (pathname.startsWith("/post/")) router.push("/profile");
-                    // Let parent remove it from list; here we just hide
-                    (document.getElementById(`post-${post.id}`)?.remove?.());
-                  } catch (e: any) {
-                    toast.show(e?.message || "Failed to delete post");
-                  }
-                }}
+                ref={deleteBtnRef}
+                className={`btn ghost ${isPressingDelete ? "pressing-delete" : ""}`}
+                onMouseDown={() => setIsPressingDelete(true)}
+                onMouseUp={() => setIsPressingDelete(false)}
+                onMouseLeave={() => setIsPressingDelete(false)}
+                onTouchStart={() => setIsPressingDelete(true)}
+                onTouchEnd={() => setIsPressingDelete(false)}
+                onClick={() => setShowDeleteConfirm(true)}
+                aria-haspopup="dialog"
+                aria-expanded={showDeleteConfirm}
               >
                 Delete
               </button>
+              {showDeleteConfirm && (
+                <div
+                  ref={popRef}
+                  className="confirm-popover"
+                  role="dialog"
+                  aria-label="Confirm delete"
+                  aria-modal={false}
+                >
+                  <div className="confirm-popover-arrow" aria-hidden="true" />
+                  <div className="confirm-popover-body">
+                    <div className="confirm-message">Delete this post? This cannot be undone.</div>
+                    <div className="confirm-actions">
+                      <button
+                        className="btn danger"
+                        onClick={async () => {
+                          try {
+                            await api.deletePost(post.id);
+                            setShowDeleteConfirm(false);
+                            // If viewing single post page, go back to profile
+                            if (pathname.startsWith("/post/")) router.push("/profile");
+                            // Let parent remove it from list; here we just hide
+                            (document.getElementById(`post-${post.id}`)?.remove?.());
+                          } catch (e: any) {
+                            setShowDeleteConfirm(false);
+                            toast.show(e?.message || "Failed to delete post");
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                      <button className="btn ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

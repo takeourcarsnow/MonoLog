@@ -173,7 +173,16 @@ export const localApi: Api = {
     if (!me) return { allowed: false, reason: "Not logged in" };
     const today = toDateKey(new Date());
     const exists = cache.posts.some(p => p.userId === me.id && toDateKey(p.createdAt) === today);
-    if (exists) return { allowed: false, reason: "You already posted today" };
+    if (exists) {
+      // find the most recent post by this user and compute 24h cooldown
+      const myPosts = cache.posts.filter(p => p.userId === me.id).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const last = myPosts[0];
+      if (last) {
+        const next = new Date(last.createdAt).getTime() + 24 * 60 * 60 * 1000;
+        return { allowed: false, reason: "You already posted in the last 24 hours", nextAllowedAt: next };
+      }
+      return { allowed: false, reason: "You already posted today" };
+    }
     return { allowed: true };
   },
 

@@ -56,38 +56,48 @@ export function Uploader() {
     (async () => {
       const can = await api.canPostToday();
       setCanPost(can.allowed);
+      // prefer server-provided nextAllowedAt if present; otherwise compute 24h from now
       if (!can.allowed) {
-        // compute local start of next day (when posting becomes allowed again)
-        const now = new Date();
-        const start = new Date(now);
-        start.setHours(0, 0, 0, 0);
-        const next = new Date(start);
-        next.setDate(start.getDate() + 1);
-        setNextAllowedAt(next.getTime());
+        const next = can.nextAllowedAt ?? (Date.now() + 24 * 60 * 60 * 1000);
+        setNextAllowedAt(next);
+        try {
+          localStorage.setItem('monolog:nextAllowedAt', String(next));
+        } catch (e) {}
+      } else {
+        // clear any stored value if allowed
+        try { localStorage.removeItem('monolog:nextAllowedAt'); } catch (e) {}
       }
     })();
   }, []);
 
   // update remaining countdown every second when nextAllowedAt is known
   useEffect(() => {
-    if (!nextAllowedAt) return;
+    // Try to read persisted value if missing
+    let initial = nextAllowedAt;
+    if (!initial) {
+      try { const stored = localStorage.getItem('monolog:nextAllowedAt'); if (stored) initial = Number(stored); } catch (e) {}
+    }
+    if (!initial) return;
     function fmt(ms: number) {
       if (ms <= 0) return "00:00:00";
+      // friendly localized formatting: H:MM:SS or MM:SS
       const total = Math.floor(ms / 1000);
       const h = Math.floor(total / 3600);
       const m = Math.floor((total % 3600) / 60);
       const s = total % 60;
       const pad = (n: number) => String(n).padStart(2, "0");
-      return `${pad(h)}:${pad(m)}:${pad(s)}`;
+      if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
+      return `${m}:${pad(s)}`;
     }
     // set initial
-    setRemaining(fmt(nextAllowedAt - Date.now()));
+    setRemaining(fmt(initial - Date.now()));
     const id = setInterval(() => {
-      const ms = nextAllowedAt - Date.now();
+      const ms = initial! - Date.now();
       if (ms <= 0) {
         setCanPost(true);
         setNextAllowedAt(null);
         setRemaining("");
+        try { localStorage.removeItem('monolog:nextAllowedAt'); } catch (e) {}
         clearInterval(id);
         return;
       }
@@ -538,8 +548,8 @@ export function Uploader() {
               ? "Processing…"
               : canPost === false
               ? nextAllowedAt
-                ? `Publish (in ${remaining})`
-                : "Publish (new day)"
+                ? `Next post in ${remaining}`
+                : "Publish again in 24h"
               : "Publish"}
           </button>
           {/* replace button removed */}

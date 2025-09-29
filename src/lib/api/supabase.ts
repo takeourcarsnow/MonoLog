@@ -379,21 +379,21 @@ export const supabaseApi: Api = {
     const { data: userData } = await sb.auth.getUser();
     const user = (userData as any)?.user;
     if (!user) return { allowed: false, reason: "Not logged in" };
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 1);
-
-    const { data, error } = await sb
+    // Check for the most recent post by this user and return a 24h cooldown
+    const { data: recent, error: recentErr } = await sb
       .from("posts")
-      .select("id")
+      .select("created_at")
       .eq("user_id", user.id)
-      .gte("created_at", start.toISOString())
-      .lt("created_at", end.toISOString())
-      .limit(1);
-    if (error) throw error;
-    const exists = (data || []).length > 0;
-    if (exists) return { allowed: false, reason: "You already posted today" };
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (recentErr) throw recentErr;
+    if (recent && (recent as any).created_at) {
+      const lastTs = new Date((recent as any).created_at).getTime();
+      const next = lastTs + 24 * 60 * 60 * 1000;
+      const allowed = Date.now() >= next;
+      if (!allowed) return { allowed: false, reason: "You already posted in the last 24 hours", nextAllowedAt: next };
+    }
     return { allowed: true };
   },
 

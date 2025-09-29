@@ -1049,3 +1049,59 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 /* keep the preview visually contained when not editing */
 .preview-inner { transition: none; }
+
+/* Confirm popover anchored to action buttons (used for Delete) */
+.confirm-popover {
+  position: absolute;
+  right: 8px;
+  top: calc(100% + 10px);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+  z-index: 60;
+  width: min(320px, 86vw);
+  transform-origin: top right;
+  animation: popConfirm 200ms var(--transition-mid) both;
+}
+.confirm-popover-arrow {
+  position: absolute;
+  top: -8px;
+  right: 18px;
+  width: 14px;
+  height: 14px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  transform: rotate(45deg);
+  z-index: -1;
+}
+.confirm-popover-body { display: grid; gap: 8px; }
+.confirm-message { color: var(--muted); font-size: 14px; }
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+@keyframes popConfirm {
+  from { opacity: 0; transform: translateY(-6px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Danger / Delete button styling */
+.btn.danger {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 12%), var(--danger));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--danger), transparent 70%);
+}
+.btn.danger:hover { transform: translateY(-2px) scale(1.01); }
+.btn.danger:active { transform: translateY(0) scale(.998); }
+
+/* subtle red pulse when header delete is pressing */
+.pressing-delete {
+  animation: pressDanger 400ms ease-in-out;
+}
+@keyframes pressDanger {
+  0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.0); }
+  30% { box-shadow: 0 6px 20px rgba(239,68,68,0.08); transform: translateY(1px) scale(.998); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); transform: translateY(0) scale(1); }
+}

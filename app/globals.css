@@ -25,6 +25,9 @@
   --transition-mid: 260ms cubic-bezier(.2,.7,.2,1);
   --maxw: 800px;
 
+  /* toggle indicator color (light default) */
+  --auth-toggle-indicator: rgba(0,0,0,0.06);
+
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
 }
@@ -41,6 +44,8 @@
   --danger: #f87171;
   --border: #1f2937;
   --shadow: 0 8px 30px rgba(0,0,0,.35);
+  /* darker theme toggle indicator */
+  --auth-toggle-indicator: rgba(255,255,255,0.04);
 }
 :root[data-theme="light"] {
   --bg: #ffffff;
@@ -53,6 +58,12 @@
   --danger: #ef4444;
   --border: #e5e7eb;
   --shadow: 0 8px 28px rgba(0,0,0,.08);
+  --auth-toggle-indicator: rgba(0,0,0,0.06);
+}
+
+/* support projects that toggle dark mode by adding a `dark` class to the html element */
+.dark {
+  --auth-toggle-indicator: rgba(255,255,255,0.04);
 }
 
 * { box-sizing: border-box; }

@@ -99,7 +99,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
             aria-describedby="username-help"
           />
           <div id="username-help" className="dim" style={{ marginBottom: 8 }}>
-            Pick a short unique username. Lowercase letters, numbers, '-' and '_' only.
+            Pick a short unique username. Lowercase letters, numbers, &apos;-&apos; and &apos;_&apos; only.
           </div>
         </>
       ) : null}

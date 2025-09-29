@@ -8,8 +8,8 @@ import dynamic from "next/dynamic";
 const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.AppShell), { ssr: false });
 
 export const metadata: Metadata = {
-  title: "MonoLog — one photo a day",
-  description: "Daily photo journal.",
+  title: "MonoLog — one post per day",
+  description: "Daily photo journal. Attach multiple images to a single post.",
   // themeColor must be placed in the `viewport` export in Next.js 14+
   other: {
     "color-scheme": "light dark"

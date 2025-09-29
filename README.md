@@ -2,11 +2,11 @@
 
 MonoLog is a minimal daily photo journal built with Next.js (App Router), TypeScript and Tailwind.
 
-The core idea: one photo per day. Post a single photo each day and keep a lightweight visual journal.
+The core idea: one post per day. Attach multiple images to a single daily entry and keep a lightweight visual journal.
 
 ## Highlights
 
-- One-photo-per-day workflow
+-- One-post-per-day workflow (attach multiple images to a post)
 - Next.js 14 (App Router) + TypeScript
 - Tailwind CSS utility styles
 -- LocalStorage-backed API by default, optional Supabase integration for remote persistence
@@ -26,7 +26,7 @@ npm run dev
 
 ## How to use
 
-- Post: use the Post (Upload) tab to add today’s photo
+-- Post: use the Post (Upload) tab to add today’s entry with up to 5 images
 - Feed: follow people and browse posts in your feed
 - Explore: browse public posts from other users
 - Calendar: browse posts by date

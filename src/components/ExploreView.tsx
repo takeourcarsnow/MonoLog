@@ -41,7 +41,11 @@ export function ExploreView() {
         <div className="grid">
           {posts.map(p => (
             <Link key={p.id} className="tile" href={`/post/${p.id}`}>
-              <img loading="lazy" src={p.imageUrl} alt={p.alt || "Photo"} />
+              <img
+                loading="lazy"
+                src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}
+                alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
+              />
             </Link>
           ))}
         </div>

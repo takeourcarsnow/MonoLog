@@ -120,8 +120,8 @@ export function Uploader() {
     <div className="uploader view-fade">
       <div className="toolbar">
         <div>
-          <strong>Post your photo for today</strong>
-          <div className="dim">One photo per day</div>
+          <strong>Post your photos for today</strong>
+          <div className="dim">Attach up to 5 images — one post per day</div>
         </div>
       </div>
 

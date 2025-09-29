@@ -4,20 +4,21 @@ export default function AboutPage() {
   return (
     <div className="card view-fade" style={{ padding: 18 }}>
       <h2>About MonoLog</h2>
-      <p className="dim">MonoLog is a minimal daily photo journal: one photo per day. It focuses on simplicity, low friction posting, and a calm way to capture small moments.</p>
 
-      <h3>Quick tour</h3>
+      <p className="dim">MonoLog is a minimal daily photo journal designed to be simple and low-friction. You can attach multiple images to a single post (up to 5), but the app limits you to one post per calendar day — a lightweight way to collect moments without letting your feed fill up.</p>
+
+      <h3>How it works</h3>
       <ul>
-        <li><strong>Post</strong> — add today’s photo. One photo per day keeps the app simple and focused.</li>
-        <li><strong>Feed</strong> — follow accounts and see posts from people you follow.</li>
-        <li><strong>Explore</strong> — browse public posts from the community (if you enable public mode).</li>
-        <li><strong>Calendar</strong> — jump to posts by date for quick review.</li>
+        <li><strong>Post</strong> — create one entry per day. Attach up to 5 images to tell a little story or share a few related shots.</li>
+        <li><strong>Feed</strong> — follow people and see their daily posts in a simple timeline.</li>
+        <li><strong>Explore</strong> — browse public posts from the community if authors make them public.</li>
+        <li><strong>Calendar</strong> — jump to any date to review past posts.</li>
       </ul>
 
-  <h3>Privacy & storage</h3>
-  <p className="dim">By default MonoLog stores data in your browser (LocalStorage). That means your posts stay on your device unless you opt into a remote backend. For remote persistence across devices, configure the Supabase mode in the environment variables.</p>
+      <h3>Privacy & storage</h3>
+      <p className="dim">By default MonoLog stores posts locally in your browser (LocalStorage). That keeps your data on your device unless you enable a remote backend. To sync across devices, switch to the Supabase mode and provide the appropriate environment variables.</p>
 
-      <p className="dim">This project is intentionally small — a starting point for a personal daily-photo practice or a prototype for a larger product.</p>
+      <p className="dim">This project is intentionally compact — a focused tool for a daily photo practice or a starting point for a bigger product.</p>
 
       <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
         <a className="btn primary" href="/upload">Post</a>

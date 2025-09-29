@@ -660,9 +660,114 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Small screens: make edit panel full-width below actions */
+/* Small screens: anchor the edit panel as a compact popover from the
+   profile actions area so it doesn't cover a large portion of the grid.
+   Cap the height so it never dominates the screen; make inner content
+   scrollable and keep the caret/arrow visible. */
 @media (max-width: 680px) {
-  .edit-panel { position: static; transform: none; width: 100%; box-shadow: none; border: none; padding: 0; margin-top: 8px; }
+  .profile-header { position: relative; }
+
+  .edit-panel {
+    position: absolute;
+    right: 8px;
+    top: calc(100% + 8px);
+    width: min(86vw, 360px);
+    max-height: 320px; /* keep it compact */
+    overflow: auto;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    padding: 10px;
+    border-radius: 12px;
+    z-index: 60;
+    animation: popIn 220ms var(--transition-mid) both;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .edit-panel::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 28px;
+    width: 14px;
+    height: 14px;
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    transform: rotate(45deg);
+    box-shadow: -2px -2px 6px rgba(0,0,0,0.04);
+  }
+
+  /* make the content area scroll if needed, keep actions visible */
+  .edit-panel > :not(.edit-actions) {
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+
+  .edit-panel .edit-actions {
+    position: sticky;
+    bottom: 8px;
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    z-index: 2;
+  }
+
+  /* Slightly tighter spacing inside the popover so more fields fit */
+  .edit-panel .input,
+  .edit-panel .bio-editor { padding: 8px; font-size: 14px; }
+
+  .edit-panel .edit-actions .btn { padding: 6px 10px; font-size: 13px; }
+}
+
+/* Profile: improved mobile layout so header content doesn't overflow */
+@media (max-width: 640px) {
+  /* stack header content and tighten padding */
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  /* keep avatar and name on a single row, allow actions to flow beneath */
+  .profile-left {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* let actions wrap to new lines instead of overflowing; make them full-width area */
+  .profile-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  /* slightly smaller avatar on phones */
+  .profile-avatar { width: 56px; height: 56px; border-radius: 12px; }
+
+  /* reduce button padding and font-size so more buttons fit per row */
+  .profile-actions .btn { padding: 8px 10px; font-size: 13px; }
+
+  /* ensure username wraps and doesn't push layout */
+  .profile-left > div { min-width: 0; }
+
+  /* make the posts grid easier to view on mobile */
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}
+
+/* Very small screens: single column grid to maximize image size */
+@media (max-width: 360px) {
+  .grid { grid-template-columns: 1fr; }
+  .profile-actions { justify-content: flex-start; }
 }
 
 /* ensure buttons in actions are vertically aligned and have consistent spacing */

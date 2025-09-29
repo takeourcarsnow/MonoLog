@@ -121,12 +121,25 @@ export const localApi: Api = {
   },
 
   async getExploreFeed() {
+    console.debug("localApi.getExploreFeed called");
     const me = getUserById(cache.currentUserId);
     return cache.posts
       .slice()
       .filter(p => p.public || p.userId === me?.id)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .map(hydratePost);
+  },
+  async getExploreFeedPage({ limit, before }: { limit: number; before?: string }) {
+    const me = getUserById(cache.currentUserId);
+    let posts = cache.posts
+      .slice()
+      .filter(p => p.public || p.userId === me?.id)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (before) {
+      posts = posts.filter(p => new Date(p.createdAt).getTime() < new Date(before).getTime());
+    }
+    const slice = posts.slice(0, limit);
+    return slice.map(hydratePost);
   },
   async getFollowingFeed() {
     const me = getUserById(cache.currentUserId);
@@ -135,6 +148,18 @@ export const localApi: Api = {
       .filter(p => ids.includes(p.userId) && p.public)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .map(hydratePost);
+  },
+  async getFollowingFeedPage({ limit, before }: { limit: number; before?: string }) {
+    const me = getUserById(cache.currentUserId);
+    const ids = me?.following || [];
+    let posts = cache.posts
+      .filter(p => ids.includes(p.userId) && p.public)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (before) {
+      posts = posts.filter(p => new Date(p.createdAt).getTime() < new Date(before).getTime());
+    }
+    const slice = posts.slice(0, limit);
+    return slice.map(hydratePost);
   },
   async getUserPosts(userId: string) {
     const me = getUserById(cache.currentUserId);

@@ -58,6 +58,9 @@ export interface Api {
 
   getExploreFeed(): Promise<HydratedPost[]>;
   getFollowingFeed(): Promise<HydratedPost[]>;
+  // Paginated variants (return newest posts before an optional timestamp).
+  getExploreFeedPage(opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
+  getFollowingFeedPage(opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
   getUserPosts(userId: string): Promise<HydratedPost[]>;
   getUser(id: string): Promise<User | null>;
 

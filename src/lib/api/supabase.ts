@@ -222,9 +222,20 @@ export const supabaseApi: Api = {
   },
 
   async getExploreFeed() {
+    console.debug("supabaseApi.getExploreFeed called");
     const sb = getClient();
   const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("public", true).order("created_at", { ascending: false });
   logSupabaseError("getExploreFeed", { data, error });
+    if (error) throw error;
+    return (data || []).map((row: any) => mapRowToHydratedPost(row));
+  },
+
+  async getExploreFeedPage({ limit, before }: { limit: number; before?: string }) {
+    const sb = getClient();
+    let q: any = sb.from("posts").select("*, users:users(*)").eq("public", true).order("created_at", { ascending: false }).limit(limit);
+    if (before) q = q.lt("created_at", before);
+    const { data, error } = await q;
+    logSupabaseError("getExploreFeedPage", { data, error });
     if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },
@@ -241,6 +252,23 @@ export const supabaseApi: Api = {
     if (!ids.length) return [];
     const { data, error } = await sb.from("posts").select("*, users:users(*)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
     logSupabaseError("getFollowingFeed", { data, error });
+    if (error) throw error;
+    return (data || []).map((row: any) => mapRowToHydratedPost(row));
+  },
+
+  async getFollowingFeedPage({ limit, before }: { limit: number; before?: string }) {
+    const sb = getClient();
+    const { data: userData } = await sb.auth.getUser();
+    const me = (userData as any)?.user;
+    if (!me) return [];
+    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+    if (profErr || !profile) return [];
+    const ids: string[] = profile.following || [];
+    if (!ids.length) return [];
+    let q: any = sb.from("posts").select("*, users:users(*)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false }).limit(limit);
+    if (before) q = q.lt("created_at", before);
+    const { data, error } = await q;
+    logSupabaseError("getFollowingFeedPage", { data, error });
     if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },

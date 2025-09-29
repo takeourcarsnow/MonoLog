@@ -132,8 +132,9 @@ export const supabaseApi: Api = {
       // If there's no profile row yet (or an error), synthesize a minimal profile from the auth user so UI reflects signed-in state
   if (profErr || !profile) {
         // synthesize and upsert a profile row so the DB and UI are in sync
-        const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-        const synthDisplay = user.user_metadata?.name || user.email?.split("@")[0] || user.id;
+  const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
+  // default display name to the username when no explicit name metadata exists
+  const synthDisplay = user.user_metadata?.name || synthUsername;
         const synthAvatar = user.user_metadata?.avatar_url;
         const joinedAt = new Date().toISOString();
         const upsertObj: any = {
@@ -461,9 +462,12 @@ export const supabaseApi: Api = {
     if (!text?.trim()) throw new Error("Empty");
     const id = uid();
     const created_at = new Date().toISOString();
-    const { error } = await sb.from("comments").insert({ id, post_id: postId, user_id: user.id, text: text.trim(), created_at });
-    if (error) throw error;
-    return { id, postId, userId: user.id, text: text.trim(), createdAt: created_at, user: { id: user.id, username: user.user_metadata?.username || user.email?.split("@")[0] || user.id, displayName: user.user_metadata?.name || user.email?.split("@")[0] || user.id, avatarUrl: user.user_metadata?.avatar_url || "" } } as any;
+  const { error } = await sb.from("comments").insert({ id, post_id: postId, user_id: user.id, text: text.trim(), created_at });
+  if (error) throw error;
+  // prefer explicit name, otherwise fall back to username (or email local-part / id)
+  const commentSynthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
+  const commentSynthDisplay = user.user_metadata?.name || commentSynthUsername;
+  return { id, postId, userId: user.id, text: text.trim(), createdAt: created_at, user: { id: user.id, username: commentSynthUsername, displayName: commentSynthDisplay, avatarUrl: user.user_metadata?.avatar_url || "" } } as any;
   },
 
   async canPostToday() {
@@ -501,8 +505,13 @@ export const supabaseApi: Api = {
     if (!existingProfileErr && existingProfile) {
       // Profile exists: only populate any missing fields from auth metadata (do not overwrite existing values)
       const upsertProfile: any = { id: user.id };
+      const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
       if ((!existingProfile.username || existingProfile.username === null || existingProfile.username === "") && user.user_metadata?.username) upsertProfile.username = user.user_metadata.username;
-      if ((!existingProfile.display_name || existingProfile.display_name === null || existingProfile.display_name === "") && user.user_metadata?.name) upsertProfile.display_name = user.user_metadata.name;
+      // if display_name is missing, prefer an explicit name, otherwise default to the username
+  if ((!existingProfile.display_name || existingProfile.display_name === null || existingProfile.display_name === "")) {
+        if (user.user_metadata?.name) upsertProfile.display_name = user.user_metadata.name;
+        else upsertProfile.display_name = synthUsername;
+      }
       if ((!existingProfile.avatar_url || existingProfile.avatar_url === null || existingProfile.avatar_url === "") && user.user_metadata?.avatar_url) upsertProfile.avatar_url = user.user_metadata.avatar_url;
       // Only call upsert when we actually have something to add
       if (Object.keys(upsertProfile).length > 1) {
@@ -511,10 +520,12 @@ export const supabaseApi: Api = {
       }
     } else {
       // No existing profile: create one with sensible defaults derived from auth metadata or email
+      const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
       const upsertProfile: any = {
         id: user.id,
-        username: user.user_metadata?.username || user.email?.split("@")[0] || user.id,
-        display_name: user.user_metadata?.name || user.email?.split("@")[0] || user.id,
+        username: synthUsername,
+        // default display name to the username when no explicit name metadata exists
+        display_name: user.user_metadata?.name || synthUsername,
         joined_at: new Date().toISOString(),
       };
       if (user.user_metadata?.avatar_url) upsertProfile.avatar_url = user.user_metadata.avatar_url;

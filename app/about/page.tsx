@@ -4,7 +4,7 @@ export default function AboutPage() {
   return (
     <div className="card view-fade" style={{ padding: 18 }}>
       <h2>About MonoLog</h2>
-      <p className="dim">MonoLog is a minimal, local-first daily photo journal: one photo per day. It focuses on simplicity, low friction posting, and a calm way to capture small moments.</p>
+      <p className="dim">MonoLog is a minimal daily photo journal: one photo per day. It focuses on simplicity, low friction posting, and a calm way to capture small moments.</p>
 
       <h3>Quick tour</h3>
       <ul>
@@ -14,8 +14,8 @@ export default function AboutPage() {
         <li><strong>Calendar</strong> — jump to posts by date for quick review.</li>
       </ul>
 
-      <h3>Local-first & privacy</h3>
-      <p className="dim">By default MonoLog stores data in your browser (LocalStorage). That means your posts stay on your device unless you opt into a remote backend. For remote persistence across devices, configure the Supabase mode in the environment variables.</p>
+  <h3>Privacy & storage</h3>
+  <p className="dim">By default MonoLog stores data in your browser (LocalStorage). That means your posts stay on your device unless you opt into a remote backend. For remote persistence across devices, configure the Supabase mode in the environment variables.</p>
 
       <p className="dim">This project is intentionally small — a starting point for a personal daily-photo practice or a prototype for a larger product.</p>
 

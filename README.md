@@ -1,6 +1,6 @@
 # MonoLog
 
-MonoLog is a local-first daily photo journal built with Next.js (App Router), TypeScript and Tailwind.
+MonoLog is a minimal daily photo journal built with Next.js (App Router), TypeScript and Tailwind.
 
 The core idea: one photo per day. Post a single photo each day and keep a lightweight visual journal.
 
@@ -9,7 +9,7 @@ The core idea: one photo per day. Post a single photo each day and keep a lightw
 - One-photo-per-day workflow
 - Next.js 14 (App Router) + TypeScript
 - Tailwind CSS utility styles
-- LocalStorage-backed API by default, optional Supabase integration for remote persistence
+-- LocalStorage-backed API by default, optional Supabase integration for remote persistence
 
 ## Quick start (Windows PowerShell)
 
@@ -21,7 +21,7 @@ npm run dev
 
 ## Environment & modes
 
-- Default: local mode using a browser LocalStorage-backed API
+- Default: browser LocalStorage-backed API
 - Optional remote mode: set `NEXT_PUBLIC_MODE=supabase` and add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local`
 
 ## How to use
@@ -47,7 +47,7 @@ npm run dev
 
 ## Notes
 
-- This project is intended as a minimal, local-first proof-of-concept. Your posts live in the browser by default.
+- This project is intended as a minimal proof-of-concept. Your posts live in the browser by default.
 - Use Supabase (or another backend) if you want persistence across devices; the codebase includes an optional Supabase adapter.
 
 ## Contributing

@@ -6,6 +6,7 @@ import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import { CONFIG } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { useToast } from "./Toast";
+import ImageEditor from "./ImageEditor";
 
 export function Uploader() {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -16,6 +17,7 @@ export function Uploader() {
   const [processing, setProcessing] = useState(false);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const [canReplace, setCanReplace] = useState(false);
+  const [editing, setEditing] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -129,8 +131,47 @@ export function Uploader() {
       </div>
 
       <div className={`preview ${dataUrl ? "" : "hidden"}`}>
-        <div className="preview-inner">
-          <img alt={alt || 'Preview'} src={dataUrl || ""} />
+        <div className="preview-inner" style={{ position: 'relative' }}>
+          {editing && dataUrl ? (
+            <div style={{ width: '100%' }}>
+              <ImageEditor
+                initialDataUrl={dataUrl}
+                onCancel={() => setEditing(false)}
+                onApply={async (newUrl) => {
+                  setEditing(false);
+                  // run through the same compression pipeline to ensure final image obeys limits
+                  setProcessing(true);
+                  try {
+                    const compressed = await compressImage(newUrl as any);
+                    setDataUrl(compressed);
+                    setCompressedSize(approxDataUrlBytes(compressed));
+                    // approximate original size from dataurl length
+                    setOriginalSize(approxDataUrlBytes(newUrl));
+                  } catch (e) {
+                    console.error(e);
+                    // fallback to the edited url directly
+                    setDataUrl(newUrl);
+                    setCompressedSize(approxDataUrlBytes(newUrl));
+                  } finally {
+                    setProcessing(false);
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <>
+              <img alt={alt || 'Preview'} src={dataUrl || ""} />
+              {dataUrl ? (
+                <button
+                  className="btn"
+                  style={{ position: 'absolute', right: 8, bottom: 8 }}
+                  onClick={() => setEditing(true)}
+                >
+                  Edit photo
+                </button>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
 

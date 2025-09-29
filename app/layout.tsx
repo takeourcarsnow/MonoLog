@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "MonoLog — one photo a day",
-  description: "Local-first daily photo journal.",
+  description: "Daily photo journal.",
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#0f0f10" },
     { media: "(prefers-color-scheme: light)", color: "#ffffff" }

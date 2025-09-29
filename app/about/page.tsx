@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 export default function AboutPage() {
   return (
@@ -21,8 +22,8 @@ export default function AboutPage() {
       <p className="dim">This project is intentionally compact — a focused tool for a daily photo practice or a starting point for a bigger product.</p>
 
       <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-        <a className="btn primary" href="/upload">Post</a>
-        <a className="btn" href="/explore">Explore</a>
+        <Link className="btn primary" href="/upload">Post</Link>
+        <Link className="btn" href="/explore">Explore</Link>
       </div>
     </div>
   );

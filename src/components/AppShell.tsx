@@ -99,7 +99,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const touchStart = (e: TouchEvent) => {
       const t = e.touches[0];
       const target = e.target as HTMLElement | null;
-      if (target && target.closest && target.closest('.image-editor')) return;
+      // ignore swipes that begin inside inputs, editable content, image editor,
+      // or inside any carousel/uploader UI so those controls can handle their
+      // own touch gestures without the app-level swipe taking over.
+      if (target) {
+        const ignoreSelectors = [
+          '.image-editor',
+          '.carousel-wrapper',
+          '.carousel-track',
+          '.carousel-slide',
+          '.uploader',
+          '.drop',
+          '.thumbs',
+        ];
+        for (const sel of ignoreSelectors) {
+          if (target.closest && target.closest(sel)) return;
+        }
+      }
       if (target) {
         const tag = target.tagName?.toLowerCase();
         const editable = (target as HTMLElement).isContentEditable || tag === 'input' || tag === 'textarea' || (target.closest && !!target.closest('input, textarea, [contenteditable="true"]'));

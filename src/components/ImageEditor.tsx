@@ -52,8 +52,11 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   const [saturation, setSaturation] = useState<number>(1);
   const [temperature, setTemperature] = useState<number>(0); // -100..100 mapped to hue-rotate
   const [vignette, setVignette] = useState<number>(0); // 0..1
+  const [frameEnabled, setFrameEnabled] = useState<boolean>(false);
+  const [frameColor, setFrameColor] = useState<'white' | 'black'>('white');
+  const [frameThickness, setFrameThickness] = useState<number>(0.02); // fraction of min(image dim)
   const [controlsOpen, setControlsOpen] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects'>('basic');
+  const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects' | 'crop'>('basic');
   const [selectedFilter, setSelectedFilter] = useState<string>('none');
   const [grain, setGrain] = useState<number>(0); // 0..1
   // refs mirror state for immediate reads inside draw() to avoid stale-state draws
@@ -62,6 +65,9 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   const saturationRef = useRef<number>(saturation);
   const temperatureRef = useRef<number>(temperature);
   const vignetteRef = useRef<number>(vignette);
+  const frameEnabledRef = useRef<boolean>(frameEnabled);
+  const frameColorRef = useRef<'white' | 'black'>(frameColor);
+  const frameThicknessRef = useRef<number>(frameThickness);
   const selectedFilterRef = useRef<string>(selectedFilter);
   const grainRef = useRef<number>(grain);
   // animated dash offset for the selection stroke (marching ants)
@@ -153,7 +159,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sel]);
 
-  function draw(info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number }, overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; selectedFilter: string; grain: number }>) {
+  function draw(info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number }, overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; selectedFilter: string; grain: number; frameEnabled: boolean; frameThickness: number; frameColor: string }>) {
     const canvas = canvasRef.current; const img = imgRef.current;
     if (!canvas || !img) return;
     const ctx = canvas.getContext("2d")!;
@@ -182,6 +188,9 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   const curVignette = overrides?.vignette ?? vignetteRef.current ?? vignette;
   const curSelectedFilter = overrides?.selectedFilter ?? selectedFilterRef.current ?? selectedFilter;
   const curGrain = overrides?.grain ?? grainRef.current ?? grain;
+  const curFrameEnabled = overrides?.frameEnabled ?? frameEnabledRef.current ?? frameEnabled;
+  const curFrameThickness = overrides?.frameThickness ?? frameThicknessRef.current ?? frameThickness;
+  const curFrameColor = overrides?.frameColor ?? frameColorRef.current ?? frameColor;
   const hue = Math.round((curTemperature / 100) * 30);
     // map selectedFilter to additional filter fragments
     const filterMap: Record<string, string> = {
@@ -193,8 +202,17 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     };
     const preset = filterMap[curSelectedFilter] || '';
     const filter = `brightness(${curExposure}) contrast(${curContrast}) saturate(${curSaturation}) ${preset} hue-rotate(${hue}deg)`;
+  // If frame is enabled we shrink the image to leave room for the frame (pad) on all sides
+  let imgLeft = left; let imgTop = top; let imgW = dispW; let imgH = dispH;
+  if (curFrameEnabled) {
+    const pad = Math.max(1, Math.round(Math.min(dispW, dispH) * Math.max(0, Math.min(0.5, curFrameThickness))));
+    imgLeft = left + pad;
+    imgTop = top + pad;
+    imgW = Math.max(1, dispW - pad * 2);
+    imgH = Math.max(1, dispH - pad * 2);
+  }
   ctx.filter = filter;
-  ctx.drawImage(img, left, top, dispW, dispH);
+  ctx.drawImage(img, imgLeft, imgTop, imgW, imgH);
   ctx.filter = 'none';
     // optional vignette overlay
     if (curVignette > 0) {
@@ -211,8 +229,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
 
     // grain/noise overlay (preview)
     if (curGrain > 0) {
-      // draw grain only over the displayed image area (left/top/dispW/dispH are in CSS pixels because of setTransform)
-      const imgLeft = left; const imgTop = top; const imgW = dispW; const imgH = dispH;
+      // draw grain only over the displayed image area (use shrunken image rect if frame is enabled)
+      const nImgLeft = imgLeft; const nImgTop = imgTop; const nImgW = imgW; const nImgH = imgH;
       const noiseW = Math.max(1, Math.round(imgW));
       const noiseH = Math.max(1, Math.round(imgH));
       const noise = generateNoiseCanvas(noiseW, noiseH, curGrain);
@@ -220,7 +238,39 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       ctx.globalAlpha = Math.min(0.85, curGrain);
       ctx.globalCompositeOperation = 'overlay';
       // draw the noise scaled to the image area so grain doesn't bleed outside the photo
-      ctx.drawImage(noise, 0, 0, noiseW, noiseH, imgLeft, imgTop, imgW, imgH);
+      ctx.drawImage(noise, 0, 0, noiseW, noiseH, nImgLeft, nImgTop, nImgW, nImgH);
+      ctx.restore();
+    }
+
+    // simple frame overlay (stroke around image)
+    if (curFrameEnabled) {
+      ctx.save();
+      const pad = Math.max(1, Math.round(Math.min(dispW, dispH) * Math.max(0, Math.min(0.5, curFrameThickness))));
+      ctx.fillStyle = curFrameColor === 'white' ? '#ffffff' : '#000000';
+      // Align drawing to device pixels to avoid seams caused by fractional coordinates
+      const outerXDev = Math.round(left * dpr);
+      const outerYDev = Math.round(top * dpr);
+      const outerWDev = Math.round(dispW * dpr);
+      const outerHDev = Math.round(dispH * dpr);
+      const innerXDev = Math.round(imgLeft * dpr);
+      const innerYDev = Math.round(imgTop * dpr);
+      const innerWDev = Math.round(imgW * dpr);
+      const innerHDev = Math.round(imgH * dpr);
+      // top band (device pixels) -> convert back to CSS pixels for canvas drawing
+      const topH = Math.max(1, innerYDev - outerYDev);
+      ctx.fillRect(outerXDev / dpr, outerYDev / dpr, outerWDev / dpr, topH / dpr);
+      // bottom band
+      const bottomYDev = innerYDev + innerHDev;
+      const outerBottomDev = outerYDev + outerHDev;
+      const bottomH = Math.max(1, outerBottomDev - bottomYDev);
+      ctx.fillRect(outerXDev / dpr, bottomYDev / dpr, outerWDev / dpr, bottomH / dpr);
+      // left band
+      const leftW = Math.max(1, innerXDev - outerXDev);
+      ctx.fillRect(outerXDev / dpr, innerYDev / dpr, leftW / dpr, innerHDev / dpr);
+      // right band
+      const rightXDev = innerXDev + innerWDev;
+      const rightW = Math.max(1, outerXDev + outerWDev - rightXDev);
+      ctx.fillRect(rightXDev / dpr, innerYDev / dpr, rightW / dpr, innerHDev / dpr);
       ctx.restore();
     }
 
@@ -281,6 +331,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     if (Math.abs(vignette) > 0.001) return true;
     if (selectedFilter !== 'none') return true;
     if (Math.abs(grain) > 0.001) return true;
+    if (frameEnabled) return true;
     return false;
   }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain]);
 
@@ -446,8 +497,10 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       srcH = Math.min(srcH, img.naturalHeight - srcY);
     }
 
+  // If frame is enabled we expand the output canvas so the frame sits outside the image
+  const padPx = frameEnabled ? Math.max(1, Math.round(Math.min(srcW, srcH) * Math.max(0, Math.min(0.5, frameThickness)))) : 0;
   const out = document.createElement('canvas');
-  out.width = srcW; out.height = srcH;
+  out.width = srcW + padPx * 2; out.height = srcH + padPx * 2;
   const octx = out.getContext('2d')!;
   octx.imageSmoothingQuality = 'high';
   // Apply color adjustments to exported image
@@ -461,7 +514,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   };
   const preset = filterMap[selectedFilter] || '';
   octx.filter = `brightness(${exposure}) contrast(${contrast}) saturate(${saturation}) ${preset} hue-rotate(${hue}deg)`;
-  octx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
+  // draw image centered with padding for the frame
+  octx.drawImage(img, srcX, srcY, srcW, srcH, padPx, padPx, srcW, srcH);
   octx.filter = 'none';
   // apply grain to exported image by compositing a noise canvas
   if (grain > 0) {
@@ -470,6 +524,32 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     octx.globalAlpha = Math.min(0.85, grain);
     octx.globalCompositeOperation = 'overlay';
     octx.drawImage(noise, 0, 0, srcW, srcH);
+    octx.restore();
+  }
+  // draw frame if enabled
+  if (frameEnabled) {
+    octx.save();
+    const thicknessPx = Math.max(1, Math.round(Math.min(srcW, srcH) * Math.max(0, Math.min(0.5, frameThickness))));
+    octx.fillStyle = frameColor === 'white' ? '#ffffff' : '#000000';
+    // integer coords to avoid seams
+    const outerX = 0;
+    const outerY = 0;
+    const outerW = srcW + padPx * 2;
+    const outerH = srcH + padPx * 2;
+    const innerX = padPx;
+    const innerY = padPx;
+    const innerW = srcW;
+    const innerH = srcH;
+    // top band
+    octx.fillRect(outerX, outerY, outerW, Math.max(1, innerY - outerY));
+    // bottom band
+    const bottomY = innerY + innerH;
+    octx.fillRect(outerX, bottomY, outerW, Math.max(1, outerY + outerH - bottomY));
+    // left band
+    octx.fillRect(outerX, innerY, Math.max(1, innerX - outerX), innerH);
+    // right band
+    const rightX = innerX + innerW;
+    octx.fillRect(rightX, innerY, Math.max(1, outerX + outerW - rightX), innerH);
     octx.restore();
   }
   const dataUrl = out.toDataURL('image/jpeg', 0.92);
@@ -540,26 +620,22 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
             <span>Drag to crop; drag inside selection to move it</span>
           </div>
         </div>
-        {/* floating confirm button inside the canvas area so it's always visible */}
-        <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 30 }}>
-          <button type="button" aria-label="Confirm crop" title="Confirm crop (Enter)" onClick={applyEdit} style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--primary)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', boxShadow: isEdited ? '0 10px 30px rgba(0,125,255,0.12)' : 'none', transform: isEdited ? 'translateY(-1px)' : 'none', transition: 'transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms ease, opacity 180ms ease', opacity: isEdited ? 1 : 0.95 }}>
-            Confirm
-          </button>
-        </div>
+        {/* floating confirm removed — use the top Confirm button in the header */}
       </div>
 
       {/* Controls header with categories (emojis + slide panels) */}
       <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'center', flexWrap: 'wrap', maxWidth: 820, margin: '12px auto 0' }}>
-        <button type="button" onClick={() => setSelectedCategory('basic')} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'basic' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.995)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>🔧 Basic</button>
+        <button type="button" onClick={() => setSelectedCategory('basic')} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'basic' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.995)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>🎛️ Basic</button>
         <button type="button" onClick={() => setSelectedCategory('color')} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'color' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.995)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>🎨 Color</button>
         <button type="button" onClick={() => setSelectedCategory('effects')} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'effects' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.995)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>✨ Effects</button>
+        <button type="button" onClick={() => setSelectedCategory('crop')} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'crop' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.995)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>✂️ Crop</button>
       </div>
 
       {/* Sliding category panels container */}
       <div style={{ maxWidth: 820, margin: '12px auto 0', position: 'relative', height: 160, overflow: 'hidden', borderRadius: 8 }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', width: '300%', transform: selectedCategory === 'basic' ? 'translateX(0%)' : selectedCategory === 'color' ? 'translateX(-33.3333%)' : 'translateX(-66.6666%)', transition: 'transform 320ms cubic-bezier(.2,.9,.2,1)' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', width: '400%', transform: selectedCategory === 'basic' ? 'translateX(0%)' : selectedCategory === 'color' ? 'translateX(-25%)' : selectedCategory === 'effects' ? 'translateX(-50%)' : 'translateX(-75%)', transition: 'transform 320ms cubic-bezier(.2,.9,.2,1)' }}>
           {/* Basic panel */}
-          <div style={{ width: '33.3333%', padding: 12, boxSizing: 'border-box', display: 'grid', gap: 10 }}>
+          <div style={{ width: '25%', padding: 12, boxSizing: 'border-box', display: 'grid', gap: 10 }}>
             <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}><span aria-hidden>❄️</span><span>Exposure</span><span aria-hidden>☀️</span></span>
               <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(exposure, 0.5, 1.8, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
@@ -575,15 +651,16 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
               <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(saturation, 0, 2, '#ff7ab6', 'rgba(255,255,255,0.06)') }} />
               <span style={{ width: 48, textAlign: 'right' }}>{saturation.toFixed(2)}</span>
             </label>
-          </div>
-
-          {/* Color panel */}
-          <div style={{ width: '33.3333%', padding: 12, boxSizing: 'border-box', display: 'grid', gap: 10 }}>
             <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}><span aria-hidden>🥶</span><span>Temperature</span><span aria-hidden>🥵</span></span>
               <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(temperature, -100, 100, '#58a6ff', '#ffb86b') }} />
               <span style={{ width: 48, textAlign: 'right' }}>{temperature}</span>
             </label>
+          </div>
+
+          {/* Color panel */}
+          <div style={{ width: '25%', padding: 12, boxSizing: 'border-box', display: 'grid', gap: 10 }}>
+            <div style={{ fontWeight: 700 }}>Color</div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ width: 110 }}>Filters</span>
               {['none', 'sepia', 'mono', 'cinema', 'bleach'].map(f => {
@@ -596,7 +673,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
           </div>
 
           {/* Effects panel */}
-          <div style={{ width: '33.3333%', padding: 12, boxSizing: 'border-box', display: 'grid', gap: 10 }}>
+          <div style={{ width: '25%', padding: 12, boxSizing: 'border-box', display: 'grid', gap: 10 }}>
             <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🕶️ <span>Vignette</span></span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, 'rgba(0,0,0,0.6)', 'rgba(255,255,255,0.06)') }} />
@@ -607,84 +684,117 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#c4c4c4', 'rgba(255,255,255,0.02)') }} />
               <span style={{ width: 48, textAlign: 'right' }}>{grain.toFixed(2)}</span>
             </label>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" checked={frameEnabled} onChange={(e) => { const v = e.target.checked; frameEnabledRef.current = v; setFrameEnabled(v); draw(); }} />
+                  <span>Frame</span>
+                </label>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                  <button type="button" className={frameColor === 'white' ? 'btn primary' : 'btn ghost'} onClick={() => { frameColorRef.current = 'white'; setFrameColor('white'); draw(); }}>White</button>
+                  <button type="button" className={frameColor === 'black' ? 'btn primary' : 'btn ghost'} onClick={() => { frameColorRef.current = 'black'; setFrameColor('black'); draw(); }}>Black</button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <span style={{ width: 110 }}>Thickness</span>
+                <input className="imgedit-range" type="range" min={0.005} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} style={{ flex: 1 }} />
+                <span style={{ width: 48, textAlign: 'right' }}>{Math.round(frameThickness * 100)}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Crop panel */}
+          <div style={{ width: '25%', padding: 12, boxSizing: 'border-box', display: 'grid', gap: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <div>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Crop</div>
+                <div className="dim" style={{ maxWidth: 240 }}>Pick an aspect ratio or drag to make a custom selection.</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn ghost" type="button" onClick={() => { setSel(null); cropRatio.current = null; }} style={{ padding: '8px 10px' }}>Reset</button>
+                <button className="btn" type="button" onClick={() => { cropRatio.current = null; setSel(null); }} aria-pressed={cropRatio.current === null} style={{ padding: '8px 10px' }}>Free</button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aspect presets</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 'auto' }}>Tap to apply</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 6, WebkitOverflowScrolling: 'touch' }}>
+                {[ 
+                  { label: 'Free', v: null },
+                  { label: '16:9', v: 16 / 9 },
+                  { label: '4:3', v: 4 / 3 },
+                  { label: '3:2', v: 3 / 2 },
+                  { label: '1:1', v: 1 },
+                  { label: '4:5', v: 4 / 5 }
+                ].map(r => {
+                  const selected = cropRatio.current === r.v;
+                  return (
+                    <button key={r.label} type="button" onClick={() => {
+                      cropRatio.current = r.v;
+                      const canvas = canvasRef.current;
+                      if (!canvas) return;
+                      const info = computeImageLayout();
+                      const pad = 0.08;
+                      if (info) {
+                        let w = info.dispW * (1 - pad * 2);
+                        let h = info.dispH * (1 - pad * 2);
+                        if (r.v) {
+                          h = w / r.v;
+                          if (h > info.dispH * (1 - pad * 2)) {
+                            h = info.dispH * (1 - pad * 2);
+                            w = h * r.v;
+                          }
+                        }
+                        const x = info.left + (info.dispW - w) / 2;
+                        const y = info.top + (info.dispH - h) / 2;
+                        setSel({ x, y, w, h });
+                      } else {
+                        const rect = canvas.getBoundingClientRect();
+                        let w = rect.width * (1 - pad * 2);
+                        let h = rect.height * (1 - pad * 2);
+                        if (r.v) {
+                          h = w / r.v;
+                          if (h > rect.height * (1 - pad * 2)) {
+                            h = rect.height * (1 - pad * 2);
+                            w = h * r.v;
+                          }
+                        }
+                        const x = (rect.width - w) / 2;
+                        const y = (rect.height - h) / 2;
+                        setSel({ x, y, w, h });
+                      }
+                    }} aria-pressed={selected} style={{
+                      minWidth: 84,
+                      flex: '0 0 auto',
+                      padding: '8px',
+                      borderRadius: 10,
+                      background: selected ? 'var(--primary)' : 'var(--bg-elev)',
+                      color: selected ? '#fff' : 'var(--text)',
+                      border: selected ? '1px solid color-mix(in srgb, var(--primary) 30%, transparent)' : '1px solid var(--border)',
+                      boxShadow: selected ? '0 6px 20px rgba(0,125,255,0.12)' : '0 4px 12px rgba(0,0,0,0.04)',
+                      display: 'flex',
+                      gap: 10,
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      transition: 'transform 120ms ease, box-shadow 180ms ease'
+                    }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'translateY(1px) scale(.997)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>
+                      <span aria-hidden style={{ width: 48, height: 28, background: 'rgba(255,255,255,0.03)', borderRadius: 4, display: 'inline-block', position: 'relative', border: '1px dashed rgba(255,255,255,0.03)' }}>
+                        {/* simple visual preview of aspect inside box */}
+                        <span style={{ position: 'absolute', left: 6, top: 4, right: 6, bottom: 4, background: selected ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)', borderRadius: 2 }} />
+                      </span>
+                      <span style={{ fontSize: 13 }}>{r.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* aspect ratio presets */}
-  <div style={{ display: 'flex', gap: 8, marginTop: 10, justifyContent: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 80, paddingBottom: 8 }}>
-              {[ 
-          { label: 'Free', v: null },
-          { label: '16:9', v: 16 / 9 },
-          { label: '4:3', v: 4 / 3 },
-          { label: '3:2', v: 3 / 2 },
-          { label: '1:1', v: 1 },
-          { label: '4:5', v: 4 / 5 }
-        ].map(r => (
-              <button type="button" key={r.label} onClick={() => {
-            cropRatio.current = r.v;
-            // compute selection centered inside the displayed image rect
-            const canvas = canvasRef.current;
-            if (!canvas) return;
-            const info = computeImageLayout();
-            const pad = 0.08;
-            if (info) {
-              let w = info.dispW * (1 - pad * 2);
-              let h = info.dispH * (1 - pad * 2);
-              if (r.v) {
-                h = w / r.v;
-                if (h > info.dispH * (1 - pad * 2)) {
-                  h = info.dispH * (1 - pad * 2);
-                  w = h * r.v;
-                }
-              }
-              const x = info.left + (info.dispW - w) / 2;
-              const y = info.top + (info.dispH - h) / 2;
-              setSel({ x, y, w, h });
-            } else {
-              // fallback to canvas-centered selection
-              const rect = canvas.getBoundingClientRect();
-              let w = rect.width * (1 - pad * 2);
-              let h = rect.height * (1 - pad * 2);
-              if (r.v) {
-                h = w / r.v;
-                if (h > rect.height * (1 - pad * 2)) {
-                  h = rect.height * (1 - pad * 2);
-                  w = h * r.v;
-                }
-              }
-              const x = (rect.width - w) / 2;
-              const y = (rect.height - h) / 2;
-              setSel({ x, y, w, h });
-            }
-              }} style={{ padding: '8px 12px', minWidth: 60, minHeight: 36, fontSize: 14, borderRadius: 8, background: cropRatio.current === r.v ? 'var(--primary)' : 'var(--bg-elev)', color: cropRatio.current === r.v ? '#fff' : 'var(--text)', border: '1px solid var(--border)', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', zIndex: 40, transition: 'transform 140ms ease, box-shadow 200ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'translateY(1px) scale(.997)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} aria-pressed={cropRatio.current === r.v}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  {/* preview icon: draw a small inner rect that reflects the aspect ratio */}
-                  {(() => {
-                    const previewW = 40; const previewH = 18;
-                    let innerW = previewW * 0.8; let innerH = previewH * 0.8;
-                    if (r.v) {
-                      // compute inner size that respects ratio while fitting inside preview box
-                      const targetH = innerW / r.v;
-                      if (targetH <= previewH * 0.9) {
-                        innerH = targetH;
-                      } else {
-                        innerW = innerH * r.v;
-                      }
-                    }
-                    const ix = (previewW - innerW) / 2; const iy = (previewH - innerH) / 2;
-                    return (
-                      <span aria-hidden style={{ display: 'inline-block', width: previewW, height: previewH, background: 'rgba(0,0,0,0.06)', borderRadius: 4, border: '1px solid rgba(0,0,0,0.04)', boxSizing: 'border-box', flex: 'none', transform: 'translateY(1px)', position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: ix, top: iy, width: innerW, height: innerH, background: 'rgba(255,255,255,0.06)', borderRadius: 2, border: '1px dashed rgba(255,255,255,0.03)' }} />
-                      </span>
-                    );
-                  })()}
-                  <span>{r.label}</span>
-                </span>
-              </button>
-        ))}
-      </div>
-
       {/* Bottom controls removed per request */}
     </div>
   );

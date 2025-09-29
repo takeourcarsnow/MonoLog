@@ -98,12 +98,13 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
     if (touchStartX.current == null) return;
     const delta = touchDeltaX.current;
     const threshold = 40; // px
-    if (delta > threshold) prev();
-    else if (delta < -threshold) next();
-    else {
-      // snap back
-      if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
-    }
+    // compute a clamped target index so dragging beyond edges snaps back
+    let target = index;
+    if (delta > threshold) target = Math.max(0, index - 1);
+    else if (delta < -threshold) target = Math.min(imageUrls.length - 1, index + 1);
+    // update state and ensure the track snaps to the target position immediately
+    setIndex(target);
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
     touchStartX.current = null;
     touchDeltaX.current = 0;
   };

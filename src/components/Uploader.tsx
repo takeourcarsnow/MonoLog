@@ -274,9 +274,11 @@ export function Uploader() {
                         }} onTouchEnd={() => {
                           if (touchStartX.current == null) return;
                           const delta = touchDeltaX.current; const threshold = 40;
-                          if (delta > threshold) setIndex(i => Math.max(0, i - 1));
-                          else if (delta < -threshold) setIndex(i => Math.min(dataUrls.length - 1, i + 1));
-                          else if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+                          let target = index;
+                          if (delta > threshold) target = Math.max(0, index - 1);
+                          else if (delta < -threshold) target = Math.min(dataUrls.length - 1, index + 1);
+                          setIndex(target);
+                          if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
                           touchStartX.current = null; touchDeltaX.current = 0;
                         }} role="list">
                           {dataUrls.map((u, idx) => (

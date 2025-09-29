@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Header } from "./Header";
 import { NavBar } from "./NavBar";
 import { initTheme } from "@/lib/theme";
@@ -18,35 +18,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // swipe tracking state (refs not to trigger rerenders)
-  let startX: number | null = null;
-  let startY: number | null = null;
-  let tracking = false;
+  const mainRef = useRef<HTMLElement | null>(null);
+  const startXRef = useRef<number | null>(null);
+  const startYRef = useRef<number | null>(null);
+  const trackingRef = useRef(false);
 
-  function onTouchStart(e: React.TouchEvent) {
-    const t = e.touches[0];
-    // ignore swipes that begin on inputs or editable content
-    const target = e.target as HTMLElement | null;
-    // If the interaction started inside an image editor, ignore to avoid
-    // interfering with crop gestures.
-    if (target && target.closest && target.closest('.image-editor')) return;
-    if (target) {
-      const tag = target.tagName?.toLowerCase();
-      const editable = target.isContentEditable || tag === 'input' || tag === 'textarea' || target.closest && !!target.closest('input, textarea, [contenteditable="true"]');
-      if (editable) return;
-    }
-    startX = t.clientX; startY = t.clientY; tracking = true;
-  }
-
-  function onTouchMove(e: React.TouchEvent) {
-    if (!tracking || startX === null || startY === null) return;
-    // prevent vertical scroll interference only when horizontal movement dominates
-    const t = e.touches[0];
-    const dx = t.clientX - startX;
-    const dy = t.clientY - startY;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
-      e.preventDefault();
-    }
-  }
+  // we attach native handlers to control passive option on touchmove
 
   async function animateAndNavigate(to: string, dir: 'left' | 'right') {
     const el = document.getElementById('view');
@@ -77,23 +54,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   function onTouchEnd(e: React.TouchEvent) {
-    if (!tracking || startX === null) { tracking = false; return; }
+    // kept for compatibility if ever used as React handler; no-op here
+    if (!trackingRef.current || startXRef.current === null) { trackingRef.current = false; return; }
     const t = e.changedTouches[0];
-    const dx = t.clientX - startX;
+    const dx = t.clientX - startXRef.current;
     handleSwipe(dx);
-    tracking = false; startX = null; startY = null;
+    trackingRef.current = false; startXRef.current = null; startYRef.current = null;
   }
 
   // mouse drag support for desktop (optional)
-  let mouseDown = false; let mouseStartX: number | null = null;
-  function onMouseDown(e: React.MouseEvent) { mouseDown = true; mouseStartX = e.clientX; }
-  function onMouseMove(e: React.MouseEvent) { if (!mouseDown) return; }
+  const mouseDownRef = useRef(false);
+  const mouseStartXRef = useRef<number | null>(null);
+  function onMouseDown(e: React.MouseEvent) { mouseDownRef.current = true; mouseStartXRef.current = e.clientX; }
+  function onMouseMove(e: React.MouseEvent) { if (!mouseDownRef.current) return; }
   function onMouseUp(e: React.MouseEvent) {
-    if (!mouseDown || mouseStartX === null) { mouseDown = false; mouseStartX = null; return; }
+    if (!mouseDownRef.current || mouseStartXRef.current === null) { mouseDownRef.current = false; mouseStartXRef.current = null; return; }
     // ignore drags that started inside the image editor
     const target = e.target as HTMLElement | null;
-    if (target && target.closest && target.closest('.image-editor')) { mouseDown = false; mouseStartX = null; return; }
-    const dx = e.clientX - mouseStartX; handleSwipe(dx); mouseDown = false; mouseStartX = null;
+    if (target && target.closest && target.closest('.image-editor')) { mouseDownRef.current = false; mouseStartXRef.current = null; return; }
+    const dx = e.clientX - mouseStartXRef.current; handleSwipe(dx); mouseDownRef.current = false; mouseStartXRef.current = null;
   }
 
   useEffect(() => {
@@ -112,6 +91,55 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  // Attach native touch listeners so we can call preventDefault from touchmove
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+
+    const touchStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest && target.closest('.image-editor')) return;
+      if (target) {
+        const tag = target.tagName?.toLowerCase();
+        const editable = (target as HTMLElement).isContentEditable || tag === 'input' || tag === 'textarea' || (target.closest && !!target.closest('input, textarea, [contenteditable="true"]'));
+        if (editable) return;
+      }
+      startXRef.current = t.clientX;
+      startYRef.current = t.clientY;
+      trackingRef.current = true;
+    };
+
+    const touchMove = (e: TouchEvent) => {
+      if (!trackingRef.current || startXRef.current === null || startYRef.current === null) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startXRef.current;
+      const dy = t.clientY - startYRef.current;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+        // we deliberately set passive: false for this listener so preventDefault is allowed
+        e.preventDefault();
+      }
+    };
+
+    const touchEnd = (e: TouchEvent) => {
+      if (!trackingRef.current || startXRef.current === null) { trackingRef.current = false; startXRef.current = null; startYRef.current = null; return; }
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startXRef.current;
+      handleSwipe(dx);
+      trackingRef.current = false; startXRef.current = null; startYRef.current = null;
+    };
+
+    el.addEventListener('touchstart', touchStart, { passive: true });
+    el.addEventListener('touchmove', touchMove, { passive: false });
+    el.addEventListener('touchend', touchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', touchStart);
+      el.removeEventListener('touchmove', touchMove as EventListener);
+      el.removeEventListener('touchend', touchEnd);
+    };
+  }, [pathname]);
+
   return (
     <ToastProvider>
       <Header />
@@ -119,9 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className="content"
         id="view"
         tabIndex={-1}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        ref={(el) => { mainRef.current = el; }}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}

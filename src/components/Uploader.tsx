@@ -420,24 +420,50 @@ export function Uploader() {
       <div className="form-row">
         <label className="vis-label">
           <span className="dim">Visibility</span>
-          <div role="radiogroup" aria-label="Post visibility" style={{ display: 'inline-flex', gap: 8 }}>
-            <button
-              type="button"
-              className={`btn ${visibility === 'public' ? 'active' : ''}`}
-              aria-pressed={visibility === 'public'}
-              onClick={() => setVisibility('public')}
-            >
-              Public
-            </button>
-            <button
-              type="button"
-              className={`btn ${visibility === 'private' ? 'active' : ''}`}
-              aria-pressed={visibility === 'private'}
-              onClick={() => setVisibility('private')}
-            >
-              Private
-            </button>
-          </div>
+            <div role="radiogroup" aria-label="Post visibility" style={{ display: 'inline-flex', gap: 8 }}>
+              <button
+                type="button"
+                data-type="public"
+                aria-label="Make post public"
+                className={`btn ${visibility === 'public' ? 'active' : ''}`}
+                aria-pressed={visibility === 'public'}
+                onClick={() => setVisibility('public')}
+              >
+                <span className="vis-icon" aria-hidden>
+                  {/* eye open */}
+                  <svg className="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" />
+                  </svg>
+                  {/* eye closed / eye-off */}
+                  <svg className="eye-closed" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19C5 19 1 12 1 12a20.16 20.16 0 0 1 5.06-5.94" stroke="currentColor" />
+                    <path d="M1 1l22 22" stroke="currentColor" />
+                  </svg>
+                </span>
+                Public
+              </button>
+              <button
+                type="button"
+                data-type="private"
+                aria-label="Make post private"
+                className={`btn ${visibility === 'private' ? 'active' : ''}`}
+                aria-pressed={visibility === 'private'}
+                onClick={() => setVisibility('private')}
+              >
+                <span className="vis-icon" aria-hidden>
+                  <svg className="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" />
+                  </svg>
+                  <svg className="eye-closed" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19C5 19 1 12 1 12a20.16 20.16 0 0 1 5.06-5.94" stroke="currentColor" />
+                    <path d="M1 1l22 22" stroke="currentColor" />
+                  </svg>
+                </span>
+                Private
+              </button>
+            </div>
         </label>
 
         <div className="btn-group">

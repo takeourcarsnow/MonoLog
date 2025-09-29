@@ -429,6 +429,77 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   outline-offset: 4px;
 }
 
+/* Visibility icon and subtle animation */
+.vis-icon { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 8px; position: relative; }
+.vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; color: currentColor; transition: opacity 180ms var(--transition-fast), transform 200ms var(--transition-fast); }
+/* default: show open eye for Public, hide closed eye */
+.form-row .vis-label button[data-type="public"] .vis-icon .eye-open { opacity: 1; transform: scale(1); }
+.form-row .vis-label button[data-type="public"] .vis-icon .eye-closed { opacity: 0; transform: scale(0.92) rotate(-6deg); }
+/* default: show closed eye for Private (muted) */
+.form-row .vis-label button[data-type="private"] .vis-icon .eye-open { opacity: 0.42; transform: scale(0.98); }
+.form-row .vis-label button[data-type="private"] .vis-icon .eye-closed { opacity: 0.9; transform: scale(1); }
+/* when active, swap to the correct icon and apply subtle motion */
+.form-row .vis-label button[data-type="public"][aria-pressed="true"] .vis-icon .eye-open {
+  opacity: 1; transform: scale(1) rotate(0deg);
+}
+.form-row .vis-label button[data-type="public"][aria-pressed="true"] .vis-icon .eye-closed {
+  opacity: 0; transform: scale(0.92) rotate(-6deg);
+}
+
+.form-row .vis-label button[data-type="private"][aria-pressed="true"] .vis-icon .eye-open {
+  opacity: 0; transform: scale(0.92) rotate(6deg);
+}
+.form-row .vis-label button[data-type="private"][aria-pressed="true"] .vis-icon .eye-closed {
+  opacity: 1; transform: scale(1) rotate(0deg);
+}
+
+/* active pill glow and lift */
+.form-row .vis-label .btn.active {
+  transform: translateY(-6px);
+  color: #fff;
+}
+.form-row .vis-label .btn.active .vis-icon svg { color: #fff; }
+.form-row .vis-label .btn.active::after {
+  content: "";
+  position: absolute;
+  inset: -8px; /* expand behind the pill */
+  border-radius: 999px;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--primary), transparent 40%), transparent 60%);
+  filter: blur(10px);
+  opacity: 0.95;
+  transition: opacity 220ms var(--transition-fast), transform 220ms var(--transition-fast);
+}
+
+/* Public active pill: strong primary color */
+.form-row .vis-label button[data-type="public"].active {
+  background: var(--primary);
+  border-color: transparent;
+}
+
+/* Private active pill: muted but still with visible accent */
+.form-row .vis-label button[data-type="private"].active {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), rgba(255,255,255,0.02)), color-mix(in srgb, var(--primary), transparent 92%));
+  border-color: transparent;
+}
+
+/* Improve contrast and affordance for the upload drop area on mobile */
+.drop { transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); }
+.drop:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(0,0,0,0.08); }
+.drop .drop-icon { transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid); }
+.drop.dragover .drop-icon { transform: scale(1.06); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+
+/* make the drop icon circle more distinct on mobile and dark theme */
+@media (max-width: 640px) {
+  .drop { border-radius: 12px; }
+  .drop .drop-icon { background: linear-gradient(180deg, color-mix(in srgb, var(--primary-weak), transparent 12%), color-mix(in srgb, var(--primary-weak), transparent 28%)); color: var(--primary); }
+}
+
+/* smaller label under buttons to emphasize primary action on mobile */
+@media (max-width: 640px) {
+  .form-row .vis-label .btn { padding: 10px 12px; }
+}
+
 .btn-group { display: flex; gap: 8px; align-items: center; }
 .btn.primary { padding: 10px 14px; border-radius: 12px; font-weight: 700; }
 .btn.ghost.replace { padding: 10px 12px; }

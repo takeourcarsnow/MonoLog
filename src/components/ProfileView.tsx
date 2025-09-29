@@ -66,9 +66,8 @@ export function ProfileView({ userId }: { userId?: string }) {
       while (n--) u8arr[n] = bstr.charCodeAt(n);
       const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
 
-      const sb = getSupabaseClient();
-      const { data: userData } = await sb.auth.getUser();
-      const userObj = (userData as any)?.user;
+  const sb = getSupabaseClient();
+  const userObj = await api.getCurrentUser();
       if (!userObj) throw new Error("Not logged in");
       const path = `avatars/${userObj.id}/${file.name}`;
       const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
@@ -279,13 +278,12 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
               const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
 
               const sb = getSupabaseClient();
-              const { data: userData, error: authErr } = await sb.auth.getUser();
               // stringify helpers for paste-friendly logs
               const s = (v: any) => {
                 try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } }
               };
-              console.debug("auth.getUser result", s({ userData, authErr }));
-              const user = (userData as any)?.user;
+              const user = await api.getCurrentUser();
+              console.debug("auth.getUser result", s({ user }));
               if (!user) throw new Error("Not logged in");
               const path = `avatars/${user.id}/${file.name}`;
               console.debug("Uploading avatar to storage", { path, fileName: file.name, fileSize: file.size, fileType: file.type });

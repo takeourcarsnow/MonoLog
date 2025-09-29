@@ -4,6 +4,10 @@ import { SUPABASE } from "../config";
 import { uid } from "../id";
 
 let supabase: SupabaseClient | null = null;
+// cached auth user to avoid repeated auth.getUser() calls during a client session.
+// undefined = not yet fetched, null = fetched and no active session, object = auth user
+let cachedAuthUser: any | null | undefined = undefined;
+let authStateSub: any = null;
 
 function getClient() {
   if (supabase) return supabase;
@@ -14,6 +18,48 @@ function getClient() {
   return supabase;
 }
 
+// Fetch auth user once and cache the result. If an auth error indicates no session,
+// cache null. Also log unexpected errors via logSupabaseError for visibility.
+async function fetchAndCacheAuthUser(sb: SupabaseClient) {
+  try {
+    const { data, error } = await sb.auth.getUser();
+    logSupabaseError("auth.getUser", { data, error });
+    if (error) {
+      // benign missing-session errors are filtered by logSupabaseError; still cache null
+      cachedAuthUser = null;
+      return null;
+    }
+    const user = (data as any)?.user ?? null;
+    cachedAuthUser = user;
+    return user;
+  } catch (e) {
+    cachedAuthUser = null;
+    return null;
+  }
+}
+
+// Return cached auth user when available, otherwise fetch and cache it.
+async function getCachedAuthUser(sb: SupabaseClient) {
+  if (cachedAuthUser !== undefined) return cachedAuthUser;
+  return await fetchAndCacheAuthUser(sb);
+}
+
+// Set up a client-side auth state change listener to keep the cache in sync.
+function ensureAuthListener(sb: SupabaseClient) {
+  if (typeof window === "undefined") return;
+  if (authStateSub) return;
+  try {
+    // supabase-js v2 returns a { data: { subscription } } shape from onAuthStateChange
+    const sub = sb.auth.onAuthStateChange((event: string, session: any) => {
+      // session may be null on sign-out
+      cachedAuthUser = session?.user ?? null;
+    });
+    authStateSub = sub;
+  } catch (e) {
+    // non-fatal; listener is only an optimization
+  }
+}
+
 // helper to log Supabase errors in the browser console with context
 function logSupabaseError(context: string, res: { data?: any; error?: any }) {
   try {
@@ -21,6 +67,16 @@ function logSupabaseError(context: string, res: { data?: any; error?: any }) {
     if (!res) return;
     const { error, data } = res as any;
     if (error) {
+      // Certain auth errors are expected when there's no active session
+      // (for example calling auth.getUser() before sign-in). Those are
+      // noisy but benign; ignore them to avoid spamming the console.
+      const msg = error?.message || "";
+      if (typeof msg === "string") {
+        const lower = msg.toLowerCase();
+        if (lower.includes("auth session missing") || lower.includes("no active session")) {
+          return;
+        }
+      }
       // provide a concise, copyable object
       console.error(`Supabase error (${context})`, { message: error.message || error, code: error.code || error?.status || null, details: error.details || error, data });
     }
@@ -107,7 +163,10 @@ export const supabaseApi: Api = {
   async init() {
     // client is lazy-initialized on first call
     if (typeof window === "undefined") return; // only initialize on client
-    getClient();
+    const sb = getClient();
+    ensureAuthListener(sb);
+    // prefetch cached user
+    fetchAndCacheAuthUser(sb).catch(() => {});
   },
 
   async seed() { throw new Error("Not available in supabase mode"); },
@@ -123,10 +182,8 @@ export const supabaseApi: Api = {
   async getCurrentUser() {
     try {
       const sb = getClient();
-  const { data: userData, error: userErr } = await sb.auth.getUser();
-  logSupabaseError("auth.getUser", { data: userData, error: userErr });
-  if (userErr) return null;
-  const user = (userData as any)?.user;
+      ensureAuthListener(sb);
+      const user = await getCachedAuthUser(sb);
       if (!user) return null;
       // try to find a matching profile in users table
   const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).single();
@@ -181,8 +238,8 @@ export const supabaseApi: Api = {
   },
   async isFollowing(userId: string) {
     const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
+    ensureAuthListener(sb);
+    const me = await getCachedAuthUser(sb);
     if (!me) return false;
     const { data: profile, error } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
     if (error || !profile) return false;
@@ -209,8 +266,8 @@ export const supabaseApi: Api = {
   async getFavoritePosts() {
     // Keep this read operation client-side (reads are safe with anon key)
     const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
+    ensureAuthListener(sb);
+    const me = await getCachedAuthUser(sb);
     if (!me) return [];
     const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
     if (profErr || !profile) return [];
@@ -243,8 +300,8 @@ export const supabaseApi: Api = {
   async getFollowingFeed() {
     // Use client-side reads for feed; follow list comes from users table
     const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
+    ensureAuthListener(sb);
+    const me = await getCachedAuthUser(sb);
     if (!me) return [];
     const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
     if (profErr || !profile) return [];
@@ -258,8 +315,8 @@ export const supabaseApi: Api = {
 
   async getFollowingFeedPage({ limit, before }: { limit: number; before?: string }) {
     const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const me = (userData as any)?.user;
+    ensureAuthListener(sb);
+    const me = await getCachedAuthUser(sb);
     if (!me) return [];
     const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
     if (profErr || !profile) return [];
@@ -311,8 +368,8 @@ export const supabaseApi: Api = {
 
   async updateCurrentUser(patch: Partial<User>) {
     const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const user = (userData as any)?.user;
+    ensureAuthListener(sb);
+    const user = await getCachedAuthUser(sb);
     if (!user) throw new Error("Not logged in");
     const upsertObj: any = { id: user.id };
     if (patch.username !== undefined) upsertObj.username = patch.username;
@@ -404,8 +461,8 @@ export const supabaseApi: Api = {
 
   async canPostToday() {
     const sb = getClient();
-    const { data: userData } = await sb.auth.getUser();
-    const user = (userData as any)?.user;
+    ensureAuthListener(sb);
+    const user = await getCachedAuthUser(sb);
     if (!user) return { allowed: false, reason: "Not logged in" };
     // Check for the most recent post by this user and return a 24h cooldown
     const { data: recent, error: recentErr } = await sb

@@ -357,7 +357,7 @@ function Editor({ post, onCancel, onSave }: {
       <input
         className="edit-caption input"
         type="text"
-        placeholder="Caption (optional)"
+  placeholder="Tell your story (if you feel like it)"
         value={caption}
         onChange={e => setCaption(e.target.value)}
       />

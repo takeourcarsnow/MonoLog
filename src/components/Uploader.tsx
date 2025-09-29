@@ -24,6 +24,22 @@ export function Uploader() {
   const [editing, setEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number>(0);
   const [editingAlt, setEditingAlt] = useState<string>("");
+  // rotating caption placeholder (persisted across reloads so users see a different prompt each time)
+  const [placeholder, setPlaceholder] = useState<string>(
+    "Tell your story (if you feel like it)"
+  );
+  // the canonical list of philosophical prompts used for rotation and animated typing
+  const PHRASES = [
+    "Frame the moment: what light or silence does this image keep?",
+    "Tell the small truth this photograph remembers about you.",
+    "Which memory does this picture return to, slowly?",
+    "Describe the world that sat still for this instant.",
+    "If this image had its own story, how would it begin?",
+    "Name the feeling that first arrived when you took this.",
+    "What does time leave behind in this single frame?",
+  ];
+  // typed text for the JS-driven typing/backspace animation
+  const [typed, setTyped] = useState<string>("");
   const dropRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileActionRef = useRef<'append' | 'replace'>('append');
@@ -107,6 +123,78 @@ export function Uploader() {
   }, [nextAllowedAt]);
 
   const toast = useToast();
+
+  // rotate a friendly placeholder message on each page load; persist index so reloads cycle
+  useEffect(() => {
+    const key = "monolog:captionPlaceholderIndex";
+    try {
+      const raw = localStorage.getItem(key);
+      let idx = Number.isFinite(Number(raw)) ? Number(raw) : -1;
+      idx = (idx + 1) % PHRASES.length;
+      localStorage.setItem(key, String(idx));
+      setPlaceholder(PHRASES[idx]);
+    } catch (e) {
+      // localStorage might not be available; silently fallback to default
+      setPlaceholder(PHRASES[0]);
+    }
+  }, []);
+
+  // Typing/backspace loop: types a phrase, pauses, deletes it, then moves to the next phrase.
+  // It runs until the user starts typing into the caption input (caption !== "").
+  useEffect(() => {
+    let mounted = true;
+    const key = "monolog:captionPlaceholderIndex";
+
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const typeSpeed = 40;
+    const deleteSpeed = 28;
+    const pauseAfterType = 900;
+    const pauseBetween = 420;
+
+    // stop immediately if user started typing
+    if (caption && caption.length > 0) {
+      setTyped("");
+      return;
+    }
+
+    (async () => {
+      let idx = 0;
+      try {
+        const raw = localStorage.getItem(key);
+        idx = Number.isFinite(Number(raw)) ? Number(raw) : 0;
+      } catch (e) {}
+
+      while (mounted && (!caption || caption.length === 0)) {
+        const msg = PHRASES[idx % PHRASES.length] || PHRASES[0];
+
+        // type forward
+        for (let i = 1; i <= msg.length; i++) {
+          if (!mounted || (caption && caption.length > 0)) return;
+          setTyped(msg.slice(0, i));
+          await sleep(typeSpeed + (i % 3 === 0 ? 8 : 0));
+        }
+
+        if (!mounted || (caption && caption.length > 0)) break;
+        await sleep(pauseAfterType);
+
+        // delete
+        for (let i = msg.length; i >= 0; i--) {
+          if (!mounted || (caption && caption.length > 0)) return;
+          setTyped(msg.slice(0, i));
+          await sleep(deleteSpeed + (i % 2 === 0 ? 4 : 0));
+        }
+
+        // advance and persist
+        idx = (idx + 1) % PHRASES.length;
+        try { localStorage.setItem(key, String(idx)); } catch (e) {}
+        await sleep(pauseBetween);
+      }
+
+      if (mounted) setTyped("");
+    })();
+
+    return () => { mounted = false; };
+  }, [caption]);
 
   // Log size stats to the console only (no UI display)
   useEffect(() => {
@@ -444,14 +532,27 @@ export function Uploader() {
       </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <input
-          className="input"
-          type="text"
-          placeholder="Caption (optional)"
-          value={caption}
-          onChange={e => setCaption(e.target.value)}
-          style={{ flex: 1 }}
-        />
+        <div className="input-wrapper" style={{ flex: 1, position: 'relative' }}>
+          <input
+            className="input"
+            type="text"
+            aria-label="Caption"
+            placeholder={caption ? undefined : ''}
+            value={caption}
+            onChange={e => setCaption(e.target.value)}
+            style={{ width: '100%' }}
+          />
+          {(!caption && typed) ? (
+            <span
+              className="input-ghost-placeholder"
+              aria-hidden="true"
+              style={{ ['--len' as any]: String(typed.length), ['--steps' as any]: String(typed.length) }}
+            >
+              <span className="typewriter">{typed}</span>
+              <span className="caret" aria-hidden>▌</span>
+            </span>
+          ) : null}
+        </div>
         {/* alt editing moved into the photo editor so it only shows when editing a specific image */}
         {dataUrl ? (
           <button

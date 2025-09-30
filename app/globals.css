@@ -1437,6 +1437,62 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   animation: none !important;
 }
 
+/* Preloader splash overlay */
+.preloader-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg), transparent 8%);
+  z-index: 999999;
+  pointer-events: auto; /* block interactions while shown */
+  transition: opacity 420ms var(--transition-mid), transform 420ms var(--transition-mid);
+  opacity: 1;
+}
+.preloader-exit { opacity: 0; transform: scale(0.996) translateY(-6px); pointer-events: none; }
+.preloader-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  background: transparent; color: var(--text);
+}
+.preloader-logo { display: block; width: 86px; height: 86px; color: var(--primary); animation: preloader-spin 1400ms cubic-bezier(.2,.8,.2,1) infinite; }
+.preloader-wordmark { font-weight: 800; letter-spacing: 0.6px; font-size: 16px; color: var(--text); opacity: 0.98; }
+
+@keyframes preloader-spin {
+  0% { transform: rotate(0); }
+  50% { transform: rotate(90deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader-logo { animation: none !important; }
+  .preloader-overlay { transition: none !important; }
+}
+
+/* Blur content while preloader is active, then smoothly remove blur when it exits */
+:root, html {
+  /* ensure transition targets exist */
+  --preloader-blur: 8px;
+}
+.app-content {
+  /* ensure filter transitions are defined on the element itself so removing
+     the `.preloader-active` class animates the change (otherwise the
+     transition is removed at the same moment the class is removed and it
+     snaps). Use a slightly longer duration for a subtle unblur. */
+  transition: filter 640ms cubic-bezier(.2,.7,.2,1);
+  will-change: filter;
+}
+
+.preloader-active .app-content {
+  filter: blur(var(--preloader-blur)) saturate(0.95);
+  pointer-events: none; /* prevent interaction with app during preload */
+}
+.preloader-active body { overflow: hidden; }
+
+/* When .preloader-active is removed the filter transition back to none creates the unblur effect */
+@media (prefers-reduced-motion: reduce) {
+  .preloader-active #app-root { filter: none !important; transition: none !important; }
+}
+
 /* --- Fix: keep image editor toolbar visible at different zoom levels --- */
 /*
   Problem: The editor's top toolbar can be clipped or pushed behind sticky

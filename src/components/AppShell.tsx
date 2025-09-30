@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Header } from "./Header";
 import { NavBar } from "./NavBar";
+import Preloader from "./Preloader";
 import { initTheme } from "@/lib/theme";
 import { api } from "@/lib/api";
 import { CONFIG } from "@/lib/config";
@@ -159,21 +160,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      <Header />
-      <main
-        className="content"
-        id="view"
-        tabIndex={-1}
-        ref={(el) => { mainRef.current = el; }}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-      >
-        {!ready ? <div className="card skeleton" style={{ height: 240 }} /> : <div className="page-slide">{children}</div>}
-      </main>
-      <NavBar />
-  <NotificationListener />
-      <ToastHost />
+      <Preloader ready={ready} />
+      <div className="app-content">
+        <Header />
+        <main
+          className="content"
+          id="view"
+          tabIndex={-1}
+          ref={(el) => { mainRef.current = el; }}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+        >
+          {!ready ? <div className="card skeleton" style={{ height: 240 }} /> : <div className="page-slide">{children}</div>}
+        </main>
+        <NavBar />
+        <NotificationListener />
+        <ToastHost />
+      </div>
     </ToastProvider>
   );
 }

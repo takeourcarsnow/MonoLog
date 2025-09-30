@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+"use client";
+import { ExploreView } from "@/components/ExploreView";
 
 export default function Page() {
-  redirect("/explore");
+  return <ExploreView />;
 }

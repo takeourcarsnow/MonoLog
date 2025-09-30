@@ -16,7 +16,7 @@ export function Header() {
           className="brand"
           role="button"
           aria-label={`${CONFIG.appName} home`}
-          onClick={() => router.push("/explore")}
+          onClick={() => router.push("/")}
         >
           <div className="logo" aria-hidden="true"></div>
           <h1>{CONFIG.appName}</h1>

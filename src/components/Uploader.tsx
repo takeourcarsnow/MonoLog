@@ -9,15 +9,21 @@ import { useRouter } from "next/navigation";
 import { useToast } from "./Toast";
 import ImageEditor from "./ImageEditor";
 import Portal from "./Portal";
+import ConfirmModal from "./ConfirmModal";
 
 // the canonical list of philosophical prompts used for rotation and animated typing
+// 10 short, contemplative prompts (rotate one per refresh)
 const PHRASES = [
-  "Frame the moment: what light or silence does this image keep?",
-  "Tell the small truth this photograph remembers about you.",
-  "Describe the world that sat still for this instant.",
-  "If this image had its own story, how would it begin?",
-  "Name the feeling that first arrived when you took this.",
-  "What does time leave behind in this single frame?",
+  "Share today’s images — let the day speak as one quiet sequence.",
+  "Gather a small sequence of moments and let them sit together.",
+  "Collect the frames that held your attention today.",
+  "Make a short visual note of this day.",
+  "Let the images show what words cannot.",
+  "Hold a day’s light in a handful of frames.",
+  "Arrange the moments that seemed worth keeping.",
+  "Submit the day’s small stories as a single post.",
+  "Capture a fragment of today and give it room to breathe.",
+  "Let these frames sit together—quiet, patient, and honest.",
 ];
 
 export function Uploader() {
@@ -48,9 +54,19 @@ export function Uploader() {
     return;
   }, [editing]);
   // rotating caption placeholder (persisted across reloads so users see a different prompt each time)
-  const [placeholder, setPlaceholder] = useState<string>(
-    "Tell your story (if you feel like it)"
-  );
+  // Initialize from localStorage so the rotated prompt appears immediately on first render.
+  const [placeholder, setPlaceholder] = useState<string>(() => {
+    const key = "monolog:captionPlaceholderIndex";
+    try {
+      const raw = localStorage.getItem(key);
+      let idx = Number.isFinite(Number(raw)) ? Number(raw) : -1;
+      idx = (idx + 1) % PHRASES.length;
+      localStorage.setItem(key, String(idx));
+      return PHRASES[idx];
+    } catch (e) {
+      return PHRASES[0];
+    }
+  });
   // typed text for the JS-driven typing/backspace animation
   const [typed, setTyped] = useState<string>("");
   const dropRef = useRef<HTMLDivElement>(null);
@@ -136,21 +152,89 @@ export function Uploader() {
   }, [nextAllowedAt]);
 
   const toast = useToast();
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
 
-  // rotate a friendly placeholder message on each page load; persist index so reloads cycle
+  // Draft persistence key
+  const DRAFT_KEY = "monolog:draft";
+
+  // restore draft on mount
   useEffect(() => {
-    const key = "monolog:captionPlaceholderIndex";
     try {
-      const raw = localStorage.getItem(key);
-      let idx = Number.isFinite(Number(raw)) ? Number(raw) : -1;
-      idx = (idx + 1) % PHRASES.length;
-      localStorage.setItem(key, String(idx));
-      setPlaceholder(PHRASES[idx]);
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed) {
+          if (parsed.dataUrls) setDataUrls(parsed.dataUrls);
+          if (parsed.dataUrl) setDataUrl(parsed.dataUrl);
+          if (parsed.caption) setCaption(parsed.caption);
+          if (parsed.alt !== undefined) setAlt(parsed.alt);
+          // Restore visibility only if the persisted draft actually contains images.
+          // This ensures a fresh composer defaults to public even if a previous draft
+          // had changed visibility without images.
+          if (parsed.visibility && (parsed.dataUrls || parsed.dataUrl)) setVisibility(parsed.visibility);
+          if (parsed.compressedSize !== undefined) setCompressedSize(parsed.compressedSize);
+          if (parsed.originalSize !== undefined) setOriginalSize(parsed.originalSize);
+          if (parsed.index !== undefined) setIndex(parsed.index);
+        }
+      }
     } catch (e) {
-      // localStorage might not be available; silently fallback to default
-      setPlaceholder(PHRASES[0]);
+      // ignore parse errors
     }
   }, []);
+
+  // Persist draft whenever key pieces of state change
+  useEffect(() => {
+    try {
+      const payload = {
+        dataUrls: dataUrls.length ? dataUrls : undefined,
+        dataUrl: dataUrl || undefined,
+        caption: caption || undefined,
+        alt: alt === undefined ? undefined : alt,
+        visibility,
+        compressedSize: compressedSize ?? undefined,
+        originalSize: originalSize ?? undefined,
+        index,
+        // timestamp could be useful for future TTL
+        savedAt: Date.now(),
+      } as any;
+      // Defensive merge: if we're about to persist a payload with no images,
+      // but there's an existing saved draft that does contain images, keep
+      // those images to avoid accidentally losing them (for example when
+      // opening the file picker and cancelling).
+      try {
+        const existingRaw = localStorage.getItem(DRAFT_KEY);
+        if (existingRaw) {
+          const existing = JSON.parse(existingRaw);
+          if ((!payload.dataUrls && !payload.dataUrl) && (existing?.dataUrls || existing?.dataUrl)) {
+            if (existing.dataUrls) payload.dataUrls = existing.dataUrls;
+            else if (existing.dataUrl) payload.dataUrl = existing.dataUrl;
+          }
+        }
+      } catch (e) {
+        // ignore parse errors and fall back to writing payload as-is
+      }
+      // only keep keys that are set to reduce size
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    } catch (e) {
+      // ignore storage errors (private mode, quota, etc.)
+    }
+  }, [dataUrls, dataUrl, caption, alt, visibility, compressedSize, originalSize, index]);
+
+  function resetDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    setDataUrls([]);
+    setDataUrl(null);
+    setCaption("");
+    setAlt("");
+    setVisibility("public");
+    setCompressedSize(null);
+    setOriginalSize(null);
+    setIndex(0);
+    setPreviewLoaded(false);
+    setEditing(false);
+  }
+
+  // placeholder is initialized synchronously above; no mount-effect needed
 
   // Typing/backspace loop: types a phrase, pauses, deletes it, then moves to the next phrase.
   // It runs until the user starts typing into the caption input (caption !== "").
@@ -278,7 +362,8 @@ export function Uploader() {
         replace,
         public: visibility === "public",
       });
-      // navigation will unmount this component; no need to clear processing here
+      // clear persisted draft (navigation will unmount but be safe)
+      resetDraft();
       router.push("/profile");
     } catch (e: any) {
       if (e?.code === "LIMIT") {
@@ -290,14 +375,9 @@ export function Uploader() {
     }
   }
 
+  // main uploader UI (toolbar removed per request)
   return (
     <div className="uploader view-fade">
-      <div className="toolbar">
-        <div>
-          <strong>Post your photos for today</strong>
-          <div className="dim">Attach up to 5 images — one post per day</div>
-        </div>
-      </div>
 
       {!dataUrl && !dataUrls.length && (
         <div
@@ -319,7 +399,7 @@ export function Uploader() {
         >
           <div className="drop-inner">
             <div className="drop-icon" aria-hidden>+</div>
-            <div className="drop-text">Drop image here or click to select</div>
+            <div className="drop-text">Drop images here or click to select</div>
             <div className="dim" style={{ marginTop: 6 }}>JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB</div>
           </div>
         </div>
@@ -530,15 +610,35 @@ export function Uploader() {
               ) : (
                 <div>
                   <img alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')} src={dataUrls[0] || dataUrl || ""} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
-                  { (dataUrl || dataUrls.length === 1) ? (
-                    <button
-                      className="btn"
-                      style={{ position: 'absolute', right: 8, bottom: 8 }}
-                      onClick={() => { setEditingIndex(0); setEditing(true); }}
-                    >
-                      Edit photo
-                    </button>
-                  ) : null }
+                      { (dataUrl || dataUrls.length === 1) ? (
+                        <>
+                          <button
+                            className="btn"
+                            style={{ position: 'absolute', right: 8, bottom: 8 }}
+                            onClick={() => { setEditingIndex(0); setEditing(true); }}
+                          >
+                            Edit photo
+                          </button>
+                          <button
+                            type="button"
+                            className="btn"
+                            style={{ position: 'absolute', right: 100, bottom: 8, zIndex: 8, padding: '6px 12px' }}
+                            onClick={() => {
+                              if (processing) return;
+                              fileActionRef.current = 'replace';
+                              replaceIndexRef.current = dataUrls.length ? index : 0;
+                              // Keep the current preview visible; open picker for replacement
+                              setEditing(false);
+                              try {
+                                if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = "";
+                              } catch (e) {}
+                              try { fileInputRef.current?.click(); } catch (e) {}
+                            }}
+                          >
+                            Change photo
+                          </button>
+                        </>
+                      ) : null }
                 </div>
               )}
             </>
@@ -570,15 +670,8 @@ export function Uploader() {
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <div className="input-wrapper" style={{ flex: 1, position: 'relative' }}>
-          <input
-            className="input"
-            type="text"
-            aria-label="Caption"
-            placeholder={caption ? undefined : ''}
-            value={caption}
-            onChange={e => setCaption(e.target.value)}
-            style={{ width: '100%' }}
-          />
+          {/** keep the ghost/typewriter visible even before a photo is selected,
+           *  but prevent the input from being focused/edited until an image exists */}
           {(!caption && typed) ? (
             <span
               className="input-ghost-placeholder"
@@ -589,51 +682,39 @@ export function Uploader() {
               <span className="caret" aria-hidden>▌</span>
             </span>
           ) : null}
+
+          <input
+            className="input"
+            type="text"
+            aria-label="Caption"
+            placeholder={caption ? undefined : ''}
+            value={caption}
+            onChange={e => setCaption(e.target.value)}
+            readOnly={!(dataUrl || dataUrls.length > 0) || processing}
+            tabIndex={(dataUrl || dataUrls.length > 0) ? 0 : -1}
+            onMouseDown={(e) => {
+              // Block mouse interaction when no image is selected so clicks don't focus the input
+              if (!(dataUrl || dataUrls.length > 0) || processing) e.preventDefault();
+            }}
+            style={{ width: '100%', cursor: (!(dataUrl || dataUrls.length > 0) || processing) ? 'not-allowed' : 'text' }}
+          />
         </div>
         {/* alt editing moved into the photo editor so it only shows when editing a specific image */}
-        {dataUrl ? (
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={() => {
-              if (processing) return;
-              // prepare to replace the currently visible image
-              fileActionRef.current = 'replace';
-              replaceIndexRef.current = dataUrls.length ? index : 0;
-              setDataUrl(null);
-              setOriginalSize(null);
-              setCompressedSize(null);
-              setAlt("");
-              setCaption("");
-              setEditing(false);
-              try {
-                if (fileInputRef.current) {
-                  // clear previous value so selecting the same file again will fire change
-                  (fileInputRef.current as HTMLInputElement).value = "";
-                }
-              } catch (e) {}
-              // open file picker so the user can choose a replacement
-              try { fileInputRef.current?.click(); } catch (e) {}
-            }}
-            style={{ whiteSpace: 'nowrap' }}
-          >
-            Change photo
-          </button>
-        ) : null}
       </div>
 
       {/* alt editing appears inside the ImageEditor modal when editing a photo */}
-      <div className="form-row">
-        <label className="vis-label">
-          <span className="dim">Visibility</span>
-            <div role="radiogroup" aria-label="Post visibility" style={{ display: 'inline-flex', gap: 8 }}>
+      {(dataUrl || dataUrls.length > 0) ? (
+        <div className="form-row">
+          <label className="vis-label">
+            <span className="dim">Visibility</span>
+            <div>
               <button
                 type="button"
-                data-type="public"
-                aria-label="Make post public"
-                className={`btn ${visibility === 'public' ? 'active' : ''}`}
-                aria-pressed={visibility === 'public'}
-                onClick={() => setVisibility('public')}
+                role="switch"
+                aria-checked={visibility === 'private'}
+                aria-label={visibility === 'private' ? 'Make post public' : 'Make post private'}
+                className={`vis-toggle btn ${visibility === 'private' ? 'private' : 'public'}`}
+                onClick={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
               >
                 <span className="vis-icon" aria-hidden>
                   {/* eye open */}
@@ -647,56 +728,54 @@ export function Uploader() {
                     <path d="M1 1l22 22" stroke="currentColor" />
                   </svg>
                 </span>
-                Public
-              </button>
-              <button
-                type="button"
-                data-type="private"
-                aria-label="Make post private"
-                className={`btn ${visibility === 'private' ? 'active' : ''}`}
-                aria-pressed={visibility === 'private'}
-                onClick={() => setVisibility('private')}
-              >
-                <span className="vis-icon" aria-hidden>
-                  <svg className="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" />
-                    <circle cx="12" cy="12" r="3" stroke="currentColor" />
-                  </svg>
-                  <svg className="eye-closed" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19C5 19 1 12 1 12a20.16 20.16 0 0 1 5.06-5.94" stroke="currentColor" />
-                    <path d="M1 1l22 22" stroke="currentColor" />
-                  </svg>
-                </span>
-                Private
+                <span style={{ marginLeft: 4 }}>{visibility === 'private' ? 'Private' : 'Public'}</span>
               </button>
             </div>
-        </label>
+          </label>
 
-        <div className="btn-group">
-          <button
-            className="btn primary"
-            onClick={() => publish(false)}
-            disabled={
-              processing ||
-              (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024) ||
-              (canPost === false)
-            }
-          >
-            {processing
-              ? "Processing…"
-              : canPost === false
-              ? nextAllowedAt
-                ? `Next post in ${remaining}`
-                : "Publish again in 24h"
-              : "Publish"}
-          </button>
-          {/* replace button removed */}
+          <div className="btn-group">
+            <button
+              className="btn primary"
+              onClick={() => publish(false)}
+              disabled={
+                processing ||
+                (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024) ||
+                (canPost === false)
+              }
+            >
+              {processing
+                ? "Processing…"
+                : canPost === false
+                ? nextAllowedAt
+                  ? `Next post in ${remaining}`
+                  : "Publish again in 24h"
+                : "Publish"}
+            </button>
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={() => setShowDiscardModal(true)}
+              disabled={processing}
+              style={{ marginLeft: 8 }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div aria-live="polite" className="sr-only status">
         {/* screen-reader updates for processing/errors */}
       </div>
+      <ConfirmModal
+        open={showDiscardModal}
+        title="Discard this draft?"
+        description="You will lose selected photos and caption."
+        confirmLabel="Discard"
+        cancelLabel="Keep"
+        onCancel={() => setShowDiscardModal(false)}
+        onConfirm={() => { setShowDiscardModal(false); resetDraft(); }}
+      />
     </div>
   );
 }

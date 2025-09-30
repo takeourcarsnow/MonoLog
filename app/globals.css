@@ -292,6 +292,33 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--bg-elev), transparent 10%);
 }
+
+/* Subtle, card-scoped button micro-interactions (used on About and other card actions) */
+.card .btn {
+  transition: transform 160ms var(--transition-mid), box-shadow 200ms var(--transition-mid), background 140ms ease;
+  padding: 10px 14px; /* slightly larger touch target inside cards */
+}
+.card .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+}
+.card .btn.primary:hover {
+  box-shadow: 0 10px 28px rgba(37,99,235,0.10), 0 1px 4px rgba(0,0,0,0.04) inset;
+}
+.card .btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary), transparent 88%), 0 6px 18px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+.card .btn:active {
+  transform: translateY(1px) scale(.997);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .card .btn, .card .btn:hover, .card .btn:focus { transition: none; transform: none; box-shadow: none; }
+}
 .avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
 .user-line { display: flex; align-items: center; gap: 6px; }
 .username { font-weight: 700; font-size: 14px; }
@@ -630,6 +657,82 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .form-row .vis-label button[data-type="private"].active {
   background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), rgba(255,255,255,0.02)), color-mix(in srgb, var(--primary), transparent 92%));
   border-color: transparent;
+}
+
+/* Improve Private pill contrast specifically in light theme so the white text/icon is readable */
+:root[data-theme="light"] .form-row .vis-label button[data-type="private"].active {
+  /* mix primary with the light background to produce a subtle blue pill with better contrast */
+  background: color-mix(in srgb, var(--primary), var(--bg) 62%);
+  border-color: transparent;
+  box-shadow: 0 12px 30px rgba(37,99,235,0.10);
+  color: #fff; /* ensure text is white */
+}
+
+/* Single toggle style for visibility (eye icon) */
+/* ensure vis-toggle overrides base .btn styles when both are present */
+.btn.vis-toggle,
+.vis-toggle {
+  /* use CSS vars so transitions are smooth between states */
+  --vis-bg: var(--bg-elev);
+  --vis-color: var(--text);
+  --vis-glow: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--vis-bg) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--vis-color) !important;
+  position: relative;
+  transition: background 360ms cubic-bezier(.2,.8,.2,1), color 260ms var(--transition-fast), box-shadow 360ms cubic-bezier(.2,.8,.2,1), transform 220ms var(--transition-fast);
+}
+.vis-toggle::after {
+  /* subtle glow that fades between states */
+  content: "";
+  position: absolute;
+  inset: -6px; border-radius: 999px; z-index: -1;
+  background: var(--vis-glow);
+  filter: blur(10px);
+  opacity: 0; transition: opacity 320ms var(--transition-fast), background 320ms var(--transition-fast);
+}
+.vis-toggle .vis-icon { position: relative; width: 18px; height: 18px; display: inline-grid; place-items: center; }
+.vis-toggle .vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms var(--transition-fast); }
+
+.vis-toggle.public {
+  /* Public: blue-ish pill (active visible state) */
+  --vis-bg: color-mix(in srgb, var(--primary), var(--bg) 64%);
+  --vis-color: #fff;
+  --vis-glow: color-mix(in srgb, var(--primary), transparent 70%);
+  transform: translateY(-3px);
+  border-color: transparent;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--primary), transparent 82%);
+}
+.vis-toggle.public .eye-open { opacity: 1; transform: translateY(0) scale(1); }
+.vis-toggle.public .eye-closed { opacity: 0; transform: translateY(-6px) scale(0.92) rotate(-6deg); }
+
+.vis-toggle.private {
+  /* Private: dark-ish pill (hidden/private state) */
+  --vis-bg: color-mix(in srgb, rgba(0,0,0,0.6), var(--bg) 36%);
+  --vis-color: #fff;
+  --vis-glow: transparent;
+  transform: translateY(-1px);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+.vis-toggle.private .eye-open { opacity: 0; transform: translateY(6px) scale(0.92); }
+.vis-toggle.private .eye-closed { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+
+/* focus state for accessibility */
+.vis-toggle:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%); outline-offset: 4px; }
+
+/* subtle press feedback */
+.vis-toggle:active { transform: translateY(-1px) scale(0.997); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vis-toggle, .vis-toggle .vis-icon svg { transition: none !important; }
+  .vis-toggle::after { transition: none !important; }
 }
 
 /* Improve contrast and affordance for the upload drop area on mobile */
@@ -1167,6 +1270,27 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   display: flex; gap: 8px; align-items: center; justify-content: space-between;
   background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 8px 10px;
+}
+
+/* subtle entrance for toolbar title and subtitle */
+@keyframes toolbarIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toolbar-title {
+  display: block;
+  animation: toolbarIn 420ms var(--transition-mid) both;
+}
+.toolbar-sub {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  animation: toolbarIn 520ms var(--transition-mid) both;
+  animation-delay: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-title, .toolbar-sub { animation: none !important; transform: none !important; }
 }
 
 /* profile header specific */

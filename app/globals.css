@@ -315,6 +315,27 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   box-shadow: 0 6px 16px rgba(0,0,0,0.05);
 }
 
+/* Icon reveal buttons: show a small icon and gently reveal the text on hover/focus */
+.icon-reveal { display: inline-flex; align-items: center; gap: 8px; overflow: hidden; }
+.icon-reveal .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; transition: transform 220ms var(--transition-mid), opacity 220ms var(--transition-fast); }
+.icon-reveal .reveal { display: inline-block; transform-origin: left center; transition: transform 260ms var(--transition-mid), opacity 220ms var(--transition-fast); opacity: 1; }
+
+/* default: slightly hide the reveal label on compact buttons to emphasize the icon */
+.icon-reveal:not(.primary) .reveal { transform: translateX(-6px) scale(0.98); opacity: 0.9; }
+
+.icon-reveal:hover .icon,
+.icon-reveal:focus .icon { transform: translateY(-3px) scale(1.06); }
+.icon-reveal:hover .reveal,
+.icon-reveal:focus .reveal { transform: translateX(0) scale(1); opacity: 1; }
+
+/* make primary buttons slightly more pronounced */
+.btn.primary.icon-reveal .reveal { font-weight: 700; }
+
+/* keep motion minimal for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .icon-reveal .icon, .icon-reveal .reveal, .icon-reveal:hover .icon, .icon-reveal:focus .icon, .icon-reveal:hover .reveal, .icon-reveal:focus .reveal { transition: none !important; transform: none !important; }
+}
+
 /* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .card .btn, .card .btn:hover, .card .btn:focus { transition: none; transform: none; box-shadow: none; }

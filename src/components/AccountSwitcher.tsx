@@ -8,20 +8,61 @@ import { useRouter } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 
 export function AccountSwitcher() {
-  const [me, setMe] = useState<User | null>(null);
+  // use `undefined` as the initial state to represent "loading" so the
+  // UI doesn't prematurely render the unauthenticated variant while we
+  // probe the client-side auth state (fixes refresh/hydration flicker).
+  const [me, setMe] = useState<User | null | undefined>(undefined);
   const router = useRouter();
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Helper: wait briefly for the runtime injection of SUPABASE keys if
+    // present. Some race conditions on hard refresh (client code runs before
+    // the injected script) can cause `getSupabaseClient()` to throw — mirror
+    // the defensive wait logic used elsewhere in the codebase.
+    const waitForRuntime = async (timeout = 1000, interval = 100) => {
+      const start = Date.now();
+      while (Date.now() - start < timeout) {
+        if ((window as any).__MONOLOG_RUNTIME_SUPABASE__) return;
+        // small delay
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, interval));
+      }
+    };
+
     (async () => {
-      setMe(await api.getCurrentUser());
+      try {
+        // If runtime keys are not present yet, wait a short while for the
+        // injected script in `app/layout.tsx` to run. This avoids a false
+        // negative (null) when the client-side Supabase client cannot be
+        // created immediately on first paint.
+        if (typeof window !== 'undefined' && !(window as any).__MONOLOG_RUNTIME_SUPABASE__) {
+          await waitForRuntime(1000, 80);
+        }
+      } catch (e) {
+        // ignore wait failures and continue to call the API
+      }
+      if (!mounted) return;
+      try {
+        try { console.debug('[AccountSwitcher] runtime keys present?', !!(window as any).__MONOLOG_RUNTIME_SUPABASE__); } catch (e) {}
+        const u = await api.getCurrentUser();
+        try { console.debug('[AccountSwitcher] api.getCurrentUser ->', u); } catch (e) {}
+        if (!mounted) return;
+        setMe(u);
+      } catch (e) {
+        try { console.error('[AccountSwitcher] getCurrentUser error', e); } catch (er) {}
+        // On error, set to null so UI falls back to unauthenticated view.
+        if (mounted) setMe(null);
+      }
     })();
     const onAuth = async () => {
       setShowAuth(false);
       setMe(await api.getCurrentUser());
     };
     window.addEventListener("auth:changed", onAuth);
-    return () => { window.removeEventListener("auth:changed", onAuth); };
+    return () => { mounted = false; window.removeEventListener("auth:changed", onAuth); };
   }, []);
 
   const current = me;
@@ -31,12 +72,21 @@ export function AccountSwitcher() {
       <button
         className="btn"
         onClick={() => {
+          // When still probing session state, do nothing on click to avoid
+          // opening the auth modal while the client is initializing.
+          if (me === undefined) return;
           if (current) return router.push("/profile");
           setShowAuth(true);
         }}
         aria-label="Open profile"
       >
-        {current ? (
+        {me === undefined ? (
+          // small skeleton to avoid layout shift and to indicate loading
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }} aria-hidden>
+            <span style={{ width: 22, height: 22, borderRadius: 999, background: 'rgba(255,255,255,0.06)', display: 'inline-block' }} />
+            <span style={{ width: 64, height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.04)', display: 'inline-block' }} />
+          </span>
+        ) : current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             <img src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" style={{ width: 22, height: 22 }} />
             <span>{current.displayName}</span>

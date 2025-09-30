@@ -23,6 +23,8 @@ export function NotificationListener() {
         const newOnes: string[] = [];
         for (const n of notifs) {
           if (!n || !n.id) continue;
+          // defensive: skip notifications already marked read
+          if (n.read) continue;
           if (seen.current[n.id]) continue;
           // Only notify for comment notifications for now
           if (n.type === 'comment') {
@@ -33,7 +35,15 @@ export function NotificationListener() {
         }
         if (newOnes.length) {
           // mark them read (best-effort)
-          await fetch('/api/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: cur.id, ids: newOnes }) });
+          try {
+            const mres = await fetch('/api/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: cur.id, ids: newOnes }) });
+            // if server didn't accept, clear seen to try again later
+            if (!mres.ok) {
+              for (const id of newOnes) delete seen.current[id];
+            }
+          } catch (e) {
+            for (const id of newOnes) delete seen.current[id];
+          }
         }
       } catch (e) {
         // ignore polling errors

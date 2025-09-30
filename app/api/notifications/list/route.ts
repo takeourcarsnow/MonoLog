@@ -7,7 +7,15 @@ export async function POST(req: Request) {
     if (!actorId) return NextResponse.json({ error: 'Missing actorId' }, { status: 400 });
     const sb = getServiceSupabase();
     try {
-      const { data, error } = await sb.from('notifications').select('*').eq('user_id', actorId).order('created_at', { ascending: false }).limit(50);
+      // Only return unread notifications so clients don't re-notify on each
+      // page load. The `mark-read` endpoint sets `read: true` when a client
+      // acknowledges notifications.
+      const { data, error } = await sb.from('notifications')
+        .select('*')
+        .eq('user_id', actorId)
+        .eq('read', false)
+        .order('created_at', { ascending: false })
+        .limit(50);
       if (error) return NextResponse.json({ notifications: [] });
       return NextResponse.json({ notifications: data || [] });
     } catch (e) {

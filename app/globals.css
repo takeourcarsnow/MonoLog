@@ -447,6 +447,32 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   .carousel-dots .dot { width: 7px; height: 7px; }
 }
 
+/* Desktop: cap feed/explore card image height so single posts don't fill the
+   whole viewport at normal browser zoom. Keeps images large but prevents the
+   'zoomed in' feeling on wide screens. Mobile rules above remain unchanged. */
+@media (min-width: 900px) {
+  .card-media {
+    /* allow the card to size to the image but not exceed viewport height */
+    max-height: 64vh;
+    display: block;
+  }
+
+  .card-media img,
+  .card-media .carousel img,
+  .carousel-slide img {
+    /* respect image aspect ratio while constraining height */
+    max-height: 64vh;
+    max-width: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* keep carousel slides vertically centered when images are constrained */
+  .carousel-slide { align-items: center; justify-content: center; }
+}
+
 /* Make profile avatar a bit smaller on narrow screens so header actions fit */
 @media (max-width: 640px) {
   .profile-avatar { width: 56px; height: 56px; border-radius: 12px; }

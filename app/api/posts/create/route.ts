@@ -44,11 +44,42 @@ export async function POST(req: Request) {
     const id = uid();
     const created_at = new Date().toISOString();
     const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: !!isPublic };
-    if (imageUrls && imageUrls.length === 1) insertObj.image_url = imageUrls[0];
-    else if (imageUrls && imageUrls.length > 1) insertObj.image_urls = imageUrls;
+    // Always set primary image_url to preserve compatibility with older schemas.
+    if (imageUrls && imageUrls.length >= 1) insertObj.image_url = imageUrls[0];
+    // Prefer storing multiple urls when provided, but this column may not exist in
+    // older / minimal schemas. We'll attempt the insert with image_urls and fall
+    // back to inserting only image_url if the DB rejects the unknown column.
+    if (imageUrls && imageUrls.length > 1) insertObj.image_urls = imageUrls;
 
-    const { error, data: insertData } = await sb.from('posts').insert(insertObj).select('*').limit(1).single();
-    if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
+    // Try insert; if it fails due to missing `image_urls` column, retry without it.
+    let insertData: any = null;
+    let error: any = null;
+    try {
+      const res = await sb.from('posts').insert(insertObj).select('*').limit(1).single();
+      error = res.error;
+      insertData = res.data;
+    } catch (e: any) {
+      error = e;
+    }
+
+    if (error) {
+      const msg = (error && (error.message || String(error))).toLowerCase();
+      // common error when a column doesn't exist or schema cache mismatch
+      if (msg.includes('image_urls') || msg.includes('column') || msg.includes('could not find')) {
+        // retry without image_urls
+        try {
+          const safeObj = { ...insertObj };
+          delete safeObj.image_urls;
+          const res2 = await sb.from('posts').insert(safeObj).select('*').limit(1).single();
+          if (res2.error) return NextResponse.json({ error: res2.error.message || res2.error }, { status: 500 });
+          insertData = res2.data;
+        } catch (e: any) {
+          return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+        }
+      } else {
+        return NextResponse.json({ error: error.message || error }, { status: 500 });
+      }
+    }
 
     return NextResponse.json({ ok: true, post: insertData });
   } catch (e: any) {

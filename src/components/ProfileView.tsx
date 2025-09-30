@@ -83,6 +83,8 @@ export function ProfileView({ userId }: { userId?: string }) {
     }
   };
 
+  
+
   if (!user) {
     // while loading, show a neutral skeleton instead of 'User not found'
     if (loading) {
@@ -143,7 +145,7 @@ export function ProfileView({ userId }: { userId?: string }) {
   return (
     <div className="view-fade">
       <div className="profile-header toolbar">
-        <div className="profile-left" style={{ display: "flex", gap: 16, alignItems: "center" }}>
+        <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
           {/* make avatar clickable for the signed-in profile owner to change avatar */}
           {currentUserId && user?.id === currentUserId ? (
             <>
@@ -161,13 +163,13 @@ export function ProfileView({ userId }: { userId?: string }) {
           ) : (
             <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
           )}
-          <div>
+          <div style={{ textAlign: "center", minWidth: 0 }}>
             <div className="username">{user.displayName}</div>
             <div className="dim">@{user.username} • joined {new Date(user.joinedAt).toLocaleDateString()}</div>
-            {user.bio ? <div className="dim" style={{ marginTop: 6 }}>{user.bio}</div> : null}
+            {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
           </div>
         </div>
-        <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
               {!isOther ? (
                 <>
                   <Link className="btn" href="/upload">New Post</Link>
@@ -205,7 +207,11 @@ export function ProfileView({ userId }: { userId?: string }) {
         </div>
       </div>
 
+      {/* inline avatar rendering (no portal) */}
+
       <div style={{ height: 8 }} />
+
+      {/* bio is rendered in the header panel to keep profile in a single card */}
       <div className="grid" aria-label="User posts">
         {posts.map(p => {
           const urls = (p as any).imageUrls || ((p as any).imageUrl ? [(p as any).imageUrl] : []);
@@ -248,140 +254,126 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
 
   const toast = useToast();
 
-  if (!editing) {
-    return <button className="btn edit-profile-btn" onClick={() => setEditing(true)}>Edit Profile</button>;
-  }
-
+  // Always render the edit button so it doesn't disappear when the
+  // edit panel is opened. The panel is rendered as an absolutely
+  // positioned overlay anchored to `.profile-actions`.
   return (
-    <div className="edit-panel" role="dialog" aria-label="Edit profile">
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileRef}
-          style={{ display: "none" }}
-          onChange={async () => {
-            const f = fileRef.current?.files?.[0];
-            if (!f) return;
-            setProcessing(true);
-            try {
-              // compress to data URL then upload to storage
-              const dataUrl = await compressImage(f);
-              // convert dataUrl -> File
-              const parts = dataUrl.split(',');
-              const meta = parts[0];
-              const mime = meta.split(':')[1].split(';')[0];
-              const bstr = atob(parts[1]);
-              let n = bstr.length;
-              const u8arr = new Uint8Array(n);
-              while (n--) u8arr[n] = bstr.charCodeAt(n);
-              const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
+    <div className="edit-profile-wrapper" style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        className="btn edit-profile-btn"
+        onClick={() => setEditing(e => !e)}
+        aria-expanded={editing}
+        aria-controls="edit-profile-panel"
+        type="button"
+      >
+        Edit Profile
+      </button>
 
-              const sb = getSupabaseClient();
-              // stringify helpers for paste-friendly logs
-              const s = (v: any) => {
-                try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } }
-              };
-              const user = await api.getCurrentUser();
-              console.debug("auth.getUser result", s({ user }));
-              if (!user) throw new Error("Not logged in");
-              const path = `avatars/${user.id}/${file.name}`;
-              console.debug("Uploading avatar to storage", { path, fileName: file.name, fileSize: file.size, fileType: file.type });
-              const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
-              console.debug("storage.upload result (stringified)", s({ uploadData, uploadErr }));
-              if (uploadErr) {
+      {editing && (
+        <div id="edit-profile-panel" className="edit-panel" role="dialog" aria-label="Edit profile">
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileRef}
+              style={{ display: "none" }}
+              onChange={async () => {
+                const f = fileRef.current?.files?.[0];
+                if (!f) return;
+                setProcessing(true);
                 try {
-                  console.error("storage.upload error details (stringified)", s({
-                    message: (uploadErr as any)?.message || uploadErr,
-                    status: (uploadErr as any)?.status || (uploadErr as any)?.statusCode || null,
-                    details: (uploadErr as any)?.details || (uploadErr as any)?.error || null,
-                    full: uploadErr,
-                  }));
-                } catch (ee) {
-                  console.error("Failed to stringify uploadErr", ee, uploadErr);
-                }
-                throw uploadErr;
-              }
-              const urlRes = sb.storage.from("posts").getPublicUrl(path);
-              console.debug("storage.getPublicUrl result (stringified)", s(urlRes));
-              const publicUrl = urlRes.data.publicUrl;
-              // persist avatar URL to profile (log payload/result)
-              console.debug("Calling api.updateCurrentUser", { avatarUrl: publicUrl });
-              try {
-                const upd = await api.updateCurrentUser({ avatarUrl: publicUrl });
-                console.debug("api.updateCurrentUser success (stringified)", s(upd));
-              } catch (e) {
-                console.error("api.updateCurrentUser failed", e);
-                throw e;
-              }
-              // refresh local bio to ensure UI reflects latest profile (optional)
-              } catch (e: any) {
-              console.error(e);
-              toast.show(e?.message || "Failed to upload avatar");
-            } finally {
-              setProcessing(false);
-            }
-          }}
-        />
-        <button className="btn" onClick={() => fileRef.current?.click()} disabled={processing}>
-          {processing ? "Uploading…" : "Change Avatar"}
-        </button>
-  </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span className="dim">Display name</span>
-          <input className="input" type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Display name" />
-        </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span className="dim">Username (used in @handle)</span>
-          <input className="input" type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="username" />
-        </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span className="dim">Bio</span>
-          <textarea
-            className="bio-editor"
-            rows={3}
-            style={{ width: 320 }}
-            value={bio}
-            onChange={e => setBio(e.target.value)}
-          />
-        </label>
-  </div>
-      <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-        <div className="edit-actions" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <button
-            className="btn save-bio"
-              onClick={async () => {
-              // basic validation
-              const uname = username.trim();
-              if (!uname) { toast.show("Username cannot be empty"); return; }
-              setProcessing(true);
-                try {
-                  await api.updateCurrentUser({ username: uname, displayName: displayName.trim() || undefined, bio: bio.trim() });
-                  setEditing(false);
-                  try { await onSaved?.(); } catch (e) { /* ignore parent refresh errors */ }
+                  // compress to data URL then upload to storage
+                  const dataUrl = await compressImage(f);
+                  // convert dataUrl -> File
+                  const parts = dataUrl.split(',');
+                  const meta = parts[0];
+                  const mime = meta.split(':')[1].split(';')[0];
+                  const bstr = atob(parts[1]);
+                  let n = bstr.length;
+                  const u8arr = new Uint8Array(n);
+                  while (n--) u8arr[n] = bstr.charCodeAt(n);
+                  const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
+
+                  const sb = getSupabaseClient();
+                  const s = (v: any) => {
+                    try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } }
+                  };
+                  const user = await api.getCurrentUser();
+                  if (!user) throw new Error("Not logged in");
+                  const path = `avatars/${user.id}/${file.name}`;
+                  const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
+                  if (uploadErr) throw uploadErr;
+                  const urlRes = sb.storage.from("posts").getPublicUrl(path);
+                  const publicUrl = urlRes.data.publicUrl;
+                  await api.updateCurrentUser({ avatarUrl: publicUrl });
                 } catch (e: any) {
-                  toast.show(e?.message || "Failed to update profile");
+                  console.error(e);
+                  toast.show(e?.message || "Failed to upload avatar");
                 } finally {
                   setProcessing(false);
                 }
-            }}
-        >
-          Save
-          </button>
-          <button
-            className="btn cancel-bio"
-            onClick={() => {
-              setBio(original);
-              setUsername(originalUsername);
-              setDisplayName(originalDisplayName);
-              setEditing(false);
-            }}
-          >
-            Cancel
-          </button>
+              }}
+            />
+            <button className="btn" onClick={() => fileRef.current?.click()} disabled={processing}>
+              {processing ? "Uploading…" : "Change Avatar"}
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span className="dim">Display name</span>
+              <input className="input" type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Display name" />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span className="dim">Username (used in @handle)</span>
+              <input className="input" type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="username" />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span className="dim">Bio</span>
+              <textarea
+                className="bio-editor"
+                rows={3}
+                style={{ width: 320 }}
+                value={bio}
+                onChange={e => setBio(e.target.value)}
+              />
+            </label>
+          </div>
+          <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+            <div className="edit-actions" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              <button
+                className="btn save-bio"
+                onClick={async () => {
+                  const uname = username.trim();
+                  if (!uname) { toast.show("Username cannot be empty"); return; }
+                  setProcessing(true);
+                  try {
+                    await api.updateCurrentUser({ username: uname, displayName: displayName.trim() || undefined, bio: bio.trim() });
+                    setEditing(false);
+                    try { await onSaved?.(); } catch (e) { /* ignore parent refresh errors */ }
+                  } catch (e: any) {
+                    toast.show(e?.message || "Failed to update profile");
+                  } finally {
+                    setProcessing(false);
+                  }
+                }}
+              >
+                Save
+              </button>
+              <button
+                className="btn cancel-bio"
+                onClick={() => {
+                  setBio(original);
+                  setUsername(originalUsername);
+                  setDisplayName(originalDisplayName);
+                  setEditing(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-      </div>
+      )}
+    </div>
   );
 }

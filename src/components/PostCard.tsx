@@ -276,45 +276,57 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
       </div>
 
       <div className="card-media">
-        {imageUrls.length > 1 ? (
-          <div className="carousel-wrapper" onKeyDown={(e) => {
-            if (e.key === "ArrowLeft") prev();
-            if (e.key === "ArrowRight") next();
-          }} tabIndex={0}>
-            {/* invisible edge areas: hovering these will reveal the nearby arrow control */}
-            <div className="edge-area left" />
-            <div className="edge-area right" />
+        {/* clickable media should navigate to the post page */}
+        {(() => {
+          const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
+          return (
+            <>
+              {imageUrls.length > 1 ? (
+                <div className="carousel-wrapper" onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft") prev();
+                  if (e.key === "ArrowRight") next();
+                }} tabIndex={0}>
+                  {/* invisible edge areas: hovering these will reveal the nearby arrow control */}
+                  <div className="edge-area left" />
+                  <div className="edge-area right" />
 
-            <div className="carousel-track" ref={trackRef} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} role="list">
-              {imageUrls.map((u: string, idx: number) => (
-                <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`${idx + 1} of ${imageUrls.length}`}>
+                  <div className="carousel-track" ref={trackRef} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} role="list">
+                    {imageUrls.map((u: string, idx: number) => (
+                      <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`${idx + 1} of ${imageUrls.length}`}>
+                        <Link href={postHref} className="media-link">
+                          <img
+                            loading="lazy"
+                            src={u}
+                            alt={alts[idx] || `Photo ${idx + 1}`}
+                            onLoad={e => (e.currentTarget.classList.add("loaded"))}
+                          />
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button className="carousel-arrow left" onClick={prev} aria-label="Previous image">‹</button>
+                  <button className="carousel-arrow right" onClick={next} aria-label="Next image">›</button>
+
+                  <div className="carousel-dots" aria-hidden="false">
+                    {imageUrls.map((_, i) => (
+                      <button key={i} className={`dot ${i === index ? "active" : ""}`} onClick={() => setIndex(i)} aria-label={`Show image ${i + 1}`} />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link href={postHref} className="media-link">
                   <img
                     loading="lazy"
-                    src={u}
-                    alt={alts[idx] || `Photo ${idx + 1}`}
+                    src={imageUrls[0]}
+                    alt={alts[0] || "Photo"}
                     onLoad={e => (e.currentTarget.classList.add("loaded"))}
                   />
-                </div>
-              ))}
-            </div>
-
-            <button className="carousel-arrow left" onClick={prev} aria-label="Previous image">‹</button>
-            <button className="carousel-arrow right" onClick={next} aria-label="Next image">›</button>
-
-            <div className="carousel-dots" aria-hidden="false">
-              {imageUrls.map((_, i) => (
-                <button key={i} className={`dot ${i === index ? "active" : ""}`} onClick={() => setIndex(i)} aria-label={`Show image ${i + 1}`} />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <img
-            loading="lazy"
-            src={imageUrls[0]}
-            alt={alts[0] || "Photo"}
-            onLoad={e => (e.currentTarget.classList.add("loaded"))}
-          />
-        )}
+                </Link>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       <div className="card-body">

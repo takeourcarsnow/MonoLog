@@ -149,6 +149,8 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   // Carousel state for multi-image posts
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const [isZooming, setIsZooming] = useState(false);
+  const isZoomingRef = useRef(false);
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef<number>(0);
 
@@ -166,6 +168,8 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   const next = () => setIndex(i => (i >= imageUrls.length - 1 ? imageUrls.length - 1 : i + 1));
 
   const onTouchStart = (e: React.TouchEvent) => {
+    // If a pinch-zoom is active, don't start carousel touch handling
+    if (isZoomingRef.current) return;
     // prevent the touch from bubbling up to parent swipers
     e.stopPropagation();
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
@@ -174,6 +178,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     touchDeltaX.current = 0;
   };
   const onTouchMove = (e: React.TouchEvent) => {
+    if (isZoomingRef.current) return;
     // stop propagation here as well so parent swipe/drag handlers don't run
     e.stopPropagation();
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
@@ -207,6 +212,8 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   const draggingRef = useRef(false);
 
   const onPointerDown = (e: React.PointerEvent) => {
+    // If a pinch-zoom is active, don't start carousel pointer handling
+    if (isZoomingRef.current) return;
     e.stopPropagation();
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
     // only primary
@@ -283,6 +290,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   };
 
   const onMouseDown = (e: React.MouseEvent) => {
+    if (isZoomingRef.current) return;
     e.stopPropagation();
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
     if (e.button !== 0) return;
@@ -305,6 +313,30 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Listen for ImageZoom pinch start/end so we can disable carousel dragging while zooming
+  useEffect(() => {
+    function onZoomStart() {
+      // cancel any active drag and prevent new drags
+      finishPointerDrag();
+      setIsZooming(true);
+      isZoomingRef.current = true;
+    }
+    function onZoomEnd() {
+      setIsZooming(false);
+      isZoomingRef.current = false;
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:zoom_start', onZoomStart as EventListener);
+      window.addEventListener('monolog:zoom_end', onZoomEnd as EventListener);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:zoom_start', onZoomStart as EventListener);
+        window.removeEventListener('monolog:zoom_end', onZoomEnd as EventListener);
+      }
+    };
   }, []);
 
   // On post pages, disable carousel touch handling to allow app-level swipe navigation

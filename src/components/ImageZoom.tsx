@@ -15,6 +15,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const pinchStartPan = useRef({ x: 0, y: 0 });
   const lastTouchDist = useRef<number | null>(null);
   const startScale = useRef(1);
+  const scaleRef = useRef(1);
   const natural = useRef({ w: 0, h: 0 });
   const lastMoveTs = useRef<number | null>(null);
   const lastMovePos = useRef({ x: 0, y: 0 });
@@ -39,6 +40,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     tyRef.current = next;
     return next;
   });
+
+  // Keep a ref copy of the latest scale so event handlers (which may have
+  // stale closures) can make decisions using the freshest value.
+  React.useEffect(() => { scaleRef.current = scale; }, [scale]);
   const [isPanning, setIsPanning] = useState(false);
   const [isTile, setIsTile] = useState(false);
   const doubleTapRef = useRef<number | null>(null);
@@ -141,15 +146,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       pinchStartPan.current = { x: tx, y: ty };
       // stop any ongoing fling
       if (flingRaf.current) cancelAnimationFrame(flingRaf.current);
-    } else if (e.touches.length === 1 && scale > 1) {
-      // begin pan
-      e.preventDefault();
-      setIsPanning(true);
-      lastPan.current = { x: tx, y: ty };
-      startPan.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      lastMovePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      lastMoveTs.current = Date.now();
-      velocity.current = { x: 0, y: 0 };
     }
   };
 
@@ -171,33 +167,23 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       const b = getBoundsForScale(next);
       setTxSafe(() => clamp(pinchStartPan.current.x + dx, -b.maxTx, b.maxTx));
       setTySafe(() => clamp(pinchStartPan.current.y + dy, -b.maxTy, b.maxTy));
-    } else if (e.touches.length === 1 && isPanning) {
-      e.preventDefault();
-      const cur = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      const dx = cur.x - startPan.current.x;
-      const dy = cur.y - startPan.current.y;
-      const b = getBoundsForScale(scale);
-      const nextTx = clamp(lastPan.current.x + dx, -b.maxTx - 100, b.maxTx + 100);
-      const nextTy = clamp(lastPan.current.y + dy, -b.maxTy - 100, b.maxTy + 100);
-  setTxSafe(nextTx);
-  setTySafe(nextTy);
-
-      // velocity tracking (px/sec)
-      const now = Date.now();
-      if (lastMoveTs.current) {
-        const dt = Math.max(1, now - lastMoveTs.current) / 1000;
-        const vx = (cur.x - lastMovePos.current.x) / dt;
-        const vy = (cur.y - lastMovePos.current.y) / dt;
-        velocity.current = { x: vx, y: vy };
-      }
-      lastMoveTs.current = now;
-      lastMovePos.current = cur;
     }
   };
 
   const onTouchEnd: React.TouchEventHandler = (e) => {
     if (!containerRef.current) return;
     if (e.touches.length < 2) lastTouchDist.current = null;
+    // If a pinch was active and the touch count dropped below 2 (either
+    // to 1 or 0), stop the pinch entirely and reset back to the non-zoomed
+    // position per user preference.
+    if (wasPinched.current && e.touches.length < 2) {
+      wasPinched.current = false;
+      isPinching.current = false;
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch (_) {}
+      // Reset will clear scale and translations and end any pan state.
+      reset();
+      return;
+    }
     // If all fingers removed, stop panning and possibly reset if nearly 1
     if (e.touches.length === 0) {
       if (isPinching.current) {
@@ -206,13 +192,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       }
       // perform fling if velocity present, but only if not resetting
       setIsPanning(false);
-      if (wasPinched.current) {
+        if (wasPinched.current) {
         // A pinch gesture just finished. Don't unconditionally reset the zoom
         // — keep the new scale and ensure translations are within bounds.
         wasPinched.current = false;
         // If the scale is effectively back to 1, reset state; otherwise
         // spring the translation back into valid bounds for the current scale.
-        if (scale <= 1.05) reset();
+        if (scaleRef.current <= 1.05) reset();
         else springBack();
       } else {
         const v = velocity.current;
@@ -221,20 +207,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
           startFling(v.x, v.y);
         } else {
           // small release adjustments: if scale close to 1, reset
-          if (scale <= 1.05) reset();
+          if (scaleRef.current <= 1.05) reset();
           else springBack();
         }
       }
     }
-    // If one finger remains after a pinch, enable immediate panning with that finger
-    if (e.touches.length === 1) {
-      // set up pan state so the remaining finger continues to pan smoothly
-      setIsPanning(true);
-      lastPan.current = { x: txRef.current, y: tyRef.current };
-      startPan.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      // ensure future pinch calculations anchor to the current scale
-      startScale.current = scale;
-    }
+    // Do not start single-finger panning after a pinch; we prefer a simple
+    // pinch-to-zoom interaction without one-finger pan continuation.
     // double-tap detection
     if (e.changedTouches.length === 1) {
       const t = Date.now();
@@ -251,7 +230,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   // Mouse / pointer pan support (when zoomed)
   const pointerActive = useRef(false);
   const onPointerDown: React.PointerEventHandler = (e) => {
+    // Ignore touch pointer events here to avoid one-finger panning on touch
+    // devices; only allow pointer-based panning for mouse/pen.
     if (scale <= 1) return;
+    if ((e as any).pointerType === 'touch') return;
     (e.target as Element).setPointerCapture?.(e.pointerId);
     pointerActive.current = true;
     setIsPanning(true);
@@ -263,6 +245,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   };
 
   const onPointerMove: React.PointerEventHandler = (e) => {
+    // ignore touch pointer moves (we only want mouse/pen panning here)
+    if ((e as any).pointerType === 'touch') return;
     if (!pointerActive.current) return;
     e.preventDefault();
     const cur = { x: e.clientX, y: e.clientY };
@@ -287,6 +271,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   };
 
   const onPointerUp: React.PointerEventHandler = (e) => {
+    // ignore touch pointer ups
+    if ((e as any).pointerType === 'touch') return;
     try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch (_) {}
     pointerActive.current = false;
     setIsPanning(false);
@@ -295,7 +281,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     const speed = Math.hypot(v.x, v.y);
     if (speed > 400) startFling(v.x, v.y);
     else {
-      if (scale <= 1.05) reset();
+      if (scaleRef.current <= 1.05) reset();
       else springBack();
     }
   };

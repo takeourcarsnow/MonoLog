@@ -392,12 +392,22 @@ export const supabaseApi: Api = {
     if (!me) return [];
     const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
     if (profErr || !profile) return [];
-    const ids: string[] = profile.following || [];
-    if (!ids.length) return [];
-  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
-    logSupabaseError("getFollowingFeed", { data, error });
-    if (error) throw error;
-    return (data || []).map((row: any) => mapRowToHydratedPost(row));
+  const ids: string[] = profile.following || [];
+    // Fetch public posts from followed users
+  const { data: followedRows, error: followedErr } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
+    logSupabaseError("getFollowingFeed.followed", { data: followedRows, error: followedErr });
+    if (followedErr) throw followedErr;
+    // Also fetch the current user's posts (include private posts owned by the user)
+    const { data: myRows, error: myErr } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("user_id", me.id).order("created_at", { ascending: false });
+    logSupabaseError("getFollowingFeed.mine", { data: myRows, error: myErr });
+    if (myErr) throw myErr;
+    const rows = ((followedRows || []) as any[]).concat((myRows || []) as any[]);
+    // dedupe by id and sort
+    const seen = new Set<string>();
+    const merged = rows
+      .filter(r => { if (!r) return false; if (seen.has(r.id)) return false; seen.add(r.id); return true; })
+      .sort((a, b) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime());
+    return (merged || []).map((row: any) => mapRowToHydratedPost(row));
   },
 
   async getFollowingFeedPage({ limit, before }: { limit: number; before?: string }) {
@@ -407,14 +417,25 @@ export const supabaseApi: Api = {
     if (!me) return [];
     const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
     if (profErr || !profile) return [];
-    const ids: string[] = profile.following || [];
-    if (!ids.length) return [];
-  let q: any = sb.from("posts").select("*, users:users(*), comments:comments(id)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false }).limit(limit);
-    if (before) q = q.lt("created_at", before);
-    const { data, error } = await q;
-    logSupabaseError("getFollowingFeedPage", { data, error });
-    if (error) throw error;
-    return (data || []).map((row: any) => mapRowToHydratedPost(row));
+  const ids: string[] = profile.following || [];
+    // Fetch followed users' public posts (paged)
+  let q1: any = sb.from("posts").select("*, users:users(*), comments:comments(id)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false }).limit(limit);
+    if (before) q1 = q1.lt("created_at", before);
+    const { data: followedRows, error: followedErr } = await q1;
+    logSupabaseError("getFollowingFeedPage.followed", { data: followedRows, error: followedErr });
+    if (followedErr) throw followedErr;
+    // Also fetch the current user's own posts (not limited by public flag). For pagination, fetch up to `limit` posts before `before` as well.
+  let q2: any = sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("user_id", me.id).order("created_at", { ascending: false }).limit(limit);
+    if (before) q2 = q2.lt("created_at", before);
+    const { data: myRows, error: myErr } = await q2;
+    logSupabaseError("getFollowingFeedPage.mine", { data: myRows, error: myErr });
+    if (myErr) throw myErr;
+    // Merge, dedupe, sort and then take the first `limit` items to emulate a unified paged feed.
+    const rows = ((followedRows || []) as any[]).concat((myRows || []) as any[]);
+    const mapById: Record<string, any> = {};
+    for (const r of rows) mapById[r.id] = r;
+    const merged = Object.values(mapById).sort((a, b) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime()).slice(0, limit);
+    return (merged || []).map((row: any) => mapRowToHydratedPost(row));
   },
 
   async getUserPosts(userId: string) {

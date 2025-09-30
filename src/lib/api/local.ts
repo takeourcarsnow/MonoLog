@@ -147,7 +147,8 @@ export const localApi: Api = {
     const me = getUserById(cache.currentUserId);
     const ids = me?.following || [];
     return cache.posts
-      .filter(p => ids.includes(p.userId) && p.public)
+      // include public posts from people you follow, and always include your own posts
+      .filter(p => (ids.includes(p.userId) && p.public) || p.userId === me?.id)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .map(hydratePost);
   },
@@ -155,7 +156,8 @@ export const localApi: Api = {
     const me = getUserById(cache.currentUserId);
     const ids = me?.following || [];
     let posts = cache.posts
-      .filter(p => ids.includes(p.userId) && p.public)
+      // include public posts from people you follow, and always include your own posts
+      .filter(p => (ids.includes(p.userId) && p.public) || p.userId === me?.id)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     if (before) {
       posts = posts.filter(p => new Date(p.createdAt).getTime() < new Date(before).getTime());

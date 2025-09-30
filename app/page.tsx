@@ -1,6 +1,6 @@
 "use client";
-import { ExploreView } from "@/components/ExploreView";
+import { FeedView } from "@/components/FeedView";
 
 export default function Page() {
-  return <ExploreView />;
+  return <FeedView />;
 }

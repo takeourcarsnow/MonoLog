@@ -20,6 +20,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const lastMovePos = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, y: 0 });
   const flingRaf = useRef<number | null>(null);
+  const isPinching = useRef(false);
+  const wasPinched = useRef(false);
   const [scale, setScale] = useState(1);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
@@ -91,8 +93,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     const dx = local.x * (1 - newScale / scale);
     const dy = local.y * (1 - newScale / scale);
     setScale(newScale);
-    setTx(t => clamp(t + dx, -9999, 9999));
-    setTy(t => clamp(t + dy, -9999, 9999));
+    const b = getBoundsForScale(newScale);
+    setTx(t => clamp(t + dx, -b.maxTx, b.maxTx));
+    setTy(t => clamp(t + dy, -b.maxTy, b.maxTy));
     startScale.current = newScale;
   };
 
@@ -101,6 +104,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     if (e.touches.length === 2) {
       // begin pinch
       e.preventDefault();
+      isPinching.current = true;
+      wasPinched.current = true;
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
       lastTouchDist.current = getTouchDist(e.touches[0], e.touches[1]);
       startScale.current = scale;
       // record pan at the moment pinch starts so we can anchor translations
@@ -166,16 +172,25 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     if (e.touches.length < 2) lastTouchDist.current = null;
     // If all fingers removed, stop panning and possibly reset if nearly 1
     if (e.touches.length === 0) {
-      // perform fling if velocity present
+      if (isPinching.current) {
+        isPinching.current = false;
+        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch (_) {}
+      }
+      // perform fling if velocity present, but only if not resetting
       setIsPanning(false);
-      const v = velocity.current;
-      const speed = Math.hypot(v.x, v.y);
-      if (speed > 400) {
-        startFling(v.x, v.y);
+      if (wasPinched.current) {
+        reset();
+        wasPinched.current = false;
       } else {
-        // small release adjustments: if scale close to 1, reset
-        if (scale <= 1.05) reset();
-        else springBack();
+        const v = velocity.current;
+        const speed = Math.hypot(v.x, v.y);
+        if (speed > 400) {
+          startFling(v.x, v.y);
+        } else {
+          // small release adjustments: if scale close to 1, reset
+          if (scale <= 1.05) reset();
+          else springBack();
+        }
       }
     }
     // If one finger remains after a pinch, enable immediate panning with that finger
@@ -209,6 +224,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     setIsPanning(true);
     lastPan.current = { x: tx, y: ty };
     startPan.current = { x: e.clientX, y: e.clientY };
+    lastMovePos.current = { x: e.clientX, y: e.clientY };
+    lastMoveTs.current = Date.now();
+    velocity.current = { x: 0, y: 0 };
   };
 
   const onPointerMove: React.PointerEventHandler = (e) => {
@@ -217,8 +235,22 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     const cur = { x: e.clientX, y: e.clientY };
     const dx = cur.x - startPan.current.x;
     const dy = cur.y - startPan.current.y;
-    setTx(clamp(lastPan.current.x + dx, -9999, 9999));
-    setTy(clamp(lastPan.current.y + dy, -9999, 9999));
+    const b = getBoundsForScale(scale);
+    const nextTx = clamp(lastPan.current.x + dx, -b.maxTx - 100, b.maxTx + 100);
+    const nextTy = clamp(lastPan.current.y + dy, -b.maxTy - 100, b.maxTy + 100);
+    setTx(nextTx);
+    setTy(nextTy);
+
+    // velocity tracking
+    const now = Date.now();
+    if (lastMoveTs.current) {
+      const dt = Math.max(1, now - lastMoveTs.current) / 1000;
+      const vx = (cur.x - lastMovePos.current.x) / dt;
+      const vy = (cur.y - lastMovePos.current.y) / dt;
+      velocity.current = { x: vx, y: vy };
+    }
+    lastMoveTs.current = now;
+    lastMovePos.current = cur;
   };
 
   const onPointerUp: React.PointerEventHandler = (e) => {
@@ -300,7 +332,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       className={className}
       style={{
         overflow: "hidden",
-        touchAction: "none",
+        touchAction: scale > 1 ? "none" : "pan-y",
         display: "inline-block",
         ...style,
       }}
@@ -325,7 +357,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
           width: "100%",
           height: "auto",
           userSelect: "none",
-          touchAction: "none",
+          touchAction: scale > 1 ? "none" : "pan-y",
         }}
         draggable={false}
       />

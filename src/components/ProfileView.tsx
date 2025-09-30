@@ -36,8 +36,8 @@ export function ProfileView({ userId }: { userId?: string }) {
         const u = userId ? await api.getUser(userId) : me;
         if (!mounted) return;
         if (!u) { setUser(null); setPosts([]); if (userId) setFollowing(false); return; }
-        setUser(u);
-        setPosts(await api.getUserPosts(u.id));
+  setUser(u);
+  setPosts(await api.getUserPosts(u.id));
         // Only compute following state when the viewed profile is actually
         // another user. If the route contained a userId param but it matches
         // the signed-in user, treat it as the owner's profile (don't show follow).
@@ -180,6 +180,7 @@ export function ProfileView({ userId }: { userId?: string }) {
           <div style={{ textAlign: "center", minWidth: 0 }}>
             <div className="username">{user.displayName}</div>
             <div className="dim">@{user.username} • joined {new Date(user.joinedAt).toLocaleDateString()}</div>
+            {/* post count intentionally hidden in design */}
             {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
           </div>
         </div>
@@ -259,6 +260,7 @@ export function ProfileView({ userId }: { userId?: string }) {
           );
         })}
       </div>
+      {/* design restored: no debug dump */}
     </div>
   );
 }

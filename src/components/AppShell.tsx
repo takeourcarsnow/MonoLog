@@ -89,14 +89,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }
       } catch (_) { /* ignore */ }
     }
+    function onZoomStart() {
+      try {
+        if (swiperRef.current && swiperRef.current.swiper) {
+          swiperRef.current.swiper.allowTouchMove = false;
+        }
+      } catch (_) { /* ignore */ }
+    }
+    function onZoomEnd() {
+      try {
+        if (swiperRef.current && swiperRef.current.swiper) {
+          swiperRef.current.swiper.allowTouchMove = Boolean(isTouchDevice);
+        }
+      } catch (_) { /* ignore */ }
+    }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:carousel_drag_start', onDragStart as any);
       window.addEventListener('monolog:carousel_drag_end', onDragEnd as any);
+      window.addEventListener('monolog:zoom_start', onZoomStart as any);
+      window.addEventListener('monolog:zoom_end', onZoomEnd as any);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('monolog:carousel_drag_start', onDragStart as any);
         window.removeEventListener('monolog:carousel_drag_end', onDragEnd as any);
+        window.removeEventListener('monolog:zoom_start', onZoomStart as any);
+        window.removeEventListener('monolog:zoom_end', onZoomEnd as any);
       }
     };
   }, [isTouchDevice]);

@@ -125,7 +125,8 @@ export const localApi: Api = {
     const me = getUserById(cache.currentUserId);
     return cache.posts
       .slice()
-      .filter(p => p.public || p.userId === me?.id)
+      // only include public posts not authored by the current user
+      .filter(p => p.public && p.userId !== me?.id)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .map(hydratePost);
   },
@@ -133,7 +134,8 @@ export const localApi: Api = {
     const me = getUserById(cache.currentUserId);
     let posts = cache.posts
       .slice()
-      .filter(p => p.public || p.userId === me?.id)
+      // only include public posts not authored by the current user
+      .filter(p => p.public && p.userId !== me?.id)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     if (before) {
       posts = posts.filter(p => new Date(p.createdAt).getTime() < new Date(before).getTime());

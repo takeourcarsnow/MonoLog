@@ -437,8 +437,9 @@ export function Uploader() {
             <div className="drop-text">Drop images here or click to select</div>
             <div className="dim" style={{ marginTop: 6 }}>JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB</div>
             <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-              <button className="btn" onClick={() => { fileInputRef.current?.click(); }} disabled={processing}>Add files</button>
-              <button className="btn" onClick={async () => {
+              <button className="btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} disabled={processing}>Add files</button>
+              <button className="btn" onClick={async (e) => {
+                e.stopPropagation();
                 // prefer getUserMedia modal; fall back to capture file input when unavailable
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                   setCameraOpen(true);

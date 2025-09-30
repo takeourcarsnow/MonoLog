@@ -358,15 +358,25 @@ export const supabaseApi: Api = {
   async getExploreFeed() {
     console.debug("supabaseApi.getExploreFeed called");
     const sb = getClient();
-  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("public", true).order("created_at", { ascending: false });
-  logSupabaseError("getExploreFeed", { data, error });
+    // Exclude posts created by the current authenticated user so the Explore
+    // view only shows other people's public posts.
+    ensureAuthListener(sb);
+    const me = await getCachedAuthUser(sb);
+    let q: any = sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("public", true).order("created_at", { ascending: false });
+    if (me) q = q.neq("user_id", me.id);
+    const { data, error } = await q;
+    logSupabaseError("getExploreFeed", { data, error });
     if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },
 
   async getExploreFeedPage({ limit, before }: { limit: number; before?: string }) {
     const sb = getClient();
-  let q: any = sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("public", true).order("created_at", { ascending: false }).limit(limit);
+    // Exclude current user's posts from paged explore results as well.
+    ensureAuthListener(sb);
+    const me = await getCachedAuthUser(sb);
+    let q: any = sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("public", true).order("created_at", { ascending: false }).limit(limit);
+    if (me) q = q.neq("user_id", me.id);
     if (before) q = q.lt("created_at", before);
   const { data, error } = await q;
     logSupabaseError("getExploreFeedPage", { data, error });

@@ -150,15 +150,16 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       lastTouchDist.current = getTouchDist(e.touches[0], e.touches[1]);
       // disable pointer events on relevant ancestor elements (link, carousel)
       try {
+        // Only disable pointer-events on the immediate clickable anchor(s)
+        // around the image (the <a> / .media-link). Disabling the
+        // carousel wrapper/track can interfere with layout/transform state
+        // and cause the carousel to jump (observed when pinching non-first
+        // slides). Keep this minimal to prevent navigation while pinching.
         const found: Array<HTMLElement> = [];
         const anchor = containerRef.current.closest('a') as HTMLElement | null;
         if (anchor) found.push(anchor);
-        const wrapper = containerRef.current.closest('.carousel-wrapper') as HTMLElement | null;
-        if (wrapper) found.push(wrapper);
-        const track = containerRef.current.closest('.carousel-track') as HTMLElement | null;
-        if (track) found.push(track);
         const mediaLink = containerRef.current.closest('.media-link') as HTMLElement | null;
-        if (mediaLink) found.push(mediaLink);
+        if (mediaLink && mediaLink !== anchor) found.push(mediaLink);
         pinchAnchorsRef.current = found.map(el => ({ el, prev: el.style.pointerEvents || '' }));
         for (const a of pinchAnchorsRef.current) {
           a.el.style.pointerEvents = 'none';

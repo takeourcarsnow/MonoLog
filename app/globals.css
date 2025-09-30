@@ -1594,6 +1594,69 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   width: 100%;
 }
 
+/* Make Swiper slides full-bleed and responsive so they fill the content area
+   and avoid rendering as a narrow centered column in small viewports. */
+.swipe-views {
+  width: 100% !important;
+  height: 100% !important; /* allow slides to size to container */
+}
+.swipe-views .swiper-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+}
+.swipe-views .swiper-slide {
+  width: 100% !important;
+  height: auto !important; /* let slide content determine height when needed */
+  min-height: calc(100vh - 160px); /* keep slides tall enough to fill most of the viewport (header + tabbar space) */
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .swipe-views .swiper-slide { min-height: calc(100vh - 140px); }
+}
+
+/* Break out of centered .content container so the Swiper can be full-bleed
+   while preserving the normal layout for other pages. Targets the Swiper
+   when it's a direct child of .content (our usage in AppShell). */
+.content > .swipe-views {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin-left: calc(50% - 50vw) !important; /* center full-bleed child */
+  margin-right: calc(50% - 50vw) !important;
+  /* remove app padding from the full-bleed wrapper so slides can be
+     exactly viewport width; slide content will receive padding instead */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* Prevent neighbouring slides from peeking on small screens */
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Make each swiper slide exactly the viewport width and apply the app padding
+   to slide content so visuals match the rest of the app while keeping the
+   slide clipping correct. */
+.swipe-views .swiper-slide {
+  width: 100vw !important;
+  min-width: 100vw !important;
+  box-sizing: border-box !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.swipe-views .swiper-slide {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* If content within a slide needs to center vertically, pages/components
+   can use .slide-center to opt-in to vertical centering without affecting
+   general layout. */
+.slide-center { display: grid; place-items: start center; }
+
+
+
 /* keep the preview visually contained when not editing */
 .preview-inner { transition: none; }
 

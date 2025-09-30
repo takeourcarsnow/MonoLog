@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const tabs = [
   { href: "/feed", label: "Feed", icon: "🏠" },
@@ -14,9 +13,14 @@ const tabs = [
 
 export function NavBarClient() {
   const pathname = usePathname();
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, visible: false });
   const [pop, setPop] = useState(false);
+
+  const handleTabClick = (href: string) => {
+    router.push(href);
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -105,17 +109,17 @@ export function NavBarClient() {
         {tabs.map(t => {
           const isActive = pathname === t.href;
           return (
-            <Link
+            <button
               key={t.href}
               className={`tab-item ${isActive ? "active" : ""}`}
-              href={t.href}
+              onClick={() => handleTabClick(t.href)}
               role="tab"
               aria-current={isActive ? "page" : undefined}
               aria-label={t.label}
             >
               <div className="ic">{t.icon}</div>
               <div>{t.label}</div>
-            </Link>
+            </button>
           );
         })}
 

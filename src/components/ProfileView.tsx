@@ -223,9 +223,11 @@ export function ProfileView({ userId }: { userId?: string }) {
                   if (!following) {
                     await api.follow(user.id);
                     setFollowing(true);
+                    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: user.id, following: true } })); } catch (e) { /* ignore */ }
                   } else {
                     await api.unfollow(user.id);
                     setFollowing(false);
+                    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: user.id, following: false } })); } catch (e) { /* ignore */ }
                   }
                 }}
               >

@@ -218,9 +218,11 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                       if (!isFollowing) {
                         await api.follow(post.userId);
                         setIsFollowing(true);
+                        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: true } })); } catch (e) { /* ignore */ }
                       } else {
                         await api.unfollow(post.userId);
                         setIsFollowing(false);
+                        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: false } })); } catch (e) { /* ignore */ }
                       }
                     }}
                   >

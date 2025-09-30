@@ -44,6 +44,29 @@ export function FeedView() {
     return () => { mounted = false; };
   }, []);
 
+  // Refresh feed when follow/unfollow actions occur elsewhere in the app
+  useEffect(() => {
+    function onFollowChange(e: any) {
+      try {
+        // simply re-fetch the initial page to show new followed users' posts
+        (async () => {
+          setLoading(true);
+          try {
+            const page = await api.getFollowingFeedPage({ limit: PAGE_SIZE });
+            setPosts(page);
+            setHasMore(page.length === PAGE_SIZE);
+          } catch (err) {
+            console.error(err);
+          } finally {
+            setLoading(false);
+          }
+        })();
+      } catch (err) { /* ignore */ }
+    }
+    if (typeof window !== 'undefined') window.addEventListener('monolog:follow_changed', onFollowChange as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:follow_changed', onFollowChange as any); };
+  }, []);
+
   useEffect(() => {
     if (!sentinelRef.current) return;
     const el = sentinelRef.current;

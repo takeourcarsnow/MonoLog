@@ -7,6 +7,7 @@ import { compressImage } from "@/lib/image";
 import { uid } from "@/lib/id";
 import type { HydratedPost, User } from "@/lib/types";
 import Link from "next/link";
+import ImageZoom from "./ImageZoom";
 import { AuthForm } from "@/components/AuthForm";
 import { SignOutButton } from "@/components/SignOut";
 import { useToast } from "./Toast";
@@ -253,7 +254,7 @@ export function ProfileView({ userId }: { userId?: string }) {
           const alts = Array.isArray(p.alt) ? p.alt : [p.alt || ""];
             return (
             <Link key={p.id} className="tile" href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`}>
-              <img loading="lazy" src={src} alt={alts[0] || "Photo"} />
+              <ImageZoom loading="lazy" src={src} alt={alts[0] || "Photo"} />
             </Link>
           );
         })}

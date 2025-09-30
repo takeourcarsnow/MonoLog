@@ -73,6 +73,7 @@ export function Uploader() {
   const [typed, setTyped] = useState<string>("");
   const dropRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileActionRef = useRef<'append' | 'replace'>('append');
   const replaceIndexRef = useRef<number | null>(null);
    const [index, setIndex] = useState<number>(0);
@@ -162,6 +163,10 @@ export function Uploader() {
 
   const toast = useToast();
   const [showDiscardModal, setShowDiscardModal] = useState(false);
+  // camera capture state
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // add a class to body to allow CSS animations scoped to uploader when ready
   useEffect(() => {
@@ -431,6 +436,27 @@ export function Uploader() {
             <div className="drop-icon" aria-hidden>+</div>
             <div className="drop-text">Drop images here or click to select</div>
             <div className="dim" style={{ marginTop: 6 }}>JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB</div>
+            <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+              <button className="btn" onClick={() => { fileInputRef.current?.click(); }} disabled={processing}>Add files</button>
+              <button className="btn" onClick={async () => {
+                // prefer getUserMedia modal; fall back to capture file input when unavailable
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                  setCameraOpen(true);
+                  try {
+                    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                    streamRef.current = s;
+                    if (videoRef.current) videoRef.current.srcObject = s;
+                  } catch (e) {
+                    console.error(e);
+                    toast.show('Camera access denied or unavailable');
+                    setCameraOpen(false);
+                    try { cameraInputRef.current?.click(); } catch (_) {}
+                  }
+                } else {
+                  try { cameraInputRef.current?.click(); } catch (_) {}
+                }
+              }} disabled={processing}>Take photo</button>
+            </div>
           </div>
         </div>
       )}
@@ -484,6 +510,22 @@ export function Uploader() {
               await handleFile(f);
             }
           }
+        }}
+      />
+
+      {/* Hidden camera-capable input as a fallback for devices/browsers where getUserMedia isn't available */}
+      <input
+        id="uploader-camera-input"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        ref={cameraInputRef}
+        style={{ display: "none" }}
+        onChange={async () => {
+          const f = cameraInputRef.current?.files?.[0];
+          if (!f) return;
+          await handleFile(f);
+          try { cameraInputRef.current!.value = ""; } catch (_) {}
         }}
       />
 
@@ -623,6 +665,35 @@ export function Uploader() {
                               >
                                 Edit
                               </button>
+                              <button
+                                className="btn"
+                                style={{ position: 'absolute', right: 8, bottom: 56 }}
+                                onClick={() => {
+                                  // open camera to replace this image
+                                  fileActionRef.current = 'replace';
+                                  replaceIndexRef.current = idx;
+                                  // try getUserMedia first
+                                  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                                    (async () => {
+                                      setCameraOpen(true);
+                                      try {
+                                        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                                        streamRef.current = s;
+                                        if (videoRef.current) videoRef.current.srcObject = s;
+                                      } catch (e) {
+                                        console.error(e);
+                                        toast.show('Camera access denied or unavailable');
+                                        setCameraOpen(false);
+                                        try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
+                                      }
+                                    })();
+                                  } else {
+                                    try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
+                                  }
+                                }}
+                              >
+                                Capture
+                              </button>
                             </div>
                           ))}
                         </div>
@@ -674,6 +745,66 @@ export function Uploader() {
             </>
           )}
         </div>
+
+        {/* Camera modal (getUserMedia) */}
+        {cameraOpen ? (
+          <Portal>
+            <div
+              role="dialog"
+              aria-modal={true}
+              style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, zIndex: 20, background: 'rgba(0,0,0,0.6)' }}
+              onClick={() => {
+                // close on overlay click
+                try { streamRef.current?.getTracks().forEach(t => t.stop()); } catch (_) {}
+                streamRef.current = null;
+                setCameraOpen(false);
+              }}
+            >
+              <div style={{ width: '100%', maxWidth: 720, background: 'var(--bg)', borderRadius: 8, padding: 12 }} onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', borderRadius: 6, background: '#000' }} />
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                    <button className="btn" onClick={async () => {
+                      const v = videoRef.current;
+                      const s = streamRef.current;
+                      if (!v || !s) return;
+                      try {
+                        const w = v.videoWidth || v.clientWidth;
+                        const h = v.videoHeight || v.clientHeight || Math.round(w * 0.75);
+                        const cnv = document.createElement('canvas');
+                        cnv.width = w; cnv.height = h;
+                        const ctx = cnv.getContext('2d');
+                        if (!ctx) throw new Error('Canvas not supported');
+                        ctx.drawImage(v, 0, 0, w, h);
+                        // convert to blob and call handleFile
+                        cnv.toBlob(async (blob) => {
+                          if (!blob) return;
+                          const file = new File([blob], `capture-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
+                          // if replacing, set fileActionRef appropriately
+                          if (fileActionRef.current === 'replace') {
+                            // leave replaceIndexRef as-is
+                          }
+                          await handleFile(file);
+                          try { s.getTracks().forEach(t => t.stop()); } catch (_) {}
+                          streamRef.current = null;
+                          setCameraOpen(false);
+                        }, 'image/jpeg', 0.92);
+                      } catch (e) {
+                        console.error(e);
+                        toast.show('Failed to capture photo');
+                      }
+                    }}>Capture</button>
+                    <button className="btn ghost" onClick={() => {
+                      try { streamRef.current?.getTracks().forEach(t => t.stop()); } catch (_) {}
+                      streamRef.current = null;
+                      setCameraOpen(false);
+                    }}>Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Portal>
+        ) : null}
 
         {/* thumbnail strip placed outside preview-inner so it isn't clipped */}
         {dataUrls.length > 1 ? (

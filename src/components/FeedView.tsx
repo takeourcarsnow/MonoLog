@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type { HydratedPost } from "@/lib/types";
 import { PostCard } from "./PostCard";
+import ImageZoom from "./ImageZoom";
 import Link from "next/link";
 import { ViewToggle } from "./ViewToggle";
 
@@ -113,7 +114,7 @@ export function FeedView() {
         <div className="grid">
           {posts.map(p => (
               <Link key={p.id} className="tile" href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`}>
-              <img
+              <ImageZoom
                 loading="lazy"
                 src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}
                 alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}

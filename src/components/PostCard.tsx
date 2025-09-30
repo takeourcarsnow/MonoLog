@@ -8,6 +8,7 @@ import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Comments } from "./Comments";
+import ImageZoom from "./ImageZoom";
 import { AuthForm } from "./AuthForm";
 import { useToast } from "./Toast";
 
@@ -435,7 +436,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                     {imageUrls.map((u: string, idx: number) => (
                       <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`${idx + 1} of ${imageUrls.length}`}>
                         <Link href={postHref} className="media-link">
-                          <img
+                          <ImageZoom
                             loading="lazy"
                             src={u}
                             alt={alts[idx] || `Photo ${idx + 1}`}
@@ -458,7 +459,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                 </div>
               ) : (
                 <Link href={postHref} className="media-link">
-                  <img
+                  <ImageZoom
                     loading="lazy"
                     src={imageUrls[0]}
                     alt={alts[0] || "Photo"}

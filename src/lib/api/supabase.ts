@@ -366,7 +366,47 @@ export const supabaseApi: Api = {
 
   // Resolve a username (or legacy user_name) to a profile. Returns null when not found.
   async getUserByUsername(username: string) {
-    const sb = getClient();
+    // getClient() may throw synchronously if build-time NEXT_PUBLIC_* vars
+    // are missing and the runtime override hasn't yet injected window.__MONOLOG_RUNTIME_SUPABASE__.
+    // To avoid a hard failure during hydration/refresh, poll briefly for the
+    // runtime keys and retry getClient() before giving up.
+    let sb: SupabaseClient | null = null;
+    try {
+      sb = getClient();
+    } catch (err) {
+      // If we're in a browser environment, wait up to 1s for the runtime
+      // override to populate keys and then try again. This handles the
+      // race where the bundle was built without NEXT_PUBLIC_ vars but the
+      // server provides them at runtime via /api/debug/env.
+      if (typeof window !== 'undefined') {
+        const waitForRuntime = async (timeout = 1000, interval = 100) => {
+          const start = Date.now();
+          while (Date.now() - start < timeout) {
+            if ((window as any).__MONOLOG_RUNTIME_SUPABASE__) {
+              try {
+                return getClient();
+              } catch (e) {
+                // continue waiting
+              }
+            }
+            // small delay
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, interval));
+          }
+          // final attempt
+          return getClient();
+        };
+        try {
+          sb = await waitForRuntime();
+        } catch (e) {
+          // give up and return null so caller shows 'not found' instead of crashing
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+
     try {
       // try common column name 'username'
       let res: any = await sb.from("users").select("*").eq("username", username).limit(1).maybeSingle();

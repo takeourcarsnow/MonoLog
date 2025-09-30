@@ -175,7 +175,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   return (
     <article className="card">
       <div className="card-head">
-  <Link className="user-link" href={`/profile/${post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
+  <Link className="user-link" href={`/profile/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
           <img className="avatar" src={post.user.avatarUrl} alt={post.user.displayName} />
           <div className="user-line">
             <span className="username">{post.user.displayName}</span>
@@ -246,7 +246,15 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                             await api.deletePost(post.id);
                             setShowDeleteConfirm(false);
                             // If viewing single post page, go back to profile
-                            if (pathname.startsWith("/post/")) router.push("/profile");
+                            if (pathname.startsWith("/post/")) {
+                              try {
+                                const cur = await api.getCurrentUser();
+                                if (cur) router.push(`/profile/${cur.username || cur.id}`);
+                                else router.push("/profile");
+                              } catch (_) {
+                                router.push("/profile");
+                              }
+                            }
                             // Let parent remove it from list; here we just hide
                             (document.getElementById(`post-${post.id}`)?.remove?.());
                           } catch (e: any) {

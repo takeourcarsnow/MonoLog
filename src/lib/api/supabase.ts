@@ -126,11 +126,52 @@ function mapProfileToUser(profile: any) {
 }
 
 function mapRowToHydratedPost(row: any): HydratedPost {
+  // Normalize imageUrls into a predictable array shape and provide
+  // lightweight debug logging when unusual shapes are encountered.
+  const raw = row.image_urls ?? row.image_urls_json ?? row.image_urls_jsonb ?? row.image_url ?? row.imageUrl ?? undefined;
+  let imageUrls: string[] | undefined = undefined;
+  if (raw !== undefined && raw !== null) {
+    if (Array.isArray(raw)) imageUrls = raw.map(String);
+    else if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) imageUrls = parsed.map(String);
+        else imageUrls = [raw];
+      } catch (e) {
+        imageUrls = [raw];
+      }
+    } else {
+      try {
+        const maybe = Array.from(raw as any);
+        if (Array.isArray(maybe)) imageUrls = maybe.map(String);
+        else imageUrls = [String(raw)];
+      } catch (e) {
+        imageUrls = [String(raw)];
+      }
+    }
+  }
+
+  // DEV: emit concise mapping info to the browser console so you can paste it from F12
+  try {
+    if (typeof window !== 'undefined') {
+      const shouldLog = Array.isArray(imageUrls) && imageUrls.length > 1 || typeof row.image_urls === 'string' && row.image_urls.length > 0;
+      if (shouldLog) {
+        // Print a compact, paste-friendly object
+        // eslint-disable-next-line no-console
+        console.debug('[supabase.mapRowToHydratedPost]', {
+          id: row.id,
+          rawShape: typeof row.image_urls === 'string' ? 'string' : Array.isArray(row.image_urls) ? 'array' : (row.image_url ? 'legacy_single' : typeof row.image_urls),
+          rawValue: typeof row.image_urls === 'string' ? row.image_urls : (Array.isArray(row.image_urls) ? row.image_urls.slice(0,5) : row.image_url || row.imageUrl),
+          mapped: imageUrls && imageUrls.slice(0,5),
+        });
+      }
+    }
+  } catch (e) { /* ignore logging errors */ }
+
   return {
     id: row.id,
     userId: row.user_id || row.userId,
-    // prefer image_urls column (JSON/array) or legacy image_url
-    imageUrls: row.image_urls || row.image_urls_json || row.image_urls_jsonb || (row.image_url ? [row.image_url] : undefined) || (row.imageUrl ? [row.imageUrl] : undefined),
+    imageUrls,
     alt: row.alt || "",
     caption: row.caption || "",
     createdAt: row.created_at || row.createdAt,
@@ -205,12 +246,28 @@ export const supabaseApi: Api = {
       if (!user) return null;
       // try to find a matching profile in users table
   const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).single();
-      // If there's no profile row yet (or an error), synthesize a minimal profile from the auth user so UI reflects signed-in state
-  if (profErr || !profile) {
+      // If the query errored, avoid writing to the DB (could clobber existing rows).
+      // Only create a minimal profile when the select succeeded and returned no row.
+      if (profErr) {
+        // couldn't read users table; return a synthesized profile based on auth metadata
+        const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
+        const synthDisplay = user.user_metadata?.name || synthUsername;
+        const synthAvatar = user.user_metadata?.avatar_url;
+        const joinedAt = new Date().toISOString();
+        return {
+          id: user.id,
+          username: synthUsername,
+          displayName: synthDisplay,
+          avatarUrl: synthAvatar,
+          joinedAt,
+        } as any;
+      }
+
+      if (!profile) {
         // synthesize and upsert a profile row so the DB and UI are in sync
-  const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-  // default display name to the username when no explicit name metadata exists
-  const synthDisplay = user.user_metadata?.name || synthUsername;
+        const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
+        // default display name to the username when no explicit name metadata exists
+        const synthDisplay = user.user_metadata?.name || synthUsername;
         const synthAvatar = user.user_metadata?.avatar_url;
         const joinedAt = new Date().toISOString();
         const upsertObj: any = {
@@ -221,11 +278,13 @@ export const supabaseApi: Api = {
         };
         // only set avatar_url when the auth metadata has one; avoid overwriting an existing DB value with an empty string
         if (synthAvatar) upsertObj.avatar_url = synthAvatar;
-        // perform upsert (creates a DB profile if missing)
+        // perform insert (creates a DB profile if missing). If the row was
+        // concurrently created we will get a duplicate-key error which we
+        // safely ignore.
         try {
-          await sb.from("users").upsert(upsertObj);
+          await sb.from("users").insert(upsertObj);
         } catch (e) {
-          // ignore upsert errors, still return synthesized profile
+          // ignore insert errors, still return synthesized profile
         }
         return {
           id: user.id,
@@ -234,8 +293,8 @@ export const supabaseApi: Api = {
           avatarUrl: synthAvatar,
           joinedAt,
         } as any;
-      }
-      return mapProfileToUser(profile) as any;
+  }
+  return mapProfileToUser(profile) as any;
     } catch (e) {
       return null;
     }

@@ -17,7 +17,10 @@ export function ProfileView({ userId }: { userId?: string }) {
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState<boolean | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const isOther = !!userId;
+  // `isOtherParam` indicates whether the route included an explicit userId param.
+  // Later we'll compare the fetched current user to the viewed user to decide
+  // whether the profile belongs to the signed-in user (owner) or another user.
+  const isOtherParam = !!userId;
 
   useEffect(() => {
     let mounted = true;
@@ -34,7 +37,17 @@ export function ProfileView({ userId }: { userId?: string }) {
         if (!u) { setUser(null); setPosts([]); if (userId) setFollowing(false); return; }
         setUser(u);
         setPosts(await api.getUserPosts(u.id));
-        if (userId) setFollowing(await api.isFollowing(u.id));
+        // Only compute following state when the viewed profile is actually
+        // another user. If the route contained a userId param but it matches
+        // the signed-in user, treat it as the owner's profile (don't show follow).
+        if (userId) {
+          if (me?.id === u.id) {
+            // viewing your own profile via /profile/[id] — don't show follow
+            setFollowing(null);
+          } else {
+            setFollowing(await api.isFollowing(u.id));
+          }
+        }
       } catch (e) {
         // swallow and let UI show not-found if appropriate
       } finally {
@@ -98,9 +111,9 @@ export function ProfileView({ userId }: { userId?: string }) {
       );
     }
 
-    // while not loading, prefer the upload-style sign-in prompt when the
-    // viewer is not signed in and they're looking at their own profile.
-    if (!loading && !isOther && !currentUserId) {
+  // while not loading, prefer the upload-style sign-in prompt when the
+  // viewer is not signed in and they're looking at their own profile.
+  if (!loading && !isOtherParam && !currentUserId) {
       return (
         <div className="view-fade" style={{ maxWidth: 520, margin: "24px auto" }}>
           <div style={{ marginBottom: 12 }}>
@@ -124,7 +137,7 @@ export function ProfileView({ userId }: { userId?: string }) {
       <div className="empty" style={{ position: "relative" }}>
         <div>User not found. Pick an account from the Account menu to get started.</div>
         <div style={{ marginTop: 12 }}>
-          <button className="btn" onClick={() => setShowAuth(true)}>Sign in / Sign up</button>
+          <button className="btn" onClick={() => { try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {} setShowAuth(true); }}>Sign in / Sign up</button>
         </div>
 
         {showAuth ? (
@@ -169,51 +182,60 @@ export function ProfileView({ userId }: { userId?: string }) {
             {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
           </div>
         </div>
-        <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
-              {!isOther ? (
-                <>
-                  <EditProfile onSaved={async () => {
-                    // refresh the profile and posts after an edit so UI reflects changes immediately
-                    const me = await api.getCurrentUser();
-                    setUser(me);
-                    if (me) setPosts(await api.getUserPosts(me.id));
-                  }} />
-                  <Link className="btn primary icon-reveal" href="/upload" aria-label="New Post">
-                    <span className="icon" aria-hidden>
-                      {/* camera icon */}
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </span>
-                    <span className="reveal">New Post</span>
-                  </Link>
-              {/* show sign out only when the viewed profile belongs to the signed-in user */}
-              {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
-            </>
-          ) : (
-            <button
-              className={`btn icon-reveal follow-btn${following ? ' following' : ''}`}
-              aria-pressed={!!following || false}
-              onClick={async () => {
-                const cur = await api.getCurrentUser();
-                if (!cur) {
-                  setShowAuth(true);
-                  return;
-                }
-                if (!following) {
-                  await api.follow(user.id);
-                  setFollowing(true);
-                } else {
-                  await api.unfollow(user.id);
-                  setFollowing(false);
-                }
-              }}
-            >
-              <span className="icon" aria-hidden>
-                {/* follow / person icon */}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </span>
-              <span className="reveal">{following ? 'Following' : 'Follow'}</span>
-            </button>
-          )}
+          <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+            {/* Show owner actions when the signed-in user is viewing their own profile.
+                This handles both /profile (no param) and /profile/[id] when the id
+                matches the current user. */}
+            {currentUserId && user?.id === currentUserId ? (
+              <>
+                <EditProfile onSaved={async () => {
+                  // refresh the profile and posts after an edit so UI reflects changes immediately
+                  const me = await api.getCurrentUser();
+                  setUser(me);
+                  if (me) setPosts(await api.getUserPosts(me.id));
+                }} />
+                <Link className="btn primary icon-reveal" href="/upload" aria-label="New Post">
+                  <span className="icon" aria-hidden>
+                    {/* camera icon */}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </span>
+                  <span className="reveal">New Post</span>
+                </Link>
+                {/* show sign out only when the viewed profile belongs to the signed-in user */}
+                {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
+              </>
+            ) : (
+              // If the viewer is looking at another user's profile, render follow/unfollow.
+              // Note: `following` may be null when we intentionally skipped computing
+              // it because the viewed id matched the signed-in user — in that case
+              // we won't render this branch because the owner branch executes above.
+              <button
+                className={`btn icon-reveal follow-btn${following ? ' following' : ''}`}
+                aria-pressed={!!following || false}
+                onClick={async () => {
+                  const cur = await api.getCurrentUser();
+                  if (!cur) {
+                    setShowAuth(true);
+                    return;
+                  }
+                  // Defensive: prevent following yourself even if route param matched unexpectedly
+                  if (cur.id === user.id) return;
+                  if (!following) {
+                    await api.follow(user.id);
+                    setFollowing(true);
+                  } else {
+                    await api.unfollow(user.id);
+                    setFollowing(false);
+                  }
+                }}
+              >
+                <span className="icon" aria-hidden>
+                  {/* follow / person icon */}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </span>
+                <span className="reveal">{following ? 'Following' : 'Follow'}</span>
+              </button>
+            )}
         </div>
       </div>
 

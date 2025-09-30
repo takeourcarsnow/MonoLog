@@ -128,6 +128,23 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   const imageUrls: string[] = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
   const alts: string[] = Array.isArray(post.alt) ? post.alt : [post.alt || ""];
 
+  // DEV: debug log when there are multiple images to help verify carousel rendering
+  try {
+    if (typeof window !== 'undefined' && imageUrls.length > 1) {
+      // eslint-disable-next-line no-console
+      // Print a compact object that's easy to copy/paste from Chrome DevTools
+      // (id, image count, first few urls, alt/caption, user)
+      console.debug('[PostCard] snapshot', {
+        id: post.id,
+        images: imageUrls.length,
+        imageUrls: imageUrls.slice(0,5),
+        alt: Array.isArray(post.alt) ? post.alt.slice(0,5) : post.alt,
+        caption: post.caption,
+        user: { id: post.user?.id, username: post.user?.username }
+      });
+    }
+  } catch (e) { /* ignore */ }
+
   // Carousel state for multi-image posts
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -172,6 +189,9 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
     touchDeltaX.current = 0;
   };
 
+  // On post pages, disable carousel touch handling to allow app-level swipe navigation
+  const carouselTouchProps = pathname?.startsWith('/post/') ? {} : { onTouchStart, onTouchMove, onTouchEnd };
+
   return (
     <article className="card">
       <div className="card-head">
@@ -191,6 +211,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                     onClick={async () => {
                       const cur = await api.getCurrentUser();
                       if (!cur) {
+                        try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
                         setShowAuth(true);
                         return;
                       }
@@ -245,15 +266,10 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                           try {
                             await api.deletePost(post.id);
                             setShowDeleteConfirm(false);
-                            // If viewing single post page, go back to profile
+                            // If viewing single post page, go back to the main feed (home)
                             if (pathname.startsWith("/post/")) {
-                              try {
-                                const cur = await api.getCurrentUser();
-                                if (cur) router.push(`/profile/${cur.username || cur.id}`);
-                                else router.push("/profile");
-                              } catch (_) {
-                                router.push("/profile");
-                              }
+                              // send user to the home page rather than back to the deleted post
+                              router.push("/");
                             }
                             // Let parent remove it from list; here we just hide
                             (document.getElementById(`post-${post.id}`)?.remove?.());
@@ -290,7 +306,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                   <div className="edge-area left" />
                   <div className="edge-area right" />
 
-                  <div className="carousel-track" ref={trackRef} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} role="list">
+                  <div className="carousel-track" ref={trackRef} {...carouselTouchProps} role="list">
                     {imageUrls.map((u: string, idx: number) => (
                       <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`${idx + 1} of ${imageUrls.length}`}>
                         <Link href={postHref} className="media-link">
@@ -416,6 +432,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                   onClick={async () => {
                     const cur = await api.getCurrentUser();
                     if (!cur) {
+                      try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
                       setShowAuth(true);
                       return;
                     }

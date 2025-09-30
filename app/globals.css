@@ -154,14 +154,22 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 /* Slide animations for swipe navigation */
 .content > .page-slide {
   position: relative; will-change: transform, opacity; transition: transform 260ms var(--transition-mid), opacity 260ms var(--transition-mid);
+  /* allow JS driven transforms to feel immediate while preserving the
+     smooth animated transitions for programmatic navigations */
+  transform: translateZ(0);
+}
+.content.dragging > .page-slide, .content > .page-slide.dragging {
+  /* while following pointer, disable CSS transition so the element
+     feels directly attached to the finger/mouse */
+  transition: none !important;
 }
 .content.slide-left > .page-slide {
   transform: translateX(-100%);
-  opacity: 0.9;
+  opacity: 0.96;
 }
 .content.slide-right > .page-slide {
   transform: translateX(100%);
-  opacity: 0.9;
+  opacity: 0.96;
 }
 .content.slide-enter-left > .page-slide {
   transform: translateX(100%);

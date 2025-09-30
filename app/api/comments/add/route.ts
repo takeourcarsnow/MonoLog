@@ -42,10 +42,12 @@ export async function POST(req: Request) {
           // ignore admin fetch errors
         }
 
-        const up: any = { id: actorId, username, display_name: displayName };
-        if (avatarUrl) up.avatar_url = avatarUrl;
-        // only create the minimal profile when missing
-        try { await sb.from('users').upsert(up); } catch (e) { /* ignore */ }
+  const up: any = { id: actorId, username, display_name: displayName };
+  if (avatarUrl) up.avatar_url = avatarUrl;
+  // only create the minimal profile when missing. Use insert rather
+  // than upsert to avoid overwriting an existing row if the earlier
+  // select failed due to schema cache issues.
+  try { await sb.from('users').insert(up); } catch (e) { /* ignore */ }
       }
     } catch (e) {
       // ignore

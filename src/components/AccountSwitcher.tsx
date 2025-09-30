@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, getSupabaseClient } from "@/lib/api";
 import type { User } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
@@ -47,9 +47,34 @@ export function AccountSwitcher() {
       if (!mounted) return;
       try {
         try { console.debug('[AccountSwitcher] runtime keys present?', !!(window as any).__MONOLOG_RUNTIME_SUPABASE__); } catch (e) {}
-        const u = await api.getCurrentUser();
+        // Try API once, then attempt a small fallback when null is returned to
+        // handle races where the Supabase client/session hasn't fully hydrated.
+        let u = await api.getCurrentUser();
         try { console.debug('[AccountSwitcher] api.getCurrentUser ->', u); } catch (e) {}
         if (!mounted) return;
+        // If api returned null but runtime keys exist, try a direct auth probe
+        // on the Supabase client and retry once. This helps when session data
+        // is present but the higher-level adapter hasn't finished initializing.
+        if (!u && typeof window !== 'undefined' && (window as any).__MONOLOG_RUNTIME_SUPABASE__) {
+          try {
+            const sb = getSupabaseClient();
+            // Prefer getSession if available; fall back to getUser.
+            let authRes: any = null;
+            try { authRes = await sb.auth.getSession(); } catch (_) { /* ignore */ }
+            if (!authRes || !authRes.data || !authRes.data.session) {
+              try { authRes = await sb.auth.getUser(); } catch (_) { /* ignore */ }
+            }
+            const maybeUser = authRes?.data?.user || authRes?.user || null;
+            if (maybeUser) {
+              // re-call through API (which may synthesize profile) once more
+              u = await api.getCurrentUser();
+              try { console.debug('[AccountSwitcher] fallback -> api.getCurrentUser ->', u); } catch (e) {}
+            }
+          } catch (e) {
+            // ignore fallback errors and continue to set null/unauth view below
+            try { console.debug('[AccountSwitcher] supabase fallback failed', e); } catch (_) {}
+          }
+        }
         setMe(u);
       } catch (e) {
         try { console.error('[AccountSwitcher] getCurrentUser error', e); } catch (er) {}
@@ -76,6 +101,8 @@ export function AccountSwitcher() {
           // opening the auth modal while the client is initializing.
           if (me === undefined) return;
           if (current) return router.push("/profile");
+          // Blur active element first to dismiss native suggestion/autocomplete
+          try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
           setShowAuth(true);
         }}
         aria-label="Open profile"

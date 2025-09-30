@@ -63,6 +63,7 @@ export interface Api {
   getFollowingFeedPage(opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
   getUserPosts(userId: string): Promise<HydratedPost[]>;
   getUser(id: string): Promise<User | null>;
+  getUserByUsername?(username: string): Promise<User | null>;
 
   updateUser(id: string, patch: Partial<User>): Promise<User>;
   updateCurrentUser(patch: Partial<User>): Promise<User>;

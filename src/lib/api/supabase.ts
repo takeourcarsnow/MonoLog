@@ -348,6 +348,33 @@ export const supabaseApi: Api = {
     return mapProfileToUser(profile) as any;
   },
 
+  // Resolve a username (or legacy user_name) to a profile. Returns null when not found.
+  async getUserByUsername(username: string) {
+    const sb = getClient();
+    try {
+      // try common column name 'username'
+      let res: any = await sb.from("users").select("*").eq("username", username).limit(1).maybeSingle();
+      if (!res.error && res.data) return mapProfileToUser(res.data) as any;
+    } catch (e) {
+      // ignore and try fallback
+    }
+    try {
+      // fallback to legacy 'user_name' column
+      let res2: any = await sb.from("users").select("*").eq("user_name", username).limit(1).maybeSingle();
+      if (!res2.error && res2.data) return mapProfileToUser(res2.data) as any;
+    } catch (e) {
+      // ignore
+    }
+    // final attempt: case-insensitive match on username
+    try {
+      const res3: any = await sb.from("users").select("*").ilike("username", username).limit(1).maybeSingle();
+      if (!res3.error && res3.data) return mapProfileToUser(res3.data) as any;
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  },
+
   async updateUser(id: string, patch: Partial<User>) {
     const sb = getClient();
     const upd: any = {};

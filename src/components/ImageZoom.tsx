@@ -31,6 +31,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const txRef = useRef(0);
   const tyRef = useRef(0);
 
+  const [isPinchingState, setIsPinchingState] = useState(false);
+
   type Updater = number | ((prev: number) => number);
   const setTxSafe = (v: Updater) => setTx((prev) => {
     const next = typeof v === 'function' ? (v as (p: number) => number)(prev) : v;
@@ -146,6 +148,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       lastPinchAt.current = Date.now();
       isPinching.current = true;
       wasPinched.current = true;
+      setIsPinchingState(true);
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
       lastTouchDist.current = getTouchDist(e.touches[0], e.touches[1]);
       // disable pointer events on relevant ancestor elements (link, carousel)
@@ -208,6 +211,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       lastPinchAt.current = Date.now();
       wasPinched.current = false;
       isPinching.current = false;
+      setIsPinchingState(false);
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch (_) {}
       // restore any modified ancestor pointer-events
       try {
@@ -224,6 +228,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     if (e.touches.length === 0) {
       if (isPinching.current) {
         isPinching.current = false;
+        setIsPinchingState(false);
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch (_) {}
       }
       // ensure ancestor pointer-events restored in case of other paths
@@ -403,7 +408,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       className={className}
       style={{
         overflow: "hidden",
-        touchAction: scale > 1 ? "none" : "pan-y",
+        touchAction: isPinchingState || scale > 1 ? "none" : "pan-y",
         // make the container fill the card width so images can center
         display: "block",
         width: "100%",
@@ -439,7 +444,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
           objectFit: isTile ? "cover" : "contain",
           objectPosition: "center center",
           userSelect: "none",
-          touchAction: scale > 1 ? "none" : "pan-y",
+          touchAction: isPinchingState || scale > 1 ? "none" : "pan-y",
         }}
         draggable={false}
       />

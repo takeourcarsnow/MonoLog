@@ -59,8 +59,6 @@ export function NavBarClient() {
     let to2: number | null = null;
     let raf1: number | null = null;
     const stabilize = () => {
-      // immediate
-      update();
       // next frame
       raf1 = window.requestAnimationFrame(() => update());
       // then in short intervals to catch slower shifts
@@ -82,7 +80,6 @@ export function NavBarClient() {
     };
 
     // initial measure + stabilization
-    update();
     stabilize();
 
     window.addEventListener("resize", update);

@@ -14,39 +14,49 @@ export const getSupabaseClient = getSupabaseClientRaw;
 // was added after the client bundle was built or due to caching), perform a
 // runtime check and switch to the supabase adapter so the UI can use the
 // remote backend without needing a full rebuild.
+// If the client bundle was built for `local` but the server is actually
+// configured for Supabase, perform a runtime check and switch adapters.
+// Important: create a promise so early API calls can wait for this decision
+// and avoid using the empty `local` adapter before the override finishes.
+let __runtimeInitResolve: any = null;
+let __runtimeInitPromise: Promise<void> | null = new Promise<void>((res: () => void) => { __runtimeInitResolve = res; });
+
 if (typeof window !== 'undefined' && CONFIG.mode === 'local') {
-	try {
-		// fire-and-forget: try to learn what the server sees
-		(async () => {
-			try {
-				const resp = await fetch('/api/debug/env');
-				if (!resp.ok) return;
-				const json = await resp.json();
-				// If the server is configured for supabase and the client bundle was
-				// built for local, switch the runtime adapter to supabase.
-				if (json?.nextPublicMode === 'supabase' || json?.hasNextPublicSupabaseUrl) {
-					// If the server provided public keys, stash them for runtime
-					// initialization so client-side supabase can be created even
-					// when the bundle's build-time NEXT_PUBLIC_* vars are missing.
-					try {
-						if (json.nextPublicSupabaseUrl || json.nextPublicSupabaseAnonKey) {
-							(window as any).__MONOLOG_RUNTIME_SUPABASE__ = {
-								url: json.nextPublicSupabaseUrl || null,
-								anonKey: json.nextPublicSupabaseAnonKey || null,
-							};
-						}
-					} catch (e) {}
-					currentApi = supabaseApi;
-					// eslint-disable-next-line no-console
-					console.log('[api] runtime override -> supabase');
-				}
-			} catch (e) {
-				// ignore network/debug failures
+	(async () => {
+		try {
+			const resp = await fetch('/api/debug/env');
+			if (!resp.ok) {
+				// allow callers to proceed
+				__runtimeInitResolve?.();
+				__runtimeInitPromise = null;
+				return;
 			}
-		})();
-	} catch (e) {
-		// swallow
-	}
+			const json = await resp.json();
+			if (json?.nextPublicMode === 'supabase' || json?.hasNextPublicSupabaseUrl) {
+				try {
+					if (json.nextPublicSupabaseUrl || json.nextPublicSupabaseAnonKey) {
+						(window as any).__MONOLOG_RUNTIME_SUPABASE__ = {
+							url: json.nextPublicSupabaseUrl || null,
+							anonKey: json.nextPublicSupabaseAnonKey || null,
+						};
+					}
+				} catch (e) {}
+				currentApi = supabaseApi;
+				// eslint-disable-next-line no-console
+				console.log('[api] runtime override -> supabase');
+			}
+		} catch (e) {
+			// ignore network/debug failures
+		} finally {
+			// signal that runtime detection completed (success or failure)
+			try { if (__runtimeInitResolve) __runtimeInitResolve(); } catch (e) {}
+			__runtimeInitPromise = null;
+		}
+	})();
+} else {
+	// No runtime init needed; resolve immediately
+	try { if (__runtimeInitResolve) __runtimeInitResolve(); } catch (e) {}
+	__runtimeInitPromise = null;
 }
 
 // Export a thin proxy that forwards calls to the currently selected adapter.
@@ -56,7 +66,13 @@ export const api: Api = new Proxy({} as Api, {
 		const target = currentApi as any;
 		const v = target?.[prop];
 		if (typeof v === 'function') {
-			return (...args: any[]) => (target as any)[prop](...args);
+			return async (...args: any[]) => {
+				// If runtime init is pending, wait for it before calling the real API
+				if (__runtimeInitPromise) {
+					try { await __runtimeInitPromise; } catch (e) { /* ignore */ }
+				}
+				return (target as any)[prop](...args);
+			};
 		}
 		return v;
 	},

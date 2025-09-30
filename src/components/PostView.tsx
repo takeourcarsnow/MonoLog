@@ -13,9 +13,18 @@ export function PostView({ id }: { id: string }) {
 
   useEffect(() => {
     (async () => {
-      const p = await api.getPost(id);
-      setPost(p);
-      setLoading(false);
+      try {
+        // client debug
+        try { console.log(`[PostView] fetching id param=${id}`); } catch (e) {}
+        const p = await api.getPost(id);
+        try { console.log('[PostView] api.getPost returned', !!p); } catch (e) {}
+        setPost(p);
+      } catch (e) {
+        try { console.error('[PostView] getPost error', e); } catch (er) {}
+        setPost(null);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [id]);
 

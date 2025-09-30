@@ -493,12 +493,85 @@ export const supabaseApi: Api = {
   },
 
   async getPost(id: string) {
-    const sb = getClient();
-  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("id", id).limit(1).single();
-  logSupabaseError("getPost", { data, error });
-  if (error) return null;
-    const row = data as any;
-    return mapRowToHydratedPost(row) as any;
+    // getClient() may throw synchronously if build-time NEXT_PUBLIC_* vars
+    // are missing and the runtime override hasn't been applied yet. Wait
+    // briefly for the runtime injection and retry to avoid returning
+    // "Post not found" on hard refresh.
+    let sb: any = null;
+    try {
+      sb = getClient();
+    } catch (err) {
+      if (typeof window !== 'undefined') {
+        const waitForRuntime = async (timeout = 1000, interval = 100) => {
+          const start = Date.now();
+          while (Date.now() - start < timeout) {
+            if ((window as any).__MONOLOG_RUNTIME_SUPABASE__) {
+              try {
+                return getClient();
+              } catch (e) {
+                // continue waiting
+              }
+            }
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, interval));
+          }
+          // final attempt
+          return getClient();
+        };
+        try {
+          sb = await waitForRuntime();
+        } catch (e) {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+
+    // Accept either a full id or a slug like "username-abcdef12". If slug,
+    // extract trailing token after last '-' and try exact id lookup first;
+    // if that fails and token looks like a short id, try prefix match.
+    let raw = id;
+    let candidateId = id;
+    const dashIdx = id.lastIndexOf('-');
+    if (dashIdx > 0) {
+      const trailing = id.slice(dashIdx + 1);
+      if (/^[0-9a-fA-F]{6,}$/.test(trailing)) candidateId = trailing;
+    }
+
+    // Try exact match first
+    try { console.log(`[supabase.getPost] trying exact id=${candidateId}`); } catch (e) {}
+    let res: any = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("id", candidateId).limit(1).maybeSingle();
+    try { console.log('[supabase.getPost] exact result', { error: res?.error, data: !!res?.data }); } catch (e) {}
+    if (!res.error && res.data) {
+      logSupabaseError("getPost", res);
+      return mapRowToHydratedPost(res.data) as any;
+    }
+
+    // If candidateId is a short prefix (<= 12 chars), try prefix match
+    if (!res.data && candidateId.length <= 12) {
+      try {
+        try { console.log(`[supabase.getPost] trying prefix match id like ${candidateId}%`); } catch (e) {}
+        const prefRes: any = await sb.from("posts").select("*, users:users(*), comments:comments(id)").ilike("id", `${candidateId}%`).limit(1).maybeSingle();
+        try { console.log('[supabase.getPost] prefix result', { error: prefRes?.error, data: !!prefRes?.data }); } catch (e) {}
+        logSupabaseError("getPost(prefix)", prefRes);
+        if (!prefRes.error && prefRes.data) return mapRowToHydratedPost(prefRes.data) as any;
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // lastly, try exact match on the original raw value
+    try {
+      try { console.log(`[supabase.getPost] trying raw exact id=${raw}`); } catch (e) {}
+      const rawRes: any = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("id", raw).limit(1).maybeSingle();
+      try { console.log('[supabase.getPost] raw result', { error: rawRes?.error, data: !!rawRes?.data }); } catch (e) {}
+      logSupabaseError("getPost(raw)", rawRes);
+      if (!rawRes.error && rawRes.data) return mapRowToHydratedPost(rawRes.data) as any;
+    } catch (e) {
+      // ignore
+    }
+    return null;
   },
 
   async updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }) {

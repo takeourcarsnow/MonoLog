@@ -211,8 +211,8 @@ export function ProfileView({ userId }: { userId?: string }) {
           const urls = (p as any).imageUrls || ((p as any).imageUrl ? [(p as any).imageUrl] : []);
           const src = urls[0] || (p as any).imageUrl || "";
           const alts = Array.isArray(p.alt) ? p.alt : [p.alt || ""];
-          return (
-            <Link key={p.id} className="tile" href={`/post/${p.id}`}>
+            return (
+            <Link key={p.id} className="tile" href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`}>
               <img loading="lazy" src={src} alt={alts[0] || "Photo"} />
             </Link>
           );

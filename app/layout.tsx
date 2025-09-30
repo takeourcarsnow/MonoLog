@@ -44,6 +44,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           id="theme-init"
           dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);}else{try{var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');document.documentElement.setAttribute('data-theme',(m&&m.matches)?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} }catch(e){} })();` }}
         />
+        <script
+          id="runtime-supabase-init"
+          dangerouslySetInnerHTML={{ __html: (function(){
+            try {
+              // Server-rendered injection of public Supabase values. These are
+              // safe to expose to the browser (anon key + url). Avoids fetch
+              // race on first load.
+              const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+              const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+              const s = JSON.stringify({ url: url || null, anonKey: anon || null });
+              return "(function(){try{(window).__MONOLOG_RUNTIME_SUPABASE__=" + s + "; if(window.__MONOLOG_RUNTIME_SUPABASE__ && (window.__MONOLOG_RUNTIME_SUPABASE__.url || window.__MONOLOG_RUNTIME_SUPABASE__.anonKey)){console.log('[runtime-init] injected runtime supabase keys (server)');} }catch(e){} })();";
+            } catch (e) {
+              return '';
+            }
+          })() }}
+        />
       </head>
       <body>
         <a href="#view" className="skip-link">Skip to content</a>

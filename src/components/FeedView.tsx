@@ -118,7 +118,7 @@ export function FeedView() {
       return (
         <div className="grid">
           {posts.map(p => (
-            <Link key={p.id} className="tile" href={`/post/${p.id}`}>
+              <Link key={p.id} className="tile" href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`}>
               <img
                 loading="lazy"
                 src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}

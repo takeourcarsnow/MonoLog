@@ -25,6 +25,20 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const [scale, setScale] = useState(1);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
+  const txRef = useRef(0);
+  const tyRef = useRef(0);
+
+  type Updater = number | ((prev: number) => number);
+  const setTxSafe = (v: Updater) => setTx((prev) => {
+    const next = typeof v === 'function' ? (v as (p: number) => number)(prev) : v;
+    txRef.current = next;
+    return next;
+  });
+  const setTySafe = (v: Updater) => setTy((prev) => {
+    const next = typeof v === 'function' ? (v as (p: number) => number)(prev) : v;
+    tyRef.current = next;
+    return next;
+  });
   const [isPanning, setIsPanning] = useState(false);
   const [isTile, setIsTile] = useState(false);
   const doubleTapRef = useRef<number | null>(null);
@@ -76,8 +90,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     lastTouchDist.current = null;
     lastPan.current = { x: 0, y: 0 };
     setScale(1);
-    setTx(0);
-    setTy(0);
+    setTxSafe(0);
+    setTySafe(0);
     setIsPanning(false);
   };
 
@@ -146,7 +160,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       const dist = getTouchDist(e.touches[0], e.touches[1]);
       const ratio = dist / lastTouchDist.current;
       let next = clamp(startScale.current * ratio, 1, maxScale);
-      setScale(next);
+  setScale(next);
       // attempt to keep midpoint stable
       const c = getCentroid(e.touches[0], e.touches[1]);
       const local = toLocalPoint(c.x, c.y);
@@ -155,8 +169,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       const dy = local.y * (1 - next / startScale.current);
       // clamp to dynamic bounds
       const b = getBoundsForScale(next);
-      setTx(() => clamp(pinchStartPan.current.x + dx, -b.maxTx, b.maxTx));
-      setTy(() => clamp(pinchStartPan.current.y + dy, -b.maxTy, b.maxTy));
+      setTxSafe(() => clamp(pinchStartPan.current.x + dx, -b.maxTx, b.maxTx));
+      setTySafe(() => clamp(pinchStartPan.current.y + dy, -b.maxTy, b.maxTy));
     } else if (e.touches.length === 1 && isPanning) {
       e.preventDefault();
       const cur = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -165,8 +179,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       const b = getBoundsForScale(scale);
       const nextTx = clamp(lastPan.current.x + dx, -b.maxTx - 100, b.maxTx + 100);
       const nextTy = clamp(lastPan.current.y + dy, -b.maxTy - 100, b.maxTy + 100);
-      setTx(nextTx);
-      setTy(nextTy);
+  setTxSafe(nextTx);
+  setTySafe(nextTy);
 
       // velocity tracking (px/sec)
       const now = Date.now();
@@ -193,8 +207,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       // perform fling if velocity present, but only if not resetting
       setIsPanning(false);
       if (wasPinched.current) {
-        reset();
+        // A pinch gesture just finished. Don't unconditionally reset the zoom
+        // — keep the new scale and ensure translations are within bounds.
         wasPinched.current = false;
+        // If the scale is effectively back to 1, reset state; otherwise
+        // spring the translation back into valid bounds for the current scale.
+        if (scale <= 1.05) reset();
+        else springBack();
       } else {
         const v = velocity.current;
         const speed = Math.hypot(v.x, v.y);
@@ -211,7 +230,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     if (e.touches.length === 1) {
       // set up pan state so the remaining finger continues to pan smoothly
       setIsPanning(true);
-      lastPan.current = { x: tx, y: ty };
+      lastPan.current = { x: txRef.current, y: tyRef.current };
       startPan.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       // ensure future pinch calculations anchor to the current scale
       startScale.current = scale;
@@ -236,7 +255,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     (e.target as Element).setPointerCapture?.(e.pointerId);
     pointerActive.current = true;
     setIsPanning(true);
-    lastPan.current = { x: tx, y: ty };
+    lastPan.current = { x: txRef.current, y: tyRef.current };
     startPan.current = { x: e.clientX, y: e.clientY };
     lastMovePos.current = { x: e.clientX, y: e.clientY };
     lastMoveTs.current = Date.now();
@@ -252,8 +271,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     const b = getBoundsForScale(scale);
     const nextTx = clamp(lastPan.current.x + dx, -b.maxTx - 100, b.maxTx + 100);
     const nextTy = clamp(lastPan.current.y + dy, -b.maxTy - 100, b.maxTy + 100);
-    setTx(nextTx);
-    setTy(nextTy);
+  setTxSafe(nextTx);
+  setTySafe(nextTy);
 
     // velocity tracking
     const now = Date.now();
@@ -284,18 +303,18 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   function springBack() {
     // animate tx/ty back within hard bounds
     const b = getBoundsForScale(scale);
-    const targetTx = clamp(tx, -b.maxTx, b.maxTx);
-    const targetTy = clamp(ty, -b.maxTy, b.maxTy);
-    const startTx = tx;
-    const startTy = ty;
+    const targetTx = clamp(txRef.current, -b.maxTx, b.maxTx);
+    const targetTy = clamp(tyRef.current, -b.maxTy, b.maxTy);
+    const startTx = txRef.current;
+    const startTy = tyRef.current;
     const dur = 300;
     const start = performance.now();
     if (flingRaf.current) cancelAnimationFrame(flingRaf.current);
     function step(now: number) {
       const t = Math.min(1, (now - start) / dur);
       const ease = 1 - Math.pow(1 - t, 3);
-      setTx(startTx + (targetTx - startTx) * ease);
-      setTy(startTy + (targetTy - startTy) * ease);
+      setTxSafe(startTx + (targetTx - startTx) * ease);
+      setTySafe(startTy + (targetTy - startTy) * ease);
       if (t < 1) flingRaf.current = requestAnimationFrame(step);
       else flingRaf.current = null;
     }
@@ -312,16 +331,16 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       const dt = Math.max(0, (now - prev) / 1000);
       prev = now;
       // move
-      const nextTx = tx + currVx * dt;
-      const nextTy = ty + currVy * dt;
+      const nextTx = txRef.current + currVx * dt;
+      const nextTy = tyRef.current + currVy * dt;
       const b = getBoundsForScale(scale);
       // allow small overshoot
       const softX = b.maxTx + 100;
       const softY = b.maxTy + 100;
       const clampedTx = clamp(nextTx, -softX, softX);
       const clampedTy = clamp(nextTy, -softY, softY);
-      setTx(clampedTx);
-      setTy(clampedTy);
+      setTxSafe(clampedTx);
+      setTySafe(clampedTy);
       // apply decay
       currVx *= Math.pow(decay, dt * 60);
       currVy *= Math.pow(decay, dt * 60);

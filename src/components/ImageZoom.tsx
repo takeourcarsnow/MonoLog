@@ -14,6 +14,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const startPan = useRef({ x: 0, y: 0 });
   const pinchStartPan = useRef({ x: 0, y: 0 });
   const lastTouchDist = useRef<number | null>(null);
+  const lastPinchAt = useRef<number | null>(null);
   const startScale = useRef(1);
   const scaleRef = useRef(1);
   const natural = useRef({ w: 0, h: 0 });
@@ -136,7 +137,12 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     if (!containerRef.current) return;
     if (e.touches.length === 2) {
       // begin pinch
+      // prevent default behaviour and stop propagation so parent carousels / links
+      // don't begin their own touch handling (which can cause the carousel to
+      // jump or trigger navigation).
       e.preventDefault();
+      try { e.stopPropagation(); } catch (_) { /* ignore */ }
+      lastPinchAt.current = Date.now();
       isPinching.current = true;
       wasPinched.current = true;
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
@@ -152,7 +158,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const onTouchMove: React.TouchEventHandler = (e) => {
     if (!containerRef.current) return;
     if (e.touches.length === 2 && lastTouchDist.current != null) {
+      // keep this gesture private to the image zoom
       e.preventDefault();
+      try { e.stopPropagation(); } catch (_) { /* ignore */ }
       const dist = getTouchDist(e.touches[0], e.touches[1]);
       const ratio = dist / lastTouchDist.current;
       let next = clamp(startScale.current * ratio, 1, maxScale);
@@ -177,6 +185,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     // to 1 or 0), stop the pinch entirely and reset back to the non-zoomed
     // position per user preference.
     if (wasPinched.current && e.touches.length < 2) {
+      // mark the time of the pinch so we can suppress click/navigation that
+      // sometimes follows touchend on some browsers/devices
+      lastPinchAt.current = Date.now();
       wasPinched.current = false;
       isPinching.current = false;
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch (_) {}
@@ -348,6 +359,15 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   return (
     <div
       ref={containerRef}
+      // block clicks that occur immediately after a pinch so parent Links
+      // don't interpret the gesture as a tap/click which would navigate or
+      // reset the carousel. We use a short time window to allow normal clicks.
+      onClick={(e) => {
+        const t = lastPinchAt.current;
+        if (t && Date.now() - t < 700) {
+          try { e.stopPropagation(); e.preventDefault(); } catch (_) {}
+        }
+      }}
       className={className}
       style={{
         overflow: "hidden",

@@ -13,13 +13,40 @@ export async function POST(req: Request) {
     // Ensure a minimal profile exists for the actor so the comment list
     // can join a users row and show a username/displayName instead of a generic fallback.
     try {
-      const up = {
-        id: actorId,
-        username: String(actorId).slice(0, 8),
-        display_name: 'User',
-      } as any;
-      // upsert will create a row if missing; ignore errors
-      await sb.from('users').upsert(up);
+      // Don't clobber an existing profile. If a users row already exists, skip upsert.
+      const { data: existing, error: existErr } = await sb.from('users').select('id,username,display_name,avatar_url').eq('id', actorId).limit(1).maybeSingle();
+      if (!existErr && existing) {
+        // we already have a profile row; leave it alone
+      } else {
+        // Try to enrich profile from Auth user metadata when available
+        let username = String(actorId).slice(0, 8);
+        let displayName = 'User';
+        let avatarUrl: string | undefined = undefined;
+        try {
+          // admin.getUserById is available when using service role client; shape may vary
+          const maybe = await (sb as any).auth?.admin?.getUserById?.(actorId);
+          const authUser = maybe?.data?.user || maybe?.data || null;
+          if (authUser) {
+            // Try common metadata paths
+            const md = authUser.user_metadata || authUser.raw_user_meta_data || authUser.raw_app_meta_data || {};
+            if (md) {
+              if (md.username) username = md.username;
+              if (md.name) displayName = md.name;
+              if (md.avatar_url) avatarUrl = md.avatar_url;
+              if (md.avatarUrl) avatarUrl = avatarUrl || md.avatarUrl;
+            }
+            // fallback to email-based username
+            if ((!md || !md.username) && authUser.email) username = authUser.email.split('@')[0];
+          }
+        } catch (e) {
+          // ignore admin fetch errors
+        }
+
+        const up: any = { id: actorId, username, display_name: displayName };
+        if (avatarUrl) up.avatar_url = avatarUrl;
+        // only create the minimal profile when missing
+        try { await sb.from('users').upsert(up); } catch (e) { /* ignore */ }
+      }
     } catch (e) {
       // ignore
     }

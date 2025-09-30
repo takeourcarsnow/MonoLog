@@ -11,10 +11,26 @@ let authStateSub: any = null;
 
 function getClient() {
   if (supabase) return supabase;
-  if (!SUPABASE.url || !SUPABASE.anonKey) {
+  // Prefer build-time NEXT_PUBLIC_* values, but if those are not present (for
+  // example when the client bundle was built before .env.local existed), allow
+  // a runtime injection via window.__MONOLOG_RUNTIME_SUPABASE__ which is set
+  // by the runtime override helper. This is safe because the anon key and URL
+  // are public values intended for client-side use.
+  let url = SUPABASE.url;
+  let anonKey = SUPABASE.anonKey;
+  try {
+    if ((!url || !anonKey) && typeof window !== 'undefined' && (window as any).__MONOLOG_RUNTIME_SUPABASE__) {
+      const r = (window as any).__MONOLOG_RUNTIME_SUPABASE__;
+      url = url || r.url || '';
+      anonKey = anonKey || r.anonKey || '';
+    }
+  } catch (e) {
+    // ignore
+  }
+  if (!url || !anonKey) {
     throw new Error("Supabase not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
   }
-  supabase = createClient(SUPABASE.url, SUPABASE.anonKey);
+  supabase = createClient(url, anonKey);
   return supabase;
 }
 

@@ -3,7 +3,14 @@ type Mode = "local" | "supabase";
 export const CONFIG = {
   appName: "MonoLog",
   // allow switching the backend from the environment (use NEXT_PUBLIC_MODE in Vercel)
-  mode: (process?.env?.NEXT_PUBLIC_MODE as Mode) || ("local" as const),
+  // If a Supabase URL is present in NEXT_PUBLIC_SUPABASE_URL, prefer running in
+  // "supabase" mode locally so dev can exercise the real backend without
+  // manually setting NEXT_PUBLIC_MODE.
+  mode: (() => {
+    const envMode = process?.env?.NEXT_PUBLIC_MODE as Mode | undefined;
+    const hasSupabase = Boolean(process?.env?.NEXT_PUBLIC_SUPABASE_URL);
+    return envMode || (hasSupabase ? ("supabase" as const) : ("local" as const));
+  })(),
   // disable demo seeding by default; set to true locally when you want seeded content
   seedDemoData: false,
   dailyPostingLimit: 1,
@@ -25,7 +32,7 @@ if (process.env.NODE_ENV !== 'production') {
   try {
     // only print whether the URL is present, not the value
     // eslint-disable-next-line no-console
-    console.debug('[config] mode=%s, hasSupabaseUrl=%s', CONFIG.mode, SUPABASE.url ? 'yes' : 'no');
+    console.log('[config] mode=%s, hasSupabaseUrl=%s', CONFIG.mode, SUPABASE.url ? 'yes' : 'no');
   } catch (e) {
     // swallow errors
   }

@@ -197,10 +197,119 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     touchDeltaX.current = 0;
   };
 
+  // Prefer Pointer Events where available (covers mouse + touch + pen) and use
+  // pointer capture so we continue receiving move/up even if the pointer
+  // leaves the element. Fall back to touch handlers on older browsers.
+  const pointerSupported = typeof window !== 'undefined' && (window as any).PointerEvent !== undefined;
+  const draggingRef = useRef(false);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
+    // only primary
+    if (e.button !== 0) return;
+    touchStartX.current = e.clientX;
+    touchDeltaX.current = 0;
+    draggingRef.current = true;
+    // prevent text selection while dragging
+    try { document.body.style.userSelect = 'none'; document.body.style.cursor = 'grabbing'; } catch (_) { /* ignore */ }
+    const el = trackRef.current as any;
+    try { if (el && el.setPointerCapture) el.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!draggingRef.current || touchStartX.current == null) return;
+    e.preventDefault();
+    touchDeltaX.current = e.clientX - touchStartX.current;
+    if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
+  };
+
+  const finishPointerDrag = (clientX?: number) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    const delta = touchDeltaX.current;
+    const threshold = 40;
+    let target = index;
+    if (delta > threshold) target = Math.max(0, index - 1);
+    else if (delta < -threshold) target = Math.min(imageUrls.length - 1, index + 1);
+    setIndex(target);
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+    try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) { /* ignore */ }
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    const el = trackRef.current as any;
+    try { if (el && el.releasePointerCapture) el.releasePointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+    finishPointerDrag();
+  };
+
+  const onPointerCancel = (e: React.PointerEvent) => {
+    const el = trackRef.current as any;
+    try { if (el && el.releasePointerCapture) el.releasePointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+    // snap back
+    finishPointerDrag();
+  };
+
+  // Fallback for browsers without PointerEvent: attach document-level mouse listeners
+  const handleDocMouseMove = (e: MouseEvent) => {
+    if (!draggingRef.current || touchStartX.current == null) return;
+    e.preventDefault();
+    touchDeltaX.current = e.clientX - touchStartX.current;
+    if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
+  };
+
+  const handleDocMouseUp = (e: MouseEvent) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    const delta = touchDeltaX.current;
+    const threshold = 40;
+    let target = index;
+    if (delta > threshold) target = Math.max(0, index - 1);
+    else if (delta < -threshold) target = Math.min(imageUrls.length - 1, index + 1);
+    setIndex(target);
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+    try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) { /* ignore */ }
+    document.removeEventListener('mousemove', handleDocMouseMove);
+    document.removeEventListener('mouseup', handleDocMouseUp);
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
+    if (e.button !== 0) return;
+    touchStartX.current = e.clientX;
+    touchDeltaX.current = 0;
+    draggingRef.current = true;
+    try { document.body.style.userSelect = 'none'; document.body.style.cursor = 'grabbing'; } catch (_) { /* ignore */ }
+    document.addEventListener('mousemove', handleDocMouseMove);
+    document.addEventListener('mouseup', handleDocMouseUp);
+  };
+
+  // Ensure cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (draggingRef.current) {
+        draggingRef.current = false;
+        try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) { /* ignore */ }
+        document.removeEventListener('mousemove', handleDocMouseMove);
+        document.removeEventListener('mouseup', handleDocMouseUp);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // On post pages, disable carousel touch handling to allow app-level swipe navigation
   // If `allowCarouselTouch` is passed (PostView wants inner carousel to handle swipes),
   // enable the handlers even on post pages.
-  const carouselTouchProps = (pathname?.startsWith('/post/') && !allowCarouselTouch) ? {} : { onTouchStart, onTouchMove, onTouchEnd };
+  const carouselTouchProps = (pathname?.startsWith('/post/') && !allowCarouselTouch) ? {} : (
+    pointerSupported
+      ? { onPointerDown, onPointerMove, onPointerUp, onPointerCancel }
+      : { onTouchStart, onTouchMove, onTouchEnd, onMouseDown }
+  );
 
   return (
     <article className="card">
@@ -318,7 +427,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                   <div className="edge-area left" />
                   <div className="edge-area right" />
 
-                  <div className="carousel-track" ref={trackRef} {...carouselTouchProps} role="list">
+                  <div className="carousel-track" ref={trackRef} {...carouselTouchProps} role="list" style={{ touchAction: 'pan-y' }}>
                     {imageUrls.map((u: string, idx: number) => (
                       <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`${idx + 1} of ${imageUrls.length}`}>
                         <Link href={postHref} className="media-link">
@@ -327,6 +436,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                             src={u}
                             alt={alts[idx] || `Photo ${idx + 1}`}
                             onLoad={e => (e.currentTarget.classList.add("loaded"))}
+                            onDragStart={e => e.preventDefault()}
                           />
                         </Link>
                       </div>

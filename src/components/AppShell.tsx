@@ -23,6 +23,7 @@ import "swiper/css/virtual";
 export function AppShell({ children }: { children: React.ReactNode }) {
   "use client";
   const [ready, setReady] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
@@ -51,6 +52,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setReady(true);
       }
     })();
+    // detect touch-capable devices so we can disable desktop swiping
+    try {
+      const touch = typeof window !== 'undefined' && (
+        ('ontouchstart' in window) ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+        (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+      );
+      setIsTouchDevice(Boolean(touch));
+    } catch (e) {
+      setIsTouchDevice(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -88,7 +100,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               initialSlide={currentIndex}
               onSlideChange={handleSlideChange}
               touchStartPreventDefault={false}
-              simulateTouch={true}
+              // only allow touch/swipe interactions on touch-capable devices
+              simulateTouch={isTouchDevice}
+              allowTouchMove={isTouchDevice}
               resistance={false}
               shortSwipes={false}
               longSwipes={false}

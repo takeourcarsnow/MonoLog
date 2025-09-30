@@ -15,6 +15,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const pinchStartPan = useRef({ x: 0, y: 0 });
   const lastTouchDist = useRef<number | null>(null);
   const lastPinchAt = useRef<number | null>(null);
+  const pinchAnchorsRef = useRef<Array<{ el: HTMLElement; prev: string }>>([]);
   const startScale = useRef(1);
   const scaleRef = useRef(1);
   const natural = useRef({ w: 0, h: 0 });
@@ -147,6 +148,22 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       wasPinched.current = true;
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
       lastTouchDist.current = getTouchDist(e.touches[0], e.touches[1]);
+      // disable pointer events on relevant ancestor elements (link, carousel)
+      try {
+        const found: Array<HTMLElement> = [];
+        const anchor = containerRef.current.closest('a') as HTMLElement | null;
+        if (anchor) found.push(anchor);
+        const wrapper = containerRef.current.closest('.carousel-wrapper') as HTMLElement | null;
+        if (wrapper) found.push(wrapper);
+        const track = containerRef.current.closest('.carousel-track') as HTMLElement | null;
+        if (track) found.push(track);
+        const mediaLink = containerRef.current.closest('.media-link') as HTMLElement | null;
+        if (mediaLink) found.push(mediaLink);
+        pinchAnchorsRef.current = found.map(el => ({ el, prev: el.style.pointerEvents || '' }));
+        for (const a of pinchAnchorsRef.current) {
+          a.el.style.pointerEvents = 'none';
+        }
+      } catch (_) { /* ignore */ }
       startScale.current = scale;
       // record pan at the moment pinch starts so we can anchor translations
       pinchStartPan.current = { x: tx, y: ty };
@@ -191,6 +208,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       wasPinched.current = false;
       isPinching.current = false;
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch (_) {}
+      // restore any modified ancestor pointer-events
+      try {
+        for (const a of pinchAnchorsRef.current) {
+          a.el.style.pointerEvents = a.prev || '';
+        }
+        pinchAnchorsRef.current = [];
+      } catch (_) {}
       // Reset will clear scale and translations and end any pan state.
       reset();
       return;
@@ -201,6 +225,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
         isPinching.current = false;
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch (_) {}
       }
+      // ensure ancestor pointer-events restored in case of other paths
+      try {
+        for (const a of pinchAnchorsRef.current) {
+          a.el.style.pointerEvents = a.prev || '';
+        }
+        pinchAnchorsRef.current = [];
+      } catch (_) {}
       // perform fling if velocity present, but only if not resetting
       setIsPanning(false);
         if (wasPinched.current) {

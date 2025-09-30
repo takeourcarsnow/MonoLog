@@ -22,8 +22,8 @@ export function Header() {
         </button>
         <div className="header-actions" id="header-actions">
           <Link href="/about" className="btn icon" title="About MonoLog" aria-label="About MonoLog">ℹ️</Link>
-          <Link href="/favorites" className="btn" title="Favorites" aria-label="Favorites">⭐</Link>
           <ThemeToggle />
+          <Link href="/favorites" className="btn" title="Favorites" aria-label="Favorites">⭐</Link>
           <AccountSwitcher />
         </div>
       </div>

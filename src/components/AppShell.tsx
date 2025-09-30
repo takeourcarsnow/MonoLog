@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Header } from "./Header";
 import { NavBar } from "./NavBar";
 import { initTheme } from "@/lib/theme";
@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // we attach native handlers to control passive option on touchmove
 
-  async function animateAndNavigate(to: string, dir: 'left' | 'right') {
+  const animateAndNavigate = useCallback(async (to: string, dir: 'left' | 'right') => {
     const el = document.getElementById('view');
     if (!el) { router.push(to); return; }
     // add a class for animation
@@ -39,9 +39,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     router.push(to);
     // cleanup classes after navigation (navigation will re-render but be defensive)
     try { el.classList.remove('slide-left', 'slide-right'); } catch (e) { /* ignore */ }
-  }
+  }, [router]);
 
-  function handleSwipe(dx: number) {
+  const handleSwipe = useCallback((dx: number) => {
     const idx = swipeTabs.indexOf(pathname || "");
     if (idx === -1) return;
     // swipe left (negative dx) -> next tab; swipe right -> previous tab
@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     } else if (dx > threshold && idx > 0) {
       animateAndNavigate(swipeTabs[idx - 1], 'right');
     }
-  }
+  }, [pathname, animateAndNavigate]);
 
   function onTouchEnd(e: React.TouchEvent) {
     // kept for compatibility if ever used as React handler; no-op here
@@ -154,7 +154,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       el.removeEventListener('touchmove', touchMove as EventListener);
       el.removeEventListener('touchend', touchEnd);
     };
-  }, [pathname]);
+  }, [pathname, handleSwipe]);
 
   return (
     <ToastProvider>

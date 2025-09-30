@@ -29,6 +29,67 @@ type Props = {
   onApply: (dataUrl: string) => void;
 };
 
+// simple linear interpolation helper for colors (hex) — returns a CSS color string
+function lerpColor(hexA: string, hexB: string, t: number) {
+  const a = parseInt(hexA.replace('#',''), 16);
+  const b = parseInt(hexB.replace('#',''), 16);
+  const ar = (a >> 16) & 0xff, ag = (a >> 8) & 0xff, ab = a & 0xff;
+  const br = (b >> 16) & 0xff, bg = (b >> 8) & 0xff, bb = b & 0xff;
+  const rr = Math.round(ar + (br - ar) * t);
+  const rg = Math.round(ag + (bg - ag) * t);
+  const rb = Math.round(ab + (bb - ab) * t);
+  return `rgb(${rr}, ${rg}, ${rb})`;
+}
+
+function exposureColor(v: number) {
+  // v range 0.5..1.8 -> normalize to 0..1
+  const t = Math.max(0, Math.min(1, (v - 0.5) / (1.8 - 0.5)));
+  return lerpColor('#fff6db', '#ffd166', t);
+}
+
+function contrastColor(v: number) {
+  const t = Math.max(0, Math.min(1, (v - 0.5) / (1.8 - 0.5)));
+  return lerpColor('#fff3e6', '#ff9f43', t);
+}
+
+function saturationColor(v: number) {
+  const t = Math.max(0, Math.min(1, v / 2));
+  return lerpColor('#ffe9e9', '#ff6b6b', t);
+}
+
+function temperatureColor(v: number) {
+  // v range -100..100 -> 0..1 (cold to warm)
+  const t = Math.max(0, Math.min(1, (v + 100) / 200));
+  return lerpColor('#66d1ff', '#ffb86b', t);
+}
+
+// ARIA live announcer — updates a hidden live region to announce semantic direction
+const ariaLiveId = 'imgedit-aria-live';
+function ensureAriaLive() {
+  if (typeof document === 'undefined') return null;
+  let el = document.getElementById(ariaLiveId) as HTMLElement | null;
+  if (!el) {
+    el = document.createElement('div');
+    el.id = ariaLiveId;
+    el.setAttribute('aria-live', 'polite');
+    el.setAttribute('aria-atomic', 'true');
+    el.className = 'sr-only';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function announceDirection(control: string, prev: number, next: number) {
+  const el = ensureAriaLive();
+  if (!el) return;
+  let dir = 'unchanged';
+  if (next > prev) dir = 'increased';
+  else if (next < prev) dir = 'decreased';
+  // give a short semantic phrase
+  const label = control === 'temperature' ? (next > prev ? 'warmer' : (next < prev ? 'cooler' : 'unchanged')) : (dir === 'increased' ? 'higher' : dir === 'decreased' ? 'lower' : 'unchanged');
+  el.textContent = `${control} ${label}`;
+}
+
 // central filter presets map (CSS filter fragments). Add new presets here.
 const FILTER_PRESETS: Record<string, string> = {
   none: '',
@@ -56,10 +117,11 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     startX: number;
     startY: number;
     mode: "pan" | "crop";
-    action?: "move" | "draw";
+    action?: "move" | "draw" | "resize";
     origSel?: { x: number; y: number; w: number; h: number };
     anchorX?: number;
     anchorY?: number;
+    handleIndex?: number;
   }>(null);
   const [sel, setSel] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [exposure, setExposure] = useState<number>(1);
@@ -71,6 +133,15 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   const [frameThickness, setFrameThickness] = useState<number>(0); // fraction of min(image dim) — default disabled
   const [controlsOpen, setControlsOpen] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects' | 'crop'>('basic');
+  const ASPECT_PRESETS = [
+    { label: 'Free', v: null },
+    { label: '16:9', v: 16 / 9 },
+    { label: '4:3', v: 4 / 3 },
+    { label: '3:2', v: 3 / 2 },
+    { label: '1:1', v: 1 },
+    { label: '4:5', v: 4 / 5 }
+  ];
+  const [presetIndex, setPresetIndex] = useState<number>(0);
   const [selectedFilter, setSelectedFilter] = useState<string>('none');
   const [filterStrength, setFilterStrength] = useState<number>(1); // 0..1
   const [grain, setGrain] = useState<number>(0); // 0..1
@@ -178,12 +249,23 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   function computeImageLayout() {
     const canvas = canvasRef.current; const img = imgRef.current;
     if (!canvas || !img) return null as any;
-    const rect = canvas.getBoundingClientRect();
-    const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
-    const dispW = img.naturalWidth * baseScale;
-    const dispH = img.naturalHeight * baseScale;
-    const left = (rect.width - dispW) / 2;
-    const top = (rect.height - dispH) / 2;
+    // Use clientWidth/clientHeight (CSS pixels) rather than getBoundingClientRect which can be affected
+    // by transforms (scale/translate) in the surrounding UI. Using client sizes gives a stable layout
+    // for the canvas drawing coordinates.
+    const cssW = canvas.clientWidth || Math.max(100, canvas.width / (window.devicePixelRatio || 1));
+    const cssH = canvas.clientHeight || Math.max(100, canvas.height / (window.devicePixelRatio || 1));
+  // add an inset so the image appears slightly smaller and doesn't hug the edges
+  // make padding responsive: smaller padding on narrow viewports so the preview remains large enough
+  const padRatio = cssW <= 420 ? 0.06 : 0.12; // 6% on small screens, 12% on larger
+  const availW = Math.max(1, cssW * (1 - padRatio * 2));
+  const availH = Math.max(1, cssH * (1 - padRatio * 2));
+  const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
+  const dispW = img.naturalWidth * baseScale;
+  const dispH = img.naturalHeight * baseScale;
+    const left = (cssW - dispW) / 2;
+    const top = (cssH - dispH) / 2;
+    // create a small rect-like object (width/height) so callers can use info.rect.width/height
+    const rect = { width: cssW, height: cssH, left: 0, top: 0 } as DOMRect;
     // return layout info; do NOT set state here (caller should set state and draw with info)
     return { rect, baseScale, dispW, dispH, left, top };
   }
@@ -195,12 +277,25 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       const dpr = window.devicePixelRatio || 1;
       // use clientWidth/clientHeight to avoid transform/scale issues from parent modals
       const contW = Math.max(100, Math.round(cont.clientWidth));
-      // pick a responsive height so editor fits smaller screens
-      const targetHeight = Math.max(180, Math.round(Math.min(window.innerHeight * 0.6, 480)));
+      // pick a responsive height so editor fits smaller screens (fallback)
+      const targetMax = Math.round(Math.min(window.innerHeight * 0.6, 480));
+      const targetHeight = Math.max(180, targetMax);
+      // If we have a loaded source image, prefer a canvas height that matches
+      // the image aspect ratio (so the photo fills the canvas without extra
+      // top/bottom letterboxing). Clamp to the targetHeight bounds.
+      let finalHeight = targetHeight;
+      const img = imgRef.current;
+      if (img && img.naturalWidth && img.naturalHeight) {
+        const imgAspect = img.naturalHeight / img.naturalWidth;
+        // compute height that preserves image aspect for current width
+        const aspectHeight = Math.max(100, Math.round(contW * imgAspect));
+        // prefer image-based height but clamp to a reasonable maximum so panels remain visible
+        finalHeight = Math.min(targetHeight, Math.max(140, aspectHeight));
+      }
       c.width = Math.max(100, Math.round(contW * dpr));
-      c.height = Math.max(100, Math.round(targetHeight * dpr));
+      c.height = Math.max(100, Math.round(finalHeight * dpr));
       c.style.width = `${contW}px`;
-      c.style.height = `${targetHeight}px`;
+      c.style.height = `${finalHeight}px`;
       // recompute image layout after resize so image stays centered
         const info = computeImageLayout();
         if (info) {
@@ -213,7 +308,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     // initial sizing + a couple of extra recomputes for animated modals / theme toggles
     resize();
     requestAnimationFrame(() => resize());
-    const t = window.setTimeout(() => resize(), 120);
+  const t = window.setTimeout(() => resize(), 120);
+  const t2 = window.setTimeout(() => resize(), 340);
 
     // also listen to container size changes via ResizeObserver so opening animations or theme changes reflow correctly
     let ro: ResizeObserver | null = null;
@@ -228,6 +324,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
 
     return () => {
       window.clearTimeout(t);
+      window.clearTimeout(t2);
       if (ro) ro.disconnect();
       else window.removeEventListener("resize", resize);
     };
@@ -247,11 +344,17 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     if (info) {
       left = info.left; top = info.top; dispW = info.dispW; dispH = info.dispH;
     } else {
-      const rect = canvas.getBoundingClientRect();
-      const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
-      dispW = img.naturalWidth * baseScale;
-      dispH = img.naturalHeight * baseScale;
-      left = offset.x; top = offset.y;
+        // Try to compute current layout from the canvas to avoid using a stale `offset` value
+        const computed = computeImageLayout();
+        if (computed) {
+          left = computed.left; top = computed.top; dispW = computed.dispW; dispH = computed.dispH;
+        } else {
+          const rect = canvas.getBoundingClientRect();
+          const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+          dispW = img.naturalWidth * baseScale;
+          dispH = img.naturalHeight * baseScale;
+          left = offset.x; top = offset.y;
+        }
     }
 
   // Apply color adjustments via canvas filter for live preview
@@ -371,18 +474,39 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = Math.min(0.45, curMatte * 0.45); ctx.fillStyle = 'rgba(25,25,25,0.04)'; ctx.fillRect(imgLeft, imgTop, imgW, imgH); ctx.restore();
     }
   }
-    // optional vignette overlay
-    if (curVignette > 0) {
-      const r = info?.rect || canvas.getBoundingClientRect();
-      const g = ctx.createRadialGradient(r.width / 2, r.height / 2, Math.min(r.width, r.height) * 0.2, r.width / 2, r.height / 2, Math.max(r.width, r.height) * 0.8);
-      g.addColorStop(0, `rgba(0,0,0,0)`);
-      g.addColorStop(1, `rgba(0,0,0,${Math.min(0.85, curVignette)})`);
-      ctx.save();
-      ctx.globalCompositeOperation = 'multiply';
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, r.width, r.height);
-      ctx.restore();
-    }
+    // optional vignette overlay — apply only over the displayed image area
+      if (curVignette > 0) {
+        try {
+          // center the radial gradient on the image display area
+          const cx = imgLeft + imgW / 2;
+          const cy = imgTop + imgH / 2;
+          const innerR = Math.min(imgW, imgH) * 0.2;
+          const outerR = Math.max(imgW, imgH) * 0.8;
+          const g = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
+          g.addColorStop(0, 'rgba(0,0,0,0)');
+          g.addColorStop(1, `rgba(0,0,0,${Math.min(0.85, curVignette)})`);
+          ctx.save();
+          ctx.globalCompositeOperation = 'multiply';
+          // clip to the image rectangle so the vignette won't darken the surrounding UI
+          ctx.beginPath();
+          ctx.rect(imgLeft, imgTop, imgW, imgH);
+          ctx.clip();
+          ctx.fillStyle = g;
+          ctx.fillRect(imgLeft, imgTop, imgW, imgH);
+          ctx.restore();
+        } catch (e) {
+          // fallback: if anything goes wrong, apply a conservative vignette over the canvas
+          const r = info?.rect || canvas.getBoundingClientRect();
+          const g = ctx.createRadialGradient(r.width / 2, r.height / 2, Math.min(r.width, r.height) * 0.2, r.width / 2, r.height / 2, Math.max(r.width, r.height) * 0.8);
+          g.addColorStop(0, `rgba(0,0,0,0)`);
+          g.addColorStop(1, `rgba(0,0,0,${Math.min(0.85, curVignette)})`);
+          ctx.save();
+          ctx.globalCompositeOperation = 'multiply';
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, r.width, r.height);
+          ctx.restore();
+        }
+      }
 
     // grain/noise overlay (preview)
     if (curGrain > 0) {
@@ -449,6 +573,23 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       // @ts-ignore
       ctx.fill("evenodd");
       ctx.restore();
+
+      // Draw resize handles
+      const handleSize = 8;
+      ctx.fillStyle = "#00aaff";
+      const handles = [
+        { x: sel.x - handleSize/2, y: sel.y - handleSize/2 }, // top-left
+        { x: sel.x + sel.w - handleSize/2, y: sel.y - handleSize/2 }, // top-right
+        { x: sel.x - handleSize/2, y: sel.y + sel.h - handleSize/2 }, // bottom-left
+        { x: sel.x + sel.w - handleSize/2, y: sel.y + sel.h - handleSize/2 }, // bottom-right
+        { x: sel.x + sel.w/2 - handleSize/2, y: sel.y - handleSize/2 }, // top
+        { x: sel.x + sel.w/2 - handleSize/2, y: sel.y + sel.h - handleSize/2 }, // bottom
+        { x: sel.x - handleSize/2, y: sel.y + sel.h/2 - handleSize/2 }, // left
+        { x: sel.x + sel.w - handleSize/2, y: sel.y + sel.h/2 - handleSize/2 }, // right
+      ];
+      handles.forEach(h => {
+        ctx.fillRect(h.x, h.y, handleSize, handleSize);
+      });
     }
   }
 
@@ -490,7 +631,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     if (Math.abs(grain) > 0.001) return true;
     if (frameThickness > 0) return true;
     return false;
-  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain]);
+  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, frameThickness]);
 
   // slider background helper: colored fill up to percentage
   function rangeBg(value: number, min: number, max: number, leftColor = '#1e90ff', rightColor = '#e6e6e6') {
@@ -511,6 +652,27 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       ev.stopPropagation?.();
       try { (ev.target as Element).setPointerCapture(ev.pointerId); } catch {}
       const p = getPointerPos(ev);
+      // Check for resize handles first
+      if (sel) {
+        const handleSize = 8;
+        const handles = [
+          { x: sel.x - handleSize/2, y: sel.y - handleSize/2 },
+          { x: sel.x + sel.w - handleSize/2, y: sel.y - handleSize/2 },
+          { x: sel.x - handleSize/2, y: sel.y + sel.h - handleSize/2 },
+          { x: sel.x + sel.w - handleSize/2, y: sel.y + sel.h - handleSize/2 },
+          { x: sel.x + sel.w/2 - handleSize/2, y: sel.y - handleSize/2 },
+          { x: sel.x + sel.w/2 - handleSize/2, y: sel.y + sel.h - handleSize/2 },
+          { x: sel.x - handleSize/2, y: sel.y + sel.h/2 - handleSize/2 },
+          { x: sel.x + sel.w - handleSize/2, y: sel.y + sel.h/2 - handleSize/2 },
+        ];
+        for (let i = 0; i < handles.length; i++) {
+          const h = handles[i];
+          if (p.x >= h.x && p.x <= h.x + handleSize && p.y >= h.y && p.y <= h.y + handleSize) {
+            dragging.current = { startX: p.x, startY: p.y, mode: 'crop', action: 'resize', handleIndex: i, origSel: { ...sel } };
+            return;
+          }
+        }
+      }
       // If clicked inside selection, prepare to move; otherwise start drawing a new selection
       if (sel && p.x >= sel.x && p.x <= sel.x + sel.w && p.y >= sel.y && p.y <= sel.y + sel.h) {
         dragging.current = { startX: p.x, startY: p.y, mode: 'crop', action: 'move', origSel: { ...sel }, anchorX: p.x - sel.x, anchorY: p.y - sel.y };
@@ -544,6 +706,67 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
           const cx = Math.min(Math.max(nx, imgRect.x), Math.max(maxX, imgRect.x));
           const cy = Math.min(Math.max(ny, imgRect.y), Math.max(maxY, imgRect.y));
           setSel({ x: cx, y: cy, w: dragging.current.origSel.w, h: dragging.current.origSel.h });
+        } else if (dragging.current.action === 'resize' && dragging.current.origSel && dragging.current.handleIndex !== undefined) {
+          const handleIndex = dragging.current.handleIndex;
+          const dx = p.x - dragging.current.startX;
+          const dy = p.y - dragging.current.startY;
+          let newSel = { ...dragging.current.origSel };
+          if (handleIndex === 0) { // top-left
+            newSel.x += dx;
+            newSel.y += dy;
+            newSel.w -= dx;
+            newSel.h -= dy;
+          } else if (handleIndex === 1) { // top-right
+            newSel.y += dy;
+            newSel.w += dx;
+            newSel.h -= dy;
+          } else if (handleIndex === 2) { // bottom-left
+            newSel.x += dx;
+            newSel.w -= dx;
+            newSel.h += dy;
+          } else if (handleIndex === 3) { // bottom-right
+            newSel.w += dx;
+            newSel.h += dy;
+          } else if (handleIndex === 4) { // top
+            newSel.y += dy;
+            newSel.h -= dy;
+          } else if (handleIndex === 5) { // bottom
+            newSel.h += dy;
+          } else if (handleIndex === 6) { // left
+            newSel.x += dx;
+            newSel.w -= dx;
+          } else if (handleIndex === 7) { // right
+            newSel.w += dx;
+          }
+          // Ensure w and h are positive
+          if (newSel.w < 1) newSel.w = 1;
+          if (newSel.h < 1) newSel.h = 1;
+          // Maintain aspect ratio if set
+          if (cropRatio.current) {
+            const ratio = cropRatio.current;
+            if (handleIndex < 4) { // corners
+              const dw = Math.abs(newSel.w - dragging.current.origSel.w);
+              const dh = Math.abs(newSel.h - dragging.current.origSel.h);
+              if (dw > dh) {
+                newSel.h = newSel.w / ratio;
+              } else {
+                newSel.w = newSel.h * ratio;
+              }
+            } else {
+              // edges
+              if (handleIndex === 4 || handleIndex === 5) { // top/bottom
+                newSel.w = newSel.h * ratio;
+              } else { // left/right
+                newSel.h = newSel.w / ratio;
+              }
+            }
+          }
+          // Clamp to image rect
+          newSel.x = Math.max(imgRect.x, Math.min(newSel.x, imgRect.x + imgRect.w - newSel.w));
+          newSel.y = Math.max(imgRect.y, Math.min(newSel.y, imgRect.y + imgRect.h - newSel.h));
+          newSel.w = Math.min(newSel.w, imgRect.x + imgRect.w - newSel.x);
+          newSel.h = Math.min(newSel.h, imgRect.y + imgRect.h - newSel.y);
+          setSel(newSel);
         } else {
           // drawing new selection
           const sx = dragging.current.startX; const sy = dragging.current.startY;
@@ -807,7 +1030,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       className="image-editor"
       style={{
         width: '100%',
-        maxWidth: 820,
+        maxWidth: 'min(92vw, 820px)',
         margin: '0 auto',
         background: 'var(--bg-elev)',
         color: 'var(--text)',
@@ -831,6 +1054,28 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
         .imgedit-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: white; border: 3px solid var(--primary); }
         /* custom focus ring */
         .imgedit-range:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent); }
+        /* panels responsiveness: allow panels to grow and scroll on small viewports */
+        .imgedit-panels { position: relative; max-height: calc(100vh - 180px); overflow: hidden; border-radius: 8px; }
+        .imgedit-panels > div { height: 100%; }
+        .imgedit-panel-inner { box-sizing: border-box; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; gap: 8px; display: grid; }
+        @media (min-width: 720px) { .imgedit-panels { max-height: 220px; } }
+        @media (max-width: 720px) { .imgedit-panels { max-height: calc(100vh - 140px); } }
+      `}</style>
+      {/* slider color variables (theme-aware) */}
+      <style>{`
+        .image-editor {
+          /* defaults; app theme can override these CSS variables */
+          --slider-exposure-start: #fff6db;
+          --slider-exposure-end: #ffd166;
+          --slider-contrast-start: #fff3e6;
+          --slider-contrast-end: #ff9f43;
+          --slider-saturation-start: #ffe9e9;
+          --slider-saturation-end: #ff6b6b;
+          --slider-temperature-cold: #66d1ff;
+          --slider-temperature-warm: #ffb86b;
+        }
+        /* visually-hidden helper for screen readers */
+        .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 12, flexWrap: 'wrap' }}>
       <button type="button" className="btn ghost" onClick={onCancel} aria-label="back" style={{ color: 'var(--text)', background: 'transparent', border: 'none', fontSize: 18, padding: 8, transformOrigin: 'center', transition: 'transform 120ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>◀</button>
@@ -845,61 +1090,123 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
         </div>
       </div>
 
-  <div style={{ position: 'relative', background: 'var(--bg)', padding: 8, borderRadius: 8 }}>
+      <div style={{ position: 'relative', background: 'var(--bg)', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', height: 360, touchAction: 'none', display: 'block', borderRadius: 6, transition: 'box-shadow 240ms ease' }}
+          style={{ width: '100%', touchAction: 'none', display: 'block', borderRadius: 6, transition: 'box-shadow 240ms ease', minHeight: 140, maxHeight: '60vh' }}
         />
 
         {/* header rotate buttons now handle rotate; removed tiny top-right rotate button to improve discoverability */}
-
-        <div style={{ position: 'absolute', left: 12, bottom: 12, background: 'color-mix(in srgb, var(--bg-elev), transparent 40%)', color: 'var(--text)', padding: '6px 8px', borderRadius: 6, fontSize: 12, opacity: 0.95 }}>
-          <div style={{ fontSize: 11, opacity: 0.9, display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ display: 'inline-block', width: 8, height: 8, background: 'linear-gradient(135deg,var(--primary), #6cc8ff)', borderRadius: 4, boxShadow: '0 2px 10px rgba(0,0,0,0.12)' }} aria-hidden />
-            <span>Drag to crop; drag inside selection to move it</span>
-          </div>
-        </div>
         {/* floating confirm removed — use the top Confirm button in the header */}
       </div>
 
+  {/* help text removed per user request */}
+
       {/* Controls header with categories (emojis + slide panels) */}
-  <div ref={categoriesContainerRef} style={{ position: 'relative', display: 'flex', gap: 8, marginTop: 12, justifyContent: 'center', flexWrap: 'wrap', maxWidth: 820, margin: '12px auto 0', padding: '6px 0' }}>
+  <div ref={categoriesContainerRef} style={{ position: 'relative', display: 'flex', gap: 8, marginTop: 12, justifyContent: 'center', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 820, margin: '12px auto 0', padding: '6px 8px', alignItems: 'center', whiteSpace: 'nowrap' }}>
     <div aria-hidden style={{ position: 'absolute', left: categoryHighlight?.left ?? 0, top: categoryHighlight?.top ?? 0, width: categoryHighlight?.width ?? 0, height: categoryHighlight?.height ?? 0, borderRadius: 10, background: 'color-mix(in srgb, var(--primary) 18%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease', pointerEvents: 'none', opacity: categoryHighlight ? 1 : 0, zIndex: 0 }} />
-  <button data-cat="basic" type="button" onClick={(e:any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('basic'); }} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'basic' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1 }}>🎛️ Basic</button>
-  <button data-cat="color" type="button" onClick={(e:any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('color'); }} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'color' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1 }}>🎨 Filters</button>
-  <button data-cat="effects" type="button" onClick={(e:any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('effects'); }} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'effects' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1 }}>✨ Effects</button>
-  <button data-cat="crop" type="button" onClick={(e:any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('crop'); }} style={{ padding: '8px 12px', borderRadius: 8, background: selectedCategory === 'crop' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1 }}>✂️ Crop & Frames</button>
+  <button
+    data-cat="basic"
+    type="button"
+    aria-label="Basic"
+    title="Basic"
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('basic'); }}
+    style={{ padding: '6px 8px', borderRadius: 8, background: selectedCategory === 'basic' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+  >
+    <span aria-hidden style={{ lineHeight: 1 }}>{'🎛️'}</span>
+    <span style={{ display: selectedCategory === 'basic' ? 'inline' : 'none', fontSize: 13, fontWeight: 600 }}>Basic</span>
+  </button>
+
+  <button
+    data-cat="color"
+    type="button"
+    aria-label="Filters"
+    title="Filters"
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('color'); }}
+    style={{ padding: '6px 8px', borderRadius: 8, background: selectedCategory === 'color' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+  >
+    <span aria-hidden style={{ lineHeight: 1 }}>{'🎨'}</span>
+    <span style={{ display: selectedCategory === 'color' ? 'inline' : 'none', fontSize: 13, fontWeight: 600 }}>Filters</span>
+  </button>
+
+  <button
+    data-cat="effects"
+    type="button"
+    aria-label="Effects"
+    title="Effects"
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('effects'); }}
+    style={{ padding: '6px 8px', borderRadius: 8, background: selectedCategory === 'effects' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+  >
+    <span aria-hidden style={{ lineHeight: 1 }}>{'✨'}</span>
+    <span style={{ display: selectedCategory === 'effects' ? 'inline' : 'none', fontSize: 13, fontWeight: 600 }}>Effects</span>
+  </button>
+
+  <button
+    data-cat="crop"
+    type="button"
+    aria-label="Crop & Frames"
+    title="Crop & Frames"
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('crop'); }}
+    style={{ padding: '6px 8px', borderRadius: 8, background: selectedCategory === 'crop' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+  >
+    <span aria-hidden style={{ lineHeight: 1 }}>{'✂️'}</span>
+    <span style={{ display: selectedCategory === 'crop' ? 'inline' : 'none', fontSize: 13, fontWeight: 600 }}>Crop & Frames</span>
+  </button>
   </div>
 
       {/* Sliding category panels container */}
-  <div style={{ maxWidth: 820, margin: '12px auto 0', position: 'relative', height: 200, overflow: 'hidden', borderRadius: 8 }}>
+  <div className="imgedit-panels" style={{ maxWidth: 820, margin: '12px auto 0', position: 'relative', borderRadius: 8, minHeight: 180 }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
           {/* Basic panel */}
-          <div style={{ display: selectedCategory === 'basic' ? 'grid' : 'none', width: '100%', padding: 10, boxSizing: 'border-box', gap: 8, overflowY: 'hidden' }}>
+          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'basic' ? 'grid' : 'none', width: '100%' }}>
             <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}><span aria-hidden>❄️</span><span>Exposure</span><span aria-hidden>☀️</span></span>
-              <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(exposure, 0.5, 1.8, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
+              <span style={{ width: 110, display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span aria-hidden>☀️</span>
+                <span>Exposure</span>
+              </span>
+              {/* animated icon that changes color with exposure */}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <circle cx="12" cy="12" r="7" style={{ fill: exposureColor(exposure) }} />
+                </svg>
+                <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('exposure', exposureRef.current, v); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(exposure, 0.5, 1.8, 'var(--slider-exposure-start)', 'var(--slider-exposure-end)') }} />
+              </span>
               <span style={{ width: 48, textAlign: 'right' }}>{exposure.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>⚖️ <span>Contrast</span></span>
-              <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={contrast} onInput={(e: any) => { const v = Number(e.target.value); contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(contrast, 0.5, 1.8, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <rect x="4" y="4" width="16" height="16" rx="3" style={{ fill: contrastColor(contrast) }} />
+                </svg>
+                <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={contrast} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('contrast', contrastRef.current, v); contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(contrast, 0.5, 1.8, 'var(--slider-contrast-start)', 'var(--slider-contrast-end)') }} />
+              </span>
               <span style={{ width: 48, textAlign: 'right' }}>{contrast.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🌈 <span>Saturation</span></span>
-              <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(saturation, 0, 2, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M12 3c1.1 0 2 .9 2 2v14a2 2 0 1 1-4 0V5c0-1.1.9-2 2-2z" style={{ fill: saturationColor(saturation) }} />
+                </svg>
+                <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('saturation', saturationRef.current, v); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(saturation, 0, 2, 'var(--slider-saturation-start)', 'var(--slider-saturation-end)') }} />
+              </span>
               <span style={{ width: 48, textAlign: 'right' }}>{saturation.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}><span aria-hidden>🥶</span><span>Temperature</span><span aria-hidden>🥵</span></span>
-              <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(temperature, -100, 100, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
+              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}><span aria-hidden>🌡️</span><span>Temperature</span></span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <rect x="9" y="3" width="6" height="12" rx="3" style={{ fill: temperatureColor(temperature) }} />
+                </svg>
+                <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('temperature', temperatureRef.current, v); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(temperature, -100, 100, 'var(--slider-temperature-cold)', 'var(--slider-temperature-warm)') }} />
+              </span>
               <span style={{ width: 48, textAlign: 'right' }}>{temperature}</span>
             </label>
           </div>
 
           {/* Color panel */}
-          <div style={{ display: selectedCategory === 'color' ? 'grid' : 'none', width: '100%', padding: 10, boxSizing: 'border-box', gap: 8, overflowY: 'hidden' }}>
+          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'color' ? 'grid' : 'none', width: '100%' }}>
             {/* panel heading removed (tab already shows Filters) */}
             <div ref={filtersContainerRef} style={{ position: 'relative', display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: '6px 0' }}>
               {/* animated highlight pill sits behind buttons and moves between them */}
@@ -935,7 +1242,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
           </div>
 
           {/* Effects panel */}
-          <div style={{ display: selectedCategory === 'effects' ? 'grid' : 'none', width: '100%', padding: 10, boxSizing: 'border-box', gap: 8, overflowY: 'hidden' }}>
+          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'effects' ? 'grid' : 'none', width: '100%' }}>
             <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🕶️ <span>Vignette</span></span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
@@ -967,7 +1274,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
           </div>
 
           {/* Crop panel */}
-          <div style={{ display: selectedCategory === 'crop' ? 'grid' : 'none', width: '100%', padding: 10, boxSizing: 'border-box', gap: 8, overflowY: 'hidden' }}>
+          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'crop' ? 'grid' : 'none', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <div>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>Crop</div>
@@ -979,82 +1286,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
             </div>
 
             <div style={{ marginTop: 6 }}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aspect presets</div>
-              </div>
-
-              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
-                {[ 
-                  { label: 'Free', v: null },
-                  { label: '16:9', v: 16 / 9 },
-                  { label: '4:3', v: 4 / 3 },
-                  { label: '3:2', v: 3 / 2 },
-                  { label: '1:1', v: 1 },
-                  { label: '4:5', v: 4 / 5 }
-                ].map(r => {
-                  const selected = cropRatio.current === r.v;
-                  return (
-                    <button key={r.label} type="button" onClick={() => {
-                      cropRatio.current = r.v;
-                      const canvas = canvasRef.current;
-                      if (!canvas) return;
-                      const info = computeImageLayout();
-                      const pad = 0.08;
-                      if (info) {
-                        let w = info.dispW * (1 - pad * 2);
-                        let h = info.dispH * (1 - pad * 2);
-                        if (r.v) {
-                          h = w / r.v;
-                          if (h > info.dispH * (1 - pad * 2)) {
-                            h = info.dispH * (1 - pad * 2);
-                            w = h * r.v;
-                          }
-                        }
-                        const x = info.left + (info.dispW - w) / 2;
-                        const y = info.top + (info.dispH - h) / 2;
-                        setSel({ x, y, w, h });
-                      } else {
-                        const rect = canvas.getBoundingClientRect();
-                        let w = rect.width * (1 - pad * 2);
-                        let h = rect.height * (1 - pad * 2);
-                        if (r.v) {
-                          h = w / r.v;
-                          if (h > rect.height * (1 - pad * 2)) {
-                            h = rect.height * (1 - pad * 2);
-                            w = h * r.v;
-                          }
-                        }
-                        const x = (rect.width - w) / 2;
-                        const y = (rect.height - h) / 2;
-                        setSel({ x, y, w, h });
-                      }
-                    }} aria-pressed={selected} style={{
-                      minWidth: 72,
-                      flex: '0 0 auto',
-                      padding: '6px',
-                      borderRadius: 8,
-                      background: selected ? 'var(--primary)' : 'var(--bg-elev)',
-                      color: selected ? '#fff' : 'var(--text)',
-                      border: selected ? '1px solid color-mix(in srgb, var(--primary) 30%, transparent)' : '1px solid var(--border)',
-                      boxShadow: selected ? '0 6px 20px rgba(0,125,255,0.12)' : '0 4px 12px rgba(0,0,0,0.04)',
-                      display: 'flex',
-                      gap: 8,
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      transition: 'transform 120ms ease, box-shadow 180ms ease',
-                      fontSize: 13
-                    }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'translateY(1px) scale(.997)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>
-                      <span aria-hidden style={{ width: 42, height: 22, background: 'rgba(255,255,255,0.03)', borderRadius: 4, display: 'inline-block', position: 'relative', border: '1px dashed rgba(255,255,255,0.03)' }}>
-                        <span style={{ position: 'absolute', left: 4, top: 3, right: 4, bottom: 3, background: selected ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)', borderRadius: 2 }} />
-                      </span>
-                      <span style={{ fontSize: 12 }}>{r.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* compact inline frame controls */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+              {/* compact inline frame controls placed first so they remain visible */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 0 }}>
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-start' }}>
                   <button type="button" className={frameColor === 'white' ? 'btn primary' : 'btn ghost'} onClick={() => { frameColorRef.current = 'white'; setFrameColor('white'); draw(); }} style={{ padding: '6px 8px', fontSize: 13, opacity: frameThickness > 0 ? 1 : 0.45, pointerEvents: frameThickness > 0 ? 'auto' : 'none' }}>White</button>
                   <button type="button" className={frameColor === 'black' ? 'btn primary' : 'btn ghost'} onClick={() => { frameColorRef.current = 'black'; setFrameColor('black'); draw(); }} style={{ padding: '6px 8px', fontSize: 13, opacity: frameThickness > 0 ? 1 : 0.45, pointerEvents: frameThickness > 0 ? 'auto' : 'none' }}>Black</button>
@@ -1065,6 +1298,73 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                   <span style={{ width: 48, textAlign: 'right' }}>{Math.round(frameThickness * 100)}%</span>
                 </label>
               </div>
+
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aspect presets</div>
+              </div>
+
+              {/* Carousel-style aspect switcher */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 4 }}>
+                <button type="button" aria-label="Previous preset" onClick={() => setPresetIndex((presetIndex - 1 + ASPECT_PRESETS.length) % ASPECT_PRESETS.length)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent' }}>◀</button>
+                <div style={{ overflow: 'hidden', width: 240, borderRadius: 10 }}>
+                  <div style={{ display: 'flex', gap: 8, transition: 'transform 300ms cubic-bezier(.2,.9,.2,1)', transform: `translateX(-${presetIndex * 92}px)` }}>
+                    {ASPECT_PRESETS.map((r, i) => {
+                      const selected = cropRatio.current === r.v;
+                      const base = 16 / 9;
+                      const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
+                      const previewInnerWidth = Math.round(36 * previewRatio);
+                      return (
+                        <div key={r.label} style={{ flex: '0 0 84px' }}>
+                          <button type="button" onClick={() => {
+                            setPresetIndex(i);
+                            cropRatio.current = r.v;
+                            const canvas = canvasRef.current;
+                            if (!canvas) return;
+                            const info = computeImageLayout();
+                            const pad = 0.08;
+                            if (info) {
+                              let w = info.dispW * (1 - pad * 2);
+                              let h = info.dispH * (1 - pad * 2);
+                              if (r.v) {
+                                h = w / r.v;
+                                if (h > info.dispH * (1 - pad * 2)) {
+                                  h = info.dispH * (1 - pad * 2);
+                                  w = h * r.v;
+                                }
+                              }
+                              const x = info.left + (info.dispW - w) / 2;
+                              const y = info.top + (info.dispH - h) / 2;
+                              setSel({ x, y, w, h });
+                            } else {
+                              const rect = canvas.getBoundingClientRect();
+                              let w = rect.width * (1 - pad * 2);
+                              let h = rect.height * (1 - pad * 2);
+                              if (r.v) {
+                                h = w / r.v;
+                                if (h > rect.height * (1 - pad * 2)) {
+                                  h = rect.height * (1 - pad * 2);
+                                  w = h * r.v;
+                                }
+                              }
+                              const x = (rect.width - w) / 2;
+                              const y = (rect.height - h) / 2;
+                              setSel({ x, y, w, h });
+                            }
+                          }} aria-pressed={selected} style={{ minWidth: 64, padding: '8px 10px', borderRadius: 10, background: selected ? 'linear-gradient(135deg,var(--primary), #4aa8ff)' : 'var(--bg-elev)', color: selected ? '#fff' : 'var(--text)', border: selected ? 'none' : '1px solid rgba(255,255,255,0.04)', boxShadow: selected ? '0 8px 26px rgba(34,122,255,0.16)' : 'none', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 120ms ease, box-shadow 180ms ease, background 180ms ease', fontSize: 13 }}>
+                            <span aria-hidden style={{ width: 52, height: 28, background: selected ? 'color-mix(in srgb, var(--primary) 6%, color-mix(in srgb, var(--bg-elev) 60%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 12%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: selected ? '0 6px 18px rgba(34,122,255,0.08)' : 'inset 0 1px 0 rgba(0,0,0,0.04)' }}>
+                              <span style={{ width: previewInnerWidth, height: 16, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)', boxShadow: selected ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.03)' }} />
+                            </span>
+                            <span style={{ fontSize: 13, fontWeight: 600, opacity: selected ? 1 : 0.95 }}>{r.label}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <button type="button" aria-label="Next preset" onClick={() => setPresetIndex((presetIndex + 1) % ASPECT_PRESETS.length)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent' }}>▶</button>
+              </div>
+
+              
             </div>
           </div>
         </div>

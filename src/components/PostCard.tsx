@@ -101,7 +101,7 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   useEffect(() => {
     // clamp index when images change
     if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1));
-  }, [imageUrls.length]);
+  }, [imageUrls.length, index]);
 
   useEffect(() => {
     if (!trackRef.current) return;

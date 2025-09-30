@@ -169,7 +169,10 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .content:focus { outline: none; }
 
 .tabbar {
-  position: sticky; bottom: 0; z-index: 10;
+  position: sticky; bottom: 0; /* keep tabbar above most content and overlays */
+  /* Raise z-index above editor/portal overlays (these use up to 99999) so the
+     navigation bar remains the top-most interactive element. */
+  z-index: 100001;
   background: color-mix(in srgb, var(--bg), transparent 6%);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(8px);
@@ -1277,6 +1280,29 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .preview-inner.editing .image-editor,
 .preview-inner.editing .image-editor * {
   z-index: 99999 !important; /* ensure toolbar & controls stay on top */
+}
+
+/* Portal root styles: ensure full-screen overlay for modals rendered into the portal */
+#modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  /* align to top so tall content can scroll into view; center horizontally */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px; /* breathing room on small screens */
+  overflow: auto; /* allow vertical scrolling when content exceeds viewport */
+  -webkit-overflow-scrolling: touch;
+  pointer-events: none; /* allow inner modal to opt into pointer events */
+}
+
+#modal-root > * {
+  pointer-events: auto;
+  /* constrain immediate child so it never exceeds viewport and can scroll internally */
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  width: 100%;
 }
 
 /* keep the preview visually contained when not editing */

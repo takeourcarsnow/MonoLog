@@ -8,6 +8,18 @@ import { CONFIG } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { useToast } from "./Toast";
 import ImageEditor from "./ImageEditor";
+import Portal from "./Portal";
+
+// the canonical list of philosophical prompts used for rotation and animated typing
+const PHRASES = [
+  "Frame the moment: what light or silence does this image keep?",
+  "Tell the small truth this photograph remembers about you.",
+  "Describe the world that sat still for this instant.",
+  "If this image had its own story, how would it begin?",
+  "Name the feeling that first arrived when you took this.",
+  "What does time leave behind in this single frame?",
+];
+
 export function Uploader() {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
@@ -24,20 +36,21 @@ export function Uploader() {
   const [editing, setEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number>(0);
   const [editingAlt, setEditingAlt] = useState<string>("");
+
+  // When the image editor is open, prevent background scrolling so the overlay
+  // feels like a true modal on mobile (covers full viewport and blocks interaction).
+  useEffect(() => {
+    if (editing) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+    return;
+  }, [editing]);
   // rotating caption placeholder (persisted across reloads so users see a different prompt each time)
   const [placeholder, setPlaceholder] = useState<string>(
     "Tell your story (if you feel like it)"
   );
-  // the canonical list of philosophical prompts used for rotation and animated typing
-  const PHRASES = [
-    "Frame the moment: what light or silence does this image keep?",
-    "Tell the small truth this photograph remembers about you.",
-    "Which memory does this picture return to, slowly?",
-    "Describe the world that sat still for this instant.",
-    "If this image had its own story, how would it begin?",
-    "Name the feeling that first arrived when you took this.",
-    "What does time leave behind in this single frame?",
-  ];
   // typed text for the JS-driven typing/backspace animation
   const [typed, setTyped] = useState<string>("");
   const dropRef = useRef<HTMLDivElement>(null);
@@ -53,7 +66,7 @@ export function Uploader() {
   // keep index within bounds when number of images changes
   useEffect(() => {
     if (index >= dataUrls.length) setIndex(Math.max(0, dataUrls.length - 1));
-  }, [dataUrls.length]);
+  }, [dataUrls.length, index]);
 
   // apply transform when index changes
   useEffect(() => {
@@ -380,66 +393,90 @@ export function Uploader() {
             </div>
           ) : null}
           {editing && (dataUrls[editingIndex] || dataUrl) ? (
-            <div style={{ width: '100%' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Alt text (describe your photo for accessibility)"
-                  value={editingAlt}
-                  onChange={e => setEditingAlt(e.target.value)}
-                />
-                <ImageEditor
-                  initialDataUrl={(dataUrls[editingIndex] || dataUrl) as string}
-                  onCancel={() => setEditing(false)}
-                  onApply={async (newUrl) => {
-                    // persist alt for this image
-                    setAlt(prev => {
-                      if (Array.isArray(prev)) {
-                        const copy = [...prev];
-                        copy[editingIndex] = editingAlt || "";
-                        return copy;
-                      }
-                      // if single string but multiple images, convert to array
-                      if (dataUrls.length > 1) {
-                        const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
-                        return arr;
-                      }
-                      return editingAlt || "";
-                    });
-                    setEditing(false);
-                    // run through the same compression pipeline to ensure final image obeys limits
-                    setProcessing(true);
-                    try {
-                      const compressed = await compressImage(newUrl as any);
-                      // replace the edited image at editingIndex
-                      setDataUrls(d => {
-                        const copy = [...d];
-                        copy[editingIndex] = compressed;
-                        return copy;
-                      });
-                      // if editing the main preview index, update dataUrl too
-                      if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
-                      setCompressedSize(approxDataUrlBytes(compressed));
-                      // approximate original size from dataurl length
-                      setOriginalSize(approxDataUrlBytes(newUrl));
-                    } catch (e) {
-                      console.error(e);
-                      // fallback to the edited url directly
-                      setDataUrls(d => {
-                        const copy = [...d];
-                        copy[editingIndex] = newUrl as string;
-                        return copy;
-                      });
-                      if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
-                      setCompressedSize(approxDataUrlBytes(newUrl as string));
-                    } finally {
-                      setProcessing(false);
-                    }
-                  }}
-                />
+            // Render the editor in a top-level portal to avoid clipping from ancestor overflow/transform.
+            <Portal>
+              {/* Fullscreen overlay to ensure the editor covers the entire viewport on mobile */}
+              <div
+                role="dialog"
+                aria-modal="true"
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 12,
+                  boxSizing: 'border-box',
+                  // Keep overlay visually above page content but below the bottom nav
+                  // (bottom nav uses z-index: 10 in globals.css). Choosing 9 lets the nav
+                  // remain visible and interactive while the editor sits above the page.
+                  zIndex: 9,
+                  background: 'color-mix(in srgb, var(--bg) 88%, rgba(0,0,0,0.32))'
+                }}
+                onClick={() => { /* clicking overlay will close only if desired; keep clicks outside ImageEditor to close */ setEditing(false); }}
+              >
+                <div style={{ width: '100%', maxWidth: 960, margin: '0 auto', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - (72px + var(--safe-bottom)) - 24px)', overflow: 'auto', paddingRight: 6 }}>
+                    <input
+                      className="input"
+                      type="text"
+                      placeholder="Alt text (describe your photo for accessibility)"
+                      value={editingAlt}
+                      onChange={e => setEditingAlt(e.target.value)}
+                    />
+                    <ImageEditor
+                      initialDataUrl={(dataUrls[editingIndex] || dataUrl) as string}
+                      onCancel={() => setEditing(false)}
+                      onApply={async (newUrl) => {
+                        // persist alt for this image
+                        setAlt(prev => {
+                          if (Array.isArray(prev)) {
+                            const copy = [...prev];
+                            copy[editingIndex] = editingAlt || "";
+                            return copy;
+                          }
+                          // if single string but multiple images, convert to array
+                          if (dataUrls.length > 1) {
+                            const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
+                            return arr;
+                          }
+                          return editingAlt || "";
+                        });
+                        setEditing(false);
+                        // run through the same compression pipeline to ensure final image obeys limits
+                        setProcessing(true);
+                        try {
+                          const compressed = await compressImage(newUrl as any);
+                          // replace the edited image at editingIndex
+                          setDataUrls(d => {
+                            const copy = [...d];
+                            copy[editingIndex] = compressed;
+                            return copy;
+                          });
+                          // if editing the main preview index, update dataUrl too
+                          if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
+                          setCompressedSize(approxDataUrlBytes(compressed));
+                          // approximate original size from dataurl length
+                          setOriginalSize(approxDataUrlBytes(newUrl));
+                        } catch (e) {
+                          console.error(e);
+                          // fallback to the edited url directly
+                          setDataUrls(d => {
+                            const copy = [...d];
+                            copy[editingIndex] = newUrl as string;
+                            return copy;
+                          });
+                          if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
+                          setCompressedSize(approxDataUrlBytes(newUrl as string));
+                        } finally {
+                          setProcessing(false);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            </Portal>
           ) : (
             <>
               {dataUrls.length > 1 ? (

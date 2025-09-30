@@ -10,6 +10,20 @@ export async function POST(req: Request) {
 
   const id = uid();
     const created_at = new Date().toISOString();
+    // Ensure a minimal profile exists for the actor so the comment list
+    // can join a users row and show a username/displayName instead of a generic fallback.
+    try {
+      const up = {
+        id: actorId,
+        username: String(actorId).slice(0, 8),
+        display_name: 'User',
+      } as any;
+      // upsert will create a row if missing; ignore errors
+      await sb.from('users').upsert(up);
+    } catch (e) {
+      // ignore
+    }
+
     // Try inserting using common snake_case column names first, then
     // fall back to alternate naming if the insert fails (some schemas
     // use `postid`/`userid` or camelCase). This keeps the endpoint

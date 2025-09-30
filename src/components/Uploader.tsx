@@ -39,6 +39,8 @@ export function Uploader() {
   const [canPost, setCanPost] = useState<boolean | null>(null);
   const [nextAllowedAt, setNextAllowedAt] = useState<number | null>(null);
   const [remaining, setRemaining] = useState<string>("");
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
+  const [countdownTotalMs, setCountdownTotalMs] = useState<number | null>(null);
   const [editing, setEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number>(0);
   const [editingAlt, setEditingAlt] = useState<string>("");
@@ -105,6 +107,8 @@ export function Uploader() {
       if (!can.allowed) {
         const next = can.nextAllowedAt ?? (Date.now() + 24 * 60 * 60 * 1000);
         setNextAllowedAt(next);
+        // capture current total interval so we can show progress
+        try { setCountdownTotalMs(next - Date.now()); } catch (e) {}
         try {
           localStorage.setItem('monolog:nextAllowedAt', String(next));
         } catch (e) {}
@@ -135,24 +139,42 @@ export function Uploader() {
       return `${m}:${pad(s)}`;
     }
     // set initial
-    setRemaining(fmt(initial - Date.now()));
+    const ms0 = initial - Date.now();
+    setRemaining(fmt(ms0));
+    setRemainingMs(ms0);
+    if (!countdownTotalMs) setCountdownTotalMs(ms0);
     const id = setInterval(() => {
       const ms = initial! - Date.now();
       if (ms <= 0) {
         setCanPost(true);
         setNextAllowedAt(null);
         setRemaining("");
+        setRemainingMs(null);
         try { localStorage.removeItem('monolog:nextAllowedAt'); } catch (e) {}
         clearInterval(id);
         return;
       }
       setRemaining(fmt(ms));
+      setRemainingMs(ms);
     }, 1000);
     return () => clearInterval(id);
   }, [nextAllowedAt]);
 
   const toast = useToast();
   const [showDiscardModal, setShowDiscardModal] = useState(false);
+
+  // add a class to body to allow CSS animations scoped to uploader when ready
+  useEffect(() => {
+    const cls = 'uploader-pulse-ready';
+    if (canPost) {
+      document.body.classList.add(cls);
+    } else {
+      document.body.classList.remove(cls);
+    }
+    return () => { document.body.classList.remove(cls); };
+  }, [canPost]);
+
+  // no percent shown anymore; we only show a short hint when ready
 
   // Draft persistence key
   const DRAFT_KEY = "monolog:draft";
@@ -378,6 +400,14 @@ export function Uploader() {
   // main uploader UI (toolbar removed per request)
   return (
     <div className="uploader view-fade">
+      {/* Local styles for publish/countdown animations */}
+      <style>{`
+        .btn.primary.ready { animation: none; }
+        body.uploader-pulse-ready .btn.primary.ready span > svg { transform-origin: center; animation: pulse 1600ms ease-in-out infinite; }
+        @keyframes pulse { 0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(125,211,252,0.0)); } 50% { transform: scale(1.06); filter: drop-shadow(0 6px 14px rgba(125,211,252,0.12)); } 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(125,211,252,0.0)); } }
+        /* smooth ring transition when filling */
+        svg circle[stroke-dasharray] { transition: stroke-dasharray 0.9s linear; }
+      `}</style>
 
       {!dataUrl && !dataUrls.length && (
         <div
@@ -734,22 +764,69 @@ export function Uploader() {
           </label>
 
           <div className="btn-group">
+            {/* Publish / Countdown button with animated icon and ring */}
             <button
-              className="btn primary"
+              className={`btn primary ${canPost ? 'ready' : 'cooldown'}`}
               onClick={() => publish(false)}
               disabled={
                 processing ||
                 (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024) ||
                 (canPost === false)
               }
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}
             >
-              {processing
-                ? "Processing…"
-                : canPost === false
-                ? nextAllowedAt
-                  ? `Next post in ${remaining}`
-                  : "Publish again in 24h"
-                : "Publish"}
+              {/* Icon + ring */}
+              <span style={{ display: 'inline-block', width: 36, height: 36, position: 'relative' }} aria-hidden>
+                <svg viewBox="0 0 36 36" width="36" height="36" style={{ display: 'block' }}>
+                  <defs>
+                    <linearGradient id="g1" x1="0%" x2="100%">
+                      <stop offset="0%" stopColor="var(--primary)" />
+                      <stop offset="100%" stopColor="#7dd3fc" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="4" />
+                  {/* progress path */}
+                  {remainingMs != null && countdownTotalMs ? (
+                    (() => {
+                      const pct = Math.max(0, Math.min(1, 1 - remainingMs / countdownTotalMs));
+                      const circumference = 2 * Math.PI * 15;
+                      const dash = String(circumference * pct);
+                      const dashGap = String(Math.max(0, circumference - circumference * pct));
+                      return (
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="15"
+                          fill="none"
+                          stroke="url(#g1)"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          strokeDasharray={`${dash} ${dashGap}`}
+                          transform="rotate(-90 18 18)"
+                        />
+                      );
+                    })()
+                  ) : null}
+                </svg>
+
+                {/* small center icon that pulses when ready */}
+                <span style={{ position: 'absolute', left: 6, top: 6, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg viewBox="0 0 24 24" width="20" height="20" style={{ display: 'block', color: 'white' }}>
+                    <circle cx="12" cy="12" r="10" fill={canPost ? 'var(--primary)' : 'rgba(255,255,255,0.06)'} />
+                    <path d="M8 12l2 2 6-6" fill="none" stroke={canPost ? 'white' : 'rgba(255,255,255,0.6)'} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </span>
+
+              <span style={{ fontWeight: 600, lineHeight: '20px', whiteSpace: 'nowrap' }}>
+                {processing
+                  ? "Processing…"
+                  : canPost === false
+                  ? nextAllowedAt
+                    ? `Next post in ${remaining}`
+                    : "Publish again in 24h"
+                  : "Publish"}
+              </span>
             </button>
             <button
               type="button"

@@ -286,6 +286,20 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   const finishPointerDrag = (clientX?: number) => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
+    // If a pinch/zoom is active, do not change the carousel index when the
+    // pointer drag finishes. Changing the index here can cause a jump back
+    // to the first slide after releasing a pinch. Instead, simply re-sync
+    // the visual transform to the current index and clear drag state.
+    if (isZoomingRef.current) {
+      try {
+        if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+      } catch (_) { /* ignore */ }
+      touchStartX.current = null;
+      touchDeltaX.current = 0;
+      try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) { /* ignore */ }
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
+      return;
+    }
     const delta = touchDeltaX.current;
     const threshold = 40;
     let target = index;
@@ -330,6 +344,18 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   const handleDocMouseUp = (e: MouseEvent) => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
+    // If a pinch/zoom is active, don't change the index here.
+    if (isZoomingRef.current) {
+      try {
+        if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+      } catch (_) { /* ignore */ }
+      touchStartX.current = null;
+      touchDeltaX.current = 0;
+      try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) { /* ignore */ }
+      document.removeEventListener('mousemove', handleDocMouseMove);
+      document.removeEventListener('mouseup', handleDocMouseUp);
+      return;
+    }
     const delta = touchDeltaX.current;
     const threshold = 40;
     let target = index;

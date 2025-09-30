@@ -11,7 +11,7 @@ import { Comments } from "./Comments";
 import { AuthForm } from "./AuthForm";
 import { useToast } from "./Toast";
 
-export function PostCard({ post: initial }: { post: HydratedPost }) {
+export function PostCard({ post: initial, allowCarouselTouch }: { post: HydratedPost; allowCarouselTouch?: boolean }) {
   const [post, setPost] = useState<HydratedPost>(initial);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsMounted, setCommentsMounted] = useState(false);
@@ -165,16 +165,24 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   const next = () => setIndex(i => (i >= imageUrls.length - 1 ? imageUrls.length - 1 : i + 1));
 
   const onTouchStart = (e: React.TouchEvent) => {
+    // prevent the touch from bubbling up to parent swipers
+    e.stopPropagation();
+    try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
     touchStartX.current = e.touches[0].clientX;
     touchDeltaX.current = 0;
   };
   const onTouchMove = (e: React.TouchEvent) => {
+    // stop propagation here as well so parent swipe/drag handlers don't run
+    e.stopPropagation();
+    try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
     if (touchStartX.current == null) return;
     touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
     // apply a slight drag transform for feel
     if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
   };
   const onTouchEnd = () => {
+    // Note: touchend doesn't provide the React.TouchEvent here, but we can still
+    // ensure we clear local state. The touchstart/move already stopped propagation.
     if (touchStartX.current == null) return;
     const delta = touchDeltaX.current;
     const threshold = 40; // px
@@ -190,7 +198,9 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
   };
 
   // On post pages, disable carousel touch handling to allow app-level swipe navigation
-  const carouselTouchProps = pathname?.startsWith('/post/') ? {} : { onTouchStart, onTouchMove, onTouchEnd };
+  // If `allowCarouselTouch` is passed (PostView wants inner carousel to handle swipes),
+  // enable the handlers even on post pages.
+  const carouselTouchProps = (pathname?.startsWith('/post/') && !allowCarouselTouch) ? {} : { onTouchStart, onTouchMove, onTouchEnd };
 
   return (
     <article className="card">

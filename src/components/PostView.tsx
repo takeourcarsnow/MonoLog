@@ -43,7 +43,7 @@ export function PostView({ id }: { id: string }) {
         <button className="btn" onClick={goBack}>← Back</button>
       </div>
       {loading ? <div className="dim">Loading post…</div> : (
-        post ? <PostCard post={post} /> : <div className="empty">Post not found.</div>
+  post ? <PostCard post={post} allowCarouselTouch={true} /> : <div className="empty">Post not found.</div>
       )}
     </div>
   );

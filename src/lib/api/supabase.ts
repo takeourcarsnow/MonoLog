@@ -447,19 +447,41 @@ export const supabaseApi: Api = {
       } catch (e) { error = e; }
     }
     if (error) throw error;
-    return (data || []).map((c: any) => ({
-      id: c.id,
-      postId: c.post_id || c.postId,
-      userId: c.user_id || c.userId,
-      text: c.text,
-      createdAt: c.created_at || c.createdAt,
-      user: {
-        id: c.users?.id || c.user_id,
-        username: c.users?.username || c.users?.user_name || "",
-        displayName: c.users?.displayName || c.users?.display_name || "",
-        avatarUrl: c.users?.avatarUrl || c.users?.avatar_url || "",
+    const comments = (data || []) as any[];
+
+    // If the related `users` join returned null (common when the DB doesn't have a foreign key
+    // relationship), fetch the user rows by id and attach them client-side. This keeps the UI
+    // working even when the DB schema lacks FK constraints.
+    const missingUsers = comments.filter(c => !c.users).map(c => c.user_id || c.userId).filter(Boolean);
+    let userMap: Record<string, any> = {};
+    if (missingUsers.length) {
+      try {
+        const uniq = Array.from(new Set(missingUsers));
+        const { data: usersData, error: usersErr } = await sb.from('users').select('*').in('id', uniq);
+        if (!usersErr && usersData) {
+          for (const u of usersData) userMap[u.id] = u;
+        }
+      } catch (e) {
+        // ignore; we'll just render whatever we have
       }
-    }));
+    }
+
+    return comments.map((c: any) => {
+      const urow = c.users || userMap[c.user_id || c.userId] || null;
+      return {
+        id: c.id,
+        postId: c.post_id || c.postId,
+        userId: c.user_id || c.userId,
+        text: c.text,
+        createdAt: c.created_at || c.createdAt,
+        user: {
+          id: urow?.id || c.user_id,
+          username: urow?.username || urow?.user_name || "",
+          displayName: urow?.displayName || urow?.display_name || "",
+          avatarUrl: urow?.avatarUrl || urow?.avatar_url || "",
+        }
+      };
+    });
   },
 
   async addComment(postId: string, text: string) {

@@ -71,6 +71,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [currentIndex]);
 
+  // Listen for carousel drag events from inner components and temporarily
+  // disable the outer Swiper's touch interactions so inner carousels can
+  // handle horizontal swipes without the whole view changing.
+  useEffect(() => {
+    function onDragStart() {
+      try {
+        if (swiperRef.current && swiperRef.current.swiper) {
+          swiperRef.current.swiper.allowTouchMove = false;
+        }
+      } catch (_) { /* ignore */ }
+    }
+    function onDragEnd() {
+      try {
+        if (swiperRef.current && swiperRef.current.swiper) {
+          swiperRef.current.swiper.allowTouchMove = Boolean(isTouchDevice);
+        }
+      } catch (_) { /* ignore */ }
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:carousel_drag_start', onDragStart as any);
+      window.addEventListener('monolog:carousel_drag_end', onDragEnd as any);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:carousel_drag_start', onDragStart as any);
+        window.removeEventListener('monolog:carousel_drag_end', onDragEnd as any);
+      }
+    };
+  }, [isTouchDevice]);
+
   const handleSlideChange = (swiper: any) => {
     const newPath = views[swiper.activeIndex]?.path;
     if (newPath && newPath !== pathname) {
@@ -104,10 +134,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               simulateTouch={isTouchDevice}
               allowTouchMove={isTouchDevice}
               resistance={false}
-              shortSwipes={false}
-              longSwipes={false}
+              // Allow both short (quick flick) and long swipes. The default
+              // behavior was disabling them which made users have to drag a
+              // large distance to change sections. Enable them and lower the
+              // longSwipesRatio so a smaller horizontal drag (<25% of width)
+              // will navigate to the next section.
+              shortSwipes={true}
+              longSwipes={true}
+              longSwipesRatio={0.2}
               threshold={10}
-              touchRatio={1}
+              // Slightly increase touchRatio to make touch movements feel a bit
+              // more responsive on devices with higher pixel density.
+              touchRatio={1.1}
               speed={300}
               effect="slide"
               watchSlidesProgress={true}

@@ -168,6 +168,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     // prevent the touch from bubbling up to parent swipers
     e.stopPropagation();
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
+    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
     touchStartX.current = e.touches[0].clientX;
     touchDeltaX.current = 0;
   };
@@ -195,6 +196,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
     touchStartX.current = null;
     touchDeltaX.current = 0;
+    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
   };
 
   // Prefer Pointer Events where available (covers mouse + touch + pen) and use
@@ -211,6 +213,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     touchStartX.current = e.clientX;
     touchDeltaX.current = 0;
     draggingRef.current = true;
+  try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
     // prevent text selection while dragging
     try { document.body.style.userSelect = 'none'; document.body.style.cursor = 'grabbing'; } catch (_) { /* ignore */ }
     const el = trackRef.current as any;
@@ -237,6 +240,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     touchStartX.current = null;
     touchDeltaX.current = 0;
     try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) { /* ignore */ }
+    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
   };
 
   const onPointerUp = (e: React.PointerEvent) => {

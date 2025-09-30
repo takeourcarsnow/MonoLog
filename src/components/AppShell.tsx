@@ -174,10 +174,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {!ready ? <div className="card skeleton" style={{ height: 240 }} /> : <div className="page-slide">{children}</div>}
         </main>
-        <NavBar />
-        <NotificationListener />
-        <ToastHost />
       </div>
+      <NavBar />
+      <NotificationListener />
+      <ToastHost />
     </ToastProvider>
   );
 }

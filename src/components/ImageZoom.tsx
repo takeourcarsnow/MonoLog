@@ -12,8 +12,14 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const imgRef = useRef<HTMLImageElement | null>(null);
   const lastPan = useRef({ x: 0, y: 0 });
   const startPan = useRef({ x: 0, y: 0 });
+  const pinchStartPan = useRef({ x: 0, y: 0 });
   const lastTouchDist = useRef<number | null>(null);
   const startScale = useRef(1);
+  const natural = useRef({ w: 0, h: 0 });
+  const lastMoveTs = useRef<number | null>(null);
+  const lastMovePos = useRef({ x: 0, y: 0 });
+  const velocity = useRef({ x: 0, y: 0 });
+  const flingRaf = useRef<number | null>(null);
   const [scale, setScale] = useState(1);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
@@ -21,6 +27,25 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const doubleTapRef = useRef<number | null>(null);
 
   const clamp = (v: number, a = -Infinity, b = Infinity) => Math.max(a, Math.min(b, v));
+
+  function getBoundsForScale(s = scale) {
+    const c = containerRef.current;
+    const img = imgRef.current;
+    if (!c || !img) return { maxTx: 0, maxTy: 0, containerW: 0, containerH: 0 };
+    const rect = c.getBoundingClientRect();
+    const containerW = rect.width;
+    const containerH = rect.height;
+    const natW = img.naturalWidth || natural.current.w || containerW;
+    const natH = img.naturalHeight || natural.current.h || containerH;
+    // image is rendered at width = containerW, height scaled by natural aspect ratio
+    const baseW = containerW;
+    const baseH = baseW * (natH / Math.max(1, natW));
+    const scaledW = baseW * s;
+    const scaledH = baseH * s;
+    const maxTx = Math.max(0, (scaledW - containerW) / 2);
+    const maxTy = Math.max(0, (scaledH - containerH) / 2);
+    return { maxTx, maxTy, containerW, containerH };
+  }
 
   // Accept React.Touch or native Touch to satisfy React types in event handlers
   function getTouchDist(t0: any, t1: any) {
@@ -78,12 +103,19 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       e.preventDefault();
       lastTouchDist.current = getTouchDist(e.touches[0], e.touches[1]);
       startScale.current = scale;
+      // record pan at the moment pinch starts so we can anchor translations
+      pinchStartPan.current = { x: tx, y: ty };
+      // stop any ongoing fling
+      if (flingRaf.current) cancelAnimationFrame(flingRaf.current);
     } else if (e.touches.length === 1 && scale > 1) {
       // begin pan
       e.preventDefault();
       setIsPanning(true);
       lastPan.current = { x: tx, y: ty };
       startPan.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      lastMovePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      lastMoveTs.current = Date.now();
+      velocity.current = { x: 0, y: 0 };
     }
   };
 
@@ -98,27 +130,62 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       // attempt to keep midpoint stable
       const c = getCentroid(e.touches[0], e.touches[1]);
       const local = toLocalPoint(c.x, c.y);
+      // compute translation relative to pan at pinch start to avoid cumulative drift
       const dx = local.x * (1 - next / startScale.current);
       const dy = local.y * (1 - next / startScale.current);
-      setTx(t => clamp(t + dx, -9999, 9999));
-      setTy(t => clamp(t + dy, -9999, 9999));
+      // clamp to dynamic bounds
+      const b = getBoundsForScale(next);
+      setTx(() => clamp(pinchStartPan.current.x + dx, -b.maxTx, b.maxTx));
+      setTy(() => clamp(pinchStartPan.current.y + dy, -b.maxTy, b.maxTy));
     } else if (e.touches.length === 1 && isPanning) {
       e.preventDefault();
       const cur = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       const dx = cur.x - startPan.current.x;
       const dy = cur.y - startPan.current.y;
-      setTx(clamp(lastPan.current.x + dx, -9999, 9999));
-      setTy(clamp(lastPan.current.y + dy, -9999, 9999));
+      const b = getBoundsForScale(scale);
+      const nextTx = clamp(lastPan.current.x + dx, -b.maxTx - 100, b.maxTx + 100);
+      const nextTy = clamp(lastPan.current.y + dy, -b.maxTy - 100, b.maxTy + 100);
+      setTx(nextTx);
+      setTy(nextTy);
+
+      // velocity tracking (px/sec)
+      const now = Date.now();
+      if (lastMoveTs.current) {
+        const dt = Math.max(1, now - lastMoveTs.current) / 1000;
+        const vx = (cur.x - lastMovePos.current.x) / dt;
+        const vy = (cur.y - lastMovePos.current.y) / dt;
+        velocity.current = { x: vx, y: vy };
+      }
+      lastMoveTs.current = now;
+      lastMovePos.current = cur;
     }
   };
 
   const onTouchEnd: React.TouchEventHandler = (e) => {
     if (!containerRef.current) return;
     if (e.touches.length < 2) lastTouchDist.current = null;
+    // If all fingers removed, stop panning and possibly reset if nearly 1
     if (e.touches.length === 0) {
+      // perform fling if velocity present
       setIsPanning(false);
-      // small release adjustments: if scale close to 1, reset
-      if (scale <= 1.05) reset();
+      const v = velocity.current;
+      const speed = Math.hypot(v.x, v.y);
+      if (speed > 400) {
+        startFling(v.x, v.y);
+      } else {
+        // small release adjustments: if scale close to 1, reset
+        if (scale <= 1.05) reset();
+        else springBack();
+      }
+    }
+    // If one finger remains after a pinch, enable immediate panning with that finger
+    if (e.touches.length === 1) {
+      // set up pan state so the remaining finger continues to pan smoothly
+      setIsPanning(true);
+      lastPan.current = { x: tx, y: ty };
+      startPan.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      // ensure future pinch calculations anchor to the current scale
+      startScale.current = scale;
     }
     // double-tap detection
     if (e.changedTouches.length === 1) {
@@ -158,8 +225,74 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch (_) {}
     pointerActive.current = false;
     setIsPanning(false);
-    if (scale <= 1.05) reset();
+    // check velocity and fling
+    const v = velocity.current;
+    const speed = Math.hypot(v.x, v.y);
+    if (speed > 400) startFling(v.x, v.y);
+    else {
+      if (scale <= 1.05) reset();
+      else springBack();
+    }
   };
+
+  function springBack() {
+    // animate tx/ty back within hard bounds
+    const b = getBoundsForScale(scale);
+    const targetTx = clamp(tx, -b.maxTx, b.maxTx);
+    const targetTy = clamp(ty, -b.maxTy, b.maxTy);
+    const startTx = tx;
+    const startTy = ty;
+    const dur = 300;
+    const start = performance.now();
+    if (flingRaf.current) cancelAnimationFrame(flingRaf.current);
+    function step(now: number) {
+      const t = Math.min(1, (now - start) / dur);
+      const ease = 1 - Math.pow(1 - t, 3);
+      setTx(startTx + (targetTx - startTx) * ease);
+      setTy(startTy + (targetTy - startTy) * ease);
+      if (t < 1) flingRaf.current = requestAnimationFrame(step);
+      else flingRaf.current = null;
+    }
+    flingRaf.current = requestAnimationFrame(step);
+  }
+
+  function startFling(vx: number, vy: number) {
+    if (flingRaf.current) cancelAnimationFrame(flingRaf.current);
+    const decay = 0.95; // per frame multiplier
+    let currVx = vx;
+    let currVy = vy;
+    let prev = performance.now();
+    function frame(now: number) {
+      const dt = Math.max(0, (now - prev) / 1000);
+      prev = now;
+      // move
+      const nextTx = tx + currVx * dt;
+      const nextTy = ty + currVy * dt;
+      const b = getBoundsForScale(scale);
+      // allow small overshoot
+      const softX = b.maxTx + 100;
+      const softY = b.maxTy + 100;
+      const clampedTx = clamp(nextTx, -softX, softX);
+      const clampedTy = clamp(nextTy, -softY, softY);
+      setTx(clampedTx);
+      setTy(clampedTy);
+      // apply decay
+      currVx *= Math.pow(decay, dt * 60);
+      currVy *= Math.pow(decay, dt * 60);
+      // if hit hard bounds, dampen velocity
+      if (clampedTx > b.maxTx || clampedTx < -b.maxTx) currVx *= 0.5;
+      if (clampedTy > b.maxTy || clampedTy < -b.maxTy) currVy *= 0.5;
+      // stop conditions
+      if (Math.hypot(currVx, currVy) < 20) {
+        flingRaf.current = null;
+        // spring back into bounds if necessary
+        springBack();
+        return;
+      }
+      flingRaf.current = requestAnimationFrame(frame);
+    }
+    flingRaf.current = requestAnimationFrame(frame);
+  }
 
   return (
     <div

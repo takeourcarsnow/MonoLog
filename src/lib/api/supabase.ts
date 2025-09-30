@@ -125,7 +125,9 @@ function mapRowToHydratedPost(row: any): HydratedPost {
       displayName: row.users?.displayName || row.users?.display_name || "",
       avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
     },
-    commentsCount: row.comments_count || row.commentsCount || 0,
+    // If the server query included a `comments` array, use its length. Otherwise
+    // fall back to common count columns or 0.
+    commentsCount: (row.comments && Array.isArray(row.comments) ? row.comments.length : (row.comments_count || row.commentsCount || 0)),
   } as HydratedPost;
 }
 
@@ -273,7 +275,7 @@ export const supabaseApi: Api = {
     if (profErr || !profile) return [];
     const ids: string[] = profile.favorites || [];
     if (!ids.length) return [];
-    const { data, error } = await sb.from("posts").select("*, users:users(*)").in("id", ids);
+  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").in("id", ids);
     if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
   },
@@ -281,7 +283,7 @@ export const supabaseApi: Api = {
   async getExploreFeed() {
     console.debug("supabaseApi.getExploreFeed called");
     const sb = getClient();
-  const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("public", true).order("created_at", { ascending: false });
+  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("public", true).order("created_at", { ascending: false });
   logSupabaseError("getExploreFeed", { data, error });
     if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
@@ -289,9 +291,9 @@ export const supabaseApi: Api = {
 
   async getExploreFeedPage({ limit, before }: { limit: number; before?: string }) {
     const sb = getClient();
-    let q: any = sb.from("posts").select("*, users:users(*)").eq("public", true).order("created_at", { ascending: false }).limit(limit);
+  let q: any = sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("public", true).order("created_at", { ascending: false }).limit(limit);
     if (before) q = q.lt("created_at", before);
-    const { data, error } = await q;
+  const { data, error } = await q;
     logSupabaseError("getExploreFeedPage", { data, error });
     if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
@@ -307,7 +309,7 @@ export const supabaseApi: Api = {
     if (profErr || !profile) return [];
     const ids: string[] = profile.following || [];
     if (!ids.length) return [];
-    const { data, error } = await sb.from("posts").select("*, users:users(*)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
+  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
     logSupabaseError("getFollowingFeed", { data, error });
     if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
@@ -322,7 +324,7 @@ export const supabaseApi: Api = {
     if (profErr || !profile) return [];
     const ids: string[] = profile.following || [];
     if (!ids.length) return [];
-    let q: any = sb.from("posts").select("*, users:users(*)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false }).limit(limit);
+  let q: any = sb.from("posts").select("*, users:users(*), comments:comments(id)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false }).limit(limit);
     if (before) q = q.lt("created_at", before);
     const { data, error } = await q;
     logSupabaseError("getFollowingFeedPage", { data, error });
@@ -332,7 +334,7 @@ export const supabaseApi: Api = {
 
   async getUserPosts(userId: string) {
     const sb = getClient();
-  const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("user_id", userId).order("created_at", { ascending: false });
+  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("user_id", userId).order("created_at", { ascending: false });
   logSupabaseError("getUserPosts", { data, error });
     if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
@@ -401,7 +403,7 @@ export const supabaseApi: Api = {
     const start = new Date(dateKey + "T00:00:00.000Z");
     const end = new Date(start);
     end.setDate(start.getDate() + 1);
-  const { data, error } = await sb.from("posts").select("*, users:users(*)").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).order("created_at", { ascending: false });
+  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).order("created_at", { ascending: false });
   logSupabaseError("getPostsByDate", { data, error });
   if (error) throw error;
     return (data || []).map((row: any) => mapRowToHydratedPost(row));
@@ -409,7 +411,7 @@ export const supabaseApi: Api = {
 
   async getPost(id: string) {
     const sb = getClient();
-  const { data, error } = await sb.from("posts").select("*, users:users(*)").eq("id", id).limit(1).single();
+  const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("id", id).limit(1).single();
   logSupabaseError("getPost", { data, error });
   if (error) return null;
     const row = data as any;

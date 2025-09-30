@@ -35,6 +35,28 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
     }
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:comment_added', onGlobalComment as any); };
   }, [post.id]);
+
+  // If the initial hydrated post didn't include a commentsCount (or it's 0),
+  // fetch the comments once to ensure the visible count is accurate. This
+  // guards against server queries that omit the comments relation.
+  useEffect(() => {
+    let mounted = true;
+    // Only do this when the currently-displayed count is falsy and comments
+    // pane isn't already mounted (which would load comments). This avoids
+    // unnecessary duplicate requests.
+    if ((count || 0) > 0) return;
+    if (commentsMounted) return;
+    (async () => {
+      try {
+        const list = await api.getComments(post.id);
+        if (!mounted) return;
+        setCount(list.length || 0);
+      } catch (e) {
+        // ignore failures; leave count as-is
+      }
+    })();
+    return () => { mounted = false; };
+  }, [post.id, count, commentsMounted]);
   const [showAuth, setShowAuth] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

@@ -179,6 +179,21 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     // prevent the touch from bubbling up to parent swipers
     e.stopPropagation();
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
+    // Track active touches to detect multi-finger gestures on browsers
+    // without PointerEvent support. We'll store the identifier values.
+    try {
+      for (let i = 0; i < e.touches.length; i++) {
+        activeTouchPointers.current.add(e.touches[i].identifier as any as number);
+      }
+      if (activeTouchPointers.current.size >= 2) {
+        // treat as pinch
+        finishPointerDrag();
+        setIsZooming(true);
+        isZoomingRef.current = true;
+        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
+        return;
+      }
+    } catch (_) { /* ignore */ }
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
     touchStartX.current = e.touches[0].clientX;
     touchDeltaX.current = 0;
@@ -194,6 +209,10 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
   };
   const onTouchEnd = () => {
+    // Remove all touch pointers (we can't reliably know which ended here
+    // from this handler signature), this keeps activeTouchPointers in sync
+    // for the carousel's multi-touch detection.
+    try { activeTouchPointers.current.clear(); } catch (_) { /* ignore */ }
     // Note: touchend doesn't provide the React.TouchEvent here, but we can still
     // ensure we clear local state. The touchstart/move already stopped propagation.
     if (touchStartX.current == null) return;
@@ -216,6 +235,9 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   // leaves the element. Fall back to touch handlers on older browsers.
   const pointerSupported = typeof window !== 'undefined' && (window as any).PointerEvent !== undefined;
   const draggingRef = useRef(false);
+  // Track active touch pointer ids so we can detect multi-finger gestures
+  // (pinch) at the carousel level and avoid starting carousel drags.
+  const activeTouchPointers = useRef<Set<number>>(new Set());
 
   const onPointerDown = (e: React.PointerEvent) => {
     // If a pinch-zoom is active, don't start carousel pointer handling
@@ -224,6 +246,23 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) { /* ignore */ }
     // only primary
     if (e.button !== 0) return;
+    // If this is a touch pointer, track active pointers and bail out when
+    // multiple touch pointers are present (this indicates a pinch). This
+    // prevents starting a carousel drag when the user is beginning a pinch
+    // gesture on the image.
+    if ((e as any).pointerType === 'touch') {
+      try { activeTouchPointers.current.add((e as any).pointerId); } catch (_) { /* ignore */ }
+      if (activeTouchPointers.current.size >= 2) {
+        // treat as pinch: cancel any active drag and mark zooming so other
+        // handlers don't start a drag. We don't change the index here; the
+        // ImageZoom component will dispatch 'monolog:zoom_start' shortly.
+        finishPointerDrag();
+        setIsZooming(true);
+        isZoomingRef.current = true;
+        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
+        return;
+      }
+    }
     touchStartX.current = e.clientX;
     touchDeltaX.current = 0;
     draggingRef.current = true;
@@ -235,6 +274,9 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    // If multiple touch pointers are active, this is part of a pinch; don't
+    // treat it as a carousel pointer move.
+    if ((e as any).pointerType === 'touch' && activeTouchPointers.current.size >= 2) return;
     if (!draggingRef.current || touchStartX.current == null) return;
     e.preventDefault();
     touchDeltaX.current = e.clientX - touchStartX.current;
@@ -260,6 +302,10 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   const onPointerUp = (e: React.PointerEvent) => {
     const el = trackRef.current as any;
     try { if (el && el.releasePointerCapture) el.releasePointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+    // If this was a touch pointer, remove it from the active set
+    if ((e as any).pointerType === 'touch') {
+      try { activeTouchPointers.current.delete((e as any).pointerId); } catch (_) { /* ignore */ }
+    }
     finishPointerDrag();
   };
 
@@ -267,6 +313,9 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     const el = trackRef.current as any;
     try { if (el && el.releasePointerCapture) el.releasePointerCapture(e.pointerId); } catch (_) { /* ignore */ }
     // snap back
+    if ((e as any).pointerType === 'touch') {
+      try { activeTouchPointers.current.delete((e as any).pointerId); } catch (_) { /* ignore */ }
+    }
     finishPointerDrag();
   };
 

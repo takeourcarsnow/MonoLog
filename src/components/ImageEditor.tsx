@@ -912,8 +912,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     octx.globalAlpha = 1;
     octx.filter = 'none';
   }
-  // draw image centered with padding for the frame
-  octx.drawImage(img, srcX, srcY, srcW, srcH, padPx, padPx, srcW, srcH);
+  // image content has been drawn above with filters applied where appropriate;
+  // ensure filter state is cleared before applying additional effects
   octx.filter = 'none';
   // --- Bake additional visual effects (Soft Focus / Fade / Matte) into export ---
   const curSoft = Math.min(1, Math.max(0, softFocus));

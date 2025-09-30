@@ -161,6 +161,12 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
 
   useEffect(() => {
     if (!trackRef.current) return;
+    // Don't override the inline transform while an ImageZoom pinch is active.
+    // Updating the transform mid-pinch can cause the carousel to snap back to
+    // the first slide on some devices/browsers. The ImageZoom already manages
+    // its own touch handling and stops propagation; while zooming we simply
+    // avoid touching the track's transform and re-sync when the zoom ends.
+    if (isZoomingRef.current) return;
     trackRef.current.style.transform = `translateX(-${index * 100}%)`;
   }, [index]);
 
@@ -313,7 +319,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [index]);
 
   // Listen for ImageZoom pinch start/end so we can disable carousel dragging while zooming
   useEffect(() => {
@@ -324,8 +330,13 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
       isZoomingRef.current = true;
     }
     function onZoomEnd() {
+      // Re-enable carousel updates and re-sync the track transform so the
+      // carousel stays on the current slide after an ImageZoom ends.
       setIsZooming(false);
       isZoomingRef.current = false;
+      try {
+        if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+      } catch (_) { /* ignore */ }
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:zoom_start', onZoomStart as EventListener);

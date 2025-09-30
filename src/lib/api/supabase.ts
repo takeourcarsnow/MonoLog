@@ -494,6 +494,15 @@ export const supabaseApi: Api = {
     // refresh current user's profile from users table so we return the up-to-date displayName / avatarUrl
     let profile = await this.getCurrentUser();
     if (!profile) profile = cur; // fallback
+    // notify other UI components that a comment was added so they can update counts optimistically
+    try {
+      if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
+        const ev = new CustomEvent('monolog:comment_added', { detail: { postId, commentId: json.id } });
+        window.dispatchEvent(ev);
+      }
+    } catch (e) {
+      // ignore event dispatch failures
+    }
     return { id: json.id, postId, userId: cur.id, text: text.trim(), createdAt: json.created_at, user: { id: profile.id, username: profile.username || '', displayName: profile.displayName || '', avatarUrl: profile.avatarUrl || '' } } as any;
   },
 

@@ -151,33 +151,26 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 .content { position: relative; /* allow certain header elements to overflow (e.g. avatar shadows) */ overflow: visible; }
 
-/* Slide animations for swipe navigation */
+/* Page slide: support swipe-to-navigate with smooth transforms. We keep
+   a single .page-slide element and animate its transform/opacity on
+   navigation or during pointer/touch drags. Respect prefers-reduced-motion
+   by disabling translations for users who opt out. */
 .content > .page-slide {
-  position: relative; will-change: transform, opacity; transition: transform 260ms var(--transition-mid), opacity 260ms var(--transition-mid);
-  /* allow JS driven transforms to feel immediate while preserving the
-     smooth animated transitions for programmatic navigations */
-  transform: translateZ(0);
+  position: relative;
+  will-change: transform, opacity;
+  transition: transform .26s var(--transition-mid), opacity .26s var(--transition-mid);
+  transform: translateX(0);
 }
-.content.dragging > .page-slide, .content > .page-slide.dragging {
-  /* while following pointer, disable CSS transition so the element
-     feels directly attached to the finger/mouse */
-  transition: none !important;
+
+/* directional classes used by JS navigation (enter/exit states) */
+.content.slide-left > .page-slide { transform: translateX(-100%); opacity: 0.92; }
+.content.slide-right > .page-slide { transform: translateX(100%); opacity: 0.92; }
+.content.slide-enter-left > .page-slide { transform: translateX(100%); }
+.content.slide-enter-right > .page-slide { transform: translateX(-100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .content > .page-slide { transition: opacity 120ms linear; transform: none !important; }
 }
-.content.slide-left > .page-slide {
-  transform: translateX(-100%);
-  opacity: 0.96;
-}
-.content.slide-right > .page-slide {
-  transform: translateX(100%);
-  opacity: 0.96;
-}
-.content.slide-enter-left > .page-slide {
-  transform: translateX(100%);
-}
-.content.slide-enter-right > .page-slide {
-  transform: translateX(-100%);
-}
-.content:focus { outline: none; }
 
 .tabbar {
   position: fixed; bottom: 0; left: 0; right: 0;

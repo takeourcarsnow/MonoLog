@@ -10,8 +10,36 @@ export async function POST(req: Request) {
 
   const id = uid();
     const created_at = new Date().toISOString();
-    const { error } = await sb.from('comments').insert({ id, post_id: postId, user_id: actorId, text: text.trim(), created_at });
-    if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
+    // Try inserting using common snake_case column names first, then
+    // fall back to alternate naming if the insert fails (some schemas
+    // use `postid`/`userid` or camelCase). This keeps the endpoint
+    // tolerant of DB variations.
+    let insertErr: any = null;
+    try {
+      const res = await sb.from('comments').insert({ id, post_id: postId, user_id: actorId, text: text.trim(), created_at });
+      insertErr = res.error;
+    } catch (e) {
+      insertErr = e;
+    }
+    if (insertErr) {
+      // try compact snake / different conventions
+      try {
+        const res2 = await sb.from('comments').insert({ id, postid: postId, userid: actorId, text: text.trim(), createdat: created_at });
+        insertErr = res2.error;
+      } catch (e) {
+        insertErr = e;
+      }
+    }
+    if (insertErr) {
+      // As a last resort, try camelCase variants
+      try {
+        const res3 = await sb.from('comments').insert({ id, postId, userId: actorId, text: text.trim(), createdAt: created_at });
+        insertErr = res3.error;
+      } catch (e) {
+        insertErr = e;
+      }
+    }
+    if (insertErr) return NextResponse.json({ error: String(insertErr.message || insertErr) }, { status: 500 });
     // Try to create a notification for the post owner. This is best-effort
     // — if the notifications table doesn't exist or the insert fails, we
     // shouldn't block comment creation.

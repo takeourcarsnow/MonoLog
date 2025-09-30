@@ -432,7 +432,20 @@ export const supabaseApi: Api = {
 
   async getComments(postId: string) {
     const sb = getClient();
-    const { data, error } = await sb.from("comments").select("*, users:users(*)").eq("post_id", postId).order("created_at", { ascending: true });
+    // Some DB schemas may use `post_id` or `postid` or `postId` as the column.
+    // Try common variants and fall back gracefully.
+    let data: any = null;
+    let error: any = null;
+    try {
+      const res = await sb.from("comments").select("*, users:users(*)").eq("post_id", postId).order("created_at", { ascending: true });
+      data = res.data; error = res.error;
+    } catch (e) { error = e; }
+    if (error) {
+      try {
+        const res2 = await sb.from("comments").select("*, users:users(*)").eq("postid", postId).order("createdat", { ascending: true });
+        data = res2.data; error = res2.error;
+      } catch (e) { error = e; }
+    }
     if (error) throw error;
     return (data || []).map((c: any) => ({
       id: c.id,

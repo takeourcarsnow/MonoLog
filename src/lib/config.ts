@@ -17,3 +17,16 @@ export const SUPABASE = {
   url: process?.env?.NEXT_PUBLIC_SUPABASE_URL || "",
   anonKey: process?.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
 };
+
+// Development-time debug to help diagnose why the app may still run in local mode.
+// This intentionally does not log secret keys. Restart the dev server after
+// changing .env.local to ensure NEXT_PUBLIC_* variables are picked up.
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    // only print whether the URL is present, not the value
+    // eslint-disable-next-line no-console
+    console.debug('[config] mode=%s, hasSupabaseUrl=%s', CONFIG.mode, SUPABASE.url ? 'yes' : 'no');
+  } catch (e) {
+    // swallow errors
+  }
+}

@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { CONFIG } from "@/lib/config";
 import { seedIfNeeded } from "@/lib/seed";
 import { ToastHost, ToastProvider } from "./Toast";
+import { NotificationListener } from "./NotificationListener";
 import { usePathname, useRouter } from "next/navigation";
 
 const swipeTabs = ["/feed", "/explore", "/upload", "/calendar", "/profile"];
@@ -171,6 +172,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {!ready ? <div className="card skeleton" style={{ height: 240 }} /> : <div className="page-slide">{children}</div>}
       </main>
       <NavBar />
+  <NotificationListener />
       <ToastHost />
     </ToastProvider>
   );

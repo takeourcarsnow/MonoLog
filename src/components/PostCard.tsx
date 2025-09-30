@@ -363,19 +363,22 @@ export function PostCard({ post: initial }: { post: HydratedPost }) {
                       setShowAuth(true);
                       return;
                     }
+                    // optimistic update: flip UI immediately, call API, revert on error
+                    const prev = isFavorite;
+                    setIsFavorite(!prev);
                     try {
-                      if (await api.isFavorite(post.id)) {
+                      if (prev) {
                         await api.unfavoritePost(post.id);
-                        setIsFavorite(false);
                       } else {
                         await api.favoritePost(post.id);
-                        setIsFavorite(true);
                       }
                     } catch (e: any) {
+                      // revert optimistic change and notify user
+                      setIsFavorite(prev);
                       toast.show(e?.message || "Failed to toggle favorite");
                     }
                   }}
-                  >
+                >
                   <span className="star" aria-hidden="true">{isFavorite ? "★" : "☆"}</span>
                 </button>
             </div>

@@ -469,7 +469,10 @@ export const supabaseApi: Api = {
     const res = await fetch('/api/comments/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: cur.id, postId, text }) });
     const json = await res.json();
     if (!res.ok) throw new Error(json?.error || 'Failed to add comment');
-    return { id: json.id, postId, userId: cur.id, text: text.trim(), createdAt: json.created_at, user: { id: cur.id, username: cur.username || '', displayName: cur.displayName || '', avatarUrl: cur.avatarUrl || '' } } as any;
+    // refresh current user's profile from users table so we return the up-to-date displayName / avatarUrl
+    let profile = await this.getCurrentUser();
+    if (!profile) profile = cur; // fallback
+    return { id: json.id, postId, userId: cur.id, text: text.trim(), createdAt: json.created_at, user: { id: profile.id, username: profile.username || '', displayName: profile.displayName || '', avatarUrl: profile.avatarUrl || '' } } as any;
   },
 
   async canPostToday() {

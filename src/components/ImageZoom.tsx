@@ -26,6 +26,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
   const [isPanning, setIsPanning] = useState(false);
+  const [isTile, setIsTile] = useState(false);
   const doubleTapRef = useRef<number | null>(null);
 
   const clamp = (v: number, a = -Infinity, b = Infinity) => Math.max(a, Math.min(b, v));
@@ -79,6 +80,19 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     setTy(0);
     setIsPanning(false);
   };
+
+  // Detect if this ImageZoom is rendered inside a grid tile so we can
+  // use cover/fill styles (center & crop) to make images align nicely.
+  React.useEffect(() => {
+    try {
+      const el = containerRef.current;
+      if (!el) return;
+      const tile = el.closest && (el.closest('.tile') as Element | null);
+      setIsTile(!!tile);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
 
   const handleDoubleTap = (clientX: number, clientY: number) => {
     // toggle between 1 and 2x (or maxScale if smaller)
@@ -333,7 +347,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       style={{
         overflow: "hidden",
         touchAction: scale > 1 ? "none" : "pan-y",
-        display: "inline-block",
+        // make the container fill the card width so images can center
+        display: "block",
+        width: "100%",
+        boxSizing: "border-box",
         ...style,
       }}
       onTouchStart={onTouchStart}
@@ -354,8 +371,16 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
           transformOrigin: "center center",
           transition: isPanning ? "none" : "transform 120ms ease-out",
           display: "block",
-          width: "100%",
-          height: "auto",
+          // When rendered inside a square grid tile, fill the tile and
+          // crop (object-fit: cover) so images are centered consistently.
+          // Otherwise render responsive width with preserved aspect ratio
+          // and center the image within the card.
+          width: isTile ? "100%" : "auto",
+          maxWidth: isTile ? undefined : "100%",
+          height: isTile ? "100%" : "auto",
+          margin: isTile ? undefined : "0 auto",
+          objectFit: isTile ? "cover" : "contain",
+          objectPosition: "center center",
           userSelect: "none",
           touchAction: scale > 1 ? "none" : "pan-y",
         }}

@@ -268,7 +268,17 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   .tab-indicator { transition: opacity 120ms linear; transform: none !important; }
 }
 
-.feed { display: grid; gap: 14px; }
+.feed {
+  display: grid;
+  gap: 14px;
+  /* center feed/explore content to match the app's main max width */
+  max-width: var(--maxw);
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  /* keep a small horizontal padding so full-bleed slides don't touch the edges */
+  padding: 0 12px;
+}
 .card {
   background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: var(--shadow); overflow: hidden;
@@ -356,8 +366,25 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 .card-media img.loaded { opacity: 1; }
 
-.card-media { background: #00000006; overflow: hidden; max-width: 100%; }
-.card-media img { width: 100%; height: auto; object-fit: contain; display: block; background: var(--bg); }
+.card-media {
+  background: #00000006;
+  overflow: hidden;
+  max-width: 100%;
+  /* center media (single images) horizontally inside the card */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-media img {
+  /* let images use their intrinsic width up to the card width, and center */
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  background: var(--bg);
+}
 
 /* Subtle frame for photos in feed / explore
    - uses an inset 1px ring to emulate a photo frame without changing layout
@@ -1011,8 +1038,8 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 @media (min-width: 680px) {
   .grid { grid-template-columns: repeat(4, 1fr); }
 }
-.tile { aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #0001; }
-.tile img { width: 100%; height: 100%; object-fit: cover; }
+.tile { aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #0001; display: flex; align-items: center; justify-content: center; }
+.tile img { width: 100%; height: 100%; object-fit: cover; object-position: center center; }
 
 /* ensure anchors used as user links have a clear focus ring */
 .user-link:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 60%); outline-offset: 4px; border-radius: 999px; }

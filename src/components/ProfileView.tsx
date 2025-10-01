@@ -63,6 +63,32 @@ export function ProfileView({ userId }: { userId?: string }) {
 
   const toast = useToast();
 
+  // Inline edit state (when viewing own profile we allow editing directly in header)
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editBio, setEditBio] = useState("");
+  const [editProcessing, setEditProcessing] = useState(false);
+  const displayNameRef = useRef<HTMLInputElement | null>(null);
+
+  // helper to persist edits and refresh UI
+  const saveEdits = async () => {
+    const uname = (editUsername || '').trim();
+    if (!uname) { toast.show('Username cannot be empty'); return; }
+    setEditProcessing(true);
+    try {
+      await api.updateCurrentUser({ username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200) });
+      const me = await api.getCurrentUser();
+      setUser(me);
+      if (me) setPosts(await api.getUserPosts(me.id));
+      setIsEditingProfile(false);
+    } catch (e: any) {
+      toast.show(e?.message || 'Failed to update profile');
+    } finally {
+      setEditProcessing(false);
+    }
+  };
+
   // handle avatar file selection directly in the profile view so we don't
   // need to open the edit panel just to change avatar
   const handleAvatarChange = async () => {
@@ -178,10 +204,33 @@ export function ProfileView({ userId }: { userId?: string }) {
             <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
           )}
           <div style={{ textAlign: "center", minWidth: 0 }}>
-            <div className="username">{user.displayName}</div>
-            <div className="dim">@{user.username} • joined {new Date(user.joinedAt).toLocaleDateString()}</div>
-            {/* post count intentionally hidden in design */}
-            {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
+            {!isEditingProfile ? (
+              <>
+                <div className="username">{user.displayName}</div>
+                <div className="dim">@{user.username} • joined {new Date(user.joinedAt).toLocaleDateString()}</div>
+                {/* post count intentionally hidden in design */}
+                {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
+              </>
+            ) : (
+              // Inline edit form inside header
+              <div className="inline-edit-card" style={{ width: '100%', maxWidth: 720 }}>
+                <label style={{ display: 'block', marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Display name</div>
+                  <input ref={displayNameRef} className="input" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
+                </label>
+                <label style={{ display: 'block', marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Username (used in @handle)</div>
+                  <input className="input" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
+                </label>
+                <label className="bio-col" style={{ display: 'block', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>Bio</div>
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }} aria-live="polite">{editBio.length}/200</div>
+                  </div>
+                  <textarea className="bio-editor" value={editBio} maxLength={200} onChange={e => setEditBio(e.target.value.slice(0,200))} />
+                </label>
+              </div>
+            )}
           </div>
         </div>
           <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
@@ -190,12 +239,32 @@ export function ProfileView({ userId }: { userId?: string }) {
                 matches the current user. */}
             {currentUserId && user?.id === currentUserId ? (
               <>
-                <EditProfile onSaved={async () => {
-                  // refresh the profile and posts after an edit so UI reflects changes immediately
-                  const me = await api.getCurrentUser();
-                  setUser(me);
-                  if (me) setPosts(await api.getUserPosts(me.id));
-                }} />
+                <button
+                  className="btn icon-reveal edit-profile-btn"
+                  onClick={async () => {
+                    // toggle inline edit mode; when entering populate fields
+                    if (!isEditingProfile) {
+                      setEditDisplayName(user.displayName || "");
+                      setEditUsername(user.username || "");
+                      setEditBio((user.bio || "").slice(0,200));
+                      setIsEditingProfile(true);
+                      // focus after next paint so input exists
+                      requestAnimationFrame(() => { displayNameRef.current?.focus?.(); });
+                      return;
+                    }
+                    // when closing via the Edit Profile button, auto-save the edits
+                    await saveEdits();
+                  }}
+                  aria-expanded={isEditingProfile}
+                  type="button"
+                >
+                  <span className="icon" aria-hidden>
+                    {/* edit/profile icon */}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </span>
+                  <span className="reveal">{isEditingProfile ? 'Close' : 'Edit Profile'}</span>
+                </button>
+                {/* Save will occur when closing the inline card; no separate Save/Cancel buttons */}
                 <Link className="btn primary icon-reveal" href="/upload" aria-label="New Post">
                   <span className="icon" aria-hidden>
                     {/* camera icon */}
@@ -279,8 +348,11 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
   useEffect(() => {
     (async () => {
       const me = await api.getCurrentUser();
-      setBio(me?.bio || "");
-      setOriginal(me?.bio || "");
+      // enforce client-side cap so the editor never exceeds the visible limit
+      const BIO_MAX = 200;
+      const trimmed = me?.bio ? String(me.bio).slice(0, BIO_MAX) : "";
+      setBio(trimmed);
+      setOriginal(trimmed);
       setUsername(me?.username || "");
       setOriginalUsername(me?.username || "");
       setDisplayName(me?.displayName || "");
@@ -368,14 +440,20 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
               <span className="dim">Username (used in @handle)</span>
               <input className="input" type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="username" />
             </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span className="dim">Bio</span>
+            <label className="bio-col" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span className="dim">Bio</span>
+                {/* live counter */}
+                <span className="dim" aria-live="polite" style={{ fontSize: 12 }}>{bio.length}/200</span>
+              </div>
               <textarea
                 className="bio-editor"
-                rows={3}
-                style={{ width: 320 }}
                 value={bio}
-                onChange={e => setBio(e.target.value)}
+                maxLength={200}
+                onChange={e => {
+                  const v = e.target.value.slice(0, 200);
+                  setBio(v);
+                }}
               />
             </label>
           </div>
@@ -388,7 +466,9 @@ function EditProfile({ onSaved }: { onSaved?: () => Promise<void> | void } = {})
                   if (!uname) { toast.show("Username cannot be empty"); return; }
                   setProcessing(true);
                   try {
-                    await api.updateCurrentUser({ username: uname, displayName: displayName.trim() || undefined, bio: bio.trim() });
+                    // ensure bio respects the server-side limit as well
+                    const BIO_MAX = 200;
+                    await api.updateCurrentUser({ username: uname, displayName: displayName.trim() || undefined, bio: bio.trim().slice(0, BIO_MAX) });
                     setEditing(false);
                     try { await onSaved?.(); } catch (e) { /* ignore parent refresh errors */ }
                   } catch (e: any) {

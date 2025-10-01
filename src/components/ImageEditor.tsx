@@ -254,11 +254,10 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     // for the canvas drawing coordinates.
     const cssW = canvas.clientWidth || Math.max(100, canvas.width / (window.devicePixelRatio || 1));
     const cssH = canvas.clientHeight || Math.max(100, canvas.height / (window.devicePixelRatio || 1));
-  // add an inset so the image appears slightly smaller and doesn't hug the edges
-  // make padding responsive: smaller padding on narrow viewports so the preview remains large enough
-  const padRatio = cssW <= 420 ? 0.06 : 0.12; // 6% on small screens, 12% on larger
-  const availW = Math.max(1, cssW * (1 - padRatio * 2));
-  const availH = Math.max(1, cssH * (1 - padRatio * 2));
+    // Minimal padding so image fills most of the editor canvas
+    const padRatio = 0.02; // just 2% padding for breathing room
+    const availW = Math.max(1, cssW * (1 - padRatio * 2));
+    const availH = Math.max(1, cssH * (1 - padRatio * 2));
   const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
   const dispW = img.naturalWidth * baseScale;
   const dispH = img.naturalHeight * baseScale;
@@ -277,25 +276,15 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       const dpr = window.devicePixelRatio || 1;
       // use clientWidth/clientHeight to avoid transform/scale issues from parent modals
       const contW = Math.max(100, Math.round(cont.clientWidth));
-      // pick a responsive height so editor fits smaller screens (fallback)
-      const targetMax = Math.round(Math.min(window.innerHeight * 0.6, 480));
-      const targetHeight = Math.max(180, targetMax);
-      // If we have a loaded source image, prefer a canvas height that matches
-      // the image aspect ratio (so the photo fills the canvas without extra
-      // top/bottom letterboxing). Clamp to the targetHeight bounds.
-      let finalHeight = targetHeight;
-      const img = imgRef.current;
-      if (img && img.naturalWidth && img.naturalHeight) {
-        const imgAspect = img.naturalHeight / img.naturalWidth;
-        // compute height that preserves image aspect for current width
-        const aspectHeight = Math.max(100, Math.round(contW * imgAspect));
-        // prefer image-based height but clamp to a reasonable maximum so panels remain visible
-        finalHeight = Math.min(targetHeight, Math.max(140, aspectHeight));
-      }
+      // Make the canvas use much more vertical space - aim for a larger editor
+      // Use 70-80% of viewport height to give the image plenty of room
+      const availableHeight = window.innerHeight - 200; // leave room for header + controls
+      const targetHeight = Math.max(320, Math.min(availableHeight, 800));
+      
       c.width = Math.max(100, Math.round(contW * dpr));
-      c.height = Math.max(100, Math.round(finalHeight * dpr));
+      c.height = Math.max(100, Math.round(targetHeight * dpr));
       c.style.width = `${contW}px`;
-      c.style.height = `${finalHeight}px`;
+      c.style.height = `${targetHeight}px`;
       // recompute image layout after resize so image stays centered
         const info = computeImageLayout();
         if (info) {
@@ -1090,10 +1079,10 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
         </div>
       </div>
 
-      <div style={{ position: 'relative', background: 'var(--bg)', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', touchAction: 'none', display: 'block', borderRadius: 6, transition: 'box-shadow 240ms ease', minHeight: 140, maxHeight: '60vh' }}
+          style={{ width: '100%', touchAction: 'none', display: 'block', transition: 'box-shadow 240ms ease', minHeight: 140 }}
         />
 
         {/* header rotate buttons now handle rotate; removed tiny top-right rotate button to improve discoverability */}

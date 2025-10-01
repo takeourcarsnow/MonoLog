@@ -639,6 +639,12 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                             if (e.propertyName !== 'max-height') return;
                             node.style.maxHeight = '';
                             node.removeEventListener('transitionend', onEnd as any);
+                            
+                            // Scroll the comments section into view after animation completes
+                            // Use setTimeout to ensure the layout is fully settled
+                            setTimeout(() => {
+                              node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }, 50);
                           }
                           node.addEventListener('transitionend', onEnd as any);
                         });

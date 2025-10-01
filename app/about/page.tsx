@@ -23,13 +23,13 @@ export default function AboutPage() {
         </section>
 
         <section style={{ marginBottom: '1.5em' }}>
-          <h3>How it's different from Instagram</h3>
+          <h3>How it&apos;s different from Instagram</h3>
           <ul style={{ display: 'inline-block', textAlign: 'left', padding: '0 1em', lineHeight: 1.6, marginTop: '0.5em' }}>
             <li><strong>One post per day</strong> — No spam, no overthinking. Just one daily entry with up to five images.</li>
             <li><strong>Favorites instead of public likes</strong> — You can favorite posts you love; there are no public like counts to chase.</li>
             <li><strong>Chronological feed</strong> — See posts from people you follow in the order they were posted. No algorithmic ranking.</li>
             <li><strong>Privacy control</strong> — Choose whether a post is public or private. You control your sharing.</li>
-            <li><strong>No ads, no tracking</strong> — Your data isn't sold and your attention isn't monetized.</li>
+            <li><strong>No ads, no tracking</strong> — Your data isn&apos;t sold and your attention isn&apos;t monetized.</li>
             <li><strong>Calm by design</strong> — Minimal notifications and no engagement metrics to distract you.</li>
           </ul>
         </section>
@@ -46,7 +46,7 @@ export default function AboutPage() {
         </section>
 
         <p className="dim" style={{ margin: '1em auto' }}>
-          MonoLog is for people who want to document their lives without being consumed by social media. It's a tool for memory, not a platform for performance. Simple, intentional, and driven by the community that uses it.
+          MonoLog is for people who want to document their lives without being consumed by social media. It&apos;s a tool for memory, not a platform for performance. Simple, intentional, and driven by the community that uses it.
         </p>
 
         <div style={{ marginTop: 14, display: 'flex', gap: 8, justifyContent: 'center' }}>

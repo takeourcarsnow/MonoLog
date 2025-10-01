@@ -1,0 +1,201 @@
+/* PublishButton.css - Standalone publish button with countdown */
+
+.publish-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  min-height: 40px; /* closer to visibility pill */
+  padding: 6px 18px; /* compact */
+  border: none;
+  border-radius: 999px; /* pill */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  overflow: hidden;
+  background: var(--primary-weak); /* pastel base (cooldown style) */
+  color: var(--text);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--primary), transparent 85%);
+  line-height: 1; /* tighter vertical rhythm */
+}
+
+.publish-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.publish-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.publish-button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Ready state - can publish */
+.publish-button.ready {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--primary), transparent 70%);
+}
+
+.publish-button.ready.pulse {
+  animation: ready-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ready-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary), transparent 70%);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 24px color-mix(in srgb, var(--primary), transparent 50%);
+  }
+}
+
+/* Cooldown state */
+.publish-button.cooldown {
+  background: color-mix(in srgb, var(--primary-weak), var(--primary) 22%); /* slightly richer than weak */
+  color: var(--text);
+  cursor: default;
+}
+
+.publish-button.cooldown:hover {
+  transform: none; /* no lift when inactive */
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary), transparent 80%);
+}
+
+/* Cooldown shrinking bar (remaining portion) */
+.cooldown-bar { position:absolute; inset:0; border-radius:inherit; overflow:hidden; background: color-mix(in srgb, var(--primary-weak), transparent 60%); }
+.cooldown-bar .fill { position:absolute; top:0; bottom:0; left:0; background: linear-gradient(90deg, color-mix(in srgb, var(--primary), #fff 20%), var(--primary)); opacity:.18; backdrop-filter: blur(1px) brightness(1.05); transition: width 1s linear; }
+.publish-button.flash .cooldown-bar .fill { animation: flashBar 900ms ease; }
+@keyframes flashBar { 0% { filter: brightness(1.8); opacity:.55; } 40% { filter: brightness(1.1); opacity:.22; } 100% { filter: brightness(1); opacity:.18; } }
+
+/* Flash digits when clicking during cooldown */
+.publish-button.flash .countdown-time { animation: flashDigits 900ms ease; }
+@keyframes flashDigits { 0% { transform: scale(1.08); text-shadow:0 0 12px color-mix(in srgb, var(--primary), #fff 40%); } 50% { transform: scale(1); } 100% { text-shadow: 0 1px 3px rgba(0,0,0,.25); } }
+
+/* Content container */
+.publish-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Ready text with icon */
+.publish-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.ready-text {
+  animation: ready-text-glow 2s ease-in-out infinite;
+}
+
+@keyframes ready-text-glow {
+  0%, 100% {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.icon-publish {
+  width: 20px;
+  height: 20px;
+  animation: icon-float 2s ease-in-out infinite;
+}
+
+@keyframes icon-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Spinner for processing state */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Countdown display */
+.countdown-display {
+  display: flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  transition: opacity 0.3s ease;
+  letter-spacing: .5px;
+}
+
+.countdown-time { font-size: 16px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.25); }
+
+/* removed show-message state */
+
+/* removed segmented time styles */
+
+/* removed cooldown text message styles */
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .publish-button.ready.pulse,
+  .ready-text,
+  .icon-publish,
+  .spinner {
+    animation: none !important;
+  }
+  
+  .publish-button {
+    transition: none;
+  }
+  
+  .publish-button.show-message .cooldown-message {
+    animation: none;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .publish-button {
+    min-height: 38px;
+    padding: 6px 16px;
+    font-size: 13.5px;
+  }
+  .cooldown-message { font-size: 13px; padding: 0 24px; }
+  .time-value { font-size: 15px; }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .publish-button {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .publish-button:not(:disabled):hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+}

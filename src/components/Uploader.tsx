@@ -11,6 +11,7 @@ import { useToast } from "./Toast";
 import ImageEditor, { EditorSettings } from "./ImageEditor";
 import Portal from "./Portal";
 import ConfirmModal from "./ConfirmModal";
+import { PublishButton } from "./PublishButton";
 
 // the canonical list of philosophical prompts used for rotation and animated typing
 // 10 short, contemplative prompts (rotate one per refresh)
@@ -196,16 +197,18 @@ function UploaderCore() {
       setCanPost(can.allowed);
       // prefer server-provided nextAllowedAt if present; otherwise compute 24h from now
       if (!can.allowed) {
-        const next = can.nextAllowedAt ?? (Date.now() + 24 * 60 * 60 * 1000);
+        const COOLDOWN_TOTAL_MS = 24 * 60 * 60 * 1000; // canonical full cooldown
+        const next = can.nextAllowedAt ?? (Date.now() + COOLDOWN_TOTAL_MS);
         setNextAllowedAt(next);
-        // capture current total interval so we can show progress
-        try { setCountdownTotalMs(next - Date.now()); } catch (e) {}
+        // Always use the full 24h window so progress reflects true fraction elapsed across reloads
+        setCountdownTotalMs(COOLDOWN_TOTAL_MS);
         try {
           localStorage.setItem('monolog:nextAllowedAt', String(next));
         } catch (e) {}
       } else {
         // clear any stored value if allowed
         try { localStorage.removeItem('monolog:nextAllowedAt'); } catch (e) {}
+        setCountdownTotalMs(null);
       }
     })();
   }, []);
@@ -220,21 +223,23 @@ function UploaderCore() {
     if (!initial) return;
     
     function fmt(ms: number) {
-      // Display ONLY hours and minutes; seconds are implied by a blinking colon.
-      // We ceil seconds so we don't show a minute early (prevents jumping to publish too soon visually).
-      if (ms <= 0) return "0:00";
-      const totalSeconds = Math.ceil(ms / 1000);
+      // Display hours, minutes, and seconds for full countdown visibility
+      if (ms <= 0) return "0:00:00";
+      const totalSeconds = Math.floor(ms / 1000);
       const h = Math.floor(totalSeconds / 3600);
       const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
       const pad = (n: number) => String(n).padStart(2, "0");
-      return `${h}:${pad(m)}`; // always show hours (can be 0) for consistent layout
+      return `${h}:${pad(m)}:${pad(s)}`;
     }
     
     // set initial
     const ms0 = initial - Date.now();
-    setRemaining(fmt(ms0));
+    const initialTime = fmt(ms0);
+    setRemaining(initialTime);
     setRemainingMs(ms0);
-    if (!countdownTotalMs) setCountdownTotalMs(ms0);
+    // If total window not already set (e.g. page refreshed mid-cooldown before initial effect ran), assume full 24h
+    if (!countdownTotalMs) setCountdownTotalMs(24 * 60 * 60 * 1000);
     
     const id = setInterval(() => {
       const ms = initial! - Date.now();
@@ -247,12 +252,13 @@ function UploaderCore() {
         clearInterval(id);
         return;
       }
-      setRemaining(fmt(ms));
+      const newTime = fmt(ms);
+      setRemaining(newTime);
       setRemainingMs(ms);
-    }, 1000);
+    }, 1000); // update every second
     
     return () => clearInterval(id);
-  }, [nextAllowedAt]);
+  }, [nextAllowedAt, countdownTotalMs]);
 
 
   const toast = useToast();
@@ -534,17 +540,6 @@ function UploaderCore() {
   }, [hasPreview]);
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''}`}>
-      {/* Local styles for publish/countdown animations */}
-      <style>{`
-        .btn.primary.ready { animation: none; }
-        body.uploader-pulse-ready .btn.primary.ready span > svg { transform-origin: center; animation: pulse 1600ms ease-in-out infinite; }
-        @keyframes pulse { 0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(125,211,252,0.0)); } 50% { transform: scale(1.06); filter: drop-shadow(0 6px 14px rgba(125,211,252,0.12)); } 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(125,211,252,0.0)); } }
-        /* smooth ring transition when filling */
-        svg circle[stroke-dasharray] { transition: stroke-dasharray 0.9s linear; }
-        /* Blinking colon for H:MM countdown */
-        .remaining-time .colon { animation: blink-colon 1s steps(2,start) infinite; display:inline-block; }
-        @keyframes blink-colon { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
-      `}</style>
 
       {!dataUrl && !dataUrls.length && (
         <div
@@ -871,23 +866,25 @@ function UploaderCore() {
                 <div>
                   <img alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')} src={dataUrls[0] || dataUrl || ""} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
                       { (dataUrl || dataUrls.length === 1) ? (
-                        <>
+                        <div className="image-actions">
                           <button
-                            className="btn"
-                            style={{ position: 'absolute', right: 8, bottom: 8 }}
+                            className="image-action-btn edit-btn"
+                            aria-label="Edit photo"
                             onClick={() => { setEditingIndex(0); setEditing(true); }}
                           >
-                            Edit photo
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
                           </button>
                           <button
                             type="button"
-                            className="btn"
-                            style={{ position: 'absolute', right: 100, bottom: 8, zIndex: 8, padding: '6px 12px' }}
+                            className="image-action-btn change-btn"
+                            aria-label="Change photo"
                             onClick={() => {
                               if (processing) return;
                               fileActionRef.current = 'replace';
                               replaceIndexRef.current = dataUrls.length ? index : 0;
-                              // Keep the current preview visible; open picker for replacement
                               setEditing(false);
                               try {
                                 if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = "";
@@ -895,9 +892,13 @@ function UploaderCore() {
                               try { fileInputRef.current?.click(); } catch (e) {}
                             }}
                           >
-                            Change photo
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="17 8 12 3 7 8" />
+                              <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
                           </button>
-                        </>
+                        </div>
                       ) : null }
                 </div>
               )}
@@ -1083,7 +1084,6 @@ function UploaderCore() {
       {(dataUrl || dataUrls.length > 0) ? (
         <div className="form-row">
           <label className="vis-label">
-            <span className="dim">Visibility</span>
             <div>
               <button
                 type="button"
@@ -1105,101 +1105,29 @@ function UploaderCore() {
                     <path d="M1 1l22 22" stroke="currentColor" />
                   </svg>
                 </span>
-                <span style={{ marginLeft: 4 }}>{visibility === 'private' ? 'Private' : 'Public'}</span>
+                <span style={{ marginLeft: 8 }}>{visibility === 'private' ? 'Private' : 'Public'}</span>
               </button>
             </div>
           </label>
 
           <div className="btn-group">
-            {/* Publish / Countdown button with animated icon and ring */}
-            <button
-              className={`btn primary ${canPost ? 'ready' : 'cooldown'}`}
-              onClick={() => publish(false)}
-              disabled={
-                processing ||
-                (compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024) ||
-                (canPost === false)
-              }
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}
-            >
-              {/* Icon + ring */}
-              <span style={{ display: 'inline-block', width: 36, height: 36, position: 'relative' }} aria-hidden>
-                <svg viewBox="0 0 36 36" width="36" height="36" style={{ display: 'block' }}>
-                  <defs>
-                    <linearGradient id="g1" x1="0%" x2="100%">
-                      <stop offset="0%" stopColor="var(--primary)" />
-                      <stop offset="100%" stopColor="#7dd3fc" />
-                    </linearGradient>
-                  </defs>
-                  <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="4" />
-                  {/* progress path */}
-                  {remainingMs != null && countdownTotalMs ? (
-                    (() => {
-                      const pct = Math.max(0, Math.min(1, 1 - remainingMs / countdownTotalMs));
-                      const circumference = 2 * Math.PI * 15;
-                      const dash = String(circumference * pct);
-                      const dashGap = String(Math.max(0, circumference - circumference * pct));
-                      return (
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="15"
-                          fill="none"
-                          stroke="url(#g1)"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          strokeDasharray={`${dash} ${dashGap}`}
-                          transform="rotate(-90 18 18)"
-                        />
-                      );
-                    })()
-                  ) : null}
-                </svg>
-
-                {/* small center icon that pulses when ready */}
-                <span style={{ position: 'absolute', left: 6, top: 6, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg viewBox="0 0 24 24" width="20" height="20" style={{ display: 'block', color: 'white' }}>
-                    <circle cx="12" cy="12" r="10" fill={canPost ? 'var(--primary)' : 'rgba(255,255,255,0.06)'} />
-                    <path d="M8 12l2 2 6-6" fill="none" stroke={canPost ? 'white' : 'rgba(255,255,255,0.6)'} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </span>
-
-              <span style={{ fontWeight: 600, lineHeight: '20px', whiteSpace: 'nowrap' }}>
-                {processing
-                  ? "Processing…"
-                  : canPost === false
-                  ? nextAllowedAt
-                    ? (
-                        <>
-                          Next post in {(() => {
-                            if (!remaining) return "0:00";
-                            const parts = remaining.split(":");
-                            if (parts.length === 2) {
-                              return (
-                                <span className="remaining-time" aria-label={`Next post in ${parts[0]} hours and ${parts[1]} minutes`}>
-                                  <span className="h" aria-hidden>{parts[0]}</span>
-                                  <span className="colon" aria-hidden>:</span>
-                                  <span className="m" aria-hidden>{parts[1]}</span>
-                                </span>
-                              );
-                            }
-                            return remaining;
-                          })()}
-                        </>
-                      )
-                    : "Publish again in 24h"
-                  : "Publish"}
-              </span>
-            </button>
+            {/* New PublishButton component with countdown */}
+            <PublishButton
+              canPost={canPost ?? false}
+              remaining={remaining}
+              remainingMs={remainingMs}
+              countdownTotalMs={countdownTotalMs}
+              processing={processing}
+              disabled={compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024}
+              onPublish={() => publish(false)}
+            />
             <button
               type="button"
-              className="btn ghost"
+              className="btn cancel-btn"
               onClick={() => setShowDiscardModal(true)}
               disabled={processing}
-              style={{ marginLeft: 8 }}
             >
-              Cancel
+              <span className="cancel-inner">Cancel</span>
             </button>
           </div>
         </div>

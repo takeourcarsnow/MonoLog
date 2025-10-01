@@ -1562,7 +1562,20 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .about-card .card-body .dim { white-space: pre-wrap; }
 
 /* view toggle */
-.view-toggle { display:flex; justify-content:space-between; align-items:center; gap:12px; padding: 8px 10px; background: transparent; }
+/* Constrain the toggle bar to the same centered width/padding as the feed content
+   so its title/subtitle and the list/grid button align with post cards. */
+.view-toggle {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  max-width: var(--maxw);
+  margin: 0 auto 4px; /* center and add a little spacing below */
+  padding: 0 12px; /* match horizontal padding of .feed */
+  box-sizing: border-box;
+  background: transparent;
+}
 .view-toggle .btn { padding: 6px 10px; }
 
 /* Uploader: blurred preview while processing */

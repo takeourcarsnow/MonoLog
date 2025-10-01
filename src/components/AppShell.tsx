@@ -127,7 +127,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
 
-  const isMainView = views.some(v => v.path === pathname);
+  // Treat the root path as a main swipe-view so the homepage renders
+  // the same Swiper layout (feed/explore/upload/calendar/profile)
+  // as the explicit /feed route. This keeps the caption, view toggle and
+  // other layout elements positioned identically between / and /feed.
+  const isMainView = pathname === "/" || views.some(v => v.path === pathname);
 
   return (
     <ToastProvider>

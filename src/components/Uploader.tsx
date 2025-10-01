@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import { CONFIG } from "@/lib/config";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "./Toast";
 import ImageEditor, { EditorSettings } from "./ImageEditor";
 import Portal from "./Portal";
@@ -25,6 +25,9 @@ const PHRASES = [
   "Capture a fragment of today and give it room to breathe.",
   "Let these frames sit together—quiet, patient, and honest.",
 ];
+
+// sessionStorage key used to remember an open editor across route hops
+const EDITING_SESSION_KEY = 'monolog:upload_editor_open';
 
 export function Uploader() {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -48,6 +51,7 @@ export function Uploader() {
   const [editing, setEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number>(0);
   const [editingAlt, setEditingAlt] = useState<string>("");
+  const pathname = usePathname();
 
   // When the image editor is open, prevent background scrolling so the overlay
   // feels like a true modal on mobile (covers full viewport and blocks interaction).
@@ -59,6 +63,55 @@ export function Uploader() {
     }
     return;
   }, [editing]);
+
+  // Close editor automatically if user navigates away from /upload
+  useEffect(() => {
+    if (editing && pathname !== '/upload') {
+      // Persist open state so coming back can restore it
+      try {
+        sessionStorage.setItem(EDITING_SESSION_KEY, JSON.stringify({ open: true, index: editingIndex, alt: editingAlt }));
+      } catch {}
+      setEditing(false); // unmount editor while off the page
+    }
+  }, [pathname, editing]);
+
+  // Persist or clear the session flag whenever editing state changes
+  useEffect(() => {
+    try {
+      if (editing) {
+        sessionStorage.setItem(EDITING_SESSION_KEY, JSON.stringify({ open: true, index: editingIndex, alt: editingAlt }));
+      } else {
+        // Only clear if we're still on /upload; if we left the page the route-change effect already stored it
+        if (pathname === '/upload') sessionStorage.removeItem(EDITING_SESSION_KEY);
+      }
+    } catch {}
+  }, [editing, editingIndex, editingAlt, pathname]);
+
+  // One-time restoration of editor state after returning to /upload.
+  // Waits for images (dataUrls or dataUrl) to exist so we can safely reopen.
+  const attemptedEditorRestoreRef = useRef(false);
+  useEffect(() => {
+    if (attemptedEditorRestoreRef.current) return; // already attempted
+    if (pathname !== '/upload') return; // only restore on upload page
+    if (editing) { attemptedEditorRestoreRef.current = true; return; } // already open
+    // Ensure we have at least one image loaded (arrays restored asynchronously)
+    if (!(dataUrls.length > 0 || dataUrl)) return; // wait for next render when images appear
+    try {
+      const raw = sessionStorage.getItem(EDITING_SESSION_KEY);
+      if (!raw) { attemptedEditorRestoreRef.current = true; return; }
+      const parsed = JSON.parse(raw);
+      if (!parsed?.open) { attemptedEditorRestoreRef.current = true; return; }
+      const idx = Math.min(parsed.index ?? 0, (dataUrls.length ? dataUrls.length - 1 : 0));
+      if (!(dataUrls[idx] || dataUrl)) { attemptedEditorRestoreRef.current = true; return; }
+      setEditingIndex(idx);
+      if (typeof parsed.alt === 'string') setEditingAlt(parsed.alt);
+      requestAnimationFrame(() => setEditing(true));
+    } catch {
+      // swallow errors silently
+    } finally {
+      attemptedEditorRestoreRef.current = true;
+    }
+  }, [pathname, dataUrls.length, dataUrl, editing]);
   // rotating caption placeholder (persisted across reloads so users see a different prompt each time)
   // Initialize from localStorage so the rotated prompt appears immediately on first render.
   const [placeholder, setPlaceholder] = useState<string>(() => {
@@ -616,10 +669,8 @@ export function Uploader() {
               <span>{processing ? 'Processing…' : 'Loading…'}</span>
             </div>
           ) : null}
-          {editing && (dataUrls[editingIndex] || dataUrl) ? (
-            // Render the editor in a top-level portal to avoid clipping from ancestor overflow/transform.
+          {editing && pathname === '/upload' && (dataUrls[editingIndex] || dataUrl) ? (
             <Portal>
-              {/* Fullscreen overlay to ensure the editor covers the entire viewport on mobile */}
               <div
                 role="dialog"
                 aria-modal="true"
@@ -631,17 +682,14 @@ export function Uploader() {
                   justifyContent: 'center',
                   padding: 12,
                   boxSizing: 'border-box',
-                  // Keep overlay visually above page content but below the bottom nav
-                  // (bottom nav uses z-index: 10 in globals.css). Choosing 9 lets the nav
-                  // remain visible and interactive while the editor sits above the page.
-                      // ensure overlay sits above persistent UI (bottom nav) and honors safe-area insets
-                      zIndex: 10001,
-                      background: 'color-mix(in srgb, var(--bg) 88%, rgba(0,0,0,0.32))'
+                  zIndex: 10001,
+                  background: 'color-mix(in srgb, var(--bg) 88%, rgba(0,0,0,0.32))',
+                  backdropFilter: 'blur(6px)'
                 }}
-                onClick={() => { /* clicking overlay will close only if desired; keep clicks outside ImageEditor to close */ setEditing(false); }}
+                onClick={() => setEditing(false)}
               >
-                    <div style={{ width: '100%', maxWidth: 960, margin: '0 auto', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - (72px + var(--safe-bottom, 12px)) - 24px)', overflow: 'auto', paddingRight: 6, paddingBottom: 'calc(var(--safe-bottom, 12px) + 12px)'}}>
+                <div style={{ width: '100%', maxWidth: 960, margin: '0 auto', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - (72px + var(--safe-bottom, 12px)) - 24px)', overflow: 'auto', paddingRight: 6, paddingBottom: 'calc(var(--safe-bottom, 12px) + 12px)' }}>
                     <input
                       className="input"
                       type="text"
@@ -654,21 +702,18 @@ export function Uploader() {
                       initialSettings={editorSettings[editingIndex] || {}}
                       onCancel={() => setEditing(false)}
                       onApply={async (newUrl, settings) => {
-                        // persist alt for this image
                         setAlt(prev => {
                           if (Array.isArray(prev)) {
                             const copy = [...prev];
                             copy[editingIndex] = editingAlt || "";
                             return copy;
                           }
-                          // if single string but multiple images, convert to array
                           if (dataUrls.length > 1) {
                             const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
                             return arr;
                           }
                           return editingAlt || "";
                         });
-                        // persist the settings for this image
                         setEditorSettings(prev => {
                           const copy = [...prev];
                           while (copy.length <= editingIndex) copy.push({});
@@ -676,25 +721,19 @@ export function Uploader() {
                           return copy;
                         });
                         setEditing(false);
-                        // run through the same compression pipeline to ensure final image obeys limits
                         setProcessing(true);
                         try {
                           const compressed = await compressImage(newUrl as any);
-                          // replace the edited image at editingIndex
                           setDataUrls(d => {
                             const copy = [...d];
                             copy[editingIndex] = compressed;
                             return copy;
                           });
-                          // DO NOT update originalDataUrls - keep the original unedited version
-                          // if editing the main preview index, update dataUrl too
                           if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
                           setCompressedSize(approxDataUrlBytes(compressed));
-                          // approximate original size from dataurl length
                           setOriginalSize(approxDataUrlBytes(newUrl));
                         } catch (e) {
                           console.error(e);
-                          // fallback to the edited url directly
                           setDataUrls(d => {
                             const copy = [...d];
                             copy[editingIndex] = newUrl as string;

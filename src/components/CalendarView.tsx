@@ -54,6 +54,7 @@ export function CalendarView() {
 
   return (
     <div className="view-fade">
+      <div className="calendar-page">
       <div className="calendar">
         <div className="header">
           <button className="btn" id="prev" aria-label="Previous month" onClick={() => {
@@ -129,7 +130,7 @@ export function CalendarView() {
           </div>
         </div>
       </div>
-      <div className="feed" id="day-feed">
+  <div className="feed" id="day-feed">
         {selectedDay ? (
           <div style={{ marginBottom: 8 }}>
             <strong>{new Date(selectedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
@@ -142,6 +143,7 @@ export function CalendarView() {
       : <div className="empty">No public posts for that day.</div>)
       : null
   )}
+      </div>
       </div>
     </div>
   );

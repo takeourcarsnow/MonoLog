@@ -447,6 +447,8 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<any>(null);
   const dblClickDetectedRef = useRef(false);
+  const [favoriteOverlayState, setFavoriteOverlayState] = useState<'adding' | 'removing' | null>(null);
+  const overlayTimerRef = useRef<any>(null);
 
   async function toggleFavoriteWithAuth() {
     const cur = await api.getCurrentUser();
@@ -465,6 +467,19 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     }
   }
 
+  const showFavoriteFeedback = (action: 'adding' | 'removing') => {
+    // Clear any existing overlay timer
+    if (overlayTimerRef.current) {
+      try { clearTimeout(overlayTimerRef.current); } catch (_) {}
+    }
+    
+    setFavoriteOverlayState(action);
+    const duration = action === 'adding' ? 600 : 500;
+    overlayTimerRef.current = setTimeout(() => {
+      setFavoriteOverlayState(null);
+    }, duration);
+  };
+
   const handleMediaClick = (e: React.MouseEvent, postHref: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -475,14 +490,14 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     clickCountRef.current += 1;
     
     if (clickCountRef.current === 1) {
-      // First click: schedule navigation
+      // First click: schedule navigation (reduced to 280ms for snappier feel)
       clickTimerRef.current = setTimeout(() => {
         if (!dblClickDetectedRef.current) {
           try { router.push(postHref); } catch (_) {}
         }
         clickCountRef.current = 0;
         dblClickDetectedRef.current = false;
-      }, 300);
+      }, 280);
     }
   };
 
@@ -502,8 +517,10 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     // Reset click count
     clickCountRef.current = 0;
     
-    // Favorite the post
-    if (!isFavorite) toggleFavoriteWithAuth();
+    // Toggle favorite (add OR remove) and show visual feedback
+    const willAdd = !isFavorite;
+    toggleFavoriteWithAuth();
+    showFavoriteFeedback(willAdd ? 'adding' : 'removing');
     
     // Reset the double-click flag after a delay
     setTimeout(() => {
@@ -511,7 +528,10 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     }, 400);
   };
 
-  useEffect(() => () => { if (clickTimerRef.current) { try { clearTimeout(clickTimerRef.current); } catch (_) {} } }, []);
+  useEffect(() => () => { 
+    if (clickTimerRef.current) { try { clearTimeout(clickTimerRef.current); } catch (_) {} }
+    if (overlayTimerRef.current) { try { clearTimeout(overlayTimerRef.current); } catch (_) {} }
+  }, []);
 
   // share helper
   const sharePost = async () => {
@@ -645,7 +665,12 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
         </div>
       </div>
 
-  <div className="card-media">
+      <div className="card-media" style={{ position: 'relative' }}>
+        {favoriteOverlayState && (
+          <div className={`favorite-overlay ${favoriteOverlayState}`} aria-hidden="true">
+            ★
+          </div>
+        )}
         {/* clickable media should navigate to the post page */}
         {(() => {
           const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;

@@ -145,6 +145,15 @@ export function ExploreView() {
       const clickCounts = new Map<string, number>();
       const clickTimers = new Map<string, any>();
       const dblClickFlags = new Map<string, boolean>();
+      const [overlayStates, setOverlayStates] = useState<Record<string, 'adding' | 'removing' | null>>({});
+
+      const showOverlay = (postId: string, action: 'adding' | 'removing') => {
+        setOverlayStates(prev => ({ ...prev, [postId]: action }));
+        const duration = action === 'adding' ? 600 : 500;
+        setTimeout(() => {
+          setOverlayStates(prev => ({ ...prev, [postId]: null }));
+        }, duration);
+      };
 
       const handleTileClick = (e: React.MouseEvent, post: HydratedPost) => {
         e.preventDefault();
@@ -163,7 +172,7 @@ export function ExploreView() {
             }
             clickCounts.set(post.id, 0);
             dblClickFlags.delete(post.id);
-          }, 300);
+          }, 280);
           clickTimers.set(post.id, timer);
         }
       };
@@ -185,8 +194,18 @@ export function ExploreView() {
         try {
           const cur = await api.getCurrentUser();
           if (!cur) { toast.show('Sign in to favorite'); return; }
-          await api.favoritePost(post.id);
-          toast.show('Added to favorites');
+          
+          // Check if already favorited to toggle properly
+          const isFav = await api.isFavorite(post.id);
+          if (isFav) {
+            await api.unfavoritePost(post.id);
+            toast.show('Removed from favorites');
+            showOverlay(post.id, 'removing');
+          } else {
+            await api.favoritePost(post.id);
+            toast.show('Added to favorites');
+            showOverlay(post.id, 'adding');
+          }
         } catch (e:any) {
           toast.show(e?.message || 'Failed');
         }
@@ -207,7 +226,13 @@ export function ExploreView() {
               role="button" 
               tabIndex={0} 
               onKeyDown={(e) => { if (e.key==='Enter') handleTileClick(e as any, p); }}
+              style={{ position: 'relative' }}
             >
+              {overlayStates[p.id] && (
+                <div className={`favorite-overlay ${overlayStates[p.id]}`} aria-hidden="true">
+                  ★
+                </div>
+              )}
               <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents' }} onClick={(e)=> e.preventDefault()}>
                 <img
                   loading="lazy"

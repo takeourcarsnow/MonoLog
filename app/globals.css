@@ -606,6 +606,59 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .action.share:hover { opacity: 1; }
 .action.share:active { transform: scale(.9); }
 
+/* Double-tap favorite overlay */
+.favorite-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  pointer-events: none;
+  z-index: 100;
+  will-change: transform, opacity;
+}
+
+.favorite-overlay.adding {
+  color: #FFD700;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.2), 0 0 20px rgba(255,215,0,0.4);
+  animation: favoriteAdd 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.favorite-overlay.removing {
+  color: #999;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  animation: favoriteRemove 500ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+@keyframes favoriteAdd {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.5); 
+    opacity: 0; 
+  }
+  30% {
+    opacity: 1;
+  }
+  60% { 
+    transform: translate(-50%, -50%) scale(1.08); 
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1) translateY(-8px); 
+    opacity: 0; 
+  }
+}
+
+@keyframes favoriteRemove {
+  0% { 
+    transform: translate(-50%, -50%) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(0.3); 
+    opacity: 0; 
+  }
+}
+
 @keyframes starPop {
   0% { transform: scale(0.9) rotate(-6deg); }
   40% { transform: scale(1.18) rotate(6deg); }

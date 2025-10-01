@@ -437,8 +437,13 @@ export function Uploader() {
             <div className="drop-text">Drop images here or click to select</div>
             <div className="dim" style={{ marginTop: 6 }}>JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB</div>
             <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-              <button className="btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} disabled={processing}>Add files</button>
-              <button className="btn" onClick={async (e) => {
+              <button type="button" className="btn icon-reveal" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} disabled={processing}>
+                <span className="icon" aria-hidden>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </span>
+                <span className="reveal">Add files</span>
+              </button>
+              <button type="button" className="btn icon-reveal" onClick={async (e) => {
                 e.stopPropagation();
                 // prefer getUserMedia modal; fall back to capture file input when unavailable
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -456,7 +461,12 @@ export function Uploader() {
                 } else {
                   try { cameraInputRef.current?.click(); } catch (_) {}
                 }
-              }} disabled={processing}>Take photo</button>
+              }} disabled={processing}>
+                <span className="icon" aria-hidden>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </span>
+                <span className="reveal">Take photo</span>
+              </button>
             </div>
           </div>
         </div>
@@ -841,7 +851,8 @@ export function Uploader() {
               style={{ ['--len' as any]: String(typed.length), ['--steps' as any]: String(typed.length) }}
             >
               <span className="typewriter">{typed}</span>
-              <span className="caret" aria-hidden>▌</span>
+              {/* use a thinner vertical bar and slightly smaller size so the caret is less obtrusive */}
+              <span className="caret" aria-hidden style={{ fontSize: 14, transform: 'translateY(-1px)' }}>|</span>
             </span>
           ) : null}
 

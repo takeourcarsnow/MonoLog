@@ -89,6 +89,35 @@ export function ProfileView({ userId }: { userId?: string }) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editDisplayName, setEditDisplayName] = useState("");
   const [editUsername, setEditUsername] = useState("");
+
+  // When a global auth:changed event fires (e.g. sign-in via Header modal),
+  // re-fetch the current user for implicit /profile route (or when viewing
+  // own profile via /profile/[id]). This fixes the need to hard refresh.
+  useEffect(() => {
+    function handleAuthChanged() {
+      (async () => {
+        if (isOtherParam && currentUserId && currentUserId !== userId) return;
+        let me: any = null;
+        for (let i = 0; i < 8; i++) {
+          // eslint-disable-next-line no-await-in-loop
+          me = await api.getCurrentUser();
+          if (me) break;
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise(r => setTimeout(r, 120));
+        }
+        if (me) {
+          setCurrentUserId(me.id);
+          setUser(me);
+          try { setPosts(await api.getUserPosts(me.id)); } catch (_) {}
+          setLoading(false);
+        }
+      })();
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:changed', handleAuthChanged as any);
+    }
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handleAuthChanged as any); };
+  }, [userId, isOtherParam, currentUserId]);
   const [editBio, setEditBio] = useState("");
   const [editProcessing, setEditProcessing] = useState(false);
   const displayNameRef = useRef<HTMLInputElement | null>(null);

@@ -14,7 +14,12 @@ export async function POST(req: Request) {
     const name = filename || `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
     const path = `${userId}/${name}`;
     const sb = getServiceSupabase();
-    const { data, error } = await sb.storage.from('posts').upload(path, buf, { upsert: true, contentType: mime as any });
+    // CRITICAL: When using service role, explicitly set the owner metadata so RLS policies work correctly
+    const { data, error } = await sb.storage.from('posts').upload(path, buf, { 
+      upsert: true, 
+      contentType: mime as any,
+      metadata: { owner: userId }  // Set owner explicitly for RLS policies
+    });
     if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
     const { data: urlData } = sb.storage.from('posts').getPublicUrl(path);
     return NextResponse.json({ ok: true, publicUrl: urlData.publicUrl });

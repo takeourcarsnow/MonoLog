@@ -723,13 +723,6 @@ function UploaderCore() {
               >
                 <div style={{ width: '100%', maxWidth: 960, margin: '0 auto', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - (72px + var(--safe-bottom, 12px)) - 24px)', overflow: 'auto', paddingRight: 6, paddingBottom: 'calc(var(--safe-bottom, 12px) + 12px)' }}>
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="Alt text (describe your photo for accessibility)"
-                      value={editingAlt}
-                      onChange={e => setEditingAlt(e.target.value)}
-                    />
                     <ImageEditor
                       initialDataUrl={(originalDataUrls[editingIndex] || originalDataUrls[0] || dataUrls[editingIndex] || dataUrl) as string}
                       initialSettings={editorSettings[editingIndex] || {}}

@@ -25,14 +25,6 @@ export function FeedView() {
     (async () => {
       try {
         const page = await api.getFollowingFeedPage({ limit: PAGE_SIZE });
-        console.debug("FeedView: loaded initial page", { len: page.length, pageSize: PAGE_SIZE });
-        try {
-          if (typeof window !== 'undefined') {
-            // compact snapshot for pasting: show first few post ids and image counts
-            // eslint-disable-next-line no-console
-            console.debug('[FeedView] initial page snapshot', page.slice(0,6).map(p => ({ id: p.id, images: Array.isArray(p.imageUrls) ? p.imageUrls.length : (p.imageUrl ? 1 : 0), imageUrls: (p.imageUrls || p.imageUrl) ? (Array.isArray(p.imageUrls) ? p.imageUrls.slice(0,5) : [p.imageUrl]) : [] })));
-          }
-        } catch (e) {}
         if (!mounted) return;
         setPosts(page);
         setHasMore(page.length === PAGE_SIZE);
@@ -83,13 +75,6 @@ export function FeedView() {
             const last = posts[posts.length - 1];
             const before = last?.createdAt;
             const next = await api.getFollowingFeedPage({ limit: PAGE_SIZE, before });
-            console.debug("FeedView: loaded next page", { len: next.length, before });
-              try {
-                if (typeof window !== 'undefined') {
-                  // eslint-disable-next-line no-console
-                  console.debug('[FeedView] next page snapshot', next.slice(0,6).map(p => ({ id: p.id, images: Array.isArray(p.imageUrls) ? p.imageUrls.length : (p.imageUrl ? 1 : 0), imageUrls: (p.imageUrls || p.imageUrl) ? (Array.isArray(p.imageUrls) ? p.imageUrls.slice(0,5) : [p.imageUrl]) : [] })));
-                }
-              } catch (e) {}
             setPosts(prev => [...prev, ...next]);
             setHasMore(next.length === PAGE_SIZE);
           } catch (e) {

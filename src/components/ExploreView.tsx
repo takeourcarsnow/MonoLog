@@ -30,7 +30,6 @@ export function ExploreView() {
     (async () => {
       try {
         const page = await api.getExploreFeedPage({ limit: PAGE_SIZE });
-        console.debug("ExploreView: loaded initial page", { len: page.length, pageSize: PAGE_SIZE });
         if (!mounted) return;
         setPosts(page);
         setHasMore(page.length === PAGE_SIZE);
@@ -76,7 +75,6 @@ export function ExploreView() {
           const last = postsRef.current[postsRef.current.length - 1];
           const before = last?.createdAt;
           const next = await api.getExploreFeedPage({ limit: PAGE_SIZE, before });
-          console.debug("ExploreView: loaded next page", { len: next.length, before });
           setPosts(prev => [...prev, ...next]);
           setHasMore(next.length === PAGE_SIZE);
           if (next.length === PAGE_SIZE) try { obs.observe(el); } catch (e) { /* ignore */ }

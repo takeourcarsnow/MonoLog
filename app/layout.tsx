@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
               const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
               const s = JSON.stringify({ url: url || null, anonKey: anon || null });
-              return "(function(){try{(window).__MONOLOG_RUNTIME_SUPABASE__=" + s + "; if(window.__MONOLOG_RUNTIME_SUPABASE__ && (window.__MONOLOG_RUNTIME_SUPABASE__.url || window.__MONOLOG_RUNTIME_SUPABASE__.anonKey)){console.log('[runtime-init] injected runtime supabase keys (server)');} }catch(e){} })();";
+              return "(function(){try{(window).__MONOLOG_RUNTIME_SUPABASE__=" + s + "; }catch(e){} })();";
             } catch (e) {
               return '';
             }

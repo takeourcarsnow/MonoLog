@@ -46,11 +46,9 @@ export function AccountSwitcher() {
       }
       if (!mounted) return;
       try {
-        try { console.debug('[AccountSwitcher] runtime keys present?', !!(window as any).__MONOLOG_RUNTIME_SUPABASE__); } catch (e) {}
         // Try API once, then attempt a small fallback when null is returned to
         // handle races where the Supabase client/session hasn't fully hydrated.
         let u = await api.getCurrentUser();
-        try { console.debug('[AccountSwitcher] api.getCurrentUser ->', u); } catch (e) {}
         if (!mounted) return;
         // If api returned null but runtime keys exist, try a direct auth probe
         // on the Supabase client and retry once. This helps when session data
@@ -68,16 +66,13 @@ export function AccountSwitcher() {
             if (maybeUser) {
               // re-call through API (which may synthesize profile) once more
               u = await api.getCurrentUser();
-              try { console.debug('[AccountSwitcher] fallback -> api.getCurrentUser ->', u); } catch (e) {}
             }
           } catch (e) {
             // ignore fallback errors and continue to set null/unauth view below
-            try { console.debug('[AccountSwitcher] supabase fallback failed', e); } catch (_) {}
           }
         }
         setMe(u);
       } catch (e) {
-        try { console.error('[AccountSwitcher] getCurrentUser error', e); } catch (er) {}
         // On error, set to null so UI falls back to unauthenticated view.
         if (mounted) setMe(null);
       }

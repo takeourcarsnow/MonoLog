@@ -422,16 +422,16 @@ function UploaderCore() {
     return () => { mounted = false; };
   }, [caption]);
 
-  // Log size stats to the console only (no UI display)
+  // Size stats tracked internally but not logged in production
   useEffect(() => {
     if (originalSize != null) {
-      try { console.info(`Original: ${Math.round(originalSize / 1024)} KB`); } catch {}
+      // Size tracking available for debugging if needed
     }
   }, [originalSize]);
 
   useEffect(() => {
     if (compressedSize != null) {
-      try { console.info(`Compressed: ${Math.round(compressedSize / 1024)} KB`); } catch {}
+      // Size tracking available for debugging if needed
     }
   }, [compressedSize]);
 

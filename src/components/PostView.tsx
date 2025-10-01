@@ -6,12 +6,15 @@ import { api } from "@/lib/api";
 import { PostCard } from "./PostCard";
 import type { HydratedPost } from "@/lib/types";
 
-export function PostView({ id }: { id: string }) {
-  const [post, setPost] = useState<HydratedPost | null>(null);
-  const [loading, setLoading] = useState(true);
+export function PostView({ id, initialPost }: { id: string; initialPost?: HydratedPost | null }) {
+  const [post, setPost] = useState<HydratedPost | null>(initialPost || null);
+  const [loading, setLoading] = useState(!initialPost);
   const router = useRouter();
 
   useEffect(() => {
+    // If we already have initialPost, skip fetching
+    if (initialPost) return;
+    
     (async () => {
       try {
         // client debug
@@ -26,7 +29,7 @@ export function PostView({ id }: { id: string }) {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, initialPost]);
 
   const goBack = () => {
     // If there's a meaningful history, go back. Otherwise, fall back to Explore.

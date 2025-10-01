@@ -1084,7 +1084,7 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .tile img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* fill tile, crop excess while preserving aspect */
+  object-fit: contain; /* show full image without cropping */
   object-position: center center;
   display: block;
 }

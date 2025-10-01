@@ -528,22 +528,36 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     // simple frame overlay (stroke around image)
     if (curFrameEnabled) {
       // Draw frame bands between outer disp rect and inner uniformly-scaled image.
+      // Use integer coordinates to avoid sub-pixel rendering gaps/seams.
       ctx.save();
       ctx.fillStyle = curFrameColor === 'white' ? '#ffffff' : '#000000';
-      const outerL = left;
-      const outerT = top;
-      const outerR = left + dispW;
-      const outerB = top + dispH;
-      // top
-      if (imgTop > outerT) ctx.fillRect(outerL, outerT, dispW, imgTop - outerT);
-      // bottom
-      const bottomGap = outerB - (imgTop + imgH);
-      if (bottomGap > 0) ctx.fillRect(outerL, imgTop + imgH, dispW, bottomGap);
-      // left
-      if (imgLeft > outerL) ctx.fillRect(outerL, imgTop, imgLeft - outerL, imgH);
-      // right
-      const rightGap = outerR - (imgLeft + imgW);
-      if (rightGap > 0) ctx.fillRect(imgLeft + imgW, imgTop, rightGap, imgH);
+      // Round all coordinates to whole pixels to eliminate gaps
+      const outerL = Math.floor(left);
+      const outerT = Math.floor(top);
+      const outerR = Math.ceil(left + dispW);
+      const outerB = Math.ceil(top + dispH);
+      const innerL = Math.floor(imgLeft);
+      const innerT = Math.floor(imgTop);
+      const innerR = Math.ceil(imgLeft + imgW);
+      const innerB = Math.ceil(imgTop + imgH);
+      
+      // Draw frame as overlapping rectangles to ensure no gaps
+      // top band
+      if (innerT > outerT) {
+        ctx.fillRect(outerL, outerT, outerR - outerL, innerT - outerT + 1);
+      }
+      // bottom band
+      if (innerB < outerB) {
+        ctx.fillRect(outerL, innerB - 1, outerR - outerL, outerB - innerB + 1);
+      }
+      // left band (full height to cover any gaps)
+      if (innerL > outerL) {
+        ctx.fillRect(outerL, outerT, innerL - outerL + 1, outerB - outerT);
+      }
+      // right band (full height to cover any gaps)
+      if (innerR < outerR) {
+        ctx.fillRect(innerR - 1, outerT, outerR - innerR + 1, outerB - outerT);
+      }
       ctx.restore();
     }
 
@@ -985,25 +999,35 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     octx.save();
     const thicknessPx = Math.max(1, Math.round(Math.min(srcW, srcH) * Math.max(0, Math.min(0.5, frameThickness))));
     octx.fillStyle = frameColor === 'white' ? '#ffffff' : '#000000';
-    // integer coords to avoid seams
+    // Use integer coords and add 1px overlap to eliminate any sub-pixel gaps/seams
     const outerX = 0;
     const outerY = 0;
-    const outerW = srcW + padPx * 2;
-    const outerH = srcH + padPx * 2;
-    const innerX = padPx;
-    const innerY = padPx;
-    const innerW = srcW;
-    const innerH = srcH;
-    // top band
-    octx.fillRect(outerX, outerY, outerW, Math.max(1, innerY - outerY));
-    // bottom band
-    const bottomY = innerY + innerH;
-    octx.fillRect(outerX, bottomY, outerW, Math.max(1, outerY + outerH - bottomY));
-    // left band
-    octx.fillRect(outerX, innerY, Math.max(1, innerX - outerX), innerH);
-    // right band
-    const rightX = innerX + innerW;
-    octx.fillRect(rightX, innerY, Math.max(1, outerX + outerW - rightX), innerH);
+    const outerW = Math.ceil(srcW + padPx * 2);
+    const outerH = Math.ceil(srcH + padPx * 2);
+    const innerX = Math.floor(padPx);
+    const innerY = Math.floor(padPx);
+    const innerW = Math.ceil(srcW);
+    const innerH = Math.ceil(srcH);
+    const innerR = innerX + innerW;
+    const innerB = innerY + innerH;
+    
+    // Draw overlapping bands to ensure no gaps
+    // top band (with 1px overlap on sides)
+    if (innerY > outerY) {
+      octx.fillRect(outerX, outerY, outerW, innerY - outerY + 1);
+    }
+    // bottom band (with 1px overlap on sides)
+    if (innerB < outerH) {
+      octx.fillRect(outerX, innerB - 1, outerW, outerH - innerB + 1);
+    }
+    // left band (full height)
+    if (innerX > outerX) {
+      octx.fillRect(outerX, outerY, innerX - outerX + 1, outerH);
+    }
+    // right band (full height)
+    if (innerR < outerW) {
+      octx.fillRect(innerR - 1, outerY, outerW - innerR + 1, outerH);
+    }
     octx.restore();
   }
   const dataUrl = out.toDataURL('image/jpeg', 0.92);
@@ -1039,18 +1063,70 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     >
       {/* scoped styles for sliders and subtle animations */}
       <style>{`
-        .imgedit-range { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 999px; outline: none; transition: box-shadow .18s ease; }
-        .imgedit-range:active { box-shadow: 0 6px 18px rgba(0,0,0,0.14); }
-        .imgedit-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: white; border: 3px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.18); transition: transform .12s ease; }
-        .imgedit-range::-webkit-slider-thumb:active { transform: scale(0.96); }
-        .imgedit-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: white; border: 3px solid var(--primary); }
+        .imgedit-range { 
+          -webkit-appearance: none; 
+          appearance: none; 
+          height: 10px; 
+          border-radius: 999px; 
+          outline: none; 
+          transition: box-shadow .2s ease, transform .2s ease; 
+          cursor: pointer;
+        }
+        .imgedit-range:hover { transform: scaleY(1.1); }
+        .imgedit-range:active { box-shadow: 0 8px 24px rgba(0,0,0,0.16); }
+        .imgedit-range::-webkit-slider-thumb { 
+          -webkit-appearance: none; 
+          appearance: none; 
+          width: 22px; 
+          height: 22px; 
+          border-radius: 50%; 
+          background: white; 
+          border: 3px solid var(--primary); 
+          box-shadow: 0 4px 14px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1); 
+          transition: transform .15s cubic-bezier(.2,.9,.2,1), box-shadow .15s ease;
+          cursor: grab;
+        }
+        .imgedit-range::-webkit-slider-thumb:hover { 
+          transform: scale(1.15); 
+          box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        .imgedit-range::-webkit-slider-thumb:active { 
+          transform: scale(1.05); 
+          cursor: grabbing;
+        }
+        .imgedit-range::-moz-range-thumb { 
+          width: 22px; 
+          height: 22px; 
+          border-radius: 50%; 
+          background: white; 
+          border: 3px solid var(--primary); 
+          box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+          cursor: grab;
+        }
+        .imgedit-range::-moz-range-thumb:hover { transform: scale(1.15); }
+        .imgedit-range::-moz-range-thumb:active { transform: scale(1.05); cursor: grabbing; }
         /* custom focus ring */
-        .imgedit-range:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent); }
+        .imgedit-range:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent); }
+        .imgedit-range:focus::-webkit-slider-thumb { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 25%, transparent), 0 4px 14px rgba(0,0,0,0.2); }
         /* panels responsiveness: allow panels to grow and scroll on small viewports */
-        .imgedit-panels { position: relative; max-height: calc(100vh - 180px); overflow: hidden; border-radius: 8px; }
+        .imgedit-panels { 
+          position: relative; 
+          max-height: calc(100vh - 180px); 
+          overflow: hidden; 
+          border-radius: 12px;
+          background: color-mix(in srgb, var(--bg-elev) 95%, var(--primary) 5%);
+          box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        }
         .imgedit-panels > div { height: 100%; }
-        .imgedit-panel-inner { box-sizing: border-box; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; gap: 8px; display: grid; }
-        @media (min-width: 720px) { .imgedit-panels { max-height: 220px; } }
+        .imgedit-panel-inner { 
+          box-sizing: border-box; 
+          overflow-y: auto; 
+          -webkit-overflow-scrolling: touch; 
+          padding: 16px; 
+          gap: 14px; 
+          display: grid; 
+        }
+        @media (min-width: 720px) { .imgedit-panels { max-height: 280px; } }
         @media (max-width: 720px) { .imgedit-panels { max-height: calc(100vh - 140px); } }
       `}</style>
       {/* slider color variables (theme-aware) */}
@@ -1069,15 +1145,15 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
         /* visually-hidden helper for screen readers */
         .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       `}</style>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 12, flexWrap: 'wrap' }}>
-      <button type="button" className="btn ghost" onClick={onCancel} aria-label="back" style={{ color: 'var(--text)', background: 'transparent', border: 'none', fontSize: 18, padding: 8, transformOrigin: 'center', transition: 'transform 120ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>◀</button>
-        <div style={{ fontSize: 14, fontWeight: 600 }}>Edit</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap', padding: '4px 0' }}>
+      <button type="button" className="btn ghost" onClick={onCancel} aria-label="back" style={{ color: 'var(--text)', background: 'color-mix(in srgb, var(--bg-elev) 80%, transparent)', border: '1px solid var(--border)', fontSize: 18, padding: '10px 14px', borderRadius: 10, transformOrigin: 'center', transition: 'transform 120ms ease, box-shadow 180ms ease', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>◀</button>
+        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>Edit Photo</div>
         <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button type="button" title="Rotate -90°" onClick={bakeRotateMinus90} style={{ padding: '8px 10px', borderRadius: 8, background: 'transparent', border: 'none', transition: 'transform 140ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>⤺</button>
-          <button type="button" title="Rotate +90°" onClick={bakeRotate90} style={{ padding: '8px 10px', borderRadius: 8, background: 'transparent', border: 'none', transition: 'transform 140ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>⤾</button>
-          <button type="button" className="btn ghost" onClick={onCancel} style={{ padding: '8px 12px', borderRadius: 8, transition: 'transform 120ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.98)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}>Cancel</button>
-          <button type="button" className="btn primary" onClick={applyEdit} style={{ padding: '8px 14px', borderRadius: 8, background: 'var(--primary)', color: '#fff', fontWeight: 600, boxShadow: isEdited ? '0 8px 28px rgba(0,125,255,0.12)' : 'none', transition: 'transform 120ms ease, box-shadow 220ms ease, opacity 180ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.98)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} aria-pressed={isEdited}>
-            Confirm
+          <button type="button" title="Rotate -90°" onClick={bakeRotateMinus90} style={{ padding: '10px 12px', borderRadius: 10, background: 'color-mix(in srgb, var(--bg-elev) 80%, transparent)', border: '1px solid var(--border)', transition: 'transform 140ms ease, box-shadow 180ms ease', fontSize: 18, boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>⤺</button>
+          <button type="button" title="Rotate +90°" onClick={bakeRotate90} style={{ padding: '10px 12px', borderRadius: 10, background: 'color-mix(in srgb, var(--bg-elev) 80%, transparent)', border: '1px solid var(--border)', transition: 'transform 140ms ease, box-shadow 180ms ease', fontSize: 18, boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>⤾</button>
+          <button type="button" className="btn ghost" onClick={onCancel} style={{ padding: '10px 14px', borderRadius: 10, transition: 'transform 120ms ease, box-shadow 180ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.98)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>Cancel</button>
+          <button type="button" className="btn primary" onClick={applyEdit} style={{ padding: '10px 18px', borderRadius: 10, background: isEdited ? 'linear-gradient(135deg, var(--primary), #60a5fa)' : 'var(--primary)', color: '#fff', fontWeight: 700, boxShadow: isEdited ? '0 8px 32px rgba(0,125,255,0.2), 0 2px 8px rgba(0,0,0,0.1)' : '0 4px 12px rgba(0,0,0,0.1)', transition: 'transform 120ms ease, box-shadow 220ms ease, opacity 180ms ease, background 220ms ease', position: 'relative', overflow: 'hidden' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.98)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} aria-pressed={isEdited}>
+            <span style={{ position: 'relative', zIndex: 1 }}>Confirm</span>
           </button>
         </div>
       </div>
@@ -1085,7 +1161,16 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', touchAction: 'none', display: 'block', transition: 'box-shadow 240ms ease', minHeight: 140 }}
+          style={{ 
+            width: '100%', 
+            touchAction: 'none', 
+            display: 'block', 
+            transition: 'box-shadow 240ms ease', 
+            minHeight: 140,
+            borderRadius: 12,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 2px rgba(255,255,255,0.05)',
+            border: '1px solid color-mix(in srgb, var(--border) 80%, transparent)'
+          }}
         />
 
         {/* header rotate buttons now handle rotate; removed tiny top-right rotate button to improve discoverability */}
@@ -1095,18 +1180,18 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   {/* help text removed per user request */}
 
       {/* Controls header with categories (emojis + slide panels) */}
-  <div ref={categoriesContainerRef} style={{ position: 'relative', display: 'flex', gap: 8, marginTop: 12, justifyContent: 'center', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 820, margin: '12px auto 0', padding: '6px 8px', alignItems: 'center', whiteSpace: 'nowrap' }}>
-    <div aria-hidden style={{ position: 'absolute', left: categoryHighlight?.left ?? 0, top: categoryHighlight?.top ?? 0, width: categoryHighlight?.width ?? 0, height: categoryHighlight?.height ?? 0, borderRadius: 10, background: 'color-mix(in srgb, var(--primary) 18%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease', pointerEvents: 'none', opacity: categoryHighlight ? 1 : 0, zIndex: 0 }} />
+  <div ref={categoriesContainerRef} style={{ position: 'relative', display: 'flex', gap: 10, marginTop: 16, justifyContent: 'center', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 820, margin: '16px auto 0', padding: '8px 10px', alignItems: 'center', whiteSpace: 'nowrap', background: 'color-mix(in srgb, var(--bg-elev) 70%, transparent)', borderRadius: 12, boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)' }}>
+    <div aria-hidden style={{ position: 'absolute', left: categoryHighlight?.left ?? 0, top: categoryHighlight?.top ?? 0, width: categoryHighlight?.width ?? 0, height: categoryHighlight?.height ?? 0, borderRadius: 11, background: 'linear-gradient(135deg, var(--primary), #60a5fa)', transition: 'left 260ms cubic-bezier(.2,.9,.2,1), width 260ms cubic-bezier(.2,.9,.2,1), top 260ms cubic-bezier(.2,.9,.2,1), height 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease', pointerEvents: 'none', opacity: categoryHighlight ? 1 : 0, zIndex: 0, boxShadow: '0 4px 16px rgba(0,125,255,0.25)' }} />
   <button
     data-cat="basic"
     type="button"
     aria-label="Basic"
     title="Basic"
-    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('basic'); }}
-    style={{ padding: '6px 8px', borderRadius: 8, background: selectedCategory === 'basic' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('basic'); }}
+    style={{ padding: '8px 12px', borderRadius: 10, background: selectedCategory === 'basic' ? 'transparent' : 'transparent', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'basic' ? 700 : 500 }}
   >
-    <span aria-hidden style={{ lineHeight: 1 }}>{'🎛️'}</span>
-    <span style={{ display: selectedCategory === 'basic' ? 'inline' : 'none', fontSize: 13, fontWeight: 600 }}>Basic</span>
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 18 }}>{'🎛️'}</span>
+    <span style={{ fontSize: 14 }}>Basic</span>
   </button>
 
   <button
@@ -1114,11 +1199,11 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     type="button"
     aria-label="Filters"
     title="Filters"
-    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('color'); }}
-    style={{ padding: '6px 8px', borderRadius: 8, background: selectedCategory === 'color' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('color'); }}
+    style={{ padding: '8px 12px', borderRadius: 10, background: selectedCategory === 'color' ? 'transparent' : 'transparent', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'color' ? 700 : 500 }}
   >
-    <span aria-hidden style={{ lineHeight: 1 }}>{'🎨'}</span>
-    <span style={{ display: selectedCategory === 'color' ? 'inline' : 'none', fontSize: 13, fontWeight: 600 }}>Filters</span>
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 18 }}>{'🎨'}</span>
+    <span style={{ fontSize: 14 }}>Filters</span>
   </button>
 
   <button
@@ -1126,11 +1211,11 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     type="button"
     aria-label="Effects"
     title="Effects"
-    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('effects'); }}
-    style={{ padding: '6px 8px', borderRadius: 8, background: selectedCategory === 'effects' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('effects'); }}
+    style={{ padding: '8px 12px', borderRadius: 10, background: selectedCategory === 'effects' ? 'transparent' : 'transparent', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'effects' ? 700 : 500 }}
   >
-    <span aria-hidden style={{ lineHeight: 1 }}>{'✨'}</span>
-    <span style={{ display: selectedCategory === 'effects' ? 'inline' : 'none', fontSize: 13, fontWeight: 600 }}>Effects</span>
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 18 }}>{'✨'}</span>
+    <span style={{ fontSize: 14 }}>Effects</span>
   </button>
 
   <button
@@ -1138,71 +1223,80 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     type="button"
     aria-label="Crop & Frames"
     title="Crop & Frames"
-    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('crop'); }}
-    style={{ padding: '6px 8px', borderRadius: 8, background: selectedCategory === 'crop' ? 'var(--primary)' : 'var(--bg-elev)', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('crop'); }}
+    style={{ padding: '8px 12px', borderRadius: 10, background: selectedCategory === 'crop' ? 'transparent' : 'transparent', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'crop' ? 700 : 500 }}
   >
-    <span aria-hidden style={{ lineHeight: 1 }}>{'✂️'}</span>
-    <span style={{ display: selectedCategory === 'crop' ? 'inline' : 'none', fontSize: 13, fontWeight: 600 }}>Crop & Frames</span>
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 18 }}>{'✂️'}</span>
+    <span style={{ fontSize: 14 }}>Crop & Frames</span>
   </button>
   </div>
 
       {/* Sliding category panels container */}
-  <div className="imgedit-panels" style={{ maxWidth: 820, margin: '12px auto 0', position: 'relative', borderRadius: 8, minHeight: 180 }}>
+  <div className="imgedit-panels" style={{ maxWidth: 820, margin: '16px auto 0', position: 'relative', borderRadius: 12, minHeight: 200 }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
           {/* Basic panel */}
           <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'basic' ? 'grid' : 'none', width: '100%' }}>
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span aria-hidden>☀️</span>
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>☀️</span>
                 <span>Exposure</span>
               </span>
               {/* animated icon that changes color with exposure */}
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <circle cx="12" cy="12" r="7" style={{ fill: exposureColor(exposure) }} />
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <circle cx="12" cy="12" r="8" style={{ fill: exposureColor(exposure), transition: 'fill 0.2s ease' }} />
                 </svg>
                 <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('exposure', exposureRef.current, v); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(exposure, 0.5, 1.8, 'var(--slider-exposure-start)', 'var(--slider-exposure-end)') }} />
               </span>
-              <span style={{ width: 48, textAlign: 'right' }}>{exposure.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{exposure.toFixed(2)}</span>
             </label>
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>⚖️ <span>Contrast</span></span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <rect x="4" y="4" width="16" height="16" rx="3" style={{ fill: contrastColor(contrast) }} />
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>⚖️</span>
+                <span>Contrast</span>
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <rect x="4" y="4" width="16" height="16" rx="3" style={{ fill: contrastColor(contrast), transition: 'fill 0.2s ease' }} />
                 </svg>
                 <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={contrast} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('contrast', contrastRef.current, v); contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(contrast, 0.5, 1.8, 'var(--slider-contrast-start)', 'var(--slider-contrast-end)') }} />
               </span>
-              <span style={{ width: 48, textAlign: 'right' }}>{contrast.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{contrast.toFixed(2)}</span>
             </label>
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🌈 <span>Saturation</span></span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <path d="M12 3c1.1 0 2 .9 2 2v14a2 2 0 1 1-4 0V5c0-1.1.9-2 2-2z" style={{ fill: saturationColor(saturation) }} />
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>🌈</span>
+                <span>Saturation</span>
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M12 3c1.1 0 2 .9 2 2v14a2 2 0 1 1-4 0V5c0-1.1.9-2 2-2z" style={{ fill: saturationColor(saturation), transition: 'fill 0.2s ease' }} />
                 </svg>
                 <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('saturation', saturationRef.current, v); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(saturation, 0, 2, 'var(--slider-saturation-start)', 'var(--slider-saturation-end)') }} />
               </span>
-              <span style={{ width: 48, textAlign: 'right' }}>{saturation.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{saturation.toFixed(2)}</span>
             </label>
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}><span aria-hidden>🌡️</span><span>Temperature</span></span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <rect x="9" y="3" width="6" height="12" rx="3" style={{ fill: temperatureColor(temperature) }} />
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>🌡️</span>
+                <span>Temperature</span>
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <rect x="9" y="3" width="6" height="12" rx="3" style={{ fill: temperatureColor(temperature), transition: 'fill 0.2s ease' }} />
                 </svg>
                 <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('temperature', temperatureRef.current, v); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(temperature, -100, 100, 'var(--slider-temperature-cold)', 'var(--slider-temperature-warm)') }} />
               </span>
-              <span style={{ width: 48, textAlign: 'right' }}>{temperature}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{temperature}</span>
             </label>
           </div>
 
           {/* Color panel */}
           <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'color' ? 'grid' : 'none', width: '100%' }}>
             {/* panel heading removed (tab already shows Filters) */}
-            <div ref={filtersContainerRef} style={{ position: 'relative', display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: '6px 0' }}>
+            <div ref={filtersContainerRef} style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: '8px 0' }}>
               {/* animated highlight pill sits behind buttons and moves between them */}
-              <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 10, background: 'color-mix(in srgb, var(--primary) 14%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease', pointerEvents: 'none', opacity: filterHighlight ? 1 : 0 }} />
+              <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 11, background: 'linear-gradient(135deg, var(--primary), #60a5fa)', transition: 'left 260ms cubic-bezier(.2,.9,.2,1), width 260ms cubic-bezier(.2,.9,.2,1), top 260ms cubic-bezier(.2,.9,.2,1), height 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease', pointerEvents: 'none', opacity: filterHighlight ? 1 : 0, boxShadow: '0 4px 16px rgba(0,125,255,0.3)' }} />
               {Object.keys(FILTER_PRESETS).map(f => {
                 const emoji = f === 'none' ? '🔁' : f === 'sepia' ? '🟤' : f === 'mono' ? '⚪' : f === 'cinema' ? '🎥' : f === 'bleach' ? '🧼' : f === 'vintage' ? '🪶' : f === 'lomo' ? '📷' : f === 'warm' ? '🔆' : f === 'cool' ? '❄️' : '🎞️';
                 return (
@@ -1211,57 +1305,72 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                     data-filter={f}
                     type="button"
                     onMouseDown={() => { selectedFilterRef.current = f; setSelectedFilter(f); draw(undefined, { selectedFilter: f }); requestAnimationFrame(() => draw()); }}
-                    style={{ padding: '6px 10px', borderRadius: 8, background: selectedFilter === f ? 'var(--primary)' : 'var(--bg-elev)', color: selectedFilter === f ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 200ms ease', display: 'inline-flex', gap: 8, alignItems: 'center', position: 'relative', zIndex: 1 }}
-                    onMouseDownCapture={(e)=> (e.currentTarget.style.transform = 'scale(0.98)')}
+                    style={{ padding: '8px 12px', borderRadius: 10, background: 'transparent', color: selectedFilter === f ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 200ms ease, color 200ms ease', display: 'inline-flex', gap: 8, alignItems: 'center', position: 'relative', zIndex: 1, border: 'none', fontWeight: selectedFilter === f ? 700 : 500 }}
+                    onMouseDownCapture={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')}
                     onMouseUpCapture={(e)=> (e.currentTarget.style.transform = '')}
                     onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}
                     onFocus={(e)=> (e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)')}
                     onBlur={(e)=> (e.currentTarget.style.boxShadow = '')}
                     aria-pressed={selectedFilter===f}
                   >
-                    <span aria-hidden>{emoji}</span>
+                    <span aria-hidden style={{ fontSize: 18 }}>{emoji}</span>
                     <span style={{ fontSize: 13 }}>{f}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
-              <span style={{ width: 110, color: 'var(--text-muted)' }}>Strength</span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={filterStrength} onInput={(e: any) => { const v = Number(e.target.value); filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
-              <span style={{ width: 48, textAlign: 'right' }}>{Math.round(filterStrength * 100)}%</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
+              <span style={{ width: 120, color: 'var(--text)', fontWeight: 600, fontSize: 14 }}>Strength</span>
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={filterStrength} onInput={(e: any) => { const v = Number(e.target.value); filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{Math.round(filterStrength * 100)}%</span>
             </div>
           </div>
 
           {/* Effects panel */}
           <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'effects' ? 'grid' : 'none', width: '100%' }}>
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🕶️ <span>Vignette</span></span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
-              <span style={{ width: 48, textAlign: 'right' }}>{vignette.toFixed(2)}</span>
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>🕶️</span>
+                <span>Vignette</span>
+              </span>
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{vignette.toFixed(2)}</span>
             </label>
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🎚️ <span>Grain</span></span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
-              <span style={{ width: 48, textAlign: 'right' }}>{grain.toFixed(2)}</span>
-            </label>
-
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>💤 <span>Soft Focus</span></span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
-              <span style={{ width: 48, textAlign: 'right' }}>{softFocus.toFixed(2)}</span>
-            </label>
-
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🎞️ <span>Fade</span></span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
-              <span style={{ width: 48, textAlign: 'right' }}>{fade.toFixed(2)}</span>
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>🎚️</span>
+                <span>Grain</span>
+              </span>
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{grain.toFixed(2)}</span>
             </label>
 
-            <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🪞 <span>Matte</span></span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
-              <span style={{ width: 48, textAlign: 'right' }}>{matte.toFixed(2)}</span>
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>💤</span>
+                <span>Soft Focus</span>
+              </span>
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{softFocus.toFixed(2)}</span>
+            </label>
+
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>🎞️</span>
+                <span>Fade</span>
+              </span>
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{fade.toFixed(2)}</span>
+            </label>
+
+            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                <span aria-hidden style={{ fontSize: 18 }}>🪞</span>
+                <span>Matte</span>
+              </span>
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{matte.toFixed(2)}</span>
             </label>
           </div>
 
@@ -1291,69 +1400,183 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                 </label>
               </div>
 
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aspect presets</div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>Aspect ratio</div>
               </div>
 
-              {/* Carousel-style aspect switcher */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 4 }}>
-                <button type="button" aria-label="Previous preset" onClick={() => setPresetIndex((presetIndex - 1 + ASPECT_PRESETS.length) % ASPECT_PRESETS.length)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent' }}>◀</button>
-                <div style={{ overflow: 'hidden', width: 240, borderRadius: 10 }}>
-                  <div style={{ display: 'flex', gap: 8, transition: 'transform 300ms cubic-bezier(.2,.9,.2,1)', transform: `translateX(-${presetIndex * 92}px)` }}>
-                    {ASPECT_PRESETS.map((r, i) => {
-                      const selected = cropRatio.current === r.v;
-                      const base = 16 / 9;
-                      const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
-                      const previewInnerWidth = Math.round(36 * previewRatio);
-                      return (
-                        <div key={r.label} style={{ flex: '0 0 84px' }}>
-                          <button type="button" onClick={() => {
-                            setPresetIndex(i);
-                            cropRatio.current = r.v;
-                            const canvas = canvasRef.current;
-                            if (!canvas) return;
-                            const info = computeImageLayout();
-                            const pad = 0.08;
-                            if (info) {
-                              let w = info.dispW * (1 - pad * 2);
-                              let h = info.dispH * (1 - pad * 2);
-                              if (r.v) {
-                                h = w / r.v;
-                                if (h > info.dispH * (1 - pad * 2)) {
-                                  h = info.dispH * (1 - pad * 2);
-                                  w = h * r.v;
-                                }
-                              }
-                              const x = info.left + (info.dispW - w) / 2;
-                              const y = info.top + (info.dispH - h) / 2;
-                              setSel({ x, y, w, h });
-                            } else {
-                              const rect = canvas.getBoundingClientRect();
-                              let w = rect.width * (1 - pad * 2);
-                              let h = rect.height * (1 - pad * 2);
-                              if (r.v) {
-                                h = w / r.v;
-                                if (h > rect.height * (1 - pad * 2)) {
-                                  h = rect.height * (1 - pad * 2);
-                                  w = h * r.v;
-                                }
-                              }
-                              const x = (rect.width - w) / 2;
-                              const y = (rect.height - h) / 2;
-                              setSel({ x, y, w, h });
+              {/* Responsive aspect switcher: grid on desktop, carousel on mobile */}
+              <div className="aspect-presets-container">
+                {/* Desktop: Show all presets in a grid */}
+                <div className="aspect-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, paddingBottom: 4 }}>
+                  {ASPECT_PRESETS.map((r, i) => {
+                    const selected = cropRatio.current === r.v;
+                    const base = 16 / 9;
+                    const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
+                    const previewInnerWidth = Math.round(36 * previewRatio);
+                    return (
+                      <button key={r.label} type="button" onClick={() => {
+                        setPresetIndex(i);
+                        cropRatio.current = r.v;
+                        const canvas = canvasRef.current;
+                        if (!canvas) return;
+                        const info = computeImageLayout();
+                        const pad = 0.08;
+                        if (info) {
+                          let w = info.dispW * (1 - pad * 2);
+                          let h = info.dispH * (1 - pad * 2);
+                          if (r.v) {
+                            h = w / r.v;
+                            if (h > info.dispH * (1 - pad * 2)) {
+                              h = info.dispH * (1 - pad * 2);
+                              w = h * r.v;
                             }
-                          }} aria-pressed={selected} style={{ minWidth: 64, padding: '8px 10px', borderRadius: 10, background: selected ? 'linear-gradient(135deg,var(--primary), #4aa8ff)' : 'var(--bg-elev)', color: selected ? '#fff' : 'var(--text)', border: selected ? 'none' : '1px solid rgba(255,255,255,0.04)', boxShadow: selected ? '0 8px 26px rgba(34,122,255,0.16)' : 'none', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 120ms ease, box-shadow 180ms ease, background 180ms ease', fontSize: 13 }}>
-                            <span aria-hidden style={{ width: 52, height: 28, background: selected ? 'color-mix(in srgb, var(--primary) 6%, color-mix(in srgb, var(--bg-elev) 60%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 12%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: selected ? '0 6px 18px rgba(34,122,255,0.08)' : 'inset 0 1px 0 rgba(0,0,0,0.04)' }}>
-                              <span style={{ width: previewInnerWidth, height: 16, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)', boxShadow: selected ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.03)' }} />
-                            </span>
-                            <span style={{ fontSize: 13, fontWeight: 600, opacity: selected ? 1 : 0.95 }}>{r.label}</span>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
+                          }
+                          const x = info.left + (info.dispW - w) / 2;
+                          const y = info.top + (info.dispH - h) / 2;
+                          setSel({ x, y, w, h });
+                        } else {
+                          const rect = canvas.getBoundingClientRect();
+                          let w = rect.width * (1 - pad * 2);
+                          let h = rect.height * (1 - pad * 2);
+                          if (r.v) {
+                            h = w / r.v;
+                            if (h > rect.height * (1 - pad * 2)) {
+                              h = rect.height * (1 - pad * 2);
+                              w = h * r.v;
+                            }
+                          }
+                          const x = (rect.width - w) / 2;
+                          const y = (rect.height - h) / 2;
+                          setSel({ x, y, w, h });
+                        }
+                      }} aria-pressed={selected} style={{ 
+                        padding: '12px 8px', 
+                        borderRadius: 10, 
+                        background: selected ? 'linear-gradient(135deg,var(--primary), #60a5fa)' : 'var(--bg-elev)', 
+                        color: selected ? '#fff' : 'var(--text)', 
+                        border: selected ? 'none' : '1px solid rgba(255,255,255,0.04)', 
+                        boxShadow: selected ? '0 6px 20px rgba(34,122,255,0.2)' : '0 2px 6px rgba(0,0,0,0.04)', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        gap: 10, 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        transition: 'transform 120ms ease, box-shadow 180ms ease, background 180ms ease', 
+                        fontSize: 13,
+                        fontWeight: selected ? 700 : 600,
+                        cursor: 'pointer',
+                        minHeight: 80
+                      }}
+                      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
+                      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)'; }}
+                      >
+                        <span aria-hidden style={{ 
+                          width: 52, 
+                          height: 28, 
+                          background: selected ? 'color-mix(in srgb, var(--primary) 6%, color-mix(in srgb, var(--bg-elev) 60%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', 
+                          borderRadius: 6, 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          position: 'relative', 
+                          border: selected ? '1px solid color-mix(in srgb, var(--text) 12%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', 
+                          boxShadow: selected ? '0 4px 12px rgba(34,122,255,0.12)' : 'inset 0 1px 0 rgba(0,0,0,0.04)',
+                          flexShrink: 0
+                        }}>
+                          <span style={{ 
+                            width: previewInnerWidth, 
+                            height: 16, 
+                            background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', 
+                            borderRadius: 3, 
+                            display: 'block', 
+                            border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)', 
+                            boxShadow: selected ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.03)' 
+                          }} />
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: selected ? 700 : 600, opacity: selected ? 1 : 0.85, lineHeight: 1.2 }}>{r.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <button type="button" aria-label="Next preset" onClick={() => setPresetIndex((presetIndex + 1) % ASPECT_PRESETS.length)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent' }}>▶</button>
+
+                {/* Mobile: Carousel with arrows */}
+                <div className="aspect-presets-carousel" style={{ display: 'none', alignItems: 'center', gap: 8, paddingBottom: 4 }}>
+                  <button type="button" aria-label="Previous preset" onClick={() => setPresetIndex((presetIndex - 1 + ASPECT_PRESETS.length) % ASPECT_PRESETS.length)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent', fontSize: 18 }}>◀</button>
+                  <div style={{ overflow: 'hidden', width: 240, borderRadius: 10 }}>
+                    <div style={{ display: 'flex', gap: 8, transition: 'transform 300ms cubic-bezier(.2,.9,.2,1)', transform: `translateX(-${presetIndex * 92}px)` }}>
+                      {ASPECT_PRESETS.map((r, i) => {
+                        const selected = cropRatio.current === r.v;
+                        const base = 16 / 9;
+                        const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
+                        const previewInnerWidth = Math.round(36 * previewRatio);
+                        return (
+                          <div key={r.label} style={{ flex: '0 0 84px' }}>
+                            <button type="button" onClick={() => {
+                              setPresetIndex(i);
+                              cropRatio.current = r.v;
+                              const canvas = canvasRef.current;
+                              if (!canvas) return;
+                              const info = computeImageLayout();
+                              const pad = 0.08;
+                              if (info) {
+                                let w = info.dispW * (1 - pad * 2);
+                                let h = info.dispH * (1 - pad * 2);
+                                if (r.v) {
+                                  h = w / r.v;
+                                  if (h > info.dispH * (1 - pad * 2)) {
+                                    h = info.dispH * (1 - pad * 2);
+                                    w = h * r.v;
+                                  }
+                                }
+                                const x = info.left + (info.dispW - w) / 2;
+                                const y = info.top + (info.dispH - h) / 2;
+                                setSel({ x, y, w, h });
+                              } else {
+                                const rect = canvas.getBoundingClientRect();
+                                let w = rect.width * (1 - pad * 2);
+                                let h = rect.height * (1 - pad * 2);
+                                if (r.v) {
+                                  h = w / r.v;
+                                  if (h > rect.height * (1 - pad * 2)) {
+                                    h = rect.height * (1 - pad * 2);
+                                    w = h * r.v;
+                                  }
+                                }
+                                const x = (rect.width - w) / 2;
+                                const y = (rect.height - h) / 2;
+                                setSel({ x, y, w, h });
+                              }
+                            }} aria-pressed={selected} style={{ minWidth: 64, padding: '8px 10px', borderRadius: 10, background: selected ? 'linear-gradient(135deg,var(--primary), #4aa8ff)' : 'var(--bg-elev)', color: selected ? '#fff' : 'var(--text)', border: selected ? 'none' : '1px solid rgba(255,255,255,0.04)', boxShadow: selected ? '0 8px 26px rgba(34,122,255,0.16)' : 'none', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 120ms ease, box-shadow 180ms ease, background 180ms ease', fontSize: 13 }}>
+                              <span aria-hidden style={{ width: 52, height: 28, background: selected ? 'color-mix(in srgb, var(--primary) 6%, color-mix(in srgb, var(--bg-elev) 60%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 12%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: selected ? '0 6px 18px rgba(34,122,255,0.08)' : 'inset 0 1px 0 rgba(0,0,0,0.04)' }}>
+                                <span style={{ width: previewInnerWidth, height: 16, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)', boxShadow: selected ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.03)' }} />
+                              </span>
+                              <span style={{ fontSize: 13, fontWeight: 600, opacity: selected ? 1 : 0.95 }}>{r.label}</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <button type="button" aria-label="Next preset" onClick={() => setPresetIndex((presetIndex + 1) % ASPECT_PRESETS.length)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent', fontSize: 18 }}>▶</button>
+                </div>
+
+                <style>{`
+                  /* Desktop: show grid, hide carousel */
+                  @media (min-width: 640px) {
+                    .aspect-presets-grid { display: grid !important; }
+                    .aspect-presets-carousel { display: none !important; }
+                  }
+                  /* Mobile: hide grid, show carousel */
+                  @media (max-width: 639px) {
+                    .aspect-presets-grid { display: none !important; }
+                    .aspect-presets-carousel { display: flex !important; }
+                  }
+                  /* Ensure aspect buttons don't wrap text */
+                  .aspect-presets-grid button {
+                    white-space: nowrap;
+                    overflow: visible;
+                  }
+                `}</style>
               </div>
 
               

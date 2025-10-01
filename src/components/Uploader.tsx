@@ -573,13 +573,14 @@ export function Uploader() {
                   // Keep overlay visually above page content but below the bottom nav
                   // (bottom nav uses z-index: 10 in globals.css). Choosing 9 lets the nav
                   // remain visible and interactive while the editor sits above the page.
-                  zIndex: 9,
-                  background: 'color-mix(in srgb, var(--bg) 88%, rgba(0,0,0,0.32))'
+                      // ensure overlay sits above persistent UI (bottom nav) and honors safe-area insets
+                      zIndex: 10001,
+                      background: 'color-mix(in srgb, var(--bg) 88%, rgba(0,0,0,0.32))'
                 }}
                 onClick={() => { /* clicking overlay will close only if desired; keep clicks outside ImageEditor to close */ setEditing(false); }}
               >
-                <div style={{ width: '100%', maxWidth: 960, margin: '0 auto', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - (72px + var(--safe-bottom)) - 24px)', overflow: 'auto', paddingRight: 6 }}>
+                    <div style={{ width: '100%', maxWidth: 960, margin: '0 auto', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - (72px + var(--safe-bottom, 12px)) - 24px)', overflow: 'auto', paddingRight: 6, paddingBottom: 'calc(var(--safe-bottom, 12px) + 12px)'}}>
                     <input
                       className="input"
                       type="text"

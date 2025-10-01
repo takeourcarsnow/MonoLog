@@ -28,6 +28,11 @@ export function ExploreView() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef(loading);
   const userInteractedRef = useRef(false);
+  
+  // Move hooks to component level for grid view
+  const toast = useToast();
+  const router = useRouter();
+  const [overlayStates, setOverlayStates] = useState<Record<string, 'adding' | 'removing' | null>>({});
 
   useEffect(() => {
     let mounted = true;
@@ -140,12 +145,9 @@ export function ExploreView() {
   if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
   if (!posts.length) return <div className="empty">No posts yet. Be the first to post your daily photo!</div>;
     if (view === "grid") {
-      const toast = useToast();
-      const router = useRouter();
       const clickCounts = new Map<string, number>();
       const clickTimers = new Map<string, any>();
       const dblClickFlags = new Map<string, boolean>();
-      const [overlayStates, setOverlayStates] = useState<Record<string, 'adding' | 'removing' | null>>({});
 
       const showOverlay = (postId: string, action: 'adding' | 'removing') => {
         setOverlayStates(prev => ({ ...prev, [postId]: action }));

@@ -370,13 +370,28 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   const baseFilter = `brightness(${curExposure}) contrast(${curContrast}) saturate(${curSaturation}) hue-rotate(${hue}deg)`;
   const filter = `${baseFilter} ${preset}`;
   // If filter strength < 1, we'll composite a filtered layer on top with alpha
+  // When a frame is enabled, shrink the displayed image rectangle (uniform inset)
+  // so the frame occupies the outer margin. Aspect ratio is preserved by applying
+  // identical padding on all sides derived from min(dispW, dispH).
   let imgLeft = left; let imgTop = top; let imgW = dispW; let imgH = dispH;
   if (curFrameEnabled) {
-    const pad = Math.max(1, Math.round(Math.min(dispW, dispH) * Math.max(0, Math.min(0.5, curFrameThickness))));
-    imgLeft = left + pad;
-    imgTop = top + pad;
-    imgW = Math.max(1, dispW - pad * 2);
-    imgH = Math.max(1, dispH - pad * 2);
+    // Previous approach subtracted identical absolute padding from width & height,
+    // which changes aspect ratio when the image isn't square. Instead, compute a
+    // desired padding based on the min dimension, derive candidate horizontal &
+    // vertical scale factors, then choose a single uniform scale so the image
+    // shrinks proportionally (aspect ratio preserved). The actual visual frame
+    // thickness may differ slightly between axes if the image is not square.
+    const minDim = Math.min(dispW, dispH);
+    const padDesired = Math.min(minDim * Math.max(0, Math.min(0.5, curFrameThickness)), minDim * 0.49);
+    const scaleW = (dispW - 2 * padDesired) / dispW;
+    const scaleH = (dispH - 2 * padDesired) / dispH;
+    const scale = Math.max(0.01, Math.min(scaleW, scaleH));
+    const scaledW = dispW * scale;
+    const scaledH = dispH * scale;
+    imgLeft = left + (dispW - scaledW) / 2;
+    imgTop = top + (dispH - scaledH) / 2;
+    imgW = scaledW;
+    imgH = scaledH;
   }
   if (curFilterStrength >= 0.999) {
     ctx.filter = filter;
@@ -514,33 +529,23 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
 
     // simple frame overlay (stroke around image)
     if (curFrameEnabled) {
+      // Draw frame bands between outer disp rect and inner uniformly-scaled image.
       ctx.save();
-      const pad = Math.max(1, Math.round(Math.min(dispW, dispH) * Math.max(0, Math.min(0.5, curFrameThickness))));
       ctx.fillStyle = curFrameColor === 'white' ? '#ffffff' : '#000000';
-      // Align drawing to device pixels to avoid seams caused by fractional coordinates
-      const outerXDev = Math.round(left * dpr);
-      const outerYDev = Math.round(top * dpr);
-      const outerWDev = Math.round(dispW * dpr);
-      const outerHDev = Math.round(dispH * dpr);
-      const innerXDev = Math.round(imgLeft * dpr);
-      const innerYDev = Math.round(imgTop * dpr);
-      const innerWDev = Math.round(imgW * dpr);
-      const innerHDev = Math.round(imgH * dpr);
-      // top band (device pixels) -> convert back to CSS pixels for canvas drawing
-      const topH = Math.max(1, innerYDev - outerYDev);
-      ctx.fillRect(outerXDev / dpr, outerYDev / dpr, outerWDev / dpr, topH / dpr);
-      // bottom band
-      const bottomYDev = innerYDev + innerHDev;
-      const outerBottomDev = outerYDev + outerHDev;
-      const bottomH = Math.max(1, outerBottomDev - bottomYDev);
-      ctx.fillRect(outerXDev / dpr, bottomYDev / dpr, outerWDev / dpr, bottomH / dpr);
-      // left band
-      const leftW = Math.max(1, innerXDev - outerXDev);
-      ctx.fillRect(outerXDev / dpr, innerYDev / dpr, leftW / dpr, innerHDev / dpr);
-      // right band
-      const rightXDev = innerXDev + innerWDev;
-      const rightW = Math.max(1, outerXDev + outerWDev - rightXDev);
-      ctx.fillRect(rightXDev / dpr, innerYDev / dpr, rightW / dpr, innerHDev / dpr);
+      const outerL = left;
+      const outerT = top;
+      const outerR = left + dispW;
+      const outerB = top + dispH;
+      // top
+      if (imgTop > outerT) ctx.fillRect(outerL, outerT, dispW, imgTop - outerT);
+      // bottom
+      const bottomGap = outerB - (imgTop + imgH);
+      if (bottomGap > 0) ctx.fillRect(outerL, imgTop + imgH, dispW, bottomGap);
+      // left
+      if (imgLeft > outerL) ctx.fillRect(outerL, imgTop, imgLeft - outerL, imgH);
+      // right
+      const rightGap = outerR - (imgLeft + imgW);
+      if (rightGap > 0) ctx.fillRect(imgLeft + imgW, imgTop, rightGap, imgH);
       ctx.restore();
     }
 

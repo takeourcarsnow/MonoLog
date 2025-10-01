@@ -408,7 +408,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       className={className}
       style={{
         overflow: "hidden",
-        touchAction: isPinchingState || scale > 1 ? "none" : "pan-y",
+        // When not pinching or zoomed, allow default pointer behavior so
+        // parent carousels can receive mouse/pointer drags on desktop.
+        touchAction: isPinchingState || scale > 1 ? "none" : "auto",
         // make the container fill the card width so images can center
         display: "block",
         width: "100%",
@@ -444,7 +446,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
           objectFit: isTile ? "cover" : "contain",
           objectPosition: "center center",
           userSelect: "none",
-          touchAction: isPinchingState || scale > 1 ? "none" : "pan-y",
+          // Mirror the container touchAction here. When not zoomed, let
+          // pointer events behave normally so the carousel can handle
+          // horizontal swipes with the mouse on desktop.
+          touchAction: isPinchingState || scale > 1 ? "none" : "auto",
         }}
         draggable={false}
       />

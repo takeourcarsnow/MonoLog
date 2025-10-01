@@ -148,6 +148,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
 
   // Carousel state for multi-image posts
   const [index, setIndex] = useState(0);
+  const indexRef = useRef(0);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [isZooming, setIsZooming] = useState(false);
   const isZoomingRef = useRef(false);
@@ -158,6 +159,10 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     // clamp index when images change
     if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1));
   }, [imageUrls.length, index]);
+
+  // keep a ref copy of the latest index so event listeners with stale
+  // closures (registered once) can read the current value.
+  useEffect(() => { indexRef.current = index; }, [index]);
 
   useEffect(() => {
     if (!trackRef.current) return;
@@ -410,7 +415,8 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
       setIsZooming(false);
       isZoomingRef.current = false;
       try {
-        if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+        // read the latest index from the ref to avoid stale closures
+        if (trackRef.current) trackRef.current.style.transform = `translateX(-${indexRef.current * 100}%)`;
       } catch (_) { /* ignore */ }
     }
     if (typeof window !== 'undefined') {
@@ -553,7 +559,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                   <div className="carousel-track" ref={trackRef} {...carouselTouchProps} role="list" style={{ touchAction: 'pan-y' }}>
                     {imageUrls.map((u: string, idx: number) => (
                       <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`${idx + 1} of ${imageUrls.length}`}>
-                        <Link href={postHref} className="media-link">
+                        <Link href={postHref} className="media-link" draggable={false} onDragStart={e => e.preventDefault()}>
                           <ImageZoom
                             loading="lazy"
                             src={u}
@@ -576,7 +582,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                   </div>
                 </div>
               ) : (
-                <Link href={postHref} className="media-link">
+                <Link href={postHref} className="media-link" draggable={false} onDragStart={e => e.preventDefault()}>
                   <ImageZoom
                     loading="lazy"
                     src={imageUrls[0]}

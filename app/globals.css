@@ -897,7 +897,8 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 10px 16px; /* unified pill spacing */
+  min-height: var(--action-pill-height,42px);
   border-radius: 999px;
   background: var(--vis-bg) !important;
   border: 1px solid var(--border) !important;
@@ -976,7 +977,10 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .btn-group { display: flex; gap: 8px; align-items: center; }
 .btn.primary { padding: 10px 14px; border-radius: 12px; font-weight: 700; }
 .btn.ghost.replace { padding: 10px 12px; }
-.btn.cancel-btn { position:relative; background: color-mix(in srgb, var(--bg-elev), transparent 4%); border:1px solid color-mix(in srgb, var(--border), transparent 5%); padding:8px 16px; border-radius:999px; font-weight:600; font-size:14px; line-height:1; min-height:40px; display:inline-flex; align-items:center; justify-content:center; gap:6px; color: var(--text); letter-spacing:.25px; transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); }
+.btn.cancel-btn { position:relative; background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 92%), color-mix(in srgb, var(--danger), transparent 96%)); border:1px solid color-mix(in srgb, var(--danger), transparent 82%); padding:10px 18px; border-radius:999px; font-weight:600; font-size:14px; line-height:1; min-height:var(--action-pill-height,42px); display:inline-flex; align-items:center; justify-content:center; gap:6px; color: color-mix(in srgb, var(--danger), var(--text) 55%); letter-spacing:.25px; transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); }
+.btn.cancel-btn:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 88%), color-mix(in srgb, var(--danger), transparent 94%)); }
+.btn.cancel-btn.confirm { background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 20%), color-mix(in srgb, var(--danger), transparent 10%)); color: #fff; border-color: color-mix(in srgb, var(--danger), transparent 20%); box-shadow: 0 6px 22px color-mix(in srgb, var(--danger), transparent 70%); }
+.btn.cancel-btn.confirm:hover { transform: translateY(-2px); }
 .btn.cancel-btn .cancel-inner { position:relative; z-index:1; }
 .btn.cancel-btn::before { content:""; position:absolute; inset:0; border-radius:inherit; background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 10%), color-mix(in srgb, var(--bg-elev), transparent 18%)); opacity:0; transition: opacity var(--transition-fast); }
 .btn.cancel-btn:hover { background: color-mix(in srgb, var(--bg-elev), transparent 12%); border-color: color-mix(in srgb, var(--primary), transparent 82%); transform: translateY(-2px); }
@@ -1008,6 +1012,29 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   /* give uploader extra bottom padding only when images present so initial empty state doesn't force scroll */
   .uploader.has-preview { padding-bottom: calc(96px + var(--safe-bottom)); }
 
+
+/* Mobile refinement: make stacked action pills (visibility / publish / cancel) align and breathe */
+@media (max-width: 640px) {
+  /* Slightly reduce pill height on small screens for a tighter stack */
+  :root { --action-pill-height: 38px; }
+
+  .uploader .form-row { gap: 10px; align-items: center; }
+  .uploader .form-row .btn-group { width: 100%; gap: 10px; align-items: center; }
+
+  /* Give all three pills a consistent width, centered. Clamp to avoid overly wide on large phones */
+  .uploader .form-row .vis-toggle,
+  .uploader .form-row .publish-button,
+  .uploader .form-row .btn.cancel-btn { 
+    width: 100%;
+    max-width: 240px; 
+    margin: 0 auto; 
+  }
+
+  /* Ensure internal padding adapts with smaller height */
+  .uploader .form-row .vis-toggle { padding: 8px 16px; }
+  .uploader .form-row .publish-button { padding: 8px 18px; }
+  .uploader .form-row .btn.cancel-btn { padding: 8px 18px; }
+}
   /* slightly smaller drop area to fit mobile screens comfortably */
   .drop { min-height: 140px; padding: 12px; }
   .drop-icon { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; }

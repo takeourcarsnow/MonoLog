@@ -10,7 +10,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "./Toast";
 import ImageEditor, { EditorSettings } from "./ImageEditor";
 import Portal from "./Portal";
-import ConfirmModal from "./ConfirmModal";
 import { PublishButton } from "./PublishButton";
 
 // the canonical list of philosophical prompts used for rotation and animated typing
@@ -262,7 +261,9 @@ function UploaderCore() {
 
 
   const toast = useToast();
-  const [showDiscardModal, setShowDiscardModal] = useState(false);
+  // Inline cancel confirmation (double tap to discard draft)
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const confirmCancelTimerRef = useRef<number | null>(null);
   // camera capture state
   const [cameraOpen, setCameraOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -1123,11 +1124,33 @@ function UploaderCore() {
             />
             <button
               type="button"
-              className="btn cancel-btn"
-              onClick={() => setShowDiscardModal(true)}
+              className={`btn cancel-btn${confirmCancel ? ' confirm' : ''}`}
+              onClick={() => {
+                if (processing) return;
+                // First tap: enter confirm state
+                if (!confirmCancel) {
+                  setConfirmCancel(true);
+                  // auto-revert after 4s if no second tap
+                  if (confirmCancelTimerRef.current) window.clearTimeout(confirmCancelTimerRef.current);
+                  confirmCancelTimerRef.current = window.setTimeout(() => {
+                    setConfirmCancel(false);
+                    confirmCancelTimerRef.current = null;
+                  }, 4000);
+                  return;
+                }
+                // Second tap: discard
+                if (confirmCancelTimerRef.current) {
+                  window.clearTimeout(confirmCancelTimerRef.current);
+                  confirmCancelTimerRef.current = null;
+                }
+                setConfirmCancel(false);
+                resetDraft();
+              }}
               disabled={processing}
+              aria-pressed={confirmCancel}
+              aria-label={confirmCancel ? 'Tap again to discard draft' : 'Cancel (double tap to discard)'}
             >
-              <span className="cancel-inner">Cancel</span>
+              <span className="cancel-inner">{confirmCancel ? 'Discard draft' : 'Cancel'}</span>
             </button>
           </div>
         </div>
@@ -1136,15 +1159,10 @@ function UploaderCore() {
       <div aria-live="polite" className="sr-only status">
         {/* screen-reader updates for processing/errors */}
       </div>
-      <ConfirmModal
-        open={showDiscardModal}
-        title="Discard this draft?"
-        description="You will lose selected photos and caption."
-        confirmLabel="Discard"
-        cancelLabel="Keep"
-        onCancel={() => setShowDiscardModal(false)}
-        onConfirm={() => { setShowDiscardModal(false); resetDraft(); }}
-      />
+      {/* Screen reader hint when in confirm state */}
+      {confirmCancel ? (
+        <div className="sr-only" role="status">Tap Cancel again to discard this draft.</div>
+      ) : null}
     </div>
   );
 }

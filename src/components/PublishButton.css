@@ -6,8 +6,8 @@
   align-items: center;
   justify-content: center;
   min-width: 120px;
-  min-height: 40px; /* closer to visibility pill */
-  padding: 6px 18px; /* compact */
+  min-height: var(--action-pill-height,42px);
+  padding: 10px 20px; /* unify with visibility & cancel pills */
   border: none;
   border-radius: 999px; /* pill */
   font-size: 14px;

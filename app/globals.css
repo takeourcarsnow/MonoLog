@@ -137,10 +137,40 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   appearance: none; border: 1px solid var(--border); background: var(--bg-elev);
   color: var(--text); padding: 8px 12px; border-radius: 999px;
   font-size: 14px; line-height: 1; cursor: pointer;
-  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
 }
-.btn:hover { transform: translateY(-1px); }
-.btn.primary { background: var(--primary); color: #fff; border-color: transparent; }
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+.btn:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.btn.primary { 
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 20%)); 
+  color: #fff; 
+  border-color: transparent;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--primary), transparent 70%);
+}
+.btn.primary:hover {
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--primary), transparent 60%);
+}
 .btn.ghost { background: transparent; border-color: var(--border); }
 .btn.icon { padding: 8px; width: 36px; height: 36px; display: grid; place-items: center; }
 
@@ -943,6 +973,57 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 /* slightly tighter layout when displayed inside Account dropdown */
 .card .auth-form { min-width: 220px; }
 
+/* Auth dialog backdrop and modal positioning */
+.auth-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+}
+
+.auth-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  background: var(--bg);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  max-width: min(420px, 90vw);
+  width: 100%;
+  animation: authDialogIn 260ms var(--transition-mid) both;
+}
+
+@keyframes authDialogIn {
+  from { opacity: 0; transform: translate(-50%, -50%) translateY(12px) scale(.97); }
+  to { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1); }
+}
+
+/* Mobile-specific adjustments for auth dialog to account for bottom nav */
+@media (max-width: 640px) {
+  .auth-dialog {
+    /* On mobile, shift the dialog up slightly to account for the bottom nav bar
+       so it appears more centered in the visible viewport area */
+    top: calc(50% - 30px);
+    max-width: 90vw;
+    /* Ensure dialog doesn't get too close to top of screen on small devices */
+    max-height: calc(100vh - 120px);
+    overflow: auto;
+  }
+}
+
+/* Very small screens: make dialog take more space but keep margins */
+@media (max-width: 400px) {
+  .auth-dialog {
+    max-width: 94vw;
+    top: calc(50% - 40px);
+  }
+}
+
 /* Toast notifications (used via ToastProvider/useToast) */
 .toast {
   position: fixed;
@@ -1078,17 +1159,43 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   .calendar-weekdays { font-size: 12px; }
 }
 
-.grid { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
-@media (min-width: 680px) {
-  .grid { grid-template-columns: repeat(4, 1fr); }
+.grid { 
+  display: grid; 
+  gap: 12px; 
+  grid-template-columns: repeat(3, 1fr);
+  padding-top: 8px;
 }
-.tile { aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #0001; display: flex; align-items: center; justify-content: center; }
+@media (min-width: 680px) {
+  .grid { 
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+}
+.tile { 
+  aspect-ratio: 1 / 1; 
+  border-radius: 12px; 
+  overflow: hidden; 
+  border: 1px solid var(--border); 
+  background: var(--bg-elev); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid), border-color 220ms var(--transition-fast);
+  position: relative;
+}
+.tile:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border);
+}
 .tile img {
   width: 100%;
   height: 100%;
   object-fit: contain; /* show full image without cropping */
   object-position: center center;
   display: block;
+  position: relative;
+  z-index: 1;
 }
 
 /* ensure anchors used as user links have a clear focus ring */
@@ -1140,15 +1247,21 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 /* Profile header layout refinements */
 .profile-header {
-  padding: 16px;
+  padding: 24px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  gap: 20px;
   /* allow the avatar to overflow slightly (shadow, transform) without being clipped */
   overflow: visible;
   z-index: 60; /* sit above nearby cards but below modals/overlays */
   width: 100%;
   box-sizing: border-box;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
 }
 
 /* On wider screens keep the profile header constrained and centered so
@@ -1201,21 +1314,50 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   }
 }
 /* left column: avatar + text. Use flex so text can shrink/wrap without pushing avatar */
-.profile-left { display: flex; flex-direction: column; gap: 12px; align-items: center; min-width: 0; }
-.profile-left > div { min-width: 0; overflow: hidden; text-align: center; }
-.profile-left .username { font-size: 18px; }
+.profile-left { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  align-items: center; 
+  min-width: 0; 
+  width: 100%;
+}
+.profile-left > div { 
+  min-width: 0; 
+  overflow: visible; 
+  text-align: center;
+  width: 100%;
+}
+.profile-left .username { 
+  font-size: 22px; 
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
 
 /* Ensure bio inside header doesn't push/clip avatar. Keep it readable but constrained. */
 .profile-bio {
-  margin-top: 6px;
-  /* clamp to ~3 lines and show ellipsis; include both vendor and newer property for compatibility */
+  margin-top: 12px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px;
+  background: color-mix(in srgb, var(--bg), transparent 50%);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  max-width: 600px;
+  width: fit-content;
+  text-align: center;
+  /* clamp to ~4 lines and show ellipsis; include both vendor and newer property for compatibility */
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   /* standard property for newer toolchains / linter compatibility */
-  line-clamp: 3;
+  line-clamp: 4;
   white-space: normal;
 }
 
@@ -1320,8 +1462,12 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   white-space: nowrap;
   position: relative; /* anchor for .edit-panel */
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex-wrap: wrap;
+  margin-top: 8px;
 }
 
 /* Edit profile overlay panel to avoid pushing layout when toggling edit mode */
@@ -1470,15 +1616,15 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   .profile-header {
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
+    gap: 16px;
+    padding: 20px 16px;
   }
 
   /* keep avatar and name stacked vertically, allow actions to flow beneath */
   .profile-left {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 14px;
     align-items: center;
     width: 100%;
     min-width: 0;
@@ -1488,29 +1634,94 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   .profile-actions {
     width: 100%;
     display: flex;
-    gap: 8px;
+    gap: 10px;
     justify-content: center;
     flex-wrap: wrap;
-    margin-top: 4px;
+    margin-top: 8px;
   }
 
   /* slightly smaller avatar on phones */
-  .profile-avatar { width: 56px; height: 56px; border-radius: 12px; }
+  .profile-avatar { 
+    width: 80px; 
+    height: 80px; 
+    border-radius: 20px; 
+  }
 
   /* reduce button padding and font-size so more buttons fit per row */
-  .profile-actions .btn { padding: 8px 10px; font-size: 13px; }
+  .profile-actions .btn { padding: 10px 14px; font-size: 14px; }
+  
+  .profile-left .username { font-size: 20px; }
 
   /* ensure username wraps and doesn't push layout */
   .profile-left > div { min-width: 0; }
 
   /* make the posts grid easier to view on mobile */
   .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  
+  .profile-bio {
+    font-size: 13px;
+    padding: 12px;
+    margin-top: 8px;
+  }
 }
 
 /* Very small screens: single column grid to maximize image size */
 @media (max-width: 360px) {
   .grid { grid-template-columns: 1fr; }
   .profile-actions { justify-content: flex-start; }
+}
+
+/* Profile stats section */
+.profile-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  border-bottom: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  margin: 8px 0;
+  width: 100%;
+}
+
+.profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.profile-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--text), color-mix(in srgb, var(--primary), var(--text) 40%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.profile-stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .profile-stats {
+    gap: 20px;
+    padding: 12px 0;
+  }
+  
+  .profile-stat-value {
+    font-size: 18px;
+  }
+  
+  .profile-stat-label {
+    font-size: 11px;
+  }
 }
 
 /* ensure buttons in actions are vertically aligned and have consistent spacing */
@@ -1550,12 +1761,44 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 
 /* profile header specific */
-.profile-header { padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.profile-avatar { width: 84px; height: 84px; border-radius: 18px; object-fit: cover; border: 2px solid var(--border); }
-.profile-header .username { font-size: 18px; }
-.profile-header .dim { font-size: 13px; }
-.follow-btn { padding: 8px 12px; border-radius: 999px; }
-.follow-btn[aria-pressed="true"] { background: color-mix(in srgb, var(--primary), transparent 86%); border-color: transparent; }
+.profile-avatar { 
+  width: 96px; 
+  height: 96px; 
+  border-radius: 24px; 
+  object-fit: cover; 
+  border: 2px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid);
+}
+.profile-avatar:hover {
+  transform: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+.profile-header .username { font-size: 22px; }
+.profile-header .dim { 
+  font-size: 14px; 
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+.follow-btn { 
+  padding: 10px 18px; 
+  border-radius: 999px;
+  font-weight: 600;
+  transition: all 220ms var(--transition-mid);
+}
+.follow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.follow-btn[aria-pressed="true"] { 
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 30%));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary), transparent 60%);
+}
 
 /* About card: constrain very long bios so they don't push header/avatar off-screen */
 .about-card .card-body { max-height: 220px; overflow: auto; }
@@ -1818,18 +2061,40 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 /* Make inline edit card more usable on small screens (match edit-panel behavior) */
 @media (max-width: 680px) {
   .inline-edit-card {
-    /* Override inline styles from the component so the card can be wider on phones */
-    width: min(96vw, 460px) !important;
-    max-width: none !important;
-    max-height: calc(100vh - 120px) !important;
-    overflow: auto !important;
-    padding: 14px !important;
+    /* Keep inline positioning but ensure proper centering and sizing on mobile */
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px !important;
     border-radius: 12px !important;
     box-sizing: border-box !important;
     margin: 0 auto !important;
+    /* Add some constraints for better mobile UX */
+    max-height: 70vh !important;
+    overflow: auto !important;
   }
   .inline-edit-card .input,
-  .inline-edit-card .bio-editor { padding: 8px; font-size: 14px; }
+  .inline-edit-card .bio-editor { 
+    padding: 10px; 
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Center text inputs on mobile for better visual balance */
+  .inline-edit-card .input {
+    text-align: center;
+  }
+  
+  .inline-edit-card .input::placeholder {
+    text-align: center;
+  }
+}
+
+/* Very small screens: ensure comfortable spacing */
+@media (max-width: 400px) {
+  .inline-edit-card {
+    padding: 12px !important;
+  }
 }
 
 /* Portal root styles: ensure full-screen overlay for modals rendered into the portal */

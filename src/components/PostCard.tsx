@@ -478,8 +478,8 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                   </button>
                   {showAuth ? (
                     <>
-                      <div onClick={() => setShowAuth(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
-                      <div role="dialog" aria-modal="true" aria-label="Sign in or sign up" style={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 50, background: "var(--bg)", padding: 16, borderRadius: 8 }}>
+                      <div className="auth-dialog-backdrop" onClick={() => setShowAuth(false)} />
+                      <div role="dialog" aria-modal="true" aria-label="Sign in or sign up" className="auth-dialog">
                         <AuthForm onClose={() => setShowAuth(false)} />
                       </div>
                     </>

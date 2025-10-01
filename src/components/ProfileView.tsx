@@ -192,10 +192,15 @@ export function ProfileView({ userId }: { userId?: string }) {
         {showAuth ? (
           <>
             <div
+              className="auth-dialog-backdrop"
               onClick={() => setShowAuth(false)}
-              style={{ position: "fixed", inset: 0, zIndex: 40 }}
             />
-            <div role="dialog" aria-modal="true" aria-label="Sign in or sign up" style={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 50, background: "var(--bg)", padding: 16, borderRadius: 8 }}>
+            <div 
+              role="dialog" 
+              aria-modal="true" 
+              aria-label="Sign in or sign up" 
+              className="auth-dialog"
+            >
               <AuthForm onClose={() => setShowAuth(false)} />
             </div>
           </>
@@ -207,7 +212,7 @@ export function ProfileView({ userId }: { userId?: string }) {
   return (
     <div className="view-fade">
       <div className="profile-header toolbar">
-        <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+        <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", width: "100%" }}>
           {/* make avatar clickable for the signed-in profile owner to change avatar */}
           {currentUserId && user?.id === currentUserId ? (
             <>
@@ -225,12 +230,11 @@ export function ProfileView({ userId }: { userId?: string }) {
           ) : (
             <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
           )}
-          <div style={{ textAlign: "center", minWidth: 0 }}>
+          <div style={{ textAlign: "center", minWidth: 0, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
             {!isEditingProfile ? (
               <>
                 <div className="username">{user.displayName}</div>
                 <div className="dim">@{user.username} • joined {new Date(user.joinedAt).toLocaleDateString()}</div>
-                {/* post count intentionally hidden in design */}
                 {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
               </>
             ) : (
@@ -255,7 +259,7 @@ export function ProfileView({ userId }: { userId?: string }) {
             )}
           </div>
         </div>
-          <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+          <div className="profile-actions" style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 8 }}>
             {/* Show owner actions when the signed-in user is viewing their own profile.
                 This handles both /profile (no param) and /profile/[id] when the id
                 matches the current user. */}

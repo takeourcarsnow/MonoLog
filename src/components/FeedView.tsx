@@ -106,6 +106,22 @@ export function FeedView() {
     return () => obs.disconnect();
   }, [posts, loadingMore, hasMore]);
 
+  // Refresh feed when a new post is created (user returns to feed after upload)
+  useEffect(() => {
+    function onPostCreated() {
+      (async () => {
+        try {
+          setLoading(true);
+          const page = await api.getFollowingFeedPage({ limit: PAGE_SIZE });
+          setPosts(page);
+          setHasMore(page.length === PAGE_SIZE);
+        } catch (e) { /* ignore */ } finally { setLoading(false); }
+      })();
+    }
+    if (typeof window !== 'undefined') window.addEventListener('monolog:post_created', onPostCreated as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_created', onPostCreated as any); };
+  }, []);
+
   const render = () => {
     if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
     if (!posts.length) return <div className="empty">Your feed is quiet. Follow people in Explore to see their daily photo.</div>;

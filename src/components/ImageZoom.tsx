@@ -414,6 +414,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
         // make the container fill the card width so images can center
         display: "block",
         width: "100%",
+        // In profile/grid tiles we want the image to fully fill the square tile area.
+        // The tile itself enforces aspect-ratio; giving the wrapper 100% height
+        // allows the inner <img> (with object-fit:cover) to crop instead of letterboxing.
+        height: isTile ? "100%" : undefined,
         boxSizing: "border-box",
         ...style,
       }}

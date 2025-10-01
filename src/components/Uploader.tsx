@@ -414,6 +414,12 @@ export function Uploader() {
         replace,
         public: visibility === "public",
       });
+      // Notify other mounted views (Profile, Feed, etc.) that a post was created or replaced
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('monolog:post_created', { detail: { replaced: replace } }));
+        }
+      } catch (_) { /* ignore */ }
       // clear persisted draft (navigation will unmount but be safe)
       resetDraft();
       router.push("/profile");

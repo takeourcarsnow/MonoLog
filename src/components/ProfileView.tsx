@@ -58,6 +58,28 @@ export function ProfileView({ userId }: { userId?: string }) {
     return () => { mounted = false; };
   }, [userId]);
 
+  // Listen for newly created posts (from uploader) so profile grid updates
+  useEffect(() => {
+    function onPostCreated() {
+      (async () => {
+        try {
+          const me = await api.getCurrentUser();
+          // Only refresh if viewing own profile (implicit or explicit) and we have a user object
+          if (!me) return;
+          // If this ProfileView is showing another user, ignore
+          if (userId && userId !== me.id) return;
+          const list = await api.getUserPosts(me.id);
+          setUser(prev => prev || me); // keep existing or set me
+          setPosts(list);
+        } catch (e) { /* ignore refresh errors */ }
+      })();
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:post_created', onPostCreated as any);
+    }
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_created', onPostCreated as any); };
+  }, [userId]);
+
   const [showAuth, setShowAuth] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 

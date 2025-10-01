@@ -180,6 +180,7 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   width: 100%;
   padding: 12px 12px calc(76px + var(--safe-bottom));
 }
+.upload-empty .content { padding-bottom: 28px; }
 .content { position: relative; /* allow certain header elements to overflow (e.g. avatar shadows) */ overflow: visible; }
 
 /* Page slide: support swipe-to-navigate with smooth transforms. We keep
@@ -912,8 +913,8 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 /* Uploader-specific mobile improvements: avoid overlap with bottom tabbar, tighten dropzone and thumbnails */
 @media (max-width: 640px) {
-  /* give uploader extra bottom padding so buttons/inputs aren't hidden behind tabbar */
-  .uploader { padding-bottom: calc(96px + var(--safe-bottom)); }
+  /* give uploader extra bottom padding only when images present so initial empty state doesn't force scroll */
+  .uploader.has-preview { padding-bottom: calc(96px + var(--safe-bottom)); }
 
   /* slightly smaller drop area to fit mobile screens comfortably */
   .drop { min-height: 140px; padding: 12px; }
@@ -2190,6 +2191,17 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   max-height: calc(100vh - 48px);
   overflow: auto;
   width: 100%;
+}
+
+/* --- Upload page desktop spacing fix --------------------------------------
+   At default desktop zoom the action row (visibility toggle + Publish/Cancel)
+   could sit partially beneath the fixed bottom nav because only the mobile
+   breakpoint added extra bottom padding to .uploader. Give the uploader a
+   generous bottom padding on wider screens too so the user can always scroll
+   the buttons fully above the nav. Kept separate from the mobile rule so the
+   existing mobile value still applies there. */
+@media (min-width: 641px) {
+  .uploader.has-preview { padding-bottom: calc(140px + var(--safe-bottom)); }
 }
 
 /* Make Swiper slides full-bleed and responsive so they fill the content area

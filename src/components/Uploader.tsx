@@ -520,8 +520,20 @@ function UploaderCore() {
   }
 
   // main uploader UI (toolbar removed per request)
+  const hasPreview = Boolean(dataUrl || dataUrls.length);
+  // Toggle a body class so we can shrink bottom padding when empty to avoid unnecessary scrollbar
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const cls = 'upload-empty';
+    if (!hasPreview) {
+      document.body.classList.add(cls);
+    } else {
+      document.body.classList.remove(cls);
+    }
+    return () => { document.body.classList.remove(cls); };
+  }, [hasPreview]);
   return (
-    <div className="uploader view-fade">
+    <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''}`}>
       {/* Local styles for publish/countdown animations */}
       <style>{`
         .btn.primary.ready { animation: none; }

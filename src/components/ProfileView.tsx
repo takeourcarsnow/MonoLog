@@ -97,6 +97,31 @@ export function ProfileView({ userId }: { userId?: string }) {
   const saveEdits = async () => {
     const uname = (editUsername || '').trim();
     if (!uname) { toast.show('Username cannot be empty'); return; }
+    
+    // Check for reserved route names
+    const RESERVED_ROUTES = [
+      'about', 'api', 'calendar', 'explore', 'favorites', 
+      'feed', 'post', 'profile', 'upload', 'admin', 
+      'settings', 'help', 'terms', 'privacy', 'login', 
+      'register', 'signup', 'signin', 'logout', 'auth'
+    ];
+    
+    if (RESERVED_ROUTES.includes(uname.toLowerCase())) {
+      toast.show('This username is reserved. Please choose a different one.');
+      return;
+    }
+    
+    // Basic username validation
+    if (!/^[a-zA-Z0-9_-]+$/.test(uname)) {
+      toast.show('Username can only contain letters, numbers, hyphens, and underscores');
+      return;
+    }
+    
+    if (uname.length < 3 || uname.length > 30) {
+      toast.show('Username must be between 3 and 30 characters');
+      return;
+    }
+    
     setEditProcessing(true);
     try {
       await api.updateCurrentUser({ username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200) });

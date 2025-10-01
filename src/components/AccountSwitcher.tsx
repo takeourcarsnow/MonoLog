@@ -95,7 +95,16 @@ export function AccountSwitcher() {
           // When still probing session state, do nothing on click to avoid
           // opening the auth modal while the client is initializing.
           if (me === undefined) return;
-          if (current) return router.push("/profile");
+          if (current) {
+            // Navigate to username route instead of /profile
+            if (current.username) {
+              return router.push(`/${current.username}`);
+            } else if (current.id) {
+              return router.push(`/${current.id}`);
+            } else {
+              return router.push("/profile");
+            }
+          }
           // Blur active element first to dismiss native suggestion/autocomplete
           try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
           setShowAuth(true);
@@ -111,7 +120,7 @@ export function AccountSwitcher() {
         ) : current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             <img src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" style={{ width: 22, height: 22 }} />
-            <span>{current.displayName}</span>
+            <span>@{current.username || current.id}</span>
           </span>
         ) : "Account"}
       </button>

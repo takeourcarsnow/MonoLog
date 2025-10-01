@@ -446,7 +446,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
   return (
     <article className="card">
       <div className="card-head">
-  <Link className="user-link" href={`/profile/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
+  <Link className="user-link" href={`/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
           <img className="avatar" src={post.user.avatarUrl} alt={post.user.displayName} />
           <div className="user-line">
             <span className="username">{post.user.displayName}</span>

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 const tabs = [
   { href: "/feed", label: "Feed", icon: "🏠" },
@@ -17,9 +18,42 @@ export function NavBarClient() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, visible: false });
   const [pop, setPop] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ username?: string; id?: string } | null>(null);
 
-  const handleTabClick = (href: string) => {
-    router.push(href);
+  // Get current user info for profile navigation
+  useEffect(() => {
+    let mounted = true;
+    async function getCurrentUser() {
+      try {
+        const user = await api.getCurrentUser();
+        if (mounted) {
+          setCurrentUser(user);
+        }
+      } catch (e) {
+        // User might not be logged in
+        if (mounted) {
+          setCurrentUser(null);
+        }
+      }
+    }
+    getCurrentUser();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleTabClick = async (href: string) => {
+    // Special handling for profile navigation
+    if (href === "/profile") {
+      if (currentUser?.username) {
+        router.push(`/${currentUser.username}`);
+      } else if (currentUser?.id) {
+        router.push(`/${currentUser.id}`);
+      } else {
+        // Fallback to old profile route if no user info
+        router.push("/profile");
+      }
+    } else {
+      router.push(href);
+    }
   };
 
   useEffect(() => {
@@ -107,7 +141,24 @@ export function NavBarClient() {
     <nav className="tabbar" aria-label="Primary">
       <div className="tabbar-inner" role="tablist" ref={containerRef}>
         {tabs.map(t => {
-          const isActive = pathname === t.href;
+          let isActive = pathname === t.href;
+          
+          // Special case: treat username routes as active when the Profile tab is selected
+          if (t.href === "/profile" && !isActive) {
+            // Check if we're on a username route (not one of the reserved routes)
+            const pathSegments = pathname.split('/').filter(Boolean);
+            if (pathSegments.length === 1) {
+              const segment = pathSegments[0];
+              const RESERVED_ROUTES = [
+                'about', 'api', 'calendar', 'explore', 'favorites', 
+                'feed', 'post', 'profile', 'upload'
+              ];
+              if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+                isActive = true;
+              }
+            }
+          }
+          
           return (
             <button
               key={t.href}

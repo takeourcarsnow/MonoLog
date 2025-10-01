@@ -952,6 +952,60 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   gap: 10px;
   min-width: 260px;
 }
+.auth-form.enhanced { max-width: 480px; width: 100%; margin: 0 auto; }
+.auth-form.enhanced .field-group { width: 100%; }
+.auth-form.enhanced .fancy-input { 
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 4%), color-mix(in srgb, var(--bg-elev), transparent 14%));
+  border: 1px solid color-mix(in srgb, var(--border), transparent 10%);
+  backdrop-filter: saturate(140%) blur(4px);
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform 160ms var(--transition-fast);
+  text-align: center;
+}
+.auth-form.enhanced .fancy-input:focus {
+  border-color: color-mix(in srgb, var(--primary), transparent 40%);
+  background: color-mix(in srgb, var(--primary-weak), transparent 82%);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary), transparent 86%), 0 4px 18px rgba(0,0,0,0.24);
+}
+.auth-form.enhanced .fancy-input:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--primary), transparent 76%);
+}
+
+.auth-form .username-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }
+.auth-form .username-wrap.open { max-height: 160px; opacity: 1; transform: translateY(0); }
+.auth-form .username-wrap .help { margin-top: 6px; }
+.auth-form .username-wrap .validity-indicator { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; pointer-events: none; }
+.auth-form .username-wrap .check { width: 22px; height: 22px; opacity: 0; transform: scale(.6) rotate(-12deg); transition: opacity 200ms var(--transition-fast), transform 260ms var(--transition-mid), color 260ms var(--transition-fast); color: var(--muted); }
+.auth-form .username-wrap .check.pending { opacity: .5; transform: scale(.8); color: var(--danger); }
+.auth-form .username-wrap .check.ok { opacity: 1; transform: scale(1) rotate(0); color: var(--accent); }
+
+/* Toggle pill improvements */
+.auth-toggle { position: relative; padding: 6px 10px; background: color-mix(in srgb, var(--bg-elev), transparent 12%); border-radius: 999px; border: 1px solid color-mix(in srgb, var(--border), transparent 40%); }
+.auth-toggle-indicator { position: absolute; top: 4px; height: calc(100% - 8px); border-radius: 999px; background: color-mix(in srgb, var(--primary-weak), transparent 60%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary), transparent 70%), 0 4px 14px rgba(0,0,0,0.14); transition: left 280ms var(--transition-mid), width 280ms var(--transition-mid); z-index: 1; }
+.auth-toggle .pill-switch { position: relative; z-index: 2; background: transparent; border: none; font-weight: 600; padding: 10px 18px; border-radius: 999px; color: var(--muted); transition: color 200ms var(--transition-fast), transform 200ms var(--transition-fast); }
+.auth-toggle .pill-switch.active { color: var(--text); transform: translateY(-2px); }
+.auth-toggle .pill-switch:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 70%); }
+
+/* Submit button animation */
+.submit-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 160px; }
+.submit-btn .spinner { position: absolute; left: 14px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--bg), transparent 50%); border-top-color: #fff; animation: authSpin 780ms linear infinite; opacity: 0; transform: scale(.6); transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast); }
+.submit-btn.loading .spinner { opacity: 1; transform: scale(1); }
+.submit-btn.loading .label-text { opacity: .82; }
+@keyframes authSpin { to { transform: rotate(360deg); } }
+@keyframes fadeInSlide { 
+  from { 
+    opacity: 0; 
+    transform: translateY(-8px); 
+  } 
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  } 
+}
+.cancel-btn { position: relative; }
+.cancel-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Card variant for signup hint (more minimal) */
+.card.minimal { box-shadow: none; border-style: dashed; backdrop-filter: saturate(120%) blur(4px); }
 .auth-toggle { display: flex; gap: 8px; }
 .auth-toggle .btn { border-radius: 999px; padding: 6px 12px; }
 .auth-toggle .btn.active { background: var(--bg); border: 1px solid color-mix(in srgb, var(--primary), transparent 70%); box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
@@ -965,6 +1019,8 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   color: var(--text);
 }
 .auth-form .input::placeholder { color: color-mix(in srgb, var(--muted), transparent 20%); }
+.auth-form .input { text-align: center; }
+.auth-form .input::placeholder { text-align: center; }
 
 .auth-actions { display: flex; gap: 8px; }
 .auth-actions .btn { padding: 8px 12px; border-radius: 999px; }
@@ -972,6 +1028,22 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 /* slightly tighter layout when displayed inside Account dropdown */
 .card .auth-form { min-width: 220px; }
+
+/* Auth form desktop tightening (keep mobile comfortable) */
+@media (min-width: 640px) {
+  .auth-form-tight .inputs-wrap .input { padding-top: 9px; padding-bottom: 9px; }
+  .auth-form-tight .field-group { gap: 10px !important; }
+  .auth-form-tight .auth-actions { gap: 10px; }
+  .auth-form-tight .auth-message strong { font-size: 19px; }
+  .auth-form-tight .auth-message { margin-top: -4px; }
+  .auth-form-tight .username-wrap.open { margin-top: 2px; }
+}
+
+  /* Host container spacing tweak for auth (desktop) */
+  @media (min-width: 640px) {
+    .auth-host { --auth-host-gap-top: 28px; }
+    .auth-host { margin-top: var(--auth-host-gap-top) !important; }
+  }
 
 /* Auth dialog backdrop and modal positioning */
 .auth-dialog-backdrop {

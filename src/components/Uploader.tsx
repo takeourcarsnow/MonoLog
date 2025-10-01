@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { AuthForm } from "./AuthForm";
 import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import { CONFIG } from "@/lib/config";
 import { useRouter, usePathname } from "next/navigation";
@@ -30,6 +31,38 @@ const PHRASES = [
 const EDITING_SESSION_KEY = 'monolog:upload_editor_open';
 
 export function Uploader() {
+  // Light wrapper handling auth gating so inner uploader hooks remain stable
+  const [me, setMe] = useState<any | null | undefined>(undefined);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const u = await api.getCurrentUser();
+        if (mounted) setMe(u);
+      } catch { if (mounted) setMe(null); }
+    })();
+    const onAuth = async () => {
+      try {
+        const u = await api.getCurrentUser();
+        if (mounted) setMe(u);
+      } catch { if (mounted) setMe(null); }
+    };
+    if (typeof window !== 'undefined') window.addEventListener('auth:changed', onAuth);
+    return () => { mounted = false; if (typeof window !== 'undefined') window.removeEventListener('auth:changed', onAuth); };
+  }, []);
+
+  if (me === undefined) return <div className="view-fade">Loading…</div>;
+  if (!me) {
+    return (
+      <div className="view-fade auth-host" style={{ maxWidth: 520, margin: '28px auto 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+        <AuthForm onClose={async () => setMe(await api.getCurrentUser())} />
+      </div>
+    );
+  }
+  return <UploaderCore />;
+}
+
+function UploaderCore() {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [dataUrls, setDataUrls] = useState<string[]>([]);

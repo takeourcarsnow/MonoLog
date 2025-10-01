@@ -113,115 +113,184 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
     }
   }
 
+  const getMessage = () => {
+    if (mode === "signin") {
+      return {
+        title: "Welcome back",
+        subtitle: "Your memories are waiting"
+      };
+    } else {
+      return {
+        title: "Start your journey",
+        subtitle: "One photo. One day. One story."
+      };
+    }
+  };
+
+  const message = getMessage();
+
   return (
-    <form onSubmit={submit} className="auth-form space-y-4" aria-label="Sign in or sign up">
-      <div ref={containerRef} className="auth-toggle relative bg-transparent rounded-full p-2" role="tablist" aria-label="Auth mode">
-        {/* sliding active indicator - positioned using measured left/width so it aligns with the buttons */}
+    <form
+      onSubmit={submit}
+      className="auth-form enhanced auth-form-tight space-y-5"
+      aria-label="Sign in or sign up"
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        textAlign: 'center'
+      }}
+    >
+      {/* Dynamic message */}
+      <div
+        key={mode}
+        className="auth-message"
+        style={{
+          marginBottom: '0.35rem',
+          animation: 'fadeInSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+      >
+        <strong
+          style={{
+            fontSize: 20,
+            display: 'block',
+            marginBottom: 4,
+            lineHeight: 1.15
+          }}
+        >
+          {message.title}
+        </strong>
+        <div
+          className="dim"
+          style={{
+            fontSize: 13,
+            lineHeight: 1.2
+          }}
+        >
+          {message.subtitle}
+        </div>
+      </div>
+
+      <div
+        ref={containerRef}
+        className="auth-toggle relative glow-wrap"
+        role="tablist"
+        aria-label="Auth mode"
+        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        {/* sliding active indicator */}
         <div
           aria-hidden
-          style={{
-            position: 'absolute',
-            top: 4,
-            height: 'calc(100% - 8px)',
-            left: indicator.left,
-            width: indicator.width,
-            borderRadius: 999,
-            transition: 'left 200ms ease, width 200ms ease',
-            background: 'var(--auth-toggle-indicator)',
-            pointerEvents: 'none',
-          }}
+          className="auth-toggle-indicator"
+          style={{ left: indicator.left, width: indicator.width }}
         />
 
-        <div style={{ display: 'inline-flex', gap: 8 }}>
+        <div style={{ display: 'inline-flex', gap: 8, position: 'relative', zIndex: 5 }}>
           <button
             ref={btnSigninRef}
             type="button"
-            className={`btn relative z-10 ${mode === "signin" ? "active" : ""}`}
-            onClick={() => setMode("signin")}
-            aria-pressed={mode === "signin"}
+            className={`btn pill-switch ${mode === 'signin' ? 'active' : ''}`}
+            onClick={() => setMode('signin')}
+            aria-pressed={mode === 'signin'}
           >
-            Sign in
+            <span className="btn-label">Sign in</span>
           </button>
           <button
             ref={btnSignupRef}
             type="button"
-            className={`btn relative z-10 ${mode === "signup" ? "active" : ""}`}
-            onClick={() => setMode("signup")}
-            aria-pressed={mode === "signup"}
+            className={`btn pill-switch ${mode === 'signup' ? 'active' : ''}`}
+            onClick={() => setMode('signup')}
+            aria-pressed={mode === 'signup'}
           >
-            Sign up
+            <span className="btn-label">Sign up</span>
           </button>
         </div>
       </div>
 
-      <input
-        className="input transition-shadow duration-150 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.06)]"
-        placeholder="Email"
-        value={email}
-        name="email"
-        autoComplete="email"
-        inputMode="email"
-        onChange={e => setEmail(e.target.value)}
-        aria-label="Email address"
-        autoCorrect="off"
-        autoCapitalize="none"
-      />
-
-      <input
-        className="input transition-shadow duration-150 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.06)]"
-        placeholder="Password"
-        type="password"
-        value={password}
-        name="password"
-        autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-        onChange={e => setPassword(e.target.value)}
-        aria-label="Password"
-      />
-
-      {/* animated username field when signing up */}
-      <div className={`transition-all duration-200 ${mode === "signup" ? "opacity-100 max-h-40" : "opacity-0 max-h-0"}`} aria-hidden={mode !== "signup"}>
-        <div className="relative">
+      <div className="w-full flex flex-col gap-3 inputs-wrap" style={{ maxWidth: 400 }}>
+        <div className="field-group flex flex-col gap-3 w-full">
           <input
-            className="input pr-10 transition-shadow duration-150 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.06)]"
-            placeholder="Choose a username (3-32 chars)"
-            value={username}
-            name="username"
-            autoComplete="username"
-            onChange={e => setUsername(e.target.value)}
-            aria-describedby="username-help"
-            aria-invalid={username ? !isUsernameValid : undefined}
+            className="input fancy-input"
+            placeholder="Email"
+            value={email}
+            name="email"
+            autoComplete="email"
+            inputMode="email"
+            onChange={e => setEmail(e.target.value)}
+            aria-label="Email address"
+            autoCorrect="off"
+            autoCapitalize="none"
           />
-          {/* live validity indicator */}
-          <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-            <svg
-              className={`w-5 h-5 transition-transform duration-150 ${isUsernameValid ? 'opacity-100 scale-100 text-green-400' : (username ? 'opacity-60 scale-95 text-rose-400' : 'opacity-0 scale-75')}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden
-            >
-              <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <input
+            className="input fancy-input"
+            placeholder="Password"
+            type="password"
+            value={password}
+            name="password"
+            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+            onChange={e => setPassword(e.target.value)}
+            aria-label="Password"
+          />
+          <div
+            className={`username-wrap transition-all duration-300 ease-out ${mode === 'signup' ? 'open' : 'closed'}`}
+            aria-hidden={mode !== 'signup'}
+          >
+            <div className="relative">
+              <input
+                className="input fancy-input pr-12"
+                placeholder="Choose a username"
+                value={username}
+                name="username"
+                autoComplete="username"
+                onChange={e => setUsername(e.target.value)}
+                aria-describedby="username-help"
+                aria-invalid={username ? !isUsernameValid : undefined}
+              />
+              <div className="validity-indicator" aria-hidden>
+                <svg
+                  className={`check ${isUsernameValid ? 'ok' : (username ? 'pending' : '')}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+            <div id="username-help" className="dim help" aria-live="polite">
+              Lowercase letters, numbers, '-' and '_' (3-32 chars).
+            </div>
           </div>
-        </div>
-
-        <div id="username-help" className="dim mt-2 transition-opacity duration-200" aria-live="polite">
-          Pick a short unique username. Lowercase letters, numbers, &apos;-&apos; and &apos;_&apos; only.
         </div>
       </div>
 
-      <div className="auth-actions flex gap-3">
-        <button className="btn primary" disabled={loading} type="submit">{loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}</button>
-        <button type="button" className="btn ghost" onClick={() => { onClose?.(); }} aria-label="Cancel and close">{loading ? ".." : "Cancel"}</button>
+  <div className="auth-actions flex gap-2 justify-center w-full" style={{ maxWidth: 400, marginTop: 2 }}>
+        <button
+          className={`btn primary submit-btn ${loading ? 'loading' : ''}`}
+          disabled={loading}
+          type="submit"
+          aria-busy={loading}
+          aria-live="polite"
+        >
+          <span className="spinner" aria-hidden />
+          <span className="label-text">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
+        </button>
+        <button
+          type="button"
+            className="btn ghost cancel-btn"
+            onClick={() => { if (!loading) onClose?.(); }}
+            aria-label="Cancel and close"
+            disabled={loading}
+        >
+          Cancel
+        </button>
       </div>
 
-      <div className={`transition-opacity duration-200 ${signupSent ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">
-        {signupSent ? (
-          <div className="card" style={{ padding: 10, background: "transparent", border: "1px dashed var(--border)", marginTop: 8 }}>
-            <strong>Check your email</strong>
-            <div className="dim">A confirmation message has been sent to <em>{email}</em>. Please confirm your address before signing in.</div>
+      <div className={`signup-hint transition-opacity duration-300 ${signupSent ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">
+        {signupSent && (
+          <div className="card minimal" style={{ padding: 14, background: 'transparent', border: '1px dashed var(--border)', marginTop: 4 }}>
+            <strong style={{ display: 'block', marginBottom: 4 }}>Check your email</strong>
+            <div className="dim" style={{ fontSize: 12 }}>A confirmation link was sent to <em>{email}</em>. After confirming you can sign in.</div>
           </div>
-        ) : null}
+        )}
       </div>
     </form>
   );

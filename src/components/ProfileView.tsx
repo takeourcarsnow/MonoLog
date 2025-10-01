@@ -164,11 +164,7 @@ export function ProfileView({ userId }: { userId?: string }) {
   // viewer is not signed in and they're looking at their own profile.
   if (!loading && !isOtherParam && !currentUserId) {
       return (
-        <div className="view-fade" style={{ maxWidth: 520, margin: "24px auto" }}>
-          <div style={{ marginBottom: 12 }}>
-            <strong>Please sign in to post</strong>
-            <div className="dim">You must be signed in to upload photos.</div>
-          </div>
+        <div className="view-fade auth-host" style={{ maxWidth: 520, margin: "28px auto 32px", textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
           <AuthForm onClose={async () => {
             // refresh authenticated user state after sign-in
             const me = await api.getCurrentUser();

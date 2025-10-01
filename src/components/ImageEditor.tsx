@@ -276,10 +276,8 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
       const dpr = window.devicePixelRatio || 1;
       // use clientWidth/clientHeight to avoid transform/scale issues from parent modals
       const contW = Math.max(100, Math.round(cont.clientWidth));
-      // Make the canvas use much more vertical space - aim for a larger editor
-      // Use 70-80% of viewport height to give the image plenty of room
-      const availableHeight = window.innerHeight - 200; // leave room for header + controls
-      const targetHeight = Math.max(320, Math.min(availableHeight, 800));
+      // Make the canvas more compact to reduce scrolling
+      const targetHeight = Math.min(400, Math.max(280, contW * 0.75)); // Use aspect-based height, max 400px
       
       c.width = Math.max(100, Math.round(contW * dpr));
       c.height = Math.max(100, Math.round(targetHeight * dpr));
@@ -1029,7 +1027,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
         background: 'var(--bg-elev)',
         color: 'var(--text)',
         padding: 12,
-        paddingBottom: 'calc(96px + var(--safe-bottom))',
+        paddingBottom: 16,
         borderRadius: 8,
         overflow: 'visible',
         // subtle mount animation

@@ -93,6 +93,9 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
       setIsMe(cur?.id === post.userId);
       if (cur?.id !== post.userId) {
         setIsFollowing(await api.isFollowing(post.userId));
+      }
+      // Check favorite status for all posts (including user's own posts)
+      if (cur) {
         setIsFavorite(await api.isFavorite(post.id));
       }
     })();
@@ -517,7 +520,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                             await api.deletePost(post.id);
                             setShowDeleteConfirm(false);
                             // If viewing single post page, go back to the main feed (home)
-                            if (pathname.startsWith("/post/")) {
+                            if (pathname?.startsWith("/post/")) {
                               // send user to the home page rather than back to the deleted post
                               router.push("/");
                             }

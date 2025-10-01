@@ -161,6 +161,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               longSwipes={true}
               longSwipesRatio={0.2}
               threshold={10}
+              autoHeight={true}
               // Slightly increase touchRatio to make touch movements feel a bit
               // more responsive on devices with higher pixel density.
               touchRatio={1.1}
@@ -169,7 +170,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               watchSlidesProgress={true}
             >
               {views.map((view, index) => (
-                <SwiperSlide key={view.path} virtualIndex={index}>
+                <SwiperSlide key={view.path} virtualIndex={index} className={view.path === '/feed' ? 'slide-feed' : undefined}>
                   <view.component />
                 </SwiperSlide>
               ))}

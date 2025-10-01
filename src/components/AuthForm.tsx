@@ -256,7 +256,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
               </div>
             </div>
             <div id="username-help" className="dim help" aria-live="polite">
-              Lowercase letters, numbers, '-' and '_' (3-32 chars).
+              Lowercase letters, numbers, &apos;-&apos; and &apos;_&apos; (3-32 chars).
             </div>
           </div>
         </div>

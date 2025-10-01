@@ -292,7 +292,9 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 @keyframes in {
   to { transform: translateY(0); opacity: 1; }
 }
-.view-fade { animation: viewFade 280ms var(--transition-mid) both; }
+.view-fade { 
+  animation: viewFade 280ms var(--transition-mid) both;
+}
 @keyframes viewFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
 .comment-item.new { animation: commentIn 360ms cubic-bezier(.2,.8,.2,1); }
@@ -934,7 +936,13 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; background: var(--bg-elev); border: 1px solid var(--border); padding: 2px 6px; border-radius: 6px; }
 
-.calendar { display: grid; gap: 8px; width: 100%; box-sizing: border-box; margin-bottom: 36px; }
+.calendar { 
+  display: grid; 
+  gap: 8px; 
+  width: 100%; 
+  box-sizing: border-box; 
+  margin-bottom: 36px;
+}
 .calendar .header {
   display: flex; justify-content: space-between; align-items: center;
   border: none; background: transparent;
@@ -1800,25 +1808,29 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   .swipe-views {
     width: 100% !important;
     /* don't force a fixed height here; let individual slides size themselves */
+    /* Ensure touch events can be detected for horizontal swipes */
+    touch-action: pan-y pinch-zoom;
   }
   .swipe-views .swiper-wrapper {
     width: 100% !important;
     /* don't force a fixed height here; let the active slide determine wrapper height */
+    touch-action: pan-y pinch-zoom;
   }
 .swipe-views .swiper-slide {
   width: 100% !important;
-  height: auto !important; /* let slide content determine height when needed */
+  height: auto !important; /* allow taller content while still guaranteeing full-touch area */
   display: block;
-}
-
-/* Only the feed slide should reserve a large min-height so other sections (calendar, profile)
-   don't get an unnecessarily huge empty area. We add `.slide-feed` to the Feed SwiperSlide. */
-.swipe-views .swiper-slide.slide-feed {
-  min-height: calc(100vh - 160px); /* keep feed slide tall enough to fill most of the viewport (header + tabbar space) */
+  /* Ensure every main slide (feed, explore, upload, calendar, profile) covers the viewport height
+     beneath the header + bottom nav so horizontal swipes register anywhere on screen, not just
+     where content exists. Previously only the feed slide had this min-height which caused the
+     calendar slide to leave a dead swipe zone below its content. */
+  min-height: calc(100vh - 160px);
+  /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
+  touch-action: pan-y pinch-zoom;
 }
 
 @media (max-width: 900px) {
-  .swipe-views .swiper-slide.slide-feed { min-height: calc(100vh - 140px); }
+  .swipe-views .swiper-slide { min-height: calc(100vh - 140px); }
 }
 
 /* Break out of centered .content container so the Swiper can be full-bleed

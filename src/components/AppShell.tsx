@@ -148,6 +148,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               initialSlide={currentIndex}
               onSlideChange={handleSlideChange}
               touchStartPreventDefault={false}
+              passiveListeners={false}
               // only allow touch/swipe interactions on touch-capable devices
               simulateTouch={isTouchDevice}
               allowTouchMove={isTouchDevice}

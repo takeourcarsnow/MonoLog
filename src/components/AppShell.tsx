@@ -152,7 +152,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               // only allow touch/swipe interactions on touch-capable devices
               simulateTouch={isTouchDevice}
               allowTouchMove={isTouchDevice}
-              resistance={false}
+              // Enable rubber-band effect at edges: allows some drag but prevents
+              // slides from going completely off-screen. resistanceRatio controls
+              // how much resistance (0.5 = moderate resistance, good balance between
+              // visual feedback and preventing excessive drag)
+              resistance={true}
+              resistanceRatio={0.5}
               // Allow both short (quick flick) and long swipes. The default
               // behavior was disabling them which made users have to drag a
               // large distance to change sections. Enable them and lower the

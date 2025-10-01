@@ -639,8 +639,26 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   border: 2px dashed var(--border);
   padding: 16px; border-radius: var(--radius); text-align: center; color: var(--muted);
   transition: border-color var(--transition-fast), background var(--transition-fast);
+  position: relative;
 }
 .drop.dragover { border-color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 70%); color: var(--text); }
+.drop-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.6));
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  border-radius: var(--radius);
+  color: var(--text);
+}
+.drop-loader svg {
+  color: var(--primary);
+}
 .preview { overflow: hidden; border-radius: var(--radius); }
 .preview img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
 

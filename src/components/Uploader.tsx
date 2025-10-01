@@ -7,7 +7,7 @@ import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import { CONFIG } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { useToast } from "./Toast";
-import ImageEditor from "./ImageEditor";
+import ImageEditor, { EditorSettings } from "./ImageEditor";
 import Portal from "./Portal";
 import ConfirmModal from "./ConfirmModal";
 
@@ -30,6 +30,10 @@ export function Uploader() {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [dataUrls, setDataUrls] = useState<string[]>([]);
+  // Store original unedited images so we can always start fresh in the editor
+  const [originalDataUrls, setOriginalDataUrls] = useState<string[]>([]);
+  // Store editor settings for each image so we can restore them when reopening the editor
+  const [editorSettings, setEditorSettings] = useState<EditorSettings[]>([]);
   const [alt, setAlt] = useState<string | string[]>("");
   const [caption, setCaption] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
@@ -128,22 +132,24 @@ export function Uploader() {
       try { const stored = localStorage.getItem('monolog:nextAllowedAt'); if (stored) initial = Number(stored); } catch (e) {}
     }
     if (!initial) return;
+    
     function fmt(ms: number) {
-      if (ms <= 0) return "00:00:00";
-      // friendly localized formatting: H:MM:SS or MM:SS
-      const total = Math.floor(ms / 1000);
-      const h = Math.floor(total / 3600);
-      const m = Math.floor((total % 3600) / 60);
-      const s = total % 60;
+      // Display ONLY hours and minutes; seconds are implied by a blinking colon.
+      // We ceil seconds so we don't show a minute early (prevents jumping to publish too soon visually).
+      if (ms <= 0) return "0:00";
+      const totalSeconds = Math.ceil(ms / 1000);
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
       const pad = (n: number) => String(n).padStart(2, "0");
-      if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
-      return `${m}:${pad(s)}`;
+      return `${h}:${pad(m)}`; // always show hours (can be 0) for consistent layout
     }
+    
     // set initial
     const ms0 = initial - Date.now();
     setRemaining(fmt(ms0));
     setRemainingMs(ms0);
     if (!countdownTotalMs) setCountdownTotalMs(ms0);
+    
     const id = setInterval(() => {
       const ms = initial! - Date.now();
       if (ms <= 0) {
@@ -158,8 +164,10 @@ export function Uploader() {
       setRemaining(fmt(ms));
       setRemainingMs(ms);
     }, 1000);
+    
     return () => clearInterval(id);
   }, [nextAllowedAt]);
+
 
   const toast = useToast();
   const [showDiscardModal, setShowDiscardModal] = useState(false);
@@ -192,6 +200,8 @@ export function Uploader() {
         const parsed = JSON.parse(raw);
         if (parsed) {
           if (parsed.dataUrls) setDataUrls(parsed.dataUrls);
+          if (parsed.originalDataUrls) setOriginalDataUrls(parsed.originalDataUrls);
+          if (parsed.editorSettings) setEditorSettings(parsed.editorSettings);
           if (parsed.dataUrl) setDataUrl(parsed.dataUrl);
           if (parsed.caption) setCaption(parsed.caption);
           if (parsed.alt !== undefined) setAlt(parsed.alt);
@@ -214,6 +224,8 @@ export function Uploader() {
     try {
       const payload = {
         dataUrls: dataUrls.length ? dataUrls : undefined,
+        originalDataUrls: originalDataUrls.length ? originalDataUrls : undefined,
+        editorSettings: editorSettings.length ? editorSettings : undefined,
         dataUrl: dataUrl || undefined,
         caption: caption || undefined,
         alt: alt === undefined ? undefined : alt,
@@ -235,6 +247,8 @@ export function Uploader() {
           if ((!payload.dataUrls && !payload.dataUrl) && (existing?.dataUrls || existing?.dataUrl)) {
             if (existing.dataUrls) payload.dataUrls = existing.dataUrls;
             else if (existing.dataUrl) payload.dataUrl = existing.dataUrl;
+            if (existing.originalDataUrls) payload.originalDataUrls = existing.originalDataUrls;
+            if (existing.editorSettings) payload.editorSettings = existing.editorSettings;
           }
         }
       } catch (e) {
@@ -245,11 +259,13 @@ export function Uploader() {
     } catch (e) {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [dataUrls, dataUrl, caption, alt, visibility, compressedSize, originalSize, index]);
+  }, [dataUrls, originalDataUrls, editorSettings, dataUrl, caption, alt, visibility, compressedSize, originalSize, index]);
 
   function resetDraft() {
     try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
     setDataUrls([]);
+    setOriginalDataUrls([]);
+    setEditorSettings([]);
     setDataUrl(null);
     setCaption("");
     setAlt("");
@@ -343,6 +359,7 @@ export function Uploader() {
       return;
     }
     setProcessing(true);
+    setPreviewLoaded(false); // Show loader immediately
     setOriginalSize(file.size);
     setCompressedSize(null);
     try {
@@ -354,10 +371,18 @@ export function Uploader() {
         const next = [...d, url].slice(0, 5);
         return next;
       });
-      // mark preview as not yet loaded so blur remains until the <img> onLoad fires
-      setPreviewLoaded(false);
+      // also store the original unedited version
+      setOriginalDataUrls(d => {
+        const next = [...d, url].slice(0, 5);
+        return next;
+      });
+      // initialize empty settings for this new image
+      setEditorSettings(s => {
+        const next = [...s, {}].slice(0, 5);
+        return next;
+      });
       // set the primary preview to the first image
-  if (!dataUrl) { setDataUrl(url); setPreviewLoaded(false); }
+  if (!dataUrl) { setDataUrl(url); }
       // ensure any previously-open editor is closed when a new file is chosen
       setEditing(false);
       // clear the file input so selecting the same file again will fire change
@@ -412,6 +437,9 @@ export function Uploader() {
         @keyframes pulse { 0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(125,211,252,0.0)); } 50% { transform: scale(1.06); filter: drop-shadow(0 6px 14px rgba(125,211,252,0.12)); } 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(125,211,252,0.0)); } }
         /* smooth ring transition when filling */
         svg circle[stroke-dasharray] { transition: stroke-dasharray 0.9s linear; }
+        /* Blinking colon for H:MM countdown */
+        .remaining-time .colon { animation: blink-colon 1s steps(2,start) infinite; display:inline-block; }
+        @keyframes blink-colon { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
       `}</style>
 
       {!dataUrl && !dataUrls.length && (
@@ -432,7 +460,20 @@ export function Uploader() {
             if (file) await handleFile(file);
           }}
         >
-          <div className="drop-inner">
+          {processing && (
+            <div className="drop-loader" role="status" aria-live="polite">
+              <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden>
+                <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 2a10 10 0 1 0 10 10" strokeOpacity={0.28} />
+                  <path d="M12 2a10 10 0 0 0 0 20">
+                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite" />
+                  </path>
+                </g>
+              </svg>
+              <span style={{ fontSize: 15, fontWeight: 600 }}>Processing image…</span>
+            </div>
+          )}
+          <div className="drop-inner" style={{ opacity: processing ? 0.3 : 1, pointerEvents: processing ? 'none' : 'auto' }}>
             <div className="drop-icon" aria-hidden>+</div>
             <div className="drop-text">Drop images here or click to select</div>
             <div className="dim" style={{ marginTop: 6 }}>JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB</div>
@@ -498,12 +539,26 @@ export function Uploader() {
                     copy[replaceAt] = url;
                     return copy;
                   });
+                  // also update the original
+                  setOriginalDataUrls(d => {
+                    const copy = [...d];
+                    copy[replaceAt] = url;
+                    return copy;
+                  });
+                  // reset settings for replaced image
+                  setEditorSettings(s => {
+                    const copy = [...s];
+                    copy[replaceAt] = {};
+                    return copy;
+                  });
                   if (replaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
                 } else {
                   // no array yet, just set primary preview
                   setDataUrl(url);
                   setPreviewLoaded(false);
                   setDataUrls([url]);
+                  setOriginalDataUrls([url]);
+                  setEditorSettings([{}]);
                 }
                 setOriginalSize(approxDataUrlBytes(f as any));
               } catch (e) {
@@ -542,7 +597,7 @@ export function Uploader() {
 
   <div className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${editing ? 'editing' : ''} ${(processing || !previewLoaded) ? 'processing' : ''}`}>
         <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
-          {processing ? (
+          {(processing || !previewLoaded) ? (
             <div className="preview-badge" role="status" aria-live="polite">
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
                 <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -552,7 +607,7 @@ export function Uploader() {
                   </path>
                 </g>
               </svg>
-              <span>Processing…</span>
+              <span>{processing ? 'Processing…' : 'Loading…'}</span>
             </div>
           ) : null}
           {editing && (dataUrls[editingIndex] || dataUrl) ? (
@@ -589,9 +644,10 @@ export function Uploader() {
                       onChange={e => setEditingAlt(e.target.value)}
                     />
                     <ImageEditor
-                      initialDataUrl={(dataUrls[editingIndex] || dataUrl) as string}
+                      initialDataUrl={(originalDataUrls[editingIndex] || originalDataUrls[0] || dataUrls[editingIndex] || dataUrl) as string}
+                      initialSettings={editorSettings[editingIndex] || {}}
                       onCancel={() => setEditing(false)}
-                      onApply={async (newUrl) => {
+                      onApply={async (newUrl, settings) => {
                         // persist alt for this image
                         setAlt(prev => {
                           if (Array.isArray(prev)) {
@@ -606,6 +662,13 @@ export function Uploader() {
                           }
                           return editingAlt || "";
                         });
+                        // persist the settings for this image
+                        setEditorSettings(prev => {
+                          const copy = [...prev];
+                          while (copy.length <= editingIndex) copy.push({});
+                          copy[editingIndex] = settings;
+                          return copy;
+                        });
                         setEditing(false);
                         // run through the same compression pipeline to ensure final image obeys limits
                         setProcessing(true);
@@ -617,6 +680,7 @@ export function Uploader() {
                             copy[editingIndex] = compressed;
                             return copy;
                           });
+                          // DO NOT update originalDataUrls - keep the original unedited version
                           // if editing the main preview index, update dataUrl too
                           if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
                           setCompressedSize(approxDataUrlBytes(compressed));
@@ -780,6 +844,7 @@ export function Uploader() {
                       const v = videoRef.current;
                       const s = streamRef.current;
                       if (!v || !s) return;
+                      setProcessing(true); // Show loader while capturing
                       try {
                         const w = v.videoWidth || v.clientWidth;
                         const h = v.videoHeight || v.clientHeight || Math.round(w * 0.75);
@@ -792,11 +857,51 @@ export function Uploader() {
                         cnv.toBlob(async (blob) => {
                           if (!blob) return;
                           const file = new File([blob], `capture-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
-                          // if replacing, set fileActionRef appropriately
+                          // if replacing, handle specially
                           if (fileActionRef.current === 'replace') {
-                            // leave replaceIndexRef as-is
+                            try {
+                              const url = await compressImage(file);
+                              const bytes = approxDataUrlBytes(url);
+                              setCompressedSize(bytes);
+                              const replaceAt = replaceIndexRef.current ?? (dataUrls.length ? index : 0);
+                              if (dataUrls.length) {
+                                setDataUrls(d => {
+                                  const copy = [...d];
+                                  copy[replaceAt] = url;
+                                  return copy;
+                                });
+                                // also update the original
+                                setOriginalDataUrls(d => {
+                                  const copy = [...d];
+                                  copy[replaceAt] = url;
+                                  return copy;
+                                });
+                                // reset settings for replaced image
+                                setEditorSettings(s => {
+                                  const copy = [...s];
+                                  copy[replaceAt] = {};
+                                  return copy;
+                                });
+                                if (replaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
+                              } else {
+                                setDataUrl(url);
+                                setPreviewLoaded(false);
+                                setDataUrls([url]);
+                                setOriginalDataUrls([url]);
+                                setEditorSettings([{}]);
+                              }
+                              setOriginalSize(approxDataUrlBytes(file as any));
+                              fileActionRef.current = 'append';
+                              replaceIndexRef.current = null;
+                            } catch (e) {
+                              console.error(e);
+                              toast.show('Failed to process captured image');
+                            } finally {
+                              setProcessing(false);
+                            }
+                          } else {
+                            await handleFile(file);
                           }
-                          await handleFile(file);
                           try { s.getTracks().forEach(t => t.stop()); } catch (_) {}
                           streamRef.current = null;
                           setCameraOpen(false);
@@ -804,8 +909,23 @@ export function Uploader() {
                       } catch (e) {
                         console.error(e);
                         toast.show('Failed to capture photo');
+                        setProcessing(false);
                       }
-                    }}>Capture</button>
+                    }} disabled={processing}>
+                      {processing ? (
+                        <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+                            <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                              <path d="M12 2a10 10 0 1 0 10 10" strokeOpacity={0.28} />
+                              <path d="M12 2a10 10 0 0 0 0 20">
+                                <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite" />
+                              </path>
+                            </g>
+                          </svg>
+                          <span>Processing…</span>
+                        </span>
+                      ) : 'Capture'}
+                    </button>
                     <button className="btn ghost" onClick={() => {
                       try { streamRef.current?.getTracks().forEach(t => t.stop()); } catch (_) {}
                       streamRef.current = null;
@@ -967,7 +1087,24 @@ export function Uploader() {
                   ? "Processing…"
                   : canPost === false
                   ? nextAllowedAt
-                    ? `Next post in ${remaining}`
+                    ? (
+                        <>
+                          Next post in {(() => {
+                            if (!remaining) return "0:00";
+                            const parts = remaining.split(":");
+                            if (parts.length === 2) {
+                              return (
+                                <span className="remaining-time" aria-label={`Next post in ${parts[0]} hours and ${parts[1]} minutes`}>
+                                  <span className="h" aria-hidden>{parts[0]}</span>
+                                  <span className="colon" aria-hidden>:</span>
+                                  <span className="m" aria-hidden>{parts[1]}</span>
+                                </span>
+                              );
+                            }
+                            return remaining;
+                          })()}
+                        </>
+                      )
                     : "Publish again in 24h"
                   : "Publish"}
               </span>

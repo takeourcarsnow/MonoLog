@@ -23,10 +23,27 @@ function generateNoiseCanvas(w: number, h: number, intensity: number) {
   return c;
 }
 
+export type EditorSettings = {
+  exposure?: number;
+  contrast?: number;
+  saturation?: number;
+  temperature?: number;
+  vignette?: number;
+  frameColor?: 'white' | 'black';
+  frameThickness?: number;
+  selectedFilter?: string;
+  filterStrength?: number;
+  grain?: number;
+  softFocus?: number;
+  fade?: number;
+  matte?: number;
+};
+
 type Props = {
   initialDataUrl: string;
+  initialSettings?: EditorSettings;
   onCancel: () => void;
-  onApply: (dataUrl: string) => void;
+  onApply: (dataUrl: string, settings: EditorSettings) => void;
 };
 
 // simple linear interpolation helper for colors (hex) — returns a CSS color string
@@ -105,7 +122,7 @@ const FILTER_PRESETS: Record<string, string> = {
   film: 'contrast(1.08) saturate(0.92) brightness(0.98)'
 };
 
-export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props) {
+export default function ImageEditor({ initialDataUrl, initialSettings, onCancel, onApply }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -124,15 +141,15 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     handleIndex?: number;
   }>(null);
   const [sel, setSel] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  const [exposure, setExposure] = useState<number>(1);
-  const [contrast, setContrast] = useState<number>(1);
-  const [saturation, setSaturation] = useState<number>(1);
-  const [temperature, setTemperature] = useState<number>(0); // -100..100 mapped to hue-rotate
-  const [vignette, setVignette] = useState<number>(0); // 0..1
-  const [frameColor, setFrameColor] = useState<'white' | 'black'>('white');
-  const [frameThickness, setFrameThickness] = useState<number>(0); // fraction of min(image dim) — default disabled
+  const [exposure, setExposure] = useState<number>(initialSettings?.exposure ?? 1);
+  const [contrast, setContrast] = useState<number>(initialSettings?.contrast ?? 1);
+  const [saturation, setSaturation] = useState<number>(initialSettings?.saturation ?? 1);
+  const [temperature, setTemperature] = useState<number>(initialSettings?.temperature ?? 0); // -100..100 mapped to hue-rotate
+  const [vignette, setVignette] = useState<number>(initialSettings?.vignette ?? 0); // 0..1
+  const [frameColor, setFrameColor] = useState<'white' | 'black'>(initialSettings?.frameColor ?? 'white');
+  const [frameThickness, setFrameThickness] = useState<number>(initialSettings?.frameThickness ?? 0); // fraction of min(image dim) — default disabled
   const [controlsOpen, setControlsOpen] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects' | 'crop'>('basic');
+  const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects' | 'crop' | 'frame'>('basic');
   const ASPECT_PRESETS = [
     { label: 'Free', v: null },
     { label: '16:9', v: 16 / 9 },
@@ -142,12 +159,12 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     { label: '4:5', v: 4 / 5 }
   ];
   const [presetIndex, setPresetIndex] = useState<number>(0);
-  const [selectedFilter, setSelectedFilter] = useState<string>('none');
-  const [filterStrength, setFilterStrength] = useState<number>(1); // 0..1
-  const [grain, setGrain] = useState<number>(0); // 0..1
-  const [softFocus, setSoftFocus] = useState<number>(0); // gentle blur overlay
-  const [fade, setFade] = useState<number>(0); // faded matte look
-  const [matte, setMatte] = useState<number>(0); // matte tone curve
+  const [selectedFilter, setSelectedFilter] = useState<string>(initialSettings?.selectedFilter ?? 'none');
+  const [filterStrength, setFilterStrength] = useState<number>(initialSettings?.filterStrength ?? 1); // 0..1
+  const [grain, setGrain] = useState<number>(initialSettings?.grain ?? 0); // 0..1
+  const [softFocus, setSoftFocus] = useState<number>(initialSettings?.softFocus ?? 0); // gentle blur overlay
+  const [fade, setFade] = useState<number>(initialSettings?.fade ?? 0); // faded matte look
+  const [matte, setMatte] = useState<number>(initialSettings?.matte ?? 0); // matte tone curve
   // refs mirror state for immediate reads inside draw() to avoid stale-state draws
   const exposureRef = useRef<number>(exposure);
   const contrastRef = useRef<number>(contrast);
@@ -172,7 +189,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     const compute = () => {
       const cont = categoriesContainerRef.current;
       if (!cont) { if (alive) setCategoryHighlight(null); return; }
-      const selKey = selectedCategory === 'basic' ? 'basic' : selectedCategory === 'color' ? 'color' : selectedCategory === 'effects' ? 'effects' : 'crop';
+      const selKey = selectedCategory === 'basic' ? 'basic' : selectedCategory === 'color' ? 'color' : selectedCategory === 'effects' ? 'effects' : selectedCategory === 'crop' ? 'crop' : 'frame';
       const btn = cont.querySelector<HTMLButtonElement>(`button[data-cat="${selKey}"]`);
       if (!btn) { if (alive) setCategoryHighlight(null); return; }
       const left = Math.round((btn as HTMLElement).offsetLeft - 4);
@@ -183,7 +200,12 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     };
     const raf = requestAnimationFrame(() => setTimeout(() => compute(), 16));
     const ro = new ResizeObserver(() => compute());
-    if (categoriesContainerRef.current) ro.observe(categoriesContainerRef.current);
+    if (categoriesContainerRef.current) {
+      ro.observe(categoriesContainerRef.current);
+      // Also observe all category buttons for size changes (hover effects)
+      const buttons = categoriesContainerRef.current.querySelectorAll('.cat-btn');
+      buttons.forEach(btn => ro.observe(btn as Element));
+    }
     window.addEventListener('resize', compute);
     return () => { alive = false; cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener('resize', compute); };
   }, [selectedCategory]);
@@ -412,68 +434,85 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   // Soft focus: draw a subtle blurred layer on top with low alpha
   if (curSoftFocus > 0.001) {
     try {
-      ctx.save();
-      // use an Offscreen canvas approach for blur if available
-      const tmp = document.createElement('canvas'); tmp.width = Math.max(1, Math.round(imgW)); tmp.height = Math.max(1, Math.round(imgH));
+      // Create a dreamy, soft focus effect by layering a blurred version
+      const tmp = document.createElement('canvas'); 
+      tmp.width = Math.max(1, Math.round(imgW)); 
+      tmp.height = Math.max(1, Math.round(imgH));
       const tctx = tmp.getContext('2d')!;
-      tctx.drawImage(img, imgLeft, imgTop, imgW, imgH, 0, 0, tmp.width, tmp.height);
-      // apply CSS blur via filter on temporary context where supported
-      tctx.filter = `blur(${Math.max(0.5, curSoftFocus * 6)}px)`;
+      
+      // Draw from the original image source (not the processed canvas)
+      tctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, tmp.width, tmp.height);
+      
+      // Apply blur
+      const blurAmount = Math.max(3, curSoftFocus * 12);
+      tctx.filter = `blur(${blurAmount}px) brightness(1.05)`;
       tctx.drawImage(tmp, 0, 0);
-      ctx.globalAlpha = Math.min(0.65, curSoftFocus * 0.8);
+      tctx.filter = 'none';
+      
+      // Composite the blurred layer on top with lighten blend for glow
+      ctx.save();
+      ctx.globalAlpha = Math.min(0.4, curSoftFocus * 0.45);
+      ctx.globalCompositeOperation = 'lighten';
       ctx.drawImage(tmp, imgLeft, imgTop, imgW, imgH);
-      ctx.globalAlpha = 1;
       ctx.restore();
     } catch (e) {
-      // fallback: very slight overlay with low alpha
-      ctx.save(); ctx.globalAlpha = Math.min(0.4, curSoftFocus * 0.5); ctx.fillStyle = 'rgba(255,255,255,0.02)'; ctx.fillRect(imgLeft, imgTop, imgW, imgH); ctx.restore();
+      // fallback: subtle white overlay
+      ctx.save(); 
+      ctx.globalAlpha = Math.min(0.25, curSoftFocus * 0.3); 
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'; 
+      ctx.fillRect(imgLeft, imgTop, imgW, imgH); 
+      ctx.restore();
     }
   }
   // Fade: produce a visible faded look by compositing a lower-contrast, slightly brighter copy on top
   if (curFade > 0.001) {
     try {
-      const tmpF = document.createElement('canvas'); tmpF.width = Math.max(1, Math.round(imgW)); tmpF.height = Math.max(1, Math.round(imgH));
-      const fctx = tmpF.getContext('2d')!;
-      // draw the source region to tmp
-      fctx.drawImage(img, imgLeft, imgTop, imgW, imgH, 0, 0, tmpF.width, tmpF.height);
-      // apply a reduced contrast and slight brightness to lift shadows
-      const contrastFactor = 1 - Math.min(0.6, curFade * 0.6);
-      const saturateFactor = 1 - Math.min(0.25, curFade * 0.25);
-      const brightFactor = 1 + Math.min(0.06, curFade * 0.06);
-      fctx.filter = `contrast(${contrastFactor}) saturate(${saturateFactor}) brightness(${brightFactor})`;
-      // redraw onto itself to apply filter
-      fctx.drawImage(tmpF, 0, 0);
-      // composite the filtered layer softly on top to mix the effect
+      // Create a lifted blacks, reduced contrast fade effect (washed out vintage look)
       ctx.save();
-      ctx.globalAlpha = Math.min(0.85, curFade * 0.9);
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.drawImage(tmpF, imgLeft, imgTop, imgW, imgH);
+      
+      // First, apply a light overlay to lift the blacks
+      ctx.globalAlpha = Math.min(0.35, curFade * 0.4);
+      ctx.globalCompositeOperation = 'lighten';
+      ctx.fillStyle = 'rgba(230, 230, 230, 0.5)';
+      ctx.fillRect(imgLeft, imgTop, imgW, imgH);
+      
+      // Then reduce contrast with a gray overlay
+      ctx.globalAlpha = Math.min(0.25, curFade * 0.3);
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.fillStyle = 'rgba(200, 200, 200, 0.6)';
+      ctx.fillRect(imgLeft, imgTop, imgW, imgH);
+      
       ctx.restore();
     } catch (e) {
       // fallback: stronger white overlay
-      ctx.save(); ctx.globalAlpha = Math.min(0.6, curFade * 0.6); ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(imgLeft, imgTop, imgW, imgH); ctx.restore();
+      ctx.save(); 
+      ctx.globalAlpha = Math.min(0.4, curFade * 0.45); 
+      ctx.fillStyle = 'rgba(245,245,240,0.3)'; 
+      ctx.fillRect(imgLeft, imgTop, imgW, imgH); 
+      ctx.restore();
     }
   }
   // Matte: stronger matte look using a desaturated, flattened layer composited with soft-light for a filmic matte
   if (curMatte > 0.001) {
     try {
-      const tmpM = document.createElement('canvas'); tmpM.width = Math.max(1, Math.round(imgW)); tmpM.height = Math.max(1, Math.round(imgH));
-      const mctx = tmpM.getContext('2d')!;
-      mctx.drawImage(img, imgLeft, imgTop, imgW, imgH, 0, 0, tmpM.width, tmpM.height);
-      // desaturate and slightly reduce contrast to get matte base
-      const sat = 1 - Math.min(0.45, curMatte * 0.45);
-      const cont = 1 - Math.min(0.3, curMatte * 0.3);
-      const bright = 1 + Math.min(0.02, curMatte * 0.02);
-      mctx.filter = `saturate(${sat}) contrast(${cont}) brightness(${bright})`;
-      mctx.drawImage(tmpM, 0, 0);
-      // composite using soft-light (gives a matte film-like result)
+      // Rich, cinematic matte look with crushed blacks and film-like tonality
       ctx.save();
+      
+      // Darken with multiply for crushed blacks
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = Math.min(0.25, curMatte * 0.3);
+      ctx.fillStyle = 'rgba(30, 25, 35, 0.8)';
+      ctx.fillRect(imgLeft, imgTop, imgW, imgH);
+      
+      // Add warm film tone with color-dodge for highlights
       ctx.globalCompositeOperation = 'soft-light';
-      ctx.globalAlpha = Math.min(0.9, curMatte * 0.95);
-      ctx.drawImage(tmpM, imgLeft, imgTop, imgW, imgH);
+      ctx.globalAlpha = Math.min(0.2, curMatte * 0.25);
+      ctx.fillStyle = 'rgba(200, 180, 150, 0.5)';
+      ctx.fillRect(imgLeft, imgTop, imgW, imgH);
+      
       ctx.restore();
     } catch (e) {
-      ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = Math.min(0.45, curMatte * 0.45); ctx.fillStyle = 'rgba(25,25,25,0.04)'; ctx.fillRect(imgLeft, imgTop, imgW, imgH); ctx.restore();
+      ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = Math.min(0.35, curMatte * 0.4); ctx.fillStyle = 'rgba(25,25,25,0.3)'; ctx.fillRect(imgLeft, imgTop, imgW, imgH); ctx.restore();
     }
   }
     // optional vignette overlay — apply only over the displayed image area
@@ -925,64 +964,70 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
   const curSoft = Math.min(1, Math.max(0, softFocus));
   const curFade = Math.min(1, Math.max(0, fade));
   const curMatte = Math.min(1, Math.max(0, matte));
-  // Soft Focus: blurred overlay composited on top
+  // Soft Focus: blurred overlay composited on top with lighten blend for dreamy glow
   if (curSoft > 0.001) {
     try {
       const tmp = document.createElement('canvas'); tmp.width = srcW; tmp.height = srcH;
       const t = tmp.getContext('2d')!;
+      // Draw from source image
       t.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-      // tuned blur radius: softer to stronger (0..8px)
-      const blurPx = Math.max(0.6, curSoft * 8);
-      t.filter = `blur(${blurPx}px)`;
+      // Apply blur with slight brightness boost
+      const blurPx = Math.max(3, curSoft * 12);
+      t.filter = `blur(${blurPx}px) brightness(1.05)`;
       t.drawImage(tmp, 0, 0);
+      t.filter = 'none';
       octx.save();
-      octx.globalAlpha = Math.min(0.8, curSoft * 0.85);
+      octx.globalAlpha = Math.min(0.4, curSoft * 0.45);
+      octx.globalCompositeOperation = 'lighten';
       octx.drawImage(tmp, padPx, padPx, srcW, srcH);
       octx.restore();
     } catch (e) {
       // fallback subtle overlay
-      octx.save(); octx.globalAlpha = Math.min(0.4, curSoft * 0.5); octx.fillStyle = 'rgba(255,255,255,0.02)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
+      octx.save(); octx.globalAlpha = Math.min(0.25, curSoft * 0.3); octx.fillStyle = 'rgba(255,255,255,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
     }
   }
-  // Fade: stronger faded look baked by compositing a lower-contrast, slightly brighter version
+  // Fade: washed out, lifted blacks vintage look (like sun-bleached photos)
   if (curFade > 0.001) {
     try {
-      const tmpF = document.createElement('canvas'); tmpF.width = srcW; tmpF.height = srcH;
-      const fctx = tmpF.getContext('2d')!;
-      fctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-      const contrastFactor = 1 - Math.min(0.7, curFade * 0.7);
-      const saturateFactor = 1 - Math.min(0.35, curFade * 0.35);
-      const brightFactor = 1 + Math.min(0.08, curFade * 0.08);
-      fctx.filter = `contrast(${contrastFactor}) saturate(${saturateFactor}) brightness(${brightFactor})`;
-      fctx.drawImage(tmpF, 0, 0);
       octx.save();
-      octx.globalAlpha = Math.min(0.95, curFade * 0.95);
-      octx.globalCompositeOperation = 'source-over';
-      octx.drawImage(tmpF, padPx, padPx, srcW, srcH);
+      
+      // First, apply a light overlay to lift the blacks
+      octx.globalAlpha = Math.min(0.35, curFade * 0.4);
+      octx.globalCompositeOperation = 'lighten';
+      octx.fillStyle = 'rgba(230, 230, 230, 0.5)';
+      octx.fillRect(padPx, padPx, srcW, srcH);
+      
+      // Then reduce contrast with a gray overlay
+      octx.globalAlpha = Math.min(0.25, curFade * 0.3);
+      octx.globalCompositeOperation = 'overlay';
+      octx.fillStyle = 'rgba(200, 200, 200, 0.6)';
+      octx.fillRect(padPx, padPx, srcW, srcH);
+      
       octx.restore();
     } catch (e) {
-      octx.save(); octx.globalAlpha = Math.min(0.7, curFade * 0.7); octx.fillStyle = 'rgba(255,255,255,0.08)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
+      octx.save(); octx.globalAlpha = Math.min(0.4, curFade * 0.45); octx.fillStyle = 'rgba(245,245,240,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
     }
   }
-  // Matte: desaturate and flatten blacks, composite with soft-light/multiply for filmic look
+  // Matte: rich, cinematic matte look with crushed blacks and film-like tonality
   if (curMatte > 0.001) {
     try {
-      const tmpM = document.createElement('canvas'); tmpM.width = srcW; tmpM.height = srcH;
-      const mctx = tmpM.getContext('2d')!;
-      mctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-      const sat = 1 - Math.min(0.6, curMatte * 0.6);
-      const cont = 1 - Math.min(0.45, curMatte * 0.45);
-      const bright = 1 + Math.min(0.03, curMatte * 0.03);
-      mctx.filter = `saturate(${sat}) contrast(${cont}) brightness(${bright})`;
-      mctx.drawImage(tmpM, 0, 0);
       octx.save();
-      // prefer soft-light for filmic matte; fallback to multiply
+      
+      // Darken with multiply for crushed blacks
+      octx.globalCompositeOperation = 'multiply';
+      octx.globalAlpha = Math.min(0.25, curMatte * 0.3);
+      octx.fillStyle = 'rgba(30, 25, 35, 0.8)';
+      octx.fillRect(padPx, padPx, srcW, srcH);
+      
+      // Add warm film tone
       octx.globalCompositeOperation = 'soft-light';
-      octx.globalAlpha = Math.min(0.95, curMatte * 0.9);
-      octx.drawImage(tmpM, padPx, padPx, srcW, srcH);
+      octx.globalAlpha = Math.min(0.2, curMatte * 0.25);
+      octx.fillStyle = 'rgba(200, 180, 150, 0.5)';
+      octx.fillRect(padPx, padPx, srcW, srcH);
+      
       octx.restore();
     } catch (e) {
-      octx.save(); octx.globalCompositeOperation = 'multiply'; octx.globalAlpha = Math.min(0.6, curMatte * 0.6); octx.fillStyle = 'rgba(20,20,20,0.05)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
+      octx.save(); octx.globalCompositeOperation = 'multiply'; octx.globalAlpha = Math.min(0.35, curMatte * 0.4); octx.fillStyle = 'rgba(25,25,25,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
     }
   }
   // apply grain to exported image by compositing a noise canvas
@@ -1031,7 +1076,23 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     octx.restore();
   }
   const dataUrl = out.toDataURL('image/jpeg', 0.92);
-    onApply(dataUrl);
+    // Return both the edited image and the current settings
+    const settings: EditorSettings = {
+      exposure,
+      contrast,
+      saturation,
+      temperature,
+      vignette,
+      frameColor,
+      frameThickness,
+      selectedFilter,
+      filterStrength,
+      grain,
+      softFocus,
+      fade,
+      matte,
+    };
+    onApply(dataUrl, settings);
   }
 
   return (
@@ -1063,6 +1124,18 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     >
       {/* scoped styles for sliders and subtle animations */}
       <style>{`
+        /* Category button hover effects */
+        .cat-btn .cat-label {
+          max-width: 0;
+          opacity: 0;
+          transition: max-width 200ms ease, opacity 180ms ease, margin 180ms ease;
+          margin-left: 0;
+        }
+        .cat-btn:hover .cat-label {
+          max-width: 80px;
+          opacity: 1;
+          margin-left: 8px;
+        }
         .imgedit-range { 
           -webkit-appearance: none; 
           appearance: none; 
@@ -1146,7 +1219,6 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
         .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap', padding: '4px 0' }}>
-      <button type="button" className="btn ghost" onClick={onCancel} aria-label="back" style={{ color: 'var(--text)', background: 'color-mix(in srgb, var(--bg-elev) 80%, transparent)', border: '1px solid var(--border)', fontSize: 18, padding: '10px 14px', borderRadius: 10, transformOrigin: 'center', transition: 'transform 120ms ease, box-shadow 180ms ease', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>◀</button>
         <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>Edit Photo</div>
         <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
           <button type="button" title="Rotate -90°" onClick={bakeRotateMinus90} style={{ padding: '10px 12px', borderRadius: 10, background: 'color-mix(in srgb, var(--bg-elev) 80%, transparent)', border: '1px solid var(--border)', transition: 'transform 140ms ease, box-shadow 180ms ease', fontSize: 18, boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>⤺</button>
@@ -1187,11 +1259,12 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     type="button"
     aria-label="Basic"
     title="Basic"
+    className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('basic'); }}
-    style={{ padding: '8px 12px', borderRadius: 10, background: selectedCategory === 'basic' ? 'transparent' : 'transparent', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'basic' ? 700 : 500 }}
+    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'basic' ? 'transparent' : 'transparent', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'basic' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 18 }}>{'🎛️'}</span>
-    <span style={{ fontSize: 14 }}>Basic</span>
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'🎛️'}</span>
+    <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Basic</span>
   </button>
 
   <button
@@ -1199,11 +1272,12 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     type="button"
     aria-label="Filters"
     title="Filters"
+    className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('color'); }}
-    style={{ padding: '8px 12px', borderRadius: 10, background: selectedCategory === 'color' ? 'transparent' : 'transparent', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'color' ? 700 : 500 }}
+    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'color' ? 'transparent' : 'transparent', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'color' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 18 }}>{'🎨'}</span>
-    <span style={{ fontSize: 14 }}>Filters</span>
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'🎨'}</span>
+    <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Filters</span>
   </button>
 
   <button
@@ -1211,23 +1285,38 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
     type="button"
     aria-label="Effects"
     title="Effects"
+    className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('effects'); }}
-    style={{ padding: '8px 12px', borderRadius: 10, background: selectedCategory === 'effects' ? 'transparent' : 'transparent', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'effects' ? 700 : 500 }}
+    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'effects' ? 'transparent' : 'transparent', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'effects' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 18 }}>{'✨'}</span>
-    <span style={{ fontSize: 14 }}>Effects</span>
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'✨'}</span>
+    <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Effects</span>
   </button>
 
   <button
     data-cat="crop"
     type="button"
-    aria-label="Crop & Frames"
-    title="Crop & Frames"
+    aria-label="Crop"
+    title="Crop"
+    className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('crop'); }}
-    style={{ padding: '8px 12px', borderRadius: 10, background: selectedCategory === 'crop' ? 'transparent' : 'transparent', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'crop' ? 700 : 500 }}
+    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'crop' ? 'transparent' : 'transparent', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'crop' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 18 }}>{'✂️'}</span>
-    <span style={{ fontSize: 14 }}>Crop & Frames</span>
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'✂️'}</span>
+    <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Crop</span>
+  </button>
+
+  <button
+    data-cat="frame"
+    type="button"
+    aria-label="Frame"
+    title="Frame"
+    className="cat-btn"
+    onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('frame'); }}
+    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'frame' ? 'transparent' : 'transparent', color: selectedCategory === 'frame' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'frame' ? 700 : 500, overflow: 'hidden' }}
+  >
+    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'🖼️'}</span>
+    <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Frame</span>
   </button>
   </div>
 
@@ -1334,7 +1423,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                 <span aria-hidden style={{ fontSize: 18 }}>🕶️</span>
                 <span>Vignette</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#1a1a1a', '#000000') }} />
               <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{vignette.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1342,7 +1431,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                 <span aria-hidden style={{ fontSize: 18 }}>🎚️</span>
                 <span>Grain</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#e8d5b7', '#8b7355') }} />
               <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{grain.toFixed(2)}</span>
             </label>
 
@@ -1351,7 +1440,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                 <span aria-hidden style={{ fontSize: 18 }}>💤</span>
                 <span>Soft Focus</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }} />
               <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{softFocus.toFixed(2)}</span>
             </label>
 
@@ -1360,7 +1449,7 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                 <span aria-hidden style={{ fontSize: 18 }}>🎞️</span>
                 <span>Fade</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }} />
               <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{fade.toFixed(2)}</span>
             </label>
 
@@ -1369,39 +1458,19 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                 <span aria-hidden style={{ fontSize: 18 }}>🪞</span>
                 <span>Matte</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }} />
               <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{matte.toFixed(2)}</span>
             </label>
           </div>
 
           {/* Crop panel */}
           <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'crop' ? 'grid' : 'none', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-              <div>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Crop</div>
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button className="btn ghost" type="button" onClick={() => { setSel(null); cropRatio.current = null; }} style={{ padding: '6px 8px', fontSize: 13 }}>Reset</button>
-                <button className="btn" type="button" onClick={() => { cropRatio.current = null; setSel(null); }} aria-pressed={cropRatio.current === null} style={{ padding: '6px 8px', fontSize: 13 }}>Free</button>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 6 }}>
-              {/* compact inline frame controls placed first so they remain visible */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 0 }}>
-                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-start' }}>
-                  <button type="button" className={frameColor === 'white' ? 'btn primary' : 'btn ghost'} onClick={() => { frameColorRef.current = 'white'; setFrameColor('white'); draw(); }} style={{ padding: '6px 8px', fontSize: 13, opacity: frameThickness > 0 ? 1 : 0.45, pointerEvents: frameThickness > 0 ? 'auto' : 'none' }}>White</button>
-                  <button type="button" className={frameColor === 'black' ? 'btn primary' : 'btn ghost'} onClick={() => { frameColorRef.current = 'black'; setFrameColor('black'); draw(); }} style={{ padding: '6px 8px', fontSize: 13, opacity: frameThickness > 0 ? 1 : 0.45, pointerEvents: frameThickness > 0 ? 'auto' : 'none' }}>Black</button>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>Crop Aspect Ratio</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="btn ghost" type="button" onClick={() => { setSel(null); cropRatio.current = null; }} style={{ padding: '6px 10px', fontSize: 12 }}>Clear</button>
                 </div>
-                <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <span style={{ width: 110, display: 'flex', gap: 6, alignItems: 'center' }}>🖼️ <span>Thickness</span></span>
-                  <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#2d9cff', 'rgba(255,255,255,0.06)') }} />
-                  <span style={{ width: 48, textAlign: 'right' }}>{Math.round(frameThickness * 100)}%</span>
-                </label>
-              </div>
-
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>Aspect ratio</div>
               </div>
 
               {/* Responsive aspect switcher: grid on desktop, carousel on mobile */}
@@ -1578,8 +1647,72 @@ export default function ImageEditor({ initialDataUrl, onCancel, onApply }: Props
                   }
                 `}</style>
               </div>
+            </div>
+          </div>
 
+          {/* Frame panel */}
+          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'frame' ? 'grid' : 'none', width: '100%' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Photo Frame</div>
               
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <span style={{ width: 100, display: 'flex', gap: 6, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                    <span aria-hidden style={{ fontSize: 18 }}>📏</span>
+                    <span>Thickness</span>
+                  </span>
+                  <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#d4c5b9', '#8b7355') }} />
+                  <span style={{ width: 48, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{Math.round(frameThickness * 100)}%</span>
+                </label>
+
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Frame Color</div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button 
+                      type="button" 
+                      className={frameColor === 'white' ? 'btn primary' : 'btn ghost'} 
+                      onClick={() => { frameColorRef.current = 'white'; setFrameColor('white'); draw(); }} 
+                      style={{ 
+                        padding: '10px 20px', 
+                        fontSize: 14, 
+                        flex: 1,
+                        opacity: frameThickness > 0 ? 1 : 0.5, 
+                        pointerEvents: frameThickness > 0 ? 'auto' : 'none',
+                        transition: 'all 200ms ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      <span style={{ fontSize: 18 }}>⚪</span>
+                      <span>White</span>
+                    </button>
+                    <button 
+                      type="button" 
+                      className={frameColor === 'black' ? 'btn primary' : 'btn ghost'} 
+                      onClick={() => { frameColorRef.current = 'black'; setFrameColor('black'); draw(); }} 
+                      style={{ 
+                        padding: '10px 20px', 
+                        fontSize: 14, 
+                        flex: 1,
+                        opacity: frameThickness > 0 ? 1 : 0.5, 
+                        pointerEvents: frameThickness > 0 ? 'auto' : 'none',
+                        transition: 'all 200ms ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      <span style={{ fontSize: 18 }}>⚫</span>
+                      <span>Black</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* hint removed as requested */}
+              </div>
             </div>
           </div>
         </div>

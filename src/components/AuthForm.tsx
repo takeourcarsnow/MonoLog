@@ -102,10 +102,12 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         // don't auto-close the modal or refresh the app here; wait for user to confirm via email
         return;
       }
-      // close modal and refresh (only for sign-in flow)
-      onClose?.();
-      router.refresh();
+      // dispatch auth changed event, then close modal and refresh (only for sign-in flow)
       try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
+      if (onClose) {
+        await onClose();
+      }
+      router.refresh();
     } catch (err: any) {
       toast.show(err?.message || String(err));
     } finally {

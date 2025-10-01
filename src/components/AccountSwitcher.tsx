@@ -139,7 +139,16 @@ export function AccountSwitcher() {
             aria-label="Sign in or sign up"
             style={{ position: "absolute", right: 0, marginTop: 8, zIndex: 50, background: "var(--bg)", padding: 12, borderRadius: 8, boxShadow: "0 6px 18px rgba(0,0,0,0.6)" }}
           >
-            <AuthForm onClose={() => setShowAuth(false)} />
+            <AuthForm onClose={async () => {
+              setShowAuth(false);
+              // Refresh user state after login
+              try {
+                const user = await api.getCurrentUser();
+                setMe(user);
+              } catch (e) {
+                setMe(null);
+              }
+            }} />
           </div>
         </>
       ) : null}

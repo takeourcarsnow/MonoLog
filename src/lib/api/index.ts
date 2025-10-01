@@ -1,6 +1,7 @@
 import { CONFIG } from "../config";
 import { localApi } from "./local";
 import { supabaseApi, getSupabaseClientRaw } from "./supabase";
+import { logger } from "../logger";
 import type { Api } from "../types";
 
 // Start with the adapter the bundle picked at build time.
@@ -24,7 +25,7 @@ let __runtimeInitPromise: Promise<void> | null = new Promise<void>((res: () => v
 if (typeof window !== 'undefined' && CONFIG.mode === 'local') {
 	(async () => {
 		try {
-			const resp = await fetch('/api/debug/env');
+			const resp = await fetch('/api/debug/env?public=1');
 			if (!resp.ok) {
 				// allow callers to proceed
 				__runtimeInitResolve?.();
@@ -42,8 +43,7 @@ if (typeof window !== 'undefined' && CONFIG.mode === 'local') {
 					}
 				} catch (e) {}
 				currentApi = supabaseApi;
-				// eslint-disable-next-line no-console
-				console.log('[api] runtime override -> supabase');
+				logger.info('[api] runtime override -> supabase');
 			}
 		} catch (e) {
 			// ignore network/debug failures
@@ -84,8 +84,5 @@ export const api: Api = new Proxy({} as Api, {
 
 // Print which adapter the bundle initially chose (build-time info).
 if (process.env.NODE_ENV !== 'production') {
-	try {
-		// eslint-disable-next-line no-console
-		console.log('[api] selected mode ->', CONFIG.mode === 'local' ? 'local' : 'supabase');
-	} catch (e) {}
+	try { logger.info('[api] selected mode -> ' + (CONFIG.mode === 'local' ? 'local' : 'supabase')); } catch (e) {}
 }

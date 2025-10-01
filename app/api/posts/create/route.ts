@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { uid } from '@/lib/id';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { userId, imageUrls, caption, alt, replace = false, public: isPublic = true } = body;
     // Debug: log incoming payload so we can verify client is sending multiple images
-    try { console.debug('[posts.create] incoming', { userId, imageUrlsLen: Array.isArray(imageUrls) ? imageUrls.length : (imageUrls ? 1 : 0) }); } catch (e) {}
+  try { logger.debug('[posts.create] incoming', { userId, imageUrlsLen: Array.isArray(imageUrls) ? imageUrls.length : (imageUrls ? 1 : 0) }); } catch (e) {}
     if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     const sb = getServiceSupabase();
 
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
           }
           if (toRemove.length) await sb.storage.from('posts').remove(toRemove);
         } catch (e) {
-          console.warn('storage removal failed', e);
+          logger.warn('storage removal failed', e);
         }
         await sb.from('posts').delete().in('id', ids);
       }
@@ -127,7 +128,7 @@ export async function POST(req: Request) {
       // ignore normalization failures
     }
 
-    try { console.debug('[posts.create] inserted', { id: insertData?.id, raw: insertData, normalizedImageUrls: normalizedImageUrls?.slice(0,5) }); } catch (e) {}
+  try { logger.debug('[posts.create] inserted', { id: insertData?.id, normalizedImageUrls: normalizedImageUrls?.slice(0,5) }); } catch (e) {}
 
     // If the client provided multiple images but the returned row doesn't
     // include a multi-image column, attempt a follow-up update to persist
@@ -145,7 +146,7 @@ export async function POST(req: Request) {
               const upRes: any = await sb.from('posts').update(payload).eq('id', insertData.id).select('*').limit(1).single();
               if (!upRes.error && upRes.data) {
                 insertData = upRes.data;
-                try { console.debug('[posts.create] post-insert updated', { id: insertData.id, updatedBy: name }); } catch (e) {}
+                try { logger.debug('[posts.create] post-insert updated', { id: insertData.id, updatedBy: name }); } catch (e) {}
                 break;
               }
             } catch (e) {
@@ -173,7 +174,7 @@ export async function POST(req: Request) {
       }
     } catch (e) {}
 
-    try { console.debug('[posts.create] final', { id: insertData?.id, normalizedImageUrls: normalizedImageUrls?.slice(0,5) }); } catch (e) {}
+  try { logger.debug('[posts.create] final', { id: insertData?.id, normalizedImageUrls: normalizedImageUrls?.slice(0,5) }); } catch (e) {}
 
     return NextResponse.json({ ok: true, post: insertData, normalizedImageUrls });
   } catch (e: any) {

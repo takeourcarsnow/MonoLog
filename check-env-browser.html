@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Env Check</title>
+</head>
+<body>
+    <h1>Check if Next.js is reading env correctly</h1>
+    <p>Visit: <a href="http://localhost:3000/api/debug/env?public=1">http://localhost:3000/api/debug/env?public=1</a></p>
+    <div id="result"></div>
+    <script>
+        fetch('/api/debug/env?public=1')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                console.log('Server env check:', data);
+            });
+    </script>
+</body>
+</html>

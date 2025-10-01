@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Api, User, HydratedPost, Comment, CalendarStats } from "../types";
 import { SUPABASE } from "../config";
 import { uid } from "../id";
+import { logger } from "../logger";
 
 let supabase: SupabaseClient | null = null;
 // cached auth user to avoid repeated auth.getUser() calls during a client session.
@@ -157,8 +158,7 @@ function mapRowToHydratedPost(row: any): HydratedPost {
       const shouldLog = Array.isArray(imageUrls) && imageUrls.length > 1 || typeof row.image_urls === 'string' && row.image_urls.length > 0;
       if (shouldLog) {
         // Print a compact, paste-friendly object
-        // eslint-disable-next-line no-console
-        console.debug('[supabase.mapRowToHydratedPost]', {
+        logger.debug('[supabase.mapRowToHydratedPost]', {
           id: row.id,
           rawShape: typeof row.image_urls === 'string' ? 'string' : Array.isArray(row.image_urls) ? 'array' : (row.image_url ? 'legacy_single' : typeof row.image_urls),
           rawValue: typeof row.image_urls === 'string' ? row.image_urls : (Array.isArray(row.image_urls) ? row.image_urls.slice(0,5) : row.image_url || row.imageUrl),
@@ -356,7 +356,7 @@ export const supabaseApi: Api = {
   },
 
   async getExploreFeed() {
-    console.debug("supabaseApi.getExploreFeed called");
+  logger.debug("supabaseApi.getExploreFeed called");
     const sb = getClient();
     // Exclude posts created by the current authenticated user so the Explore
     // view only shows other people's public posts.
@@ -552,9 +552,9 @@ export const supabaseApi: Api = {
     if (patch.avatarUrl !== undefined) upsertObj.avatar_url = patch.avatarUrl;
     if (patch.bio !== undefined) upsertObj.bio = patch.bio;
     const safe = (v: any) => { try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } } };
-    console.debug("users.upsert payload", safe(upsertObj));
+  logger.debug("users.upsert payload", safe(upsertObj));
     const res = await sb.from("users").upsert(upsertObj).select("*").limit(1).single();
-    console.debug("users.upsert result (stringified)", safe(res));
+  logger.debug("users.upsert result (stringified)", safe(res));
     const { error, data } = res as any;
     if (error) {
       console.error("users.upsert error", { message: error.message || error, code: error.code || error?.status || null, details: error.details || error?.error || null, full: error });

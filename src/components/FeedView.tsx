@@ -6,8 +6,11 @@ import { api } from "@/lib/api";
 import type { HydratedPost } from "@/lib/types";
 import { PostCard } from "./PostCard";
 import ImageZoom from "./ImageZoom";
+import { useToast } from "./Toast";
 import Link from "next/link";
 import { ViewToggle } from "./ViewToggle";
+import { tabs } from "./NavBarClient";
+import { useRouter } from "next/navigation";
 
 export function FeedView() {
   const [posts, setPosts] = useState<HydratedPost[]>([]);
@@ -111,16 +114,82 @@ export function FeedView() {
     if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
     if (!posts.length) return <div className="empty">Your feed is quiet. Follow people in Explore to see their daily photo.</div>;
     if (view === "grid") {
+      const toast = useToast();
+      const router = useRouter();
+      const clickCounts = new Map<string, number>();
+      const clickTimers = new Map<string, any>();
+      const dblClickFlags = new Map<string, boolean>();
+
+      const handleTileClick = (e: React.MouseEvent, post: HydratedPost) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (dblClickFlags.get(post.id)) return;
+        
+        const href = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
+        const count = (clickCounts.get(post.id) || 0) + 1;
+        clickCounts.set(post.id, count);
+        
+        if (count === 1) {
+          const timer = setTimeout(() => {
+            if (!dblClickFlags.get(post.id)) {
+              try { router.push(href); } catch (_) {}
+            }
+            clickCounts.set(post.id, 0);
+            dblClickFlags.delete(post.id);
+          }, 300);
+          clickTimers.set(post.id, timer);
+        }
+      };
+
+      const handleTileDblClick = async (e: React.MouseEvent, post: HydratedPost) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        dblClickFlags.set(post.id, true);
+        
+        const timer = clickTimers.get(post.id);
+        if (timer) {
+          clearTimeout(timer);
+          clickTimers.delete(post.id);
+        }
+        
+        clickCounts.set(post.id, 0);
+        
+        try {
+          const cur = await api.getCurrentUser();
+          if (!cur) { toast.show('Sign in to favorite'); return; }
+          await api.favoritePost(post.id);
+          toast.show('Added to favorites');
+        } catch (e:any) {
+          toast.show(e?.message || 'Failed');
+        }
+        
+        setTimeout(() => {
+          dblClickFlags.delete(post.id);
+        }, 400);
+      };
+
       return (
         <div className="grid">
           {posts.map(p => (
-              <Link key={p.id} className="tile" href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`}>
-              <ImageZoom
-                loading="lazy"
-                src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}
-                alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
-              />
-            </Link>
+            <div 
+              key={p.id} 
+              className="tile" 
+              onClick={(e) => handleTileClick(e, p)} 
+              onDoubleClick={(e) => handleTileDblClick(e, p)} 
+              role="button" 
+              tabIndex={0} 
+              onKeyDown={(e) => { if (e.key==='Enter') handleTileClick(e as any, p); }}
+            >
+              <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents' }} onClick={(e)=> e.preventDefault()}>
+                <ImageZoom
+                  loading="lazy"
+                  src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}
+                  alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
+                />
+              </Link>
+            </div>
           ))}
           {hasMore ? <div ref={sentinelRef} className="tile sentinel" aria-hidden /> : null}
         </div>
@@ -137,7 +206,7 @@ export function FeedView() {
 
   return (
     <div className="view-fade">
-      <ViewToggle title="Following" subtitle="Only people you follow" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("feedView", v); }} />
+      <ViewToggle title={tabs.find(t => t.href === '/feed')?.icon || '🏠'} subtitle="MonoLogs from people that you follow" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("feedView", v); }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         {loadingMore ? <div className="dim">Loading more…</div> : null}
       </div>

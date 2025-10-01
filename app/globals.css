@@ -601,6 +601,10 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .action.favorite .star { display: inline-block; font-size: 16px; line-height: 1; transition: transform 220ms cubic-bezier(.2,.8,.2,1), color 220ms var(--transition-mid), text-shadow 220ms var(--transition-mid); color: color-mix(in srgb, var(--muted), transparent 20%); }
 .action.favorite.active { color: var(--primary); }
 .action.favorite.active .star { animation: starPop 420ms cubic-bezier(.2,.8,.2,1); color: var(--primary); text-shadow: 0 6px 18px rgba(37,99,235,0.18); }
+/* share action */
+.action.share { opacity: 0.82; transition: opacity 180ms var(--transition-mid), transform 200ms var(--transition-mid); }
+.action.share:hover { opacity: 1; }
+.action.share:active { transform: scale(.9); }
 
 @keyframes starPop {
   0% { transform: scale(0.9) rotate(-6deg); }
@@ -977,21 +981,50 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .btn-group { display: flex; gap: 8px; align-items: center; }
 .btn.primary { padding: 10px 14px; border-radius: 12px; font-weight: 700; }
 .btn.ghost.replace { padding: 10px 12px; }
-.btn.cancel-btn { position:relative; background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 92%), color-mix(in srgb, var(--danger), transparent 96%)); border:1px solid color-mix(in srgb, var(--danger), transparent 82%); padding:10px 18px; border-radius:999px; font-weight:600; font-size:14px; line-height:1; min-height:var(--action-pill-height,42px); display:inline-flex; align-items:center; justify-content:center; gap:6px; color: color-mix(in srgb, var(--danger), var(--text) 55%); letter-spacing:.25px; transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); }
-.btn.cancel-btn:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 88%), color-mix(in srgb, var(--danger), transparent 94%)); }
-.btn.cancel-btn.confirm { background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 20%), color-mix(in srgb, var(--danger), transparent 10%)); color: #fff; border-color: color-mix(in srgb, var(--danger), transparent 20%); box-shadow: 0 6px 22px color-mix(in srgb, var(--danger), transparent 70%); }
-.btn.cancel-btn.confirm:hover { transform: translateY(-2px); }
-.btn.cancel-btn .cancel-inner { position:relative; z-index:1; }
-.btn.cancel-btn::before { content:""; position:absolute; inset:0; border-radius:inherit; background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 10%), color-mix(in srgb, var(--bg-elev), transparent 18%)); opacity:0; transition: opacity var(--transition-fast); }
-.btn.cancel-btn:hover { background: color-mix(in srgb, var(--bg-elev), transparent 12%); border-color: color-mix(in srgb, var(--primary), transparent 82%); transform: translateY(-2px); }
-.btn.cancel-btn:hover::before { opacity:1; }
+/* Cancel button unified logic
+   - Base: neutral subtle pill (light/dark adapt via bg vars)
+   - Confirm (double-tap): solid danger emphasis
+   Keep transitions minimal & accessible. */
+.btn.cancel-btn {
+  position: relative;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  min-height: var(--action-pill-height,42px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: .25px;
+  background: color-mix(in srgb, var(--bg-elev), var(--danger) 4%);
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 86%);
+  color: color-mix(in srgb, var(--danger), var(--text) 65%);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+.btn.cancel-btn:hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%); transform: translateY(-2px); }
 .btn.cancel-btn:active { transform: translateY(0); }
-.btn.cancel-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary), transparent 75%); }
-.btn.cancel-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.btn.cancel-btn.confirm {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 6%), color-mix(in srgb, var(--danger), transparent 2%));
+  color: #fff;
+  border-color: color-mix(in srgb, var(--danger), transparent 12%);
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--danger), transparent 72%), 0 0 0 1px color-mix(in srgb, var(--danger), transparent 40%) inset;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+.btn.cancel-btn.confirm:hover { background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 4%), color-mix(in srgb, var(--danger), transparent 0%)); }
+.btn.cancel-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 70%), 0 4px 16px rgba(0,0,0,0.18); }
+.btn.cancel-btn.confirm:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 55%), 0 6px 20px rgba(0,0,0,0.30); }
+.btn.cancel-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.btn.cancel-btn .cancel-inner { position: relative; z-index: 1; }
 
-/* Dark theme subtle tweaks */
-:root[data-theme="dark"] .btn.cancel-btn { background: color-mix(in srgb, var(--bg-elev), transparent 2%); border-color: color-mix(in srgb, var(--border), transparent 40%); }
-:root[data-theme="dark"] .btn.cancel-btn:hover { background: color-mix(in srgb, var(--bg-elev), transparent 8%); }
+/* Dark theme slight desaturation for base state for balance */
+:root[data-theme="dark"] .btn.cancel-btn:not(.confirm) {
+  background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%);
+  border-color: color-mix(in srgb, var(--danger), transparent 78%);
+  color: color-mix(in srgb, var(--danger), var(--text) 72%);
+}
+:root[data-theme="dark"] .btn.cancel-btn:not(.confirm):hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 8%); }
 
 /* Mobile full-width stacking coherence */
 @media (max-width:640px){
@@ -2454,4 +2487,30 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.0); }
   30% { box-shadow: 0 6px 20px rgba(239,68,68,0.08); transform: translateY(1px) scale(.998); }
   100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); transform: translateY(0) scale(1); }
+}
+
+/* Explore view subtle discovery hint */
+.explore-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--bg-elev), transparent 30%);
+  border: 1px solid color-mix(in srgb, var(--border), transparent 40%);
+  padding: 8px 10px;
+  border-radius: 12px;
+  max-width: 640px;
+  margin: 0 auto 12px;
+  opacity: 0;
+  transform: translateY(4px) scale(.985);
+  animation: exploreHintIn 560ms var(--transition-mid) forwards;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+@keyframes exploreHintIn {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .explore-hint { animation: none; opacity: 1; transform: none; }
 }

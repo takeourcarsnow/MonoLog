@@ -443,6 +443,107 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
       : { onTouchStart, onTouchMove, onTouchEnd, onMouseDown }
   );
 
+  // double-tap detection state
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<any>(null);
+  const dblClickDetectedRef = useRef(false);
+
+  async function toggleFavoriteWithAuth() {
+    const cur = await api.getCurrentUser();
+    if (!cur) {
+      try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+      setShowAuth(true);
+      return;
+    }
+    const prev = isFavorite;
+    setIsFavorite(!prev);
+    try {
+      if (prev) await api.unfavoritePost(post.id); else await api.favoritePost(post.id);
+    } catch (e: any) {
+      setIsFavorite(prev);
+      toast.show(e?.message || "Failed to toggle favorite");
+    }
+  }
+
+  const handleMediaClick = (e: React.MouseEvent, postHref: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // If we already detected a double-click in this cycle, ignore subsequent clicks
+    if (dblClickDetectedRef.current) return;
+    
+    clickCountRef.current += 1;
+    
+    if (clickCountRef.current === 1) {
+      // First click: schedule navigation
+      clickTimerRef.current = setTimeout(() => {
+        if (!dblClickDetectedRef.current) {
+          try { router.push(postHref); } catch (_) {}
+        }
+        clickCountRef.current = 0;
+        dblClickDetectedRef.current = false;
+      }, 300);
+    }
+  };
+
+  const handleMediaDblClick = (e: React.MouseEvent, postHref: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Mark that double-click was detected
+    dblClickDetectedRef.current = true;
+    
+    // Cancel any pending navigation
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+    
+    // Reset click count
+    clickCountRef.current = 0;
+    
+    // Favorite the post
+    if (!isFavorite) toggleFavoriteWithAuth();
+    
+    // Reset the double-click flag after a delay
+    setTimeout(() => {
+      dblClickDetectedRef.current = false;
+    }, 400);
+  };
+
+  useEffect(() => () => { if (clickTimerRef.current) { try { clearTimeout(clickTimerRef.current); } catch (_) {} } }, []);
+
+  // share helper
+  const sharePost = async () => {
+    const url = `${(typeof window !== 'undefined' ? window.location.origin : '')}/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
+    const title = `${post.user.displayName}'s MonoLog`;
+    const text = post.caption ? post.caption : 'Check out this MonoLog photo';
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title, text, url });
+        return;
+      }
+    } catch (e) {
+      // fallback to copy
+    }
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        toast.show('Link copied');
+      } else {
+        // fallback: temporary input
+        const tmp = document.createElement('input');
+        tmp.value = url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        try { document.execCommand('copy'); toast.show('Link copied'); } catch (_) { /* ignore */ }
+        document.body.removeChild(tmp);
+      }
+    } catch (e:any) {
+      toast.show(e?.message || 'Failed to share');
+    }
+  };
+
   return (
     <article className="card">
       <div className="card-head">
@@ -544,7 +645,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
         </div>
       </div>
 
-      <div className="card-media">
+  <div className="card-media">
         {/* clickable media should navigate to the post page */}
         {(() => {
           const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
@@ -562,7 +663,17 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                   <div className="carousel-track" ref={trackRef} {...carouselTouchProps} role="list" style={{ touchAction: 'pan-y' }}>
                     {imageUrls.map((u: string, idx: number) => (
                       <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`${idx + 1} of ${imageUrls.length}`}>
-                        <Link href={postHref} className="media-link" draggable={false} onDragStart={e => e.preventDefault()}>
+                        <a
+                          href={postHref}
+                          className="media-link"
+                          draggable={false}
+                          onClick={(e) => handleMediaClick(e, postHref)}
+                          onDoubleClick={(e) => handleMediaDblClick(e, postHref)}
+                          onDragStart={e => e.preventDefault()}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleMediaClick(e as any, postHref); }}
+                        >
                           <ImageZoom
                             loading="lazy"
                             src={u}
@@ -570,7 +681,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                             onLoad={e => (e.currentTarget.classList.add("loaded"))}
                             onDragStart={e => e.preventDefault()}
                           />
-                        </Link>
+                        </a>
                       </div>
                     ))}
                   </div>
@@ -585,14 +696,24 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                   </div>
                 </div>
               ) : (
-                <Link href={postHref} className="media-link" draggable={false} onDragStart={e => e.preventDefault()}>
+                <a
+                  href={postHref}
+                  className="media-link"
+                  draggable={false}
+                  onClick={(e) => handleMediaClick(e, postHref)}
+                  onDoubleClick={(e) => handleMediaDblClick(e, postHref)}
+                  onDragStart={e => e.preventDefault()}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleMediaClick(e as any, postHref); }}
+                >
                   <ImageZoom
                     loading="lazy"
                     src={imageUrls[0]}
                     alt={alts[0] || "Photo"}
                     onLoad={e => (e.currentTarget.classList.add("loaded"))}
                   />
-                </Link>
+                </a>
               )}
             </>
           );
@@ -714,6 +835,12 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
                 >
                   <span className="star" aria-hidden="true">{isFavorite ? "★" : "☆"}</span>
                 </button>
+                <button
+                  className="action share"
+                  title="Share link"
+                  aria-label="Share post"
+                  onClick={() => { sharePost(); }}
+                >🔗</button>
             </div>
             {commentsMounted && (
               <div className={`comments ${commentsOpen ? "open" : ""}`} id={`comments-${post.id}`} ref={commentsRef}>

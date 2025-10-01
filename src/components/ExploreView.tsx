@@ -7,6 +7,9 @@ import { api } from "@/lib/api";
 import type { HydratedPost } from "@/lib/types";
 import Link from "next/link";
 import { ViewToggle } from "./ViewToggle";
+import { tabs } from "./NavBarClient";
+import { useToast } from "./Toast";
+import { useRouter } from "next/navigation";
 
 const PostCard = dynamic(() => import("./PostCard").then(m => m.PostCard), { ssr: false });
 
@@ -16,6 +19,8 @@ export function ExploreView() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  // subtle explanatory hint appears after mount
+  const [showHint, setShowHint] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const PAGE_SIZE = 5;
   const loadingMoreRef = useRef(false);
@@ -114,6 +119,14 @@ export function ExploreView() {
   // keep loadingRef up-to-date so the callback ref can read it synchronously
   useEffect(() => { loadingRef.current = loading; }, [loading]);
 
+  // reveal hint a tick after mount (and only while not loading initial page)
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => setShowHint(true), 120);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
   // If the sentinel existed while we were initially loading, it may not have
   // had the observer attached. Once loading completes, attach it if needed.
   useEffect(() => {
@@ -127,16 +140,82 @@ export function ExploreView() {
   if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
   if (!posts.length) return <div className="empty">No posts yet. Be the first to post your daily photo!</div>;
     if (view === "grid") {
+      const toast = useToast();
+      const router = useRouter();
+      const clickCounts = new Map<string, number>();
+      const clickTimers = new Map<string, any>();
+      const dblClickFlags = new Map<string, boolean>();
+
+      const handleTileClick = (e: React.MouseEvent, post: HydratedPost) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (dblClickFlags.get(post.id)) return;
+        
+        const href = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
+        const count = (clickCounts.get(post.id) || 0) + 1;
+        clickCounts.set(post.id, count);
+        
+        if (count === 1) {
+          const timer = setTimeout(() => {
+            if (!dblClickFlags.get(post.id)) {
+              try { router.push(href); } catch (_) {}
+            }
+            clickCounts.set(post.id, 0);
+            dblClickFlags.delete(post.id);
+          }, 300);
+          clickTimers.set(post.id, timer);
+        }
+      };
+
+      const handleTileDblClick = async (e: React.MouseEvent, post: HydratedPost) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        dblClickFlags.set(post.id, true);
+        
+        const timer = clickTimers.get(post.id);
+        if (timer) {
+          clearTimeout(timer);
+          clickTimers.delete(post.id);
+        }
+        
+        clickCounts.set(post.id, 0);
+        
+        try {
+          const cur = await api.getCurrentUser();
+          if (!cur) { toast.show('Sign in to favorite'); return; }
+          await api.favoritePost(post.id);
+          toast.show('Added to favorites');
+        } catch (e:any) {
+          toast.show(e?.message || 'Failed');
+        }
+        
+        setTimeout(() => {
+          dblClickFlags.delete(post.id);
+        }, 400);
+      };
+
       return (
         <div className="grid">
           {posts.map(p => (
-              <Link key={p.id} className="tile" href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`}>
-              <img
-                loading="lazy"
-                src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}
-                alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
-              />
-            </Link>
+            <div 
+              key={p.id} 
+              className="tile" 
+              onClick={(e) => handleTileClick(e, p)} 
+              onDoubleClick={(e) => handleTileDblClick(e, p)} 
+              role="button" 
+              tabIndex={0} 
+              onKeyDown={(e) => { if (e.key==='Enter') handleTileClick(e as any, p); }}
+            >
+              <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents' }} onClick={(e)=> e.preventDefault()}>
+                <img
+                  loading="lazy"
+                  src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}
+                  alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
+                />
+              </Link>
+            </div>
           ))}
           {hasMore ? <div ref={setSentinel} className="tile sentinel" aria-hidden /> : null}
         </div>
@@ -154,14 +233,22 @@ export function ExploreView() {
   return (
     <div className="view-fade">
       <ViewToggle
-        title="Explore"
-        subtitle="All recent public posts"
+        title={tabs.find(t => t.href === '/explore')?.icon || '🧭'}
+        subtitle="MonoLogs from people you aren't following yet"
         selected={view}
         onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("exploreView", v); }}
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         {loadingMore ? <div className="dim">Loading more…</div> : null}
       </div>
+      {showHint && posts.length ? (
+        <div className="explore-hint" role="note">
+          <span aria-hidden="true">🔍</span>
+          <span>
+            Discover new people — this feed hides posts from users you already follow so you can find fresh creators.
+          </span>
+        </div>
+      ) : null}
       <div className="feed">{render()}</div>
     </div>
   );

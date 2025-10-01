@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
-const tabs = [
+export const tabs = [
   { href: "/feed", label: "Feed", icon: "🏠" },
   { href: "/explore", label: "Explore", icon: "🧭" },
   { href: "/upload", label: "Post", icon: "➕" },

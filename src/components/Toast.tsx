@@ -10,14 +10,18 @@ const Ctx = createContext<ToastCtx>({ show: () => {} });
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [msg, setMsg] = useState<string | null>(null);
   const show = useCallback((m: string, timeout = 2000) => {
-    setMsg(m);
+    // Normalize incoming message to sentence case so UI toasts look consistent
+    const sentence = m && m.length > 0 ? m[0].toUpperCase() + m.slice(1) : m;
+    setMsg(sentence);
     window.setTimeout(() => setMsg(null), timeout);
   }, []);
   return (
     <Ctx.Provider value={{ show }}>
       {children}
       {msg && (
-        <div className="toast" role="status" aria-live="polite">{msg}</div>
+        <div className="toast" role="status" aria-live="polite">
+          <div className="toast-message">{msg}</div>
+        </div>
       )}
     </Ctx.Provider>
   );

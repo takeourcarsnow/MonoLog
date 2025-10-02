@@ -288,13 +288,12 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
 
   <div className="auth-actions flex gap-2 justify-center w-full" style={{ maxWidth: 400, marginTop: 2 }}>
         <button
-          className={`btn primary submit-btn ${loading ? 'loading' : ''}`}
+          className="btn primary submit-btn"
           disabled={loading}
           type="submit"
           aria-busy={loading}
           aria-live="polite"
         >
-          <span className="spinner" aria-hidden />
           <span className="label-text">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
         </button>
         <button

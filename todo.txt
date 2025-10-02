@@ -1,10 +1,8 @@
-subtly animate logo on hover or click
-on phone make sure that double tapping also properly favorites/unfavorites the post like it does on desktop, now it zooms in on double tap
 
 Profile section takes a long time to load and the section highlighter lags because of it until the last tab's highlight switches off
 
 
-make doubletapping on phone on photo not zoom in or take me to the post's page but just favorite/unfavorite like it does on desktop
 
-doesnt properly rubberband back when using laptops touchpad
 maybe we should say log instead of post
+
+when i add a comment it kind of flickers on and off for a few times for a couple of seconds before properly staying on

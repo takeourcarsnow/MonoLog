@@ -32,6 +32,40 @@
   --safe-bottom: env(safe-area-inset-bottom);
 }
 
+/* Header favorites button: when the Favorites page is active, fill the header star */
+.header .favorites-btn.active svg {
+  fill: #FFD700;
+  stroke: rgba(0,0,0,0.48);
+  stroke-width: 1.8px;
+}
+/* Dark theme header star outline */
+:root[data-theme="dark"] .header .favorites-btn.active svg {
+  stroke: rgba(255,255,255,0.22);
+}
+
+/* About header button active styling: match favorites look so it becomes colored when active */
+.header .about-btn.active svg {
+  /* subtle pastel blue (softer than the favorites gold) */
+  /* pastel background for the svg area */
+  fill: #A7D1FF;
+  /* Make the icon strokes more visible: use primary color with reduced opacity
+     so the lines read clearly against the pastel background */
+  stroke: color-mix(in srgb, var(--primary), rgba(0,0,0,0.18));
+  stroke-width: 1.8px;
+}
+
+/* Also raise the effective icon color (for icons using currentColor) */
+.header .about-btn.active {
+  color: color-mix(in srgb, var(--primary), rgba(0,0,0,0.06));
+}
+/* Dark theme about button outline */
+:root[data-theme="dark"] .header .about-btn.active svg {
+  /* stronger light stroke in dark theme for readability */
+  stroke: rgba(255,255,255,0.9);
+  stroke-width: 1.6px;
+}
+
+
 /* Prefer the user's OS preference only when no explicit saved preference exists - handled in JS init */
 :root[data-theme="dark"] {
   --bg: #0c0c0e;
@@ -679,6 +713,15 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .comment-item.new { animation: commentIn 360ms cubic-bezier(.2,.8,.2,1); }
 @keyframes commentIn { from { opacity: 0; transform: translateY(6px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
+/* animate removed comments: fade out and slide up slightly */
+.comment-item.removing {
+  animation: commentOut 320ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes commentOut {
+  from { opacity: 1; transform: translateY(0) scale(1); height: auto; }
+  to { opacity: 0; transform: translateY(-6px) scale(.995); height: 0; margin: 0; padding: 0; }
+}
+
 .btn { transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; }
 .btn:active { transform: translateY(1px) scale(.997); }
 
@@ -954,11 +997,37 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 .action:hover { background: color-mix(in srgb, var(--primary-weak), transparent 70%); color: var(--text); }
 
+/* Tap / press feedback for action icons */
+/* Ensure svgs inherit color and animate smoothly */
+.action svg { width: 18px; height: 18px; display: inline-block; vertical-align: middle; transition: transform 160ms var(--transition-fast), opacity 160ms var(--transition-fast), color 200ms var(--transition-fast), stroke 200ms var(--transition-fast); color: inherit; }
+
+/* Subtle press scale and color change for most actions (but not overriding favorite active state) */
+.action:active { transform: translateY(1px) scale(0.992); }
+.action:not(.favorite):active { color: var(--primary); }
+.action:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 4px; border-radius: 8px; }
+
+/* Also provide a tiny hover/press lift on pointer devices */
+@media (hover: hover) and (pointer: fine) {
+  .action:hover { transform: translateY(-2px); }
+}
+
 /* Favorite (star) animation and color feedback */
 .action.favorite { transition: transform 220ms var(--transition-mid), color 220ms var(--transition-mid); }
 .action.favorite .star { display: inline-block; font-size: 16px; line-height: 1; transition: transform 220ms cubic-bezier(.2,.8,.2,1), color 220ms var(--transition-mid), text-shadow 220ms var(--transition-mid); color: color-mix(in srgb, var(--muted), transparent 20%); }
-.action.favorite.active { color: var(--primary); }
-.action.favorite.active .star { animation: starPop 420ms cubic-bezier(.2,.8,.2,1); color: var(--primary); text-shadow: 0 6px 18px rgba(37,99,235,0.18); }
+.action.favorite.active { color: #FFD700; }
+.action.favorite.active .star { animation: starPop 420ms cubic-bezier(.2,.8,.2,1); color: #FFD700; text-shadow: 0 6px 18px rgba(255,215,0,0.18); }
+.action.favorite.active svg { 
+  fill: currentColor; 
+  /* thicker darker outline so the yellow star reads on light backgrounds */
+  stroke: rgba(0,0,0,0.48);
+  stroke-width: 1.8px;
+}
+
+/* Dark theme: use a lighter stroke for contrast on dark backgrounds */
+:root[data-theme="dark"] .action.favorite.active svg {
+  stroke: rgba(255,255,255,0.22);
+  stroke-width: 1.8px;
+}
 /* share action */
 .action.share { opacity: 0.82; transition: opacity 180ms var(--transition-mid), transform 200ms var(--transition-mid); }
 .action.share:hover { opacity: 1; }
@@ -1024,24 +1093,31 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   100% { transform: scale(1) rotate(0deg); }
 }
 
-/* Comments open/close animation */
+/* Comments open/close animation
+   Notes:
+   - Animating `grid-template-rows: 1fr` -> `0fr` can be janky in some browsers
+     because `fr` units are not interpolated smoothly. Switch to a max-height
+     + opacity approach for consistent, organic open/close timing.
+   - JavaScript will set an inline `max-height` to the element's scrollHeight
+     when opening/closing so the transition is accurate for content of any size.
+*/
 .comments {
-  overflow: hidden;
-  max-height: 0;
+  /* collapsed by default */
+  max-height: 0px;
   opacity: 0;
-  transform: translateY(-6px);
-  transition: max-height 200ms var(--transition-mid), opacity 180ms var(--transition-mid), transform 180ms var(--transition-mid);
+  overflow: hidden;
+  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.comments > * {
+  /* ensure inner wrapper doesn't overflow visually during the transition */
+  overflow: hidden;
 }
 .comments.open {
+  /* visible state; JS will typically set an inline max-height equal to the
+     actual content height for a smooth transition. The CSS fallback max-height
+     keeps things working even if JS is disabled. */
   opacity: 1;
-  transform: translateY(0);
-  /* large max-height to accommodate comment list; keeps transition smooth */
-  max-height: 1200px;
-}
-.comments.closing {
-  opacity: 0;
-  transform: translateY(-6px);
-  max-height: 0;
+  max-height: 800px; /* fallback - should be larger than typical comment panes */
 }
 
 .comment-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
@@ -1096,9 +1172,49 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .comment-head { display:flex; gap:8px; align-items:center; margin-bottom:4px; }
 .comment-text { font-size: 14px; color: var(--text); }
 
+/* Appear animation for comment items (staggered) */
+.appear { opacity: 0; transform: translateY(6px) scale(.998); animation: appearIn 300ms cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes appearIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* Skeleton placeholder styles */
+.skeleton { background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); color: transparent; pointer-events: none; }
+.skeleton .comment-avatar { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 6%), color-mix(in srgb, var(--bg-elev), transparent 2%)); border-radius: 10px; }
+.skeleton-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); }
+.skeleton-line { height: 12px; border-radius: 8px; margin-bottom: 8px; background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); }
+.skeleton-author { width: 110px; height: 14px; margin-right: 8px; display: inline-block; }
+.skeleton-time { width: 40px; height: 12px; display: inline-block; }
+.skeleton-text { width: 100%; height: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .appear { animation: none; opacity: 1; transform: none; }
+}
+
 .comment-box { display:flex; gap:8px; align-items:center; }
 .comment-box .input { flex: 1 1 auto; border-radius: 999px; padding: 10px 14px; }
 .comment-box .btn.primary { border-radius: 999px; padding: 8px 12px; }
+
+/* Remove the strong blue outline/halo specifically for the comment input when focused.
+   Keep global focus styles for other controls, but avoid the heavy highlight for this
+   compact input to match the desired look. */
+.comment-box .input:focus,
+.comment-box .input:focus-visible {
+  outline: none;
+  box-shadow: none;
+  /* keep a subtle border change for affordance if you want, otherwise keep base border */
+  border-color: var(--border);
+}
+
+/* Confirm-once delete badge: first click enters .confirming state (tinted danger)
+   second click proceeds with removal. Auto-cancels after a short timeout. */
+.comment-badge.confirming {
+  background: color-mix(in srgb, var(--danger), var(--bg-elev) 8%);
+  border-color: color-mix(in srgb, var(--danger), transparent 72%);
+  color: #fff;
+  transform: scale(1.04);
+  /* intentionally no glow/drop-shadow to keep the confirm visual subtle */
+}
+.comment-badge.confirming svg { stroke: #fff; color: #fff; filter: none; }
+
 
 .comment-badge { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:6px; background:color-mix(in srgb, var(--bg-elev), transparent 20%); border-radius:8px; border:1px solid var(--border); color:var(--muted); }
 
@@ -1990,6 +2106,28 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .follow-btn.not-following { background: transparent; border-color: color-mix(in srgb, var(--primary), var(--border) 85%); color: var(--primary); }
 .follow-btn.not-following .icon { color: var(--primary); }
 
+/* When a follow-style animation class is present (used for the send button
+   while submitting), pop the icon and tint it to the primary color briefly. */
+.follow-btn.following-anim .icon {
+  color: var(--primary);
+  transform: translateY(-3px) scale(1.08);
+  transition: transform 320ms cubic-bezier(.2,.9,.2,1), color 220ms var(--transition-fast);
+}
+.follow-btn.following-anim .label {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 220ms var(--transition-fast);
+}
+
+/* Remove shadow on hover/focus for follow-style buttons (prevents the
+   larger shadow used by generic .btn:hover from appearing). */
+.follow-btn:hover,
+.follow-btn:focus,
+.follow-btn:focus-visible,
+.follow-btn:active {
+  box-shadow: none !important;
+}
+
 /* Remove colored glow: prefer neutral outline instead of blue/green mix */
 .follow-btn.not-following { border-color: var(--border); }
 
@@ -2834,16 +2972,57 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   background: color-mix(in srgb, var(--bg), transparent 8%);
   z-index: 999999;
   pointer-events: auto; /* block interactions while shown */
-  transition: opacity 420ms var(--transition-mid), transform 420ms var(--transition-mid);
+  /* make these transitions important so the initial server-side
+    `.no-transitions` rule (which uses `!important`) doesn't prevent
+    the preloader from animating once the client removes that class.
+    Use a longer, gentler duration so the overlay fade feels softer. */
+  transition: opacity 640ms var(--transition-mid), transform 640ms var(--transition-mid) !important;
   opacity: 1;
 }
 .preloader-exit { opacity: 0; transform: scale(0.996) translateY(-6px); pointer-events: none; }
+:root{
+  /* preloader motion tuning */
+  --preloader-ease-quick: cubic-bezier(.18,.9,.34,1);
+  --preloader-ease-smooth: cubic-bezier(.22,.95,.18,1);
+  --preloader-ease-in: cubic-bezier(.25,.1,.25,1);
+}
+
 .preloader-inner {
+  position: relative;
   display: flex; flex-direction: column; align-items: center; gap: 12px;
   background: transparent; color: var(--text);
+  /* entrance: subtle lift + fade */
+  animation: preloader-in 560ms var(--preloader-ease-quick) both;
 }
-.preloader-logo { display: block; width: 86px; height: 86px; color: var(--primary); animation: preloader-spin 1400ms cubic-bezier(.2,.8,.2,1) infinite; }
-.preloader-wordmark { font-weight: 800; letter-spacing: 0.6px; font-size: 16px; color: var(--text); opacity: 0.98; }
+.preloader-logo {
+  display: block;
+  width: 86px; height: 86px;
+  color: var(--primary);
+  /* combined slow spin with a tiny scale wobble for a more organic feel
+     - uses a custom easing so the rotation speeds up early, then eases into the slower sweep */
+  animation: preloader-spin-scale 2400ms var(--preloader-ease-smooth) infinite !important;
+  position: relative;
+  z-index: 2;
+}
+.preloader-inner::before {
+  /* faint pulsing ring behind the logo for subtle emphasis */
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary), transparent 88%) 0%, transparent 60%);
+  opacity: .08;
+  z-index: 1;
+  filter: blur(6px);
+  animation: preloader-pulse 2000ms var(--preloader-ease-quick) infinite;
+}
+.preloader-wordmark {
+  font-weight: 800; letter-spacing: 0.6px; font-size: 16px; color: var(--text);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: preloader-wordmark-in 560ms var(--preloader-ease-quick) both;
+  animation-delay: 220ms; /* reveal shortly after the logo */
+}
 
 /* In dark mode the preloader shows over a dark background; invert the logo so
   the SVG (which may be dark) remains visible. We target both the dataset
@@ -2857,15 +3036,50 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   filter: invert(1) hue-rotate(180deg);
 }
 
-@keyframes preloader-spin {
-  0% { transform: rotate(0); }
-  50% { transform: rotate(90deg); }
-  100% { transform: rotate(360deg); }
+@keyframes preloader-spin-scale {
+  /* ramp: quick acceleration first 20%, then smooth mid-sweep, gentle deceleration to 360deg */
+  0%   { transform: rotate(0deg)   scale(0.986); }
+  12%  { transform: rotate(55deg)  scale(1.04); }
+  28%  { transform: rotate(120deg) scale(1.02); }
+  60%  { transform: rotate(230deg) scale(0.995); }
+  88%  { transform: rotate(320deg) scale(1.002); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes preloader-pulse {
+  0%   { opacity: 0.05; transform: translate(-50%, -50%) scale(0.96); }
+  35%  { opacity: 0.12; transform: translate(-50%, -50%) scale(1.08); }
+  65%  { opacity: 0.10; transform: translate(-50%, -50%) scale(1.02); }
+  100% { opacity: 0.05; transform: translate(-50%, -50%) scale(0.96); }
+}
+
+@keyframes preloader-in {
+  from { opacity: 0; transform: translateY(10px) scale(.994); }
+  40%  { opacity: 1; transform: translateY(0px) scale(1.006); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes preloader-wordmark-in {
+  0%   { opacity: 0; transform: translateY(8px) scale(.998); }
+  60%  { opacity: 0.65; transform: translateY(3px) scale(1.002); }
+  100% { opacity: 0.98; transform: translateY(0) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .preloader-logo { animation: none !important; }
   .preloader-overlay { transition: none !important; }
+}
+
+/* If the html carries .no-transitions to suppress initial animations during
+   server render, explicitly opt this preloader back in. This selector is
+   more specific than the generic `.no-transitions *` rule and will ensure
+   the splash animates while the client hydrates. We still respect the
+   user's `prefers-reduced-motion` media query above which disables animations. */
+.no-transitions .preloader-logo {
+  animation: preloader-spin 2400ms linear infinite !important;
+}
+.no-transitions .preloader-overlay {
+  transition: opacity 640ms var(--transition-mid), transform 640ms var(--transition-mid) !important;
 }
 
 /* Blur content while preloader is active, then smoothly remove blur when it exits */

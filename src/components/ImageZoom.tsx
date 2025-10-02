@@ -5,9 +5,10 @@ import React, { useRef, useState } from "react";
 
 type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   maxScale?: number;
+  onDoubleTap?: (clientX: number, clientY: number) => void;
 };
 
-export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }: Props) {
+export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTap, ...rest }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const lastPan = useRef({ x: 0, y: 0 });
@@ -266,8 +267,16 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
     if (e.changedTouches.length === 1) {
       const t = Date.now();
       if (doubleTapRef.current && t - doubleTapRef.current < 300) {
-        handleDoubleTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        // Prevent browser double-tap-to-zoom and avoid the default zooming behavior.
+        try { e.preventDefault(); } catch (_) {}
         doubleTapRef.current = null;
+        // If a parent requested double-tap to be handled, call it. Otherwise
+        // fall back to default ImageZoom double-tap-to-zoom behavior.
+        if (typeof onDoubleTap === 'function') {
+          try { onDoubleTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY); } catch (_) {}
+        } else {
+          handleDoubleTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
       } else {
         doubleTapRef.current = t;
         setTimeout(() => { doubleTapRef.current = null; }, 350);

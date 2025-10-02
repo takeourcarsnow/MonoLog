@@ -12,29 +12,10 @@ const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '-
 // rendering which can cause `useContext` to be null in dev/hydration.
 const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.AppShell), { 
   ssr: false,
-  loading: () => (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      minHeight: '100vh',
-      background: 'var(--bg)',
-      color: 'var(--text)'
-    }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ 
-          width: 40, 
-          height: 40, 
-          border: '3px solid var(--border)', 
-          borderTopColor: 'var(--primary)',
-          borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite',
-          margin: '0 auto 12px'
-        }} />
-        <style dangerouslySetInnerHTML={{ __html: '@keyframes spin { to { transform: rotate(360deg); } }' }} />
-      </div>
-    </div>
-  )
+  // Avoid rendering an extra ad-hoc spinner while AppShell hydrates. The
+  // app already provides a full-page Preloader inside AppShell, so render
+  // nothing here to prevent duplicate loading UIs.
+  loading: () => null,
 });
 
 // Overscroll rubber band effect component

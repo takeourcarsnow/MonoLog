@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
+import styles from './about.module.css';
 
 export default function AboutPage() {
   return (
-    <div className="card view-fade" style={{ padding: 18, textAlign: 'center' }}>
+  <div className={`card view-fade about-card ${styles.aboutCard}`} style={{ padding: 18, textAlign: 'center' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <h2>About MonoLog</h2>
 
@@ -24,7 +25,7 @@ export default function AboutPage() {
 
         <section style={{ marginBottom: '1.5em' }}>
           <h3>How it&apos;s different from Instagram</h3>
-          <ul style={{ display: 'inline-block', textAlign: 'left', padding: '0 1em', lineHeight: 1.6, marginTop: '0.5em' }}>
+          <ul className={styles.aboutList}>
             <li><strong>One post per day</strong> — No spam, no overthinking. Just one daily entry with up to five images.</li>
             <li><strong>Favorites instead of public likes</strong> — You can favorite posts you love; there are no public like counts to chase.</li>
             <li><strong>Chronological feed</strong> — See posts from people you follow in the order they were posted. No algorithmic ranking.</li>
@@ -36,7 +37,7 @@ export default function AboutPage() {
 
         <section style={{ marginBottom: '1.5em' }}>
           <h3>What you can do</h3>
-          <ul style={{ display: 'inline-block', textAlign: 'left', padding: '0 1em', lineHeight: 1.6, marginTop: '0.5em' }}>
+          <ul className={styles.aboutList}>
             <li><strong>Post</strong> — Create one entry per day with up to five images and a caption.</li>
             <li><strong>Feed</strong> — Follow friends and see their daily posts in a clean, chronological timeline.</li>
             <li><strong>Explore</strong> — Discover public posts from the community at your own pace.</li>

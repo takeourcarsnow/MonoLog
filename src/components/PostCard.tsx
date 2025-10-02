@@ -4,12 +4,13 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
+import { prefetchComments, hasCachedComments } from "@/lib/commentCache";
 import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Comments } from "./Comments";
 import ImageZoom from "./ImageZoom";
-import { Lock, UserPlus, UserCheck, Edit, Trash } from "lucide-react";
+import { Lock, UserPlus, UserCheck, Edit, Trash, MessageCircle, Star as StarIcon, Link as LinkIcon } from "lucide-react";
 import { AuthForm } from "./AuthForm";
 import { useToast } from "./Toast";
 
@@ -60,6 +61,43 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
     })();
     return () => { mounted = false; };
   }, [post.id, count, commentsMounted]);
+
+  // Prefetch comments in the background when the post becomes visible or hovered
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let obs: IntersectionObserver | null = null;
+    const el = document.getElementById(`post-${post.id}`);
+    // Only prefetch if there might be comments (count > 0) and not already cached
+    if (!el || !(count > 0) || hasCachedComments(post.id)) return;
+    try {
+      obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            // background prefetch; don't await
+            prefetchComments(post.id, api.getComments as any).catch(() => {});
+            if (obs) { obs.disconnect(); obs = null; }
+          }
+        });
+      }, { rootMargin: '300px' });
+      obs.observe(el);
+    } catch (e) {
+      // Fallback: if IntersectionObserver unsupported, prefetch after brief idle
+      try { setTimeout(() => prefetchComments(post.id, api.getComments as any).catch(() => {}), 800); } catch (_) {}
+    }
+
+    // Also prefetch on pointer enter (hover) or focus for keyboard users
+    const onEnter = () => {
+      if (hasCachedComments(post.id)) return;
+      prefetchComments(post.id, api.getComments as any).catch(() => {});
+    };
+    el?.addEventListener('pointerenter', onEnter);
+    el?.addEventListener('focus', onEnter);
+
+    return () => {
+      try { el?.removeEventListener('pointerenter', onEnter); el?.removeEventListener('focus', onEnter); } catch (_) {}
+      if (obs) obs.disconnect();
+    };
+  }, [post.id, count]);
   const [showAuth, setShowAuth] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -495,6 +533,13 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
     // If we already detected a double-click in this cycle, ignore subsequent clicks
     if (dblClickDetectedRef.current) return;
     
+    // If we're viewing a listing (feed or explore), don't navigate into the
+    // single-post page when the media is tapped/clicked. Users expect to
+    // interact with posts inline in the feed; double-click still toggles
+    // favorites and keyboard handlers remain unchanged.
+    const onListing = pathname === '/' || (pathname || '').startsWith('/feed') || (pathname || '').startsWith('/explore');
+    if (onListing) return;
+
     clickCountRef.current += 1;
     
     if (clickCountRef.current === 1) {
@@ -571,6 +616,47 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
       toast.show(e?.message || 'Failed to share');
     }
   };
+
+  // helper to set animated max-height on the comments container
+  const setCommentsVisible = (open: boolean) => {
+    const el = commentsRef.current;
+    if (!el) return;
+    if (open) {
+      // measure and set explicit max-height so CSS can animate it
+      const h = el.scrollHeight;
+      // allow a small extra so inner margins/paddings don't clip
+      el.style.maxHeight = h + 24 + 'px';
+      // ensure the open class is present so opacity transitions
+      el.classList.add('open');
+      // remove any previous transitionend handlers
+      const onEnd = () => { el.style.maxHeight = ''; el.removeEventListener('transitionend', onEnd); };
+      el.addEventListener('transitionend', onEnd);
+    } else {
+      // closing: set maxHeight to current height then to 0 so transition runs
+      const h = el.scrollHeight;
+      el.style.maxHeight = h + 'px';
+      // Force layout so the browser notices the change before collapsing
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      el.offsetHeight;
+      // remove open class after transition completes
+      const onEnd = (ev: TransitionEvent) => {
+        if (ev.propertyName === 'max-height' || ev.propertyName === 'max-height') {
+          el.classList.remove('open');
+          el.style.maxHeight = '';
+          el.removeEventListener('transitionend', onEnd as any);
+        }
+      };
+      el.addEventListener('transitionend', onEnd as any);
+      // trigger collapse
+      el.style.maxHeight = '0px';
+      el.style.opacity = '0';
+    }
+  };
+
+  useEffect(() => {
+    // whenever commentsOpen changes, drive the measured animation
+    try { setCommentsVisible(commentsOpen); } catch (_) {}
+  }, [commentsOpen]);
 
   return (
     <article className="card">
@@ -734,6 +820,12 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                             loading="lazy"
                             src={u}
                             alt={alts[idx] || `Photo ${idx + 1}`}
+                            onDoubleTap={(x,y) => {
+                              // emulate desktop double-click behavior on touch devices
+                              const willAdd = !isFavorite;
+                              toggleFavoriteWithAuth();
+                              showFavoriteFeedback(willAdd ? 'adding' : 'removing');
+                            }}
                             onLoad={e => (e.currentTarget.classList.add("loaded"))}
                             onDragStart={e => e.preventDefault()}
                           />
@@ -766,6 +858,11 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                   <ImageZoom
                     loading="lazy"
                     src={imageUrls[0]}
+                    onDoubleTap={(x,y) => {
+                      const willAdd = !isFavorite;
+                      toggleFavoriteWithAuth();
+                      showFavoriteFeedback(willAdd ? 'adding' : 'removing');
+                    }}
                     alt={alts[0] || "Photo"}
                     onLoad={e => (e.currentTarget.classList.add("loaded"))}
                   />
@@ -786,81 +883,64 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                 aria-expanded={commentsOpen}
                 aria-controls={`comments-${post.id}`}
                 onClick={() => {
-                  // If not mounted, mount and animate open
                   if (!commentsMounted) {
+                    // Mount and open in one step
                     setCommentsMounted(true);
-
-                    // Wait for the element to be mounted and painted, then trigger the measured-height open animation
-                    if (typeof window !== "undefined") {
-                      requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                          const el = commentsRef.current;
-                          if (!el) return;
-                          const node = el as HTMLDivElement;
-                          // ensure starting styles
-                          node.style.maxHeight = '0px';
-                          node.style.opacity = '0';
-                          node.style.transform = 'translateY(-6px)';
-                          // force layout
-                          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                          node.offsetHeight;
-                          const h = node.scrollHeight;
-                          // set the open class so aria and css reflect the open state
-                          setCommentsOpen(true);
-                          // then set measured max-height to trigger the transition (CSS handles duration)
-                          node.style.maxHeight = h + 'px';
-                          node.style.opacity = '1';
-                          node.style.transform = 'translateY(0)';
-
-                          function onEnd(e: TransitionEvent) {
-                            if (e.propertyName !== 'max-height') return;
-                            node.style.maxHeight = '';
-                            node.removeEventListener('transitionend', onEnd as any);
-                            
-                            // Scroll the comments section into view after animation completes
-                            // Use setTimeout to ensure the layout is fully settled
-                            setTimeout(() => {
-                              node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            }, 50);
-                          }
-                          node.addEventListener('transitionend', onEnd as any);
-                        });
-                      });
-                    } else {
-                      // fallback
-                      setTimeout(() => setCommentsOpen(true), 8);
-                    }
+                    // Next frame, flip open state so the measured animation runs
+                    requestAnimationFrame(() => {
+                      setCommentsOpen(true);
+                      // Scroll into view after the open transition finishes
+                      const onOpenEnd = (ev?: TransitionEvent) => {
+                        if (!commentsRef.current) return;
+                        if (ev && ev.propertyName !== 'max-height') return;
+                        try { commentsRef.current.removeEventListener('transitionend', onOpenEnd as any); } catch (_) {}
+                        try { commentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
+                      };
+                      commentsRef.current?.addEventListener('transitionend', onOpenEnd as any);
+                    });
                   } else {
-                    // Closing: set aria state, then animate to 0 and unmount on finish
-                    setCommentsOpen(false);
-                    const el = commentsRef.current;
-                    if (!el) {
-                      setCommentsMounted(false);
-                      return;
+                    // Toggle open/closed state
+                    const willOpen = !commentsOpen;
+                    if (!willOpen) {
+                      // start collapse animation; when it ends, unmount
+                      setCommentsOpen(false);
+                      const el = commentsRef.current;
+                      if (el) {
+                        const onClose = (ev: TransitionEvent) => {
+                          // ensure we're responding to the max-height transition
+                          if (ev.propertyName !== 'max-height') return;
+                          try { el.removeEventListener('transitionend', onClose as any); } catch (_) {}
+                          setCommentsMounted(false);
+                        };
+                        el.addEventListener('transitionend', onClose as any);
+                        // also set a fallback timeout in case transitionend doesn't fire
+                        setTimeout(() => {
+                          try { el.removeEventListener('transitionend', onClose as any); } catch (_) {}
+                          setCommentsMounted(false);
+                        }, 520);
+                      } else {
+                        setCommentsMounted(false);
+                      }
+                    } else {
+                      // opening while mounted
+                      setCommentsOpen(true);
+                      // scroll into view after open completes
+                      const el = commentsRef.current;
+                      if (el) {
+                        const onOpen = (ev?: TransitionEvent) => {
+                          if (ev && ev.propertyName !== 'max-height') return;
+                          try { el.removeEventListener('transitionend', onOpen as any); } catch (_) {}
+                          try { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
+                        };
+                        el.addEventListener('transitionend', onOpen as any);
+                      }
                     }
-                    const node = el as HTMLDivElement;
-                    // set current height then animate to 0
-                    node.style.maxHeight = node.scrollHeight + 'px';
-                    // force layout
-                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                    node.offsetHeight;
-                    node.style.maxHeight = '0px';
-                    node.style.opacity = '0';
-                    node.style.transform = 'translateY(-6px)';
-
-                    function onEnd(e: TransitionEvent) {
-                      if (e.propertyName !== 'max-height') return;
-                      node.removeEventListener('transitionend', onEnd as any);
-                      // cleanup
-                      node.style.maxHeight = '';
-                      setCommentsMounted(false);
-                    }
-                    node.addEventListener('transitionend', onEnd as any);
                   }
                 }}
                 title="Toggle comments"
-              >
-                💬 {count}
+                >
+                <MessageCircle size={16} />
+                <span style={{ marginLeft: 8 }}>{count}</span>
               </button>
                 <button
                   className={`action favorite ${isFavorite ? "active" : ""}`}
@@ -889,18 +969,22 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                     }
                   }}
                 >
-                  <span className="star" aria-hidden="true">{isFavorite ? "★" : "☆"}</span>
+                  <StarIcon size={16} aria-hidden="true" />
                 </button>
                 <button
                   className="action share"
                   title="Share link"
                   aria-label="Share post"
                   onClick={() => { sharePost(); }}
-                >🔗</button>
+                >
+                  <LinkIcon size={16} />
+                </button>
             </div>
             {commentsMounted && (
               <div className={`comments ${commentsOpen ? "open" : ""}`} id={`comments-${post.id}`} ref={commentsRef}>
-                <Comments postId={post.id} onCountChange={setCount} />
+                <div>
+                  <Comments postId={post.id} onCountChange={setCount} />
+                </div>
               </div>
             )}
           </>

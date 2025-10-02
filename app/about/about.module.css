@@ -1,0 +1,34 @@
+.aboutCard {
+  /* small responsive tweak scoped to the About card */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.aboutCard :global(.dim) {
+  /* Allow multi-line paragraphs on the About page (overrides global .dim narrow rule) */
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+.aboutList {
+  display: inline-block;
+  text-align: left;
+  padding: 0 1em;
+  line-height: 1.6;
+  margin-top: 0.5em;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .aboutList {
+    display: block;
+    padding: 0;
+    margin: 0 0 0.75em 0;
+  }
+
+  .aboutCard {
+    padding: 12px; /* slightly reduce padding on small screens */
+  }
+}

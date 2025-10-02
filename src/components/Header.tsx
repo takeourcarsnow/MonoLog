@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CONFIG } from "@/lib/config";
 import { ThemeToggle } from "./ThemeToggle";
@@ -11,6 +11,7 @@ import { Info, Star } from "lucide-react";
 export function Header() {
   const router = useRouter();
   const [isLogoAnimating, setIsLogoAnimating] = useState(false);
+  const pathname = usePathname();
 
   const handleLogoClick = () => {
     setIsLogoAnimating(true);
@@ -32,11 +33,11 @@ export function Header() {
           <h1>{CONFIG.appName}</h1>
         </button>
         <div className="header-actions" id="header-actions">
-          <Link href="/about" className="btn icon" title="About MonoLog" aria-label="About MonoLog">
+          <Link href="/about" className={`btn icon about-btn ${pathname === '/about' ? 'active' : ''}`} title="About MonoLog" aria-label="About MonoLog" aria-current={pathname === '/about' ? 'page' : undefined}>
             <Info size={20} strokeWidth={2} />
           </Link>
           <ThemeToggle />
-          <Link href="/favorites" className="btn" title="Favorites" aria-label="Favorites">
+          <Link href="/favorites" className={`btn favorites-btn ${pathname === '/favorites' ? 'active' : ''}`} title="Favorites" aria-label="Favorites" aria-current={pathname === '/favorites' ? 'page' : undefined}>
             <Star size={20} strokeWidth={2} />
           </Link>
           <AccountSwitcher />

@@ -1,37 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from 'next/image';
 
 export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () => void }) {
   const [exiting, setExiting] = useState(false);
   const [mounted, setMounted] = useState(true);
+  const mountTime = useRef<number | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (ready && mounted) {
-      // start exit animation for the overlay
-      setExiting(true);
+      // Ensure the preloader is visible for at least `minVisible` ms so the
+      // spinner animation feels complete even if initialization resolves
+      // very quickly during hydration. This avoids a janky flash where the
+      // overlay appears and immediately disappears without a full rotation.
+  const minVisible = 1200; // ms - keep spinner visible longer for a subtle effect
+      const now = Date.now();
+      const mountedAt = mountTime.current || now;
+      const elapsed = Math.max(0, now - mountedAt);
+      const startDelay = Math.max(0, minVisible - elapsed);
 
-      // overlay exit duration (ms) — matches CSS transition
-      const overlayExit = 420;
-      // additional time to keep the page blurred after the overlay fades
-      const blurHold = 700;
+  let startTimerId: number | null = null;
+  startTimerId = window.setTimeout(() => {
+        // start exit animation for the overlay
+        setExiting(true);
 
-      const overlayTimer = setTimeout(() => {
-        // overlay has finished its exit animation visually (opacity 0)
-        // keep component mounted so we can preserve the blur for blurHold
-        onFinish?.();
-      }, overlayExit);
+  // overlay exit duration (ms) — matches CSS transition (longer, softer)
+  const overlayExit = 640;
+  // additional time to keep the page blurred after the overlay fades
+  const blurHold = 900;
 
-      // schedule blur removal after overlay exit + hold, then unmount
-      const blurTimer = setTimeout(() => {
-        try { document.documentElement.classList.remove('preloader-active'); } catch (e) {}
-        setMounted(false);
-      }, overlayExit + blurHold);
+        const overlayTimer = setTimeout(() => {
+          // overlay has finished its exit animation visually (opacity 0)
+          // keep component mounted so we can preserve the blur for blurHold
+          onFinish?.();
+        }, overlayExit);
+
+        // schedule blur removal after overlay exit + hold, then unmount
+        const blurTimer = setTimeout(() => {
+          try { document.documentElement.classList.remove('preloader-active'); } catch (e) {}
+          setMounted(false);
+        }, overlayExit + blurHold);
+
+        // cleanup timers started within startTimer
+        cleanupRef.current = () => {
+          try { window.clearTimeout(overlayTimer); } catch (e) {}
+          try { window.clearTimeout(blurTimer); } catch (e) {}
+        };
+      }, startDelay);
 
       return () => {
-        try { clearTimeout(overlayTimer); } catch (e) {}
-        try { clearTimeout(blurTimer); } catch (e) {}
+        try { if (startTimerId) window.clearTimeout(startTimerId); } catch (e) {}
+        try { if (cleanupRef.current) { cleanupRef.current(); cleanupRef.current = null; } } catch (e) {}
       };
     }
   }, [ready, mounted, onFinish]);
@@ -42,6 +63,7 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
     try {
       document.documentElement.classList.add('preloader-active');
     } catch (e) {}
+    mountTime.current = Date.now();
     return () => {
       // only remove class on unmount if it's still present
       try { document.documentElement.classList.remove('preloader-active'); } catch (e) {}

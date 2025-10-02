@@ -1196,8 +1196,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         /* custom focus ring */
         .imgedit-range:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent); }
         .imgedit-range:focus::-webkit-slider-thumb { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 25%, transparent), 0 4px 14px rgba(0,0,0,0.2); }
-  /* hide numeric value badges next to sliders when requested */
-  .imgedit-value { display: none !important; }
         /* panels responsiveness: allow panels to grow and scroll on small viewports */
         .imgedit-panels { 
           position: relative; 
@@ -1354,7 +1352,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 </svg>
                 <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('exposure', exposureRef.current, v); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(exposure, 0.5, 1.8, 'var(--slider-exposure-start)', 'var(--slider-exposure-end)') }} />
               </span>
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{exposure.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{exposure.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
@@ -1367,7 +1365,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 </svg>
                 <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={contrast} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('contrast', contrastRef.current, v); contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(contrast, 0.5, 1.8, 'var(--slider-contrast-start)', 'var(--slider-contrast-end)') }} />
               </span>
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{contrast.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{contrast.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
@@ -1380,7 +1378,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 </svg>
                 <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('saturation', saturationRef.current, v); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(saturation, 0, 2, 'var(--slider-saturation-start)', 'var(--slider-saturation-end)') }} />
               </span>
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{saturation.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{saturation.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
@@ -1393,7 +1391,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 </svg>
                 <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('temperature', temperatureRef.current, v); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(temperature, -100, 100, 'var(--slider-temperature-cold)', 'var(--slider-temperature-warm)') }} />
               </span>
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{temperature}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{temperature}</span>
             </label>
           </div>
 
@@ -1429,7 +1427,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
               <span style={{ width: 120, color: 'var(--text)', fontWeight: 600, fontSize: 14 }}>Strength</span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={filterStrength} onInput={(e: any) => { const v = Number(e.target.value); filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{Math.round(filterStrength * 100)}%</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{Math.round(filterStrength * 100)}%</span>
             </div>
           </div>
 
@@ -1441,7 +1439,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Vignette</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#1a1a1a', '#000000') }} />
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{vignette.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{vignette.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
@@ -1449,7 +1447,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Grain</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#e8d5b7', '#8b7355') }} />
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{grain.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{grain.toFixed(2)}</span>
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1458,7 +1456,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Soft Focus</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }} />
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{softFocus.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{softFocus.toFixed(2)}</span>
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1467,7 +1465,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Fade</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }} />
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{fade.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{fade.toFixed(2)}</span>
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1476,7 +1474,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Matte</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }} />
-              <span className="imgedit-value" style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{matte.toFixed(2)}</span>
+              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{matte.toFixed(2)}</span>
             </label>
           </div>
 
@@ -1679,7 +1677,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                     <span>Thickness</span>
                   </span>
                   <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#d4c5b9', '#8b7355') }} />
-                  <span className="imgedit-value" style={{ width: 48, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{Math.round(frameThickness * 100)}%</span>
+                  <span style={{ width: 48, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{Math.round(frameThickness * 100)}%</span>
                 </label>
 
                 <div>

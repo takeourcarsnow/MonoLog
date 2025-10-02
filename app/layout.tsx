@@ -15,33 +15,6 @@ const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.A
 export const metadata: Metadata = {
   title: "MonoLog — one post per day",
   description: "Daily photo journal. Attach multiple images to a single post.",
-  keywords: ["daily journal", "photo diary", "privacy", "one post per day", "personal log"],
-  authors: [{ name: "MonoLog" }],
-  creator: "MonoLog",
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://example.com",
-    title: "MonoLog — one post per day",
-    description: "Daily photo journal. Attach multiple images to a single post.",
-    siteName: "MonoLog",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "MonoLog — one post per day",
-    description: "Daily photo journal. Attach multiple images to a single post.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
   // themeColor must be placed in the `viewport` export in Next.js 14+
   other: {
     "color-scheme": "light dark"
@@ -72,15 +45,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     */
   <html lang="en" className={`no-transitions ${patrick.variable}`} suppressHydrationWarning>
       <head>
-        {/* PWA Meta / Manifest */}
-        <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="MonoLog" />
-        <meta name="application-name" content="MonoLog" />
-        <meta name="theme-color" content="#0f0f10" />
         <script
           id="theme-init"
           dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);}else{try{var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');document.documentElement.setAttribute('data-theme',(m&&m.matches)?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} }catch(e){} })();` }}

@@ -797,8 +797,6 @@ export const supabaseApi: Api = {
     try {
       const sb = getClient();
       await sb.auth.signOut();
-      // Notify other UI components that auth state changed so they can update
-      try { if (typeof window !== 'undefined' && typeof CustomEvent === 'function') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
     } catch (e) {
       console.warn("supabase.signOut failed", e);
     }

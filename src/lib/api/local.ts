@@ -308,6 +308,5 @@ export const localApi: Api = {
   async signOut() {
     cache.currentUserId = null;
     persist();
-    try { if (typeof window !== 'undefined' && typeof CustomEvent === 'function') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
   },
 };

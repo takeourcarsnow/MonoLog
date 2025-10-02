@@ -96,19 +96,6 @@ export function ProfileView({ userId }: { userId?: string }) {
   useEffect(() => {
     function handleAuthChanged() {
       (async () => {
-        // If signed out, clear the implicit /profile view state so UI falls back to auth prompt
-        const meCheck = await api.getCurrentUser();
-        if (!meCheck) {
-          setCurrentUserId(null);
-          // If viewing an explicit userId, keep that view; otherwise clear user so auth prompt shows
-          if (!isOtherParam) {
-            setUser(null);
-            setPosts([]);
-          }
-          setLoading(false);
-          return;
-        }
-        // If signed in, and we're not viewing someone else, refresh to show owner UI
         if (isOtherParam && currentUserId && currentUserId !== userId) return;
         let me: any = null;
         for (let i = 0; i < 8; i++) {

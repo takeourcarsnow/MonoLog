@@ -308,6 +308,26 @@ export function ProfileView({ userId }: { userId?: string }) {
                     })()}
                   </div>
                   <input className="input" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
+                  {/* Warning about username change cooldown */}
+                  {editUsername !== user.username && (
+                    <div style={{ 
+                      marginTop: 6, 
+                      padding: '8px 12px', 
+                      background: 'rgba(255, 165, 0, 0.1)', 
+                      border: '1px solid rgba(255, 165, 0, 0.3)',
+                      borderRadius: 6,
+                      fontSize: 12,
+                      color: 'var(--text)',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 8
+                    }}>
+                      <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
+                      <div>
+                        <strong>Note:</strong> You can only change your username once every 24 hours. Choose carefully!
+                      </div>
+                    </div>
+                  )}
                 </label>
                 <label className="bio-col" style={{ display: 'block', marginBottom: 8 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>

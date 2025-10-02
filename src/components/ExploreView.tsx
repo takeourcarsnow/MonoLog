@@ -10,7 +10,7 @@ import { ViewToggle } from "./ViewToggle";
 import { tabs } from "./NavBarClient";
 import { useToast } from "./Toast";
 import { useRouter } from "next/navigation";
-import { Search, Compass } from "lucide-react";
+import { Compass } from "lucide-react";
 
 const PostCard = dynamic(() => import("./PostCard").then(m => m.PostCard), { ssr: false });
 
@@ -20,8 +20,6 @@ export function ExploreView() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  // subtle explanatory hint appears after mount
-  const [showHint, setShowHint] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const PAGE_SIZE = 5;
   const loadingMoreRef = useRef(false);
@@ -125,13 +123,6 @@ export function ExploreView() {
   // keep loadingRef up-to-date so the callback ref can read it synchronously
   useEffect(() => { loadingRef.current = loading; }, [loading]);
 
-  // reveal hint a tick after mount (and only while not loading initial page)
-  useEffect(() => {
-    if (!loading) {
-      const t = setTimeout(() => setShowHint(true), 120);
-      return () => clearTimeout(t);
-    }
-  }, [loading]);
 
   // If the sentinel existed while we were initially loading, it may not have
   // had the observer attached. Once loading completes, attach it if needed.
@@ -269,14 +260,7 @@ export function ExploreView() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         {loadingMore ? <div className="dim">Loading more…</div> : null}
       </div>
-      {showHint && posts.length ? (
-        <div className="explore-hint" role="note">
-          <Search size={16} strokeWidth={2} aria-hidden="true" />
-          <span>
-            Discover new people — this feed hides posts from users you already follow so you can find fresh creators.
-          </span>
-        </div>
-      ) : null}
+      {/* hint removed per user request */}
       <div className="feed">{render()}</div>
     </div>
   );

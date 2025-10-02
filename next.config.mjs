@@ -21,8 +21,6 @@ const nextConfig = {
     // Reduce bundle size by auto-rewriting deep imports for listed packages.
     // lucide-react tree-shakes well, but this shaves a few KB of parser/edge cases.
     optimizePackageImports: ['lucide-react'],
-    // Enable optimized CSS loading
-    optimizeCss: true,
   },
   // Enable compression
   compress: true,

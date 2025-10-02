@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api, getSupabaseClient } from "@/lib/api";
 import { compressImage } from "@/lib/image";
 import { uid } from "@/lib/id";
@@ -13,6 +14,7 @@ import { SignOutButton } from "@/components/SignOut";
 import { useToast } from "./Toast";
 
 export function ProfileView({ userId }: { userId?: string }) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,6 +153,9 @@ export function ProfileView({ userId }: { userId?: string }) {
       return;
     }
     
+    const oldUsername = user?.username;
+    const usernameChanged = oldUsername && uname !== oldUsername;
+    
     setEditProcessing(true);
     try {
       await api.updateCurrentUser({ username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200) });
@@ -158,6 +163,15 @@ export function ProfileView({ userId }: { userId?: string }) {
       setUser(me);
       if (me) setPosts(await api.getUserPosts(me.id));
       setIsEditingProfile(false);
+      
+      // If username changed and we're on a username route, redirect to new username
+      if (usernameChanged && me?.username && typeof window !== 'undefined') {
+        // Check if current path contains the old username
+        const currentPath = window.location.pathname;
+        if (currentPath.includes(`/${oldUsername}`)) {
+          router.push(`/${me.username}`);
+        }
+      }
     } catch (e: any) {
       toast.show(e?.message || 'Failed to update profile');
     } finally {

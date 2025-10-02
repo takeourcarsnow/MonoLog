@@ -148,8 +148,11 @@ export function CalendarView() {
   <div className="feed" id="day-feed">
         {selectedDay ? (
           <div style={{ marginBottom: 8, textAlign: 'center' }}>
-            <strong style={{ display: 'block' }}>{new Date(selectedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
-            <div className="dim" style={{ marginTop: 4 }}>{(stats.counts[selectedDay] || 0)} public post{(stats.counts[selectedDay] || 0) === 1 ? '' : 's'}</div>
+            {/* keyed wrapper so changing selectedDay or counts will retrigger CSS animation */}
+            <div key={selectedDay + "-" + (stats.counts[selectedDay] || 0)} className="day-header-anim">
+              <strong style={{ display: 'block' }}>{new Date(selectedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+              <div className="dim" style={{ marginTop: 4 }}>{(stats.counts[selectedDay] || 0)} public post{(stats.counts[selectedDay] || 0) === 1 ? '' : 's'}</div>
+            </div>
           </div>
         ) : null}
 

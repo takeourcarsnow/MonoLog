@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import type { HydratedPost } from "@/lib/types";
 import { PostCard } from "./PostCard";
@@ -31,23 +31,27 @@ export function FeedView() {
   const router = useRouter();
   const [overlayStates, setOverlayStates] = useState<Record<string, 'adding' | 'removing' | null>>({});
 
+  // Memoize the initial load function
+  const loadInitialPosts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const page = await api.getFollowingFeedPage({ limit: PAGE_SIZE });
+      setPosts(page);
+      setHasMore(page.length === PAGE_SIZE);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
     (async () => {
-      try {
-        const page = await api.getFollowingFeedPage({ limit: PAGE_SIZE });
-        if (!mounted) return;
-        setPosts(page);
-        setHasMore(page.length === PAGE_SIZE);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (mounted) setLoading(false);
-      }
+      if (mounted) await loadInitialPosts();
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [loadInitialPosts]);
 
   // Refresh feed only when a FOLLOW action occurs elsewhere AND the newly
   // followed user's posts are not already in the current list. This prevents
@@ -55,7 +59,7 @@ export function FeedView() {
   // posts are already visible (original request: avoid instant feed refresh
   // side-effects for these toggles).
   useEffect(() => {
-    function onFollowChange(e: any) {
+    const onFollowChange = (e: any) => {
       try {
         const following = e?.detail?.following;
         const changedUserId = e?.detail?.userId;
@@ -66,23 +70,12 @@ export function FeedView() {
         if (changedUserId && postsRef.current.some(p => p.userId === changedUserId)) return;
 
         // Otherwise fetch the first page again so new followed users' posts appear.
-        (async () => {
-          setLoading(true);
-          try {
-            const page = await api.getFollowingFeedPage({ limit: PAGE_SIZE });
-            setPosts(page);
-            setHasMore(page.length === PAGE_SIZE);
-          } catch (err) {
-            console.error(err);
-          } finally {
-            setLoading(false);
-          }
-        })();
+        loadInitialPosts();
       } catch (err) { /* ignore */ }
-    }
+    };
     if (typeof window !== 'undefined') window.addEventListener('monolog:follow_changed', onFollowChange as any);
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:follow_changed', onFollowChange as any); };
-  }, []);
+  }, [loadInitialPosts]);
 
   useEffect(() => {
     if (!sentinelRef.current) return;
@@ -117,21 +110,13 @@ export function FeedView() {
 
   // Refresh feed when a new post is created (user returns to feed after upload)
   useEffect(() => {
-    function onPostCreated() {
-      (async () => {
-        try {
-          setLoading(true);
-          const page = await api.getFollowingFeedPage({ limit: PAGE_SIZE });
-          setPosts(page);
-          setHasMore(page.length === PAGE_SIZE);
-        } catch (e) { /* ignore */ } finally { setLoading(false); }
-      })();
-    }
+    const onPostCreated = () => loadInitialPosts();
     if (typeof window !== 'undefined') window.addEventListener('monolog:post_created', onPostCreated as any);
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_created', onPostCreated as any); };
-  }, []);
+  }, [loadInitialPosts]);
 
-  const render = () => {
+  // Memoize the render function to prevent unnecessary recalculations
+  const render = useMemo(() => {
     if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
     if (!posts.length) return <div className="empty">Your feed is quiet. Follow people in Explore to see their daily photo.</div>;
     if (view === "grid") {
@@ -245,7 +230,7 @@ export function FeedView() {
         {loadingMore ? <div className="card skeleton" style={{ height: 120 }} /> : null}
       </>
     );
-  };
+  }, [loading, posts, view, hasMore, loadingMore, overlayStates, toast, router]);
 
   return (
     <div className="view-fade">
@@ -254,7 +239,7 @@ export function FeedView() {
         {loadingMore ? <div className="dim">Loading more…</div> : null}
       </div>
         {loadingMore ? <div className="dim">Loading more…</div> : null}
-      <div className="feed">{render()}</div>
+      <div className="feed">{render}</div>
     </div>
   );
 }

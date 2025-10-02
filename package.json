@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
-    "check-env": "node ./scripts/check-env.js"
+    "check-env": "node ./scripts/check-env.js",
+    "check-perf": "node ./scripts/check-performance.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.35.0",

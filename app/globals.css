@@ -68,11 +68,22 @@
 
 * { box-sizing: border-box; }
 /* Prevent any accidental horizontal overflow (fixes unwanted horizontal scrollbar on desktop) */
-html, body { height: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
+html, body { 
+  height: 100%; 
+  overflow-x: hidden; 
+  overscroll-behavior-x: none;
+}
 body {
-  margin: 0; background: var(--bg); color: var(--text);
+  margin: 0; 
+  background: var(--bg); 
+  color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   line-height: 1.45;
+  /* Enable font smoothing for better text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Optimize text rendering */
+  text-rendering: optimizeLegibility;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -623,6 +634,10 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  
+  /* Performance optimizations */
+  contain: layout style paint;
+  content-visibility: auto;
 }
 @keyframes in {
   to { transform: translateY(0); opacity: 1; }

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
 import { formatRelative } from "@/lib/date";
@@ -13,7 +13,8 @@ import { Lock } from "lucide-react";
 import { AuthForm } from "./AuthForm";
 import { useToast } from "./Toast";
 
-export function PostCard({ post: initial, allowCarouselTouch }: { post: HydratedPost; allowCarouselTouch?: boolean }) {
+// Memoize PostCard to prevent unnecessary re-renders when parent updates
+const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: HydratedPost; allowCarouselTouch?: boolean }) => {
   const [post, setPost] = useState<HydratedPost>(initial);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsMounted, setCommentsMounted] = useState(false);
@@ -896,6 +897,16 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     </article>
   );
 }
+
+// Memoize PostCard with shallow comparison to prevent re-renders when posts haven't changed
+export const PostCard = memo(PostCardComponent, (prev, next) => {
+  // Only re-render if post ID or allowCarouselTouch changes
+  return prev.post.id === next.post.id && 
+         prev.allowCarouselTouch === next.allowCarouselTouch &&
+         prev.post.caption === next.post.caption &&
+         prev.post.public === next.post.public &&
+         prev.post.commentsCount === next.post.commentsCount;
+});
 
 function Editor({ post, onCancel, onSave }: {
   post: HydratedPost;

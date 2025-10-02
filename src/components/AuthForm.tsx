@@ -68,6 +68,28 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
+        // Ensure the client session has propagated before notifying the app.
+        // Some runtimes may delay session hydration; poll briefly for the user
+        // so listeners (like AccountSwitcher) can update immediately.
+        const waitForUser = async (tries = 6, delay = 80) => {
+          for (let i = 0; i < tries; i++) {
+            try {
+              let authRes: any = null;
+              try { authRes = await sb.auth.getSession(); } catch (_) { /* ignore */ }
+              if (!authRes || !authRes.data || !authRes.data.session) {
+                try { authRes = await sb.auth.getUser(); } catch (_) { /* ignore */ }
+              }
+              const maybeUser = authRes?.data?.user || authRes?.user || null;
+              if (maybeUser) return maybeUser;
+            } catch (_) { /* ignore */ }
+            // small backoff
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, delay));
+          }
+          return null;
+        };
+        try { await waitForUser(8, 120); } catch (_) { /* ignore */ }
+
         // Ensure the user's profile row exists in the users table.
         // Fire-and-forget: create or upsert a minimal profile in the background
         // so that subsequent actions (like creating posts) won't fail with FK errors.
@@ -124,8 +146,10 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         // don't auto-close the modal or refresh the app here; wait for user to confirm via email
         return;
       }
-      // dispatch auth changed event, then close modal and refresh (only for sign-in flow)
-      try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
+  // dispatch auth changed event, then close modal and refresh (only for sign-in flow)
+  // Dispatch after waiting for session to be available so listeners can
+  // immediately retrieve the current user without requiring a full page reload.
+  try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
       if (onClose) {
         await onClose();
       }
@@ -295,15 +319,6 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
           aria-live="polite"
         >
           <span className="label-text">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
-        </button>
-        <button
-          type="button"
-            className="btn ghost cancel-btn"
-            onClick={() => { if (!loading) onClose?.(); }}
-            aria-label="Cancel and close"
-            disabled={loading}
-        >
-          Cancel
         </button>
       </div>
 

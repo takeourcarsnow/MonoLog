@@ -43,6 +43,23 @@ export function FeedView() {
         if (mounted) setLoading(false);
       }
     })();
+    // react to auth changes: re-fetch feed (will become empty / prompt when signed out)
+    function onAuthChanged() {
+      (async () => {
+        try {
+          setLoading(true);
+          const page = await api.getFollowingFeedPage({ limit: PAGE_SIZE });
+          if (!mounted) return;
+          setPosts(page);
+          setHasMore(page.length === PAGE_SIZE);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      })();
+    }
+    if (typeof window !== 'undefined') window.addEventListener('auth:changed', onAuthChanged as any);
     return () => { mounted = false; };
   }, []);
 

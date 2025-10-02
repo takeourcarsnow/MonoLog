@@ -39,6 +39,9 @@ export function NavBarClient() {
       }
     }
     getCurrentUser();
+    // Update when auth state changes (sign in / sign out)
+    function onAuthChanged() { getCurrentUser(); }
+    if (typeof window !== 'undefined') window.addEventListener('auth:changed', onAuthChanged as any);
     return () => { mounted = false; };
   }, []);
 

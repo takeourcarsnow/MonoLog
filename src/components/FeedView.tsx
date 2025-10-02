@@ -15,6 +15,9 @@ import { Home } from "lucide-react";
 
 export function FeedView() {
   const [posts, setPosts] = useState<HydratedPost[]>([]);
+  // Keep a ref to latest posts for event handlers without re-binding
+  const postsRef = useRef<HydratedPost[]>([]);
+  useEffect(() => { postsRef.current = posts; }, [posts]);
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("feedView") as any)) || "list");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -46,11 +49,23 @@ export function FeedView() {
     return () => { mounted = false; };
   }, []);
 
-  // Refresh feed when follow/unfollow actions occur elsewhere in the app
+  // Refresh feed only when a FOLLOW action occurs elsewhere AND the newly
+  // followed user's posts are not already in the current list. This prevents
+  // a disruptive refetch when you quickly unfollow/refollow someone whose
+  // posts are already visible (original request: avoid instant feed refresh
+  // side-effects for these toggles).
   useEffect(() => {
     function onFollowChange(e: any) {
       try {
-        // simply re-fetch the initial page to show new followed users' posts
+        const following = e?.detail?.following;
+        const changedUserId = e?.detail?.userId;
+        if (!following) return; // ignore unfollow events entirely
+
+        // If the followed user's posts are already present (e.g. user unfollowed
+        // then re-followed), skip refetch to avoid flicker.
+        if (changedUserId && postsRef.current.some(p => p.userId === changedUserId)) return;
+
+        // Otherwise fetch the first page again so new followed users' posts appear.
         (async () => {
           setLoading(true);
           try {

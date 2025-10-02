@@ -827,6 +827,15 @@ export const supabaseApi: Api = {
     try {
       const sb = getClient();
       await sb.auth.signOut();
+      // Immediately invalidate cached auth user so subsequent calls to
+      // getCurrentUser() in the same client session do not return the
+      // stale signed-in user before the onAuthStateChange listener fires.
+      cachedAuthUser = null;
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('auth:changed'));
+        }
+      } catch (_) { /* ignore */ }
     } catch (e) {
       console.warn("supabase.signOut failed", e);
     }

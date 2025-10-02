@@ -1,4 +1,5 @@
 subtly animate logo on hover or click
 
 
-make sure toast subtly animates/fades out
+make sure toast subtly animates/fades out, now it instantly disapears
+when i unfollow someone in feed dont instantly remove them from feed, just change the state of button so i could follow again, dont show it only after refresh but dont refresh instantly

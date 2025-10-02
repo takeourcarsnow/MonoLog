@@ -16,11 +16,9 @@ export function SignOutButton() {
         } catch (e) {
           console.warn("Sign out error", e);
         } finally {
-          // navigate to home/landing (explore)
+          // Navigate to explore (or could stay on current page). Avoid router.refresh()
+          // so we rely on client state & auth:changed event for fast UI update.
           router.push("/explore");
-          // refresh to ensure UI updates
-          router.refresh();
-          try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
         }
       }}
     >

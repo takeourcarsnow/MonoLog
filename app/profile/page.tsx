@@ -30,6 +30,10 @@ export default function ProfilePage() {
     }
     
     redirectToUsername();
+    // Re-run redirect logic on auth changes (sign in/out) so the profile page
+    // doesn't keep showing the previous user's profile without a hard refresh.
+    function onAuthChanged() { redirectToUsername(); }
+    if (typeof window !== 'undefined') window.addEventListener('auth:changed', onAuthChanged as any);
     return () => { mounted = false; };
   }, [router]);
 

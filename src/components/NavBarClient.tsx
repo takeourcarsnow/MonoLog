@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Home, Compass, Plus, Calendar, User } from "lucide-react";
@@ -250,7 +251,7 @@ export function NavBarClient() {
     };
   }, [activeTab]);
 
-  return (
+  const nav = (
     <nav className="tabbar" aria-label="Primary">
       <div className="tabbar-inner" role="tablist" ref={containerRef}>
         {tabs.map(t => {
@@ -285,6 +286,14 @@ export function NavBarClient() {
       </div>
     </nav>
   );
+
+  // Portal the navbar into document.body so transforms applied to app
+  // content do not create a containing block that affects fixed positioning.
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(nav, document.body);
+  }
+
+  return nav;
 }
 
 export default NavBarClient;

@@ -7,4 +7,3 @@ Profile section takes a long time to load and the section highlighter lags becau
 
 make doubletapping on phone on photo not zoom in or take me to the post's page but just favorite/unfavorite like it does on desktop
 
-swiping across sections doesnt work anymore

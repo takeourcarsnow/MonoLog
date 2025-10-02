@@ -72,6 +72,12 @@ html, body {
   height: 100%; 
   overflow-x: hidden; 
   overscroll-behavior-x: none;
+  overflow-y: auto;
+}
+html {
+  /* Enable smooth overscroll behavior */
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
 }
 body {
   margin: 0; 
@@ -114,6 +120,11 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 #app-root {
   min-height: 100dvh;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 1;
 }
 
 .app-content {
@@ -256,10 +267,13 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 
 .tabbar {
-  position: fixed; bottom: 0; left: 0; right: 0;
+  position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
   /* Raise z-index above editor/portal overlays (these use up to 99999) so the
      navigation bar remains the top-most interactive element. */
   z-index: 100001;
+  /* Force no transform so it won't be affected visually if an ancestor has a transform */
+  transform: none !important;
+  -webkit-transform: none !important;
   background: color-mix(in srgb, var(--bg), transparent 6%);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(8px);

@@ -37,6 +37,11 @@ const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.A
   )
 });
 
+// Overscroll rubber band effect component
+const OverscrollRubberband = dynamic(() => import("@/components/OverscrollRubberband").then(mod => mod.OverscrollRubberband), {
+  ssr: false
+});
+
 export const metadata: Metadata = {
   title: "MonoLog — one post per day",
   description: "Daily photo journal. Attach multiple images to a single post.",
@@ -103,6 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div id="app-root">
           <AppShell>{children}</AppShell>
         </div>
+        <OverscrollRubberband />
         <noscript>MonoLog requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}
         {process.env.NODE_ENV === 'production' ? <WebVitalsScript /> : null}

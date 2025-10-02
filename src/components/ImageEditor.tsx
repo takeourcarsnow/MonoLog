@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { RotateCcw, Circle, Film, Droplet, Feather, Camera, Sun, Snowflake, Clapperboard, Sliders, Palette, Sparkles, Image as ImageIcon } from "lucide-react";
+import { RotateCcw, Circle, Film, Droplet, Feather, Camera, Sun, Snowflake, Clapperboard, Sliders, Palette, Sparkles, Image as ImageIcon, Scissors, SunDim, Scale, Rainbow, Thermometer, Aperture, Layers, ZapOff, Square, Ruler } from "lucide-react";
 
 // Filter icon mapping
 const FILTER_ICONS: Record<string, React.ComponentType<any>> = {
@@ -1317,7 +1317,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('crop'); }}
     style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'crop' ? 'transparent' : 'transparent', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'crop' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'✂️'}</span>
+    <Scissors size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Crop</span>
   </button>
 
@@ -1342,7 +1342,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'basic' ? 'grid' : 'none', width: '100%' }}>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>☀️</span>
+                <SunDim size={18} strokeWidth={2} aria-hidden />
                 <span>Exposure</span>
               </span>
               {/* animated icon that changes color with exposure */}
@@ -1356,7 +1356,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>⚖️</span>
+                <Scale size={18} strokeWidth={2} aria-hidden />
                 <span>Contrast</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
@@ -1369,7 +1369,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>🌈</span>
+                <Rainbow size={18} strokeWidth={2} aria-hidden />
                 <span>Saturation</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
@@ -1382,7 +1382,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>🌡️</span>
+                <Thermometer size={18} strokeWidth={2} aria-hidden />
                 <span>Temperature</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
@@ -1435,7 +1435,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'effects' ? 'grid' : 'none', width: '100%' }}>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>🕶️</span>
+                <Aperture size={18} strokeWidth={2} aria-hidden />
                 <span>Vignette</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#1a1a1a', '#000000') }} />
@@ -1443,7 +1443,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>🎚️</span>
+                <Layers size={18} strokeWidth={2} aria-hidden />
                 <span>Grain</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#e8d5b7', '#8b7355') }} />
@@ -1452,7 +1452,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>💤</span>
+                <ZapOff size={18} strokeWidth={2} aria-hidden />
                 <span>Soft Focus</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }} />
@@ -1461,7 +1461,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>🎞️</span>
+                <Film size={18} strokeWidth={2} aria-hidden />
                 <span>Fade</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }} />
@@ -1470,7 +1470,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <span aria-hidden style={{ fontSize: 18 }}>🪞</span>
+                <Square size={18} strokeWidth={2} aria-hidden />
                 <span>Matte</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }} />
@@ -1673,7 +1673,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   <span style={{ width: 100, display: 'flex', gap: 6, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                    <span aria-hidden style={{ fontSize: 18 }}>📏</span>
+                    <Ruler size={18} strokeWidth={2} aria-hidden />
                     <span>Thickness</span>
                   </span>
                   <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#d4c5b9', '#8b7355') }} />

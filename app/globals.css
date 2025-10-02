@@ -293,6 +293,38 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   transition: left 260ms var(--transition-mid), width 260ms var(--transition-mid), opacity 160ms var(--transition-fast), transform 220ms cubic-bezier(.2,.7,.2,1);
   z-index: 1; /* behind icons (icons have z-index:2) */
 }
+/* Light mode: previous indicator was low contrast on very light backgrounds. Increase saturation, add subtle ring & strengthen active label weight. */
+:root[data-theme="light"] .tab-indicator,
+/* also apply when no explicit dark theme attribute is present */
+:root:not([data-theme="dark"]) .tab-indicator {
+  background: linear-gradient(145deg, var(--primary) 0%, color-mix(in srgb, var(--primary), #1d4ed8 22%));
+  /* remove the bright white ring which reduced perceived contrast on very light backgrounds
+     and keep a subtler, softer shadow to lift the indicator */
+  box-shadow: 0 4px 14px rgba(37,99,235,0.22), 0 10px 28px -6px rgba(37,99,235,0.26);
+}
+:root[data-theme="light"] .tab-item[aria-current="page"],
+:root:not([data-theme="dark"]) .tab-item[aria-current="page"] { color: #0f0f10; font-weight: 700; }
+/* Light mode active icon: make glyph crisper against saturated blue */
+:root[data-theme="light"] .tab-item[aria-current="page"] .ic svg,
+:root:not([data-theme="dark"]) .tab-item[aria-current="page"] .ic svg {
+  /* use the dark text color for the active glyph in light mode so it reads
+     clearly against the saturated blue indicator */
+  stroke: var(--text);
+  stroke-width: 2.2;
+}
+:root[data-theme="light"] .tab-item[aria-current="page"] .ic,
+:root:not([data-theme="dark"]) .tab-item[aria-current="page"] .ic {
+  /* reduce the bright white halo which made icons look washed out; keep a
+     subtle drop shadow for depth */
+  text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+/* Slightly stronger inner highlight behind icon to lift it */
+:root[data-theme="light"] .tab-indicator::after,
+:root:not([data-theme="dark"]) .tab-indicator::after {
+  /* use a subtle darker tint for the inner glow so a dark glyph keeps good contrast */
+  background: rgba(0,0,0,0.06);
+  filter: blur(10px);
+}
 .tab-indicator.visible { opacity: 1; }
 .tab-indicator.pop { transform: translateY(-4px) scale(1.02); }
 

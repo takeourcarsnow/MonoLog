@@ -38,7 +38,14 @@ Replaced all emoji icons with **Lucide React** - a beautiful, consistent, and pr
 - 🎛️ Basic → `<Sliders />`
 - 🎨 Filters → `<Palette />`
 - ✨ Effects → `<Sparkles />`
+- ✂️ Crop → `<Scissors />`
 - 🖼️ Frame → `<Image />`
+
+#### Basic Panel
+- ☀️ Exposure → `<SunDim />`
+- ⚖️ Contrast → `<Scale />`
+- 🌈 Saturation → `<Rainbow />`
+- 🌡️ Temperature → `<Thermometer />`
 
 #### Filter Presets
 - 🔁 None → `<RotateCcw />`
@@ -50,6 +57,16 @@ Replaced all emoji icons with **Lucide React** - a beautiful, consistent, and pr
 - 📷 Lomo → `<Camera />`
 - 🔆 Warm → `<Sun />`
 - ❄️ Cool → `<Snowflake />`
+
+#### Effects Panel
+- 🕶️ Vignette → `<Aperture />`
+- 🎚️ Grain → `<Layers />`
+- 💤 Soft Focus → `<ZapOff />`
+- 🎞️ Fade → `<Film />`
+- 🪞 Matte → `<Square />`
+
+#### Frame Panel
+- 📏 Thickness → `<Ruler />`
 
 ### Post Card (`PostCard.tsx`)
 - 🔒 Private lock → `<Lock />`

@@ -10,7 +10,32 @@ const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '-
 // AppShell is a client component that uses next/navigation hooks. Dynamically
 // load it on the client only to avoid calling client-only hooks during server
 // rendering which can cause `useContext` to be null in dev/hydration.
-const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.AppShell), { ssr: false });
+const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.AppShell), { 
+  ssr: false,
+  loading: () => (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '100vh',
+      background: 'var(--bg)',
+      color: 'var(--text)'
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ 
+          width: 40, 
+          height: 40, 
+          border: '3px solid var(--border)', 
+          borderTopColor: 'var(--primary)',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+          margin: '0 auto 12px'
+        }} />
+        <style dangerouslySetInnerHTML={{ __html: '@keyframes spin { to { transform: rotate(360deg); } }' }} />
+      </div>
+    </div>
+  )
+});
 
 export const metadata: Metadata = {
   title: "MonoLog — one post per day",

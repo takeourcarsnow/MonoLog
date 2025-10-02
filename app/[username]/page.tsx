@@ -67,7 +67,18 @@ export default function UsernamePage({ params }: { params: { username: string } 
     return () => { mounted = false; };
   }, [params.username]);
 
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="view-fade">
+        <div className="card skeleton" style={{ height: 120, maxWidth: 800, margin: '24px auto' }} />
+        <div className="grid" aria-label="Loading posts">
+          <div className="tile skeleton" style={{ height: 160 }} />
+          <div className="tile skeleton" style={{ height: 160 }} />
+          <div className="tile skeleton" style={{ height: 160 }} />
+        </div>
+      </div>
+    );
+  }
   if (!resolvedId) return null; // notFound() will handle this
 
   return <ProfileView userId={resolvedId} />;

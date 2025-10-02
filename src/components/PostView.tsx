@@ -45,7 +45,9 @@ export function PostView({ id, initialPost }: { id: string; initialPost?: Hydrat
       <div className="toolbar">
         <button className="btn" onClick={goBack}>← Back</button>
       </div>
-      {loading ? <div className="dim">Loading post…</div> : (
+      {loading ? (
+        <div className="card skeleton" style={{ height: 400, maxWidth: 800, margin: '24px auto' }} />
+      ) : (
   post ? <PostCard post={post} allowCarouselTouch={true} /> : <div className="empty">Post not found.</div>
       )}
     </div>

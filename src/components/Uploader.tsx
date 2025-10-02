@@ -51,7 +51,13 @@ export function Uploader() {
     return () => { mounted = false; if (typeof window !== 'undefined') window.removeEventListener('auth:changed', onAuth); };
   }, []);
 
-  if (me === undefined) return <div className="view-fade">Loading…</div>;
+  if (me === undefined) {
+    return (
+      <div className="view-fade">
+        <div className="card skeleton" style={{ height: 200, maxWidth: 600, margin: '24px auto' }} />
+      </div>
+    );
+  }
   if (!me) {
     return (
       <div className="view-fade auth-host" style={{ maxWidth: 520, margin: '28px auto 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>

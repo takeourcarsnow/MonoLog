@@ -86,6 +86,7 @@ export function ProfileView({ userId }: { userId?: string }) {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   const toast = useToast();
+  const followInFlightRef = useRef(false);
 
   // Inline edit state (when viewing own profile we allow editing directly in header)
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -412,14 +413,31 @@ export function ProfileView({ userId }: { userId?: string }) {
                   }
                   // Defensive: prevent following yourself even if route param matched unexpectedly
                   if (cur.id === user.id) return;
-                  if (!following) {
-                    await api.follow(user.id);
-                    setFollowing(true);
-                    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: user.id, following: true } })); } catch (e) { /* ignore */ }
-                  } else {
-                    await api.unfollow(user.id);
-                    setFollowing(false);
-                    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: user.id, following: false } })); } catch (e) { /* ignore */ }
+
+                  // Prevent duplicate inflight requests
+                  if (followInFlightRef.current) return;
+
+                  // Treat null/undefined as not-following
+                  const prev = !!following;
+                  // Optimistic update: flip state immediately
+                  setFollowing(!prev);
+                  // Dispatch follow change immediately so other UI can respond optimistically
+                  try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: user.id, following: !prev } })); } catch (_) {}
+
+                  followInFlightRef.current = true;
+                  try {
+                    if (!prev) {
+                      await api.follow(user.id);
+                    } else {
+                      await api.unfollow(user.id);
+                    }
+                  } catch (e: any) {
+                    // Revert optimistic change on error and show toast
+                    setFollowing(prev);
+                    try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}
+                  }
+                  finally {
+                    followInFlightRef.current = false;
                   }
                 }}
               >

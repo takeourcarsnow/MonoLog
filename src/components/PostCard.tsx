@@ -123,6 +123,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   }, [post.user?.id, post.user?.avatarUrl]);
 
   const toast = useToast();
+  const followInFlightRef = useRef(false);
 
   const userLine = useMemo(() => {
     const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
@@ -592,14 +593,24 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                         setShowAuth(true);
                         return;
                       }
-                      if (!isFollowing) {
-                        await api.follow(post.userId);
-                        setIsFollowing(true);
-                        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: true } })); } catch (e) { /* ignore */ }
-                      } else {
-                        await api.unfollow(post.userId);
-                        setIsFollowing(false);
-                        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: false } })); } catch (e) { /* ignore */ }
+                      if (followInFlightRef.current) return;
+                      const prev = !!isFollowing;
+                      // optimistic UI flip
+                      setIsFollowing(!prev);
+                      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
+                      followInFlightRef.current = true;
+                      try {
+                        if (!prev) {
+                          await api.follow(post.userId);
+                        } else {
+                          await api.unfollow(post.userId);
+                        }
+                      } catch (e: any) {
+                        // revert on error
+                        setIsFollowing(prev);
+                        try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}
+                      } finally {
+                        followInFlightRef.current = false;
                       }
                     }}
                   >

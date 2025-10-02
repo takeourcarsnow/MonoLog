@@ -22,6 +22,16 @@ const nextConfig = {
     // lucide-react tree-shakes well, but this shaves a few KB of parser/edge cases.
     optimizePackageImports: ['lucide-react'],
   },
+  // Image optimization configuration
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+  // Compress with gzip
+  compress: true,
+  // Power optimizations
+  poweredByHeader: false,
   async headers() {
     return [
       {

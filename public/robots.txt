@@ -3,5 +3,7 @@ Allow: /
 
 # Disallow Next.js build output and API routes from indexing
 Disallow: /api/
+Disallow: /_next/
 
-Sitemap: https://example.com/sitemap.xml
+# Note: Update the sitemap URL below with your actual domain
+# Sitemap: https://yourdomain.com/sitemap.xml

@@ -15,6 +15,33 @@ const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.A
 export const metadata: Metadata = {
   title: "MonoLog — one post per day",
   description: "Daily photo journal. Attach multiple images to a single post.",
+  keywords: ["daily journal", "photo diary", "privacy", "one post per day", "personal log"],
+  authors: [{ name: "MonoLog" }],
+  creator: "MonoLog",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://example.com",
+    title: "MonoLog — one post per day",
+    description: "Daily photo journal. Attach multiple images to a single post.",
+    siteName: "MonoLog",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MonoLog — one post per day",
+    description: "Daily photo journal. Attach multiple images to a single post.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   // themeColor must be placed in the `viewport` export in Next.js 14+
   other: {
     "color-scheme": "light dark"

@@ -1,5 +1,36 @@
+# Dependencies
 node_modules
 package-lock.json
+
+# Next.js
 .next
+out
+*.tsbuildinfo
+
+# Environment variables
+.env*.local
 .env.local
-tsconfig.tsbuildinfo
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vercel
+.vercel
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+.DS_Store

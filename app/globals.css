@@ -1966,6 +1966,186 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   100% { transform: scale(1); opacity: 0; }
 }
 
+/* Follow button specific styles — minimalistic */
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 20%);
+  color: var(--text);
+  font-weight: 700;
+  /* smoother, slightly springy transitions for organic feel */
+  transition: background 320ms cubic-bezier(.2,.9,.2,1),
+              border-color 320ms cubic-bezier(.2,.9,.2,1),
+              color 240ms cubic-bezier(.2,.9,.2,1),
+              transform 340ms cubic-bezier(.2,.9,.2,1);
+}
+.follow-btn .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; color: var(--muted); transition: color 240ms cubic-bezier(.2,.9,.2,1), transform 300ms cubic-bezier(.2,.9,.2,1); will-change: transform; }
+.follow-btn .label { display: inline-block; font-weight: 600; transform-origin: left center; transition: opacity 240ms cubic-bezier(.2,.9,.2,1), transform 300ms cubic-bezier(.2,.9,.2,1); }
+
+/* Not following: subtle outline using primary, minimal fill */
+.follow-btn.not-following { background: transparent; border-color: color-mix(in srgb, var(--primary), var(--border) 85%); color: var(--primary); }
+.follow-btn.not-following .icon { color: var(--primary); }
+
+/* Remove colored glow: prefer neutral outline instead of blue/green mix */
+.follow-btn.not-following { border-color: var(--border); }
+
+/* Following: subtle muted filled state */
+.follow-btn.following { background: color-mix(in srgb, var(--bg-elev), transparent 6%); border-color: color-mix(in srgb, var(--border), transparent 40%); color: var(--muted); }
+.follow-btn.following .icon { color: var(--muted); transform: translateY(-1px) scale(1.02); }
+.follow-btn.following::after { content: ""; position: absolute; inset: 0; margin: -6px; border-radius: 999px; pointer-events: none; border: 1px solid rgba(0,0,0,0.03); box-shadow: none; }
+
+/* Smaller, subtler pop animations */
+.follow-btn.following-anim::after { animation: followPop 320ms cubic-bezier(.2,.8,.2,1); }
+.follow-btn.unfollow-anim::after { animation: unfollowPop 320ms cubic-bezier(.2,.8,.2,1); }
+
+/* Animate the icon and label when the temporary animation class is added.
+   This creates an organic transition between states when JS toggles follow. */
+.follow-btn.following-anim .icon {
+  animation: followIcon 380ms cubic-bezier(.22,.9,.28,1);
+}
+.follow-btn.following-anim .label {
+  animation: followLabelIn 380ms cubic-bezier(.22,.9,.28,1);
+}
+.follow-btn.unfollow-anim .icon {
+  animation: unfollowIcon 320ms cubic-bezier(.22,.9,.28,1);
+}
+.follow-btn.unfollow-anim .label {
+  animation: followLabelOut 320ms cubic-bezier(.22,.9,.28,1);
+}
+
+/* Icon/label keyframes */
+@keyframes followIcon {
+  0% { transform: translateY(0) scale(.92) rotate(-4deg); opacity: 0.9; }
+  45% { transform: translateY(-6px) scale(1.14) rotate(8deg); opacity: 1; }
+  100% { transform: translateY(-1px) scale(1.02) rotate(0deg); opacity: 1; }
+}
+@keyframes unfollowIcon {
+  0% { transform: translateY(-1px) scale(1.02) rotate(0deg); opacity: 1; }
+  50% { transform: translateY(2px) scale(.94) rotate(-6deg); opacity: 0.92; }
+  100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes followLabelIn {
+  0% { transform: translateX(6px) scale(.98); opacity: 0; }
+  60% { transform: translateX(-2px) scale(1.03); opacity: 1; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes followLabelOut {
+  0% { transform: translateX(0) scale(1); opacity: 1; }
+  50% { transform: translateX(4px) scale(.98); opacity: 0.6; }
+  100% { transform: translateX(6px) scale(.96); opacity: 0; }
+}
+
+/* Icon-reveal helpers (kept but tuned) */
+.follow-btn.icon-reveal .icon { transition: transform 180ms var(--transition-fast), opacity 160ms var(--transition-fast); }
+.follow-btn.icon-reveal .label { transition: transform 200ms var(--transition-fast), opacity 160ms var(--transition-fast); }
+
+@media (max-width: 640px) {
+  .follow-btn { padding: 8px 10px; gap: 6px; }
+  .follow-btn .label { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .label { transition: none !important; animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn.following-anim .icon,
+  .follow-btn.unfollow-anim .icon,
+  .follow-btn.following-anim .label,
+  .follow-btn.unfollow-anim .label,
+  .follow-btn.following-anim::after,
+  .follow-btn.unfollow-anim::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Theme-specific adjustments for follow button so it reads well in light/dark */
+:root[data-theme="light"] .btn.following::after,
+:root:not([data-theme="dark"]) .btn.following::after {
+  border-color: color-mix(in srgb, var(--accent), transparent 86%);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--accent), transparent 88%);
+}
+
+:root[data-theme="dark"] .btn.following::after {
+  /* darker theme: slightly brighter ring to be visible on dark bg */
+  border-color: color-mix(in srgb, var(--accent), transparent 72%);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent), transparent 74%);
+}
+
+:root[data-theme="light"] .follow-btn.not-following {
+  /* keep the subtle primary outline but slightly softer on light */
+  border-color: color-mix(in srgb, var(--primary), var(--border) 88%);
+}
+
+:root[data-theme="dark"] .follow-btn.not-following {
+  /* on dark backgrounds, use a slightly more opaque primary outline for clarity */
+  border-color: color-mix(in srgb, var(--primary), rgba(255,255,255,0.04) 40%);
+}
+
+:root[data-theme="light"] .follow-btn.following {
+  background: color-mix(in srgb, var(--bg-elev), transparent 6%);
+  border-color: color-mix(in srgb, var(--border), transparent 40%);
+  /* ensure label/icon use the dark text color in light theme for better contrast */
+  color: var(--text);
+}
+
+:root[data-theme="light"] .follow-btn.following .icon {
+  color: var(--text);
+}
+
+/* Neutralize any colored ring/glow for following in light theme */
+:root[data-theme="light"] .btn.following::after,
+:root:not([data-theme="dark"]) .btn.following::after {
+  border-color: color-mix(in srgb, var(--border), transparent 40%) !important;
+  box-shadow: none !important;
+}
+
+/* Global override: completely remove colored glow for any follow button variants */
+/* This covers legacy selectors and ensures no colored box-shadow shows up */
+.follow-btn.following::after,
+.btn.following::after,
+.follow-btn.following,
+.btn.following {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  border-color: var(--border) !important;
+  background: transparent !important;
+}
+
+/* ensure the inner icon/text doesn't inherit a colored shadow or filter */
+.follow-btn.following .icon,
+.btn.following .icon,
+.follow-btn.following .label,
+.btn.following .label {
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Remove the visible outline/halo when the follow button is clicked (mouse).
+   Keep keyboard focus visible by only hiding for :focus that is NOT :focus-visible. */
+.follow-btn:focus:not(:focus-visible),
+.btn.following:focus:not(:focus-visible),
+.follow-btn.following:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.follow-btn:focus:not(:focus-visible)::after,
+.btn.following:focus:not(:focus-visible)::after,
+.follow-btn.following:focus:not(:focus-visible)::after {
+  box-shadow: none !important;
+}
+
+:root[data-theme="dark"] .follow-btn.following {
+  /* make sure the filled state contrasts on dark backgrounds */
+  background: color-mix(in srgb, var(--bg-elev), transparent 10%);
+  border-color: color-mix(in srgb, var(--border), transparent 36%);
+}
+
 /* Profile header layout refinements */
 .profile-header {
   padding: 24px;

@@ -9,7 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Comments } from "./Comments";
 import ImageZoom from "./ImageZoom";
-import { Lock } from "lucide-react";
+import { Lock, UserPlus, UserCheck } from "lucide-react";
 import { AuthForm } from "./AuthForm";
 import { useToast } from "./Toast";
 
@@ -124,6 +124,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
 
   const toast = useToast();
   const followInFlightRef = useRef(false);
+  const followBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [followAnim, setFollowAnim] = useState<'following-anim' | 'unfollow-anim' | null>(null);
 
   const userLine = useMemo(() => {
     const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
@@ -584,7 +586,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
               {!isMe ? (
                 <>
                   <button
-                    className="btn follow-btn"
+                    ref={followBtnRef}
+                    className={`btn follow-btn icon-reveal ${isFollowing ? 'following' : 'not-following'} ${followAnim || ''}`}
                     aria-pressed={isFollowing}
                     onClick={async () => {
                       const cur = await api.getCurrentUser();
@@ -597,6 +600,9 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                       const prev = !!isFollowing;
                       // optimistic UI flip
                       setIsFollowing(!prev);
+                      // trigger a small pop animation (use existing CSS animation hooks)
+                      const willFollow = !prev;
+                      setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
                       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
                       followInFlightRef.current = true;
                       try {
@@ -611,10 +617,15 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                         try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}
                       } finally {
                         followInFlightRef.current = false;
+                        // cleanup animation state after it runs
+                        setTimeout(() => setFollowAnim(null), 520);
                       }
                     }}
                   >
-                    {isFollowing ? "Following" : "Follow"}
+                    <span className="icon" aria-hidden="true">
+                      {isFollowing ? <UserCheck size={16} /> : <UserPlus size={16} />}
+                    </span>
+                    <span className="reveal label">{isFollowing ? 'Following' : 'Follow'}</span>
                   </button>
                   {showAuth ? (
                     <>

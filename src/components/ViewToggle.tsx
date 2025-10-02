@@ -1,4 +1,4 @@
-function ViewToggle({ title, subtitle, selected, onSelect }: { title: string; subtitle: string; selected: "list" | "grid"; onSelect: (v: "list" | "grid") => void }) {
+function ViewToggle({ title, subtitle, selected, onSelect }: { title: React.ReactNode; subtitle: string; selected: "list" | "grid"; onSelect: (v: "list" | "grid") => void }) {
   return (
     <div className="view-toggle">
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

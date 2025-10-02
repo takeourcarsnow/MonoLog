@@ -11,6 +11,7 @@ import Link from "next/link";
 import { ViewToggle } from "./ViewToggle";
 import { tabs } from "./NavBarClient";
 import { useRouter } from "next/navigation";
+import { Home } from "lucide-react";
 
 export function FeedView() {
   const [posts, setPosts] = useState<HydratedPost[]>([]);
@@ -233,7 +234,7 @@ export function FeedView() {
 
   return (
     <div className="view-fade">
-      <ViewToggle title={tabs.find(t => t.href === '/feed')?.icon || '🏠'} subtitle="MonoLogs from people that you follow" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("feedView", v); }} />
+      <ViewToggle title={<Home size={20} strokeWidth={2} />} subtitle="MonoLogs from people that you follow" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("feedView", v); }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         {loadingMore ? <div className="dim">Loading more…</div> : null}
       </div>

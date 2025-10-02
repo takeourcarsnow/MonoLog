@@ -3,13 +3,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { Home, Compass, Plus, Calendar, User } from "lucide-react";
 
 export const tabs = [
-  { href: "/feed", label: "Feed", icon: "🏠" },
-  { href: "/explore", label: "Explore", icon: "🧭" },
-  { href: "/upload", label: "Post", icon: "➕" },
-  { href: "/calendar", label: "Calendar", icon: "🗓️" },
-  { href: "/profile", label: "Profile", icon: "👤" },
+  { href: "/feed", label: "Feed", icon: Home },
+  { href: "/explore", label: "Explore", icon: Compass },
+  { href: "/upload", label: "Post", icon: Plus },
+  { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function NavBarClient() {
@@ -168,7 +169,7 @@ export function NavBarClient() {
               aria-current={isActive ? "page" : undefined}
               aria-label={t.label}
             >
-              <div className="ic">{t.icon}</div>
+              <div className="ic"><t.icon size={24} strokeWidth={2} /></div>
               <div>{t.label}</div>
             </button>
           );

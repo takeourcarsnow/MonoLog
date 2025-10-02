@@ -38,7 +38,12 @@ export function toggleTheme() {
   return next;
 }
 
+export function currentTheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "light";
+  return (document.documentElement.getAttribute("data-theme") as "light" | "dark") || "light";
+}
+
 export function currentThemeIcon() {
-  const v = (typeof document !== "undefined" ? document.documentElement.getAttribute("data-theme") : "light") || "light";
+  const v = currentTheme();
   return v === "light" ? "🌞" : "🌙";
 }

@@ -9,6 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Comments } from "./Comments";
 import ImageZoom from "./ImageZoom";
+import { Lock } from "lucide-react";
 import { AuthForm } from "./AuthForm";
 import { useToast } from "./Toast";
 
@@ -120,13 +121,16 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
     return () => { mounted = false; };
   }, [post.user?.id, post.user?.avatarUrl]);
 
-  const lock = post.public ? "" : "🔒";
-
   const toast = useToast();
 
   const userLine = useMemo(() => {
-    return `@${post.user.username} • ${formatRelative(post.createdAt)} ${lock}`;
-  }, [post.user.username, post.createdAt, lock]);
+    const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
+    return (
+      <>
+        @{post.user.username} • {formatRelative(post.createdAt)} {lockIcon}
+      </>
+    );
+  }, [post.user.username, post.createdAt, post.public]);
 
   // Normalize image urls and alt text for rendering
   const imageUrls: string[] = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);

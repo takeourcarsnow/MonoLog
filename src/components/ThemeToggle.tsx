@@ -1,18 +1,20 @@
 "use client";
-import { currentThemeIcon, toggleTheme } from "@/lib/theme";
+import { currentTheme, toggleTheme } from "@/lib/theme";
 import { useEffect, useState } from "react";
+import { Sun, Moon } from "lucide-react";
 
 export function ThemeToggle() {
-  const [icon, setIcon] = useState("🌓");
-  useEffect(() => setIcon(currentThemeIcon()), []);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  useEffect(() => setTheme(currentTheme()), []);
+  const Icon = theme === "light" ? Sun : Moon;
   return (
     <button
       className="btn icon"
       title="Toggle theme"
       aria-label="Toggle theme"
-      onClick={() => { toggleTheme(); setIcon(currentThemeIcon()); }}
+      onClick={() => { const newTheme = toggleTheme(); setTheme(newTheme); }}
     >
-      {icon}
+      <Icon size={20} strokeWidth={2} />
     </button>
   );
 }

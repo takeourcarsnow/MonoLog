@@ -1,6 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
+import { RotateCcw, Circle, Film, Droplet, Feather, Camera, Sun, Snowflake, Clapperboard, Sliders, Palette, Sparkles, Image as ImageIcon } from "lucide-react";
+
+// Filter icon mapping
+const FILTER_ICONS: Record<string, React.ComponentType<any>> = {
+  none: RotateCcw,
+  sepia: Circle,
+  mono: Circle,
+  cinema: Clapperboard,
+  bleach: Droplet,
+  vintage: Feather,
+  lomo: Camera,
+  warm: Sun,
+  cool: Snowflake,
+  default: Film
+};
 
 // helper: generate a small noise canvas scaled to requested size for grain effect
 function generateNoiseCanvas(w: number, h: number, intensity: number) {
@@ -1263,7 +1278,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('basic'); }}
     style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'basic' ? 'transparent' : 'transparent', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'basic' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'🎛️'}</span>
+    <Sliders size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Basic</span>
   </button>
 
@@ -1276,7 +1291,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('color'); }}
     style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'color' ? 'transparent' : 'transparent', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'color' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'🎨'}</span>
+    <Palette size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Filters</span>
   </button>
 
@@ -1289,7 +1304,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('effects'); }}
     style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'effects' ? 'transparent' : 'transparent', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'effects' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'✨'}</span>
+    <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Effects</span>
   </button>
 
@@ -1315,7 +1330,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('frame'); }}
     style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'frame' ? 'transparent' : 'transparent', color: selectedCategory === 'frame' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'frame' ? 700 : 500, overflow: 'hidden' }}
   >
-    <span aria-hidden style={{ lineHeight: 1, fontSize: 20, flexShrink: 0 }}>{'🖼️'}</span>
+    <ImageIcon size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Frame</span>
   </button>
   </div>
@@ -1387,7 +1402,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
               {/* animated highlight pill sits behind buttons and moves between them */}
               <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 11, background: 'linear-gradient(135deg, var(--primary), #60a5fa)', transition: 'left 260ms cubic-bezier(.2,.9,.2,1), width 260ms cubic-bezier(.2,.9,.2,1), top 260ms cubic-bezier(.2,.9,.2,1), height 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease', pointerEvents: 'none', opacity: filterHighlight ? 1 : 0, boxShadow: '0 4px 16px rgba(0,125,255,0.3)' }} />
               {Object.keys(FILTER_PRESETS).map(f => {
-                const emoji = f === 'none' ? '🔁' : f === 'sepia' ? '🟤' : f === 'mono' ? '⚪' : f === 'cinema' ? '🎥' : f === 'bleach' ? '🧼' : f === 'vintage' ? '🪶' : f === 'lomo' ? '📷' : f === 'warm' ? '🔆' : f === 'cool' ? '❄️' : '🎞️';
+                const Icon = FILTER_ICONS[f] || FILTER_ICONS.default;
                 return (
                   <button
                     key={f}
@@ -1402,7 +1417,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                     onBlur={(e)=> (e.currentTarget.style.boxShadow = '')}
                     aria-pressed={selectedFilter===f}
                   >
-                    <span aria-hidden style={{ fontSize: 18 }}>{emoji}</span>
+                    <Icon size={18} strokeWidth={2} aria-hidden />
                     <span style={{ fontSize: 13 }}>{f}</span>
                   </button>
                 );

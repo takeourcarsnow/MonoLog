@@ -10,6 +10,7 @@ import { ViewToggle } from "./ViewToggle";
 import { tabs } from "./NavBarClient";
 import { useToast } from "./Toast";
 import { useRouter } from "next/navigation";
+import { Search, Compass } from "lucide-react";
 
 const PostCard = dynamic(() => import("./PostCard").then(m => m.PostCard), { ssr: false });
 
@@ -260,7 +261,7 @@ export function ExploreView() {
   return (
     <div className="view-fade">
       <ViewToggle
-        title={tabs.find(t => t.href === '/explore')?.icon || '🧭'}
+        title={<Compass size={20} strokeWidth={2} />}
         subtitle="MonoLogs from people you aren't following yet"
         selected={view}
         onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("exploreView", v); }}
@@ -270,7 +271,7 @@ export function ExploreView() {
       </div>
       {showHint && posts.length ? (
         <div className="explore-hint" role="note">
-          <span aria-hidden="true">🔍</span>
+          <Search size={16} strokeWidth={2} aria-hidden="true" />
           <span>
             Discover new people — this feed hides posts from users you already follow so you can find fresh creators.
           </span>

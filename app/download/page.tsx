@@ -16,7 +16,7 @@ export default function DownloadPage() {
       <ol className="stack" style={{ gap: '0.5rem', paddingLeft: '1.25rem' }}>
         <li>Download the APK file.</li>
         <li>On your device, open the file once it finishes downloading.</li>
-        <li>Approve the install (enable "Install unknown apps" if prompted).</li>
+  <li>Approve the install (enable &quot;Install unknown apps&quot; if prompted).</li>
         <li>Open MonoLog from your app drawer.</li>
       </ol>
       <div className="card" style={{ padding: '1rem' }}>
@@ -26,7 +26,7 @@ export default function DownloadPage() {
             Download APK
           </a>
         </div>
-        <p style={{ fontSize: '0.8rem', marginTop: '0.75rem', opacity: 0.75 }}>If the download does not start, long-press and choose "Download link".</p>
+  <p style={{ fontSize: '0.8rem', marginTop: '0.75rem', opacity: 0.75 }}>If the download does not start, long-press and choose &quot;Download link&quot;.</p>
       </div>
       <p style={{ fontSize: '0.75rem', opacity: 0.6 }}>Security tip: Always verify the SHA-256 hash you publish next to the download to ensure file integrity.</p>
       <p style={{ fontSize: '0.75rem', opacity: 0.6 }}>Looking for the web app? <Link href="/">Return to MonoLog</Link>.</p>

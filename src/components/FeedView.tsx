@@ -235,10 +235,6 @@ export function FeedView() {
   return (
     <div className="view-fade">
       <ViewToggle title={<Home size={20} strokeWidth={2} />} subtitle="MonoLogs from people that you follow" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("feedView", v); }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        {loadingMore ? <div className="dim">Loading more…</div> : null}
-      </div>
-        {loadingMore ? <div className="dim">Loading more…</div> : null}
       <div className="feed">{render}</div>
     </div>
   );

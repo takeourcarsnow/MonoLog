@@ -1,5 +1,4 @@
 subtly animate logo on hover or click
-when i scroll to top or bottom on phone it should bounce back not just stop instantly
 on phone make sure that double tapping also properly favorites/unfavorites the post like it does on desktop, now it zooms in on double tap
 
 Profile section takes a long time to load and the section highlighter lags because of it until the last tab's highlight switches off

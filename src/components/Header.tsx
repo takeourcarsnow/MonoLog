@@ -10,6 +10,15 @@ import { Info, Star } from "lucide-react";
 
 export function Header() {
   const router = useRouter();
+  const [isLogoAnimating, setIsLogoAnimating] = useState(false);
+
+  const handleLogoClick = () => {
+    setIsLogoAnimating(true);
+    router.push("/");
+    // Reset animation after it completes
+    setTimeout(() => setIsLogoAnimating(false), 400);
+  };
+
   return (
     <header className="header">
       <div className="header-inner">
@@ -17,9 +26,9 @@ export function Header() {
           className="brand"
           role="button"
           aria-label={`${CONFIG.appName} home`}
-          onClick={() => router.push("/")}
+          onClick={handleLogoClick}
         >
-          <div className="logo" aria-hidden="true"></div>
+          <div className={`logo ${isLogoAnimating ? 'animate-bounce' : ''}`} aria-hidden="true"></div>
           <h1>{CONFIG.appName}</h1>
         </button>
         <div className="header-actions" id="header-actions">

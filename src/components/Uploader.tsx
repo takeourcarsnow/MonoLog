@@ -515,7 +515,17 @@ function UploaderCore() {
       } catch (_) { /* ignore */ }
       // clear persisted draft (navigation will unmount but be safe)
       resetDraft();
-      router.push("/profile");
+      // Prefer routing to the user's username route when available so we land
+      // on domain.tld/[username] instead of /profile. Try to refresh user
+      // info if we don't already have it.
+      try {
+        const cur = await api.getCurrentUser();
+        if (cur?.username) router.push(`/${cur.username}`);
+        else if (cur?.id) router.push(`/${cur.id}`);
+        else router.push("/profile");
+      } catch (e) {
+        router.push("/profile");
+      }
     } catch (e: any) {
       if (e?.code === "LIMIT") {
         toast.show("You already posted today. Tap 'Replace today’s post' to replace it.");

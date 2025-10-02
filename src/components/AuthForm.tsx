@@ -67,6 +67,27 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
       if (mode === "signin") {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
+
+        // Ensure the user's profile row exists in the users table.
+        // Fire-and-forget: create or upsert a minimal profile in the background
+        // so that subsequent actions (like creating posts) won't fail with FK errors.
+        (async () => {
+          try {
+            const get = await sb.auth.getUser();
+            const u = (get as any)?.data?.user;
+            if (u) {
+              const synthUsername = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : u.id);
+              const synthDisplay = u.user_metadata?.name || synthUsername;
+              try {
+                await sb.from('users').upsert({ id: u.id, username: synthUsername, display_name: synthDisplay, avatar_url: '/logo.svg' });
+              } catch (e) {
+                // ignore upsert failures; this is best-effort
+              }
+            }
+          } catch (e) {
+            // ignore background errors
+          }
+        })();
       } else {
         // require username for signup
         const chosen = normalizeUsername(username || email.split("@")[0]);
@@ -91,7 +112,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         if (userId) {
           // create a profile row (best-effort)
           try {
-            await sb.from("users").upsert({ id: userId, username: chosen, display_name: chosen, avatar_url: "" });
+            // Set default avatar to the app logo so new users aren't blank
+            await sb.from("users").upsert({ id: userId, username: chosen, display_name: chosen, avatar_url: "/logo.svg" });
           } catch (e) { /* ignore upsert errors for now */ }
         }
         // indicate that a confirmation email (or magic link) was sent

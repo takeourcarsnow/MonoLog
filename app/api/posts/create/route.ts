@@ -12,6 +12,31 @@ export async function POST(req: Request) {
     if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     const sb = getServiceSupabase();
 
+    // --- SAFEGUARD: ensure a matching users row exists to satisfy FK ---
+    // A race or client-side failure to create the profile row (e.g. RLS blocking
+    // insert, swallowed error, or network interruption) can cause a FK violation
+    // when inserting into posts. Since this endpoint uses the service role key,
+    // we can safely create a minimal users row if it does not yet exist.
+    try {
+      const { data: existingUser, error: userSelErr } = await sb.from('users').select('id').eq('id', userId).limit(1).maybeSingle();
+      if (!existingUser && !userSelErr) {
+        const synthUsername = 'user_' + userId.slice(0, 8);
+        const joined = new Date().toISOString();
+        const insertUser: any = { id: userId, username: synthUsername, display_name: synthUsername, joined_at: joined };
+        // Ignore duplicate key / unique violations – another request may create it concurrently
+        const ins = await sb.from('users').insert(insertUser);
+        if (ins.error) {
+          // Log but don't fail post creation; FK may still pass if another request inserted the row.
+          try { logger.warn('[posts.create] user auto-insert failed', { message: ins.error.message, code: ins.error.code }); } catch (e) {}
+        } else {
+          try { logger.debug('[posts.create] created missing user profile row'); } catch (e) {}
+        }
+      }
+    } catch (ensureErr) {
+      // Non-fatal – continue; worst case the original FK error will surface as before.
+      try { logger.warn('[posts.create] ensure user row failed', { err: String(ensureErr) }); } catch (e) {}
+    }
+
     // If replace is true, delete today's posts for the user first
     if (replace) {
       const start = new Date(); start.setHours(0, 0, 0, 0);

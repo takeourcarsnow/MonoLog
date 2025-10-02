@@ -52,12 +52,26 @@ export function NavBarClient() {
 
     // Special handling for profile navigation
     if (href === "/profile") {
+      try {
+        // Try to refresh user info in case it's stale
+        const cur = await api.getCurrentUser();
+        if (cur?.username) {
+          router.push(`/${cur.username}`);
+          return;
+        }
+        if (cur?.id) {
+          router.push(`/${cur.id}`);
+          return;
+        }
+      } catch (e) {
+        // ignore and fall back
+      }
+      // Fallback to previously-known user info or legacy /profile route
       if (currentUser?.username) {
         router.push(`/${currentUser.username}`);
       } else if (currentUser?.id) {
         router.push(`/${currentUser.id}`);
       } else {
-        // Fallback to old profile route if no user info
         router.push("/profile");
       }
     } else {

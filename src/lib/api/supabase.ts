@@ -5,6 +5,8 @@ import { uid } from "../id";
 import { logger } from "../logger";
 
 let supabase: SupabaseClient | null = null;
+// Default avatar used when a user has not set one; points to public/logo.svg.
+const DEFAULT_AVATAR = "/logo.svg";
 // cached auth user to avoid repeated auth.getUser() calls during a client session.
 // undefined = not yet fetched, null = fetched and no active session, object = auth user
 let cachedAuthUser: any | null | undefined = undefined;
@@ -118,7 +120,7 @@ function mapProfileToUser(profile: any) {
     id: profile.id,
     username: profile.username || profile.user_name || "",
     displayName: profile.displayName || profile.display_name || "",
-    avatarUrl: profile.avatarUrl || profile.avatar_url || "",
+  avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
     joinedAt: profile.joinedAt || profile.joined_at,
     following: profile.following,
@@ -180,7 +182,7 @@ function mapRowToHydratedPost(row: any): HydratedPost {
       id: row.users?.id || row.user_id,
       username: row.users?.username || row.users?.user_name || "",
       displayName: row.users?.displayName || row.users?.display_name || "",
-      avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || "",
+        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || DEFAULT_AVATAR,
     },
     // If the server query included a `comments` array, use its length. Otherwise
     // fall back to common count columns or 0.
@@ -194,16 +196,10 @@ function mapRowToHydratedPost(row: any): HydratedPost {
 // callers can still get a profile row (without the requested field) and continue.
 async function selectUserFields(sb: SupabaseClient, id: string, fields: string) {
   try {
-    // To avoid triggering a 400 from the REST schema cache when requesting a column
-    // that may not exist, fetch the entire profile first (select('*')). This is
-    // safe and prevents the Supabase REST API from returning a Bad Request for
-    // unknown columns. If callers specifically need only the requested fields,
-    // they can still read them from the returned row.
-    const res: any = await sb.from("users").select("*").eq("id", id).limit(1).single();
-    if (res?.error) return res;
+    // Use maybeSingle so a missing row returns { data: null, error: null }
+    const res: any = await sb.from("users").select("*").eq("id", id).limit(1).maybeSingle();
     return res;
   } catch (e) {
-    // In case the client throws, return a shaped object similar to Supabase responses
     return { data: null, error: e } as any;
   }
 }
@@ -245,56 +241,32 @@ export const supabaseApi: Api = {
       const user = await getCachedAuthUser(sb);
       if (!user) return null;
       // try to find a matching profile in users table
-  const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).single();
-      // If the query errored, avoid writing to the DB (could clobber existing rows).
-      // Only create a minimal profile when the select succeeded and returned no row.
+      const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).maybeSingle();
       if (profErr) {
-        // couldn't read users table; return a synthesized profile based on auth metadata
+        // Real query error (e.g. permissions); fall back to synthesized profile (no DB write)
         const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
         const synthDisplay = user.user_metadata?.name || synthUsername;
-        const synthAvatar = user.user_metadata?.avatar_url;
+  const synthAvatar = user.user_metadata?.avatar_url || DEFAULT_AVATAR;
         const joinedAt = new Date().toISOString();
-        return {
-          id: user.id,
-          username: synthUsername,
-          displayName: synthDisplay,
-          avatarUrl: synthAvatar,
-          joinedAt,
-        } as any;
+        return { id: user.id, username: synthUsername, displayName: synthDisplay, avatarUrl: synthAvatar, joinedAt } as any;
       }
 
       if (!profile) {
-        // synthesize and upsert a profile row so the DB and UI are in sync
+        // Row truly missing. Insert a minimal profile.
         const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-        // default display name to the username when no explicit name metadata exists
         const synthDisplay = user.user_metadata?.name || synthUsername;
-        const synthAvatar = user.user_metadata?.avatar_url;
+  const synthAvatar = user.user_metadata?.avatar_url || DEFAULT_AVATAR;
         const joinedAt = new Date().toISOString();
-        const upsertObj: any = {
-          id: user.id,
-          username: synthUsername,
-          display_name: synthDisplay,
-          joined_at: joinedAt,
-        };
-        // only set avatar_url when the auth metadata has one; avoid overwriting an existing DB value with an empty string
-        if (synthAvatar) upsertObj.avatar_url = synthAvatar;
-        // perform insert (creates a DB profile if missing). If the row was
-        // concurrently created we will get a duplicate-key error which we
-        // safely ignore.
+        const insertObj: any = { id: user.id, username: synthUsername, display_name: synthDisplay, joined_at: joinedAt };
+  if (synthAvatar) insertObj.avatar_url = synthAvatar;
         try {
-          await sb.from("users").insert(upsertObj);
+          await sb.from("users").insert(insertObj);
         } catch (e) {
-          // ignore insert errors, still return synthesized profile
+          // ignore duplicate or RLS failures; we still return synthesized profile
         }
-        return {
-          id: user.id,
-          username: synthUsername,
-          displayName: synthDisplay,
-          avatarUrl: synthAvatar,
-          joinedAt,
-        } as any;
-  }
-  return mapProfileToUser(profile) as any;
+        return { id: user.id, username: synthUsername, displayName: synthDisplay, avatarUrl: synthAvatar, joinedAt } as any;
+      }
+      return mapProfileToUser(profile) as any;
     } catch (e) {
       return null;
     }
@@ -535,7 +507,7 @@ export const supabaseApi: Api = {
       id: profile.id,
       username: profile.username || profile.user_name,
       displayName: profile.displayName || profile.display_name,
-      avatarUrl: profile.avatarUrl || profile.avatar_url,
+  avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
       bio: profile.bio,
       joinedAt: profile.joinedAt || profile.joined_at,
     } as any;
@@ -565,7 +537,7 @@ export const supabaseApi: Api = {
       id: profile.id,
       username: profile.username || profile.user_name,
       displayName: profile.displayName || profile.display_name,
-      avatarUrl: profile.avatarUrl || profile.avatar_url,
+  avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
       bio: profile.bio,
       joinedAt: profile.joinedAt || profile.joined_at,
     } as any;
@@ -726,7 +698,7 @@ export const supabaseApi: Api = {
           id: urow?.id || c.user_id,
           username: urow?.username || urow?.user_name || "",
           displayName: urow?.displayName || urow?.display_name || "",
-          avatarUrl: urow?.avatarUrl || urow?.avatar_url || "",
+            avatarUrl: urow?.avatarUrl || urow?.avatar_url || DEFAULT_AVATAR,
         }
       };
     });

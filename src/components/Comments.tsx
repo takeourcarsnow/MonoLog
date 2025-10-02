@@ -27,7 +27,7 @@ export function Comments({ postId, onCountChange }: Props) {
       <div className="comment-list">
         {comments.map((c) => (
           <div key={c.id} className="comment-item">
-            <img className="comment-avatar" src={c.user?.avatarUrl || ""} alt={c.user?.displayName || "User"} />
+            <img className="comment-avatar" src={c.user?.avatarUrl || "/logo.svg"} alt={c.user?.displayName || "User"} />
             <div className="comment-body">
               <div className="comment-head">
                 <span className="author">{c.user?.displayName || "User"}</span>

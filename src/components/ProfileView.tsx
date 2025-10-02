@@ -295,7 +295,18 @@ export function ProfileView({ userId }: { userId?: string }) {
                   <input ref={displayNameRef} className="input" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
                 </label>
                 <label style={{ display: 'block', marginBottom: 8 }}>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Username (used in @handle)</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>Username (used in @handle)</div>
+                    {user.usernameChangedAt && (() => {
+                      const lastChanged = new Date(user.usernameChangedAt).getTime();
+                      const hoursSince = (Date.now() - lastChanged) / (1000 * 60 * 60);
+                      if (hoursSince < 24) {
+                        const hoursRemaining = Math.ceil(24 - hoursSince);
+                        return <div style={{ fontSize: 11, color: 'var(--muted)' }} title="You can only change your username once every 24 hours">🔒 {hoursRemaining}h cooldown</div>;
+                      }
+                      return null;
+                    })()}
+                  </div>
                   <input className="input" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
                 </label>
                 <label className="bio-col" style={{ display: 'block', marginBottom: 8 }}>

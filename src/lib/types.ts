@@ -7,6 +7,7 @@ export type User = {
   joinedAt: string;
   following?: string[];
   favorites?: string[];
+  usernameChangedAt?: string; // Tracks last username change for 24-hour cooldown
 };
 
 export type Post = {

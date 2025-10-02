@@ -125,6 +125,7 @@ function mapProfileToUser(profile: any) {
     joinedAt: profile.joinedAt || profile.joined_at,
     following: profile.following,
     favorites: profile.favorites,
+    usernameChangedAt: profile.username_changed_at || profile.usernameChangedAt,
   } as any;
 }
 
@@ -518,8 +519,36 @@ export const supabaseApi: Api = {
     ensureAuthListener(sb);
     const user = await getCachedAuthUser(sb);
     if (!user) throw new Error("Not logged in");
+    
+    // Check if username is being changed and enforce 24-hour cooldown
+    if (patch.username !== undefined) {
+      const { data: currentProfile } = await sb.from("users").select("username, username_changed_at").eq("id", user.id).limit(1).single();
+      
+      if (currentProfile) {
+        const lastChanged = currentProfile.username_changed_at;
+        const now = Date.now();
+        
+        // Only enforce cooldown if username is actually changing
+        if (currentProfile.username !== patch.username) {
+          if (lastChanged) {
+            const lastChangedTime = new Date(lastChanged).getTime();
+            const hoursSinceChange = (now - lastChangedTime) / (1000 * 60 * 60);
+            
+            if (hoursSinceChange < 24) {
+              const hoursRemaining = Math.ceil(24 - hoursSinceChange);
+              const nextChangeDate = new Date(lastChangedTime + 24 * 60 * 60 * 1000);
+              throw new Error(`You can only change your username once every 24 hours. Try again in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''} (${nextChangeDate.toLocaleString()}).`);
+            }
+          }
+        }
+      }
+    }
+    
     const upsertObj: any = { id: user.id };
-    if (patch.username !== undefined) upsertObj.username = patch.username;
+    if (patch.username !== undefined) {
+      upsertObj.username = patch.username;
+      upsertObj.username_changed_at = new Date().toISOString();
+    }
     if (patch.displayName !== undefined) upsertObj.display_name = patch.displayName;
     if (patch.avatarUrl !== undefined) upsertObj.avatar_url = patch.avatarUrl;
     if (patch.bio !== undefined) upsertObj.bio = patch.bio;
@@ -540,6 +569,7 @@ export const supabaseApi: Api = {
   avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
       bio: profile.bio,
       joinedAt: profile.joinedAt || profile.joined_at,
+      usernameChangedAt: profile.username_changed_at || profile.usernameChangedAt,
     } as any;
   },
 

@@ -120,6 +120,10 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .header-inner {
   max-width: var(--maxw); margin: 0 auto; padding: 12px 16px;
   display: flex; align-items: center; gap: 10px; justify-content: space-between;
+  /* Ensure the header never expands beyond its container (prevents
+     long inline labels from increasing the app width on small screens). */
+  width: 100%;
+  box-sizing: border-box;
 }
 .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .brand .logo {
@@ -131,6 +135,10 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.2px; }
 
 .header-actions { display: flex; align-items: center; gap: 8px; }
+/* allow header action group to shrink when space is tight (prevents
+  the header from growing wider than the viewport when account text
+  is present). */
+.header-actions { min-width: 0; }
 
 /* Normalize header action button heights so icon-only and text buttons match */
 .header-actions .btn {
@@ -143,6 +151,26 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 /* Keep existing square sizing for icon variant; remove extra horizontal padding */
 .header-actions .btn.icon {
   padding: 0; /* .btn.icon already sets fixed size; zero padding ensures perfect circle */
+}
+
+/* Account switcher button: prevent long usernames from expanding the header.
+   Keep avatar fixed size and clamp the label with ellipsis. */
+.account-switcher .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* allow truncation */
+  padding: 6px 10px; /* slightly smaller touch target for header */
+}
+.account-switcher .btn img.avatar {
+  width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;
+}
+.account-switcher .btn span {
+  display: inline-block;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .btn {
@@ -2800,10 +2828,14 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
    while preserving the normal layout for other pages. Targets the Swiper
    when it's a direct child of .content (our usage in AppShell). */
 .content > .swipe-views {
-  width: 100vw !important;
-  max-width: 100vw !important;
-  margin-left: calc(50% - 50vw) !important; /* center full-bleed child */
-  margin-right: calc(50% - 50vw) !important;
+  /* Use dynamic viewport units (dvw) to avoid horizontal shifts when
+     the browser shows/hides scrollbars (e.g. after logging in). We center
+     using a calc() that breaks out of the centered .content container so
+     the swiper truly matches the viewport rather than the centered content. */
+  width: 100dvw !important;
+  max-width: 100dvw !important;
+  margin-left: calc(50% - 50dvw) !important; /* center full-bleed child */
+  margin-right: calc(50% - 50dvw) !important;
   /* remove app padding from the full-bleed wrapper so slides can be
      exactly viewport width; slide content will receive padding instead */
   padding-left: 0 !important;
@@ -2818,8 +2850,11 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
    to slide content so visuals match the rest of the app while keeping the
    slide clipping correct. */
 .swipe-views .swiper-slide {
-  width: 100vw !important;
-  min-width: 100vw !important;
+  /* Make slides match the dynamic viewport width so they stay centered
+     and don't produce a horizontal shift when the vertical scrollbar
+     appears/disappears. */
+  width: 100dvw !important;
+  min-width: 100dvw !important;
   box-sizing: border-box !important;
   padding-left: 12px !important;
   padding-right: 12px !important;
@@ -2830,6 +2865,18 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   flex-direction: column;
   align-items: stretch;
 }
+
+/* DEBUG HELPERS (temporary) -------------------------------------------------
+   These subtle outlines help identify which container is misaligned when
+   you sign in. They'll be easy to spot in the devtools device emulation.
+   Remove these rules after debugging. */
+.debug-guides .content { outline: 1px dashed rgba(255,255,255,0.04); }
+.debug-guides .content > .swipe-views { outline: 1px dashed rgba(255,0,128,0.06); }
+.debug-guides .header-inner { outline: 1px dashed rgba(0,200,255,0.05); }
+.debug-guides .tabbar-inner { outline: 1px dashed rgba(0,255,128,0.04); }
+/* Apply by adding class "debug-guides" to the <body> element in the console:
+   document.body.classList.add('debug-guides')
+ */
 
 /* If content within a slide needs to center vertically, pages/components
    can use .slide-center to opt-in to vertical centering without affecting

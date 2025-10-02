@@ -16,8 +16,15 @@ export const metadata: Metadata = {
   title: "MonoLog — one post per day",
   description: "Daily photo journal. Attach multiple images to a single post.",
   // themeColor must be placed in the `viewport` export in Next.js 14+
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'MonoLog',
+  },
   other: {
-    "color-scheme": "light dark"
+    "color-scheme": "light dark",
+    "mobile-web-app-capable": "yes"
   }
 };
 

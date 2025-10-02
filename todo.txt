@@ -1,5 +1,4 @@
-subtly animate logo on hover or clock
+subtly animate logo on hover or click
 
-auth form sign in sign up button animation is kind of all over the place, remake from scratch
 
-    
+make sure toast subtly animates/fades out

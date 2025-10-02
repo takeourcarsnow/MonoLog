@@ -11,6 +11,7 @@ import { CONFIG } from "@/lib/config";
 import { seedIfNeeded } from "@/lib/seed";
 import { ToastHost, ToastProvider } from "./Toast";
 import { NotificationListener } from "./NotificationListener";
+import { InstallPrompt } from "./InstallPrompt";
 import { FeedView } from "./FeedView";
 import { ExploreView } from "./ExploreView";
 import { Uploader } from "./Uploader";
@@ -190,6 +191,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <NavBar />
       <NotificationListener />
+      <InstallPrompt />
       <ToastHost />
     </ToastProvider>
   );

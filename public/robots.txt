@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Disallow Next.js build output and API routes from indexing
+Disallow: /api/
+
+Sitemap: https://example.com/sitemap.xml

@@ -150,7 +150,9 @@ export function NavBarClient() {
     <nav className="tabbar" aria-label="Primary">
       <div className="tabbar-inner" role="tablist" ref={containerRef}>
         {tabs.map(t => {
-          let isActive = pathname === t.href;
+          // Treat both "/feed" and root path "/" as the Feed tab so clicking the logo
+          // (which routes to "/") correctly highlights the Feed icon.
+          let isActive = pathname === t.href || (t.href === "/feed" && pathname === "/");
           
           // Special case: treat username routes as active when the Profile tab is selected
           if (t.href === "/profile" && !isActive) {

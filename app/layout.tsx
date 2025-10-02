@@ -1,6 +1,11 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
+import { Patrick_Hand } from "next/font/google";
+import React from "react";
+
+// Self-host the previously imported Google Font for better performance & privacy.
+const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
 
 // AppShell is a client component that uses next/navigation hooks. Dynamically
 // load it on the client only to avoid calling client-only hooks during server
@@ -38,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       hydration mismatch warning — using suppressHydrationWarning here
       documents and silences that expected mismatch.
     */
-    <html lang="en" className="no-transitions" suppressHydrationWarning>
+  <html lang="en" className={`no-transitions ${patrick.variable}`} suppressHydrationWarning>
       <head>
         <script
           id="theme-init"
@@ -67,7 +72,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AppShell>{children}</AppShell>
         </div>
         <noscript>MonoLog requires JavaScript. Please enable it to continue.</noscript>
+        {/* Defer web vitals collection until after hydration */}
+        {process.env.NODE_ENV === 'production' ? <WebVitalsScript /> : null}
       </body>
     </html>
   );
+}
+
+// Inline component to lazily import and init web vitals with minimal bundle impact.
+function WebVitalsScript() {
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const { initWebVitals } = await import('@/lib/performance');
+        initWebVitals({ sampleRate: 1 });
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
+  return null;
 }

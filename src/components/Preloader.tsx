@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from 'next/image';
 
 export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () => void }) {
   const [exiting, setExiting] = useState(false);
@@ -55,7 +56,7 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
       className={`preloader-overlay ${exiting ? 'preloader-exit' : ''}`}
     >
       <div className="preloader-inner" role="img" aria-label="Loading MonoLog">
-        <img className="preloader-logo" src="/logo.svg" width={86} height={86} alt="MonoLog logo" />
+  <Image priority className="preloader-logo" src="/logo.svg" width={86} height={86} alt="MonoLog logo" />
         <div className="preloader-wordmark">MonoLog</div>
       </div>
     </div>

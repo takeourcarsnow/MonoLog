@@ -1,28 +1,5 @@
-todo: fix public buckets
+subtly animate logo on hover or clock
 
-Best fix (recommended next step): make bucket private and add Storage policies via the Supabase Storage UI
-Why: the Storage UI creates policies as the correct owner (supabase_storage_admin) so you don’t get “must be owner” errors. Policies let authenticated users upload but prevent anonymous abuse.
+auth form sign in sign up button animation is kind of all over the place, remake from scratch
 
-Exact policy expressions to add in the Storage UI (replace bucket/folder/ext as needed). Use these when creating new policies in the Storage → select posts → Policies → New policy form:
-
-INSERT (allow authenticated users to upload only jpgs into public/ folder)
-
-Action: INSERT
-WITH CHECK: auth.uid() IS NOT NULL AND bucket_id = 'posts' AND lower(split_part(name, '/', 1)) = 'public' AND lower(name) LIKE '%.jpg' AND (owner = auth.uid() OR owner IS NULL)
-UPDATE (allow owner to update their object metadata)
-
-Action: UPDATE
-USING: owner = auth.uid() AND bucket_id = 'posts'
-WITH CHECK: owner = auth.uid() AND bucket_id = 'posts'
-DELETE (allow owner to delete)
-
-Action: DELETE
-USING: owner = auth.uid() AND bucket_id = 'posts'
-SELECT (optional — allow public reads only for that folder/extension)
-
-Action: SELECT
-USING: bucket_id = 'posts' AND lower(split_part(name, '/', 1)) = 'public' AND lower(name) LIKE '%.jpg'
-Notes:
-
-In the UI, “FOR INSERT” uses the WITH CHECK box. For SELECT/UPDATE/DELETE the UI shows USING / WITH CHECK fields — paste the expressions above into the right field.
-If you want all posts public for reading, SELECT can be looser (bucket_id = 'posts').
+    

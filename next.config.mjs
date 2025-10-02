@@ -17,12 +17,25 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Reduce bundle size by auto-rewriting deep imports for listed packages.
+    // lucide-react tree-shakes well, but this shaves a few KB of parser/edge cases.
+    optimizePackageImports: ['lucide-react'],
+  },
   async headers() {
     return [
       {
         // apply these headers to all routes
         source: '/:path*',
         headers: securityHeaders,
+      },
+      {
+        // Long‑term immutable caching for versioned static assets (images, fonts, etc.)
+        // Next will fingerprint files in .next/static so they can safely be cached for a year.
+        source: '/:all*\.(svg|jpg|jpeg|png|webp|avif|gif|ico)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
       },
     ];
   },

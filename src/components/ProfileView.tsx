@@ -1,11 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { api, getSupabaseClient } from "@/lib/api";
 import { compressImage } from "@/lib/image";
 import { uid } from "@/lib/id";
+import { dedupe } from "@/lib/requestDeduplication";
 import type { HydratedPost, User } from "@/lib/types";
 import Link from "next/link";
 import ImageZoom from "./ImageZoom";
@@ -25,61 +26,79 @@ export function ProfileView({ userId }: { userId?: string }) {
   // whether the profile belongs to the signed-in user (owner) or another user.
   const isOtherParam = !!userId;
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      try {
-        // determine signed-in user (if any) so we can tell if the viewed profile is the owner
-        const me = await api.getCurrentUser();
-        if (!mounted) return;
-        setCurrentUserId(me?.id || null);
+  // Optimize data fetching with request deduplication
+  const fetchUserData = useCallback(async () => {
+    try {
+      // Determine signed-in user with deduplication
+      const me = await dedupe('getCurrentUser', () => api.getCurrentUser());
+      setCurrentUserId(me?.id || null);
 
-        const u = userId ? await api.getUser(userId) : me;
-        if (!mounted) return;
-        if (!u) { setUser(null); setPosts([]); if (userId) setFollowing(false); return; }
-  setUser(u);
-  setPosts(await api.getUserPosts(u.id));
-        // Only compute following state when the viewed profile is actually
-        // another user. If the route contained a userId param but it matches
-        // the signed-in user, treat it as the owner's profile (don't show follow).
-        if (userId) {
-          if (me?.id === u.id) {
-            // viewing your own profile via /profile/[id] — don't show follow
-            setFollowing(null);
-          } else {
-            setFollowing(await api.isFollowing(u.id));
-          }
-        }
-      } catch (e) {
-        // swallow and let UI show not-found if appropriate
-      } finally {
-        if (mounted) setLoading(false);
+      // Fetch user profile with deduplication
+      const u = userId 
+        ? await dedupe(`getUser:${userId}`, () => api.getUser(userId))
+        : me;
+      
+      if (!u) {
+        setUser(null);
+        setPosts([]);
+        if (userId) setFollowing(false);
+        return;
       }
-    })();
-    return () => { mounted = false; };
+
+      setUser(u);
+      
+      // Fetch posts with deduplication
+      const userPosts = await dedupe(`getUserPosts:${u.id}`, () => api.getUserPosts(u.id));
+      setPosts(userPosts);
+
+      // Only compute following state when viewing another user's profile
+      if (userId) {
+        if (me?.id === u.id) {
+          setFollowing(null);
+        } else {
+          const isFollowingUser = await dedupe(`isFollowing:${u.id}`, () => api.isFollowing(u.id));
+          setFollowing(isFollowingUser);
+        }
+      }
+    } catch (e) {
+      // swallow and let UI show not-found if appropriate
+    }
   }, [userId]);
 
-  // Listen for newly created posts (from uploader) so profile grid updates
   useEffect(() => {
-    function onPostCreated() {
-      (async () => {
-        try {
-          const me = await api.getCurrentUser();
-          // Only refresh if viewing own profile (implicit or explicit) and we have a user object
-          if (!me) return;
-          // If this ProfileView is showing another user, ignore
-          if (userId && userId !== me.id) return;
-          const list = await api.getUserPosts(me.id);
-          setUser(prev => prev || me); // keep existing or set me
-          setPosts(list);
-        } catch (e) { /* ignore refresh errors */ }
-      })();
-    }
+    let mounted = true;
+    
+    setLoading(true);
+    
+    fetchUserData().finally(() => {
+      if (mounted) setLoading(false);
+    });
+    
+    return () => { mounted = false; };
+  }, [fetchUserData]);
+
+  // Listen for newly created posts (from uploader) - optimized
+  useEffect(() => {
+    const onPostCreated = async () => {
+      try {
+        const me = await dedupe('getCurrentUser', () => api.getCurrentUser());
+        if (!me) return;
+        if (userId && userId !== me.id) return;
+        
+        const list = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id));
+        setUser(prev => prev || me);
+        setPosts(list);
+      } catch (e) { /* ignore refresh errors */ }
+    };
+    
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:post_created', onPostCreated as any);
     }
-    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_created', onPostCreated as any); };
+    return () => { 
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:post_created', onPostCreated as any); 
+      }
+    };
   }, [userId]);
 
   const [showAuth, setShowAuth] = useState(false);
@@ -93,33 +112,38 @@ export function ProfileView({ userId }: { userId?: string }) {
   const [editDisplayName, setEditDisplayName] = useState("");
   const [editUsername, setEditUsername] = useState("");
 
-  // When a global auth:changed event fires (e.g. sign-in via Header modal),
-  // re-fetch the current user for implicit /profile route (or when viewing
-  // own profile via /profile/[id]). This fixes the need to hard refresh.
+  // When a global auth:changed event fires - optimized
   useEffect(() => {
-    function handleAuthChanged() {
-      (async () => {
-        if (isOtherParam && currentUserId && currentUserId !== userId) return;
-        let me: any = null;
-        for (let i = 0; i < 8; i++) {
-          // eslint-disable-next-line no-await-in-loop
-          me = await api.getCurrentUser();
-          if (me) break;
-          // eslint-disable-next-line no-await-in-loop
-          await new Promise(r => setTimeout(r, 120));
-        }
-        if (me) {
-          setCurrentUserId(me.id);
-          setUser(me);
-          try { setPosts(await api.getUserPosts(me.id)); } catch (_) {}
-          setLoading(false);
-        }
-      })();
-    }
+    const handleAuthChanged = async () => {
+      if (isOtherParam && currentUserId && currentUserId !== userId) return;
+      
+      let me: any = null;
+      for (let i = 0; i < 8; i++) {
+        // Use deduplication for auth checks
+        me = await dedupe('getCurrentUser', () => api.getCurrentUser());
+        if (me) break;
+        await new Promise(r => setTimeout(r, 120));
+      }
+      
+      if (me) {
+        setCurrentUserId(me.id);
+        setUser(me);
+        try {
+          const userPosts = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id));
+          setPosts(userPosts);
+        } catch (_) {}
+        setLoading(false);
+      }
+    };
+    
     if (typeof window !== 'undefined') {
       window.addEventListener('auth:changed', handleAuthChanged as any);
     }
-    return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handleAuthChanged as any); };
+    return () => { 
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('auth:changed', handleAuthChanged as any); 
+      }
+    };
   }, [userId, isOtherParam, currentUserId]);
   const [editBio, setEditBio] = useState("");
   const [editProcessing, setEditProcessing] = useState(false);
@@ -217,13 +241,24 @@ export function ProfileView({ userId }: { userId?: string }) {
   
 
   if (!user) {
-    // while loading, show a neutral skeleton instead of 'User not found'
+    // while loading, show a proper skeleton with multiple placeholders
     if (loading) {
       return (
         <div className="view-fade">
-          <div className="card skeleton" style={{ height: 120, maxWidth: 800, margin: '24px auto' }} />
-          <div className="grid" aria-label="User posts">
-            <div className="tile skeleton" style={{ height: 160 }} />
+          <div className="profile-header toolbar">
+            <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", width: "100%" }}>
+              <div className="skeleton" style={{ width: 96, height: 96, borderRadius: '50%' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', width: '100%' }}>
+                <div className="skeleton" style={{ width: 180, height: 20, borderRadius: 8 }} />
+                <div className="skeleton" style={{ width: 220, height: 16, borderRadius: 6 }} />
+              </div>
+            </div>
+          </div>
+          <div style={{ height: 8 }} />
+          <div className="grid" aria-label="Loading posts">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="tile skeleton" style={{ height: 200, animationDelay: `${i * 60}ms` }} />
+            ))}
           </div>
         </div>
       );

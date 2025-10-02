@@ -3470,3 +3470,47 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 @media (prefers-reduced-motion: reduce) {
   .explore-hint { animation: none; opacity: 1; transform: none; }
 }
+
+/* Lazy image loading states */
+.lazy-image {
+  transition: opacity 320ms ease-out;
+  will-change: opacity;
+}
+.lazy-image.loading {
+  opacity: 0;
+  background: var(--bg-elev);
+}
+.lazy-image.loaded {
+  opacity: 1;
+}
+
+/* Improved skeleton loading animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-elev) 0%,
+    color-mix(in srgb, var(--border), transparent 50%) 20%,
+    var(--bg-elev) 40%,
+    var(--bg-elev) 100%
+  );
+  background-size: 1000px 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Reduce skeleton animation on slow connections or preference */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--bg-elev);
+  }
+}

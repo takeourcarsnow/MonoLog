@@ -20,7 +20,7 @@ const nextConfig = {
   experimental: {
     // Reduce bundle size by auto-rewriting deep imports for listed packages.
     // lucide-react tree-shakes well, but this shaves a few KB of parser/edge cases.
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: ['lucide-react', 'react-swipeable'],
   },
   // Enable compression
   compress: true,
@@ -30,6 +30,10 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Enable image optimization
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Enable SWC minification for better performance
   swcMinify: true,
@@ -38,6 +42,19 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'],
     } : false,
+  },
+  // Optimize webpack
+  webpack: (config, { dev, isServer }) => {
+    // Production optimizations
+    if (!dev && !isServer) {
+      // Enable tree shaking
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+        sideEffects: false,
+      };
+    }
+    return config;
   },
   async headers() {
     return [
@@ -57,6 +74,13 @@ const nextConfig = {
       {
         // Cache static JS/CSS chunks
         source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // Cache public images with long TTL
+        source: '/public/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],

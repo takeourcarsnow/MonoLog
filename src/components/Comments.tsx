@@ -1,11 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Send, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
 import { api } from "@/lib/api";
 import { getCachedComments, setCachedComments } from "@/lib/commentCache";
 import { useToast } from "./Toast";
+
+// Lazy load icons to reduce initial bundle size
+const Send = lazy(() => import("lucide-react").then(mod => ({ default: mod.Send })));
+const Trash2 = lazy(() => import("lucide-react").then(mod => ({ default: mod.Trash2 })));
 
 type Props = {
   postId: string;
@@ -76,6 +79,7 @@ export function Comments({ postId, onCountChange }: Props) {
       user: currentUser || { id: 'me', displayName: 'You', avatarUrl: '/logo.svg' }
     } as any;
 
+    // Add optimistic comment
     setComments(prev => {
       const next = [...prev, optimistic];
       try { setCachedComments(postId, next); } catch (_) {}
@@ -87,20 +91,36 @@ export function Comments({ postId, onCountChange }: Props) {
 
     try {
       const added = await api.addComment(postId, bodyText);
+      
+      // Replace optimistic with real comment without flickering
       setComments(prev => {
+        // If the optimistic comment is still there, replace it
+        const hasOptimistic = prev.some(c => c.id === tempId);
+        if (!hasOptimistic) {
+          // Already removed or replaced, just add the real one
+          const next = [...prev, added];
+          try { setCachedComments(postId, next); } catch (_) {}
+          return next;
+        }
+        
+        // Replace optimistic with real comment smoothly
         const next = prev.map(c => c.id === tempId ? added : c);
         try { setCachedComments(postId, next); } catch (_) {}
         return next;
       });
+      
+      // Update the new comment ID to the real one for animation
       setNewCommentId(added?.id ?? null);
       setTimeout(() => setNewCommentId(null), 420);
     } catch (err: any) {
+      // Remove optimistic comment on error
       setComments(prev => {
         const next = prev.filter(c => c.id !== tempId);
         try { setCachedComments(postId, next); } catch (_) {}
         notifyCount(next.length);
         return next;
       });
+      setNewCommentId(null);
       toast.show(err?.message || 'Failed to add comment');
     }
   };
@@ -181,7 +201,9 @@ export function Comments({ postId, onCountChange }: Props) {
                         confirmTimers.current.set(c.id, timer);
                       }}
                     >
-                      <Trash2 size={14} />
+                      <Suspense fallback={<span>×</span>}>
+                        <Trash2 size={14} />
+                      </Suspense>
                     </button>
                   ) : null}
                 </div>
@@ -232,7 +254,11 @@ export function Comments({ postId, onCountChange }: Props) {
           aria-label={sending ? "Sending comment" : "Send comment"}
           title={sending ? "Sending…" : "Send comment"}
         >
-          <span className="icon" aria-hidden="true"><Send size={16} /></span>
+          <span className="icon" aria-hidden="true">
+            <Suspense fallback={<span>→</span>}>
+              <Send size={16} />
+            </Suspense>
+          </span>
           {/* keep a screen-reader-only label so assistive tech still announces the action */}
           <span className="sr-only">{sending ? "Sending comment" : "Send comment"}</span>
         </button>

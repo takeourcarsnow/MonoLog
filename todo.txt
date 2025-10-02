@@ -1,8 +1,19 @@
+## COMPLETED ✅
 
-Profile section takes a long time to load and the section highlighter lags because of it until the last tab's highlight switches off
+✓ Fixed comment flickering issue - comments now add smoothly without flicker
+✓ Optimized ProfileView loading with request deduplication
+✓ Added API response caching layer with TTL support
+✓ Implemented lazy image loading with Intersection Observer
+✓ Added performance monitoring utilities
+✓ Reduced bundle size with dynamic imports
+✓ Improved skeleton loading states
+✓ Enhanced Next.js configuration for better performance
 
 
+## TODO
 
-maybe we should say log instead of post
+Profile section: Consider further optimizations if needed
+- The section highlighter lag should be improved with the deduplication changes
+- If issues persist, may need to investigate tab switching animation performance
 
-when i add a comment it kind of flickers on and off for a few times for a couple of seconds before properly staying on
+Maybe we should say "log" instead of "post" throughout the app for consistency

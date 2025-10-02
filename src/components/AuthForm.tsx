@@ -69,19 +69,25 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         if (error) throw error;
 
         // Ensure the user's profile row exists in the users table.
-        // Fire-and-forget: create or upsert a minimal profile in the background
-        // so that subsequent actions (like creating posts) won't fail with FK errors.
+        // Fire-and-forget: create a minimal profile in the background ONLY if it doesn't exist.
+        // Use INSERT (not UPSERT) to avoid overwriting existing profile data.
         (async () => {
           try {
             const get = await sb.auth.getUser();
             const u = (get as any)?.data?.user;
             if (u) {
-              const synthUsername = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : u.id);
-              const synthDisplay = u.user_metadata?.name || synthUsername;
-              try {
-                await sb.from('users').upsert({ id: u.id, username: synthUsername, display_name: synthDisplay, avatar_url: '/logo.svg' });
-              } catch (e) {
-                // ignore upsert failures; this is best-effort
+              // First check if profile already exists
+              const { data: existing } = await sb.from('users').select('id').eq('id', u.id).limit(1).maybeSingle();
+              
+              // Only insert if profile doesn't exist yet
+              if (!existing) {
+                const synthUsername = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : u.id);
+                const synthDisplay = u.user_metadata?.name || synthUsername;
+                try {
+                  await sb.from('users').insert({ id: u.id, username: synthUsername, display_name: synthDisplay, avatar_url: '/logo.svg' });
+                } catch (e) {
+                  // ignore insert failures (e.g., duplicate key); this is best-effort
+                }
               }
             }
           } catch (e) {

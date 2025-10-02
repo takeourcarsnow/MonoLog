@@ -52,6 +52,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setReady(true);
       }
     })();
+    // Register service worker for PWA (production only)
+    try {
+      if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .catch(err => console.debug('[sw] registration failed', err));
+      }
+    } catch (e) {
+      // ignore
+    }
     // detect touch-capable devices so we can disable desktop swiping
     try {
       const touch = typeof window !== 'undefined' && (

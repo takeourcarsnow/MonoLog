@@ -72,6 +72,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     */
   <html lang="en" className={`no-transitions ${patrick.variable}`} suppressHydrationWarning>
       <head>
+        {/* PWA Meta / Manifest */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="MonoLog" />
+        <meta name="application-name" content="MonoLog" />
+        <meta name="theme-color" content="#0f0f10" />
         <script
           id="theme-init"
           dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);}else{try{var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');document.documentElement.setAttribute('data-theme',(m&&m.matches)?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} }catch(e){} })();` }}

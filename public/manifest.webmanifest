@@ -1,0 +1,29 @@
+{
+  "name": "MonoLog",
+  "short_name": "MonoLog",
+  "id": "/?source=pwa",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f0f10",
+  "theme_color": "#0f0f10",
+  "description": "Daily photo journal. Attach multiple images to a single post.",
+  "categories": ["lifestyle", "productivity", "photo", "journal"],
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    { "name": "Feed", "short_name": "Feed", "url": "/feed" },
+    { "name": "Upload", "short_name": "Upload", "url": "/upload" },
+    { "name": "Profile", "short_name": "Profile", "url": "/profile" }
+  ],
+  "dir": "auto",
+  "lang": "en-US",
+  "prefer_related_applications": false
+}

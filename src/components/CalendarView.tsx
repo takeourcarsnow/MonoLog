@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { monthMatrix, toDateKey } from "@/lib/date";
 import { api } from "@/lib/api";
 import { PostCard } from "./PostCard";
+import InlinePreloader from "./InlinePreloader";
 import type { HydratedPost } from "@/lib/types";
 
 const weekdays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -50,6 +51,21 @@ export function CalendarView() {
     }
   };
 
+  // Auto-select today when the calendar initially shows the current month/year
+  useEffect(() => {
+    try {
+      const todayKey = toDateKey(new Date());
+      const nowYear = new Date().getFullYear();
+      const nowMonth = new Date().getMonth();
+      // only auto-open if calendar is showing this month/year and nothing is selected
+      if (curYear === nowYear && curMonth === nowMonth && selectedDay == null) {
+        // fire-and-forget; showDay will set loading state and fetch
+        void showDay(todayKey);
+      }
+    } catch (e) { /* ignore */ }
+    // run only when month/year changes or selectedDay updates
+  }, [curYear, curMonth]);
+
   const matrix = monthMatrix(curYear, curMonth);
 
   return (
@@ -80,7 +96,7 @@ export function CalendarView() {
         <div className="calendar-weekdays">
           {weekdays.map(d => <div key={d} className="dim" style={{ textAlign: "center" }}>{d}</div>)}
         </div>
-        {/* helper + legend moved to bottom of the calendar for improved layout */}
+        {/* legend originally below the grid; kept removed here per user request */}
         <div className="calendar-grid" id="grid" aria-label="Month grid">
           {matrix.map((d, idx) => {
             if (!d) return <div className="day" key={idx} style={{ visibility: "hidden" }} />;
@@ -116,8 +132,7 @@ export function CalendarView() {
             );
           })}
         </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '6px 2px 0' }}>
-          <div className="dim">Tap a day to see all public posts</div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center', padding: '6px 2px 0' }}>
           <div className="calendar-legend" aria-hidden style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div className="legend-item" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
               <span className="legend-dot post" />
@@ -132,13 +147,15 @@ export function CalendarView() {
       </div>
   <div className="feed" id="day-feed">
         {selectedDay ? (
-          <div style={{ marginBottom: 8 }}>
-            <strong>{new Date(selectedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+          <div style={{ marginBottom: 8, textAlign: 'center' }}>
+            <strong style={{ display: 'block' }}>{new Date(selectedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
             <div className="dim" style={{ marginTop: 4 }}>{(stats.counts[selectedDay] || 0)} public post{(stats.counts[selectedDay] || 0) === 1 ? '' : 's'}</div>
           </div>
         ) : null}
 
-  {loadingDay ? <div className="dim">Loading…</div> : (
+  {loadingDay ? (
+    <InlinePreloader />
+  ) : (
     dayPosts ? (dayPosts.length ? dayPosts.map(p => <PostCard key={p.id} post={p} />)
       : <div className="empty">No public posts for that day.</div>)
       : null

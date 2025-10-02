@@ -51,16 +51,19 @@ export function OverscrollRubberband() {
       if (!target || !(target instanceof Element)) return null;
 
       // Prefer a closest ancestor that is itself the feed container
-      const direct = target.closest('.feed');
+  // first prefer .feed (post list) then the calendar page wrapper so
+  // the calendar header/grid and the day feed move together.
+  const direct = target.closest('.feed') || target.closest('.calendar-page');
       if (direct && direct instanceof HTMLElement) return direct;
 
       // Otherwise, find the nearest swiper slide and query a .feed inside it
       const slide = target.closest('.swiper-slide');
       if (slide && slide instanceof HTMLElement) {
-        const inner = slide.querySelector<HTMLElement>('.feed');
-        if (inner) return inner;
-        // in some cases the slide itself may be the feed
-        if (slide.classList.contains('feed')) return slide;
+  // prefer a .feed inside the slide, but also accept a .calendar-page wrapper
+  const inner = slide.querySelector<HTMLElement>('.feed') || slide.querySelector<HTMLElement>('.calendar-page');
+  if (inner) return inner;
+  // in some cases the slide itself may be the feed
+  if (slide.classList.contains('feed')) return slide;
       }
 
       // Fallback: if the event target is the scroll container (or something else),
@@ -68,7 +71,7 @@ export function OverscrollRubberband() {
       try {
         const active = document.querySelector<HTMLElement>('.swiper-slide-active');
         if (active) {
-          const innerActive = active.querySelector<HTMLElement>('.feed');
+          const innerActive = active.querySelector<HTMLElement>('.feed') || active.querySelector<HTMLElement>('.calendar-page');
           if (innerActive) return innerActive;
           if (active.classList.contains('feed')) return active;
         }

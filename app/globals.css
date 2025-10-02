@@ -17,6 +17,9 @@
   --border: #e5e7eb;
   --shadow: 0 8px 28px rgba(0,0,0,.08);
 
+
+  /* Inline preloader used inside the calendar day feed — subtle, low-contrast */
+
   --radius: 14px;
   --radius-sm: 10px;
   --radius-lg: 18px;

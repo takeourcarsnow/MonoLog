@@ -22,6 +22,79 @@ export function NavBarClient() {
   const [currentUser, setCurrentUser] = useState<{ username?: string; id?: string } | null>(null);
   const [activeTab, setActiveTab] = useState<string>("");
 
+  // Calculate which tab is active based on pathname
+  useEffect(() => {
+    // reuse detection logic so pathname and slide events behave the same
+    const detect = (p: string) => {
+      for (const t of tabs) {
+        let isActive = p === t.href || (t.href === "/feed" && p === "/");
+
+        if (t.href === "/profile" && !isActive) {
+          const pathSegments = p.split('/').filter(Boolean);
+          if (pathSegments.length === 1) {
+            const segment = pathSegments[0];
+            const RESERVED_ROUTES = [
+              'about', 'api', 'calendar', 'explore', 'favorites', 
+              'feed', 'post', 'profile', 'upload'
+            ];
+            if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+              isActive = true;
+            }
+          }
+        }
+
+        if (isActive) return t.label.toLowerCase();
+      }
+      return "";
+    };
+
+    const newActive = detect(pathname);
+    setActiveTab(newActive);
+  }, [pathname]);
+
+  // Listen for swiper slide changes for immediate active state updates
+  useEffect(() => {
+    const handleSlideChange = (e: CustomEvent) => {
+      const { path } = e.detail;
+      // reuse same detection as pathname so username/profile paths are handled
+      const detect = (p: string) => {
+        for (const t of tabs) {
+          let isActive = p === t.href || (t.href === "/feed" && p === "/");
+
+          if (t.href === "/profile" && !isActive) {
+            const pathSegments = p.split('/').filter(Boolean);
+            if (pathSegments.length === 1) {
+              const segment = pathSegments[0];
+              const RESERVED_ROUTES = [
+                'about', 'api', 'calendar', 'explore', 'favorites', 
+                'feed', 'post', 'profile', 'upload'
+              ];
+              if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+                isActive = true;
+              }
+            }
+          }
+
+          if (isActive) return t.label.toLowerCase();
+        }
+        return "";
+      };
+
+      const newActive = detect(path || "");
+      setActiveTab(newActive);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:slide_change', handleSlideChange as any);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:slide_change', handleSlideChange as any);
+      }
+    };
+  }, []);
+
   // Get current user info for profile navigation
   useEffect(() => {
     let mounted = true;
@@ -86,13 +159,27 @@ export function NavBarClient() {
     const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const update = () => {
-      // Find the icon element inside the active tab so the circular indicator
-      // can sit directly behind it and slide between icons.
-      const activeIcon = container.querySelector<HTMLElement>(`[href='${pathname}'] .ic`);
+      // Use activeTab state to find the active button
+      if (!activeTab) {
+        setIndicator(i => ({ ...i, visible: false }));
+        return;
+      }
+      
+      // Find the button that matches activeTab
+      const activeButton = container.querySelector<HTMLElement>(`button[data-tab="${activeTab}"]`);
+      
+      if (!activeButton) {
+        setIndicator(i => ({ ...i, visible: false }));
+        return;
+      }
+      
+      // Find the icon element inside the active tab
+      const activeIcon = activeButton.querySelector<HTMLElement>('.ic');
       if (!activeIcon) {
         setIndicator(i => ({ ...i, visible: false }));
         return;
       }
+      
       const iconRect = activeIcon.getBoundingClientRect();
       const parentRect = container.getBoundingClientRect();
       const iconLeft = iconRect.left - parentRect.left;
@@ -136,8 +223,11 @@ export function NavBarClient() {
 
     // Also observe the active icon specifically (if it changes size)
     const observeActiveIcon = () => {
-      const activeIcon = container.querySelector<HTMLElement>(`[href='${pathname}'] .ic`);
-      if (activeIcon) ro.observe(activeIcon);
+      if (activeTab) {
+        const btn = container.querySelector<HTMLElement>(`button[data-tab="${activeTab}"]`);
+        const icon = btn?.querySelector<HTMLElement>('.ic');
+        if (icon) ro.observe(icon);
+      }
     };
 
     // initial measure + stabilization
@@ -146,7 +236,7 @@ export function NavBarClient() {
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
 
-    // re-observe when pathname changes (active icon element will differ)
+    // re-observe when activeTab changes (active icon element will differ)
     observeActiveIcon();
 
     return () => {
@@ -158,36 +248,15 @@ export function NavBarClient() {
       if (raf1) window.cancelAnimationFrame(raf1);
       try { ro.disconnect(); } catch (e) { /* ignore */ }
     };
-  }, [pathname]);
+  }, [activeTab]);
 
   return (
     <nav className="tabbar" aria-label="Primary">
       <div className="tabbar-inner" role="tablist" ref={containerRef}>
         {tabs.map(t => {
-          // Treat both "/feed" and root path "/" as the Feed tab so clicking the logo
-          // (which routes to "/") correctly highlights the Feed icon.
-          let isActive = pathname === t.href || (t.href === "/feed" && pathname === "/");
-          
-          // Special case: treat username routes as active when the Profile tab is selected
-          if (t.href === "/profile" && !isActive) {
-            // Check if we're on a username route (not one of the reserved routes)
-            const pathSegments = pathname.split('/').filter(Boolean);
-            if (pathSegments.length === 1) {
-              const segment = pathSegments[0];
-              const RESERVED_ROUTES = [
-                'about', 'api', 'calendar', 'explore', 'favorites', 
-                'feed', 'post', 'profile', 'upload'
-              ];
-              if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-                isActive = true;
-              }
-            }
-          }
-          
-          // Update active tab for indicator color
-          if (isActive && activeTab !== t.label.toLowerCase()) {
-            setActiveTab(t.label.toLowerCase());
-          }
+          // Use activeTab state to determine if this tab is active
+          // This allows immediate updates during swiper slide changes
+          const isActive = activeTab === t.label.toLowerCase();
           
           return (
             <button

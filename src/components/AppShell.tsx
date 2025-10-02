@@ -37,7 +37,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { path: "/profile", component: ProfileView },
   ];
 
-  const currentIndex = views.findIndex(v => v.path === pathname) || 0;
+  // Calculate current index, treating username routes as profile view (index 4)
+  const getCurrentIndex = () => {
+    const idx = views.findIndex(v => v.path === pathname);
+    if (idx !== -1) return idx;
+    
+    // Check if we're on a username route - if so, treat it as profile view
+    const pathSegments = pathname.split('/').filter(Boolean);
+    if (pathSegments.length === 1) {
+      const segment = pathSegments[0];
+      const RESERVED_ROUTES = [
+        'about', 'api', 'calendar', 'explore', 'favorites', 
+        'feed', 'post', 'profile', 'upload', 'admin', 
+        'settings', 'help', 'terms', 'privacy', 'login', 
+        'register', 'signup', 'signin', 'logout', 'auth'
+      ];
+      if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+        return 4; // profile view index
+      }
+    }
+    
+    return 0; // default to feed
+  };
+  
+  const currentIndex = getCurrentIndex();
 
   useEffect(() => {
     initTheme();
@@ -122,7 +145,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleSlideChange = (swiper: any) => {
     const newPath = views[swiper.activeIndex]?.path;
+    
+    // Immediately dispatch event so NavBar can update active state before route changes
+    if (typeof window !== 'undefined' && newPath) {
+      window.dispatchEvent(new CustomEvent('monolog:slide_change', { 
+        detail: { path: newPath, index: swiper.activeIndex } 
+      }));
+    }
+    
     if (newPath && newPath !== pathname) {
+      // Special handling for profile - maintain username route if we're already on one
+      if (newPath === "/profile") {
+        const pathSegments = pathname.split('/').filter(Boolean);
+        if (pathSegments.length === 1) {
+          const segment = pathSegments[0];
+          const RESERVED_ROUTES = [
+            'about', 'api', 'calendar', 'explore', 'favorites', 
+            'feed', 'post', 'profile', 'upload', 'admin', 
+            'settings', 'help', 'terms', 'privacy', 'login', 
+            'register', 'signup', 'signin', 'logout', 'auth'
+          ];
+          // If we're already on a username route, don't navigate away from it
+          if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+            return;
+          }
+        }
+      }
       router.push(newPath);
     }
   };
@@ -132,7 +180,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // the same Swiper layout (feed/explore/upload/calendar/profile)
   // as the explicit /feed route. This keeps the caption, view toggle and
   // other layout elements positioned identically between / and /feed.
-  const isMainView = pathname === "/" || views.some(v => v.path === pathname);
+  // Also treat username routes (e.g., /${username}) as profile view for swipe support.
+  const isMainView = pathname === "/" || views.some(v => v.path === pathname) || (() => {
+    // Check if we're on a username route (not one of the reserved routes)
+    const pathSegments = pathname.split('/').filter(Boolean);
+    if (pathSegments.length === 1) {
+      const segment = pathSegments[0];
+      const RESERVED_ROUTES = [
+        'about', 'api', 'calendar', 'explore', 'favorites', 
+        'feed', 'post', 'profile', 'upload', 'admin', 
+        'settings', 'help', 'terms', 'privacy', 'login', 
+        'register', 'signup', 'signin', 'logout', 'auth'
+      ];
+      return !RESERVED_ROUTES.includes(segment.toLowerCase());
+    }
+    return false;
+  })();
 
   return (
     <ToastProvider>

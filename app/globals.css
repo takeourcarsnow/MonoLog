@@ -321,67 +321,67 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   100% { transform: translateY(-6px) scale(1); }
 }
 /* Inactive tabs - subtle hover feedback */
-.tab-item:not([aria-current="page"]):hover .ic {
-  transform: translateY(-2px) scale(1.05);
-}
-.tab-item:not([aria-current="page"]):hover .ic svg {
-  stroke-width: 2.2;
-}
-.tab-item:not([aria-current="page"]):hover span {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-/* Remove background highlight, use color instead */
+/* Hover / pointer-fine only interactions: prevent sticky hover colors on touch devices. */
+@media (hover: hover) and (pointer: fine) {
+  .tab-item:not([aria-current="page"]):hover .ic {
+    transform: translateY(-2px) scale(1.05);
+  }
+  .tab-item:not([aria-current="page"]):hover .ic svg {
+    stroke-width: 2.2;
+  }
+  .tab-item:not([aria-current="page"]):hover span {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  /* Remove background highlight, use color instead */
 
-/* Unique colors for each navbar tab using data attributes */
-/* Feed - Blue */
-.tab-item[data-tab="feed"]:hover:not([aria-current="page"]) .ic svg {
-  color: #3b82f6;
-  stroke: #3b82f6;
+  /* Unique colors for each navbar tab using data attributes */
+  /* Feed - Blue */
+  .tab-item[data-tab="feed"]:hover:not([aria-current="page"]) .ic svg {
+    color: #3b82f6;
+    stroke: #3b82f6;
+  }
+  /* Explore - Purple */
+  .tab-item[data-tab="explore"]:hover:not([aria-current="page"]) .ic svg {
+    color: #a855f7;
+    stroke: #a855f7;
+  }
+  /* Post - Green/Accent */
+  .tab-item[data-tab="post"]:hover:not([aria-current="page"]) .ic svg {
+    color: #22c55e;
+    stroke: #22c55e;
+  }
+  /* Calendar - Orange */
+  .tab-item[data-tab="calendar"]:hover:not([aria-current="page"]) .ic svg {
+    color: #f59e0b;
+    stroke: #f59e0b;
+  }
+  /* Profile - Pink */
+  .tab-item[data-tab="profile"]:hover:not([aria-current="page"]) .ic svg {
+    color: #ec4899;
+    stroke: #ec4899;
+  }
 }
+/* Active (aria-current) colored states remain outside media query so they apply everywhere */
 .tab-item[data-tab="feed"][aria-current="page"] .ic svg {
   color: #3b82f6;
   stroke: #3b82f6;
   filter: drop-shadow(0 0 10px #3b82f6) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.5));
-}
-
-/* Explore - Purple */
-.tab-item[data-tab="explore"]:hover:not([aria-current="page"]) .ic svg {
-  color: #a855f7;
-  stroke: #a855f7;
 }
 .tab-item[data-tab="explore"][aria-current="page"] .ic svg {
   color: #a855f7;
   stroke: #a855f7;
   filter: drop-shadow(0 0 10px #a855f7) drop-shadow(0 2px 4px rgba(168, 85, 247, 0.5));
 }
-
-/* Post - Green/Accent */
-.tab-item[data-tab="post"]:hover:not([aria-current="page"]) .ic svg {
-  color: #22c55e;
-  stroke: #22c55e;
-}
 .tab-item[data-tab="post"][aria-current="page"] .ic svg {
   color: #22c55e;
   stroke: #22c55e;
   filter: drop-shadow(0 0 10px #22c55e) drop-shadow(0 2px 4px rgba(34, 197, 94, 0.5));
 }
-
-/* Calendar - Orange */
-.tab-item[data-tab="calendar"]:hover:not([aria-current="page"]) .ic svg {
-  color: #f59e0b;
-  stroke: #f59e0b;
-}
 .tab-item[data-tab="calendar"][aria-current="page"] .ic svg {
   color: #f59e0b;
   stroke: #f59e0b;
   filter: drop-shadow(0 0 10px #f59e0b) drop-shadow(0 2px 4px rgba(245, 158, 11, 0.5));
-}
-
-/* Profile - Pink */
-.tab-item[data-tab="profile"]:hover:not([aria-current="page"]) .ic svg {
-  color: #ec4899;
-  stroke: #ec4899;
 }
 .tab-item[data-tab="profile"][aria-current="page"] .ic svg {
   color: #ec4899;
@@ -411,14 +411,16 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   box-shadow: 0 4px 12px rgba(236, 72, 153, 0.1);
 }
 
-/* Subtle color on hover for inactive tabs */
-.tab-item:not([aria-current="page"]):hover .ic svg {
-  opacity: 0.8;
-  transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
-              stroke 280ms cubic-bezier(0.4, 0, 0.2, 1),
-              transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
-              stroke-width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+/* Subtle color on hover for inactive tabs (pointer-fine only) */
+@media (hover: hover) and (pointer: fine) {
+  .tab-item:not([aria-current="page"]):hover .ic svg {
+    opacity: 0.8;
+    transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                stroke 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                stroke-width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 .tab-item[aria-current="page"] .ic svg {
   transition: color 320ms cubic-bezier(0.4, 0, 0.2, 1), 

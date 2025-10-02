@@ -1707,6 +1707,10 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   justify-content: center;
 }
 
+.toast.toast--leaving {
+  animation: toastOut 260ms var(--transition-mid) forwards; /* overrides toastIn once leaving */
+}
+
 .toast-message {
   text-transform: none; /* message casing handled in JS */
   white-space: normal; /* allow wrapping */
@@ -1719,6 +1723,12 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(.995); }
   to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@keyframes toastOut {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  60% { opacity: .4; transform: translateX(-50%) translateY(2px) scale(.99); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(6px) scale(.975); }
 }
 
 .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; background: var(--bg-elev); border: 1px solid var(--border); padding: 2px 6px; border-radius: 6px; }

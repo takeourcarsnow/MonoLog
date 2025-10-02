@@ -235,17 +235,200 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .tab-item {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   color: var(--muted); font-size: 12px; padding: 4px 2px;
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  overflow: visible;
+  /* Add smooth transitions for all interactive states */
+  transition: color 320ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.tab-item span { line-height: 1; }
-.tab-item[aria-current="page"] { color: var(--text); font-weight: 700; }
+.tab-item span { 
+  line-height: 1; 
+  /* Subtle label animation on tab switch */
+  opacity: 0.7;
+  transform: translateY(0);
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tab-item[aria-current="page"] { 
+  color: var(--text); 
+  font-weight: 700; 
+}
+.tab-item[aria-current="page"] span {
+  opacity: 1;
+  transform: translateY(-2px);
+}
 .tab-item .ic {
   width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center;
-  transition: transform var(--transition-fast), color var(--transition-fast);
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              color 320ms cubic-bezier(0.4, 0, 0.2, 1);
   position: relative; z-index: 2; /* sit above the moving indicator */
+  will-change: transform;
 }
+/* Add subtle breathing animation to icons */
+.tab-item .ic svg {
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke-width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Active tab - organic lift with gentle bounce */
 .tab-item[aria-current="page"] .ic {
   transform: translateY(-6px); /* slightly lift the icon when active */
   color: white;
+  animation: iconBounce 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes iconBounce {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-8px) scale(1.08); }
+  60% { transform: translateY(-5px) scale(0.98); }
+  100% { transform: translateY(-6px) scale(1); }
+}
+/* Inactive tabs - subtle hover feedback */
+.tab-item:not([aria-current="page"]):hover .ic {
+  transform: translateY(-2px) scale(1.05);
+}
+.tab-item:not([aria-current="page"]):hover .ic svg {
+  stroke-width: 2.2;
+}
+.tab-item:not([aria-current="page"]):hover span {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+/* Remove background highlight, use color instead */
+
+/* Unique colors for each navbar tab using data attributes */
+/* Feed - Blue */
+.tab-item[data-tab="feed"]:hover:not([aria-current="page"]) .ic svg {
+  color: #3b82f6;
+  stroke: #3b82f6;
+}
+.tab-item[data-tab="feed"][aria-current="page"] .ic svg {
+  color: #3b82f6;
+  stroke: #3b82f6;
+  filter: drop-shadow(0 0 10px #3b82f6) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.5));
+}
+
+/* Explore - Purple */
+.tab-item[data-tab="explore"]:hover:not([aria-current="page"]) .ic svg {
+  color: #a855f7;
+  stroke: #a855f7;
+}
+.tab-item[data-tab="explore"][aria-current="page"] .ic svg {
+  color: #a855f7;
+  stroke: #a855f7;
+  filter: drop-shadow(0 0 10px #a855f7) drop-shadow(0 2px 4px rgba(168, 85, 247, 0.5));
+}
+
+/* Post - Green/Accent */
+.tab-item[data-tab="post"]:hover:not([aria-current="page"]) .ic svg {
+  color: #22c55e;
+  stroke: #22c55e;
+}
+.tab-item[data-tab="post"][aria-current="page"] .ic svg {
+  color: #22c55e;
+  stroke: #22c55e;
+  filter: drop-shadow(0 0 10px #22c55e) drop-shadow(0 2px 4px rgba(34, 197, 94, 0.5));
+}
+
+/* Calendar - Orange */
+.tab-item[data-tab="calendar"]:hover:not([aria-current="page"]) .ic svg {
+  color: #f59e0b;
+  stroke: #f59e0b;
+}
+.tab-item[data-tab="calendar"][aria-current="page"] .ic svg {
+  color: #f59e0b;
+  stroke: #f59e0b;
+  filter: drop-shadow(0 0 10px #f59e0b) drop-shadow(0 2px 4px rgba(245, 158, 11, 0.5));
+}
+
+/* Profile - Pink */
+.tab-item[data-tab="profile"]:hover:not([aria-current="page"]) .ic svg {
+  color: #ec4899;
+  stroke: #ec4899;
+}
+.tab-item[data-tab="profile"][aria-current="page"] .ic svg {
+  color: #ec4899;
+  stroke: #ec4899;
+  filter: drop-shadow(0 0 10px #ec4899) drop-shadow(0 2px 4px rgba(236, 72, 153, 0.5));
+}
+
+/* Update indicator color based on active tab */
+.tab-indicator[data-active-tab="feed"] {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
+}
+.tab-indicator[data-active-tab="explore"] {
+  background: linear-gradient(135deg, #a855f7, #9333ea);
+  box-shadow: 0 12px 30px rgba(168, 85, 247, 0.3);
+}
+.tab-indicator[data-active-tab="post"] {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.3);
+}
+.tab-indicator[data-active-tab="calendar"] {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 12px 30px rgba(245, 158, 11, 0.3);
+}
+.tab-indicator[data-active-tab="profile"] {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  box-shadow: 0 12px 30px rgba(236, 72, 153, 0.3);
+}
+
+/* Subtle color on hover for inactive tabs */
+.tab-item:not([aria-current="page"]):hover .ic svg {
+  opacity: 0.8;
+  transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke-width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tab-item[aria-current="page"] .ic svg {
+  transition: color 320ms cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 320ms cubic-bezier(0.4, 0, 0.2, 1),
+              filter 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              stroke 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active state press feedback */
+.tab-item:active .ic {
+  transform: translateY(-4px) scale(0.95);
+}
+/* Ripple effect on tap */
+.tab-item::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, 
+    color-mix(in srgb, var(--primary), transparent 70%) 0%, 
+    transparent 70%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.tab-item.ripple::before {
+  animation: tabRipple 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes tabRipple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.5;
+  }
+  50% {
+    width: 80px;
+    height: 80px;
+    opacity: 0.3;
+  }
+  100% {
+    width: 100px;
+    height: 100px;
+    opacity: 0;
+  }
 }
 /* Improve contrast for icons (including emoji or image-based icons).
    - add a subtle drop shadow to all icons so they read against both light and colored backgrounds
@@ -259,13 +442,8 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 .tab-item[aria-current="page"] .ic {
   transform: translateY(-6px) scale(1.06);
-  color: white;
+  /* Color is now set by individual tab rules for unique colors */
   text-shadow: 0 1px 0 rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.12);
-}
-.tab-item[aria-current="page"] .ic img,
-.tab-item[aria-current="page"] .ic svg {
-  /* further lift image/svg icons visually above the indicator */
-  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.12));
 }
 
 /* make the active label smaller and centered under the raised icon */
@@ -290,8 +468,15 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   pointer-events: none;
   transform-origin: center;
   opacity: 0;
-  transition: left 260ms var(--transition-mid), width 260ms var(--transition-mid), opacity 160ms var(--transition-fast), transform 220ms cubic-bezier(.2,.7,.2,1);
+  /* Enhanced spring-based physics for organic movement */
+  transition: left 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              width 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              opacity 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 380ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 380ms cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1; /* behind icons (icons have z-index:2) */
+  will-change: left, transform;
 }
 /* Light mode: previous indicator was low contrast on very light backgrounds. Increase saturation, add subtle ring & strengthen active label weight. */
 :root[data-theme="light"] .tab-indicator,
@@ -304,14 +489,7 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 :root[data-theme="light"] .tab-item[aria-current="page"],
 :root:not([data-theme="dark"]) .tab-item[aria-current="page"] { color: #0f0f10; font-weight: 700; }
-/* Light mode active icon: make glyph crisper against saturated blue */
-:root[data-theme="light"] .tab-item[aria-current="page"] .ic svg,
-:root:not([data-theme="dark"]) .tab-item[aria-current="page"] .ic svg {
-  /* use the dark text color for the active glyph in light mode so it reads
-     clearly against the saturated blue indicator */
-  stroke: var(--text);
-  stroke-width: 2.2;
-}
+/* Light mode active icon: icons now use their unique colors in both light and dark mode */
 :root[data-theme="light"] .tab-item[aria-current="page"] .ic,
 :root:not([data-theme="dark"]) .tab-item[aria-current="page"] .ic {
   /* reduce the bright white halo which made icons look washed out; keep a
@@ -325,8 +503,42 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   background: rgba(0,0,0,0.06);
   filter: blur(10px);
 }
-.tab-indicator.visible { opacity: 1; }
-.tab-indicator.pop { transform: translateY(-4px) scale(1.02); }
+.tab-indicator.visible { 
+  opacity: 1; 
+  animation: indicatorFadeIn 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes indicatorFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(4px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.tab-indicator.pop { 
+  /* Enhanced pop with organic spring motion */
+  animation: indicatorPop 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes indicatorPop {
+  0% { 
+    transform: scale(1) translateY(0); 
+  }
+  35% { 
+    transform: scale(1.12) translateY(-6px); 
+  }
+  65% { 
+    transform: scale(0.96) translateY(-2px); 
+  }
+  100% { 
+    transform: scale(1) translateY(0); 
+  }
+}
 
 /* soft center highlight in the indicator to raise icon contrast (very subtle) */
 .tab-indicator::after {
@@ -341,7 +553,22 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 /* when user prefers reduced motion, use a simple fade without translate/scale */
 @media (prefers-reduced-motion: reduce) {
-  .tab-indicator { transition: opacity 120ms linear; transform: none !important; }
+  .tab-indicator { 
+    transition: opacity 120ms linear; 
+    transform: none !important; 
+    animation: none !important;
+  }
+  .tab-item .ic,
+  .tab-item span,
+  .tab-item::before,
+  .tab-item::after {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .tab-item[aria-current="page"] .ic {
+    transform: translateY(-6px); /* keep the lift but no animation */
+  }
 }
 
 .feed {
@@ -353,7 +580,7 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   width: 100%;
   box-sizing: border-box;
   /* keep a small horizontal padding so full-bleed slides don't touch the edges */
-  padding: 0 12px;
+  padding: 0 12px 80px 12px; /* Added 80px bottom padding for space above navbar */
 }
 .card {
   background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
@@ -619,8 +846,9 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   font-size: 15px;
   font-family: 'Patrick Hand', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   line-height: 1.35;
+  text-align: center;
 }
-.actions { display: flex; align-items: center; gap: 10px; }
+.actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .action {
   display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
   font-size: 13px; cursor: pointer; padding: 6px 8px; border-radius: 8px;

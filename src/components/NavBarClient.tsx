@@ -20,6 +20,7 @@ export function NavBarClient() {
   const [indicator, setIndicator] = useState({ left: 0, width: 0, visible: false });
   const [pop, setPop] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ username?: string; id?: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("");
 
   // Get current user info for profile navigation
   useEffect(() => {
@@ -42,6 +43,13 @@ export function NavBarClient() {
   }, []);
 
   const handleTabClick = async (href: string) => {
+    // Add ripple effect on click
+    const clickedButton = document.querySelector(`button[data-href="${href}"]`);
+    if (clickedButton) {
+      clickedButton.classList.add('ripple');
+      setTimeout(() => clickedButton.classList.remove('ripple'), 600);
+    }
+
     // Special handling for profile navigation
     if (href === "/profile") {
       if (currentUser?.username) {
@@ -160,11 +168,18 @@ export function NavBarClient() {
             }
           }
           
+          // Update active tab for indicator color
+          if (isActive && activeTab !== t.label.toLowerCase()) {
+            setActiveTab(t.label.toLowerCase());
+          }
+          
           return (
             <button
               key={t.href}
               className={`tab-item ${isActive ? "active" : ""}`}
               onClick={() => handleTabClick(t.href)}
+              data-href={t.href}
+              data-tab={t.label.toLowerCase()}
               role="tab"
               aria-current={isActive ? "page" : undefined}
               aria-label={t.label}
@@ -180,6 +195,7 @@ export function NavBarClient() {
           aria-hidden
           className={`tab-indicator ${pop ? "pop" : ""} ${indicator.visible ? "visible" : ""}`}
           style={{ left: indicator.left ? `${indicator.left}px` : undefined, width: indicator.width ? `${indicator.width}px` : undefined }}
+          data-active-tab={activeTab}
         />
       </div>
     </nav>

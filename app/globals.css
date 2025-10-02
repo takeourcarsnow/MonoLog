@@ -613,8 +613,14 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .follow-btn.pulse { animation: pulse 420ms ease; }
 @keyframes pulse { 0% { transform: scale(.98); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
 .card-head {
-  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border);
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 10px 12px; 
+  border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--bg-elev), transparent 10%);
+  flex-wrap: nowrap; /* Prevent wrapping on mobile */
+  min-width: 0; /* Allow flex children to shrink */
 }
 
 /* Subtle, card-scoped button micro-interactions (used on About and other card actions) */
@@ -664,10 +670,31 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 @media (prefers-reduced-motion: reduce) {
   .card .btn, .card .btn:hover, .card .btn:focus { transition: none; transform: none; box-shadow: none; }
 }
-.avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
-.user-line { display: flex; align-items: center; gap: 6px; }
-.username { font-weight: 700; font-size: 14px; }
-.dim { color: var(--muted); font-size: 12px; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.user-line { 
+  display: flex; 
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* Allow flex item to shrink below content size */
+  flex: 1; /* Take available space */
+  overflow: hidden; /* Contain overflowing text */
+}
+.username { 
+  font-weight: 700; 
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.dim { 
+  color: var(--muted); 
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
 
 .card-media img {
   width: 100%; height: auto; display: block;
@@ -1816,6 +1843,9 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   display: flex; /* redundant with some inline styles but safe to keep */
   align-items: center;
   gap: 12px; /* increased spacing between avatar and name */
+  min-width: 0; /* Allow flex item to shrink below content size */
+  flex: 1; /* Take available space but don't push buttons off */
+  overflow: hidden; /* Contain overflowing content */
 }
 
 /* Followed user ring + subtle pop animation */

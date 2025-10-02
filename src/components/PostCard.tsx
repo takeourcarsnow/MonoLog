@@ -578,7 +578,7 @@ export function PostCard({ post: initial, allowCarouselTouch }: { post: Hydrated
             <span className="dim">{userLine}</span>
           </div>
         </Link>
-  <div style={{ marginLeft: "auto", position: "relative" }}>
+  <div style={{ marginLeft: "auto", position: "relative", display: "flex", gap: 8, flexShrink: 0 }}>
               {!isMe ? (
                 <>
                   <button

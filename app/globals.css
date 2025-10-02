@@ -2703,6 +2703,46 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   box-shadow: 0 8px 24px color-mix(in srgb, var(--primary), transparent 60%);
 }
 
+/* Edit/Delete icon-reveal buttons: reuse the same icon reveal behavior as follow */
+.edit-btn, .delete-btn {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: transform 200ms var(--transition-mid), box-shadow 200ms var(--transition-mid), color 160ms var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Keep consistent icon sizing with existing helpers */
+.icon-reveal .icon { width: 18px; height: 18px; }
+
+/* Edit: subtle primary accent on the icon */
+.edit-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.edit-btn .icon { color: var(--primary); }
+.edit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+
+/* Delete: ghost style but with danger icon; pressing-delete animation preserved */
+.delete-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.delete-btn .icon { color: var(--danger); }
+.delete-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+.delete-btn.pressing-delete { animation: pressDanger 400ms ease-in-out; }
+
+/* Hide mouse-focus halo but preserve keyboard focus visibility */
+.edit-btn:focus:not(:focus-visible),
+.delete-btn:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.edit-btn:focus:not(:focus-visible)::after,
+.delete-btn:focus:not(:focus-visible)::after {
+  box-shadow: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edit-btn, .delete-btn { transition: none !important; animation: none !important; }
+}
+
 /* About card: constrain very long bios so they don't push header/avatar off-screen */
 .about-card .card-body { max-height: 220px; overflow: auto; }
 .about-card .card-body .dim { white-space: pre-wrap; }

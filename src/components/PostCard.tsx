@@ -9,7 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Comments } from "./Comments";
 import ImageZoom from "./ImageZoom";
-import { Lock, UserPlus, UserCheck } from "lucide-react";
+import { Lock, UserPlus, UserCheck, Edit, Trash } from "lucide-react";
 import { AuthForm } from "./AuthForm";
 import { useToast } from "./Toast";
 
@@ -639,11 +639,14 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
           ) : (
             <>
               {!editing && (
-                <button className="btn" onClick={() => setEditing(true)}>Edit</button>
+                <button className="btn icon-reveal edit-btn" onClick={() => setEditing(true)}>
+                  <span className="icon" aria-hidden="true"><Edit size={16} /></span>
+                  <span className="reveal label">Edit</span>
+                </button>
               )}
               <button
                 ref={deleteBtnRef}
-                className={`btn ghost ${isPressingDelete ? "pressing-delete" : ""}`}
+                className={`btn ghost icon-reveal delete-btn ${isPressingDelete ? "pressing-delete" : ""}`}
                 onMouseDown={() => setIsPressingDelete(true)}
                 onMouseUp={() => setIsPressingDelete(false)}
                 onMouseLeave={() => setIsPressingDelete(false)}
@@ -653,7 +656,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                 aria-haspopup="dialog"
                 aria-expanded={showDeleteConfirm}
               >
-                Delete
+                <span className="icon" aria-hidden="true"><Trash size={16} /></span>
+                <span className="reveal label">Delete</span>
               </button>
                   {showDeleteConfirm && (
                 <div ref={popRef} className="confirm-popover" role="dialog" aria-label="Confirm delete" aria-modal={true}>

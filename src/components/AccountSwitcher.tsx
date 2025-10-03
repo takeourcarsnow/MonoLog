@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { api, getSupabaseClient } from "@/lib/api";
 import type { User } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import { AuthForm } from "@/components/AuthForm";
 
 export function AccountSwitcher() {
   // use `undefined` as the initial state to represent "loading" so the
@@ -13,7 +12,6 @@ export function AccountSwitcher() {
   // probe the client-side auth state (fixes refresh/hydration flicker).
   const [me, setMe] = useState<User | null | undefined>(undefined);
   const router = useRouter();
-  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -78,7 +76,6 @@ export function AccountSwitcher() {
       }
     })();
     const onAuth = async () => {
-      setShowAuth(false);
       setMe(await api.getCurrentUser());
     };
     window.addEventListener("auth:changed", onAuth);
@@ -107,7 +104,8 @@ export function AccountSwitcher() {
           }
           // Blur active element first to dismiss native suggestion/autocomplete
           try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
-          setShowAuth(true);
+          // When not signed in, go to the profile page which hosts the auth form
+          router.push('/profile');
         }}
         aria-label="Open profile"
       >
@@ -122,36 +120,18 @@ export function AccountSwitcher() {
             <img src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" style={{ width: 22, height: 22 }} />
             <span>@{current.username || current.id}</span>
           </span>
-        ) : "Account"}
+        ) : (
+          // show a user icon instead of the text "Account" when unauthenticated
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </span>
+        )}
       </button>
 
-        {showAuth ? (
-        <>
-          <div
-            className="auth-overlay"
-            onClick={() => setShowAuth(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 40 }}
-          />
-          <div
-            className="auth-popover"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Sign in or sign up"
-            style={{ position: "absolute", right: 0, marginTop: 8, zIndex: 50, background: "var(--bg)", padding: 12, borderRadius: 8, boxShadow: "0 6px 18px rgba(0,0,0,0.6)" }}
-          >
-            <AuthForm onClose={async () => {
-              setShowAuth(false);
-              // Refresh user state after login
-              try {
-                const user = await api.getCurrentUser();
-                setMe(user);
-              } catch (e) {
-                setMe(null);
-              }
-            }} />
-          </div>
-        </>
-      ) : null}
+      
     </div>
   );
 }

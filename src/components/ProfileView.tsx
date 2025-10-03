@@ -133,6 +133,17 @@ export function ProfileView({ userId }: { userId?: string }) {
           setPosts(userPosts);
         } catch (_) {}
         setLoading(false);
+        return;
+      }
+
+      // No authenticated user found. Clear viewer state for the "own profile"
+      // route so the page can show the sign in / sign up form instead of
+      // incorrectly continuing to render a stale signed-in profile.
+      setCurrentUserId(null);
+      if (!isOtherParam) {
+        setUser(null);
+        setPosts([]);
+        setLoading(false);
       }
     };
     

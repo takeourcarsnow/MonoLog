@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -20,68 +20,48 @@ export function NavBarClient() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, visible: false });
   const [pop, setPop] = useState(false);
+  const [indicatorTransitionsEnabled, setIndicatorTransitionsEnabled] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ username?: string; id?: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("");
+  // Centralized detection logic so pathname and slide events behave the same
+  const detectActive = (p: string) => {
+    for (const t of tabs) {
+      let isActive = p === t.href || (t.href === "/feed" && p === "/");
 
-  // Calculate which tab is active based on pathname
-  useEffect(() => {
-    // reuse detection logic so pathname and slide events behave the same
-    const detect = (p: string) => {
-      for (const t of tabs) {
-        let isActive = p === t.href || (t.href === "/feed" && p === "/");
-
-        if (t.href === "/profile" && !isActive) {
-          const pathSegments = p.split('/').filter(Boolean);
-          if (pathSegments.length === 1) {
-            const segment = pathSegments[0];
-            const RESERVED_ROUTES = [
-              'about', 'api', 'calendar', 'explore', 'favorites', 
-              'feed', 'post', 'profile', 'upload'
-            ];
-            if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-              isActive = true;
-            }
+      if (t.href === "/profile" && !isActive) {
+        const pathSegments = p.split('/').filter(Boolean);
+        if (pathSegments.length === 1) {
+          const segment = pathSegments[0];
+          const RESERVED_ROUTES = [
+            'about', 'api', 'calendar', 'explore', 'favorites', 
+            'feed', 'post', 'profile', 'upload'
+          ];
+          if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+            isActive = true;
           }
         }
-
-        if (isActive) return t.label.toLowerCase();
       }
-      return "";
-    };
 
-    const newActive = detect(pathname);
-    setActiveTab(newActive);
+      if (isActive) return t.label.toLowerCase();
+    }
+    return "";
+  };
+
+  // Start empty and synchronously set the active tab from the real
+  // client pathname before the first paint so the indicator doesn't
+  // animate from a wrong initial position.
+  const [activeTab, setActiveTab] = useState<string>("");
+
+  useLayoutEffect(() => {
+    const p = typeof window !== 'undefined' ? window.location.pathname : (pathname || "");
+    setActiveTab(detectActive(p));
   }, [pathname]);
 
   // Listen for swiper slide changes for immediate active state updates
   useEffect(() => {
     const handleSlideChange = (e: CustomEvent) => {
       const { path } = e.detail;
-      // reuse same detection as pathname so username/profile paths are handled
-      const detect = (p: string) => {
-        for (const t of tabs) {
-          let isActive = p === t.href || (t.href === "/feed" && p === "/");
-
-          if (t.href === "/profile" && !isActive) {
-            const pathSegments = p.split('/').filter(Boolean);
-            if (pathSegments.length === 1) {
-              const segment = pathSegments[0];
-              const RESERVED_ROUTES = [
-                'about', 'api', 'calendar', 'explore', 'favorites', 
-                'feed', 'post', 'profile', 'upload'
-              ];
-              if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-                isActive = true;
-              }
-            }
-          }
-
-          if (isActive) return t.label.toLowerCase();
-        }
-        return "";
-      };
-
-      const newActive = detect(path || "");
+      // reuse centralized detection logic
+      const newActive = detectActive(path || "");
       setActiveTab(newActive);
     };
 
@@ -153,7 +133,9 @@ export function NavBarClient() {
     }
   };
 
-  useEffect(() => {
+  // Measure and position the indicator before paint using layout effect
+  // to avoid visible jumps on initial load.
+  useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -165,22 +147,22 @@ export function NavBarClient() {
         setIndicator(i => ({ ...i, visible: false }));
         return;
       }
-      
+
       // Find the button that matches activeTab
       const activeButton = container.querySelector<HTMLElement>(`button[data-tab="${activeTab}"]`);
-      
+
       if (!activeButton) {
         setIndicator(i => ({ ...i, visible: false }));
         return;
       }
-      
+
       // Find the icon element inside the active tab
       const activeIcon = activeButton.querySelector<HTMLElement>('.ic');
       if (!activeIcon) {
         setIndicator(i => ({ ...i, visible: false }));
         return;
       }
-      
+
       const iconRect = activeIcon.getBoundingClientRect();
       const parentRect = container.getBoundingClientRect();
       const iconLeft = iconRect.left - parentRect.left;
@@ -190,15 +172,29 @@ export function NavBarClient() {
       const size = 44;
       const left = Math.round(iconLeft + (iconRect.width - size) / 2);
       const top = Math.round(iconTop + (iconRect.height - size) / 2);
+      // On initial measurement we disable CSS transitions so the indicator
+      // doesn't animate from a default position to the measured one.
       setIndicator({ left, width: size, visible: true });
+      if ((update as any)._initial) {
+        setIndicatorTransitionsEnabled(false);
+        // Re-enable transitions on the next animation frame so subsequent
+        // moves animate smoothly.
+        window.requestAnimationFrame(() => {
+          window.setTimeout(() => setIndicatorTransitionsEnabled(true), 40);
+        });
+      }
       // store top as part of width field? Keep indicator state small — we'll set top via CSS variable
       if (container) container.style.setProperty("--indicator-top", `${top}px`);
       if (!prefersReduced) {
-        // trigger a short pop animation
-        setPop(true);
-        window.clearTimeout((update as any)._t);
-        (update as any)._t = window.setTimeout(() => setPop(false), 420);
+        // trigger a short pop animation unless this is the first measurement
+        if (!(update as any)._initial) {
+          setPop(true);
+          window.clearTimeout((update as any)._t);
+          (update as any)._t = window.setTimeout(() => setPop(false), 420);
+        }
       }
+      // mark initial as done
+      (update as any)._initial = false;
     };
 
     // Stabilization: re-run measurements a few times after changes to catch
@@ -231,6 +227,9 @@ export function NavBarClient() {
       }
     };
 
+    // mark initial measurement so we can suppress the pop animation once
+    (update as any)._initial = true;
+
     // initial measure + stabilization
     stabilize();
 
@@ -240,7 +239,7 @@ export function NavBarClient() {
     // re-observe when activeTab changes (active icon element will differ)
     observeActiveIcon();
 
-    return () => {
+  return () => {
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
       window.clearTimeout((update as any)._t);
@@ -280,20 +279,25 @@ export function NavBarClient() {
         <span
           aria-hidden
           className={`tab-indicator ${pop ? "pop" : ""} ${indicator.visible ? "visible" : ""}`}
-          style={{ left: indicator.left ? `${indicator.left}px` : undefined, width: indicator.width ? `${indicator.width}px` : undefined }}
+          // Always set left/width (including 0) so the indicator doesn't fall back
+          // to a CSS default position on first render and then jump.
+          style={{ left: `${indicator.left}px`, width: `${indicator.width}px`, transition: indicatorTransitionsEnabled ? undefined : 'none' }}
           data-active-tab={activeTab}
+          data-transitions-enabled={indicatorTransitionsEnabled}
         />
       </div>
     </nav>
   );
+  // Only render the navbar after the component has mounted on the client.
+  // Rendering server-side HTML and then switching to a portal on the client
+  // causes a DOM mismatch and visible jumps; defer rendering until mounted
+  // and always portal into document.body.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Portal the navbar into document.body so transforms applied to app
-  // content do not create a containing block that affects fixed positioning.
-  if (typeof document !== 'undefined' && document.body) {
-    return createPortal(nav, document.body);
-  }
+  if (!mounted) return null;
 
-  return nav;
+  return createPortal(nav, document.body);
 }
 
 export default NavBarClient;

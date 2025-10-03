@@ -175,7 +175,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   return (
     <form
       onSubmit={submit}
-      className="auth-form enhanced auth-form-tight space-y-5"
+  className="auth-form enhanced auth-form-tight"
       aria-label="Sign in or sign up"
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -248,8 +248,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-      <div className="w-full flex flex-col gap-3 inputs-wrap" style={{ maxWidth: 400 }}>
-        <div className="field-group flex flex-col gap-3 w-full">
+      <div className="w-full flex flex-col gap-2 inputs-wrap" style={{ maxWidth: 400 }}>
+        <div className="field-group flex flex-col gap-2 w-full">
           <input
             className="input fancy-input"
             placeholder="Email"
@@ -305,7 +305,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-      <div className="auth-actions flex gap-2 justify-center w-full" style={{ maxWidth: 400, marginTop: 6 }}>
+  <div className="auth-actions flex gap-1 justify-center w-full" style={{ maxWidth: 400, marginTop: 4 }}>
         <button
           className={`auth-confirm-btn ${loading ? 'loading' : ''} ${signupSent ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : 'mode-signin'}`}
           disabled={loading}

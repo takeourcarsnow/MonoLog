@@ -28,8 +28,8 @@
   overflow: hidden;
   background: var(--primary-weak); /* pastel base (cooldown style) */
   color: var(--text);
-  /* remove persistent halo/shadow to match Cancel button vibe; keep a subtle base shadow */
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  /* remove persistent halo/shadow to match Cancel button vibe */
+  box-shadow: none;
   line-height: 1; /* tighter vertical rhythm */
 }
 
@@ -41,7 +41,8 @@
 .publish-button:not(:disabled):hover {
   transform: translateY(-2px);
   /* subtle hover shadow to hint interactiveness */
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  /* removed hover shadow */
+  box-shadow: none;
 }
 
 .publish-button:not(:disabled):active {
@@ -56,7 +57,8 @@
 
 /* subtler pulse */
 .publish-button.ready.pulse {
-  animation: ready-pulse 2.4s ease-in-out infinite;
+  /* pulse animation disabled to avoid glow/halo */
+  animation: none;
 }
 
 @keyframes ready-pulse {
@@ -79,7 +81,8 @@
 
 .publish-button.cooldown:hover {
   transform: none; /* no lift when inactive */
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary), transparent 80%);
+  /* no shadow while cooling down */
+  box-shadow: none;
 }
 
 /* Cooldown shrinking bar (remaining portion) */
@@ -89,7 +92,7 @@
 @keyframes flashBar { 0% { filter: brightness(1.8); opacity:.55; } 40% { filter: brightness(1.1); opacity:.22; } 100% { filter: brightness(1); opacity:.18; } }
 
 /* Flash digits when clicking during cooldown */
-.publish-button.flash .countdown-time { animation: flashDigits 900ms ease; }
+.publish-button.flash .countdown-time { animation: none; /* disable glowing text during flash */ }
 @keyframes flashDigits { 0% { transform: scale(1.08); text-shadow:0 0 12px color-mix(in srgb, var(--primary), #fff 40%); } 50% { transform: scale(1); } 100% { text-shadow: 0 1px 3px rgba(0,0,0,.25); } }
 
 /* Content container */
@@ -117,7 +120,9 @@
 }
 
 .ready-text {
-  animation: ready-text-glow 2s ease-in-out infinite;
+  /* disable glowing text effect */
+  animation: none;
+  text-shadow: none;
 }
 
 @keyframes ready-text-glow {
@@ -259,10 +264,10 @@
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .publish-button {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
   }
   
   .publish-button:not(:disabled):hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: none;
   }
 }

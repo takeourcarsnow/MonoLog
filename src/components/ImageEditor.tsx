@@ -1599,7 +1599,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
           <span className="sr-only">Edit Photo</span>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+  <div className="image-editor-buttons" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
           {/* rotate buttons removed from header */}
 
           {/* Cancel (ghost) */}
@@ -1621,6 +1621,30 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           </button>
         </div>
       </div>
+
+      {/* compact the header buttons on desktop to free horizontal editor space */}
+      <style>{`
+        @media (min-width: 720px) {
+          /* much narrower header icon buttons */
+          .image-editor .image-editor-buttons { gap: 4px; }
+          .image-editor .btn.icon.ghost {
+            padding: 4px;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 6px;
+          }
+          .image-editor .btn.icon.ghost svg { width: 12px; height: 12px; }
+
+          /* tighten category pills to avoid forcing header width */
+          .image-editor .cat-btn { padding: 6px 8px; border-radius: 8px; }
+          /* keep labels short and only visible when active */
+          .image-editor .cat-btn .cat-label { max-width: 56px; }
+
+          /* reduce top header vertical spacing slightly */
+          .image-editor > div[style] { margin-bottom: 8px; }
+        }
+      `}</style>
 
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
         <canvas

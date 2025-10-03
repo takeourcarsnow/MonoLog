@@ -120,15 +120,9 @@ function UploaderCore() {
   }, []);
 
   // When the image editor is open, prevent background scrolling so the overlay
-  // feels like a true modal on mobile (covers full viewport and blocks interaction).
-  useEffect(() => {
-    if (editing) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = prev; };
-    }
-    return;
-  }, [editing]);
+  // Previously the editor opened in a fullscreen modal and blocked body
+  // scrolling. The editor now opens inline inside the uploader preview so
+  // we no longer toggle body overflow here.
 
   // Close editor automatically if user navigates away from /upload
   useEffect(() => {
@@ -782,7 +776,60 @@ function UploaderCore() {
           {/* ImageEditor moved inline into the main form below — keep preview DOM unchanged here. */}
 
           {/* Render either the ImageEditor inline (replacing the visible photo) or the preview content. */}
-          <>
+          {editing && pathname === '/upload' && (dataUrls[editingIndex] || dataUrl) ? (
+            <div style={{ width: '100%' }}>
+              <ImageEditor
+                initialDataUrl={(originalDataUrls[editingIndex] || originalDataUrls[0] || dataUrls[editingIndex] || dataUrl) as string}
+                initialSettings={editorSettings[editingIndex] || {}}
+                onCancel={() => setEditing(false)}
+                onApply={async (newUrl, settings) => {
+                  setAlt(prev => {
+                    if (Array.isArray(prev)) {
+                      const copy = [...prev];
+                      copy[editingIndex] = editingAlt || "";
+                      return copy;
+                    }
+                    if (dataUrls.length > 1) {
+                      const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
+                      return arr;
+                    }
+                    return editingAlt || "";
+                  });
+                  setEditorSettings(prev => {
+                    const copy = [...prev];
+                    while (copy.length <= editingIndex) copy.push({});
+                    copy[editingIndex] = settings;
+                    return copy;
+                  });
+                  setProcessing(true);
+                  try {
+                    const compressed = await compressImage(newUrl as any);
+                    setDataUrls(d => {
+                      const copy = [...d];
+                      copy[editingIndex] = compressed;
+                      return copy;
+                    });
+                    if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
+                    setCompressedSize(approxDataUrlBytes(compressed));
+                    setOriginalSize(approxDataUrlBytes(newUrl));
+                  } catch (e) {
+                    console.error(e);
+                    setDataUrls(d => {
+                      const copy = [...d];
+                      copy[editingIndex] = newUrl as string;
+                      return copy;
+                    });
+                    if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
+                    setCompressedSize(approxDataUrlBytes(newUrl as string));
+                  } finally {
+                    setProcessing(false);
+                    setEditing(false);
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <>
             {dataUrls.length > 1 ? (
                   <div style={{ width: '100%' }}>
                     <div className="carousel-wrapper" tabIndex={0} onKeyDown={(e) => {
@@ -900,7 +947,8 @@ function UploaderCore() {
                     ) : null }
               </div>
             )}
-          </>
+            </>
+          )}
         </div>
 
         {/* Camera modal (getUserMedia) */}
@@ -1030,71 +1078,7 @@ function UploaderCore() {
           </div>
         ) : null}
 
-        {/* The explicit "Exit edit" button was removed because Cancel performs the same action.
-          </>
-          {/* Render the ImageEditor as a modal overlay via Portal so opening it doesn't reflow the preview layout. */}
-          {editing && pathname === '/upload' && (dataUrls[editingIndex] || dataUrl) ? (
-            <Portal>
-              <div
-                role="dialog"
-                aria-modal={true}
-                style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 60, background: 'rgba(0,0,0,0.55)' }}
-                onClick={() => setEditing(false)}
-              >
-                <div style={{ width: '100%', maxWidth: 'min(92vw, 820px)', margin: '0 auto' }} onClick={(e) => e.stopPropagation()}>
-                  <ImageEditor
-                    initialDataUrl={(originalDataUrls[editingIndex] || originalDataUrls[0] || dataUrls[editingIndex] || dataUrl) as string}
-                    initialSettings={editorSettings[editingIndex] || {}}
-                    onCancel={() => setEditing(false)}
-                    onApply={async (newUrl, settings) => {
-                      setAlt(prev => {
-                        if (Array.isArray(prev)) {
-                          const copy = [...prev];
-                          copy[editingIndex] = editingAlt || "";
-                          return copy;
-                        }
-                        if (dataUrls.length > 1) {
-                          const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
-                          return arr;
-                        }
-                        return editingAlt || "";
-                      });
-                      setEditorSettings(prev => {
-                        const copy = [...prev];
-                        while (copy.length <= editingIndex) copy.push({});
-                        copy[editingIndex] = settings;
-                        return copy;
-                      });
-                      setProcessing(true);
-                      try {
-                        const compressed = await compressImage(newUrl as any);
-                        setDataUrls(d => {
-                          const copy = [...d];
-                          copy[editingIndex] = compressed;
-                          return copy;
-                        });
-                        if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
-                        setCompressedSize(approxDataUrlBytes(compressed));
-                        setOriginalSize(approxDataUrlBytes(newUrl));
-                      } catch (e) {
-                        console.error(e);
-                        setDataUrls(d => {
-                          const copy = [...d];
-                          copy[editingIndex] = newUrl as string;
-                          return copy;
-                        });
-                        if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
-                        setCompressedSize(approxDataUrlBytes(newUrl as string));
-                      } finally {
-                        setProcessing(false);
-                        setEditing(false);
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </Portal>
-          ) : null}
+        {/* inline editor render handled earlier in the preview area; modal Portal removed */}
       </div>
 
       {/* When processing, blur the visible preview and show a small badge instead of the fullscreen overlay */}

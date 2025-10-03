@@ -138,6 +138,30 @@ const FILTER_PRESETS: Record<string, string> = {
   film: 'contrast(1.08) saturate(0.92) brightness(0.98)'
 };
 
+// unique colors for each category button when selected
+const CATEGORY_COLORS: Record<string, string> = {
+  basic: '#2d9cff',    // blue
+  color: '#ff6b6b',    // red/pink
+  effects: '#9b5cff',  // purple
+  crop: '#00c48c',     // green
+  frame: '#ffb703'     // warm yellow
+};
+
+// unique colors for each filter button when selected
+const FILTER_COLORS: Record<string, string> = {
+  none: '#94a3b8',    // neutral
+  sepia: '#d97706',   // amber
+  mono: '#374151',    // slate
+  cinema: '#0ea5a5',  // teal
+  bleach: '#ef4444',  // red
+  vintage: '#8b5cf6', // violet
+  lomo: '#fb923c',    // orange
+  warm: '#ffb86b',    // warm
+  cool: '#60a5fa',    // cool blue
+  invert: '#64748b',  // gray-blue
+  film: '#16a34a'     // green
+};
+
 export default function ImageEditor({ initialDataUrl, initialSettings, onCancel, onApply }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -310,11 +334,14 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     // for the canvas drawing coordinates.
     const cssW = canvas.clientWidth || Math.max(100, canvas.width / (window.devicePixelRatio || 1));
     const cssH = canvas.clientHeight || Math.max(100, canvas.height / (window.devicePixelRatio || 1));
-    // Minimal padding so image fills most of the editor canvas
-    const padRatio = 0.02; // just 2% padding for breathing room
+  // Minimal padding so image fills most of the editor canvas
+  // Use zero padding so the image tightly fills the canvas and avoids visible empty space
+  const padRatio = 0.0;
     const availW = Math.max(1, cssW * (1 - padRatio * 2));
     const availH = Math.max(1, cssH * (1 - padRatio * 2));
-  const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
+  // Use cover-style scaling so the image fills the available area and avoids letterbox gaps
+  // This may crop some parts of the image at the edges but ensures no empty space is visible.
+  const baseScale = Math.max(availW / img.naturalWidth, availH / img.naturalHeight);
   const dispW = img.naturalWidth * baseScale;
   const dispH = img.naturalHeight * baseScale;
     const left = (cssW - dispW) / 2;
@@ -330,11 +357,20 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       const c = canvasRef.current; const cont = containerRef.current;
       if (!c || !cont) return;
       const dpr = window.devicePixelRatio || 1;
-      // use clientWidth/clientHeight to avoid transform/scale issues from parent modals
+      // use clientWidth to derive canvas size (avoid transform/scale issues from parent modals)
       const contW = Math.max(100, Math.round(cont.clientWidth));
-      // Match the uploader preview size more closely - use similar aspect with larger max height
-      const targetHeight = Math.min(520, Math.max(340, contW * 0.8)); // Increased from 400px to 520px max
-      
+      // Keep previous min/max constraints but prefer the image's natural aspect ratio when available
+      const MAX_HEIGHT = 520;
+      const MIN_HEIGHT = 140;
+      let targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(contW * 0.8)));
+      const img = imgRef.current;
+      if (img && img.naturalWidth && img.naturalHeight) {
+        // Compute height that matches the image aspect ratio at the current container width
+        const imgHeight = Math.round((img.naturalHeight / img.naturalWidth) * contW);
+        // Clamp to sensible bounds so the editor never becomes too tall or too small
+        targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, imgHeight));
+      }
+
       c.width = Math.max(100, Math.round(contW * dpr));
       c.height = Math.max(100, Math.round(targetHeight * dpr));
       c.style.width = `${contW}px`;
@@ -763,6 +799,53 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     const pct = Math.round(((value - min) / (max - min)) * 100);
     return `linear-gradient(90deg, ${leftColor} ${pct}%, ${rightColor} ${pct}%)`;
   }
+
+  // Ensure slider interactions don't cause the outer app swiper to change slides.
+  // Dispatch global events that AppShell listens to so it can temporarily disable
+  // outer swipe handling while the user is moving a slider.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof window === 'undefined') return;
+
+    const start = () => {
+      try { window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
+  // ensure we always end when pointer/touch/mouse is released anywhere
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+  window.addEventListener('touchend', end);
+  window.addEventListener('touchcancel', end);
+  window.addEventListener('mouseup', end);
+    };
+
+    const end = () => {
+      try { window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('touchend', end);
+      window.removeEventListener('mouseup', end);
+    };
+
+    const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('.imgedit-range'));
+    inputs.forEach(inp => {
+      inp.addEventListener('pointerdown', start);
+      inp.addEventListener('touchstart', start, { passive: true } as any);
+      inp.addEventListener('mousedown', start);
+    });
+
+    return () => {
+      inputs.forEach(inp => {
+        inp.removeEventListener('pointerdown', start);
+        inp.removeEventListener('touchstart', start as any);
+        inp.removeEventListener('mousedown', start);
+      });
+  // ensure cleanup of window listeners
+  window.removeEventListener('pointerup', end);
+  window.removeEventListener('pointercancel', end);
+  window.removeEventListener('touchend', end);
+  window.removeEventListener('touchcancel', end);
+  window.removeEventListener('mouseup', end);
+    };
+    // run once on mount when containerRef is available
+  }, []);
 
   function getPointerPos(e: PointerEvent | React.PointerEvent) {
     const canvas = canvasRef.current; if (!canvas) return { x: 0, y: 0 };
@@ -1524,9 +1607,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     title="Basic"
     className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('basic'); }}
-    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'basic' ? 'transparent' : 'transparent', color: selectedCategory === 'basic' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'basic' ? 700 : 500, overflow: 'hidden' }}
+  style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'basic' ? 'transparent' : 'transparent', color: 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'basic' ? 700 : 500, overflow: 'hidden' }}
   >
-    <Sliders size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
+  <Sliders size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'basic' ? CATEGORY_COLORS.basic : undefined }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Basic</span>
   </button>
 
@@ -1538,9 +1621,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     title="Filters"
     className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('color'); }}
-    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'color' ? 'transparent' : 'transparent', color: selectedCategory === 'color' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'color' ? 700 : 500, overflow: 'hidden' }}
+  style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'color' ? 'transparent' : 'transparent', color: 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'color' ? 700 : 500, overflow: 'hidden' }}
   >
-    <Palette size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
+  <Palette size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'color' ? CATEGORY_COLORS.color : undefined }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Filters</span>
   </button>
 
@@ -1552,9 +1635,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     title="Effects"
     className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('effects'); }}
-    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'effects' ? 'transparent' : 'transparent', color: selectedCategory === 'effects' ? '#fff' : 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'effects' ? 700 : 500, overflow: 'hidden' }}
+  style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'effects' ? 'transparent' : 'transparent', color: 'var(--text)', transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'effects' ? 700 : 500, overflow: 'hidden' }}
   >
-    <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
+  <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'effects' ? CATEGORY_COLORS.effects : undefined }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Effects</span>
   </button>
 
@@ -1566,9 +1649,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     title="Crop"
     className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('crop'); }}
-    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'crop' ? 'transparent' : 'transparent', color: selectedCategory === 'crop' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'crop' ? 700 : 500, overflow: 'hidden' }}
+  style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'crop' ? 'transparent' : 'transparent', color: 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'crop' ? 700 : 500, overflow: 'hidden' }}
   >
-    <Scissors size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
+  <Scissors size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'crop' ? CATEGORY_COLORS.crop : undefined }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Crop</span>
   </button>
 
@@ -1580,9 +1663,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     title="Frame"
     className="cat-btn"
     onClick={(e: any) => { try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {} setSelectedCategory('frame'); }}
-    style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'frame' ? 'transparent' : 'transparent', color: selectedCategory === 'frame' ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'frame' ? 700 : 500, overflow: 'hidden' }}
+  style={{ padding: '10px 12px', borderRadius: 10, background: selectedCategory === 'frame' ? 'transparent' : 'transparent', color: 'var(--text)', transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease', position: 'relative', zIndex: 1, flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', fontWeight: selectedCategory === 'frame' ? 700 : 500, overflow: 'hidden' }}
   >
-    <ImageIcon size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0 }} />
+  <ImageIcon size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'frame' ? CATEGORY_COLORS.frame : undefined }} />
     <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Frame</span>
   </button>
   </div>
@@ -1644,7 +1727,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                     data-filter={f}
                     type="button"
                     onMouseDown={() => { selectedFilterRef.current = f; setSelectedFilter(f); draw(undefined, { selectedFilter: f }); requestAnimationFrame(() => draw()); }}
-                    style={{ padding: '8px 12px', borderRadius: 10, background: 'transparent', color: selectedFilter === f ? '#fff' : 'var(--text)', transition: 'transform 120ms ease, box-shadow 200ms ease, color 200ms ease', display: 'inline-flex', gap: 8, alignItems: 'center', position: 'relative', zIndex: 1, border: 'none', fontWeight: selectedFilter === f ? 700 : 500 }}
+                    style={{ padding: '8px 12px', borderRadius: 10, background: 'transparent', color: 'var(--text)', transition: 'transform 120ms ease, box-shadow 200ms ease, color 200ms ease', display: 'inline-flex', gap: 8, alignItems: 'center', position: 'relative', zIndex: 1, border: 'none', fontWeight: selectedFilter === f ? 700 : 500 }}
                     onMouseDownCapture={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')}
                     onMouseUpCapture={(e)=> (e.currentTarget.style.transform = '')}
                     onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}
@@ -1652,7 +1735,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                     onBlur={(e)=> (e.currentTarget.style.boxShadow = '')}
                     aria-pressed={selectedFilter===f}
                   >
-                    <Icon size={18} strokeWidth={2} aria-hidden />
+                    <Icon size={18} strokeWidth={2} aria-hidden style={{ color: selectedFilter === f ? FILTER_COLORS[f] ?? undefined : undefined }} />
                     <span style={{ fontSize: 13 }}>{f}</span>
                   </button>
                 );

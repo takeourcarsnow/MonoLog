@@ -97,11 +97,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
         (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
       );
-      const val = Boolean(touch);
-      console.debug('[AppShell] touch detection on mount ->', val);
-      setIsTouchDevice(val);
+      setIsTouchDevice(Boolean(touch));
     } catch (e) {
-      console.debug('[AppShell] touch detection error', e);
       setIsTouchDevice(false);
     }
   }, []);
@@ -109,13 +106,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // swiperRef will be set via onSwiper; support both shapes for safety
     const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-    console.debug('[AppShell] syncing slide, currentIndex=', currentIndex, 'instance=', inst ? true : false);
     if (inst && typeof inst.slideTo === 'function') {
       try {
         inst.slideTo(currentIndex);
-      } catch (err) {
-        console.debug('[AppShell] slideTo error', err);
-      }
+      } catch (_) { /* ignore */ }
     }
   }, [currentIndex]);
 
@@ -126,34 +120,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     function onDragStart() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        console.debug('[AppShell] onDragStart - swiper instance:', !!inst, 'prev allowTouchMove=', inst?.allowTouchMove);
         if (inst) inst.allowTouchMove = false;
-        console.debug('[AppShell] onDragStart - allowTouchMove set to false');
-      } catch (err) { console.debug('[AppShell] onDragStart error', err); }
+      } catch (_) { /* ignore */ }
     }
     function onDragEnd() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        console.debug('[AppShell] onDragEnd - swiper instance:', !!inst, 'restoring allowTouchMove->', Boolean(isTouchDevice));
         if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
-        console.debug('[AppShell] onDragEnd - allowTouchMove now=', inst?.allowTouchMove);
-      } catch (err) { console.debug('[AppShell] onDragEnd error', err); }
+      } catch (_) { /* ignore */ }
     }
     function onZoomStart() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        console.debug('[AppShell] onZoomStart - swiper instance:', !!inst);
         if (inst) inst.allowTouchMove = false;
-        console.debug('[AppShell] onZoomStart - allowTouchMove set to false');
-      } catch (err) { console.debug('[AppShell] onZoomStart error', err); }
+      } catch (_) { /* ignore */ }
     }
     function onZoomEnd() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        console.debug('[AppShell] onZoomEnd - restoring allowTouchMove->', Boolean(isTouchDevice));
         if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
-        console.debug('[AppShell] onZoomEnd - allowTouchMove now=', inst?.allowTouchMove);
-      } catch (err) { console.debug('[AppShell] onZoomEnd error', err); }
+      } catch (_) { /* ignore */ }
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:carousel_drag_start', onDragStart as any);
@@ -172,8 +158,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [isTouchDevice]);
 
   const handleSlideChange = (swiper: any) => {
-    const newPath = views[swiper.activeIndex]?.path;
-    console.debug('[AppShell] slideChange -> index=', swiper.activeIndex, 'newPath=', newPath, 'currentPath=', pathname);
+  const newPath = views[swiper.activeIndex]?.path;
     // Immediately dispatch event so NavBar can update active state before route changes
     if (typeof window !== 'undefined' && newPath) {
       window.dispatchEvent(new CustomEvent('monolog:slide_change', { 

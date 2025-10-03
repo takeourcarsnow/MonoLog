@@ -304,13 +304,43 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   }, [selectedCategory]);
 
   useEffect(() => {
-    // small mount animation trigger
-    const t = window.setTimeout(() => setMounted(true), 20);
+    // Load the image and defer showing the editor until the initial layout
+    // and draw have completed. This prevents a visible "jump" where the
+    // canvas/image resizes after the editor is already visible.
+    let cancelled = false;
     const img = new Image();
     img.crossOrigin = "anonymous";
-      img.onload = () => {
-        imgRef.current = img;
-        // schedule layout & draw on next frame so canvas sizing/resizes have applied
+    img.onload = () => {
+      if (cancelled) return;
+      imgRef.current = img;
+      // Attempt to size the canvas to the final layout immediately so
+      // computeImageLayout has stable dimensions to work with. This mirrors
+      // the logic in the resize effect so we avoid a visible resize after
+      // the editor becomes visible.
+      try {
+        const canvas = canvasRef.current;
+        const cont = containerRef.current;
+        if (canvas && cont) {
+          const dpr = window.devicePixelRatio || 1;
+          const contW = Math.max(100, Math.round(cont.clientWidth));
+          const MAX_HEIGHT = 520;
+          const MIN_HEIGHT = 140;
+          let targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(contW * 0.8)));
+          if (img && img.naturalWidth && img.naturalHeight) {
+            const imgHeight = Math.round((img.naturalHeight / img.naturalWidth) * contW);
+            targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, imgHeight));
+          }
+          canvas.width = Math.max(100, Math.round(contW * dpr));
+          canvas.height = Math.max(100, Math.round(targetHeight * dpr));
+          canvas.style.width = `${contW}px`;
+          canvas.style.height = `${targetHeight}px`;
+        }
+      } catch (e) {
+        // ignore sizing errors and fall back to computeImageLayout
+      }
+
+      // Small RAFs to ensure browser applied style changes before measuring/drawing
+      requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const info = computeImageLayout();
           if (info) {
@@ -319,10 +349,14 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           } else {
             draw();
           }
+          // Trigger the mount animation / visibility only after the
+          // initial draw has completed.
+          setMounted(true);
         });
+      });
     };
     img.src = imageSrc;
-    return () => window.clearTimeout(t);
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageSrc]);
 
@@ -1437,10 +1471,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         paddingBottom: 16,
   borderRadius: 8,
   overflowX: 'hidden',
-        // subtle mount animation
-        transform: mounted ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.995)',
-        opacity: mounted ? 1 : 0,
-        transition: 'opacity 220ms ease, transform 260ms cubic-bezier(.2,.9,.2,1)'
+  // subtle mount animation: only translate and fade (no scaling) to
+  // avoid a size jump when the canvas finishes sizing.
+  transform: mounted ? 'translateY(0)' : 'translateY(6px)',
+  opacity: mounted ? 1 : 0,
+  transition: 'opacity 220ms ease, transform 260ms cubic-bezier(.2,.9,.2,1)'
       }}
       
     >

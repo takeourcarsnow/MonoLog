@@ -1655,9 +1655,23 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   // Reset crop selection and aspect preset without affecting other edits
   function resetCrop() {
+    // If the underlying working image was replaced by a baked crop, restore
+    // the original (uncropped) image. Do not reset color adjustments — only
+    // undo geometry (crop/rotation/preset/selection).
+    if (imageSrc !== originalRef.current) {
+      setImageSrc(originalRef.current);
+      // Clear any baked rotation as well so the photo returns to its original geometry
+      rotationRef.current = 0; setRotation(0);
+    }
+
     cropRatio.current = null;
     setSel(null);
-    setPresetIndex(-1);
+    setPresetIndex(0);
+    // clear any active drag state and A/B preview
+    if (dragging.current) dragging.current = null;
+    previewPointerIdRef.current = null;
+    previewOriginalRef.current = false;
+    setPreviewOriginal(false);
     // recentre image in canvas and redraw
     requestAnimationFrame(() => {
       const info = computeImageLayout();
@@ -2270,7 +2284,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
               </label>
             </div>
             <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button type="button" className="btn ghost" onClick={() => resetCrop()} disabled={!sel} aria-disabled={!sel} style={{ padding: '8px 12px', borderRadius: 8 }}>Reset crop</button>
+              <button type="button" className="btn ghost" onClick={() => resetCrop()} disabled={!(sel || cropRatio.current != null || presetIndex > 0 || imageSrc !== originalRef.current)} aria-disabled={!(sel || cropRatio.current != null || presetIndex > 0 || imageSrc !== originalRef.current)} style={{ padding: '8px 12px', borderRadius: 8 }}>Reset crop</button>
               <button type="button" className="btn primary" onClick={() => applyCropOnly()} disabled={!sel} aria-disabled={!sel} style={{ padding: '8px 12px', borderRadius: 8 }}>Apply crop</button>
             </div>
           </div>

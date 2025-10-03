@@ -13,6 +13,51 @@ export function Header() {
   const [isLogoAnimating, setIsLogoAnimating] = useState(false);
   const pathname = usePathname();
 
+  const PREV_FAV_KEY = "monolog:prev-path-before-favorites";
+
+  const handleFavoritesToggle = (e: any) => {
+    e.preventDefault();
+    const current = pathname || "/";
+
+    // If we're not on /favorites, store the current path and go to /favorites
+    if (current !== "/favorites") {
+      try {
+        sessionStorage.setItem(PREV_FAV_KEY, current);
+      } catch (err) {
+        // ignore storage errors
+      }
+      router.push("/favorites");
+      return;
+    }
+
+    // If we're already on /favorites, try to return to the previous page.
+    // Prefer using the browser history (router.back()) when it looks safe,
+    // otherwise fall back to the stored previous path in sessionStorage.
+    try {
+      const histLen = typeof window !== 'undefined' ? window.history.length : 0;
+      if (histLen > 1) {
+        // navigate back in history — this preserves user's original navigation
+        // context (e.g. scroll position). Remove stored key as it's no longer needed.
+        try { sessionStorage.removeItem(PREV_FAV_KEY); } catch (_) {}
+        router.back();
+        return;
+      }
+    } catch (_) {
+      // ignore
+    }
+
+    let prev = "/";
+    try {
+      const v = sessionStorage.getItem(PREV_FAV_KEY);
+      if (v) prev = v;
+    } catch (err) {
+      // ignore
+    }
+    if (prev === "/favorites") prev = "/";
+    try { sessionStorage.removeItem(PREV_FAV_KEY); } catch (_) {}
+    router.push(prev);
+  };
+
   const handleLogoClick = () => {
     // Use the Web Animations API so the animation is driven by the browser
     // compositor and we get a reliable `finished` promise. Keep a small
@@ -93,9 +138,15 @@ export function Header() {
             <Info size={20} strokeWidth={2} />
           </Link>
           <ThemeToggle />
-          <Link href="/favorites" className={`btn icon favorites-btn ${pathname === '/favorites' ? 'active' : ''}`} title="Favorites" aria-label="Favorites" aria-current={pathname === '/favorites' ? 'page' : undefined}>
+          <button
+            className={`btn icon favorites-btn ${pathname === '/favorites' ? 'active' : ''}`}
+            title="Favorites"
+            aria-label="Favorites"
+            aria-current={pathname === '/favorites' ? 'page' : undefined}
+            onClick={handleFavoritesToggle}
+          >
             <Star size={20} strokeWidth={2} />
-          </Link>
+          </button>
           <AccountSwitcher />
         </div>
       </div>

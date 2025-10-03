@@ -621,6 +621,9 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .tab-indicator.visible { 
   opacity: 1; 
   animation: indicatorFadeIn 360ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  /* keep final animation state so removing/adding other animations doesn't
+     briefly revert opacity/transform and cause a visual flicker */
+  animation-fill-mode: both;
 }
 @keyframes indicatorFadeIn {
   0% {
@@ -639,6 +642,9 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .tab-indicator.pop { 
   /* Subtle pop animation - more refined and less prominent */
   animation: indicatorPop 380ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  /* ensure the pop keeps its final transform while the element remains in
+     this state so toggling classes doesn't produce a flash */
+  animation-fill-mode: both;
 }
 @keyframes indicatorPop {
   0% { 
@@ -653,6 +659,17 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   100% { 
     transform: scale(1) translateY(0); 
   }
+}
+
+/* When both the visible (fade) and pop animations are applied we want them
+   to run together rather than one overriding the other. Define a combined
+   animation so the fade animation isn't inadvertently restarted when the
+   pop class is toggled which caused the flicker at animation end. */
+.tab-indicator.visible.pop,
+.tab-indicator.pop.visible {
+  animation: indicatorFadeIn 360ms cubic-bezier(0.34, 1.2, 0.64, 1),
+             indicatorPop 380ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  animation-fill-mode: both, both;
 }
 
 /* soft center highlight in the indicator to raise icon contrast (very subtle) */
@@ -1909,11 +1926,15 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 .auth-actions .btn.following-anim .label,
 .auth-actions .btn.following-anim .label-text,
-.auth-actions .btn.following-anim .btn-label {
-  /* visually fade the label while keeping layout space */
-  opacity: 0;
-  transform: translateY(-4px) scale(.995);
-  pointer-events: none;
+.auth-actions .btn.following-anim .btn-label,
+.auth-actions .btn.following-anim .reveal.label {
+  /* visually hide the label while keeping layout space; use !important so
+     this wins over later .follow-btn rules that may re-enable the label. */
+  opacity: 0 !important;
+  transform: translateY(-4px) scale(.995) !important;
+  pointer-events: none !important;
+  /* keep the label beneath the loader when present */
+  z-index: 0 !important;
 }
 
 /* Center the inline dot loader absolutely inside the button so it doesn't
@@ -2113,7 +2134,20 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .day:hover { transform: translateY(-2px); border-color: var(--primary); }
 .day:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 2px; }
 .day .d { font-weight: 700; font-size: 13px; }
-.day .count { font-size: 11px; color: var(--muted); }
+.day .d.date-anim {
+  opacity: 0;
+  transform: translateY(6px) scale(.995);
+  will-change: transform, opacity;
+  /* use a CSS var so JS can stagger each day */
+  animation: dateIn 360ms var(--transition-mid) both;
+  animation-delay: var(--date-delay, 0ms);
+}
+
+@keyframes dateIn {
+  0% { opacity: 0; transform: translateY(6px) scale(.995); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.day .count { position: absolute; left: 8px; bottom: 8px; font-size: 11px; color: var(--muted); background: transparent; padding: 0 6px; border-radius: 999px; pointer-events: none; }
 .day.today { outline: 2px solid color-mix(in srgb, var(--accent), transparent 60%); }
 
 /* make day a positioned container so we can add subtle indicators */
@@ -2179,7 +2213,17 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 /* count badge - floats at bottom-left */
 .day .count {
-  font-size: 11px; color: var(--muted); background: transparent; padding: 2px 6px; border-radius: 999px; justify-self: start;
+  /* absolutely position count badge so it does not change layout when it appears */
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  padding: 0 6px;
+  border-radius: 999px;
+  pointer-events: none; /* non-interactive; keeps clicks targeting the day */
+  white-space: nowrap;
 }
 
 /* header buttons and title improvements */

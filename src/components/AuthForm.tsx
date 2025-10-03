@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { getSupabaseClient } from "@/lib/api/supabase";
 import { useRouter } from "next/navigation";
 import { useToast } from "./Toast";
+import './AuthConfirmButton.css';
 
 export function AuthForm({ onClose }: { onClose?: () => void }) {
   const [email, setEmail] = useState("");
@@ -304,44 +305,38 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-  <div className="auth-actions flex gap-2 justify-center w-full" style={{ maxWidth: 400, marginTop: 2 }}>
+      <div className="auth-actions flex gap-2 justify-center w-full" style={{ maxWidth: 400, marginTop: 6 }}>
         <button
-          className={`btn follow-btn not-following expanded ${loading ? 'following-anim' : ''}`}
+          className={`auth-confirm-btn ${loading ? 'loading' : ''} ${signupSent ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : 'mode-signin'}`}
           disabled={loading}
           type="submit"
           aria-busy={loading}
           aria-live="polite"
           aria-label={mode === 'signup' ? (loading ? 'Creating account' : 'Create account') : (loading ? 'Signing in' : 'Sign in')}
         >
-          <span className="icon" aria-hidden>
-            {/* svg icon stays inside the icon container */}
-            <span className="icon-svg" aria-hidden>
-              {mode === 'signup' ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <span className="btn-inner">
+            <span className="btn-icon" aria-hidden>
+              {!loading && !signupSent ? (
+                // chevron-like icon to the left of the label (keeps the pill look from the attachment)
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              ) : signupSent ? (
+                // success check
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M20 6L9 17l-5-5" />
                 </svg>
               ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                </svg>
+                <span className="btn-spinner" aria-hidden>
+                  <span />
+                </span>
               )}
             </span>
+            <span className="btn-label">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
           </span>
-
-          {/* move dot-loader out so it can be absolutely centered in the button */}
-          <span className="dot-loader" aria-hidden>
-            <span />
-            <span />
-            <span />
-          </span>
-
-      {/* Always render the visible label so the button shape doesn't change.
-        CSS will fade the visible label out when loading and center the loader.
-        Also keep an sr-only label for screen readers while loading. */}
-  <span className="reveal label">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
+          {/* visible hint for screen readers during loading */}
           {loading && <span className="sr-only">{mode === 'signup' ? 'Creating account' : 'Signing in'}</span>}
         </button>
-        {/* Cancel button intentionally removed */}
       </div>
 
       <div className={`signup-hint transition-opacity duration-300 ${signupSent ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">

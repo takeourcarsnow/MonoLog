@@ -110,7 +110,9 @@ export function CalendarView() {
               isToday ? "today" : "",
               isMine ? "mine" : "",
               count > 0 ? "has-posts" : "",
-              loadingStats ? "skeleton" : "",
+              // don't apply the global skeleton to the whole day element —
+              // that made the date number text transparent while stats load.
+              // we'll apply skeleton only to the count/dot placeholders below.
               isSelected ? "selected" : "",
             ].join(" ").trim();
 
@@ -124,10 +126,11 @@ export function CalendarView() {
                 onClick={() => showDay(dk)}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && showDay(dk)}
               >
-                <div className="d">{d.getDate()}</div>
-                {isToday ? <div className="today-badge">Today</div> : null}
-                <div className="count">{count > 0 ? `${count} post${count===1 ? '' : 's'}` : ''}</div>
-                {count > 0 ? <div className="dot" aria-hidden /> : null}
+                {/* date number: animate in subtly with a per-item stagger using --date-delay */}
+                <div className="d date-anim" style={{ ['--date-delay' as any]: `${idx * 28}ms` } as React.CSSProperties}>{d.getDate()}</div>
+                {/* Today badge removed per user request */}
+                <div className={loadingStats ? "count skeleton" : "count"}>{count > 0 ? `${count} post${count===1 ? '' : 's'}` : ''}</div>
+                {count > 0 ? <div className={loadingStats ? "dot skeleton" : "dot"} aria-hidden /> : null}
               </div>
             );
           })}

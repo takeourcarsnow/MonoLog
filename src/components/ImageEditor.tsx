@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { RotateCcw, Circle, Film, Droplet, Feather, Camera, Sun, Snowflake, Clapperboard, Sliders, Palette, Sparkles, Image as ImageIcon, Scissors, SunDim, Scale, Rainbow, Thermometer, Aperture, Layers, ZapOff, Square, Ruler } from "lucide-react";
+import { RotateCcw, RotateCw, RefreshCw, X, Check, Circle, Film, Droplet, Feather, Camera, Sun, Snowflake, Clapperboard, Sliders, Palette, Sparkles, Image as ImageIcon, Scissors, SunDim, Scale, Rainbow, Thermometer, Aperture, Layers, ZapOff, Square, Ruler } from "lucide-react";
 
 // Filter icon mapping
 const FILTER_ICONS: Record<string, React.ComponentType<any>> = {
@@ -196,6 +196,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const matteRef = useRef<number>(matte);
   const filtersContainerRef = useRef<HTMLDivElement | null>(null);
   const [filterHighlight, setFilterHighlight] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const suppressFilterTransitionRef = useRef<boolean>(false);
   const categoriesContainerRef = useRef<HTMLDivElement | null>(null);
   const [categoryHighlight, setCategoryHighlight] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
@@ -259,6 +260,19 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const [mounted, setMounted] = useState(false);
   // default behavior: drag to create/move crop selection.
   const cropRatio = useRef<number | null>(null); // null = free
+  // default behavior: drag to create/move crop selection.
+
+  // when opening the Filters category, suppress the highlight transition for the initial placement
+  useEffect(() => {
+    if (selectedCategory === 'color') {
+      suppressFilterTransitionRef.current = true;
+      // re-enable transitions after the initial layout settles
+      const t = window.setTimeout(() => { suppressFilterTransitionRef.current = false; }, 220);
+      return () => window.clearTimeout(t);
+    }
+    // ensure flag is off when leaving
+    suppressFilterTransitionRef.current = false;
+  }, [selectedCategory]);
 
   useEffect(() => {
     // small mount animation trigger
@@ -272,6 +286,18 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           const info = computeImageLayout();
           if (info) {
             setOffset({ x: info.left, y: info.top });
+
+    // when opening the Filters category, suppress the highlight transition for the initial placement
+    useEffect(() => {
+      if (selectedCategory === 'color') {
+        suppressFilterTransitionRef.current = true;
+        // re-enable transitions after the initial layout settles
+        const t = window.setTimeout(() => { suppressFilterTransitionRef.current = false; }, 220);
+        return () => window.clearTimeout(t);
+      }
+      // ensure flag is off when leaving
+      suppressFilterTransitionRef.current = false;
+    }, [selectedCategory]);
             draw(info);
           } else {
             draw();
@@ -919,6 +945,47 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setSel(null); setOffset({ x: 0, y: 0 });
   }
 
+  // Reset only the adjustment/settings (color corrections, filters, effects, frame)
+  function resetAdjustments() {
+    // Default values
+    const defExposure = 1;
+    const defContrast = 1;
+    const defSaturation = 1;
+    const defTemperature = 0;
+    const defVignette = 0;
+    const defFrameColor: 'white' | 'black' = 'white';
+    const defFrameThickness = 0;
+    const defSelectedFilter = 'none';
+    const defFilterStrength = 1;
+    const defGrain = 0;
+    const defSoftFocus = 0;
+    const defFade = 0;
+    const defMatte = 0;
+
+    // Update state
+    setExposure(defExposure); exposureRef.current = defExposure;
+    setContrast(defContrast); contrastRef.current = defContrast;
+    setSaturation(defSaturation); saturationRef.current = defSaturation;
+    setTemperature(defTemperature); temperatureRef.current = defTemperature;
+    setVignette(defVignette); vignetteRef.current = defVignette;
+    setFrameColor(defFrameColor); frameColorRef.current = defFrameColor;
+    setFrameThickness(defFrameThickness); frameThicknessRef.current = defFrameThickness;
+    setSelectedFilter(defSelectedFilter); selectedFilterRef.current = defSelectedFilter;
+    setFilterStrength(defFilterStrength); filterStrengthRef.current = defFilterStrength;
+    setGrain(defGrain); grainRef.current = defGrain;
+    setSoftFocus(defSoftFocus); softFocusRef.current = defSoftFocus;
+    setFade(defFade); fadeRef.current = defFade;
+    setMatte(defMatte); matteRef.current = defMatte;
+
+  // Also clear any crop selection/preset
+  setSel(null);
+  if (typeof cropRatio !== 'undefined' && cropRatio) cropRatio.current = null;
+  setPresetIndex(0);
+
+    // Redraw with defaults
+    requestAnimationFrame(() => draw());
+  }
+
   async function applyEdit() {
     const img = imgRef.current; if (!img) return;
   const canvas = canvasRef.current;
@@ -1128,8 +1195,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         color: 'var(--text)',
         padding: 12,
         paddingBottom: 16,
-        borderRadius: 8,
-        overflow: 'visible',
+  borderRadius: 8,
+  overflowX: 'hidden',
         // subtle mount animation
         transform: mounted ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.995)',
         opacity: mounted ? 1 : 0,
@@ -1146,7 +1213,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           transition: max-width 200ms ease, opacity 180ms ease, margin 180ms ease;
           margin-left: 0;
         }
-        .cat-btn:hover .cat-label {
+        .cat-btn[data-active="true"] .cat-label {
           max-width: 80px;
           opacity: 1;
           margin-left: 8px;
@@ -1159,6 +1226,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           outline: none; 
           transition: box-shadow .2s ease, transform .2s ease; 
           cursor: pointer;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .imgedit-range:hover { transform: scaleY(1.1); }
         .imgedit-range:active { box-shadow: 0 8px 24px rgba(0,0,0,0.16); }
@@ -1196,11 +1265,19 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         /* custom focus ring */
         .imgedit-range:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent); }
         .imgedit-range:focus::-webkit-slider-thumb { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 25%, transparent), 0 4px 14px rgba(0,0,0,0.2); }
+        /* Hide horizontal scrollbar for category selector but keep scrollable (touch/drag) */
+        .categories-scroll {
+          overflow-x: auto;
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+        .categories-scroll::-webkit-scrollbar { height: 0; display: none; }
         /* panels responsiveness: allow panels to grow and scroll on small viewports */
         .imgedit-panels { 
           position: relative; 
           max-height: calc(100vh - 180px); 
           overflow: hidden; 
+          overflow-x: hidden; /* prevent horizontal scroll */
           border-radius: 12px;
           background: color-mix(in srgb, var(--bg-elev) 95%, var(--primary) 5%);
           box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
@@ -1209,6 +1286,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         .imgedit-panel-inner { 
           box-sizing: border-box; 
           overflow-y: auto; 
+          overflow-x: hidden; /* avoid transient horizontal scroll */
           -webkit-overflow-scrolling: touch; 
           padding: 16px; 
           gap: 14px; 
@@ -1233,14 +1311,37 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         /* visually-hidden helper for screen readers */
         .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       `}</style>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap', padding: '4px 0' }}>
-        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>Edit Photo</div>
-        <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button type="button" title="Rotate -90°" onClick={bakeRotateMinus90} style={{ padding: '10px 12px', borderRadius: 10, background: 'color-mix(in srgb, var(--bg-elev) 80%, transparent)', border: '1px solid var(--border)', transition: 'transform 140ms ease, box-shadow 180ms ease', fontSize: 18, boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>⤺</button>
-          <button type="button" title="Rotate +90°" onClick={bakeRotate90} style={{ padding: '10px 12px', borderRadius: 10, background: 'color-mix(in srgb, var(--bg-elev) 80%, transparent)', border: '1px solid var(--border)', transition: 'transform 140ms ease, box-shadow 180ms ease', fontSize: 18, boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>⤾</button>
-          <button type="button" className="btn ghost" onClick={onCancel} style={{ padding: '10px 14px', borderRadius: 10, transition: 'transform 120ms ease, box-shadow 180ms ease' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.98)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} onMouseEnter={(e)=> (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}>Cancel</button>
-          <button type="button" className="btn primary" onClick={applyEdit} style={{ padding: '10px 18px', borderRadius: 10, background: isEdited ? 'linear-gradient(135deg, var(--primary), #60a5fa)' : 'var(--primary)', color: '#fff', fontWeight: 700, boxShadow: isEdited ? '0 8px 32px rgba(0,125,255,0.2), 0 2px 8px rgba(0,0,0,0.1)' : '0 4px 12px rgba(0,0,0,0.1)', transition: 'transform 120ms ease, box-shadow 220ms ease, opacity 180ms ease, background 220ms ease', position: 'relative', overflow: 'hidden' }} onMouseDown={(e)=> (e.currentTarget.style.transform = 'scale(0.98)')} onMouseUp={(e)=> (e.currentTarget.style.transform = '')} onMouseLeave={(e)=> (e.currentTarget.style.transform = '')} aria-pressed={isEdited}>
-            <span style={{ position: 'relative', zIndex: 1 }}>Confirm</span>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap', padding: '4px 0' }}>
+        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
+          <span className="sr-only">Edit Photo</span>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Icon-only rotate buttons */}
+          <button type="button" title="Rotate -90°" onClick={bakeRotateMinus90} className="btn icon" aria-label="Rotate -90°">
+            <RotateCw size={18} aria-hidden />
+            <span className="sr-only">Rotate -90 degrees</span>
+          </button>
+          <button type="button" title="Rotate +90°" onClick={bakeRotate90} className="btn icon" aria-label="Rotate +90°">
+            <RotateCcw size={18} aria-hidden />
+            <span className="sr-only">Rotate +90 degrees</span>
+          </button>
+
+          {/* Cancel (ghost) */}
+          <button type="button" className="btn icon ghost" onClick={onCancel} aria-label="Cancel edits">
+            <X size={16} aria-hidden />
+            <span className="sr-only">Cancel edits</span>
+          </button>
+
+          {/* Reset adjustments (match follow button visual) */}
+          <button type="button" className="btn icon ghost" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">
+            <RefreshCw size={16} aria-hidden />
+            <span className="sr-only">Reset adjustments</span>
+          </button>
+
+          {/* Confirm (match other icon buttons - subtle) */}
+          <button type="button" className={`btn icon ghost`} onClick={applyEdit} aria-pressed={isEdited} aria-label="Confirm edits" title="Confirm edits">
+            <Check size={16} aria-hidden />
+            <span className="sr-only">Confirm edits</span>
           </button>
         </div>
       </div>
@@ -1267,10 +1368,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   {/* help text removed per user request */}
 
       {/* Controls header with categories (emojis + slide panels) */}
-  <div ref={categoriesContainerRef} style={{ position: 'relative', display: 'flex', gap: 10, marginTop: 16, justifyContent: 'center', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 820, margin: '16px auto 0', padding: '8px 10px', alignItems: 'center', whiteSpace: 'nowrap', background: 'color-mix(in srgb, var(--bg-elev) 70%, transparent)', borderRadius: 12, boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)' }}>
-    <div aria-hidden style={{ position: 'absolute', left: categoryHighlight?.left ?? 0, top: categoryHighlight?.top ?? 0, width: categoryHighlight?.width ?? 0, height: categoryHighlight?.height ?? 0, borderRadius: 11, background: 'linear-gradient(135deg, var(--primary), #60a5fa)', transition: 'left 260ms cubic-bezier(.2,.9,.2,1), width 260ms cubic-bezier(.2,.9,.2,1), top 260ms cubic-bezier(.2,.9,.2,1), height 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease', pointerEvents: 'none', opacity: categoryHighlight ? 1 : 0, zIndex: 0, boxShadow: '0 4px 16px rgba(0,125,255,0.25)' }} />
+  <div ref={categoriesContainerRef} className="categories-scroll" style={{ position: 'relative', display: 'flex', gap: 10, marginTop: 16, justifyContent: 'center', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 820, margin: '16px auto 0', padding: '8px 10px', alignItems: 'center', whiteSpace: 'nowrap', background: 'color-mix(in srgb, var(--bg-elev) 70%, transparent)', borderRadius: 12, boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)' }}>
+  <div aria-hidden style={{ position: 'absolute', left: categoryHighlight?.left ?? 0, top: categoryHighlight?.top ?? 0, width: categoryHighlight?.width ?? 0, height: categoryHighlight?.height ?? 0, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease', pointerEvents: 'none', opacity: categoryHighlight ? 0.95 : 0, zIndex: 0, boxShadow: 'none', border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)' }} />
   <button
     data-cat="basic"
+    data-active={selectedCategory === 'basic'}
     type="button"
     aria-label="Basic"
     title="Basic"
@@ -1284,6 +1386,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   <button
     data-cat="color"
+    data-active={selectedCategory === 'color'}
     type="button"
     aria-label="Filters"
     title="Filters"
@@ -1297,6 +1400,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   <button
     data-cat="effects"
+    data-active={selectedCategory === 'effects'}
     type="button"
     aria-label="Effects"
     title="Effects"
@@ -1310,6 +1414,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   <button
     data-cat="crop"
+    data-active={selectedCategory === 'crop'}
     type="button"
     aria-label="Crop"
     title="Crop"
@@ -1323,6 +1428,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   <button
     data-cat="frame"
+    data-active={selectedCategory === 'frame'}
     type="button"
     aria-label="Frame"
     title="Frame"
@@ -1345,14 +1451,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <SunDim size={18} strokeWidth={2} aria-hidden />
                 <span>Exposure</span>
               </span>
-              {/* animated icon that changes color with exposure */}
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <circle cx="12" cy="12" r="8" style={{ fill: exposureColor(exposure), transition: 'fill 0.2s ease' }} />
-                </svg>
                 <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('exposure', exposureRef.current, v); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(exposure, 0.5, 1.8, 'var(--slider-exposure-start)', 'var(--slider-exposure-end)') }} />
               </span>
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{exposure.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
@@ -1360,12 +1461,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Contrast</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <rect x="4" y="4" width="16" height="16" rx="3" style={{ fill: contrastColor(contrast), transition: 'fill 0.2s ease' }} />
-                </svg>
                 <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={contrast} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('contrast', contrastRef.current, v); contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(contrast, 0.5, 1.8, 'var(--slider-contrast-start)', 'var(--slider-contrast-end)') }} />
               </span>
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{contrast.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
@@ -1373,12 +1470,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Saturation</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <path d="M12 3c1.1 0 2 .9 2 2v14a2 2 0 1 1-4 0V5c0-1.1.9-2 2-2z" style={{ fill: saturationColor(saturation), transition: 'fill 0.2s ease' }} />
-                </svg>
                 <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('saturation', saturationRef.current, v); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(saturation, 0, 2, 'var(--slider-saturation-start)', 'var(--slider-saturation-end)') }} />
               </span>
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{saturation.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
@@ -1386,12 +1479,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Temperature</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <rect x="9" y="3" width="6" height="12" rx="3" style={{ fill: temperatureColor(temperature), transition: 'fill 0.2s ease' }} />
-                </svg>
                 <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('temperature', temperatureRef.current, v); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(temperature, -100, 100, 'var(--slider-temperature-cold)', 'var(--slider-temperature-warm)') }} />
               </span>
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{temperature}</span>
             </label>
           </div>
 
@@ -1400,7 +1489,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             {/* panel heading removed (tab already shows Filters) */}
             <div ref={filtersContainerRef} style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: '8px 0' }}>
               {/* animated highlight pill sits behind buttons and moves between them */}
-              <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 11, background: 'linear-gradient(135deg, var(--primary), #60a5fa)', transition: 'left 260ms cubic-bezier(.2,.9,.2,1), width 260ms cubic-bezier(.2,.9,.2,1), top 260ms cubic-bezier(.2,.9,.2,1), height 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease', pointerEvents: 'none', opacity: filterHighlight ? 1 : 0, boxShadow: '0 4px 16px rgba(0,125,255,0.3)' }} />
+              <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', transition: suppressFilterTransitionRef.current ? 'none' : 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease', pointerEvents: 'none', opacity: filterHighlight ? 0.95 : 0, boxShadow: 'none', border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)' }} />
               {Object.keys(FILTER_PRESETS).map(f => {
                 const Icon = FILTER_ICONS[f] || FILTER_ICONS.default;
                 return (
@@ -1427,7 +1516,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
               <span style={{ width: 120, color: 'var(--text)', fontWeight: 600, fontSize: 14 }}>Strength</span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={filterStrength} onInput={(e: any) => { const v = Number(e.target.value); filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{Math.round(filterStrength * 100)}%</span>
             </div>
           </div>
 
@@ -1439,7 +1527,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Vignette</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#1a1a1a', '#000000') }} />
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{vignette.toFixed(2)}</span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
@@ -1447,7 +1534,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Grain</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#e8d5b7', '#8b7355') }} />
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{grain.toFixed(2)}</span>
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1456,7 +1542,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Soft Focus</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }} />
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{softFocus.toFixed(2)}</span>
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1465,7 +1550,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Fade</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }} />
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{fade.toFixed(2)}</span>
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1474,7 +1558,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Matte</span>
               </span>
               <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }} />
-              <span style={{ width: 52, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{matte.toFixed(2)}</span>
             </label>
           </div>
 
@@ -1482,23 +1565,26 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'crop' ? 'grid' : 'none', width: '100%' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>Crop Aspect Ratio</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="btn ghost" type="button" onClick={() => { setSel(null); cropRatio.current = null; }} style={{ padding: '6px 10px', fontSize: 12 }}>Clear</button>
-                </div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}><span className="sr-only">Crop Aspect Ratio</span></div>
               </div>
 
               {/* Responsive aspect switcher: grid on desktop, carousel on mobile */}
               <div className="aspect-presets-container">
                 {/* Desktop: Show all presets in a grid */}
-                <div className="aspect-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, paddingBottom: 4 }}>
+                <div className="aspect-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gridAutoRows: 'minmax(72px, auto)', gap: 8, paddingBottom: 4, alignItems: 'start' }}>
                   {ASPECT_PRESETS.map((r, i) => {
                     const selected = cropRatio.current === r.v;
                     const base = 16 / 9;
                     const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
-                    const previewInnerWidth = Math.round(36 * previewRatio);
+                    const previewInnerWidth = Math.round(28 * previewRatio);
                     return (
                       <button key={r.label} type="button" onClick={() => {
+                        // Toggle: if selecting the same preset again, clear selection
+                        if (cropRatio.current === r.v) {
+                          cropRatio.current = null;
+                          setSel(null);
+                          return;
+                        }
                         setPresetIndex(i);
                         cropRatio.current = r.v;
                         const canvas = canvasRef.current;
@@ -1536,10 +1622,10 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                       }} aria-pressed={selected} style={{ 
                         padding: '12px 8px', 
                         borderRadius: 10, 
-                        background: selected ? 'linear-gradient(135deg,var(--primary), #60a5fa)' : 'var(--bg-elev)', 
-                        color: selected ? '#fff' : 'var(--text)', 
-                        border: selected ? 'none' : '1px solid rgba(255,255,255,0.04)', 
-                        boxShadow: selected ? '0 6px 20px rgba(34,122,255,0.2)' : '0 2px 6px rgba(0,0,0,0.04)', 
+                        background: selected ? 'color-mix(in srgb, var(--text) 6%, transparent)' : 'var(--bg-elev)', 
+                        color: selected ? 'var(--text)' : 'var(--text)', 
+                        border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)', 
+                        boxShadow: 'none', 
                         display: 'flex', 
                         flexDirection: 'column',
                         gap: 10, 
@@ -1554,28 +1640,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                       onMouseEnter={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
                       onMouseLeave={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)'; }}
                       >
-                        <span aria-hidden style={{ 
-                          width: 52, 
-                          height: 28, 
-                          background: selected ? 'color-mix(in srgb, var(--primary) 6%, color-mix(in srgb, var(--bg-elev) 60%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', 
-                          borderRadius: 6, 
-                          display: 'inline-flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          position: 'relative', 
-                          border: selected ? '1px solid color-mix(in srgb, var(--text) 12%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', 
-                          boxShadow: selected ? '0 4px 12px rgba(34,122,255,0.12)' : 'inset 0 1px 0 rgba(0,0,0,0.04)',
-                          flexShrink: 0
-                        }}>
-                          <span style={{ 
-                            width: previewInnerWidth, 
-                            height: 16, 
-                            background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', 
-                            borderRadius: 3, 
-                            display: 'block', 
-                            border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)', 
-                            boxShadow: selected ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.03)' 
-                          }} />
+                        <span aria-hidden style={{ width: 44, height: 22, background: selected ? 'color-mix(in srgb, var(--bg-elev) 92%, color-mix(in srgb, var(--text) 6%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none', flexShrink: 0 }}>
+                          <span style={{ width: previewInnerWidth, height: 12, background: selected ? 'color-mix(in srgb, var(--text) 36%, #fff)' : 'color-mix(in srgb, var(--text) 28%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
                         </span>
                         <span style={{ fontSize: 13, fontWeight: selected ? 700 : 600, opacity: selected ? 1 : 0.85, lineHeight: 1.2 }}>{r.label}</span>
                       </button>
@@ -1592,11 +1658,18 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                         const selected = cropRatio.current === r.v;
                         const base = 16 / 9;
                         const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
-                        const previewInnerWidth = Math.round(36 * previewRatio);
+                        const previewInnerWidth = Math.round(28 * previewRatio);
                         return (
                           <div key={r.label} style={{ flex: '0 0 84px' }}>
                             <button type="button" onClick={() => {
+                              // mirror desktop behavior: clicking the already-selected preset clears the crop
                               setPresetIndex(i);
+                              const already = cropRatio.current === r.v;
+                              if (already) {
+                                cropRatio.current = null;
+                                setSel(null);
+                                return;
+                              }
                               cropRatio.current = r.v;
                               const canvas = canvasRef.current;
                               if (!canvas) return;
@@ -1630,9 +1703,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                                 const y = (rect.height - h) / 2;
                                 setSel({ x, y, w, h });
                               }
-                            }} aria-pressed={selected} style={{ minWidth: 64, padding: '8px 10px', borderRadius: 10, background: selected ? 'linear-gradient(135deg,var(--primary), #4aa8ff)' : 'var(--bg-elev)', color: selected ? '#fff' : 'var(--text)', border: selected ? 'none' : '1px solid rgba(255,255,255,0.04)', boxShadow: selected ? '0 8px 26px rgba(34,122,255,0.16)' : 'none', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 120ms ease, box-shadow 180ms ease, background 180ms ease', fontSize: 13 }}>
-                              <span aria-hidden style={{ width: 52, height: 28, background: selected ? 'color-mix(in srgb, var(--primary) 6%, color-mix(in srgb, var(--bg-elev) 60%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 12%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: selected ? '0 6px 18px rgba(34,122,255,0.08)' : 'inset 0 1px 0 rgba(0,0,0,0.04)' }}>
-                                <span style={{ width: previewInnerWidth, height: 16, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)', boxShadow: selected ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.03)' }} />
+                            }} aria-pressed={selected} style={{ minWidth: 64, padding: '8px 10px', borderRadius: 10, background: selected ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)', color: selected ? 'var(--text)' : 'var(--text)', border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)', boxShadow: 'none', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 120ms ease, box-shadow 180ms ease, background 180ms ease', fontSize: 13 }}>
+                              <span aria-hidden style={{ width: 44, height: 22, background: selected ? 'color-mix(in srgb, var(--primary) 6%, transparent)' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none' }}>
+                                <span style={{ width: previewInnerWidth, height: 12, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
                               </span>
                               <span style={{ fontSize: 13, fontWeight: 600, opacity: selected ? 1 : 0.95 }}>{r.label}</span>
                             </button>
@@ -1645,21 +1718,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 </div>
 
                 <style>{`
-                  /* Desktop: show grid, hide carousel */
-                  @media (min-width: 640px) {
-                    .aspect-presets-grid { display: grid !important; }
-                    .aspect-presets-carousel { display: none !important; }
-                  }
-                  /* Mobile: hide grid, show carousel */
-                  @media (max-width: 639px) {
-                    .aspect-presets-grid { display: none !important; }
-                    .aspect-presets-carousel { display: flex !important; }
-                  }
+                  /* Always show the full presets grid; hide the carousel variant */
+                  .aspect-presets-grid { display: grid !important; }
+                  .aspect-presets-carousel { display: none !important; }
                   /* Ensure aspect buttons don't wrap text */
-                  .aspect-presets-grid button {
-                    white-space: nowrap;
-                    overflow: visible;
-                  }
+                  .aspect-presets-grid button { white-space: nowrap; overflow: visible; }
                 `}</style>
               </div>
             </div>
@@ -1668,7 +1731,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           {/* Frame panel */}
           <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'frame' ? 'grid' : 'none', width: '100%' }}>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Photo Frame</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}><span className="sr-only">Photo Frame</span></div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -1677,11 +1740,10 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                     <span>Thickness</span>
                   </span>
                   <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#d4c5b9', '#8b7355') }} />
-                  <span style={{ width: 48, textAlign: 'right', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{Math.round(frameThickness * 100)}%</span>
                 </label>
 
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Frame Color</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}><span className="sr-only">Frame Color</span></div>
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button 
                       type="button" 

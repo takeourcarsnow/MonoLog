@@ -726,6 +726,7 @@ function UploaderCore() {
               <span>{processing ? 'Processing…' : 'Loading…'}</span>
             </div>
           ) : null}
+          {/* Keep the preview DOM mounted to avoid layout shifts when opening the editor. */}
           {editing && pathname === '/upload' && (dataUrls[editingIndex] || dataUrl) ? (
             <Portal>
               <div
@@ -800,127 +801,128 @@ function UploaderCore() {
                 </div>
               </div>
             </Portal>
-          ) : (
-            <>
-              {dataUrls.length > 1 ? (
-                    <div style={{ width: '100%' }}>
-                      <div className="carousel-wrapper" tabIndex={0} onKeyDown={(e) => {
-                        if (e.key === 'ArrowLeft') setIndex(i => Math.max(0, i - 1));
-                        if (e.key === 'ArrowRight') setIndex(i => Math.min(dataUrls.length - 1, i + 1));
-                      }}>
-                        <div className="edge-area left" />
-                        <div className="edge-area right" />
-                        <div className="carousel-track" ref={trackRef} onTouchStart={(e) => {
-                          touchStartX.current = e.touches[0].clientX; touchDeltaX.current = 0;
-                        }} onTouchMove={(e) => {
-                          if (touchStartX.current == null) return;
-                          touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
-                          if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
-                        }} onTouchEnd={() => {
-                          if (touchStartX.current == null) return;
-                          const delta = touchDeltaX.current; const threshold = 40;
-                          let target = index;
-                          if (delta > threshold) target = Math.max(0, index - 1);
-                          else if (delta < -threshold) target = Math.min(dataUrls.length - 1, index + 1);
-                          setIndex(target);
-                          if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
-                          touchStartX.current = null; touchDeltaX.current = 0;
-                        }} role="list">
-                          {dataUrls.map((u, idx) => (
-            <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`Preview ${idx+1} of ${dataUrls.length}`} style={{ position: 'relative' }}>
-                          <img alt={(Array.isArray(alt) ? (alt[idx] || '') : (alt || `Preview ${idx+1}`))} src={u} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
-                              <button
-                                className="btn"
-                                style={{ position: 'absolute', right: 8, bottom: 8 }}
-                                onClick={() => { setEditingIndex(idx); setEditing(true); setIndex(idx); }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className="btn"
-                                style={{ position: 'absolute', right: 8, bottom: 56 }}
-                                onClick={() => {
-                                  // open camera to replace this image
-                                  fileActionRef.current = 'replace';
-                                  replaceIndexRef.current = idx;
-                                  // try getUserMedia first
-                                  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                                    (async () => {
-                                      setCameraOpen(true);
-                                      try {
-                                        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-                                        streamRef.current = s;
-                                        if (videoRef.current) videoRef.current.srcObject = s;
-                                      } catch (e) {
-                                        console.error(e);
-                                        toast.show('Camera access denied or unavailable');
-                                        setCameraOpen(false);
-                                        try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
-                                      }
-                                    })();
-                                  } else {
-                                    try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
-                                  }
-                                }}
-                              >
-                                Capture
-                              </button>
-                            </div>
-                          ))}
-                        </div>
+          ) : null}
 
-                        <button className="carousel-arrow left" onClick={() => setIndex(i => Math.max(0, i - 1))} aria-label="Previous image">‹</button>
-                        <button className="carousel-arrow right" onClick={() => setIndex(i => Math.min(dataUrls.length - 1, i + 1))} aria-label="Next image">›</button>
+          {/* Render the preview content as before — keep it mounted even while the editor is open. */}
+          <>
+            {dataUrls.length > 1 ? (
+                  <div style={{ width: '100%' }}>
+                    <div className="carousel-wrapper" tabIndex={0} onKeyDown={(e) => {
+                      if (e.key === 'ArrowLeft') setIndex(i => Math.max(0, i - 1));
+                      if (e.key === 'ArrowRight') setIndex(i => Math.min(dataUrls.length - 1, i + 1));
+                    }}>
+                      <div className="edge-area left" />
+                      <div className="edge-area right" />
+                      <div className="carousel-track" ref={trackRef} onTouchStart={(e) => {
+                        touchStartX.current = e.touches[0].clientX; touchDeltaX.current = 0;
+                      }} onTouchMove={(e) => {
+                        if (touchStartX.current == null) return;
+                        touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+                        if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
+                      }} onTouchEnd={() => {
+                        if (touchStartX.current == null) return;
+                        const delta = touchDeltaX.current; const threshold = 40;
+                        let target = index;
+                        if (delta > threshold) target = Math.max(0, index - 1);
+                        else if (delta < -threshold) target = Math.min(dataUrls.length - 1, index + 1);
+                        setIndex(target);
+                        if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
+                        touchStartX.current = null; touchDeltaX.current = 0;
+                      }} role="list">
+                        {dataUrls.map((u, idx) => (
+          <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`Preview ${idx+1} of ${dataUrls.length}`} style={{ position: 'relative' }}>
+                        <img alt={(Array.isArray(alt) ? (alt[idx] || '') : (alt || `Preview ${idx+1}`))} src={u} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
+                            <button
+                              className="btn"
+                              style={{ position: 'absolute', right: 8, bottom: 8 }}
+                              onClick={() => { setEditingIndex(idx); setEditing(true); setIndex(idx); }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="btn"
+                              style={{ position: 'absolute', right: 8, bottom: 56 }}
+                              onClick={() => {
+                                // open camera to replace this image
+                                fileActionRef.current = 'replace';
+                                replaceIndexRef.current = idx;
+                                // try getUserMedia first
+                                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                                  (async () => {
+                                    setCameraOpen(true);
+                                    try {
+                                      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                                      streamRef.current = s;
+                                      if (videoRef.current) videoRef.current.srcObject = s;
+                                    } catch (e) {
+                                      console.error(e);
+                                      toast.show('Camera access denied or unavailable');
+                                      setCameraOpen(false);
+                                      try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
+                                    }
+                                  })();
+                                } else {
+                                  try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
+                                }
+                              }}
+                            >
+                              Capture
+                            </button>
+                          </div>
+                        ))}
+                      </div>
 
-                        <div className="carousel-dots" aria-hidden="false">
-                          {dataUrls.map((_, i) => (
-                            <button key={i} className={`dot ${i === index ? 'active' : ''}`} onClick={() => setIndex(i)} aria-label={`Show preview ${i + 1}`} />
-                          ))}
-                        </div>
+                      <button className="carousel-arrow left" onClick={() => setIndex(i => Math.max(0, i - 1))} aria-label="Previous image">‹</button>
+                      <button className="carousel-arrow right" onClick={() => setIndex(i => Math.min(dataUrls.length - 1, i + 1))} aria-label="Next image">›</button>
+
+                      <div className="carousel-dots" aria-hidden="false">
+                        {dataUrls.map((_, i) => (
+                          <button key={i} className={`dot ${i === index ? 'active' : ''}`} onClick={() => setIndex(i)} aria-label={`Show preview ${i + 1}`} />
+                        ))}
                       </div>
                     </div>
-              ) : (
-                <div>
-                  <img alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')} src={dataUrls[0] || dataUrl || ""} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
-                      { (dataUrl || dataUrls.length === 1) ? (
-                        <div className="image-actions">
-                          <button
-                            className="image-action-btn edit-btn"
-                            aria-label="Edit photo"
-                            onClick={() => { setEditingIndex(0); setEditing(true); }}
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            className="image-action-btn change-btn"
-                            aria-label="Change photo"
-                            onClick={() => {
-                              if (processing) return;
-                              fileActionRef.current = 'replace';
-                              replaceIndexRef.current = dataUrls.length ? index : 0;
-                              setEditing(false);
-                              try {
-                                if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = "";
-                              } catch (e) {}
-                              try { fileInputRef.current?.click(); } catch (e) {}
-                            }}
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                              <polyline points="17 8 12 3 7 8" />
-                              <line x1="12" y1="3" x2="12" y2="15" />
-                            </svg>
-                          </button>
-                        </div>
-                      ) : null }
-                </div>
-              )}
-            </>
-          )}
+                  </div>
+            ) : (
+              <div>
+                <img alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')} src={dataUrls[0] || dataUrl || ""} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
+                    { (dataUrl || dataUrls.length === 1) ? (
+                      <div className="image-actions">
+                        <button
+                          className="image-action-btn edit-btn"
+                          aria-label="Edit photo"
+                          onClick={() => { setEditingIndex(0); setEditing(true); }}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="image-action-btn change-btn"
+                          aria-label="Change photo"
+                          onClick={() => {
+                            if (processing) return;
+                            fileActionRef.current = 'replace';
+                            replaceIndexRef.current = dataUrls.length ? index : 0;
+                            setEditing(false);
+                            try {
+                              if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = "";
+                            } catch (e) {}
+                            try { fileInputRef.current?.click(); } catch (e) {}
+                          }}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : null }
+              </div>
+            )}
+          </>
         </div>
 
         {/* Camera modal (getUserMedia) */}

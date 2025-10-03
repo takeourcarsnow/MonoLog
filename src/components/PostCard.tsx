@@ -101,6 +101,10 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   const [showAuth, setShowAuth] = useState(false);
   const [editing, setEditing] = useState(false);
   const deleteBtnRef = useRef<HTMLButtonElement | null>(null);
+  const touchActivatedRef = useRef(false);
+  const deleteHandlerRef = useRef<(() => void) | null>(null);
+  const [overlayEnabled, setOverlayEnabled] = useState(true);
+  const focusSinkRef = useRef<HTMLElement | null>(null);
   const [isPressingDelete, setIsPressingDelete] = useState(false);
   // Inline confirm state (confirm-on-second-click) for deleting a post
   const [confirming, setConfirming] = useState(false);
@@ -124,8 +128,173 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
       if (deleteExpandTimerRef.current) { try { window.clearTimeout(deleteExpandTimerRef.current); } catch (_) {} deleteExpandTimerRef.current = null; }
     };
   }, []);
+
+  // Some mobile browsers apply focus after touch/click events (timing can be
+  // inconsistent). Add a capture-phase focusin listener and document-level
+  // pointer/touchend handlers to ensure the delete button never keeps focus.
+  useEffect(() => {
+    const el = deleteBtnRef.current;
+    if (!el) return;
+
+    const tryBlur = () => {
+      try { (el as HTMLElement).blur?.(); } catch (_) {}
+      try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+      // Also attempt to focus a hidden focus sink to move focus away reliably
+      try {
+        const sink = focusSinkRef.current;
+        if (sink) {
+          sink.focus();
+          // blur the sink shortly after
+          setTimeout(() => { try { sink.blur(); } catch (_) {} }, 0);
+        }
+      } catch (_) {}
+    };
+
+    const onFocusIn = (ev: FocusEvent) => {
+      try {
+        if (ev.target === el) {
+          // Defer slightly to handle browsers that move focus after the event
+          setTimeout(tryBlur, 0);
+        }
+      } catch (_) { }
+    };
+
+    const onDocPointerUp = () => { setTimeout(tryBlur, 0); };
+    const onDocTouchEnd = () => { setTimeout(tryBlur, 0); };
+
+    document.addEventListener('focusin', onFocusIn as any, true);
+    document.addEventListener('pointerup', onDocPointerUp);
+    document.addEventListener('touchend', onDocTouchEnd);
+
+    return () => {
+      try { document.removeEventListener('focusin', onFocusIn as any, true); } catch (_) {}
+      try { document.removeEventListener('pointerup', onDocPointerUp); } catch (_) {}
+      try { document.removeEventListener('touchend', onDocTouchEnd); } catch (_) {}
+    };
+  }, []);
+
+  // Create a hidden focus sink element appended to body to use as a reliable
+  // target for stealing focus when mobile browsers re-focus the delete control.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const sink = document.createElement('div');
+    sink.tabIndex = -1;
+    sink.setAttribute('aria-hidden', 'true');
+    // keep it visually hidden but focusable
+    sink.style.position = 'fixed';
+    sink.style.left = '-9999px';
+    sink.style.width = '1px';
+    sink.style.height = '1px';
+    sink.style.overflow = 'hidden';
+    document.body.appendChild(sink);
+    focusSinkRef.current = sink;
+    return () => {
+      try { focusSinkRef.current = null; document.body.removeChild(sink); } catch (_) {}
+    };
+  }, []);
+
+  // Attach a native non-passive touchstart/end listener to the delete button so we can
+  // handle activation on mobile (avoid relying on browser focus timing). We call the
+  // latest handler via deleteHandlerRef to avoid stale closures.
+  useEffect(() => {
+    const el = deleteBtnRef.current;
+    if (!el) return;
+    const onTouchStartNative = (ev: TouchEvent) => {
+      try { ev.preventDefault(); } catch (_) {}
+      touchActivatedRef.current = true;
+      try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+      try { (el as HTMLElement).blur?.(); } catch (_) {}
+      try { setIsPressingDelete(true); } catch (_) {}
+    };
+    const onTouchEndNative = (ev: TouchEvent) => {
+      try { setIsPressingDelete(false); } catch (_) {}
+      try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+      try { (el as HTMLElement).blur?.(); } catch (_) {}
+      // If a touch activation started on this element, call the React handler path
+      try {
+        if (touchActivatedRef.current && deleteHandlerRef.current) {
+          // Defer so React state updates are applied consistently
+          setTimeout(() => { try { deleteHandlerRef.current && deleteHandlerRef.current(); } catch (_) {} }, 0);
+        }
+      } catch (_) {}
+      touchActivatedRef.current = false;
+    };
+    // passive: false so preventDefault is allowed
+    el.addEventListener('touchstart', onTouchStartNative as EventListener, { passive: false });
+    el.addEventListener('touchend', onTouchEndNative as EventListener);
+    el.addEventListener('touchcancel', onTouchEndNative as EventListener);
+    return () => {
+      try { el.removeEventListener('touchstart', onTouchStartNative as any); } catch (_) {}
+      try { el.removeEventListener('touchend', onTouchEndNative as any); } catch (_) {}
+      try { el.removeEventListener('touchcancel', onTouchEndNative as any); } catch (_) {}
+    };
+  }, []);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Centralized delete activation handler used by both React onClick and native touchend
+  const handleDeleteActivation = async () => {
+    // Immediately remove focus from any element so the delete control never stays focused
+    try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+    try { setTimeout(() => { document.body.dispatchEvent(new MouseEvent('click', { bubbles: true })); }, 0); } catch (_) {}
+    // Aggressively steal focus to a hidden sink for a few micro-ticks to handle
+    // mobile browsers that re-apply focus after the event loop.
+    try {
+      const sink = focusSinkRef.current;
+      if (sink) {
+        // schedule multiple focus/blur cycles to cover delayed re-focus behaviors
+        const delays = [0, 8, 40, 120, 400, 900];
+        for (const d of delays) {
+          setTimeout(() => {
+            try {
+              // debug what element is active right now (helps remote debugging)
+              // eslint-disable-next-line no-console
+              console.debug('[PostCard] delete blur pass - activeElement', document.activeElement?.tagName, document.activeElement?.id, document.activeElement?.className);
+            } catch (_) {}
+            try { sink.focus(); sink.blur(); } catch (_) {}
+            try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+          }, d);
+        }
+      }
+    } catch (_) {}
+
+  // Clear pressing visual state
+  try { setIsPressingDelete(false); } catch (_) {}
+
+  // If already confirming, proceed to delete
+    if (confirming) {
+      try {
+        (document.getElementById(`post-${post.id}`)?.remove?.());
+        await api.deletePost(post.id);
+        if (pathname?.startsWith("/post/")) router.push("/");
+      } catch (e: any) {
+        toast.show(e?.message || "Failed to delete post");
+      } finally {
+        setConfirming(false);
+        if (confirmTimerRef.current) { window.clearTimeout(confirmTimerRef.current); confirmTimerRef.current = null; setConfirmTimer(null); }
+      }
+      return;
+    }
+
+    // Enter confirming state and reveal label (expanded) and clear after timeout
+    setConfirming(true);
+    setDeleteExpanded(true);
+    if (deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
+    deleteExpandTimerRef.current = window.setTimeout(() => { setDeleteExpanded(false); deleteExpandTimerRef.current = null; }, 3500);
+    const t = window.setTimeout(() => {
+      setConfirming(false);
+      confirmTimerRef.current = null;
+      setConfirmTimer(null);
+      setDeleteExpanded(false);
+    }, 3500);
+    confirmTimerRef.current = t;
+    setConfirmTimer(t);
+    // final debug snapshot a little later
+    setTimeout(() => { try { console.debug('[PostCard] final activeElement', document.activeElement?.tagName, document.activeElement?.id, document.activeElement?.className); } catch (_) {} }, 1200);
+  };
+
+  // keep a live reference so native listeners can call the latest handler
+  deleteHandlerRef.current = handleDeleteActivation;
 
   // no anchored popover used for delete confirmation anymore
 
@@ -756,52 +925,44 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                 <span className="reveal label">{editorSaving ? 'Saving…' : 'Edit'}</span>
               </button>
               {/* Inline confirm-on-second-click delete flow (no popover) */}
-              <button
-                ref={deleteBtnRef}
-                className={`btn ghost icon-reveal delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${confirming ? 'confirming' : ''} ${deleteExpanded ? 'expanded' : ''}`}
-                onMouseDown={() => setIsPressingDelete(true)}
-                onMouseUp={() => setIsPressingDelete(false)}
-                onMouseLeave={() => setIsPressingDelete(false)}
-                onTouchStart={() => setIsPressingDelete(true)}
-                onTouchEnd={() => setIsPressingDelete(false)}
-                onClick={async () => {
-                  // If already confirming, proceed to delete
-                  if (confirming) {
-                    try {
-                      // optimistic UI: remove element immediately with small animation
-                      (document.getElementById(`post-${post.id}`)?.remove?.());
-                      // perform delete
-                      await api.deletePost(post.id);
-                      // If viewing single post page, go home
-                      if (pathname?.startsWith("/post/")) router.push("/");
-                    } catch (e: any) {
-                      toast.show(e?.message || "Failed to delete post");
-                      } finally {
-                        setConfirming(false);
-                        if (confirmTimerRef.current) { window.clearTimeout(confirmTimerRef.current); confirmTimerRef.current = null; setConfirmTimer(null); }
-                      }
-                    return;
-                  }
+              {/* Presentational delete UI + non-focusable overlay for pointer events */}
+              <div className={`btn ghost icon-reveal delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${confirming ? 'confirming' : ''} ${deleteExpanded ? 'expanded' : ''}`} style={{ position: 'relative' }}>
+                {/* Visible icon/label (non-interactive) */}
+                <div aria-hidden="true">
+                  <span className="icon"><Trash size={16} /></span>
+                  <span className="reveal label">{confirming ? 'Confirm' : 'Delete'}</span>
+                </div>
 
-                  // Enter confirming state and reveal label (expanded) and clear after timeout
-                  setConfirming(true);
-                  setDeleteExpanded(true);
-                  if (deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
-                  deleteExpandTimerRef.current = window.setTimeout(() => { setDeleteExpanded(false); deleteExpandTimerRef.current = null; }, 3500);
-                  const t = window.setTimeout(() => {
-                    setConfirming(false);
-                    confirmTimerRef.current = null;
-                    setConfirmTimer(null);
-                    setDeleteExpanded(false);
-                  }, 3500);
-                  confirmTimerRef.current = t;
-                  setConfirmTimer(t);
-                }}
-                aria-pressed={confirming ? 'true' : 'false'}
-              >
-                <span className="icon" aria-hidden="true"><Trash size={16} /></span>
-                <span className="reveal label">{confirming ? 'Confirm' : 'Delete'}</span>
-              </button>
+                {/* Non-focusable overlay that handles pointer/touch/click events on mobile/desktop */}
+                {overlayEnabled && (
+                  <div
+                    ref={deleteBtnRef as any}
+                    // do NOT set role/tabIndex so browser won't focus this element
+                    style={{ position: 'absolute', inset: 0, cursor: 'pointer', background: 'transparent', WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                    onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => { try { e.preventDefault(); } catch (_) {} setIsPressingDelete(true); }}
+                    onMouseUp={() => setIsPressingDelete(false)}
+                    onMouseLeave={() => setIsPressingDelete(false)}
+                    onTouchStart={() => { setIsPressingDelete(true); }}
+                    onTouchEnd={() => setIsPressingDelete(false)}
+                    onClick={() => {
+                      // ensure pressing visual cleared immediately
+                      try { setIsPressingDelete(false); } catch (_) {}
+                      // hide the overlay briefly to force the browser to clear any tap highlight
+                      try { setOverlayEnabled(false); } catch (_) {}
+                      try { setTimeout(() => { setOverlayEnabled(true); }, 220); } catch (_) {}
+                      deleteHandlerRef.current && deleteHandlerRef.current();
+                    }}
+                  />
+                )}
+
+                {/* Offscreen focusable button for keyboard users (keeps accessibility) */}
+                <button
+                  aria-label={confirming ? 'Confirm delete' : 'Delete post'}
+                  onClick={() => { deleteHandlerRef.current && deleteHandlerRef.current(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); deleteHandlerRef.current && deleteHandlerRef.current(); } }}
+                  style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+                />
+              </div>
             </>
           )}
         </div>

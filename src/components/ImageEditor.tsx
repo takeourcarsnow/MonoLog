@@ -287,11 +287,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const dashOffsetRef = useRef<number>(0);
   const dashAnimRef = useRef<number | null>(null);
   const [mounted, setMounted] = useState(false);
-  // Track transient press state for the reset button so it reacts from the default "pressed" look
-  const [resetActive, setResetActive] = useState(false);
-  // Track transient press state for the other header buttons so they share the same interaction
-  const [cancelActive, setCancelActive] = useState(false);
-  const [confirmActive, setConfirmActive] = useState(false);
   // default behavior: drag to create/move crop selection.
   const cropRatio = useRef<number | null>(null); // null = free
   // default behavior: drag to create/move crop selection.
@@ -328,7 +323,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         if (canvas && cont) {
           const dpr = window.devicePixelRatio || 1;
           const contW = Math.max(100, Math.round(cont.clientWidth));
-          const MAX_HEIGHT = 520;
+          // Prefer a canvas height that fits comfortably in the viewport.
+          // Use a fraction of the viewport height but clamp to sensible min/max.
+          const viewportH = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 800;
+          const VIEWPORT_BASE = Math.max(140, Math.round(viewportH * 0.5));
+          const MAX_HEIGHT = Math.min(520, VIEWPORT_BASE);
           const MIN_HEIGHT = 140;
           let targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(contW * 0.8)));
           if (img && img.naturalWidth && img.naturalHeight) {
@@ -397,13 +396,15 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     const resize = () => {
       const c = canvasRef.current; const cont = containerRef.current;
       if (!c || !cont) return;
-      const dpr = window.devicePixelRatio || 1;
-      // use clientWidth to derive canvas size (avoid transform/scale issues from parent modals)
-      const contW = Math.max(100, Math.round(cont.clientWidth));
-      // Keep previous min/max constraints but prefer the image's natural aspect ratio when available
-      const MAX_HEIGHT = 520;
-      const MIN_HEIGHT = 140;
-      let targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(contW * 0.8)));
+  const dpr = window.devicePixelRatio || 1;
+  // use clientWidth to derive canvas size (avoid transform/scale issues from parent modals)
+  const contW = Math.max(100, Math.round(cont.clientWidth));
+  // Prefer canvas height derived from the viewport so the editor never grows larger than the screen.
+  const viewportH = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 800;
+  const VIEWPORT_BASE = Math.max(140, Math.round(viewportH * 0.5));
+  const MAX_HEIGHT = Math.min(520, VIEWPORT_BASE);
+  const MIN_HEIGHT = 140;
+  let targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(contW * 0.8)));
       const img = imgRef.current;
       if (img && img.naturalWidth && img.naturalHeight) {
         // Compute height that matches the image aspect ratio at the current container width
@@ -1465,23 +1466,26 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         if (k === 'Enter') { applyEdit(); }
         if (k === 'Escape') { onCancel(); }
       }}
-      className="image-editor"
-      style={{
-        width: '100%',
-        maxWidth: 'min(92vw, 820px)',
-        margin: '0 auto',
-        background: 'var(--bg-elev)',
-        color: 'var(--text)',
-        padding: 12,
-        paddingBottom: 16,
+  className="image-editor"
+  style={{
+    width: '100%',
+    maxWidth: 'min(92vw, 820px)',
+    margin: '0 auto',
+    background: 'var(--bg-elev)',
+    color: 'var(--text)',
+    padding: 12,
+    paddingBottom: 16,
   borderRadius: 8,
   overflowX: 'hidden',
+  // ensure the editor never exceeds the viewport height; allow internal scrolling
+  maxHeight: 'calc(100vh - 48px)',
+  overflowY: 'auto',
   // subtle mount animation: only translate and fade (no scaling) to
   // avoid a size jump when the canvas finishes sizing.
   transform: mounted ? 'translateY(0)' : 'translateY(6px)',
   opacity: mounted ? 1 : 0,
   transition: 'opacity 220ms ease, transform 260ms cubic-bezier(.2,.9,.2,1)'
-      }}
+  }}
       
     >
       {/* scoped styles for sliders and subtle animations */}
@@ -1599,87 +1603,19 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           {/* rotate buttons removed from header */}
 
           {/* Cancel (ghost) */}
-          <button
-            type="button"
-            className="btn icon ghost"
-            onClick={onCancel}
-            aria-label="Cancel edits"
-            onPointerDown={() => setCancelActive(true)}
-            onPointerUp={() => setCancelActive(false)}
-            onPointerCancel={() => setCancelActive(false)}
-            onPointerLeave={() => setCancelActive(false)}
-            onKeyDown={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setCancelActive(true); }}
-            onKeyUp={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setCancelActive(false); }}
-            style={{
-              padding: 8,
-              borderRadius: 999,
-              background: 'color-mix(in srgb, var(--bg-elev) 98%, white)',
-              boxShadow: cancelActive ? 'inset 0 3px 8px rgba(0,0,0,0.12)' : '0 6px 18px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)',
-              transform: cancelActive ? 'translateY(2px)' : 'translateY(-1px)',
-              border: '1px solid color-mix(in srgb, var(--border) 80%, transparent)',
-              transition: 'transform 160ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease'
-            }}
-          >
+          <button type="button" className="btn icon ghost" onClick={onCancel} aria-label="Cancel edits">
             <X size={16} aria-hidden />
             <span className="sr-only">Cancel edits</span>
           </button>
 
-          {/* Reset adjustments (always visually 'pressed' / selected) */}
-          <button
-            type="button"
-            className="btn icon ghost"
-            title="Reset adjustments"
-            onClick={resetAdjustments}
-            aria-label="Reset adjustments"
-            aria-pressed={true}
-            onPointerDown={() => setResetActive(true)}
-            onPointerUp={() => setResetActive(false)}
-            onPointerCancel={() => setResetActive(false)}
-            onPointerLeave={() => setResetActive(false)}
-            onKeyDown={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setResetActive(true); }}
-            onKeyUp={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setResetActive(false); }}
-            style={{
-              // Keep the button visually as-if pressed once: subtle depressed/inset look
-              padding: 8,
-              borderRadius: 999,
-              background: 'color-mix(in srgb, var(--bg-elev) 98%, white)',
-              // non-active: lifted/hovering look (drop shadow & slight upward offset)
-              // active: inset/depressed look with stronger inset shadow and downward offset
-              // Subtle hover (lifted) vs subtle press (inset) styling
-              boxShadow: resetActive ? 'inset 0 3px 8px rgba(0,0,0,0.12)' : '0 6px 18px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)',
-              transform: resetActive ? 'translateY(2px)' : 'translateY(-1px)',
-              border: '1px solid color-mix(in srgb, var(--border) 80%, transparent)',
-              transition: 'transform 160ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease'
-            }}
-          >
+          {/* Reset adjustments (match follow button visual) */}
+          <button type="button" className="btn icon ghost" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">
             <RefreshCw size={16} aria-hidden />
             <span className="sr-only">Reset adjustments</span>
           </button>
 
           {/* Confirm (match other icon buttons - subtle) */}
-          <button
-            type="button"
-            className={`btn icon ghost`}
-            onClick={applyEdit}
-            aria-pressed={isEdited}
-            aria-label="Confirm edits"
-            title="Confirm edits"
-            onPointerDown={() => setConfirmActive(true)}
-            onPointerUp={() => setConfirmActive(false)}
-            onPointerCancel={() => setConfirmActive(false)}
-            onPointerLeave={() => setConfirmActive(false)}
-            onKeyDown={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setConfirmActive(true); }}
-            onKeyUp={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setConfirmActive(false); }}
-            style={{
-              padding: 8,
-              borderRadius: 999,
-              background: 'color-mix(in srgb, var(--bg-elev) 98%, white)',
-              boxShadow: confirmActive ? 'inset 0 3px 8px rgba(0,0,0,0.12)' : '0 6px 18px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)',
-              transform: confirmActive ? 'translateY(2px)' : 'translateY(-1px)',
-              border: '1px solid color-mix(in srgb, var(--border) 80%, transparent)',
-              transition: 'transform 160ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease'
-            }}
-          >
+          <button type="button" className={`btn icon ghost`} onClick={applyEdit} aria-pressed={isEdited} aria-label="Confirm edits" title="Confirm edits">
             <Check size={16} aria-hidden />
             <span className="sr-only">Confirm edits</span>
           </button>
@@ -1695,6 +1631,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             display: 'block', 
             transition: 'box-shadow 240ms ease', 
             minHeight: 140,
+            maxHeight: 'min(50vh, 520px)',
             borderRadius: 12,
             boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 2px rgba(255,255,255,0.05)',
             border: '1px solid color-mix(in srgb, var(--border) 80%, transparent)'

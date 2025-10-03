@@ -1,0 +1,110 @@
+/* --- MonoLog original CSS + variables (kept) --- */
+:root {
+  color-scheme: light dark;
+
+  --bg: #ffffff;
+  --bg-elev: #f7f7f9;
+  --text: #0f0f10;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-weak: #dbeafe;
+  --accent: #22c55e;
+  --danger: #ef4444;
+  --border: #e5e7eb;
+  --shadow: 0 8px 28px rgba(0,0,0,.08);
+
+
+  /* Inline preloader used inside the calendar day feed — subtle, low-contrast */
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 18px;
+
+  --transition-fast: 160ms ease;
+  --transition-mid: 260ms cubic-bezier(.2,.7,.2,1);
+  --maxw: 800px;
+
+  /* toggle indicator color (light default) */
+  --auth-toggle-indicator: rgba(0,0,0,0.06);
+
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+/* calendar selected-day header animation */
+.day-header-anim {
+  animation: day-header-in 260ms var(--preloader-ease-quick) both;
+  will-change: transform, opacity;
+}
+
+@keyframes day-header-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Header favorites button: when the Favorites page is active, fill the header star */
+.header .favorites-btn.active svg {
+  fill: #FFD700;
+  stroke: rgba(0,0,0,0.48);
+  stroke-width: 1.8px;
+}
+/* Dark theme header star outline */
+:root[data-theme="dark"] .header .favorites-btn.active svg {
+  stroke: rgba(255,255,255,0.22);
+}
+
+/* About header button active styling: match favorites look so it becomes colored when active */
+.header .about-btn.active svg {
+  /* subtle pastel blue (softer than the favorites gold) */
+  /* pastel background for the svg area */
+  fill: #A7D1FF;
+  /* Make the icon strokes more visible: use primary color with reduced opacity
+     so the lines read clearly against the pastel background */
+  stroke: color-mix(in srgb, var(--primary), rgba(0,0,0,0.18));
+  stroke-width: 1.8px;
+}
+
+/* Also raise the effective icon color (for icons using currentColor) */
+.header .about-btn.active {
+  color: color-mix(in srgb, var(--primary), rgba(0,0,0,0.06));
+}
+/* Dark theme about button outline */
+:root[data-theme="dark"] .header .about-btn.active svg {
+  /* stronger light stroke in dark theme for readability */
+  stroke: rgba(255,255,255,0.9);
+  stroke-width: 1.6px;
+}
+
+/* Prefer the user's OS preference only when no explicit saved preference exists - handled in JS init */
+:root[data-theme="dark"] {
+  --bg: #0c0c0e;
+  --bg-elev: #141418;
+  --text: #f7f7f7;
+  --muted: #9ca3af;
+  --primary: #60a5fa;
+  --primary-weak: #0b2547;
+  --accent: #34d399;
+  --danger: #f87171;
+  --border: #1f2937;
+  --shadow: 0 8px 30px rgba(0,0,0,.35);
+  /* darker theme toggle indicator */
+  --auth-toggle-indicator: rgba(255,255,255,0.04);
+}
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-elev: #f7f7f9;
+  --text: #0f0f10;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-weak: #dbeafe;
+  --accent: #22c55e;
+  --danger: #ef4444;
+  --border: #e5e7eb;
+  --shadow: 0 8px 28px rgba(0,0,0,.08);
+  --auth-toggle-indicator: rgba(0,0,0,0.06);
+}
+
+/* support projects that toggle dark mode by adding a `dark` class to the html element */
+.dark {
+  --auth-toggle-indicator: rgba(255,255,255,0.04);
+}

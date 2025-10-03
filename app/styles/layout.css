@@ -1,0 +1,508 @@
+.header {
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: saturate(180%) blur(8px);
+  background: color-mix(in srgb, var(--bg), transparent 10%);
+  border-bottom: 1px solid var(--border);
+  padding-top: var(--safe-top);
+}
+.header-inner {
+  max-width: var(--maxw); margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px; justify-content: space-between;
+  /* Ensure the header never expands beyond its container (prevents
+     long inline labels from increasing the app width on small screens). */
+  width: 100%;
+  box-sizing: border-box;
+}
+.brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.brand .logo {
+  width: 28px; height: 28px; border-radius: 8px; background: var(--text); position: relative; overflow: hidden;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.brand .logo::after {
+  content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg);
+}
+.brand:hover .logo {
+  transform: rotate(5deg) scale(1.05);
+}
+.brand .logo.animate-bounce {
+  animation: logo-bounce 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes logo-bounce {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(0.92) rotate(-8deg); }
+  60% { transform: scale(1.08) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.2px; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; }
+/* allow header action group to shrink when space is tight (prevents
+  the header from growing wider than the viewport when account text
+  is present). */
+.header-actions { min-width: 0; }
+
+/* Normalize header action button heights so icon-only and text buttons match */
+.header-actions .btn {
+  height: 36px; /* match .btn.icon width/height for visual consistency */
+  padding: 0 12px; /* vertical padding removed since height is fixed */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Keep existing square sizing for icon variant; remove extra horizontal padding */
+.header-actions .btn.icon {
+  padding: 0; /* .btn.icon already sets fixed size; zero padding ensures perfect circle */
+}
+
+/* Account switcher button: prevent long usernames from expanding the header.
+   Keep avatar fixed size and clamp the label with ellipsis. */
+.account-switcher .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* allow truncation */
+  padding: 6px 10px; /* slightly smaller touch target for header */
+}
+.account-switcher .btn img.avatar {
+  width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;
+}
+.account-switcher .btn span {
+  display: inline-block;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  width: 100%;
+  padding: 12px 12px calc(76px + var(--safe-bottom));
+}
+.upload-empty .content { padding-bottom: 28px; }
+.content { position: relative; /* allow certain header elements to overflow (e.g. avatar shadows) */ overflow: visible; }
+
+/* Strong page-level override when uploader has an active preview (JS toggles
+  `body.uploader-has-preview`). This lives immediately after the base
+  `.content` so it reliably overrides earlier padding. Adjust to taste. */
+body.uploader-has-preview .content {
+  padding-bottom: calc(28px + var(--safe-bottom)) !important;
+}
+
+/* Debug outline: add `document.body.classList.add('debug-uploader-outline')`
+  in browser console to reveal outlines for the main containers while
+  debugging the remaining vertical gap. Remove the class when done. */
+body.debug-uploader-outline .content { outline: 3px dashed rgba(255,0,0,0.95); }
+body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); }
+body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
+
+/* Page slide: support swipe-to-navigate with smooth transforms. We keep
+   a single .page-slide element and animate its transform/opacity on
+   navigation or during pointer/touch drags. Respect prefers-reduced-motion
+   by disabling translations for users who opt out. */
+.content > .page-slide {
+  position: relative;
+  will-change: transform, opacity;
+  transition: transform .26s var(--transition-mid), opacity .26s var(--transition-mid);
+  transform: translateX(0);
+}
+
+/* directional classes used by JS navigation (enter/exit states) */
+.content.slide-left > .page-slide { transform: translateX(-100%); opacity: 0.92; }
+.content.slide-right > .page-slide { transform: translateX(100%); opacity: 0.92; }
+.content.slide-enter-left > .page-slide { transform: translateX(100%); }
+.content.slide-enter-right > .page-slide { transform: translateX(-100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .content > .page-slide { transition: opacity 120ms linear; transform: none !important; }
+}
+
+.tabbar {
+  position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
+  /* Raise z-index above editor/portal overlays (these use up to 99999) so the
+     navigation bar remains the top-most interactive element. */
+  z-index: 100001;
+  /* Force no transform so it won't be affected visually if an ancestor has a transform */
+  transform: none !important;
+  -webkit-transform: none !important;
+  background: color-mix(in srgb, var(--bg), transparent 6%);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  padding-bottom: var(--safe-bottom);
+}
+.tabbar-inner {
+  max-width: var(--maxw);
+  margin: 0 auto; padding: 6px 8px; /* tighter padding */
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; /* 5 columns so Post sits center */
+}
+.tab-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  color: var(--muted); font-size: 12px; padding: 4px 2px;
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  overflow: visible;
+  /* Add smooth transitions for all interactive states */
+  transition: color 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tab-item span { 
+  line-height: 1; 
+  /* Subtle label animation on tab switch */
+  opacity: 0.7;
+  transform: translateY(0);
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tab-item[aria-current="page"] { 
+  color: var(--text); 
+  font-weight: 700; 
+}
+.tab-item[aria-current="page"] span {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+.tab-item .ic {
+  width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center;
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              color 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative; z-index: 2; /* sit above the moving indicator */
+  will-change: transform;
+}
+/* Add subtle breathing animation to icons */
+.tab-item .ic svg {
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke-width 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              /* ensure the stroke/color animate smoothly (avoids inheriting a
+                 transient ancestor color like white when toggling active state) */
+              stroke 320ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 320ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* default (inactive) icon color/stroke so the icon doesn't briefly
+    inherit a different color from a parent during class toggles */
+  color: var(--muted);
+  stroke: var(--muted);
+  opacity: 1;
+}
+/* Active tab - organic lift with gentle bounce */
+.tab-item[aria-current="page"] .ic {
+  transform: translateY(-6px); /* slightly lift the icon when active */
+  /* avoid setting a global `color` on the container (.ic) which would be
+     inherited by the SVG (lucide icons use currentColor). Setting the
+     visible stroke/color on the SVG itself avoids a brief white flash when
+     aria-current is removed and the container's color transitions. */
+  animation: iconBounce 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes iconBounce {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-8px) scale(1.08); }
+  60% { transform: translateY(-5px) scale(0.98); }
+  100% { transform: translateY(-6px) scale(1); }
+}
+/* Inactive tabs - subtle hover feedback */
+/* Hover / pointer-fine only interactions: prevent sticky hover colors on touch devices. */
+@media (hover: hover) and (pointer: fine) {
+  .tab-item:not([aria-current="page"]):hover .ic {
+    transform: translateY(-2px) scale(1.05);
+  }
+  .tab-item:not([aria-current="page"]):hover .ic svg {
+    stroke-width: 2.2;
+  }
+  .tab-item:not([aria-current="page"]):hover span {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  /* Remove background highlight, use color instead */
+
+  /* Unique colors for each navbar tab using data attributes */
+  /* Feed - Blue */
+  .tab-item[data-tab="feed"]:hover:not([aria-current="page"]) .ic svg {
+    color: #3b82f6;
+    stroke: #3b82f6;
+  }
+  /* Explore - Purple */
+  .tab-item[data-tab="explore"]:hover:not([aria-current="page"]) .ic svg {
+    color: #a855f7;
+    stroke: #a855f7;
+  }
+  /* Post - Green/Accent */
+  .tab-item[data-tab="post"]:hover:not([aria-current="page"]) .ic svg {
+    color: #22c55e;
+    stroke: #22c55e;
+  }
+  /* Calendar - Orange */
+  .tab-item[data-tab="calendar"]:hover:not([aria-current="page"]) .ic svg {
+    color: #f59e0b;
+    stroke: #f59e0b;
+  }
+  /* Profile - Pink */
+  .tab-item[data-tab="profile"]:hover:not([aria-current="page"]) .ic svg {
+    color: #ec4899;
+    stroke: #ec4899;
+  }
+}
+/* Active (aria-current) colored states remain outside media query so they apply everywhere */
+.tab-item[data-tab="feed"][aria-current="page"] .ic svg {
+  color: #3b82f6;
+  stroke: #3b82f6;
+  filter: drop-shadow(0 0 10px #3b82f6) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.5));
+}
+.tab-item[data-tab="explore"][aria-current="page"] .ic svg {
+  color: #a855f7;
+  stroke: #a855f7;
+  filter: drop-shadow(0 0 10px #a855f7) drop-shadow(0 2px 4px rgba(168, 85, 247, 0.5));
+}
+.tab-item[data-tab="post"][aria-current="page"] .ic svg {
+  color: #22c55e;
+  stroke: #22c55e;
+  filter: drop-shadow(0 0 10px #22c55e) drop-shadow(0 2px 4px rgba(34, 197, 94, 0.5));
+}
+.tab-item[data-tab="calendar"][aria-current="page"] .ic svg {
+  color: #f59e0b;
+  stroke: #f59e0b;
+  filter: drop-shadow(0 0 10px #f59e0b) drop-shadow(0 2px 4px rgba(245, 158, 11, 0.5));
+}
+.tab-item[data-tab="profile"][aria-current="page"] .ic svg {
+  color: #ec4899;
+  stroke: #ec4899;
+  filter: drop-shadow(0 0 10px #ec4899) drop-shadow(0 2px 4px rgba(236, 72, 153, 0.5));
+}
+
+/* Update indicator color based on active tab - subtle shades */
+.tab-indicator[data-active-tab="feed"] {
+  background: rgba(59, 130, 246, 0.12);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+.tab-indicator[data-active-tab="explore"] {
+  background: rgba(168, 85, 247, 0.12);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.1);
+}
+.tab-indicator[data-active-tab="post"] {
+  background: rgba(34, 197, 94, 0.12);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+}
+.tab-indicator[data-active-tab="calendar"] {
+  background: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+}
+.tab-indicator[data-active-tab="profile"] {
+  background: rgba(236, 72, 153, 0.12);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.1);
+}
+
+/* Subtle color on hover for inactive tabs (pointer-fine only) */
+@media (hover: hover) and (pointer: fine) {
+  .tab-item:not([aria-current="page"]):hover .ic svg {
+    opacity: 0.8;
+    transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                stroke 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                stroke-width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+.tab-item[aria-current="page"] .ic svg {
+  transition: color 320ms cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 320ms cubic-bezier(0.4, 0, 0.2, 1),
+              filter 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              stroke 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active state press feedback */
+.tab-item:active .ic {
+  transform: translateY(-4px) scale(0.95);
+}
+/* Ripple effect on tap */
+.tab-item::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, 
+    color-mix(in srgb, var(--primary), transparent 70%) 0%, 
+    transparent 70%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.tab-item.ripple::before {
+  animation: tabRipple 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes tabRipple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.5;
+  }
+  50% {
+    width: 80px;
+    height: 80px;
+    opacity: 0.3;
+  }
+  100% {
+    width: 100px;
+    height: 100px;
+    opacity: 0;
+  }
+}
+/* Improve contrast for icons (including emoji or image-based icons).
+   - add a subtle drop shadow to all icons so they read against both light and colored backgrounds
+   - for active icons (on the colored indicator) add a light halo/text-shadow to increase perceived contrast
+   - slightly scale the active icon for a clearer visual cue */
+.tab-item .ic,
+.tab-item .ic img,
+.tab-item .ic svg {
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.08));
+  -webkit-font-smoothing: antialiased;
+}
+.tab-item[aria-current="page"] .ic {
+  transform: translateY(-6px) scale(1.06);
+  /* Color is now set by individual tab rules for unique colors */
+  text-shadow: 0 1px 0 rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* make the active label smaller and centered under the raised icon */
+.tab-item[aria-current="page"] {
+  padding-top: 2px; /* reduce top padding so label sits closer to icon */
+}
+
+/* extra breathing room so raised icon doesn't overlap the border */
+.tabbar { padding-top: 8px; }
+
+/* Moving indicator for bottom nav: sits behind active tab and animates between positions */
+.tabbar-inner { position: relative; }
+/* Circular sliding indicator that moves behind icons. Positioned using left
+   and a CSS variable for top so it can sit under the icon row. */
+.tab-indicator {
+  position: absolute;
+  left: 0;
+  top: var(--indicator-top, 6px);
+  width: 44px; height: 44px; border-radius: 999px;
+  /* Subtle background with reduced opacity and softer shadow */
+  background: rgba(var(--primary-rgb, 59, 130, 246), 0.12);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.08);
+  pointer-events: none;
+  transform-origin: center;
+  opacity: 0;
+  /* Enhanced spring-based physics for organic movement */
+  transition: left 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              width 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              opacity 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1; /* behind icons (icons have z-index:2) */
+  will-change: left, transform;
+}
+/* Light mode: previous indicator was low contrast on very light backgrounds. Increase saturation, add subtle ring & strengthen active label weight. */
+:root[data-theme="light"] .tab-indicator,
+/* also apply when no explicit dark theme attribute is present */
+:root:not([data-theme="dark"]) .tab-indicator {
+  background: rgba(59, 130, 246, 0.1);
+  /* Subtle shadow for depth without being too prominent */
+  box-shadow: 0 2px 8px rgba(37,99,235,0.12), 0 4px 12px -2px rgba(37,99,235,0.15);
+}
+:root[data-theme="light"] .tab-item[aria-current="page"],
+:root:not([data-theme="dark"]) .tab-item[aria-current="page"] { color: #0f0f10; font-weight: 700; }
+/* Light mode active icon: icons now use their unique colors in both light and dark mode */
+:root[data-theme="light"] .tab-item[aria-current="page"] .ic,
+:root:not([data-theme="dark"]) .tab-item[aria-current="page"] .ic {
+  /* reduce the bright white halo which made icons look washed out; keep a
+     subtle drop shadow for depth */
+  text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+/* Slightly stronger inner highlight behind icon to lift it */
+:root[data-theme="light"] .tab-indicator::after,
+:root:not([data-theme="dark"]) .tab-indicator::after {
+  /* use a subtle darker tint for the inner glow so a dark glyph keeps good contrast */
+  background: rgba(0,0,0,0.06);
+  filter: blur(10px);
+}
+.tab-indicator.visible { 
+  opacity: 1; 
+  animation: indicatorFadeIn 360ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  /* keep final animation state so removing/adding other animations doesn't
+     briefly revert opacity/transform and cause a visual flicker */
+  animation-fill-mode: both;
+}
+@keyframes indicatorFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(2px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.tab-indicator.pop { 
+  /* Subtle pop animation - more refined and less prominent */
+  animation: indicatorPop 380ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  /* ensure the pop keeps its final transform while the element remains in
+     this state so toggling classes doesn't produce a flash */
+  animation-fill-mode: both;
+}
+@keyframes indicatorPop {
+  0% { 
+    transform: scale(1) translateY(0); 
+  }
+  40% { 
+    transform: scale(1.04) translateY(-2px); 
+  }
+  70% { 
+    transform: scale(0.98) translateY(-1px); 
+  }
+  100% { 
+    transform: scale(1) translateY(0); 
+  }
+}
+
+/* When both the visible (fade) and pop animations are applied we want them
+   to run together rather than one overriding the other. Define a combined
+   animation so the fade animation isn't inadvertently restarted when the
+   pop class is toggled which caused the flicker at animation end. */
+.tab-indicator.visible.pop,
+.tab-indicator.pop.visible {
+  animation: indicatorFadeIn 360ms cubic-bezier(0.34, 1.2, 0.64, 1),
+             indicatorPop 380ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  animation-fill-mode: both, both;
+}
+
+/* soft center highlight in the indicator to raise icon contrast (very subtle) */
+.tab-indicator::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 28px; height: 28px; border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* when user prefers reduced motion, use a simple fade without translate/scale */
+@media (prefers-reduced-motion: reduce) {
+  .tab-indicator { 
+    transition: opacity 120ms linear; 
+    transform: none !important; 
+    animation: none !important;
+  }
+  .tab-item .ic,
+  .tab-item span,
+  .tab-item::before,
+  .tab-item::after {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .tab-item[aria-current="page"] .ic {
+    transform: translateY(-6px); /* keep the lift but no animation */
+  }
+}

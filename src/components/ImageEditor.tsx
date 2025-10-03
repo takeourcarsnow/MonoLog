@@ -75,13 +75,18 @@ function lerpColor(hexA: string, hexB: string, t: number) {
 }
 
 function exposureColor(v: number) {
-  // v range 0.5..1.8 -> normalize to 0..1
-  const t = Math.max(0, Math.min(1, (v - 0.5) / (1.8 - 0.5)));
+  // v range 0.2..1.8 -> normalize to 0..1 (we keep neutral=1 centered)
+  const EXPOSURE_MIN = 0.2;
+  const EXPOSURE_MAX = 1.8;
+  const t = Math.max(0, Math.min(1, (v - EXPOSURE_MIN) / (EXPOSURE_MAX - EXPOSURE_MIN)));
   return lerpColor('#fff6db', '#ffd166', t);
 }
 
 function contrastColor(v: number) {
-  const t = Math.max(0, Math.min(1, (v - 0.5) / (1.8 - 0.5)));
+  // contrast uses same numeric range as exposure so normalize against the same bounds
+  const CONTRAST_MIN = 0.2;
+  const CONTRAST_MAX = 1.8;
+  const t = Math.max(0, Math.min(1, (v - CONTRAST_MIN) / (CONTRAST_MAX - CONTRAST_MIN)));
   return lerpColor('#fff3e6', '#ff9f43', t);
 }
 
@@ -166,8 +171,12 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const originalImgRef = useRef<HTMLImageElement | null>(null);
   const [imageSrc, setImageSrc] = useState(initialDataUrl);
   const originalRef = useRef<string>(initialDataUrl);
+  const [previewOriginal, setPreviewOriginal] = useState(false);
+  const previewPointerIdRef = useRef<number | null>(null);
+  const previewOriginalRef = useRef<boolean>(false);
 
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragging = useRef<null | {
@@ -360,6 +369,15 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       });
     };
     img.src = imageSrc;
+    // preload original (unedited) image for instant preview when pressed
+    try {
+      const oimg = new Image();
+      oimg.crossOrigin = 'anonymous';
+      oimg.onload = () => { originalImgRef.current = oimg; };
+      oimg.src = originalRef.current;
+    } catch (e) {
+      // ignore preload errors
+    }
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageSrc]);
@@ -453,8 +471,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   }, [sel]);
 
   function draw(info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number }, overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; matte: number; frameEnabled: boolean; frameThickness: number; frameColor: string }>) {
-    const canvas = canvasRef.current; const img = imgRef.current;
-    if (!canvas || !img) return;
+  const canvas = canvasRef.current; const img = previewOriginalRef.current && originalImgRef.current ? originalImgRef.current : imgRef.current;
+  if (!canvas || !img) return;
     const ctx = canvas.getContext("2d")!;
     const dpr = window.devicePixelRatio || 1;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -479,8 +497,10 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     }
 
   // Apply color adjustments via canvas filter for live preview
+  // If previewOriginal is true we skip all adjustments/filters and draw the raw original image
+  const isPreviewOrig = previewOriginalRef.current && originalImgRef.current;
   // temperature mapped to hue-rotate degrees (-30..30 deg)
-  const curExposure = overrides?.exposure ?? exposureRef.current ?? exposure;
+  const curExposure = isPreviewOrig ? 1 : (overrides?.exposure ?? exposureRef.current ?? exposure);
   const curContrast = overrides?.contrast ?? contrastRef.current ?? contrast;
   const curSaturation = overrides?.saturation ?? saturationRef.current ?? saturation;
   const curTemperature = overrides?.temperature ?? temperatureRef.current ?? temperature;
@@ -538,7 +558,10 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     imgW = scaledW;
     imgH = scaledH;
   }
-  if (curFilterStrength >= 0.999) {
+  if (isPreviewOrig) {
+    // Draw raw original with no filters/effects
+    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
+  } else if (curFilterStrength >= 0.999) {
     ctx.filter = filter;
     drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
     ctx.filter = 'none';
@@ -692,35 +715,50 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     // simple frame overlay (stroke around image)
     if (curFrameEnabled) {
       // Draw frame bands between outer disp rect and inner uniformly-scaled image.
-      // Use integer coordinates to avoid sub-pixel rendering gaps/seams.
+      // If the image is rotated, draw the frame inside a rotated coordinate
+      // system so the frame rotates with the photo.
       ctx.save();
       ctx.fillStyle = curFrameColor === 'white' ? '#ffffff' : '#000000';
-      // Round all coordinates to whole pixels to eliminate gaps
-      const outerL = Math.floor(left);
-      const outerT = Math.floor(top);
-      const outerR = Math.ceil(left + dispW);
-      const outerB = Math.ceil(top + dispH);
-      const innerL = Math.floor(imgLeft);
-      const innerT = Math.floor(imgTop);
-      const innerR = Math.ceil(imgLeft + imgW);
-      const innerB = Math.ceil(imgTop + imgH);
-      
-      // Draw frame as overlapping rectangles to ensure no gaps
-      // top band
-      if (innerT > outerT) {
-        ctx.fillRect(outerL, outerT, outerR - outerL, innerT - outerT + 1);
-      }
-      // bottom band
-      if (innerB < outerB) {
-        ctx.fillRect(outerL, innerB - 1, outerR - outerL, outerB - innerB + 1);
-      }
-      // left band (full height to cover any gaps)
-      if (innerL > outerL) {
-        ctx.fillRect(outerL, outerT, innerL - outerL + 1, outerB - outerT);
-      }
-      // right band (full height to cover any gaps)
-      if (innerR < outerR) {
-        ctx.fillRect(innerR - 1, outerT, outerR - innerR + 1, outerB - outerT);
+      // When no rotation is applied we can draw axis-aligned bands (fast path)
+      if (Math.abs(angleRad) < 1e-6) {
+        // Round all coordinates to whole pixels to eliminate gaps
+        const outerL = Math.floor(left);
+        const outerT = Math.floor(top);
+        const outerR = Math.ceil(left + dispW);
+        const outerB = Math.ceil(top + dispH);
+        const innerL = Math.floor(imgLeft);
+        const innerT = Math.floor(imgTop);
+        const innerR = Math.ceil(imgLeft + imgW);
+        const innerB = Math.ceil(imgTop + imgH);
+
+        // Draw frame as overlapping rectangles to ensure no gaps
+        if (innerT > outerT) ctx.fillRect(outerL, outerT, outerR - outerL, innerT - outerT + 1);
+        if (innerB < outerB) ctx.fillRect(outerL, innerB - 1, outerR - outerL, outerB - innerB + 1);
+        if (innerL > outerL) ctx.fillRect(outerL, outerT, innerL - outerL + 1, outerB - outerT);
+        if (innerR < outerR) ctx.fillRect(innerR - 1, outerT, outerR - innerR + 1, outerB - outerT);
+      } else {
+        // Rotated path: translate to image center and draw relative to that center
+        const cx = left + dispW / 2;
+        const cy = top + dispH / 2;
+        ctx.translate(cx, cy);
+        ctx.rotate(angleRad);
+
+        // Outer rect relative to center
+        const outerL = Math.floor(-dispW / 2);
+        const outerT = Math.floor(-dispH / 2);
+        const outerR = Math.ceil(dispW / 2);
+        const outerB = Math.ceil(dispH / 2);
+
+        // Inner rect relative to center
+        const innerL = Math.floor(imgLeft - left - dispW / 2);
+        const innerT = Math.floor(imgTop - top - dispH / 2);
+        const innerR = Math.ceil(imgLeft + imgW - left - dispW / 2);
+        const innerB = Math.ceil(imgTop + imgH - top - dispH / 2);
+
+        if (innerT > outerT) ctx.fillRect(outerL, outerT, outerR - outerL, innerT - outerT + 1);
+        if (innerB < outerB) ctx.fillRect(outerL, innerB - 1, outerR - outerL, outerB - innerB + 1);
+        if (innerL > outerL) ctx.fillRect(outerL, outerT, innerL - outerL + 1, outerB - outerT);
+        if (innerR < outerR) ctx.fillRect(innerR - 1, outerT, outerR - innerR + 1, outerB - outerT);
       }
       ctx.restore();
     }
@@ -897,12 +935,15 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
-    const onPointerDown = (ev: PointerEvent) => {
-      // stop propagation so AppShell swipe/mouse handlers don't react
-      ev.stopPropagation?.();
-      try { (ev.target as Element).setPointerCapture(ev.pointerId); } catch {}
-      const p = getPointerPos(ev);
-      // Check for resize handles first
+  const onPointerDown = (ev: PointerEvent) => {
+    // stop propagation so AppShell swipe/mouse handlers don't react
+    ev.stopPropagation?.();
+    try { (ev.target as Element).setPointerCapture(ev.pointerId); } catch {}
+  const p = getPointerPos(ev);
+    // We'll only enable the A/B preview for pan interactions. For crop-related
+    // interactions (draw/resize/move) we should NOT show the original preview while dragging.
+    // So defer setting previewOriginal until we've determined the action below.
+    // Check for resize handles first
       if (sel) {
         const handleSize = 8;
         const handles = [
@@ -923,13 +964,30 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           }
         }
       }
-      // If clicked inside selection, prepare to move; otherwise start drawing a new selection
+
+      // If clicked inside existing selection, prepare to move (do NOT enable preview)
       if (sel && p.x >= sel.x && p.x <= sel.x + sel.w && p.y >= sel.y && p.y <= sel.y + sel.h) {
         dragging.current = { startX: p.x, startY: p.y, mode: 'crop', action: 'move', origSel: { ...sel }, anchorX: p.x - sel.x, anchorY: p.y - sel.y };
-      } else {
+        return;
+      }
+
+      // Only start drawing a new crop if Crop category is active AND an aspect preset is selected.
+      // If no aspect ratio is selected (free mode), treat the click as a pan so the user still gets the
+      // A/B preview on press instead of immediately creating a selection.
+      if (selectedCategory === 'crop' && cropRatio.current != null) {
         dragging.current = { startX: p.x, startY: p.y, mode: 'crop', action: 'draw' };
         setSel({ x: p.x, y: p.y, w: 0, h: 0 });
+        return;
       }
+
+      // Default: start panning (click on image should not create a new crop when not in crop mode)
+      dragging.current = { startX: p.x, startY: p.y, mode: 'pan' };
+      // Enable A/B preview for pan interactions only
+      previewPointerIdRef.current = ev.pointerId ?? null;
+      previewOriginalRef.current = true;
+      setPreviewOriginal(true);
+      // Ensure the canvas repaints to show the unedited original immediately
+      requestAnimationFrame(() => draw());
     };
 
     const onPointerMove = (ev: PointerEvent) => {
@@ -1139,16 +1197,31 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       ev.stopPropagation?.();
       try { (ev.target as Element).releasePointerCapture(ev.pointerId); } catch {}
       dragging.current = null;
+      // Only clear the preview if this pointer matches the one that started it
+      if (previewPointerIdRef.current == null || previewPointerIdRef.current === ev.pointerId) {
+        previewOriginalRef.current = false;
+        setPreviewOriginal(false);
+        previewPointerIdRef.current = null;
+      }
       draw();
     };
   canvas.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
+    const onPointerCancel = (ev: PointerEvent) => {
+      if (previewPointerIdRef.current == null || previewPointerIdRef.current === ev.pointerId) {
+        setPreviewOriginal(false);
+        previewPointerIdRef.current = null;
+      }
+      dragging.current = null;
+    };
+    window.addEventListener('pointercancel', onPointerCancel);
   // no keyboard modifiers — panning is done by dragging outside/inside selection as before
     return () => {
       canvas.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offset, sel]);
@@ -1234,6 +1307,74 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
     // Redraw with defaults
     requestAnimationFrame(() => draw());
+  }
+
+  // Reset a single control to its default value (used by double-click on sliders)
+  function resetControlToDefault(control: string) {
+    switch (control) {
+      case 'exposure': {
+        const v = 1;
+        exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'contrast': {
+        const v = 1;
+        contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'saturation': {
+        const v = 1;
+        saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'temperature': {
+        const v = 0;
+        temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'filterStrength': {
+        const v = 1;
+        filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'vignette': {
+        const v = 0;
+        vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'grain': {
+        const v = 0;
+        grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'softFocus': {
+        const v = 0;
+        softFocusRef.current = v; setSoftFocus(v); draw(); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'fade': {
+        const v = 0;
+        fadeRef.current = v; setFade(v); draw(); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'matte': {
+        const v = 0;
+        matteRef.current = v; setMatte(v); draw(); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'rotation': {
+        const v = 0;
+        rotationRef.current = v; setRotation(v); draw(); requestAnimationFrame(() => draw());
+        break;
+      }
+      case 'frameThickness': {
+        const v = 0;
+        frameThicknessRef.current = v; setFrameThickness(v); draw(); requestAnimationFrame(() => draw());
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   async function applyEdit() {
@@ -1347,6 +1488,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       octx.save(); octx.globalAlpha = Math.min(0.25, curSoft * 0.3); octx.fillStyle = 'rgba(255,255,255,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
     }
   }
+
+  
   // Fade: washed out, lifted blacks vintage look (like sun-bleached photos)
   if (curFade > 0.001) {
     try {
@@ -1455,6 +1598,72 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       matte,
     };
     onApply(dataUrl, settings);
+  }
+
+  // Apply only the current crop (and rotation) to the image without confirming all edits.
+  // This bakes geometry (crop + rotation) into the underlying image source so the user
+  // can continue editing other adjustments afterwards.
+  async function applyCropOnly() {
+    const img = imgRef.current; if (!img) return;
+    const canvas = canvasRef.current; if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+
+    if (!sel) return; // nothing to crop
+
+    // Map selection (canvas coords) back to source image pixels
+    const srcX = Math.max(0, Math.round((sel.x - offset.x) / baseScale));
+    const srcY = Math.max(0, Math.round((sel.y - offset.y) / baseScale));
+    const srcW = Math.max(1, Math.round(sel.w / baseScale));
+    const srcH = Math.max(1, Math.round(sel.h / baseScale));
+
+    // Handle rotation: bake rotation into the new image and then reset the rotation slider
+    const rot = rotationRef.current ?? rotation;
+    const angle = (rot * Math.PI) / 180;
+    const absCos = Math.abs(Math.cos(angle));
+    const absSin = Math.abs(Math.sin(angle));
+    const outW = Math.max(1, Math.round((srcW) * absCos + (srcH) * absSin));
+    const outH = Math.max(1, Math.round((srcW) * absSin + (srcH) * absCos));
+
+    const out = document.createElement('canvas');
+    out.width = outW; out.height = outH;
+    const octx = out.getContext('2d')!;
+    octx.imageSmoothingQuality = 'high';
+
+    // Draw the selected source region into the center of the output canvas with rotation applied.
+    octx.save();
+    octx.translate(outW / 2, outH / 2);
+    octx.rotate(angle);
+    // draw the selected region centered
+    octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+    octx.restore();
+
+    // Replace working image with the cropped version (keep adjustments intact)
+    const dataUrl = out.toDataURL('image/png');
+    setImageSrc(dataUrl);
+    // Clear selection and reset pan/rotation since geometry is baked
+    setSel(null);
+    setOffset({ x: 0, y: 0 });
+    rotationRef.current = 0; setRotation(0);
+    // allow the new image to load and then redraw
+    requestAnimationFrame(() => {
+      const info = computeImageLayout();
+      if (info) { setOffset({ x: info.left, y: info.top }); draw(info); }
+      else draw();
+    });
+  }
+
+  // Reset crop selection and aspect preset without affecting other edits
+  function resetCrop() {
+    cropRatio.current = null;
+    setSel(null);
+    setPresetIndex(-1);
+    // recentre image in canvas and redraw
+    requestAnimationFrame(() => {
+      const info = computeImageLayout();
+      if (info) { setOffset({ x: info.left, y: info.top }); draw(info); }
+      else draw();
+    });
   }
 
   return (
@@ -1591,6 +1800,18 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           --slider-saturation-end: #ff6b6b;
           --slider-temperature-cold: #66d1ff;
           --slider-temperature-warm: #ffb86b;
+          /* unified heat gradient used across primary sliders */
+          --slider-heat-start: #2d9cff;
+          --slider-heat-end: #ffd166;
+          /* rotation slider colors: left is subtle blue, right is warm so the track forms a blue->warm heat gradient */
+          --slider-rotation-start: var(--slider-heat-start);
+          --slider-rotation-end: var(--slider-heat-end);
+        }
+        /* Prefer a slightly lighter/whiter right-side color in dark mode so the filled portion remains visible */
+        @media (prefers-color-scheme: dark) {
+          .image-editor {
+            --slider-rotation-end: #ffdc99;
+          }
         }
         /* visually-hidden helper for screen readers */
         .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
@@ -1752,7 +1973,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Exposure</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('exposure', exposureRef.current, v); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(exposure, 0.5, 1.8, 'var(--slider-exposure-start)', 'var(--slider-exposure-end)') }} />
+                <input className="imgedit-range" type="range" min={0.2} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('exposure', exposureRef.current, v); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('exposure')} style={{ flex: 1, background: rangeBg(exposure, 0.2, 1.8, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }} />
               </span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1761,7 +1982,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Contrast</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <input className="imgedit-range" type="range" min={0.5} max={1.8} step={0.01} value={contrast} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('contrast', contrastRef.current, v); contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(contrast, 0.5, 1.8, 'var(--slider-contrast-start)', 'var(--slider-contrast-end)') }} />
+                <input className="imgedit-range" type="range" min={0.2} max={1.8} step={0.01} value={contrast} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('contrast', contrastRef.current, v); contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('contrast')} style={{ flex: 1, background: rangeBg(contrast, 0.2, 1.8, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }} />
               </span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1770,7 +1991,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Saturation</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('saturation', saturationRef.current, v); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(saturation, 0, 2, 'var(--slider-saturation-start)', 'var(--slider-saturation-end)') }} />
+                <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('saturation', saturationRef.current, v); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('saturation')} style={{ flex: 1, background: rangeBg(saturation, 0, 2, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }} />
               </span>
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1779,7 +2000,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <span>Temperature</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('temperature', temperatureRef.current, v); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(temperature, -100, 100, 'var(--slider-temperature-cold)', 'var(--slider-temperature-warm)') }} />
+                <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('temperature', temperatureRef.current, v); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('temperature')} style={{ flex: 1, background: rangeBg(temperature, -100, 100, 'var(--slider-temperature-cold)', 'var(--slider-temperature-warm)') }} />
               </span>
             </label>
           </div>
@@ -1815,7 +2036,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
               <span style={{ width: 120, color: 'var(--text)', fontWeight: 600, fontSize: 14 }}>Strength</span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={filterStrength} onInput={(e: any) => { const v = Number(e.target.value); filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#2d9cff', 'rgba(255,255,255,0.08)') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={filterStrength} onInput={(e: any) => { const v = Number(e.target.value); filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('filterStrength')} style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }} />
             </div>
           </div>
 
@@ -1826,14 +2047,14 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <Aperture size={18} strokeWidth={2} aria-hidden />
                 <span>Vignette</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#1a1a1a', '#000000') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('vignette')} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#1a1a1a', '#000000') }} />
             </label>
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
                 <Layers size={18} strokeWidth={2} aria-hidden />
                 <span>Grain</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#e8d5b7', '#8b7355') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('grain')} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#e8d5b7', '#8b7355') }} />
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1841,7 +2062,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <ZapOff size={18} strokeWidth={2} aria-hidden />
                 <span>Soft Focus</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('softFocus')} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }} />
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1849,7 +2070,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <Film size={18} strokeWidth={2} aria-hidden />
                 <span>Fade</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('fade')} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }} />
             </label>
 
             <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -1857,7 +2078,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                 <Square size={18} strokeWidth={2} aria-hidden />
                 <span>Matte</span>
               </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }} />
+              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('matte')} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }} />
             </label>
           </div>
 
@@ -2044,9 +2265,13 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                   <span className="sr-only">Straighten</span>
                 </span>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
-                  <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} style={{ flex: 1, background: rangeBg(rotation, -30, 30, '#a8d8ff', 'rgba(255,255,255,0.06)') }} />
+                  <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')} style={{ flex: 1, background: rangeBg(rotation, -30, 30, 'var(--slider-rotation-start)', 'var(--slider-rotation-end)') }} />
                 </div>
               </label>
+            </div>
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button type="button" className="btn ghost" onClick={() => resetCrop()} disabled={!sel} aria-disabled={!sel} style={{ padding: '8px 12px', borderRadius: 8 }}>Reset crop</button>
+              <button type="button" className="btn primary" onClick={() => applyCropOnly()} disabled={!sel} aria-disabled={!sel} style={{ padding: '8px 12px', borderRadius: 8 }}>Apply crop</button>
             </div>
           </div>
 
@@ -2061,7 +2286,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                     <Ruler size={18} strokeWidth={2} aria-hidden />
                     <span>Thickness</span>
                   </span>
-                  <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#d4c5b9', '#8b7355') }} />
+                  <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} onDoubleClick={() => resetControlToDefault('frameThickness')} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#d4c5b9', '#8b7355') }} />
                 </label>
 
                 <div>

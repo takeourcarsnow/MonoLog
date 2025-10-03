@@ -1293,16 +1293,30 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         }}
       />
       <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
-        <span className="dim">Visibility:</span>
-        <select
-          className="edit-visibility"
-          aria-label="Post visibility"
-          value={visibility}
-          onChange={e => setVisibility(e.target.value)}
-        >
-          <option value="public">Public</option>
-          <option value="private">Private</option>
-        </select>
+        <div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={visibility === 'private'}
+            aria-label={visibility === 'private' ? 'Make post public' : 'Make post private'}
+            className={`vis-toggle btn ${visibility === 'private' ? 'private' : 'public'}`}
+            onClick={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
+          >
+            <span className="vis-icon" aria-hidden>
+              {/* eye open */}
+              <svg className="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" />
+              </svg>
+              {/* eye closed / eye-off */}
+              <svg className="eye-closed" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19C5 19 1 12 1 12a20.16 20.16 0 0 1 5.06-5.94" stroke="currentColor" />
+                <path d="M1 1l22 22" stroke="currentColor" />
+              </svg>
+            </span>
+            <span style={{ marginLeft: 8 }}>{visibility === 'private' ? 'Private' : 'Public'}</span>
+          </button>
+        </div>
       </label>
       {/* Save/Cancel are handled by the parent edit button and ESC respectively */}
     </div>

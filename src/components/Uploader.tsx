@@ -94,6 +94,31 @@ function UploaderCore() {
   const [editingAlt, setEditingAlt] = useState<string>("");
   const pathname = usePathname();
 
+  // Ensure we don't show a stale "processing" loader when navigating back
+  // to the upload page via client-side routing. Some client navigation
+  // patterns can preserve component state (including `processing`) so
+  // explicitly clear it when the user arrives at `/upload`.
+  useEffect(() => {
+    if (pathname === '/upload') {
+      setProcessing(false);
+    }
+  }, [pathname]);
+
+  // Clear processing when a post is created elsewhere in the app. The
+  // publish flow dispatches a `monolog:post_created` event; listen for it
+  // and ensure we remove any stale processing indicator.
+  useEffect(() => {
+    const onPostCreated = () => setProcessing(false);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:post_created', onPostCreated as EventListener);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:post_created', onPostCreated as EventListener);
+      }
+    };
+  }, []);
+
   // When the image editor is open, prevent background scrolling so the overlay
   // feels like a true modal on mobile (covers full viewport and blocks interaction).
   useEffect(() => {

@@ -11,15 +11,7 @@ import { rangeBg, generateNoiseCanvas } from './imageEditor/utils';
 import { useImageEditorState } from './imageEditor/useImageEditorState';
 import { draw as canvasDraw } from './imageEditor/CanvasRenderer';
 import type { EditorSettings } from './imageEditor/types';
-import {
-  applyEdit as actionsApplyEdit,
-  resetAdjustments as actionsResetAdjustments,
-  resetControlToDefault as actionsResetControlToDefault,
-  bakeRotate90 as actionsBakeRotate90,
-  bakeRotateMinus90 as actionsBakeRotateMinus90,
-  applyCropOnly as actionsApplyCropOnly,
-  resetCrop as actionsResetCrop,
-} from './imageEditor/imageEditorActions';
+import { useImageEditorActions } from './useImageEditorActions';
 import { usePointerEvents, useSliderEvents } from './imageEditor/imageEditorEvents';
 import { useImageEditorLayout } from './imageEditor/useImageEditorLayout';
 import { useImageEditorHighlights } from './imageEditor/useImageEditorHighlights';
@@ -208,126 +200,68 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   useEffect(() => { fadeRef.current = fade; }, [fade]);
   useEffect(() => { matteRef.current = matte; }, [matte]);
 
-  // quick derived flag: has the user made any edits (image replaced, selection or adjustments)
-  const isEdited = useMemo(() => {
-    if (imageSrc !== originalRef.current) return true;
-    if (sel) return true;
-    if (Math.abs(exposure - 1) > 0.001) return true;
-    if (Math.abs(contrast - 1) > 0.001) return true;
-    if (Math.abs(saturation - 1) > 0.001) return true;
-    if (Math.abs(temperature) > 0.001) return true;
-    if (Math.abs(vignette) > 0.001) return true;
-    if (Math.abs(rotation) > 0.001) return true;
-    if (selectedFilter !== 'none') return true;
-    if (Math.abs(grain) > 0.001) return true;
-    if (frameThickness > 0) return true;
-    return false;
-  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, frameThickness]);
-
-  // Action wrappers that delegate to the standalone action helpers
-  function applyEdit() {
-    actionsApplyEdit(
-      imgRef,
-      canvasRef,
-      offset,
-      sel,
-      exposure,
-      contrast,
-      saturation,
-      temperature,
-      vignette,
-      frameColor,
-      frameThickness,
-      selectedFilter,
-      filterStrength,
-      grain,
-      softFocus,
-      fade,
-      matte,
-      rotation,
-      rotationRef,
-      onApply
-    );
-  }
-
-  function resetAdjustments() {
-    actionsResetAdjustments(
-      setExposure,
-      exposureRef,
-      setContrast,
-      contrastRef,
-      setSaturation,
-      saturationRef,
-      setTemperature,
-      temperatureRef,
-      setVignette,
-      vignetteRef,
-      setFrameColor,
-      frameColorRef,
-      setFrameThickness,
-      frameThicknessRef,
-      setSelectedFilter,
-      selectedFilterRef,
-      setFilterStrength,
-      filterStrengthRef,
-      setGrain,
-      grainRef,
-      setSoftFocus,
-      softFocusRef,
-      setFade,
-      fadeRef,
-      setMatte,
-      matteRef,
-      setRotation,
-      rotationRef,
-      setSel,
-      cropRatio,
-      setPresetIndex
-    );
-    // ensure canvas redraw after reset
-    requestAnimationFrame(() => draw());
-  }
-
-  function resetControlToDefault(control: string) {
-    actionsResetControlToDefault(
-      control,
-      exposureRef,
-      setExposure,
-      contrastRef,
-      setContrast,
-      saturationRef,
-      setSaturation,
-      temperatureRef,
-      setTemperature,
-      filterStrengthRef,
-      setFilterStrength,
-      vignetteRef,
-      setVignette,
-      grainRef,
-      setGrain,
-      softFocusRef,
-      setSoftFocus,
-      fadeRef,
-      setFade,
-      matteRef,
-      setMatte,
-      rotationRef,
-      setRotation,
-      frameThicknessRef,
-      setFrameThickness,
-      draw
-    );
-  }
-
-  async function bakeRotate90() {
-    await actionsBakeRotate90(imgRef, setImageSrc, setSel, setOffset);
-    requestAnimationFrame(() => draw());
-  }
-
-  async function bakeRotateMinus90() {
-    await actionsBakeRotateMinus90(imgRef, setImageSrc, setSel, setOffset);
-    requestAnimationFrame(() => draw());
-  }
+  const { isEdited, applyEdit, resetAdjustments, resetControlToDefault, bakeRotate90, bakeRotateMinus90, applyCropOnly, resetCrop } = useImageEditorActions(
+    imgRef,
+    canvasRef,
+    offset,
+    sel,
+    exposure,
+    contrast,
+    saturation,
+    temperature,
+    vignette,
+    frameColor,
+    frameThickness,
+    selectedFilter,
+    filterStrength,
+    grain,
+    softFocus,
+    fade,
+    matte,
+    rotation,
+    rotationRef,
+    onApply,
+    setExposure,
+    exposureRef,
+    setContrast,
+    contrastRef,
+    setSaturation,
+    saturationRef,
+    setTemperature,
+    temperatureRef,
+    setVignette,
+    vignetteRef,
+    setFrameColor,
+    frameColorRef,
+    setFrameThickness,
+    frameThicknessRef,
+    setSelectedFilter,
+    selectedFilterRef,
+    setFilterStrength,
+    filterStrengthRef,
+    setGrain,
+    grainRef,
+    setSoftFocus,
+    softFocusRef,
+    setFade,
+    fadeRef,
+    setMatte,
+    matteRef,
+    setRotation,
+    setSel,
+    cropRatio,
+    setPresetIndex,
+    draw,
+    imageSrc,
+    originalRef,
+    setImageSrc,
+    setOffset,
+    computeImageLayout,
+    dragging,
+    previewPointerIdRef,
+    previewOriginalRef,
+    setPreviewOriginal
+  );
 
   // redraw whenever any adjustment state changes to avoid stale-draw races
   useEffect(() => {
@@ -348,85 +282,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
 
 
-  // Apply only the current crop (and rotation) to the image without confirming all edits.
-  // This bakes geometry (crop + rotation) into the underlying image source so the user
-  // can continue editing other adjustments afterwards.
-  async function applyCropOnly() {
-    const img = imgRef.current; if (!img) return;
-    const canvas = canvasRef.current; if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
 
-    if (!sel) return; // nothing to crop
 
-    // Map selection (canvas coords) back to source image pixels
-    const srcX = Math.max(0, Math.round((sel.x - offset.x) / baseScale));
-    const srcY = Math.max(0, Math.round((sel.y - offset.y) / baseScale));
-    const srcW = Math.max(1, Math.round(sel.w / baseScale));
-    const srcH = Math.max(1, Math.round(sel.h / baseScale));
 
-    // Handle rotation: bake rotation into the new image and then reset the rotation slider
-    const rot = rotationRef.current ?? rotation;
-    const angle = (rot * Math.PI) / 180;
-    const absCos = Math.abs(Math.cos(angle));
-    const absSin = Math.abs(Math.sin(angle));
-    const outW = Math.max(1, Math.round((srcW) * absCos + (srcH) * absSin));
-    const outH = Math.max(1, Math.round((srcW) * absSin + (srcH) * absCos));
-
-    const out = document.createElement('canvas');
-    out.width = outW; out.height = outH;
-    const octx = out.getContext('2d')!;
-    octx.imageSmoothingQuality = 'high';
-
-    // Draw the selected source region into the center of the output canvas with rotation applied.
-    octx.save();
-    octx.translate(outW / 2, outH / 2);
-    octx.rotate(angle);
-    // draw the selected region centered
-    octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
-    octx.restore();
-
-    // Replace working image with the cropped version (keep adjustments intact)
-    const dataUrl = out.toDataURL('image/png');
-    setImageSrc(dataUrl);
-    // Clear selection and reset pan/rotation since geometry is baked
-    setSel(null);
-    setOffset({ x: 0, y: 0 });
-    rotationRef.current = 0; setRotation(0);
-    // allow the new image to load and then redraw
-    requestAnimationFrame(() => {
-      const info = computeImageLayout();
-      if (info) { setOffset({ x: info.left, y: info.top }); draw(info); }
-      else draw();
-    });
-  }
-
-  // Reset crop selection and aspect preset without affecting other edits
-  function resetCrop() {
-    // If the underlying working image was replaced by a baked crop, restore
-    // the original (uncropped) image. Do not reset color adjustments — only
-    // undo geometry (crop/rotation/preset/selection).
-    if (imageSrc !== originalRef.current) {
-      setImageSrc(originalRef.current);
-      // Clear any baked rotation as well so the photo returns to its original geometry
-      rotationRef.current = 0; setRotation(0);
-    }
-
-    cropRatio.current = null;
-    setSel(null);
-    setPresetIndex(0);
-    // clear any active drag state and A/B preview
-    if (dragging.current) dragging.current = null;
-    previewPointerIdRef.current = null;
-    previewOriginalRef.current = false;
-    setPreviewOriginal(false);
-    // recentre image in canvas and redraw
-    requestAnimationFrame(() => {
-      const info = computeImageLayout();
-      if (info) { setOffset({ x: info.left, y: info.top }); draw(info); }
-      else draw();
-    });
-  }
 
   return (
     <div

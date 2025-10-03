@@ -69,6 +69,7 @@ export function Uploader() {
 }
 
 function UploaderCore() {
+  const CAPTION_MAX = 1000;
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [dataUrls, setDataUrls] = useState<string[]>([]);
@@ -555,6 +556,8 @@ function UploaderCore() {
     }
     return () => { document.body.classList.remove(cls); };
   }, [hasPreview]);
+  const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
+
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''}`}>
 
@@ -1065,7 +1068,12 @@ function UploaderCore() {
               aria-label="Caption"
               placeholder={caption ? undefined : ''}
               value={caption}
-              onChange={e => setCaption(e.target.value)}
+              maxLength={CAPTION_MAX}
+              onChange={e => {
+                const v = e.target.value;
+                if (v.length <= CAPTION_MAX) setCaption(v);
+                else toast.show(`Captions are limited to ${CAPTION_MAX} characters`);
+              }}
               readOnly={!(dataUrl || dataUrls.length > 0) || processing}
               tabIndex={(dataUrl || dataUrls.length > 0) ? 0 : -1}
               onMouseDown={(e) => {
@@ -1074,6 +1082,9 @@ function UploaderCore() {
               }}
               style={{ width: '100%', cursor: (!(dataUrl || dataUrls.length > 0) || processing) ? 'not-allowed' : 'text' }}
             />
+            <div style={{ position: 'absolute', right: 8, bottom: -18, fontSize: 12, color: 'var(--dim)' }} aria-hidden>
+              {captionRemaining} characters remaining
+            </div>
           </div>
         ) : null}
         {/* alt editing moved into the photo editor so it only shows when editing a specific image */}

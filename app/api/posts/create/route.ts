@@ -9,7 +9,9 @@ export async function POST(req: Request) {
     const { userId, imageUrls, caption, alt, replace = false, public: isPublic = true } = body;
     // Debug: log incoming payload so we can verify client is sending multiple images
   try { logger.debug('[posts.create] incoming', { userId, imageUrlsLen: Array.isArray(imageUrls) ? imageUrls.length : (imageUrls ? 1 : 0) }); } catch (e) {}
-    if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+  if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+  const CAPTION_MAX = 1000;
+  if (caption && typeof caption === 'string' && caption.length > CAPTION_MAX) return NextResponse.json({ error: `Caption exceeds ${CAPTION_MAX} characters` }, { status: 400 });
     const sb = getServiceSupabase();
 
     // --- SAFEGUARD: ensure a matching users row exists to satisfy FK ---

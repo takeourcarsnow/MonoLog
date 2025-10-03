@@ -1002,6 +1002,10 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   font-family: 'Patrick Hand', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   line-height: 1.35;
   text-align: center;
+  /* allow long captions/newlines to wrap */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .action {
@@ -1184,7 +1188,13 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .comment-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; flex: 0 0 36px; }
 .comment-body { display: block; min-width: 0; }
 .comment-head { display:flex; gap:8px; align-items:center; margin-bottom:4px; }
-.comment-text { font-size: 14px; color: var(--text); }
+.comment-text { 
+  font-size: 14px; 
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 
 /* Appear animation for comment items (staggered) */
 .appear { opacity: 0; transform: translateY(6px) scale(.998); animation: appearIn 300ms cubic-bezier(.2,.8,.2,1) forwards; }

@@ -6,6 +6,8 @@ export async function POST(req: Request) {
   try {
     const { actorId, postId, text } = await req.json();
     if (!actorId || !postId || !text) return NextResponse.json({ error: 'Missing actorId/postId/text' }, { status: 400 });
+    const COMMENT_MAX = 500;
+    if (typeof text === 'string' && text.trim().length > COMMENT_MAX) return NextResponse.json({ error: `Comment exceeds ${COMMENT_MAX} characters` }, { status: 400 });
     const sb = getServiceSupabase();
 
   const id = uid();
@@ -53,7 +55,7 @@ export async function POST(req: Request) {
       // ignore
     }
 
-    // Try inserting using common snake_case column names first, then
+  // Try inserting using common snake_case column names first, then
     // fall back to alternate naming if the insert fails (some schemas
     // use `postid`/`userid` or camelCase). This keeps the endpoint
     // tolerant of DB variations.

@@ -16,6 +16,7 @@ type Props = {
 };
 
 export function Comments({ postId, onCountChange }: Props) {
+  const COMMENT_MAX = 500;
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
@@ -69,6 +70,7 @@ export function Comments({ postId, onCountChange }: Props) {
 
   const sendBtnRef = useRef<HTMLButtonElement | null>(null);
   const toast = useToast();
+  const commentRemaining = Math.max(0, COMMENT_MAX - (text?.length || 0));
 
   const doOptimisticAdd = async (bodyText: string) => {
     const tempId = `optimistic-${Date.now()}`;
@@ -207,7 +209,12 @@ export function Comments({ postId, onCountChange }: Props) {
                     </button>
                   ) : null}
                 </div>
-                <div className="comment-text">{c.text}</div>
+                <div
+                  className="comment-text"
+                  style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'break-word' }}
+                >
+                  {c.text}
+                </div>
               </div>
             </div>
           ))
@@ -215,24 +222,53 @@ export function Comments({ postId, onCountChange }: Props) {
       </div>
 
       <div className="comment-box" style={{ marginTop: 8 }}>
-        <input
-          className="input"
-          type="text"
-          placeholder="Add a comment…"
-          aria-label="Add a comment"
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={async (e) => {
-            if (e.key === "Enter") {
-              if (!text.trim()) return;
-              setSending(true);
-              const sendText = text;
-              setText("");
-              await doOptimisticAdd(sendText);
-              setSending(false);
-            }
-          }}
-        />
+        <div style={{ position: 'relative', flex: 1 }}>
+          <input
+            className="input"
+            type="text"
+            placeholder="Add a comment…"
+            aria-label="Add a comment"
+            value={text}
+            maxLength={COMMENT_MAX}
+            onChange={e => {
+              const v = e.target.value;
+              if (v.length <= COMMENT_MAX) setText(v);
+              else {
+                // defensive: should be prevented by maxLength but notify user if they paste huge text
+                toast.show(`Comments are limited to ${COMMENT_MAX} characters`);
+              }
+            }}
+            onKeyDown={async (e) => {
+              if (e.key === "Enter") {
+                if (!text.trim()) return;
+                if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
+                setSending(true);
+                const sendText = text;
+                setText("");
+                await doOptimisticAdd(sendText);
+                setSending(false);
+              }
+            }}
+            style={{ width: '100%', paddingRight: 72 }}
+          />
+          {/* character counter overlaid inside the input on the right */}
+          <div
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: 12,
+              color: commentRemaining <= 20 ? '#d9534f' : 'var(--dim)',
+              pointerEvents: 'none',
+              fontVariantNumeric: 'tabular-nums'
+            }}
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {text.length}/{COMMENT_MAX}
+          </div>
+        </div>
 
         <button
           ref={sendBtnRef}
@@ -242,6 +278,7 @@ export function Comments({ postId, onCountChange }: Props) {
               sendBtnRef.current?.blur();
               return;
             }
+            if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); sendBtnRef.current?.blur(); return; }
             setSending(true);
             setSendAnim('following-anim');
             const sendText = text;

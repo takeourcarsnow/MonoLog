@@ -24,7 +24,18 @@ import "swiper/css/virtual";
 export function AppShell({ children }: { children: React.ReactNode }) {
   "use client";
   const [ready, setReady] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      return (
+        ('ontouchstart' in window) ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+        (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+      );
+    } catch (e) {
+      return false;
+    }
+  });
   const pathname = usePathname();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
@@ -76,22 +87,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setReady(true);
       }
     })();
-    // detect touch-capable devices so we can disable desktop swiping
+
+    // Re-check touch capability on mount in case environment changes
+    // (keeps the value up-to-date but the initial synchronous detection
+    // ensures Swiper mounts with the correct behavior).
     try {
       const touch = typeof window !== 'undefined' && (
         ('ontouchstart' in window) ||
         (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
         (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
       );
-      setIsTouchDevice(Boolean(touch));
+      const val = Boolean(touch);
+      console.debug('[AppShell] touch detection on mount ->', val);
+      setIsTouchDevice(val);
     } catch (e) {
+      console.debug('[AppShell] touch detection error', e);
       setIsTouchDevice(false);
     }
   }, []);
 
   useEffect(() => {
-    if (swiperRef.current && swiperRef.current.swiper) {
-      swiperRef.current.swiper.slideTo(currentIndex);
+    // swiperRef will be set via onSwiper; support both shapes for safety
+    const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
+    console.debug('[AppShell] syncing slide, currentIndex=', currentIndex, 'instance=', inst ? true : false);
+    if (inst && typeof inst.slideTo === 'function') {
+      try {
+        inst.slideTo(currentIndex);
+      } catch (err) {
+        console.debug('[AppShell] slideTo error', err);
+      }
     }
   }, [currentIndex]);
 
@@ -101,31 +125,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     function onDragStart() {
       try {
-        if (swiperRef.current && swiperRef.current.swiper) {
-          swiperRef.current.swiper.allowTouchMove = false;
-        }
-      } catch (_) { /* ignore */ }
+        const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
+        console.debug('[AppShell] onDragStart - swiper instance:', !!inst, 'prev allowTouchMove=', inst?.allowTouchMove);
+        if (inst) inst.allowTouchMove = false;
+        console.debug('[AppShell] onDragStart - allowTouchMove set to false');
+      } catch (err) { console.debug('[AppShell] onDragStart error', err); }
     }
     function onDragEnd() {
       try {
-        if (swiperRef.current && swiperRef.current.swiper) {
-          swiperRef.current.swiper.allowTouchMove = Boolean(isTouchDevice);
-        }
-      } catch (_) { /* ignore */ }
+        const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
+        console.debug('[AppShell] onDragEnd - swiper instance:', !!inst, 'restoring allowTouchMove->', Boolean(isTouchDevice));
+        if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
+        console.debug('[AppShell] onDragEnd - allowTouchMove now=', inst?.allowTouchMove);
+      } catch (err) { console.debug('[AppShell] onDragEnd error', err); }
     }
     function onZoomStart() {
       try {
-        if (swiperRef.current && swiperRef.current.swiper) {
-          swiperRef.current.swiper.allowTouchMove = false;
-        }
-      } catch (_) { /* ignore */ }
+        const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
+        console.debug('[AppShell] onZoomStart - swiper instance:', !!inst);
+        if (inst) inst.allowTouchMove = false;
+        console.debug('[AppShell] onZoomStart - allowTouchMove set to false');
+      } catch (err) { console.debug('[AppShell] onZoomStart error', err); }
     }
     function onZoomEnd() {
       try {
-        if (swiperRef.current && swiperRef.current.swiper) {
-          swiperRef.current.swiper.allowTouchMove = Boolean(isTouchDevice);
-        }
-      } catch (_) { /* ignore */ }
+        const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
+        console.debug('[AppShell] onZoomEnd - restoring allowTouchMove->', Boolean(isTouchDevice));
+        if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
+        console.debug('[AppShell] onZoomEnd - allowTouchMove now=', inst?.allowTouchMove);
+      } catch (err) { console.debug('[AppShell] onZoomEnd error', err); }
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:carousel_drag_start', onDragStart as any);
@@ -145,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleSlideChange = (swiper: any) => {
     const newPath = views[swiper.activeIndex]?.path;
-    
+    console.debug('[AppShell] slideChange -> index=', swiper.activeIndex, 'newPath=', newPath, 'currentPath=', pathname);
     // Immediately dispatch event so NavBar can update active state before route changes
     if (typeof window !== 'undefined' && newPath) {
       window.dispatchEvent(new CustomEvent('monolog:slide_change', { 
@@ -167,10 +195,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ];
           // If we're already on a username route, don't navigate away from it
           if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+            console.debug('[AppShell] slideChange aborted: on username route', segment);
             return;
           }
         }
       }
+      console.debug('[AppShell] navigating to', newPath);
       router.push(newPath);
     }
   };
@@ -210,6 +240,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Swiper
               className="swipe-views"
               ref={swiperRef}
+              onSwiper={(s) => { swiperRef.current = s; }}
               modules={[]}
               spaceBetween={0}
               slidesPerView={1}

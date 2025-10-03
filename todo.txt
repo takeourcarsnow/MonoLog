@@ -20,8 +20,5 @@ Maybe we should say "log" instead of "post" throughout the app for consistency
 when rotating crop in so theres no empty canvas
 
 
-delete icon doent shrink back after confirm ends. it only properly shrinksback after confirm onl  if i click somewhere else after triggering the confirm dialogue
-edit button also doent shrink back unless i click somewhere else
-follow button also doenst shrink back unless i click somewhere
 photo editor should subtly blur in
-dont add extra background for back button 
+text turns from confirm to delete in delete button

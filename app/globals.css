@@ -1258,13 +1258,38 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .delete-btn.confirming {
   /* Use a semi-opaque background-color (animatable) instead of a gradient so
      entering and exiting the confirming state can transition smoothly. */
-  background-color: color-mix(in srgb, var(--danger), var(--bg-elev) 14%);
-  color: #fff;
-  border-color: color-mix(in srgb, var(--danger), transparent 72%);
+  background-color: color-mix(in srgb, var(--danger), var(--bg-elev) 14%) !important;
+  /* keep the visible label readable against the tinted background */
+  color: var(--text) !important;
+  /* ensure the border and background remain visible even though we globally
+     suppress button backgrounds for edit/delete — use !important to win */
+  border-color: color-mix(in srgb, var(--danger), transparent 72%) !important;
   transform: scale(1.02);
   will-change: transform, background-color, border-color, opacity;
 }
-.delete-btn.confirming .icon { color: #fff !important; }
+.delete-btn.confirming .icon { color: var(--danger) !important; }
+
+/* Ensure the confirming label remains visible even when the button is collapsed
+   and always reads "Confirm". We visually hide the original label text and
+   render a pseudo-element with the desired string so collapse/expand
+   transitions won't switch back to the default label. */
+.delete-btn.confirming .reveal.label {
+  /* override any collapsed-state rules */
+  max-width: 160px !important;
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  color: transparent !important; /* hide original text */
+  position: relative !important;
+}
+.delete-btn.confirming .reveal.label::after {
+  content: "Confirm";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+}
 
 
 .comment-badge { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:6px; background:color-mix(in srgb, var(--bg-elev), transparent 20%); border-radius:8px; border:1px solid var(--border); color:var(--muted); }
@@ -3071,6 +3096,47 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   padding: 8px 0 !important;
 }
 
+/* Make the Back button in the post toolbar text-only (no pill/decoration).
+   Preserve keyboard focus visibility while removing background, border,
+   padding and shadows so the button appears as plain text. Targets both
+   <button class="btn"> and <a class="btn"> use-cases. */
+.post-view-wrap .toolbar .btn,
+.post-view-wrap .toolbar a.btn,
+.post-view-wrap .toolbar button.btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  line-height: 1 !important;
+  color: var(--text) !important;
+  background-clip: padding-box !important;
+  transform: none !important;
+}
+
+/* Remove hover lift and background for pointer devices so it's pure text */
+@media (hover: hover) and (pointer: fine) {
+  .post-view-wrap .toolbar .btn:hover,
+  .post-view-wrap .toolbar a.btn:hover,
+  .post-view-wrap .toolbar button.btn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+}
+
+/* Keep an accessible keyboard focus ring for users who tab to the button */
+.post-view-wrap .toolbar .btn:focus-visible,
+.post-view-wrap .toolbar a.btn:focus-visible,
+.post-view-wrap .toolbar button.btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 /* subtle entrance for toolbar title and subtitle */
 @keyframes toolbarIn {
   from { opacity: 0; transform: translateY(6px); }
@@ -3617,6 +3683,56 @@ button.follow-btn:not(.expanded),
 .delete-btn:focus:not(:focus-visible)::after {
   box-shadow: none !important;
 }
+
+/* ------------------------------------------------------------------
+   Make edit/delete buttons behave like follow-style buttons: remove
+   visible outline/halo/pseudo-elements so they don't show the blue/colored
+   ring on mouse/touch interactions. This preserves their active/confirming
+   visual states but prevents the extra ring/outline that was previously
+   appearing on posts.
+ ------------------------------------------------------------------ */
+.edit-btn,
+.delete-btn,
+button.edit-btn,
+button.delete-btn,
+.card .edit-btn,
+.card .delete-btn,
+.profile-actions .edit-btn,
+.profile-actions .delete-btn {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
+  background-clip: padding-box !important;
+}
+
+/* Hide any pseudo-elements that can draw a ring/halo around the button */
+.edit-btn::after, .edit-btn::before,
+.delete-btn::after, .delete-btn::before,
+.card .edit-btn::after, .card .edit-btn::before,
+.card .delete-btn::after, .card .delete-btn::before,
+.profile-actions .edit-btn::after, .profile-actions .edit-btn::before,
+.profile-actions .delete-btn::after, .profile-actions .delete-btn::before {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also ensure focus halos are suppressed for both mouse/touch and keyboard
+   interactions to match the follow button behavior requested. */
+.edit-btn:focus,
+.edit-btn:focus-visible,
+.delete-btn:focus,
+.delete-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   .edit-btn, .delete-btn { transition: none !important; animation: none !important; }

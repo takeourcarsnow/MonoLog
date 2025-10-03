@@ -44,6 +44,7 @@ export type EditorSettings = {
   saturation?: number;
   temperature?: number;
   vignette?: number;
+  rotation?: number;
   frameColor?: 'white' | 'black';
   frameThickness?: number;
   selectedFilter?: string;
@@ -171,12 +172,14 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     { label: '4:3', v: 4 / 3 },
     { label: '3:2', v: 3 / 2 },
     { label: '1:1', v: 1 },
-    { label: '4:5', v: 4 / 5 }
+    // 4:5 removed per request
   ];
   const [presetIndex, setPresetIndex] = useState<number>(0);
   const [selectedFilter, setSelectedFilter] = useState<string>(initialSettings?.selectedFilter ?? 'none');
   const [filterStrength, setFilterStrength] = useState<number>(initialSettings?.filterStrength ?? 1); // 0..1
+  const [rotation, setRotation] = useState<number>(initialSettings?.rotation ?? 0); // degrees, -180..180
   const [grain, setGrain] = useState<number>(initialSettings?.grain ?? 0); // 0..1
+  const rotationRef = useRef<number>(rotation);
   const [softFocus, setSoftFocus] = useState<number>(initialSettings?.softFocus ?? 0); // gentle blur overlay
   const [fade, setFade] = useState<number>(initialSettings?.fade ?? 0); // faded matte look
   const [matte, setMatte] = useState<number>(initialSettings?.matte ?? 0); // matte tone curve
@@ -191,6 +194,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const selectedFilterRef = useRef<string>(selectedFilter);
   const filterStrengthRef = useRef<number>(filterStrength);
   const grainRef = useRef<number>(grain);
+  useEffect(() => { rotationRef.current = rotation; }, [rotation]);
+  // keep rotationRef available for draw/export
   const softFocusRef = useRef<number>(softFocus);
   const fadeRef = useRef<number>(fade);
   const matteRef = useRef<number>(matte);
@@ -327,8 +332,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       const dpr = window.devicePixelRatio || 1;
       // use clientWidth/clientHeight to avoid transform/scale issues from parent modals
       const contW = Math.max(100, Math.round(cont.clientWidth));
-      // Make the canvas more compact to reduce scrolling
-      const targetHeight = Math.min(400, Math.max(280, contW * 0.75)); // Use aspect-based height, max 400px
+      // Match the uploader preview size more closely - use similar aspect with larger max height
+      const targetHeight = Math.min(520, Math.max(340, contW * 0.8)); // Increased from 400px to 520px max
       
       c.width = Math.max(100, Math.round(contW * dpr));
       c.height = Math.max(100, Math.round(targetHeight * dpr));
@@ -369,7 +374,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sel]);
 
-  function draw(info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number }, overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; selectedFilter: string; grain: number; softFocus: number; fade: number; matte: number; frameEnabled: boolean; frameThickness: number; frameColor: string }>) {
+  function draw(info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number }, overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; matte: number; frameEnabled: boolean; frameThickness: number; frameColor: string }>) {
     const canvas = canvasRef.current; const img = imgRef.current;
     if (!canvas || !img) return;
     const ctx = canvas.getContext("2d")!;
@@ -415,6 +420,19 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const hue = Math.round((curTemperature / 100) * 30);
     // map selectedFilter to additional filter fragments
   const preset = FILTER_PRESETS[curSelectedFilter] || '';
+  const angle = (overrides?.rotation ?? rotationRef.current ?? rotation) || 0;
+  const angleRad = (angle * Math.PI) / 180;
+
+  // helper to draw an image/canvas with rotation around its center
+  function drawRotated(source: CanvasImageSource, left: number, top: number, w: number, h: number, rad: number) {
+    const cx = left + w / 2;
+    const cy = top + h / 2;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rad);
+    ctx.drawImage(source as any, -w / 2, -h / 2, w, h);
+    ctx.restore();
+  }
   // base color adjustments (exposure/contrast/saturation) + hue
   const baseFilter = `brightness(${curExposure}) contrast(${curContrast}) saturate(${curSaturation}) hue-rotate(${hue}deg)`;
   const filter = `${baseFilter} ${preset}`;
@@ -444,19 +462,19 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   }
   if (curFilterStrength >= 0.999) {
     ctx.filter = filter;
-    ctx.drawImage(img, imgLeft, imgTop, imgW, imgH);
+    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
     ctx.filter = 'none';
   } else if (curFilterStrength <= 0.001) {
     ctx.filter = baseFilter;
-    ctx.drawImage(img, imgLeft, imgTop, imgW, imgH);
+    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
     ctx.filter = 'none';
   } else {
     // draw base with baseFilter, then composite filtered version on top with globalAlpha = strength
     ctx.filter = baseFilter;
-    ctx.drawImage(img, imgLeft, imgTop, imgW, imgH);
+    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
     ctx.filter = filter;
     ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
-    ctx.drawImage(img, imgLeft, imgTop, imgW, imgH);
+    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
     ctx.globalAlpha = 1;
     ctx.filter = 'none';
   }
@@ -470,7 +488,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       const tctx = tmp.getContext('2d')!;
       
       // Draw from the original image source (not the processed canvas)
-      tctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, tmp.width, tmp.height);
+  tctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, tmp.width, tmp.height);
       
       // Apply blur
       const blurAmount = Math.max(3, curSoftFocus * 12);
@@ -479,11 +497,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       tctx.filter = 'none';
       
       // Composite the blurred layer on top with lighten blend for glow
-      ctx.save();
-      ctx.globalAlpha = Math.min(0.4, curSoftFocus * 0.45);
-      ctx.globalCompositeOperation = 'lighten';
-      ctx.drawImage(tmp, imgLeft, imgTop, imgW, imgH);
-      ctx.restore();
+  ctx.save();
+  ctx.globalAlpha = Math.min(0.4, curSoftFocus * 0.45);
+  ctx.globalCompositeOperation = 'lighten';
+  drawRotated(tmp, imgLeft, imgTop, imgW, imgH, angleRad);
+  ctx.restore();
     } catch (e) {
       // fallback: subtle white overlay
       ctx.save(); 
@@ -589,7 +607,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       ctx.globalAlpha = Math.min(0.85, curGrain);
       ctx.globalCompositeOperation = 'overlay';
       // draw the noise scaled to the image area so grain doesn't bleed outside the photo
-      ctx.drawImage(noise, 0, 0, noiseW, noiseH, nImgLeft, nImgTop, nImgW, nImgH);
+      drawRotated(noise, nImgLeft, nImgTop, nImgW, nImgH, angleRad);
       ctx.restore();
     }
 
@@ -638,6 +656,38 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       ctx.lineDashOffset = dashOffsetRef.current;
       ctx.strokeRect(sel.x, sel.y, sel.w, sel.h);
       ctx.restore();
+      // rule-of-thirds overlay inside the selection (double-stroke for contrast)
+      try {
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+        // compute thirds
+        const tx1 = sel.x + sel.w / 3;
+        const tx2 = sel.x + (sel.w * 2) / 3;
+        const ty1 = sel.y + sel.h / 3;
+        const ty2 = sel.y + (sel.h * 2) / 3;
+
+        // draw darker base lines for contrast on light backgrounds
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(0,0,0,0.32)';
+        ctx.moveTo(tx1, sel.y); ctx.lineTo(tx1, sel.y + sel.h);
+        ctx.moveTo(tx2, sel.y); ctx.lineTo(tx2, sel.y + sel.h);
+        ctx.moveTo(sel.x, ty1); ctx.lineTo(sel.x + sel.w, ty1);
+        ctx.moveTo(sel.x, ty2); ctx.lineTo(sel.x + sel.w, ty2);
+        ctx.stroke();
+
+        // subtle light lines on top for visibility on dark backgrounds
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.moveTo(tx1, sel.y); ctx.lineTo(tx1, sel.y + sel.h);
+        ctx.moveTo(tx2, sel.y); ctx.lineTo(tx2, sel.y + sel.h);
+        ctx.moveTo(sel.x, ty1); ctx.lineTo(sel.x + sel.w, ty1);
+        ctx.moveTo(sel.x, ty2); ctx.lineTo(sel.x + sel.w, ty2);
+        ctx.stroke();
+        ctx.restore();
+      } catch (e) {
+        // drawing extras should never crash; if it does, silently continue
+      }
       // dim outside selection
       ctx.save();
       ctx.fillStyle = "rgba(0,0,0,0.35)";
@@ -701,6 +751,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     if (Math.abs(saturation - 1) > 0.001) return true;
     if (Math.abs(temperature) > 0.001) return true;
     if (Math.abs(vignette) > 0.001) return true;
+    if (Math.abs(rotation) > 0.001) return true;
     if (selectedFilter !== 'none') return true;
     if (Math.abs(grain) > 0.001) return true;
     if (frameThickness > 0) return true;
@@ -815,31 +866,115 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           // Ensure w and h are positive
           if (newSel.w < 1) newSel.w = 1;
           if (newSel.h < 1) newSel.h = 1;
-          // Maintain aspect ratio if set
+          // Maintain aspect ratio if set: enforce exact ratio and keep the handle anchor fixed
           if (cropRatio.current) {
-            const ratio = cropRatio.current;
-            if (handleIndex < 4) { // corners
+            const ratio = cropRatio.current; // width / height
+            // determine new width/height based on handle type
+            let adjW = newSel.w;
+            let adjH = newSel.h;
+            if (handleIndex < 4) {
+              // corners: base on the larger change to feel natural
               const dw = Math.abs(newSel.w - dragging.current.origSel.w);
               const dh = Math.abs(newSel.h - dragging.current.origSel.h);
               if (dw > dh) {
-                newSel.h = newSel.w / ratio;
+                adjH = Math.max(1, adjW / ratio);
               } else {
-                newSel.w = newSel.h * ratio;
+                adjW = Math.max(1, adjH * ratio);
               }
+            } else if (handleIndex === 4 || handleIndex === 5) {
+              // top/bottom edges: base on height
+              adjH = Math.max(1, adjH);
+              adjW = Math.max(1, adjH * ratio);
             } else {
-              // edges
-              if (handleIndex === 4 || handleIndex === 5) { // top/bottom
-                newSel.w = newSel.h * ratio;
-              } else { // left/right
-                newSel.h = newSel.w / ratio;
-              }
+              // left/right edges: base on width
+              adjW = Math.max(1, adjW);
+              adjH = Math.max(1, adjW / ratio);
+            }
+
+            // recompute x/y so the opposite edge stays anchored
+            const orig = dragging.current.origSel;
+            // compute anchor (the fixed point) based on which handle is dragged
+            let anchorX = orig.x; let anchorY = orig.y;
+            if (handleIndex === 0) { anchorX = orig.x + orig.w; anchorY = orig.y + orig.h; }
+            else if (handleIndex === 1) { anchorX = orig.x; anchorY = orig.y + orig.h; }
+            else if (handleIndex === 2) { anchorX = orig.x + orig.w; anchorY = orig.y; }
+            else if (handleIndex === 3) { anchorX = orig.x; anchorY = orig.y; }
+            else if (handleIndex === 4) { anchorX = orig.x + orig.w / 2; anchorY = orig.y + orig.h; }
+            else if (handleIndex === 5) { anchorX = orig.x + orig.w / 2; anchorY = orig.y; }
+            else if (handleIndex === 6) { anchorX = orig.x + orig.w; anchorY = orig.y + orig.h / 2; }
+            else if (handleIndex === 7) { anchorX = orig.x; anchorY = orig.y + orig.h / 2; }
+
+            // available space from the anchor to image rect edges
+            const availLeft = anchorX - imgRect.x;
+            const availRight = imgRect.x + imgRect.w - anchorX;
+            const availTop = anchorY - imgRect.y;
+            const availBottom = imgRect.y + imgRect.h - anchorY;
+            // choose horizontal/vertical available depending on which side the anchor is on
+            const availableW = (anchorX > orig.x) ? availLeft : availRight;
+            const availableH = (anchorY > orig.y) ? availTop : availBottom;
+            // Ensure adjW/adjH fit within available area while preserving ratio
+            // Compute max width allowed by availableH and ratio
+            const maxWFromH = Math.max(1, availableH * ratio);
+            const maxAllowedW = Math.max(1, Math.min(availableW, maxWFromH));
+            if (adjW > maxAllowedW) {
+              adjW = maxAllowedW;
+              adjH = Math.max(1, adjW / ratio);
+            }
+            // Also ensure adjH fits availableH (in case horizontal wasn't limiting)
+            const maxHFromW = Math.max(1, availableW / ratio);
+            const maxAllowedH = Math.max(1, Math.min(availableH, maxHFromW));
+            if (adjH > maxAllowedH) {
+              adjH = maxAllowedH;
+              adjW = Math.max(1, adjH * ratio);
+            }
+            switch (handleIndex) {
+              case 0: // top-left - anchor bottom-right
+                newSel.x = orig.x + orig.w - adjW;
+                newSel.y = orig.y + orig.h - adjH;
+                newSel.w = adjW; newSel.h = adjH;
+                break;
+              case 1: // top-right - anchor bottom-left
+                newSel.x = orig.x;
+                newSel.y = orig.y + orig.h - adjH;
+                newSel.w = adjW; newSel.h = adjH;
+                break;
+              case 2: // bottom-left - anchor top-right
+                newSel.x = orig.x + orig.w - adjW;
+                newSel.y = orig.y;
+                newSel.w = adjW; newSel.h = adjH;
+                break;
+              case 3: // bottom-right - anchor top-left
+                newSel.x = orig.x;
+                newSel.y = orig.y;
+                newSel.w = adjW; newSel.h = adjH;
+                break;
+              case 4: // top edge - anchor bottom
+                newSel.x = orig.x + (orig.w - adjW) / 2;
+                newSel.y = orig.y + orig.h - adjH;
+                newSel.w = adjW; newSel.h = adjH;
+                break;
+              case 5: // bottom edge - anchor top
+                newSel.x = orig.x + (orig.w - adjW) / 2;
+                newSel.y = orig.y;
+                newSel.w = adjW; newSel.h = adjH;
+                break;
+              case 6: // left edge - anchor right
+                newSel.x = orig.x + orig.w - adjW;
+                newSel.y = orig.y + (orig.h - adjH) / 2;
+                newSel.w = adjW; newSel.h = adjH;
+                break;
+              case 7: // right edge - anchor left
+                newSel.x = orig.x;
+                newSel.y = orig.y + (orig.h - adjH) / 2;
+                newSel.w = adjW; newSel.h = adjH;
+                break;
             }
           }
-          // Clamp to image rect
+          // Clamp to image rect (ensure selection stays inside image)
           newSel.x = Math.max(imgRect.x, Math.min(newSel.x, imgRect.x + imgRect.w - newSel.w));
           newSel.y = Math.max(imgRect.y, Math.min(newSel.y, imgRect.y + imgRect.h - newSel.h));
-          newSel.w = Math.min(newSel.w, imgRect.x + imgRect.w - newSel.x);
-          newSel.h = Math.min(newSel.h, imgRect.y + imgRect.h - newSel.y);
+          newSel.w = Math.min(newSel.w, Math.max(1, imgRect.x + imgRect.w - newSel.x));
+          newSel.h = Math.min(newSel.h, Math.max(1, imgRect.y + imgRect.h - newSel.y));
           setSel(newSel);
         } else {
           // drawing new selection
@@ -949,6 +1084,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     const defSoftFocus = 0;
     const defFade = 0;
     const defMatte = 0;
+  const defRotation = 0;
 
     // Update state
     setExposure(defExposure); exposureRef.current = defExposure;
@@ -964,6 +1100,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setSoftFocus(defSoftFocus); softFocusRef.current = defSoftFocus;
     setFade(defFade); fadeRef.current = defFade;
     setMatte(defMatte); matteRef.current = defMatte;
+  setRotation(defRotation); rotationRef.current = defRotation;
 
   // Also clear any crop selection/preset
   setSel(null);
@@ -994,8 +1131,16 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   // If frame thickness > 0 we expand the output canvas so the frame sits outside the image
   const padPx = frameThickness > 0 ? Math.max(1, Math.round(Math.min(srcW, srcH) * Math.max(0, Math.min(0.5, frameThickness)))) : 0;
+  // Handle rotation: if rotation is set, output canvas needs to accommodate rotated bounds
+  const rot = rotationRef.current ?? rotation;
+  const angle = (rot * Math.PI) / 180;
+  // compute rotated bounding box
+  const absCos = Math.abs(Math.cos(angle));
+  const absSin = Math.abs(Math.sin(angle));
+  const rotatedW = Math.max(1, Math.round((srcW) * absCos + (srcH) * absSin));
+  const rotatedH = Math.max(1, Math.round((srcW) * absSin + (srcH) * absCos));
   const out = document.createElement('canvas');
-  out.width = srcW + padPx * 2; out.height = srcH + padPx * 2;
+  out.width = rotatedW + padPx * 2; out.height = rotatedH + padPx * 2;
   const octx = out.getContext('2d')!;
   octx.imageSmoothingQuality = 'high';
   // Apply color adjustments to exported image
@@ -1009,24 +1154,45 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   };
   const preset = FILTER_PRESETS[selectedFilter] || '';
   const baseFilterExport = `brightness(${exposure}) contrast(${contrast}) saturate(${saturation}) hue-rotate(${hue}deg)`;
-  if (filterStrength >= 0.999) {
-    octx.filter = `${baseFilterExport} ${preset}`;
-    octx.drawImage(img, srcX, srcY, srcW, srcH, padPx, padPx, srcW, srcH);
-    octx.filter = 'none';
-  } else if (filterStrength <= 0.001) {
-    octx.filter = baseFilterExport;
-    octx.drawImage(img, srcX, srcY, srcW, srcH, padPx, padPx, srcW, srcH);
-    octx.filter = 'none';
-  } else {
-    // draw base then composite filtered with alpha
-    octx.filter = baseFilterExport;
-    octx.drawImage(img, srcX, srcY, srcW, srcH, padPx, padPx, srcW, srcH);
-    octx.filter = `${baseFilterExport} ${preset}`;
-    octx.globalAlpha = Math.min(1, Math.max(0, filterStrength));
-    octx.drawImage(img, srcX, srcY, srcW, srcH, padPx, padPx, srcW, srcH);
-    octx.globalAlpha = 1;
-    octx.filter = 'none';
-  }
+  // draw with rotation: translate to center of out canvas, rotate, then draw image centered
+  const centerX = out.width / 2;
+  const centerY = out.height / 2;
+  const drawExport = () => {
+    if (filterStrength >= 0.999) {
+      octx.filter = `${baseFilterExport} ${preset}`;
+      octx.save();
+      octx.translate(centerX, centerY);
+      octx.rotate(angle);
+      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.restore();
+      octx.filter = 'none';
+    } else if (filterStrength <= 0.001) {
+      octx.filter = baseFilterExport;
+      octx.save();
+      octx.translate(centerX, centerY);
+      octx.rotate(angle);
+      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.restore();
+      octx.filter = 'none';
+    } else {
+      octx.filter = baseFilterExport;
+      octx.save();
+      octx.translate(centerX, centerY);
+      octx.rotate(angle);
+      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.restore();
+      octx.filter = `${baseFilterExport} ${preset}`;
+      octx.globalAlpha = Math.min(1, Math.max(0, filterStrength));
+      octx.save();
+      octx.translate(centerX, centerY);
+      octx.rotate(angle);
+      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.restore();
+      octx.globalAlpha = 1;
+      octx.filter = 'none';
+    }
+  };
+  drawExport();
   // image content has been drawn above with filters applied where appropriate;
   // ensure filter state is cleared before applying additional effects
   octx.filter = 'none';
@@ -1152,6 +1318,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       contrast,
       saturation,
       temperature,
+      rotation,
       vignette,
       frameColor,
       frameThickness,
@@ -1304,15 +1471,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           <span className="sr-only">Edit Photo</span>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-          {/* Icon-only rotate buttons */}
-          <button type="button" title="Rotate -90°" onClick={bakeRotateMinus90} className="btn icon" aria-label="Rotate -90°">
-            <RotateCw size={18} aria-hidden />
-            <span className="sr-only">Rotate -90 degrees</span>
-          </button>
-          <button type="button" title="Rotate +90°" onClick={bakeRotate90} className="btn icon" aria-label="Rotate +90°">
-            <RotateCcw size={18} aria-hidden />
-            <span className="sr-only">Rotate +90 degrees</span>
-          </button>
+          {/* rotate buttons removed from header */}
 
           {/* Cancel (ghost) */}
           <button type="button" className="btn icon ghost" onClick={onCancel} aria-label="Cancel edits">
@@ -1349,8 +1508,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           }}
         />
 
-        {/* header rotate buttons now handle rotate; removed tiny top-right rotate button to improve discoverability */}
-        {/* floating confirm removed — use the top Confirm button in the header */}
+  {/* header rotate buttons removed to declutter toolbar; use crop panel straighten / rotate controls instead */}
       </div>
 
   {/* help text removed per user request */}
@@ -1554,17 +1712,20 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <div style={{ fontWeight: 700, fontSize: 15 }}><span className="sr-only">Crop Aspect Ratio</span></div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {/* header rotate buttons removed; use controls beside the Straighten slider */}
+                </div>
               </div>
 
               {/* Responsive aspect switcher: grid on desktop, carousel on mobile */}
               <div className="aspect-presets-container">
                 {/* Desktop: Show all presets in a grid */}
-                <div className="aspect-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gridAutoRows: 'minmax(72px, auto)', gap: 8, paddingBottom: 4, alignItems: 'start' }}>
+                <div className="aspect-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(56px, 1fr))', gridAutoRows: 'minmax(44px, auto)', gap: 4, paddingBottom: 2, alignItems: 'start' }}>
                   {ASPECT_PRESETS.map((r, i) => {
                     const selected = cropRatio.current === r.v;
                     const base = 16 / 9;
                     const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
-                    const previewInnerWidth = Math.round(28 * previewRatio);
+                    const previewInnerWidth = Math.round(18 * previewRatio);
                     return (
                       <button key={r.label} type="button" onClick={() => {
                         // Toggle: if selecting the same preset again, clear selection
@@ -1608,30 +1769,31 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                           setSel({ x, y, w, h });
                         }
                       }} aria-pressed={selected} style={{ 
-                        padding: '12px 8px', 
-                        borderRadius: 10, 
+                        padding: '6px 4px', 
+                        borderRadius: 6, 
                         background: selected ? 'color-mix(in srgb, var(--text) 6%, transparent)' : 'var(--bg-elev)', 
                         color: selected ? 'var(--text)' : 'var(--text)', 
                         border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)', 
                         boxShadow: 'none', 
                         display: 'flex', 
                         flexDirection: 'column',
-                        gap: 10, 
+                        gap: 6, 
                         alignItems: 'center', 
                         justifyContent: 'center', 
-                        transition: 'transform 120ms ease, box-shadow 180ms ease, background 180ms ease', 
-                        fontSize: 13,
+                        transition: 'transform 100ms ease, box-shadow 140ms ease, background 140ms ease', 
+                        fontSize: 11,
                         fontWeight: selected ? 700 : 600,
                         cursor: 'pointer',
-                        minHeight: 80
+                        minHeight: 44,
+                        lineHeight: 1
                       }}
-                      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
-                      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)'; }}
+                      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 3px 8px rgba(0,0,0,0.06)'; }}
+                      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'; }}
                       >
-                        <span aria-hidden style={{ width: 44, height: 22, background: selected ? 'color-mix(in srgb, var(--bg-elev) 92%, color-mix(in srgb, var(--text) 6%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none', flexShrink: 0 }}>
-                          <span style={{ width: previewInnerWidth, height: 12, background: selected ? 'color-mix(in srgb, var(--text) 36%, #fff)' : 'color-mix(in srgb, var(--text) 28%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
+                        <span aria-hidden style={{ width: 28, height: 14, background: selected ? 'color-mix(in srgb, var(--bg-elev) 92%, color-mix(in srgb, var(--text) 6%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none', flexShrink: 0 }}>
+                          <span style={{ width: previewInnerWidth, height: 8, background: selected ? 'color-mix(in srgb, var(--text) 36%, #fff)' : 'color-mix(in srgb, var(--text) 28%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
                         </span>
-                        <span style={{ fontSize: 13, fontWeight: selected ? 700 : 600, opacity: selected ? 1 : 0.85, lineHeight: 1.2 }}>{r.label}</span>
+                        <span style={{ fontSize: 11, fontWeight: selected ? 700 : 600, opacity: selected ? 1 : 0.85, lineHeight: 1 }}>{r.label}</span>
                       </button>
                     );
                   })}
@@ -1646,9 +1808,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                         const selected = cropRatio.current === r.v;
                         const base = 16 / 9;
                         const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
-                        const previewInnerWidth = Math.round(28 * previewRatio);
+                        const previewInnerWidth = Math.round(14 * previewRatio);
                         return (
-                          <div key={r.label} style={{ flex: '0 0 84px' }}>
+                          <div key={r.label} style={{ flex: '0 0 64px' }}>
                             <button type="button" onClick={() => {
                               // mirror desktop behavior: clicking the already-selected preset clears the crop
                               setPresetIndex(i);
@@ -1691,11 +1853,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                                 const y = (rect.height - h) / 2;
                                 setSel({ x, y, w, h });
                               }
-                            }} aria-pressed={selected} style={{ minWidth: 64, padding: '8px 10px', borderRadius: 10, background: selected ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)', color: selected ? 'var(--text)' : 'var(--text)', border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)', boxShadow: 'none', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 120ms ease, box-shadow 180ms ease, background 180ms ease', fontSize: 13 }}>
-                              <span aria-hidden style={{ width: 44, height: 22, background: selected ? 'color-mix(in srgb, var(--primary) 6%, transparent)' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none' }}>
-                                <span style={{ width: previewInnerWidth, height: 12, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
+                            }} aria-pressed={selected} style={{ minWidth: 48, padding: '4px 6px', borderRadius: 6, background: selected ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)', color: selected ? 'var(--text)' : 'var(--text)', border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)', boxShadow: 'none', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 100ms ease, box-shadow 140ms ease, background 140ms ease', fontSize: 11 }}>
+                              <span aria-hidden style={{ width: 28, height: 14, background: selected ? 'color-mix(in srgb, var(--primary) 6%, transparent)' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none' }}>
+                                <span style={{ width: previewInnerWidth, height: 8, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
                               </span>
-                              <span style={{ fontSize: 13, fontWeight: 600, opacity: selected ? 1 : 0.95 }}>{r.label}</span>
+                              <span style={{ fontSize: 11, fontWeight: 600, opacity: selected ? 1 : 0.95 }}>{r.label}</span>
                             </button>
                           </div>
                         );
@@ -1713,6 +1875,24 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
                   .aspect-presets-grid button { white-space: nowrap; overflow: visible; }
                 `}</style>
               </div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <button type="button" title="Rotate -90°" onClick={async () => { await bakeRotateMinus90(); /* after bake, keep slider controlled rotation at 0 so user can fine-tune */ rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate -90°" style={{ padding: 6, borderRadius: 8 }}>
+                      <RotateCw size={14} aria-hidden />
+                    </button>
+                    <button type="button" title="Rotate +90°" onClick={async () => { await bakeRotate90(); rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate +90°" style={{ padding: 6, borderRadius: 8 }}>
+                      <RotateCcw size={14} aria-hidden />
+                    </button>
+                  </div>
+                  <span className="sr-only">Straighten</span>
+                </span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
+                  <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} style={{ flex: 1, background: rangeBg(rotation, -30, 30, '#a8d8ff', 'rgba(255,255,255,0.06)') }} />
+                </div>
+              </label>
             </div>
           </div>
 

@@ -1043,42 +1043,44 @@ function UploaderCore() {
       </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <div className="input-wrapper" style={{ flex: 1, position: 'relative' }}>
-          {/** keep the ghost/typewriter visible even before a photo is selected,
-           *  but prevent the input from being focused/edited until an image exists */}
-          {(!caption && typed) ? (
-            <span
-              className="input-ghost-placeholder"
-              aria-hidden="true"
-              style={{ ['--len' as any]: String(typed.length), ['--steps' as any]: String(typed.length) }}
-            >
-              <span className="typewriter">{typed}</span>
-              {/* use a thinner vertical bar and slightly smaller size so the caret is less obtrusive */}
-              <span className="caret" aria-hidden style={{ fontSize: 14, transform: 'translateY(-1px)' }}>|</span>
-            </span>
-          ) : null}
+        {!editing ? (
+          <div className="input-wrapper" style={{ flex: 1, position: 'relative' }}>
+            {/** keep the ghost/typewriter visible even before a photo is selected,
+             *  but prevent the input from being focused/edited until an image exists */}
+            {(!caption && typed) ? (
+              <span
+                className="input-ghost-placeholder"
+                aria-hidden="true"
+                style={{ ['--len' as any]: String(typed.length), ['--steps' as any]: String(typed.length) }}
+              >
+                <span className="typewriter">{typed}</span>
+                {/* use a thinner vertical bar and slightly smaller size so the caret is less obtrusive */}
+                <span className="caret" aria-hidden style={{ fontSize: 14, transform: 'translateY(-1px)' }}>|</span>
+              </span>
+            ) : null}
 
-          <input
-            className="input"
-            type="text"
-            aria-label="Caption"
-            placeholder={caption ? undefined : ''}
-            value={caption}
-            onChange={e => setCaption(e.target.value)}
-            readOnly={!(dataUrl || dataUrls.length > 0) || processing}
-            tabIndex={(dataUrl || dataUrls.length > 0) ? 0 : -1}
-            onMouseDown={(e) => {
-              // Block mouse interaction when no image is selected so clicks don't focus the input
-              if (!(dataUrl || dataUrls.length > 0) || processing) e.preventDefault();
-            }}
-            style={{ width: '100%', cursor: (!(dataUrl || dataUrls.length > 0) || processing) ? 'not-allowed' : 'text' }}
-          />
-        </div>
+            <input
+              className="input"
+              type="text"
+              aria-label="Caption"
+              placeholder={caption ? undefined : ''}
+              value={caption}
+              onChange={e => setCaption(e.target.value)}
+              readOnly={!(dataUrl || dataUrls.length > 0) || processing}
+              tabIndex={(dataUrl || dataUrls.length > 0) ? 0 : -1}
+              onMouseDown={(e) => {
+                // Block mouse interaction when no image is selected so clicks don't focus the input
+                if (!(dataUrl || dataUrls.length > 0) || processing) e.preventDefault();
+              }}
+              style={{ width: '100%', cursor: (!(dataUrl || dataUrls.length > 0) || processing) ? 'not-allowed' : 'text' }}
+            />
+          </div>
+        ) : null}
         {/* alt editing moved into the photo editor so it only shows when editing a specific image */}
       </div>
 
       {/* alt editing appears inside the ImageEditor modal when editing a photo */}
-      {(dataUrl || dataUrls.length > 0) ? (
+      {(dataUrl || dataUrls.length > 0) && !editing ? (
         <div className="form-row">
           <label className="vis-label">
             <div>

@@ -1,0 +1,251 @@
+import React from 'react';
+import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon } from "lucide-react";
+import { CATEGORY_COLORS } from './constants';
+
+interface ImageEditorToolbarProps {
+  onCancel: () => void;
+  resetAdjustments: () => void;
+  applyEdit: () => void;
+  isEdited: boolean;
+  categoriesContainerRef: React.RefObject<HTMLDivElement>;
+  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame';
+  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame') => void;
+  categoryHighlight: { left: number; top: number; width: number; height: number } | null;
+}
+
+export default function ImageEditorToolbar({
+  onCancel,
+  resetAdjustments,
+  applyEdit,
+  isEdited,
+  categoriesContainerRef,
+  selectedCategory,
+  setSelectedCategory,
+  categoryHighlight
+}: ImageEditorToolbarProps) {
+  return (
+    <>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap', padding: '4px 0' }}>
+        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
+          <span className="sr-only">Edit Photo</span>
+        </div>
+        <div className="image-editor-buttons" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Cancel */}
+          <button type="button" className="btn icon ghost" onClick={onCancel} aria-label="Cancel edits">
+            <X size={16} aria-hidden />
+            <span className="sr-only">Cancel edits</span>
+          </button>
+
+          {/* Reset adjustments */}
+          <button type="button" className="btn icon ghost" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">
+            <RefreshCw size={16} aria-hidden />
+            <span className="sr-only">Reset adjustments</span>
+          </button>
+
+          {/* Confirm */}
+          <button type="button" className={`btn icon ghost`} onClick={applyEdit} aria-pressed={isEdited} aria-label="Confirm edits" title="Confirm edits">
+            <Check size={16} aria-hidden />
+            <span className="sr-only">Confirm edits</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Category selector */}
+      <div ref={categoriesContainerRef} className="categories-scroll" style={{
+        position: 'relative',
+        display: 'flex',
+        gap: 10,
+        marginTop: 16,
+        justifyContent: 'center',
+        flexWrap: 'nowrap',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        maxWidth: 820,
+        margin: '16px auto 0',
+        padding: '8px 10px',
+        alignItems: 'center',
+        whiteSpace: 'nowrap',
+        background: 'color-mix(in srgb, var(--bg-elev) 70%, transparent)',
+        borderRadius: 12,
+        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)'
+      }}>
+        <div aria-hidden style={{
+          position: 'absolute',
+          left: categoryHighlight?.left ?? 0,
+          top: categoryHighlight?.top ?? 0,
+          width: categoryHighlight?.width ?? 0,
+          height: categoryHighlight?.height ?? 0,
+          borderRadius: 8,
+          background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
+          transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease',
+          pointerEvents: 'none',
+          opacity: categoryHighlight ? 0.95 : 0,
+          zIndex: 0,
+          boxShadow: 'none',
+          border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)'
+        }} />
+
+        <button
+          data-cat="basic"
+          data-active={selectedCategory === 'basic'}
+          type="button"
+          aria-label="Basic"
+          title="Basic"
+          className="cat-btn"
+          onClick={(e: any) => {
+            try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+            setSelectedCategory('basic');
+          }}
+          style={{
+            padding: '10px 12px',
+            borderRadius: 10,
+            background: selectedCategory === 'basic' ? 'transparent' : 'transparent',
+            color: 'var(--text)',
+            transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
+            position: 'relative',
+            zIndex: 1,
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            border: 'none',
+            fontWeight: selectedCategory === 'basic' ? 700 : 500,
+            overflow: 'hidden'
+          }}
+        >
+          <Sliders size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'basic' ? CATEGORY_COLORS.basic : undefined }} />
+          <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Basic</span>
+        </button>
+
+        <button
+          data-cat="color"
+          data-active={selectedCategory === 'color'}
+          type="button"
+          aria-label="Filters"
+          title="Filters"
+          className="cat-btn"
+          onClick={(e: any) => {
+            try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+            setSelectedCategory('color');
+          }}
+          style={{
+            padding: '10px 12px',
+            borderRadius: 10,
+            background: selectedCategory === 'color' ? 'transparent' : 'transparent',
+            color: 'var(--text)',
+            transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
+            position: 'relative',
+            zIndex: 1,
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            border: 'none',
+            fontWeight: selectedCategory === 'color' ? 700 : 500,
+            overflow: 'hidden'
+          }}
+        >
+          <Palette size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'color' ? CATEGORY_COLORS.color : undefined }} />
+          <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Filters</span>
+        </button>
+
+        <button
+          data-cat="effects"
+          data-active={selectedCategory === 'effects'}
+          type="button"
+          aria-label="Effects"
+          title="Effects"
+          className="cat-btn"
+          onClick={(e: any) => {
+            try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+            setSelectedCategory('effects');
+          }}
+          style={{
+            padding: '10px 12px',
+            borderRadius: 10,
+            background: selectedCategory === 'effects' ? 'transparent' : 'transparent',
+            color: 'var(--text)',
+            transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
+            position: 'relative',
+            zIndex: 1,
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            border: 'none',
+            fontWeight: selectedCategory === 'effects' ? 700 : 500,
+            overflow: 'hidden'
+          }}
+        >
+          <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'effects' ? CATEGORY_COLORS.effects : undefined }} />
+          <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Effects</span>
+        </button>
+
+        <button
+          data-cat="crop"
+          data-active={selectedCategory === 'crop'}
+          type="button"
+          aria-label="Crop"
+          title="Crop"
+          className="cat-btn"
+          onClick={(e: any) => {
+            try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+            setSelectedCategory('crop');
+          }}
+          style={{
+            padding: '10px 12px',
+            borderRadius: 10,
+            background: selectedCategory === 'crop' ? 'transparent' : 'transparent',
+            color: 'var(--text)',
+            transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
+            position: 'relative',
+            zIndex: 1,
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            border: 'none',
+            fontWeight: selectedCategory === 'crop' ? 700 : 500,
+            overflow: 'hidden'
+          }}
+        >
+          <Scissors size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'crop' ? CATEGORY_COLORS.crop : undefined }} />
+          <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Crop</span>
+        </button>
+
+        <button
+          data-cat="frame"
+          data-active={selectedCategory === 'frame'}
+          type="button"
+          aria-label="Frame"
+          title="Frame"
+          className="cat-btn"
+          onClick={(e: any) => {
+            try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+            setSelectedCategory('frame');
+          }}
+          style={{
+            padding: '10px 12px',
+            borderRadius: 10,
+            background: selectedCategory === 'frame' ? 'transparent' : 'transparent',
+            color: 'var(--text)',
+            transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
+            position: 'relative',
+            zIndex: 1,
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            border: 'none',
+            fontWeight: selectedCategory === 'frame' ? 700 : 500,
+            overflow: 'hidden'
+          }}
+        >
+          <ImageIcon size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'frame' ? CATEGORY_COLORS.frame : undefined }} />
+          <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Frame</span>
+        </button>
+      </div>
+    </>
+  );
+}

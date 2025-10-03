@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './PublishButton.css';
 
 interface PublishButtonProps {
@@ -24,6 +24,23 @@ export function PublishButton({
 }: PublishButtonProps) {
   const [flash, setFlash] = useState(false); // visual feedback when clicking during cooldown
   const [pulseAnimation, setPulseAnimation] = useState(false);
+  const [waitMsgVisible, setWaitMsgVisible] = useState(false);
+  const waitTimerRef = useRef<number | null>(null);
+  // Messages to cycle through when the user clicks while on cooldown
+  const MESSAGES = [
+    'Soon, meanwhile explore',
+    'Hang tight — new post soon',
+    'Almost there — enjoy exploring',
+    'Not yet — try browsing the feed',
+    'Hold on — check out Explore',
+    'Give it a moment — discover recent posts',
+    'Not yet — take a look around',
+    'Patience — fresh posts incoming',
+    'Almost ready — browse the feed',
+    'Take a peek at Explore while you wait',
+  ];
+  const messageIndexRef = useRef(0);
+  const [currentWaitMessage, setCurrentWaitMessage] = useState(MESSAGES[0]);
 
   // Enable pulse animation when ready to post
   useEffect(() => {
@@ -39,10 +56,31 @@ export function PublishButton({
       // trigger a brief flash animation on the bar & digits
       setFlash(true);
       setTimeout(() => setFlash(false), 900);
+      // show an inline wait message inside the button (not a toast)
+      // rotate to the next message on every press
+      const idx = messageIndexRef.current % MESSAGES.length;
+      setCurrentWaitMessage(MESSAGES[idx]);
+      messageIndexRef.current = (messageIndexRef.current + 1) % MESSAGES.length;
+      setWaitMsgVisible(true);
+      if (waitTimerRef.current) window.clearTimeout(waitTimerRef.current);
+      waitTimerRef.current = window.setTimeout(() => {
+        waitTimerRef.current = null;
+        setWaitMsgVisible(false);
+      }, 3000);
       return;
     }
     onPublish();
   };
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (waitTimerRef.current) {
+        window.clearTimeout(waitTimerRef.current);
+        waitTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // Calculate progress percentage (0 = done, 100 = just posted)
   const progressPercent = remainingMs != null && countdownTotalMs != null && countdownTotalMs > 0
@@ -90,7 +128,11 @@ export function PublishButton({
           </span>
         ) : (
           <span className="countdown-display">
-            <span className="countdown-time">{displayTime}</span>
+            {waitMsgVisible ? (
+              <span className="wait-message">{currentWaitMessage}</span>
+            ) : (
+              <span className="countdown-time">{displayTime}</span>
+            )}
           </span>
         )}
       </span>

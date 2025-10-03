@@ -1,19 +1,29 @@
 /* PublishButton.css - Standalone publish button with countdown */
 
+/* Shared custom properties so both Publish and Cancel buttons can reference height */
+:root {
+  --publish-two-line-height: 48px;
+  /* widened slightly to avoid content-driven jumps between timer and two-line messages */
+  --publish-button-min-width: 240px;
+}
+
 .publish-button {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 120px;
-  min-height: var(--action-pill-height,42px);
-  padding: 10px 20px; /* unify with visibility & cancel pills */
+  min-width: var(--publish-button-min-width);
+  height: var(--publish-two-line-height);
+  min-height: var(--publish-two-line-height);
+  padding: 7px 16px; /* slightly reduced padding to match shorter height */
   border: none;
   border-radius: 999px; /* pill */
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  /* smooth any width changes (keeps UI from jumping) */
+  transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), width 180ms ease;
   overflow: hidden;
   background: var(--primary-weak); /* pastel base (cooldown style) */
   color: var(--text);
@@ -87,6 +97,10 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  /* Allow content to wrap (two lines max) while keeping button height fixed */
+  flex-wrap: wrap;
+  text-align: center;
+  white-space: normal;
 }
 
 /* Ready text with icon */
@@ -154,6 +168,28 @@
 
 .countdown-time { font-size: 16px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.25); }
 
+/* Inline wait message (rotating). Constrain to two lines and center.) */
+.wait-message {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.05;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box; /* enable clamping */
+  -webkit-box-orient: vertical;
+  line-clamp: 2; /* (non-standard) added for tooling warnings */
+  -webkit-line-clamp: 2; /* clamp to two lines */
+  max-height: calc(1.05em * 2); /* fallback for non-supporting browsers */
+  word-break: break-word;
+  /* Limit each line to ~23 characters (depends on font). Center within the pill. */
+  max-width: 23ch;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  hyphens: auto;
+}
+
 /* removed show-message state */
 
 /* removed segmented time styles */
@@ -180,13 +216,38 @@
 
 /* Mobile responsive */
 @media (max-width: 640px) {
+  :root { --publish-two-line-height: 44px; }
+  :root { --publish-button-min-width: 160px; }
   .publish-button {
-    min-height: 38px;
-    padding: 6px 16px;
+    /* slightly smaller on mobile but still fits two lines */
+    padding: 6px 14px;
     font-size: 13.5px;
   }
+  .wait-message { max-width: 20ch; }
   .cooldown-message { font-size: 13px; padding: 0 24px; }
   .time-value { font-size: 15px; }
+}
+
+/* Make the Cancel button match the publish button's size and pill shape */
+.btn.cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--publish-button-min-width);
+  height: var(--publish-two-line-height);
+  min-height: var(--publish-two-line-height);
+  padding: 7px 16px; /* match publish button */
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .btn.cancel-btn {
+    padding: 6px 14px; /* match publish button mobile padding */
+    font-size: 13.5px;
+  }
 }
 
 /* Dark mode adjustments */

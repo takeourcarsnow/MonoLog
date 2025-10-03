@@ -19,7 +19,8 @@
   border: none;
   border-radius: 999px; /* pill */
   font-size: 14px;
-  font-weight: 600;
+  /* softer weight for calmer UI */
+  font-weight: 400;
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
   /* smooth any width changes (keeps UI from jumping) */
@@ -27,7 +28,8 @@
   overflow: hidden;
   background: var(--primary-weak); /* pastel base (cooldown style) */
   color: var(--text);
-  box-shadow: 0 4px 10px color-mix(in srgb, var(--primary), transparent 85%);
+  /* remove persistent halo/shadow to match Cancel button vibe; keep a subtle base shadow */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   line-height: 1; /* tighter vertical rhythm */
 }
 
@@ -38,7 +40,8 @@
 
 .publish-button:not(:disabled):hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  /* subtle hover shadow to hint interactiveness */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
 .publish-button:not(:disabled):active {
@@ -49,21 +52,21 @@
 .publish-button.ready {
   background: var(--primary);
   color: #fff;
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--primary), transparent 70%);
 }
 
+/* subtler pulse */
 .publish-button.ready.pulse {
-  animation: ready-pulse 2s ease-in-out infinite;
+  animation: ready-pulse 2.4s ease-in-out infinite;
 }
 
 @keyframes ready-pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary), transparent 70%);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--primary), transparent 80%);
   }
   50% {
-    transform: scale(1.02);
-    box-shadow: 0 6px 24px color-mix(in srgb, var(--primary), transparent 50%);
+    transform: scale(1.01);
+    box-shadow: 0 5px 16px color-mix(in srgb, var(--primary), transparent 60%);
   }
 }
 
@@ -108,8 +111,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  /* softer weight for icon + label */
+  font-weight: 400;
+  letter-spacing: 0.35px;
 }
 
 .ready-text {
@@ -126,19 +130,12 @@
 }
 
 .icon-publish {
-  width: 20px;
-  height: 20px;
-  animation: icon-float 2s ease-in-out infinite;
+  width: 18px;
+  height: 18px;
+  animation: icon-float 3s ease-in-out infinite;
 }
 
-@keyframes icon-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
+@keyframes icon-float { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-1.5px);} }
 
 /* Spinner for processing state */
 .spinner {
@@ -159,35 +156,44 @@
 
 /* Countdown display */
 .countdown-display {
+  position: relative;
   display: flex;
   align-items: center;
   font-variant-numeric: tabular-nums;
-  transition: opacity 0.3s ease;
   letter-spacing: .5px;
+  /* reserve space so content swaps don't jump */
+  min-width: 9ch;
 }
 
-.countdown-time { font-size: 16px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.countdown-time,
+.wait-message {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateY(6px);
+  opacity: 0;
+  transition: opacity 260ms cubic-bezier(.2,.9,.2,1), transform 260ms cubic-bezier(.2,.9,.2,1);
+  white-space: nowrap;
+}
+
+.countdown-time.visible,
+.wait-message.visible {
+  transform: translate(-50%, -50%) translateY(0);
+  opacity: 1;
+}
+
+.countdown-time { font-size: 16px; /* slightly reduced weight for subtler look */ font-weight: 600; text-shadow: none; }
 
 /* Inline wait message (rotating). Constrain to two lines and center.) */
 .wait-message {
   font-size: 15px;
-  font-weight: 700;
+  /* slightly lighter so the ephemeral hint reads friendly */
+  font-weight: 500;
   line-height: 1.05;
-  white-space: normal;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box; /* enable clamping */
-  -webkit-box-orient: vertical;
-  line-clamp: 2; /* (non-standard) added for tooling warnings */
-  -webkit-line-clamp: 2; /* clamp to two lines */
-  max-height: calc(1.05em * 2); /* fallback for non-supporting browsers */
-  word-break: break-word;
-  /* Limit each line to ~23 characters (depends on font). Center within the pill. */
-  max-width: 23ch;
-  width: 100%;
-  box-sizing: border-box;
-  margin: 0 auto;
-  hyphens: auto;
+  max-width: 20ch;
 }
 
 /* removed show-message state */
@@ -238,7 +244,7 @@
   min-height: var(--publish-two-line-height);
   padding: 7px 16px; /* match publish button */
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 14px;
   line-height: 1;
 }

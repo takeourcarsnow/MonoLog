@@ -17,3 +17,4 @@ Profile section: Consider further optimizations if needed
 - If issues persist, may need to investigate tab switching animation performance
 
 Maybe we should say "log" instead of "post" throughout the app for consistency
+when rotating crop in so theres no empty canvas

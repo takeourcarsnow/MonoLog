@@ -339,9 +339,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const padRatio = 0.0;
     const availW = Math.max(1, cssW * (1 - padRatio * 2));
     const availH = Math.max(1, cssH * (1 - padRatio * 2));
-  // Use cover-style scaling so the image fills the available area and avoids letterbox gaps
-  // This may crop some parts of the image at the edges but ensures no empty space is visible.
-  const baseScale = Math.max(availW / img.naturalWidth, availH / img.naturalHeight);
+  // Use contain-style scaling so the whole image is visible inside the editor canvas.
+  // This prevents tall (or very wide) images from being cropped in the preview.
+  // It will letterbox (show empty space) when the image aspect doesn't match the canvas,
+  // but that's preferable for editing so users can reach all image pixels.
+  const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
   const dispW = img.naturalWidth * baseScale;
   const dispH = img.naturalHeight * baseScale;
     const left = (cssW - dispW) / 2;

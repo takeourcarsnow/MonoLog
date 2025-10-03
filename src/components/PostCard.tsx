@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState, useImperativeHandle, forwardRef, useCallback } from "react";
 import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
 import { prefetchComments, hasCachedComments } from "@/lib/commentCache";
@@ -100,32 +100,34 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   }, [post.id, count]);
   const [showAuth, setShowAuth] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const deleteBtnRef = useRef<HTMLButtonElement | null>(null);
-  const popRef = useRef<HTMLDivElement | null>(null);
   const [isPressingDelete, setIsPressingDelete] = useState(false);
+  // Inline confirm state (confirm-on-second-click) for deleting a post
+  const [confirming, setConfirming] = useState(false);
+  const [confirmTimer, setConfirmTimer] = useState<number | null>(null);
+  const confirmTimerRef = useRef<number | null>(null);
+  const [editExpanded, setEditExpanded] = useState(false);
+  const [deleteExpanded, setDeleteExpanded] = useState(false);
+  const editTimerRef = useRef<number | null>(null);
+  const deleteExpandTimerRef = useRef<number | null>(null);
+  const editorRef = useRef<{ save: () => Promise<void>; cancel?: () => void } | null>(null);
+  const [editorSaving, setEditorSaving] = useState(false);
+
+  // cleanup any pending confirm timer when component unmounts
+  useEffect(() => {
+    return () => {
+      if (confirmTimerRef.current) {
+        try { window.clearTimeout(confirmTimerRef.current); } catch (_) {}
+        confirmTimerRef.current = null;
+      }
+      if (editTimerRef.current) { try { window.clearTimeout(editTimerRef.current); } catch (_) {} editTimerRef.current = null; }
+      if (deleteExpandTimerRef.current) { try { window.clearTimeout(deleteExpandTimerRef.current); } catch (_) {} deleteExpandTimerRef.current = null; }
+    };
+  }, []);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Close the anchored confirm when clicking outside or pressing Escape
-  useEffect(() => {
-    if (!showDeleteConfirm) return;
-    function onDoc(e: MouseEvent) {
-      const target = e.target as Node | null;
-      if (popRef.current && !popRef.current.contains(target) && deleteBtnRef.current && !deleteBtnRef.current.contains(target)) {
-        setShowDeleteConfirm(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setShowDeleteConfirm(false);
-    }
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [showDeleteConfirm]);
+  // no anchored popover used for delete confirmation anymore
 
   useEffect(() => {
     (async () => {
@@ -722,61 +724,84 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                     </>
                   ) : null}
                 </>
-          ) : (
+              ) : (
             <>
-              {!editing && (
-                <button className="btn icon-reveal edit-btn" onClick={() => setEditing(true)}>
-                  <span className="icon" aria-hidden="true"><Edit size={16} /></span>
-                  <span className="reveal label">Edit</span>
-                </button>
-              )}
+              {/* Always render the edit button so it remains visible while editing */}
+              <button
+                className={`btn icon-reveal edit-btn ${editExpanded ? 'expanded' : ''} ${editing ? 'active' : ''} ${editorSaving ? 'saving' : ''}`}
+                onClick={async () => {
+                  // If not currently editing, reveal label then enter edit mode
+                  if (!editing) {
+                    setEditExpanded(true);
+                    if (editTimerRef.current) { window.clearTimeout(editTimerRef.current); editTimerRef.current = null; }
+                    editTimerRef.current = window.setTimeout(() => { setEditExpanded(false); editTimerRef.current = null; }, 3500);
+                    setEditing(true);
+                    return;
+                  }
+
+                  // Already editing: trigger save on the Editor via ref
+                  if (editorRef.current?.save) {
+                    try {
+                      setEditorSaving(true);
+                      await editorRef.current.save();
+                    } catch (e) {
+                      // allow Editor/onSave to surface errors via toast
+                    } finally {
+                      setEditorSaving(false);
+                    }
+                  }
+                }}
+              >
+                <span className="icon" aria-hidden="true"><Edit size={16} /></span>
+                <span className="reveal label">{editorSaving ? 'Saving…' : 'Edit'}</span>
+              </button>
+              {/* Inline confirm-on-second-click delete flow (no popover) */}
               <button
                 ref={deleteBtnRef}
-                className={`btn ghost icon-reveal delete-btn ${isPressingDelete ? "pressing-delete" : ""}`}
+                className={`btn ghost icon-reveal delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${confirming ? 'confirming' : ''} ${deleteExpanded ? 'expanded' : ''}`}
                 onMouseDown={() => setIsPressingDelete(true)}
                 onMouseUp={() => setIsPressingDelete(false)}
                 onMouseLeave={() => setIsPressingDelete(false)}
                 onTouchStart={() => setIsPressingDelete(true)}
                 onTouchEnd={() => setIsPressingDelete(false)}
-                onClick={() => setShowDeleteConfirm(true)}
-                aria-haspopup="dialog"
-                aria-expanded={showDeleteConfirm}
+                onClick={async () => {
+                  // If already confirming, proceed to delete
+                  if (confirming) {
+                    try {
+                      // optimistic UI: remove element immediately with small animation
+                      (document.getElementById(`post-${post.id}`)?.remove?.());
+                      // perform delete
+                      await api.deletePost(post.id);
+                      // If viewing single post page, go home
+                      if (pathname?.startsWith("/post/")) router.push("/");
+                    } catch (e: any) {
+                      toast.show(e?.message || "Failed to delete post");
+                      } finally {
+                        setConfirming(false);
+                        if (confirmTimerRef.current) { window.clearTimeout(confirmTimerRef.current); confirmTimerRef.current = null; setConfirmTimer(null); }
+                      }
+                    return;
+                  }
+
+                  // Enter confirming state and reveal label (expanded) and clear after timeout
+                  setConfirming(true);
+                  setDeleteExpanded(true);
+                  if (deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
+                  deleteExpandTimerRef.current = window.setTimeout(() => { setDeleteExpanded(false); deleteExpandTimerRef.current = null; }, 3500);
+                  const t = window.setTimeout(() => {
+                    setConfirming(false);
+                    confirmTimerRef.current = null;
+                    setConfirmTimer(null);
+                    setDeleteExpanded(false);
+                  }, 3500);
+                  confirmTimerRef.current = t;
+                  setConfirmTimer(t);
+                }}
+                aria-pressed={confirming ? 'true' : 'false'}
               >
                 <span className="icon" aria-hidden="true"><Trash size={16} /></span>
-                <span className="reveal label">Delete</span>
+                <span className="reveal label">{confirming ? 'Confirm' : 'Delete'}</span>
               </button>
-                  {showDeleteConfirm && (
-                <div ref={popRef} className="confirm-popover" role="dialog" aria-label="Confirm delete" aria-modal={true}>
-                  <div className="confirm-popover-arrow" aria-hidden="true" />
-                  <div className="confirm-popover-body">
-                    <div className="confirm-message">Delete this post? This cannot be undone.</div>
-                    <div className="confirm-actions">
-                      <button
-                        className="btn danger"
-                        onClick={async () => {
-                          try {
-                            await api.deletePost(post.id);
-                            setShowDeleteConfirm(false);
-                            // If viewing single post page, go back to the main feed (home)
-                            if (pathname?.startsWith("/post/")) {
-                              // send user to the home page rather than back to the deleted post
-                              router.push("/");
-                            }
-                            // Let parent remove it from list; here we just hide
-                            (document.getElementById(`post-${post.id}`)?.remove?.());
-                          } catch (e: any) {
-                            setShowDeleteConfirm(false);
-                            toast.show(e?.message || "Failed to delete post");
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
-                      <button className="btn ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -990,6 +1015,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
           </>
         ) : (
           <Editor
+            ref={editorRef}
             post={post}
             onCancel={() => setEditing(false)}
             onSave={async (patch) => {
@@ -1018,24 +1044,55 @@ export const PostCard = memo(PostCardComponent, (prev, next) => {
          prev.post.commentsCount === next.post.commentsCount;
 });
 
-function Editor({ post, onCancel, onSave }: {
+export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   post: HydratedPost;
   onCancel: () => void;
   onSave: (patch: { caption: string; public: boolean }) => Promise<void>;
-}) {
+}, ref: any) {
   const [caption, setCaption] = useState(post.caption || "");
   const [visibility, setVisibility] = useState(post.public ? "public" : "private");
   const [saving, setSaving] = useState(false);
+
+  const doSave = useCallback(async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave({ caption, public: visibility === 'public' });
+    } finally {
+      setSaving(false);
+    }
+  }, [caption, visibility, onSave, saving]);
+
+  useImperativeHandle(ref, () => ({
+    save: doSave,
+    cancel: () => onCancel(),
+  }), [doSave, onCancel]);
+
+  // Support ESC to cancel while editing
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCancel();
+    }
+    if (typeof window !== 'undefined') window.addEventListener('keydown', onKey);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('keydown', onKey); };
+  }, [onCancel]);
 
   return (
     <div className="post-editor">
       <input
         className="edit-caption input"
         type="text"
-  placeholder="Tell your story (if you feel like it)"
-  aria-label="Edit caption"
+        placeholder="Tell your story (if you feel like it)"
+        aria-label="Edit caption"
         value={caption}
         onChange={e => setCaption(e.target.value)}
+        onKeyDown={async (e) => {
+          // Enter saves (unless combined with modifier keys). Shift+Enter should allow a newline.
+          if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+            e.preventDefault();
+            await doSave();
+          }
+        }}
       />
       <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
         <span className="dim">Visibility:</span>
@@ -1049,20 +1106,7 @@ function Editor({ post, onCancel, onSave }: {
           <option value="private">Private</option>
         </select>
       </label>
-      <div style={{ marginTop: 8 }}>
-        <button
-          className="btn save"
-          disabled={saving}
-          onClick={async () => {
-            setSaving(true);
-            await onSave({ caption, public: visibility === "public" });
-            setSaving(false);
-          }}
-        >
-          {saving ? "Saving…" : "Save"}
-        </button>
-        <button className="btn ghost cancel" onClick={onCancel} style={{ marginLeft: 8 }}>Cancel</button>
-      </div>
+      {/* Save/Cancel are handled by the parent edit button and ESC respectively */}
     </div>
   );
-}
+});

@@ -774,18 +774,22 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   box-shadow: 0 6px 16px rgba(0,0,0,0.05);
 }
 
-/* Icon reveal buttons: show a small icon and gently reveal the text on hover/focus */
+/* Icon reveal buttons: show a small icon and gently reveal the text on hover/focus
+  or when JS toggles the `.expanded` class (used to reveal labels on click). */
 .icon-reveal { display: inline-flex; align-items: center; gap: 8px; overflow: hidden; }
 .icon-reveal .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; transition: transform 220ms var(--transition-mid), opacity 220ms var(--transition-fast); }
-.icon-reveal .reveal { display: inline-block; transform-origin: left center; transition: transform 260ms var(--transition-mid), opacity 220ms var(--transition-fast); opacity: 1; }
+.icon-reveal .reveal { display: inline-block; transform-origin: left center; transition: transform 260ms var(--transition-mid), opacity 220ms var(--transition-fast), max-width 260ms var(--transition-mid); opacity: 1; white-space: nowrap; max-width: 120px; overflow: hidden; }
 
 /* default: slightly hide the reveal label on compact buttons to emphasize the icon */
-.icon-reveal:not(.primary) .reveal { transform: translateX(-6px) scale(0.98); opacity: 0.9; }
+.icon-reveal:not(.primary) .reveal { transform: translateX(-6px) scale(0.98); opacity: 0; max-width: 0; }
 
 .icon-reveal:hover .icon,
 .icon-reveal:focus .icon { transform: translateY(-3px) scale(1.06); }
 .icon-reveal:hover .reveal,
-.icon-reveal:focus .reveal { transform: translateX(0) scale(1); opacity: 1; }
+.icon-reveal:focus .reveal { transform: translateX(0) scale(1); opacity: 1; max-width: 120px; }
+
+/* Explicit expanded state: reveal label when JS toggles .expanded */
+.icon-reveal.expanded .reveal { transform: translateX(0) scale(1); opacity: 1; max-width: 220px; }
 
 /* make primary buttons slightly more pronounced */
 .btn.primary.icon-reveal .reveal { font-weight: 700; }
@@ -994,7 +998,17 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   border-color: color-mix(in srgb, var(--primary), transparent 84%);
 }
 
-.card:focus-within { outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 4px; border-radius: 8px; }
+.card:focus-within { outline: none; }
+
+/* Prefer showing the card outline only when a descendant is keyboard-focused.
+   Uses :has() to detect a focus-visible descendant; browsers that don't support
+   :has() will still hide the mouse-click halo (fallback above) while keyboard
+   users retain a visible ring where supported. */
+.card:has(:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
 
 .card-body { padding: 10px 12px; display: grid; gap: 10px; }
 .caption {
@@ -1238,6 +1252,19 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   /* intentionally no glow/drop-shadow to keep the confirm visual subtle */
 }
 .comment-badge.confirming svg { stroke: #fff; color: #fff; filter: none; }
+
+/* Inline post delete button confirming state: first click toggles confirming,
+   second click (within timeout) proceeds. Visual matches comment confirm style. */
+.delete-btn.confirming {
+  /* Use a semi-opaque background-color (animatable) instead of a gradient so
+     entering and exiting the confirming state can transition smoothly. */
+  background-color: color-mix(in srgb, var(--danger), var(--bg-elev) 14%);
+  color: #fff;
+  border-color: color-mix(in srgb, var(--danger), transparent 72%);
+  transform: scale(1.02);
+  will-change: transform, background-color, border-color, opacity;
+}
+.delete-btn.confirming .icon { color: #fff !important; }
 
 
 .comment-badge { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:6px; background:color-mix(in srgb, var(--bg-elev), transparent 20%); border-radius:8px; border:1px solid var(--border); color:var(--muted); }
@@ -2057,7 +2084,9 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 
 /* ensure anchors used as user links have a clear focus ring */
-.user-link:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 60%); outline-offset: 4px; border-radius: 999px; }
+.user-link:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+/* show a visible ring only for keyboard focus */
+.user-link:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 60%); outline-offset: 4px; border-radius: 999px; }
 
 /* make user links (avatar + name) more spacious */
 .user-link {
@@ -2870,7 +2899,8 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   padding: 8px 12px;
   border-radius: 999px;
   font-weight: 600;
-  transition: transform 200ms var(--transition-mid), box-shadow 200ms var(--transition-mid), color 160ms var(--transition-fast);
+  /* include background, border-color and opacity so entering/exiting states animate smoothly */
+  transition: transform 200ms var(--transition-mid), box-shadow 200ms var(--transition-mid), color 160ms var(--transition-fast), background 260ms var(--transition-mid), border-color 260ms var(--transition-mid), opacity 220ms var(--transition-fast);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -2884,11 +2914,39 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .edit-btn .icon { color: var(--primary); }
 .edit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
 
+/* When the edit UI is active, keep the edit button visible and give it a
+   subtle active treatment so users can always cancel or re-open the editor. */
+.edit-btn.active {
+  background: color-mix(in srgb, var(--primary-weak), var(--bg) 48%);
+  border-color: transparent;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--primary), transparent 72%);
+  transform: translateY(-2px);
+}
+.edit-btn.active .icon { color: var(--primary); }
+
+/* small entrance animation for edit active state */
+@keyframes editActiveIn {
+  0% { transform: translateY(0.6px) scale(.996); opacity: 0; }
+  60% { transform: translateY(-4px) scale(1.03); opacity: 1; }
+ 100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
+.edit-btn.active {
+  animation: editActiveIn 260ms cubic-bezier(.2,.9,.28,1) both;
+}
+
 /* Delete: ghost style but with danger icon; pressing-delete animation preserved */
 .delete-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
 .delete-btn .icon { color: var(--danger); }
 .delete-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
 .delete-btn.pressing-delete { animation: pressDanger 400ms ease-in-out; }
+
+/* The delete confirm state uses transitions so it can both animate in and out.
+   Avoid one-shot keyframe animations which don't reverse when the state is removed. */
+.delete-btn.confirming {
+  /* ensure transitions run when entering AND exiting the confirming state */
+  transition: background 220ms cubic-bezier(.2,.85,.2,1), border-color 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), opacity 220ms cubic-bezier(.2,.85,.2,1);
+}
+.delete-btn.confirming .icon { transition: color 180ms ease; }
 
 /* Hide mouse-focus halo but preserve keyboard focus visibility */
 .edit-btn:focus:not(:focus-visible),
@@ -2903,6 +2961,11 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 @media (prefers-reduced-motion: reduce) {
   .edit-btn, .delete-btn { transition: none !important; animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Ensure our small state animations are suppressed for reduced-motion users */
+  .edit-btn.active, .delete-btn.confirming { animation: none !important; }
 }
 
 /* About card: constrain very long bios so they don't push header/avatar off-screen */

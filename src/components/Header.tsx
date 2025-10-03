@@ -37,7 +37,7 @@ export function Header() {
             <Info size={20} strokeWidth={2} />
           </Link>
           <ThemeToggle />
-          <Link href="/favorites" className={`btn favorites-btn ${pathname === '/favorites' ? 'active' : ''}`} title="Favorites" aria-label="Favorites" aria-current={pathname === '/favorites' ? 'page' : undefined}>
+          <Link href="/favorites" className={`btn icon favorites-btn ${pathname === '/favorites' ? 'active' : ''}`} title="Favorites" aria-label="Favorites" aria-current={pathname === '/favorites' ? 'page' : undefined}>
             <Star size={20} strokeWidth={2} />
           </Link>
           <AccountSwitcher />

@@ -18,3 +18,7 @@ Profile section: Consider further optimizations if needed
 
 Maybe we should say "log" instead of "post" throughout the app for consistency
 when rotating crop in so theres no empty canvas
+
+
+delete icon doent shrink back after confirm ends. it only properly shrinksback after confirm onl  if i click somewhere else after triggering the confirm dialogue
+edit button also doent shrink back unless i click somewhere else

@@ -2272,14 +2272,14 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   border: 1px solid color-mix(in srgb, var(--border), transparent 20%);
   color: var(--text);
   font-weight: 700;
-  /* smoother, slightly springy transitions for organic feel */
-  transition: background 320ms cubic-bezier(.2,.9,.2,1),
-              border-color 320ms cubic-bezier(.2,.9,.2,1),
-              color 240ms cubic-bezier(.2,.9,.2,1),
-              transform 340ms cubic-bezier(.2,.9,.2,1);
+  /* smoother, slightly springy transitions for organic feel - unified variables */
+  transition: background var(--follow-duration) var(--follow-ease),
+              border-color var(--follow-duration) var(--follow-ease),
+              color var(--follow-duration) var(--follow-ease),
+              transform var(--follow-duration) var(--follow-ease);
 }
-.follow-btn .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; color: var(--muted); transition: color 240ms cubic-bezier(.2,.9,.2,1), transform 300ms cubic-bezier(.2,.9,.2,1); will-change: transform; }
-.follow-btn .label { display: inline-block; font-weight: 600; transform-origin: left center; transition: opacity 240ms cubic-bezier(.2,.9,.2,1), transform 300ms cubic-bezier(.2,.9,.2,1); }
+.follow-btn .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; color: var(--muted); transition: color var(--follow-duration) var(--follow-ease), transform var(--follow-duration) var(--follow-ease); will-change: transform; }
+.follow-btn .label { display: inline-block; font-weight: 600; transform-origin: left center; transition: opacity var(--follow-duration) var(--follow-ease), transform var(--follow-duration) var(--follow-ease); }
 
 /* Not following: subtle outline using primary, minimal fill */
 .follow-btn.not-following { background: transparent; border-color: color-mix(in srgb, var(--primary), var(--border) 85%); color: var(--primary); }
@@ -2290,12 +2290,12 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .follow-btn.following-anim .icon {
   color: var(--primary);
   transform: translateY(-3px) scale(1.08);
-  transition: transform 320ms cubic-bezier(.2,.9,.2,1), color 220ms var(--transition-fast);
+  transition: transform var(--follow-duration) var(--follow-ease), color var(--follow-duration) var(--follow-ease);
 }
 .follow-btn.following-anim .label {
   transform: translateX(0) scale(1);
   opacity: 1;
-  transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 220ms var(--transition-fast);
+  transition: transform var(--follow-duration) var(--follow-ease), opacity var(--follow-duration) var(--follow-ease);
 }
 
 /* Remove shadow on hover/focus for follow-style buttons (prevents the
@@ -2353,6 +2353,52 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 @keyframes followLabelOut {
   0% { transform: translateX(0) scale(1); opacity: 1; }
   50% { transform: translateX(4px) scale(.98); opacity: 0.6; }
+  100% { transform: translateX(6px) scale(.96); opacity: 0; }
+}
+
+/* Subtle expanded-state animations for follow/unfollow transitions.
+   These animate only when the button is in the expanded (pill) state so
+   the user sees a gentle pop & label update when they click Follow/Following. */
+.follow-btn.expanded {
+  /* smooth color/background transitions for the pill */
+  transition: background 260ms cubic-bezier(.22,.9,.28,1), color 220ms ease, transform 220ms ease;
+}
+
+.follow-btn.expanded.following-anim .icon {
+  animation: expandedFollowIcon 360ms cubic-bezier(.22,.9,.28,1);
+  transform-origin: center center;
+}
+.follow-btn.expanded.unfollow-anim .icon {
+  animation: expandedUnfollowIcon 300ms cubic-bezier(.22,.9,.28,1);
+  transform-origin: center center;
+}
+
+.follow-btn.expanded.following-anim .reveal.label {
+  animation: expandedLabelIn 360ms cubic-bezier(.22,.9,.28,1);
+}
+.follow-btn.expanded.unfollow-anim .reveal.label {
+  animation: expandedLabelOut 300ms cubic-bezier(.22,.9,.28,1);
+}
+
+@keyframes expandedFollowIcon {
+  0% { transform: translateY(0) scale(.96); opacity: .92; }
+  45% { transform: translateY(-6px) scale(1.08); opacity: 1; }
+  100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
+@keyframes expandedUnfollowIcon {
+  0% { transform: translateY(-2px) scale(1); opacity: 1; }
+  50% { transform: translateY(2px) scale(.96); opacity: .92; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes expandedLabelIn {
+  0% { transform: translateX(6px) scale(.98); opacity: 0; }
+  60% { transform: translateX(-2px) scale(1.02); opacity: 1; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes expandedLabelOut {
+  0% { transform: translateX(0) scale(1); opacity: 1; }
+  50% { transform: translateX(4px) scale(.98); opacity: .6; }
   100% { transform: translateX(6px) scale(.96); opacity: 0; }
 }
 
@@ -3016,6 +3062,15 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   padding: 8px 10px;
 }
 
+/* Remove the extra panel background for the post view toolbar so the back
+   button sits directly on the page content (no full-width rounded panel). */
+.post-view-wrap .toolbar {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 8px 0 !important;
+}
+
 /* subtle entrance for toolbar title and subtitle */
 @keyframes toolbarIn {
   from { opacity: 0; transform: translateY(6px); }
@@ -3075,6 +3130,427 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   color: white;
   border-color: transparent;
   box-shadow: 0 8px 24px color-mix(in srgb, var(--primary), transparent 60%);
+}
+
+/* Smooth, subtle animation between follow/unfollow states.
+   - animate icon and label concurrently for an organic feel
+   - use separate helper animation classes applied by the component
+     (following-anim / unfollow-anim) so we can finely control the
+     entrance/exit timing without changing the DOM structure. */
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  transition: background 300ms cubic-bezier(.2,.8,.2,1), color 260ms cubic-bezier(.2,.8,.2,1), box-shadow 300ms cubic-bezier(.2,.8,.2,1), transform 220ms ease;
+  will-change: transform, box-shadow, background, color;
+}
+
+.follow-btn .icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 300ms cubic-bezier(.2,.8,.2,1), color 220ms ease, opacity 220ms ease;
+  will-change: transform, opacity;
+}
+
+.follow-btn .reveal.label {
+  transform-origin: left center;
+  transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease, max-width 320ms cubic-bezier(.2,.8,.2,1);
+  will-change: transform, opacity, max-width;
+}
+
+/* Explicit states to ensure consistent visuals */
+.follow-btn.not-following { background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); }
+.follow-btn.following { background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 20%)); color: #fff; border-color: transparent; box-shadow: 0 8px 28px color-mix(in srgb, var(--primary), transparent 60%); transform: translateY(-2px); }
+.follow-btn.following .icon { transform: translateY(-2px) scale(1.02); }
+.follow-btn.not-following .icon { transform: translateY(0) scale(1); }
+
+/* Entrance / exit micro-animations triggered by JS classes */
+@keyframes followIn {
+  0% { transform: translateY(0) scale(0.98); opacity: 0.0; filter: blur(2px); }
+  60% { transform: translateY(-6px) scale(1.06); opacity: 1; filter: blur(0); }
+  100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
+@keyframes unfollowOut {
+  0% { transform: translateY(-2px) scale(1); opacity: 1; }
+  60% { transform: translateY(-4px) scale(0.985); opacity: 0.86; }
+  100% { transform: translateY(0) scale(0.99); opacity: 0.98; }
+}
+.following-anim {
+  animation: followIn 420ms cubic-bezier(.2,.9,.2,1);
+}
+.unfollow-anim {
+  animation: unfollowOut 420ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* ensure label reveal behavior remains snappy but smooth */
+.follow-btn.not-following .reveal.label { transform: translateX(-6px) scale(.98); opacity: 0; max-width: 0; overflow: hidden; }
+.follow-btn.following .reveal.label { transform: translateX(0) scale(1); opacity: 1; max-width: 160px; }
+
+/* Default: collapsed (icon-only) unless explicitly expanded.
+   Use max-width animation (not width) so expansions/collapses animate smoothly
+   even when the expanded size is intrinsically determined. Sequence label
+   fade/contract before the container shrinks to avoid clipping/glitching. */
+.follow-btn {
+  --icon-size: 36px;
+  --max-expanded: 220px; /* reasonable cap for the expanded pill */
+  /* unify expand & collapse so animations are symmetric */
+  --follow-duration: 260ms;
+  --follow-ease: cubic-bezier(.22,.9,.28,1);
+  --expand-ease: var(--follow-ease);
+  --collapse-ease: var(--follow-ease);
+  --shrink-delay: 0ms; /* no delay: collapse should match expand */
+  --grow-delay: 0ms;
+
+  /* Keep height fixed for perfect circle in collapsed state */
+  height: var(--icon-size);
+  min-height: var(--icon-size);
+  padding-left: 0;
+  padding-right: 0;
+
+  /* Use max-width so we can animate between icon-only and pill smoothly */
+  max-width: var(--icon-size);
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+
+  /* animate container max-width & padding using unified duration/easing */
+  transition: max-width var(--follow-duration) var(--follow-ease) var(--grow-delay),
+              padding var(--follow-duration) var(--follow-ease) var(--grow-delay),
+              box-shadow var(--follow-duration) var(--follow-ease), background var(--follow-duration) var(--follow-ease), transform var(--follow-duration) var(--follow-ease);
+}
+
+.follow-btn .reveal.label {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
+  margin-left: 8px;
+
+  /* start hidden and contracted in collapsed state */
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(6px) scale(.98);
+
+  /* synchronize label fade/transform with container max-width so collapse is one step */
+  transition: opacity var(--follow-duration) var(--follow-ease) 0ms, transform var(--follow-duration) var(--follow-ease) 0ms, max-width var(--follow-duration) var(--follow-ease) 0ms;
+}
+
+.follow-btn.expanded {
+  /* allow the pill to grow to the capped expanded width */
+  max-width: var(--max-expanded);
+  padding-left: 12px;
+  padding-right: 14px;
+  height: var(--icon-size);
+  /* expansion uses unified follow duration/easing for symmetry */
+  transition: max-width var(--follow-duration) var(--follow-ease) 0ms, padding var(--follow-duration) var(--follow-ease) 0ms, box-shadow var(--follow-duration) var(--follow-ease);
+}
+.follow-btn.expanded .reveal.label { max-width: 220px; opacity: 1; transform: translateX(0) scale(1); }
+
+/* Keep the icon centered visually */
+.follow-btn .icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn { transition: none !important; }
+}
+
+/* Ensure collapsed icon is truly centered: reset any translate transforms
+   and make the inner svg a block-level element with an explicit size. */
+.follow-btn:not(.expanded) {
+  box-sizing: border-box;
+  padding: 0 !important;
+}
+.follow-btn:not(.expanded) .icon {
+  transform: none !important; /* avoid micro-transforms that nudge icon */
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.follow-btn .icon svg {
+  display: block; /* remove inline baseline shifts */
+  width: 18px; height: 18px;
+}
+
+/* Collapsed follow button: keep icon centered with flexbox and animate width
+   when expanding/collapsing. The label animates via opacity + max-width so it
+   fades and contracts before the button shrinks. Avoid absolute positioning
+   to prevent layout jumps during the transition. */
+.follow-btn {
+  --icon-size: 36px;
+  --width-delay: 0ms; /* can be overridden by collapsed state */
+  height: var(--icon-size);
+  min-height: var(--icon-size);
+  padding-left: 0;
+  padding-right: 0;
+  width: var(--icon-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+  transition: width var(--follow-duration) var(--follow-ease) var(--width-delay), padding var(--follow-duration) var(--follow-ease), box-shadow var(--follow-duration) var(--follow-ease), background var(--follow-duration) var(--follow-ease);
+}
+.follow-btn .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+.follow-btn .icon svg { display: block; width: 18px; height: 18px; }
+.follow-btn.expanded {
+  width: auto;
+  padding-left: 12px;
+  padding-right: 14px;
+  height: var(--icon-size);
+  --width-delay: 0ms;
+}
+/* Contracted label state: fade & contract quickly. When NOT expanded we
+   sequence container shrink after the label transition to avoid overlap. */
+.follow-btn:not(.expanded) .reveal.label {
+  /* fade & contract in sync with the container (no separate shrink delay) */
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--follow-duration) var(--collapse-ease) 0ms, transform var(--follow-duration) var(--collapse-ease) 0ms, max-width var(--follow-duration) var(--collapse-ease) 0ms;
+}
+
+/* ensure the collapsed container waits before shrinking so the label can finish */
+.follow-btn:not(.expanded) {
+  /* collapse the container in sync with the label with no artificial delay */
+  transition: max-width 260ms var(--collapse-ease) 0ms, padding 220ms var(--collapse-ease) 0ms, box-shadow 220ms ease, background 220ms ease, transform 220ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; animation: none !important; transform: none !important; }
+}
+
+/* Remove the visual ring/outline for collapsed (icon-only) follow buttons.
+   This prevents the ::after border or glow from appearing around the small
+   follow/unfollow icon while preserving the ring for expanded/pill states
+   where the label is visible. Use high-specificity and !important to win
+   over earlier theme-specific rules. */
+.follow-btn:not(.expanded)::after,
+.follow-btn:not(.expanded).following::after,
+.follow-btn:not(.expanded).following-anim::after,
+.follow-btn:not(.expanded).unfollow-anim::after,
+.btn.following:not(.expanded)::after {
+  display: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also remove the button's own border for the collapsed icon-only state so
+   the small circular icon appears without any surrounding stroke. Keep this
+   scoped to follow-style buttons only. */
+.follow-btn:not(.expanded),
+.follow-btn:not(.expanded).not-following,
+.btn.following:not(.expanded),
+.btn.follow-btn:not(.expanded),
+.follow-btn:not(.expanded)[aria-pressed],
+.follow-btn:not(.expanded)[aria-pressed="true"] {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Extra high-specificity rules to cover other legacy/utility selectors and
+   pseudo-elements that might draw an outline (e.g. .btn::before or theme
+   overrides). This forces no visible ring for icon-only follow buttons. */
+button.follow-btn:not(.expanded),
+.card .follow-btn:not(.expanded),
+.card-head .follow-btn:not(.expanded),
+.user-link + .follow-btn:not(.expanded),
+.profile-actions .follow-btn:not(.expanded),
+.follow-btn.icon-reveal:not(.expanded) {
+  border: 0 !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
+}
+
+/* Hide pseudo-elements that can look like a border/ring */
+.follow-btn:not(.expanded)::after,
+.follow-btn:not(.expanded)::before,
+.card .follow-btn:not(.expanded)::after,
+.card .follow-btn:not(.expanded)::before,
+.follow-btn.icon-reveal:not(.expanded)::after,
+.follow-btn.icon-reveal:not(.expanded)::before {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also ensure any focus halos are suppressed for mouse/touch where not focus-visible */
+.follow-btn:not(.expanded):focus:not(:focus-visible),
+.follow-btn:not(.expanded).following:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ------------------------------------------------------------------
+   Remove outline/ring for expanded (pill) follow buttons as requested.
+   Keep the visual fill/color of the pill (background/foreground) but
+   remove any outline, border stroke, pseudo-element rings, and focus
+   halos so the pill displays without the extra ring.
+   ------------------------------------------------------------------ */
+.follow-btn.expanded,
+.follow-btn.expanded.not-following,
+.follow-btn.expanded.following,
+.follow-btn.expanded.following-anim,
+.follow-btn.expanded.unfollow-anim,
+.btn.following.expanded,
+.card .follow-btn.expanded,
+.profile-actions .follow-btn.expanded,
+.follow-btn.expanded[aria-pressed],
+.follow-btn.expanded[aria-pressed="true"] {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  outline: none !important;
+  background-clip: padding-box !important;
+}
+
+/* Hide any pseudo-elements that create a ring/halo for expanded follow buttons */
+.follow-btn.expanded::after,
+.follow-btn.expanded::before,
+.follow-btn.expanded.following::after,
+.follow-btn.expanded.following::before,
+.follow-btn.expanded.following-anim::after,
+.follow-btn.expanded.unfollow-anim::after,
+.card .follow-btn.expanded::after,
+.profile-actions .follow-btn.expanded::after {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Remove focus halos for mouse/touch on expanded state; preserve :focus-visible
+   behavior unless the app explicitly wants to keep a halo — the user asked
+   to remove the outline so suppress both. */
+.follow-btn.expanded:focus,
+.follow-btn.expanded:focus-visible,
+.follow-btn.expanded.following:focus,
+.follow-btn.expanded.following:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent label/icon color from transitioning (causes a flash/invert effect
+   when the pill expands/collapses). Only animate background, transform,
+   opacity and max-width so the text remains stable. */
+.follow-btn,
+.follow-btn.expanded,
+.follow-btn.not-following,
+.follow-btn.following {
+  /* Explicitly list the properties we want to animate; include max-width and padding
+     so the follow pill can expand/collapse smoothly. Avoid animating color here. */
+  transition: max-width 260ms var(--follow-ease),
+              padding 260ms var(--follow-ease),
+              background 260ms cubic-bezier(.22,.9,.28,1),
+              box-shadow 260ms cubic-bezier(.22,.9,.28,1),
+              transform 220ms ease !important;
+}
+
+.follow-btn .reveal.label {
+  color: inherit !important; /* keep label color stable */
+  transition: opacity var(--follow-duration) var(--follow-ease) 0ms,
+              transform var(--follow-duration) var(--follow-ease) 0ms,
+              max-width var(--follow-duration) var(--follow-ease) 0ms !important;
+}
+
+.follow-btn .icon,
+.follow-btn .icon svg {
+  color: inherit !important; /* avoid icon color flashes */
+  transition: transform 220ms var(--follow-ease), opacity 220ms ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; }
+}
+
+/* Prevent follow button from creating a perceived depth shift on hover/active/click
+   Some earlier rules applied translateY or box-shadow to provide a lift effect.
+   The following overrides neutralize those transforms and shadows so the button
+   doesn't visually push itself in/out when interacted with. We still allow
+   color/background changes for feedback but avoid any translate/box-shadow. */
+.follow-btn,
+.follow-btn:hover,
+.follow-btn:focus,
+.follow-btn:focus-visible,
+.follow-btn:active,
+.follow-btn[aria-pressed],
+.follow-btn.following,
+.follow-btn.expanded {
+  transform: none !important;
+  -webkit-transform: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+
+.follow-btn .icon,
+.follow-btn.following .icon,
+.follow-btn .reveal.label {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+/* Keep subtle non-positional feedback (color/opacity) while avoiding depth changes */
+.follow-btn:hover,
+.follow-btn:focus-visible {
+  /* use color change only for hover/focus feedback */
+  opacity: 0.98;
+}
+
+/* Collapsed follow button: keep inline-flex so layout doesn't jump between
+   display modes. Use max-width + overflow to animate between icon-only and
+   expanded pill smoothly. This avoids abrupt display changes which cause
+   instant snapping on collapse. */
+.follow-btn:not(.expanded) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* keep the container constrained via max-width so the transition can animate */
+  width: auto !important;
+  max-width: var(--icon-size, 36px) !important;
+  height: var(--icon-size, 36px) !important;
+  min-width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.follow-btn:not(.expanded) .icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.follow-btn:not(.expanded) .icon svg {
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
 }
 
 /* Edit/Delete icon-reveal buttons: reuse the same icon reveal behavior as follow */
@@ -3769,4 +4245,47 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
     animation: none;
     background: var(--bg-elev);
   }
+}
+
+/* Final override: ensure follow button uses max-width sequencing and not the
+   older width-based rules that can cause an instantaneous snap. Placed at
+   the end of the stylesheet so it wins in the cascade. */
+.follow-btn {
+  /* let width be auto; control visible size via max-width for smooth animation */
+  width: auto !important;
+  max-width: var(--icon-size, 36px) !important;
+  overflow: hidden !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* collapse in a single synchronized step (no shrink delay) */
+  transition: max-width var(--follow-duration) var(--collapse-ease) 0ms,
+              padding var(--follow-duration) var(--collapse-ease) 0ms,
+              box-shadow var(--follow-duration) var(--collapse-ease),
+              background var(--follow-duration) var(--collapse-ease) !important;
+}
+
+.follow-btn.expanded {
+  max-width: var(--max-expanded, 220px) !important;
+  padding-left: 12px !important;
+  padding-right: 14px !important;
+  transition: max-width var(--follow-duration) var(--expand-ease) 0ms,
+              padding var(--follow-duration) var(--expand-ease) 0ms !important;
+}
+
+.follow-btn:not(.expanded) {
+  max-width: var(--icon-size, 36px) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.follow-btn:not(.expanded) .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--follow-duration) var(--collapse-ease) 0ms, transform var(--follow-duration) var(--collapse-ease) 0ms, max-width var(--follow-duration) var(--collapse-ease) 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; animation: none !important; transform: none !important; }
 }

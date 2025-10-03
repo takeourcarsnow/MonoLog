@@ -126,8 +126,38 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
       }
       if (editTimerRef.current) { try { window.clearTimeout(editTimerRef.current); } catch (_) {} editTimerRef.current = null; }
       if (deleteExpandTimerRef.current) { try { window.clearTimeout(deleteExpandTimerRef.current); } catch (_) {} deleteExpandTimerRef.current = null; }
+      if (followExpandTimerRef.current) { try { window.clearTimeout(followExpandTimerRef.current); } catch (_) {} followExpandTimerRef.current = null; }
+      if (followAnimTimerRef.current) { try { window.clearTimeout(followAnimTimerRef.current); } catch (_) {} followAnimTimerRef.current = null; }
     };
   }, []);
+
+  // Listen for follow changes triggered elsewhere (ProfileView) so this
+  // PostCard can animate when its user's follow state changes externally.
+  useEffect(() => {
+    const onFollowChanged = (e: any) => {
+      try {
+        const changedUserId = e?.detail?.userId;
+        const following = !!e?.detail?.following;
+        if (!changedUserId) return;
+        if (changedUserId !== post.userId) return;
+        if (followInFlightRef.current) return; // ignore if we initiated it
+
+        setIsFollowing(prev => {
+          if (prev === following) return prev;
+          // expand the button briefly so label shows while we animate
+          setFollowExpanded(true);
+          if (followExpandTimerRef.current) { try { window.clearTimeout(followExpandTimerRef.current); } catch (_) {} followExpandTimerRef.current = null; }
+          followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
+          setFollowAnim(following ? 'following-anim' : 'unfollow-anim');
+          if (followAnimTimerRef.current) { try { window.clearTimeout(followAnimTimerRef.current); } catch (_) {} followAnimTimerRef.current = null; }
+          followAnimTimerRef.current = window.setTimeout(() => { setFollowAnim(null); followAnimTimerRef.current = null; }, 420);
+          return following;
+        });
+      } catch (_) { /* ignore */ }
+    };
+    if (typeof window !== 'undefined') window.addEventListener('monolog:follow_changed', onFollowChanged as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:follow_changed', onFollowChanged as any); };
+  }, [post.userId]);
 
   // Some mobile browsers apply focus after touch/click events (timing can be
   // inconsistent). Add a capture-phase focusin listener and document-level
@@ -335,6 +365,9 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   const followInFlightRef = useRef(false);
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
   const [followAnim, setFollowAnim] = useState<'following-anim' | 'unfollow-anim' | null>(null);
+  const [followExpanded, setFollowExpanded] = useState(false);
+  const followExpandTimerRef = useRef<number | null>(null);
+  const followAnimTimerRef = useRef<number | null>(null);
 
   const userLine = useMemo(() => {
     const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
@@ -844,7 +877,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                 <>
                   <button
                     ref={followBtnRef}
-                    className={`btn follow-btn icon-reveal ${isFollowing ? 'following' : 'not-following'} ${followAnim || ''}`}
+                    className={`btn follow-btn icon-reveal ${isFollowing ? 'following' : 'not-following'} ${followAnim || ''} ${followExpanded ? 'expanded' : ''}`}
                     aria-pressed={isFollowing}
                     onClick={async () => {
                       const cur = await api.getCurrentUser();
@@ -857,6 +890,10 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                       const prev = !!isFollowing;
                       // optimistic UI flip
                       setIsFollowing(!prev);
+                      // Expand the follow button to show label briefly, then collapse back
+                      setFollowExpanded(true);
+                      if (followExpandTimerRef.current) { window.clearTimeout(followExpandTimerRef.current); followExpandTimerRef.current = null; }
+                      followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
                       // trigger a small pop animation (use existing CSS animation hooks)
                       const willFollow = !prev;
                       setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');

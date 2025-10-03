@@ -17,14 +17,11 @@ Profile section: Consider further optimizations if needed
 - If issues persist, may need to investigate tab switching animation performance
 
 Maybe we should say "log" instead of "post" throughout the app for consistency
-when rotating crop in so theres no empty canvas
 
 
-photo editor should subtly blur in
-text turns from confirm to delete in delete button
 Turn off background focus effect on edit post button 
 
-Zoom in when rotating image
+when rotating crop in so theres no empty canvas
 Remove click effect from reset settings button 
 
 Discard draft button is white with red outline in light theme instead of red

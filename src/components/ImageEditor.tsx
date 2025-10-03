@@ -287,6 +287,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const dashOffsetRef = useRef<number>(0);
   const dashAnimRef = useRef<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  // Track transient press state for the reset button so it reacts from the default "pressed" look
+  const [resetActive, setResetActive] = useState(false);
+  // Track transient press state for the other header buttons so they share the same interaction
+  const [cancelActive, setCancelActive] = useState(false);
+  const [confirmActive, setConfirmActive] = useState(false);
   // default behavior: drag to create/move crop selection.
   const cropRatio = useRef<number | null>(null); // null = free
   // default behavior: drag to create/move crop selection.
@@ -1594,19 +1599,87 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           {/* rotate buttons removed from header */}
 
           {/* Cancel (ghost) */}
-          <button type="button" className="btn icon ghost" onClick={onCancel} aria-label="Cancel edits">
+          <button
+            type="button"
+            className="btn icon ghost"
+            onClick={onCancel}
+            aria-label="Cancel edits"
+            onPointerDown={() => setCancelActive(true)}
+            onPointerUp={() => setCancelActive(false)}
+            onPointerCancel={() => setCancelActive(false)}
+            onPointerLeave={() => setCancelActive(false)}
+            onKeyDown={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setCancelActive(true); }}
+            onKeyUp={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setCancelActive(false); }}
+            style={{
+              padding: 8,
+              borderRadius: 999,
+              background: 'color-mix(in srgb, var(--bg-elev) 98%, white)',
+              boxShadow: cancelActive ? 'inset 0 3px 8px rgba(0,0,0,0.12)' : '0 6px 18px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)',
+              transform: cancelActive ? 'translateY(2px)' : 'translateY(-1px)',
+              border: '1px solid color-mix(in srgb, var(--border) 80%, transparent)',
+              transition: 'transform 160ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease'
+            }}
+          >
             <X size={16} aria-hidden />
             <span className="sr-only">Cancel edits</span>
           </button>
 
-          {/* Reset adjustments (match follow button visual) */}
-          <button type="button" className="btn icon ghost" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">
+          {/* Reset adjustments (always visually 'pressed' / selected) */}
+          <button
+            type="button"
+            className="btn icon ghost"
+            title="Reset adjustments"
+            onClick={resetAdjustments}
+            aria-label="Reset adjustments"
+            aria-pressed={true}
+            onPointerDown={() => setResetActive(true)}
+            onPointerUp={() => setResetActive(false)}
+            onPointerCancel={() => setResetActive(false)}
+            onPointerLeave={() => setResetActive(false)}
+            onKeyDown={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setResetActive(true); }}
+            onKeyUp={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setResetActive(false); }}
+            style={{
+              // Keep the button visually as-if pressed once: subtle depressed/inset look
+              padding: 8,
+              borderRadius: 999,
+              background: 'color-mix(in srgb, var(--bg-elev) 98%, white)',
+              // non-active: lifted/hovering look (drop shadow & slight upward offset)
+              // active: inset/depressed look with stronger inset shadow and downward offset
+              // Subtle hover (lifted) vs subtle press (inset) styling
+              boxShadow: resetActive ? 'inset 0 3px 8px rgba(0,0,0,0.12)' : '0 6px 18px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)',
+              transform: resetActive ? 'translateY(2px)' : 'translateY(-1px)',
+              border: '1px solid color-mix(in srgb, var(--border) 80%, transparent)',
+              transition: 'transform 160ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease'
+            }}
+          >
             <RefreshCw size={16} aria-hidden />
             <span className="sr-only">Reset adjustments</span>
           </button>
 
           {/* Confirm (match other icon buttons - subtle) */}
-          <button type="button" className={`btn icon ghost`} onClick={applyEdit} aria-pressed={isEdited} aria-label="Confirm edits" title="Confirm edits">
+          <button
+            type="button"
+            className={`btn icon ghost`}
+            onClick={applyEdit}
+            aria-pressed={isEdited}
+            aria-label="Confirm edits"
+            title="Confirm edits"
+            onPointerDown={() => setConfirmActive(true)}
+            onPointerUp={() => setConfirmActive(false)}
+            onPointerCancel={() => setConfirmActive(false)}
+            onPointerLeave={() => setConfirmActive(false)}
+            onKeyDown={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setConfirmActive(true); }}
+            onKeyUp={(e) => { if ((e as any).key === ' ' || (e as any).key === 'Enter') setConfirmActive(false); }}
+            style={{
+              padding: 8,
+              borderRadius: 999,
+              background: 'color-mix(in srgb, var(--bg-elev) 98%, white)',
+              boxShadow: confirmActive ? 'inset 0 3px 8px rgba(0,0,0,0.12)' : '0 6px 18px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)',
+              transform: confirmActive ? 'translateY(2px)' : 'translateY(-1px)',
+              border: '1px solid color-mix(in srgb, var(--border) 80%, transparent)',
+              transition: 'transform 160ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease'
+            }}
+          >
             <Check size={16} aria-hidden />
             <span className="sr-only">Confirm edits</span>
           </button>

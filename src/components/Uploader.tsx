@@ -727,85 +727,63 @@ function UploaderCore() {
             </div>
           ) : null}
           {/* Keep the preview DOM mounted to avoid layout shifts when opening the editor. */}
-          {editing && pathname === '/upload' && (dataUrls[editingIndex] || dataUrl) ? (
-            <Portal>
-              <div
-                role="dialog"
-                aria-modal="true"
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 12,
-                  boxSizing: 'border-box',
-                  zIndex: 10001,
-                  background: 'color-mix(in srgb, var(--bg) 88%, rgba(0,0,0,0.32))',
-                  backdropFilter: 'blur(6px)'
-                }}
-                onClick={() => setEditing(false)}
-              >
-                <div style={{ width: '100%', maxWidth: 960, margin: '0 auto', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - (72px + var(--safe-bottom, 12px)) - 24px)', overflow: 'auto', paddingRight: 6, paddingBottom: 'calc(var(--safe-bottom, 12px) + 12px)' }}>
-                    <ImageEditor
-                      initialDataUrl={(originalDataUrls[editingIndex] || originalDataUrls[0] || dataUrls[editingIndex] || dataUrl) as string}
-                      initialSettings={editorSettings[editingIndex] || {}}
-                      onCancel={() => setEditing(false)}
-                      onApply={async (newUrl, settings) => {
-                        setAlt(prev => {
-                          if (Array.isArray(prev)) {
-                            const copy = [...prev];
-                            copy[editingIndex] = editingAlt || "";
-                            return copy;
-                          }
-                          if (dataUrls.length > 1) {
-                            const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
-                            return arr;
-                          }
-                          return editingAlt || "";
-                        });
-                        setEditorSettings(prev => {
-                          const copy = [...prev];
-                          while (copy.length <= editingIndex) copy.push({});
-                          copy[editingIndex] = settings;
-                          return copy;
-                        });
-                        setEditing(false);
-                        setProcessing(true);
-                        try {
-                          const compressed = await compressImage(newUrl as any);
-                          setDataUrls(d => {
-                            const copy = [...d];
-                            copy[editingIndex] = compressed;
-                            return copy;
-                          });
-                          if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
-                          setCompressedSize(approxDataUrlBytes(compressed));
-                          setOriginalSize(approxDataUrlBytes(newUrl));
-                        } catch (e) {
-                          console.error(e);
-                          setDataUrls(d => {
-                            const copy = [...d];
-                            copy[editingIndex] = newUrl as string;
-                            return copy;
-                          });
-                          if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
-                          setCompressedSize(approxDataUrlBytes(newUrl as string));
-                        } finally {
-                          setProcessing(false);
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Portal>
-          ) : null}
+          {/* ImageEditor moved inline into the main form below — keep preview DOM unchanged here. */}
 
-          {/* Render the preview content as before — keep it mounted even while the editor is open. */}
+          {/* Render either the ImageEditor inline (replacing the visible photo) or the preview content. */}
           <>
-            {dataUrls.length > 1 ? (
+            {editing && pathname === '/upload' && (dataUrls[editingIndex] || dataUrl) ? (
+              <div style={{ width: '100%' }}>
+                <ImageEditor
+                  initialDataUrl={(originalDataUrls[editingIndex] || originalDataUrls[0] || dataUrls[editingIndex] || dataUrl) as string}
+                  initialSettings={editorSettings[editingIndex] || {}}
+                  onCancel={() => setEditing(false)}
+                  onApply={async (newUrl, settings) => {
+                    setAlt(prev => {
+                      if (Array.isArray(prev)) {
+                        const copy = [...prev];
+                        copy[editingIndex] = editingAlt || "";
+                        return copy;
+                      }
+                      if (dataUrls.length > 1) {
+                        const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
+                        return arr;
+                      }
+                      return editingAlt || "";
+                    });
+                    setEditorSettings(prev => {
+                      const copy = [...prev];
+                      while (copy.length <= editingIndex) copy.push({});
+                      copy[editingIndex] = settings;
+                      return copy;
+                    });
+                    setProcessing(true);
+                    try {
+                      const compressed = await compressImage(newUrl as any);
+                      setDataUrls(d => {
+                        const copy = [...d];
+                        copy[editingIndex] = compressed;
+                        return copy;
+                      });
+                      if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
+                      setCompressedSize(approxDataUrlBytes(compressed));
+                      setOriginalSize(approxDataUrlBytes(newUrl));
+                    } catch (e) {
+                      console.error(e);
+                      setDataUrls(d => {
+                        const copy = [...d];
+                        copy[editingIndex] = newUrl as string;
+                        return copy;
+                      });
+                      if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
+                      setCompressedSize(approxDataUrlBytes(newUrl as string));
+                    } finally {
+                      setProcessing(false);
+                      setEditing(false);
+                    }
+                  }}
+                />
+              </div>
+            ) : dataUrls.length > 1 ? (
                   <div style={{ width: '100%' }}>
                     <div className="carousel-wrapper" tabIndex={0} onKeyDown={(e) => {
                       if (e.key === 'ArrowLeft') setIndex(i => Math.max(0, i - 1));

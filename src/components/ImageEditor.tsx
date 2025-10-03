@@ -286,18 +286,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           const info = computeImageLayout();
           if (info) {
             setOffset({ x: info.left, y: info.top });
-
-    // when opening the Filters category, suppress the highlight transition for the initial placement
-    useEffect(() => {
-      if (selectedCategory === 'color') {
-        suppressFilterTransitionRef.current = true;
-        // re-enable transitions after the initial layout settles
-        const t = window.setTimeout(() => { suppressFilterTransitionRef.current = false; }, 220);
-        return () => window.clearTimeout(t);
-      }
-      // ensure flag is off when leaving
-      suppressFilterTransitionRef.current = false;
-    }, [selectedCategory]);
             draw(info);
           } else {
             draw();

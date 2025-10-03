@@ -31,5 +31,3 @@ Discard draft button is white with red outline in light theme instead of red
 
 ? when im on desktop hide the navbar when i enter photo editor
 make reset crop work
-
-add ability to export photos to your device not just to post it 

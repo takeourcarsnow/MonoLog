@@ -2,15 +2,4741 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import modular CSS files */
-@import './styles/variables.css';
-@import './styles/base.css';
-@import './styles/layout.css';
-@import './styles/components.css';
-@import './styles/forms.css';
-@import './styles/animations.css';
-@import './styles/calendar.css';
-@import './styles/grid.css';
-@import './styles/profile.css';
-@import './styles/toolbar.css';
-@import './styles/follow.css';
+/* --- MonoLog original CSS + variables (kept) --- */
+:root {
+  color-scheme: light dark;
+
+  --bg: #ffffff;
+  --bg-elev: #f7f7f9;
+  --text: #0f0f10;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-weak: #dbeafe;
+  --accent: #22c55e;
+  --danger: #ef4444;
+  --border: #e5e7eb;
+  --shadow: 0 8px 28px rgba(0,0,0,.08);
+
+
+  /* Inline preloader used inside the calendar day feed — subtle, low-contrast */
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 18px;
+
+  --transition-fast: 160ms ease;
+  --transition-mid: 260ms cubic-bezier(.2,.7,.2,1);
+  --maxw: 800px;
+
+  /* toggle indicator color (light default) */
+  --auth-toggle-indicator: rgba(0,0,0,0.06);
+
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+/* calendar selected-day header animation */
+.day-header-anim {
+  animation: day-header-in 260ms var(--preloader-ease-quick) both;
+  will-change: transform, opacity;
+}
+
+@keyframes day-header-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Header favorites button: when the Favorites page is active, fill the header star */
+.header .favorites-btn.active svg {
+  fill: #FFD700;
+  stroke: rgba(0,0,0,0.48);
+  stroke-width: 1.8px;
+}
+/* Dark theme header star outline */
+:root[data-theme="dark"] .header .favorites-btn.active svg {
+  stroke: rgba(255,255,255,0.22);
+}
+
+/* About header button active styling: match favorites look so it becomes colored when active */
+.header .about-btn.active svg {
+  /* subtle pastel blue (softer than the favorites gold) */
+  /* pastel background for the svg area */
+  fill: #A7D1FF;
+  /* Make the icon strokes more visible: use primary color with reduced opacity
+     so the lines read clearly against the pastel background */
+  stroke: color-mix(in srgb, var(--primary), rgba(0,0,0,0.18));
+  stroke-width: 1.8px;
+}
+
+/* Also raise the effective icon color (for icons using currentColor) */
+.header .about-btn.active {
+  color: color-mix(in srgb, var(--primary), rgba(0,0,0,0.06));
+}
+/* Dark theme about button outline */
+:root[data-theme="dark"] .header .about-btn.active svg {
+  /* stronger light stroke in dark theme for readability */
+  stroke: rgba(255,255,255,0.9);
+  stroke-width: 1.6px;
+}
+
+
+/* Prefer the user's OS preference only when no explicit saved preference exists - handled in JS init */
+:root[data-theme="dark"] {
+  --bg: #0c0c0e;
+  --bg-elev: #141418;
+  --text: #f7f7f7;
+  --muted: #9ca3af;
+  --primary: #60a5fa;
+  --primary-weak: #0b2547;
+  --accent: #34d399;
+  --danger: #f87171;
+  --border: #1f2937;
+  --shadow: 0 8px 30px rgba(0,0,0,.35);
+  /* darker theme toggle indicator */
+  --auth-toggle-indicator: rgba(255,255,255,0.04);
+}
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-elev: #f7f7f9;
+  --text: #0f0f10;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-weak: #dbeafe;
+  --accent: #22c55e;
+  --danger: #ef4444;
+  --border: #e5e7eb;
+  --shadow: 0 8px 28px rgba(0,0,0,.08);
+  --auth-toggle-indicator: rgba(0,0,0,0.06);
+}
+
+/* support projects that toggle dark mode by adding a `dark` class to the html element */
+.dark {
+  --auth-toggle-indicator: rgba(255,255,255,0.04);
+}
+
+* { box-sizing: border-box; }
+/* Prevent any accidental horizontal overflow (fixes unwanted horizontal scrollbar on desktop) */
+html, body { 
+  height: 100%; 
+  overflow-x: hidden; 
+  overscroll-behavior-x: none;
+  overflow-y: auto;
+}
+html {
+  /* Enable smooth overscroll behavior */
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+body {
+  margin: 0; 
+  background: var(--bg); 
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  line-height: 1.45;
+  /* Enable font smoothing for better text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Optimize text rendering */
+  text-rendering: optimizeLegibility;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; height: auto; display: block; image-orientation: from-image; }
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--primary);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 999px;
+  z-index: 9999;
+}
+.skip-link:focus {
+  left: 12px;
+  top: 8px;
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary), transparent 60%);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+#app-root {
+  min-height: 100dvh;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 1;
+}
+
+.app-content {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.header {
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: saturate(180%) blur(8px);
+  background: color-mix(in srgb, var(--bg), transparent 10%);
+  border-bottom: 1px solid var(--border);
+  padding-top: var(--safe-top);
+}
+.header-inner {
+  max-width: var(--maxw); margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px; justify-content: space-between;
+  /* Ensure the header never expands beyond its container (prevents
+     long inline labels from increasing the app width on small screens). */
+  width: 100%;
+  box-sizing: border-box;
+}
+.brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.brand .logo {
+  width: 28px; height: 28px; border-radius: 8px; background: var(--text); position: relative; overflow: hidden;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.brand .logo::after {
+  content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg);
+}
+.brand:hover .logo {
+  transform: rotate(5deg) scale(1.05);
+}
+.brand .logo.animate-bounce {
+  animation: logo-bounce 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes logo-bounce {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(0.92) rotate(-8deg); }
+  60% { transform: scale(1.08) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.2px; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; }
+/* allow header action group to shrink when space is tight (prevents
+  the header from growing wider than the viewport when account text
+  is present). */
+.header-actions { min-width: 0; }
+
+/* Normalize header action button heights so icon-only and text buttons match */
+.header-actions .btn {
+  height: 36px; /* match .btn.icon width/height for visual consistency */
+  padding: 0 12px; /* vertical padding removed since height is fixed */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Keep existing square sizing for icon variant; remove extra horizontal padding */
+.header-actions .btn.icon {
+  padding: 0; /* .btn.icon already sets fixed size; zero padding ensures perfect circle */
+}
+
+/* Account switcher button: prevent long usernames from expanding the header.
+   Keep avatar fixed size and clamp the label with ellipsis. */
+.account-switcher .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* allow truncation */
+  padding: 6px 10px; /* slightly smaller touch target for header */
+}
+.account-switcher .btn img.avatar {
+  width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;
+}
+.account-switcher .btn span {
+  display: inline-block;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn {
+  appearance: none; border: 1px solid var(--border); background: var(--bg-elev);
+  color: var(--text); padding: 8px 12px; border-radius: 999px;
+  font-size: 14px; line-height: 1; cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+.btn:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.btn.primary { 
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 20%)); 
+  color: #fff; 
+  border-color: transparent;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--primary), transparent 70%);
+}
+.btn.primary:hover {
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--primary), transparent 60%);
+}
+.btn.ghost { background: transparent; border-color: var(--border); }
+.btn.icon { padding: 8px; width: 36px; height: 36px; display: grid; place-items: center; }
+
+.content {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  width: 100%;
+  padding: 12px 12px calc(76px + var(--safe-bottom));
+}
+.upload-empty .content { padding-bottom: 28px; }
+.content { position: relative; /* allow certain header elements to overflow (e.g. avatar shadows) */ overflow: visible; }
+
+/* Strong page-level override when uploader has an active preview (JS toggles
+  `body.uploader-has-preview`). This lives immediately after the base
+  `.content` so it reliably overrides earlier padding. Adjust to taste. */
+body.uploader-has-preview .content {
+  padding-bottom: calc(28px + var(--safe-bottom)) !important;
+}
+
+/* Debug outline: add `document.body.classList.add('debug-uploader-outline')`
+  in browser console to reveal outlines for the main containers while
+  debugging the remaining vertical gap. Remove the class when done. */
+body.debug-uploader-outline .content { outline: 3px dashed rgba(255,0,0,0.95); }
+body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); }
+body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
+
+/* Page slide: support swipe-to-navigate with smooth transforms. We keep
+   a single .page-slide element and animate its transform/opacity on
+   navigation or during pointer/touch drags. Respect prefers-reduced-motion
+   by disabling translations for users who opt out. */
+.content > .page-slide {
+  position: relative;
+  will-change: transform, opacity;
+  transition: transform .26s var(--transition-mid), opacity .26s var(--transition-mid);
+  transform: translateX(0);
+}
+
+/* directional classes used by JS navigation (enter/exit states) */
+.content.slide-left > .page-slide { transform: translateX(-100%); opacity: 0.92; }
+.content.slide-right > .page-slide { transform: translateX(100%); opacity: 0.92; }
+.content.slide-enter-left > .page-slide { transform: translateX(100%); }
+.content.slide-enter-right > .page-slide { transform: translateX(-100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .content > .page-slide { transition: opacity 120ms linear; transform: none !important; }
+}
+
+.tabbar {
+  position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
+  /* Raise z-index above editor/portal overlays (these use up to 99999) so the
+     navigation bar remains the top-most interactive element. */
+  z-index: 100001;
+  /* Force no transform so it won't be affected visually if an ancestor has a transform */
+  transform: none !important;
+  -webkit-transform: none !important;
+  background: color-mix(in srgb, var(--bg), transparent 6%);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  padding-bottom: var(--safe-bottom);
+}
+.tabbar-inner {
+  max-width: var(--maxw);
+  margin: 0 auto; padding: 6px 8px; /* tighter padding */
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; /* 5 columns so Post sits center */
+}
+.tab-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  color: var(--muted); font-size: 12px; padding: 4px 2px;
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  overflow: visible;
+  /* Add smooth transitions for all interactive states */
+  transition: color 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tab-item span { 
+  line-height: 1; 
+  /* Subtle label animation on tab switch */
+  opacity: 0.7;
+  transform: translateY(0);
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tab-item[aria-current="page"] { 
+  color: var(--text); 
+  font-weight: 700; 
+}
+.tab-item[aria-current="page"] span {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+.tab-item .ic {
+  width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center;
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              color 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative; z-index: 2; /* sit above the moving indicator */
+  will-change: transform;
+}
+/* Add subtle breathing animation to icons */
+.tab-item .ic svg {
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke-width 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              /* ensure the stroke/color animate smoothly (avoids inheriting a
+                 transient ancestor color like white when toggling active state) */
+              stroke 320ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 320ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* default (inactive) icon color/stroke so the icon doesn't briefly
+    inherit a different color from a parent during class toggles */
+  color: var(--muted);
+  stroke: var(--muted);
+  opacity: 1;
+}
+/* Active tab - organic lift with gentle bounce */
+.tab-item[aria-current="page"] .ic {
+  transform: translateY(-6px); /* slightly lift the icon when active */
+  /* avoid setting a global `color` on the container (.ic) which would be
+     inherited by the SVG (lucide icons use currentColor). Setting the
+     visible stroke/color on the SVG itself avoids a brief white flash when
+     aria-current is removed and the container's color transitions. */
+  animation: iconBounce 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes iconBounce {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-8px) scale(1.08); }
+  60% { transform: translateY(-5px) scale(0.98); }
+  100% { transform: translateY(-6px) scale(1); }
+}
+/* Inactive tabs - subtle hover feedback */
+/* Hover / pointer-fine only interactions: prevent sticky hover colors on touch devices. */
+@media (hover: hover) and (pointer: fine) {
+  .tab-item:not([aria-current="page"]):hover .ic {
+    transform: translateY(-2px) scale(1.05);
+  }
+  .tab-item:not([aria-current="page"]):hover .ic svg {
+    stroke-width: 2.2;
+  }
+  .tab-item:not([aria-current="page"]):hover span {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  /* Remove background highlight, use color instead */
+
+  /* Unique colors for each navbar tab using data attributes */
+  /* Feed - Blue */
+  .tab-item[data-tab="feed"]:hover:not([aria-current="page"]) .ic svg {
+    color: #3b82f6;
+    stroke: #3b82f6;
+  }
+  /* Explore - Purple */
+  .tab-item[data-tab="explore"]:hover:not([aria-current="page"]) .ic svg {
+    color: #a855f7;
+    stroke: #a855f7;
+  }
+  /* Post - Green/Accent */
+  .tab-item[data-tab="post"]:hover:not([aria-current="page"]) .ic svg {
+    color: #22c55e;
+    stroke: #22c55e;
+  }
+  /* Calendar - Orange */
+  .tab-item[data-tab="calendar"]:hover:not([aria-current="page"]) .ic svg {
+    color: #f59e0b;
+    stroke: #f59e0b;
+  }
+  /* Profile - Pink */
+  .tab-item[data-tab="profile"]:hover:not([aria-current="page"]) .ic svg {
+    color: #ec4899;
+    stroke: #ec4899;
+  }
+}
+/* Active (aria-current) colored states remain outside media query so they apply everywhere */
+.tab-item[data-tab="feed"][aria-current="page"] .ic svg {
+  color: #3b82f6;
+  stroke: #3b82f6;
+  filter: drop-shadow(0 0 10px #3b82f6) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.5));
+}
+.tab-item[data-tab="explore"][aria-current="page"] .ic svg {
+  color: #a855f7;
+  stroke: #a855f7;
+  filter: drop-shadow(0 0 10px #a855f7) drop-shadow(0 2px 4px rgba(168, 85, 247, 0.5));
+}
+.tab-item[data-tab="post"][aria-current="page"] .ic svg {
+  color: #22c55e;
+  stroke: #22c55e;
+  filter: drop-shadow(0 0 10px #22c55e) drop-shadow(0 2px 4px rgba(34, 197, 94, 0.5));
+}
+.tab-item[data-tab="calendar"][aria-current="page"] .ic svg {
+  color: #f59e0b;
+  stroke: #f59e0b;
+  filter: drop-shadow(0 0 10px #f59e0b) drop-shadow(0 2px 4px rgba(245, 158, 11, 0.5));
+}
+.tab-item[data-tab="profile"][aria-current="page"] .ic svg {
+  color: #ec4899;
+  stroke: #ec4899;
+  filter: drop-shadow(0 0 10px #ec4899) drop-shadow(0 2px 4px rgba(236, 72, 153, 0.5));
+}
+
+/* Update indicator color based on active tab - subtle shades */
+.tab-indicator[data-active-tab="feed"] {
+  background: rgba(59, 130, 246, 0.12);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+.tab-indicator[data-active-tab="explore"] {
+  background: rgba(168, 85, 247, 0.12);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.1);
+}
+.tab-indicator[data-active-tab="post"] {
+  background: rgba(34, 197, 94, 0.12);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+}
+.tab-indicator[data-active-tab="calendar"] {
+  background: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+}
+.tab-indicator[data-active-tab="profile"] {
+  background: rgba(236, 72, 153, 0.12);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.1);
+}
+
+/* Subtle color on hover for inactive tabs (pointer-fine only) */
+@media (hover: hover) and (pointer: fine) {
+  .tab-item:not([aria-current="page"]):hover .ic svg {
+    opacity: 0.8;
+    transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                stroke 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                stroke-width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+.tab-item[aria-current="page"] .ic svg {
+  transition: color 320ms cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 320ms cubic-bezier(0.4, 0, 0.2, 1),
+              filter 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              stroke 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active state press feedback */
+.tab-item:active .ic {
+  transform: translateY(-4px) scale(0.95);
+}
+/* Ripple effect on tap */
+.tab-item::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, 
+    color-mix(in srgb, var(--primary), transparent 70%) 0%, 
+    transparent 70%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.tab-item.ripple::before {
+  animation: tabRipple 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes tabRipple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.5;
+  }
+  50% {
+    width: 80px;
+    height: 80px;
+    opacity: 0.3;
+  }
+  100% {
+    width: 100px;
+    height: 100px;
+    opacity: 0;
+  }
+}
+/* Improve contrast for icons (including emoji or image-based icons).
+   - add a subtle drop shadow to all icons so they read against both light and colored backgrounds
+   - for active icons (on the colored indicator) add a light halo/text-shadow to increase perceived contrast
+   - slightly scale the active icon for a clearer visual cue */
+.tab-item .ic,
+.tab-item .ic img,
+.tab-item .ic svg {
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.08));
+  -webkit-font-smoothing: antialiased;
+}
+.tab-item[aria-current="page"] .ic {
+  transform: translateY(-6px) scale(1.06);
+  /* Color is now set by individual tab rules for unique colors */
+  text-shadow: 0 1px 0 rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* make the active label smaller and centered under the raised icon */
+.tab-item[aria-current="page"] {
+  padding-top: 2px; /* reduce top padding so label sits closer to icon */
+}
+
+/* extra breathing room so raised icon doesn't overlap the border */
+.tabbar { padding-top: 8px; }
+
+/* Moving indicator for bottom nav: sits behind active tab and animates between positions */
+.tabbar-inner { position: relative; }
+/* Circular sliding indicator that moves behind icons. Positioned using left
+   and a CSS variable for top so it can sit under the icon row. */
+.tab-indicator {
+  position: absolute;
+  left: 0;
+  top: var(--indicator-top, 6px);
+  width: 44px; height: 44px; border-radius: 999px;
+  /* Subtle background with reduced opacity and softer shadow */
+  background: rgba(var(--primary-rgb, 59, 130, 246), 0.12);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.08);
+  pointer-events: none;
+  transform-origin: center;
+  opacity: 0;
+  /* Enhanced spring-based physics for organic movement */
+  transition: left 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              width 420ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              opacity 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 380ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 380ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1; /* behind icons (icons have z-index:2) */
+  will-change: left, transform;
+}
+/* Light mode: previous indicator was low contrast on very light backgrounds. Increase saturation, add subtle ring & strengthen active label weight. */
+:root[data-theme="light"] .tab-indicator,
+/* also apply when no explicit dark theme attribute is present */
+:root:not([data-theme="dark"]) .tab-indicator {
+  background: rgba(59, 130, 246, 0.1);
+  /* Subtle shadow for depth without being too prominent */
+  box-shadow: 0 2px 8px rgba(37,99,235,0.12), 0 4px 12px -2px rgba(37,99,235,0.15);
+}
+:root[data-theme="light"] .tab-item[aria-current="page"],
+:root:not([data-theme="dark"]) .tab-item[aria-current="page"] { color: #0f0f10; font-weight: 700; }
+/* Light mode active icon: icons now use their unique colors in both light and dark mode */
+:root[data-theme="light"] .tab-item[aria-current="page"] .ic,
+:root:not([data-theme="dark"]) .tab-item[aria-current="page"] .ic {
+  /* reduce the bright white halo which made icons look washed out; keep a
+     subtle drop shadow for depth */
+  text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+/* Slightly stronger inner highlight behind icon to lift it */
+:root[data-theme="light"] .tab-indicator::after,
+:root:not([data-theme="dark"]) .tab-indicator::after {
+  /* use a subtle darker tint for the inner glow so a dark glyph keeps good contrast */
+  background: rgba(0,0,0,0.06);
+  filter: blur(10px);
+}
+.tab-indicator.visible { 
+  opacity: 1; 
+  animation: indicatorFadeIn 360ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  /* keep final animation state so removing/adding other animations doesn't
+     briefly revert opacity/transform and cause a visual flicker */
+  animation-fill-mode: both;
+}
+@keyframes indicatorFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(2px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.tab-indicator.pop { 
+  /* Subtle pop animation - more refined and less prominent */
+  animation: indicatorPop 380ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  /* ensure the pop keeps its final transform while the element remains in
+     this state so toggling classes doesn't produce a flash */
+  animation-fill-mode: both;
+}
+@keyframes indicatorPop {
+  0% { 
+    transform: scale(1) translateY(0); 
+  }
+  40% { 
+    transform: scale(1.04) translateY(-2px); 
+  }
+  70% { 
+    transform: scale(0.98) translateY(-1px); 
+  }
+  100% { 
+    transform: scale(1) translateY(0); 
+  }
+}
+
+/* When both the visible (fade) and pop animations are applied we want them
+   to run together rather than one overriding the other. Define a combined
+   animation so the fade animation isn't inadvertently restarted when the
+   pop class is toggled which caused the flicker at animation end. */
+.tab-indicator.visible.pop,
+.tab-indicator.pop.visible {
+  animation: indicatorFadeIn 360ms cubic-bezier(0.34, 1.2, 0.64, 1),
+             indicatorPop 380ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  animation-fill-mode: both, both;
+}
+
+/* soft center highlight in the indicator to raise icon contrast (very subtle) */
+.tab-indicator::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 28px; height: 28px; border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* when user prefers reduced motion, use a simple fade without translate/scale */
+@media (prefers-reduced-motion: reduce) {
+  .tab-indicator { 
+    transition: opacity 120ms linear; 
+    transform: none !important; 
+    animation: none !important;
+  }
+  .tab-item .ic,
+  .tab-item span,
+  .tab-item::before,
+  .tab-item::after {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .tab-item[aria-current="page"] .ic {
+    transform: translateY(-6px); /* keep the lift but no animation */
+  }
+}
+
+.feed {
+  display: grid;
+  gap: 14px;
+  /* center feed/explore content to match the app's main max width */
+  max-width: var(--maxw);
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  /* keep a small horizontal padding so full-bleed slides don't touch the edges */
+  padding: 0 12px 80px 12px; /* Added 80px bottom padding for space above navbar */
+}
+.card {
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  /* Changed from overflow:hidden to visible to avoid 1px vertical cropping
+     of contained media at certain desktop zoom levels due to fractional
+     rounding between image height and card box. Media-specific clipping
+     still handled inside .card-media which retains overflow hidden. */
+  overflow: visible;
+  transform: translateY(4px); opacity: 0; animation: in 460ms var(--transition-mid) forwards;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  
+  /* Performance optimizations */
+  contain: layout style paint;
+  content-visibility: auto;
+}
+@keyframes in {
+  to { transform: translateY(0); opacity: 1; }
+}
+.view-fade { 
+  animation: viewFade 280ms var(--transition-mid) both;
+}
+@keyframes viewFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.comment-item.new { animation: commentIn 360ms cubic-bezier(.2,.8,.2,1); }
+@keyframes commentIn { from { opacity: 0; transform: translateY(6px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* animate removed comments: fade out and slide up slightly */
+.comment-item.removing {
+  animation: commentOut 320ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes commentOut {
+  from { opacity: 1; transform: translateY(0) scale(1); height: auto; }
+  to { opacity: 0; transform: translateY(-6px) scale(.995); height: 0; margin: 0; padding: 0; }
+}
+
+.btn { transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; }
+.btn:active { transform: translateY(1px) scale(.997); }
+
+.follow-btn.pulse { animation: pulse 420ms ease; }
+@keyframes pulse { 0% { transform: scale(.98); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+.card-head {
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 10px 12px; 
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-elev), transparent 10%);
+  flex-wrap: nowrap; /* Prevent wrapping on mobile */
+  min-width: 0; /* Allow flex children to shrink */
+}
+
+/* Subtle, card-scoped button micro-interactions (used on About and other card actions) */
+.card .btn {
+  transition: transform 160ms var(--transition-mid), box-shadow 200ms var(--transition-mid), background 140ms ease;
+  padding: 10px 14px; /* slightly larger touch target inside cards */
+}
+.card .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+}
+.card .btn.primary:hover {
+  box-shadow: 0 10px 28px rgba(37,99,235,0.10), 0 1px 4px rgba(0,0,0,0.04) inset;
+}
+.card .btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary), transparent 88%), 0 6px 18px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+.card .btn:active {
+  transform: translateY(1px) scale(.997);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+/* Icon reveal buttons: show a small icon and gently reveal the text on hover/focus
+  or when JS toggles the `.expanded` class (used to reveal labels on click). */
+.icon-reveal { display: inline-flex; align-items: center; gap: 8px; overflow: hidden; }
+.icon-reveal .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; transition: transform 220ms var(--transition-mid), opacity 220ms var(--transition-fast); }
+.icon-reveal .reveal { display: inline-block; transform-origin: left center; transition: transform 260ms var(--transition-mid), opacity 220ms var(--transition-fast), max-width 260ms var(--transition-mid); opacity: 1; white-space: nowrap; max-width: 120px; overflow: hidden; }
+
+/* default: slightly hide the reveal label on compact buttons to emphasize the icon */
+.icon-reveal:not(.primary) .reveal { transform: translateX(-6px) scale(0.98); opacity: 0; max-width: 0; }
+
+.icon-reveal:hover .icon,
+.icon-reveal:focus .icon { transform: translateY(-3px) scale(1.06); }
+.icon-reveal:hover .reveal,
+.icon-reveal:focus .reveal { transform: translateX(0) scale(1); opacity: 1; max-width: 120px; }
+
+/* Explicit expanded state: reveal label when JS toggles .expanded */
+.icon-reveal.expanded .reveal { transform: translateX(0) scale(1); opacity: 1; max-width: 220px; }
+
+/* make primary buttons slightly more pronounced */
+.btn.primary.icon-reveal .reveal { font-weight: 700; }
+
+/* keep motion minimal for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .icon-reveal .icon, .icon-reveal .reveal, .icon-reveal:hover .icon, .icon-reveal:focus .icon, .icon-reveal:hover .reveal, .icon-reveal:focus .reveal { transition: none !important; transform: none !important; }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .card .btn, .card .btn:hover, .card .btn:focus { transition: none; transform: none; box-shadow: none; }
+}
+.avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.user-line { 
+  display: flex; 
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* Allow flex item to shrink below content size */
+  flex: 1; /* Take available space */
+  overflow: hidden; /* Contain overflowing text */
+}
+.username { 
+  font-weight: 700; 
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.dim { 
+  color: var(--muted); 
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.card-media img {
+  width: 100%; height: auto; display: block;
+  background: #00000008; opacity: 0; transition: opacity 220ms ease;
+}
+.card-media img.loaded { opacity: 1; }
+
+.card-media {
+  background: #00000006;
+  /* Keep the media container clipping for rounded frame, while parent
+     .card now uses overflow:visible to prevent fractional cropping. */
+  overflow: hidden;
+  max-width: 100%;
+  /* center media (single images) horizontally inside the card */
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+/* Subtle frame for photos in feed / explore
+   - uses an inset 1px ring to emulate a photo frame without changing layout
+   - applies to single images, carousel slides, and grid tiles
+*/
+.card-media img,
+.carousel-slide img,
+.grid .tile img {
+  border-radius: 10px;
+  background-clip: padding-box; /* keep the inset ring sharp */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border), transparent 58%), 0 8px 20px rgba(0,0,0,0.04);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+/* Slightly emphasize the frame on hover/focus for affordance without being loud */
+.card:hover .card-media img,
+.card-media:hover img,
+.grid .tile:hover img,
+.carousel-slide img:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border), transparent 40%), 0 12px 30px rgba(0,0,0,0.06);
+}
+
+/* Carousel: horizontally scrollable set of images for posts with multiple images */
+.card-media .carousel {
+  display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+}
+.card-media .carousel img {
+  flex: 0 0 100%; scroll-snap-align: center; width: 100%; height: auto; object-fit: contain; display: block;
+}
+
+/* Controlled transform-based carousel for posts (better UX than free horizontal scroll) */
+.carousel-wrapper { position: relative; overflow: hidden; }
+.carousel-wrapper { touch-action: pan-y; }
+.carousel-track {
+  display: flex; transition: transform 320ms cubic-bezier(.2,.8,.2,1); width: 100%; will-change: transform;
+}
+.carousel-slide { flex: 0 0 100%; display: flex; align-items: center; justify-content: center; }
+.carousel-slide img { width: 100%; height: auto; object-fit: contain; display: block; }
+
+/* arrows */
+.carousel-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+  background: color-mix(in srgb, var(--bg), transparent 60%); border: 1px solid var(--border);
+  width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08); color: var(--text); font-size: 22px; line-height: 1;
+  opacity: 0; pointer-events: none; transition: opacity 180ms var(--transition-fast), transform 180ms var(--transition-fast);
+}
+.carousel-arrow.left { left: 8px; }
+.carousel-arrow.right { right: 8px; }
+.carousel-arrow:hover { transform: translateY(-50%) scale(1.03); }
+
+/* Edge hover areas: reveal arrows when user is hovering near the left/right edges */
+.carousel-wrapper { position: relative; }
+.carousel-wrapper:focus { outline: none; }
+.edge-area {
+  position: absolute; top: 0; bottom: 0; width: 14%; z-index: 5; background: transparent;
+  /* don't block clicks on slide content (Edit button) */
+  pointer-events: none;
+}
+.edge-area.left { left: 0; }
+.edge-area.right { right: 0; }
+
+/* When hovering the left/right edge, reveal the corresponding arrow */
+.edge-area.left:hover ~ .carousel-track + .carousel-arrow.left,
+.carousel-wrapper:hover .edge-area.left:hover ~ .carousel-track + .carousel-arrow.left {
+  opacity: 1; pointer-events: auto;
+}
+.edge-area.right:hover ~ .carousel-track + .carousel-arrow.right,
+.carousel-wrapper:hover .edge-area.right:hover ~ .carousel-track + .carousel-arrow.right {
+  opacity: 1; pointer-events: auto;
+}
+
+/* Also reveal arrows when wrapper is focused (keyboard users) or hovered overall */
+.carousel-wrapper:focus .carousel-arrow,
+.carousel-wrapper:hover .carousel-arrow {
+  opacity: 0.9; pointer-events: auto;
+}
+
+/* dots */
+.carousel-dots { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; display: flex; gap: 8px; z-index: 11; }
+.carousel-dots .dot {
+  width: 8px; height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--bg-elev), transparent 40%); border: 1px solid var(--border); padding: 0; cursor: pointer;
+}
+.carousel-dots .dot.active { background: var(--primary); border-color: transparent; box-shadow: 0 6px 18px rgba(0,0,0,0.12); transform: scale(1.15); }
+
+/* make arrows and dots smaller on small screens */
+@media (max-width: 640px) {
+  .carousel-arrow { width: 34px; height: 34px; font-size: 20px; }
+  .carousel-dots .dot { width: 7px; height: 7px; }
+}
+
+/* Desktop: cap feed/explore card image height so single posts don't fill the
+   whole viewport at normal browser zoom. Keeps images large but prevents the
+   'zoomed in' feeling on wide screens. Mobile rules above remain unchanged. */
+/* Desktop image sizing: previously 64vh could cause fractional rounding
+   at certain desktop zoom levels (esp. 100% on some displays) leading to
+   a 1px vertical crop because the container was overflow:hidden while
+   the intrinsic image computed a slightly larger pixel height. Give a
+   little headroom (+2vh) and also cap by available dynamic viewport
+   height minus a conservative chrome offset so tall landscape windows
+   still keep images comfortably sized. Use dvh so browser UI changes
+   (URL bar hide/show) on some platforms don't cause jumpy resizes. */
+@media (min-width: 900px) {
+  :root { --chrome-offset: 220px; }
+  .card-media {
+    /* allow the card to size to the image but not exceed viewport height */
+    max-height: min(66vh, calc(100dvh - var(--chrome-offset)));
+    display: block;
+    /* avoid inadvertent vertical clipping; we still hide horizontal overflow for carousel drag */
+    overflow-y: visible;
+    overflow-x: hidden;
+  }
+
+  .card-media img,
+  .card-media .carousel img,
+  .carousel-slide img {
+    /* respect image aspect ratio while constraining height */
+    max-height: min(66vh, calc(100dvh - var(--chrome-offset)));
+    max-width: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* keep carousel slides vertically centered when images are constrained */
+  .carousel-slide { align-items: center; justify-content: center; }
+}
+
+/* Make profile avatar a bit smaller on narrow screens so header actions fit */
+@media (max-width: 640px) {
+  .profile-avatar { width: 56px; height: 56px; border-radius: 12px; }
+}
+
+/* Uploader-specific carousel/thumbnail layout to avoid interfering with post card styles */
+.uploader .preview-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.uploader .preview-inner .carousel { width: 100%; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.uploader .preview-inner .carousel > div { flex: 0 0 100%; scroll-snap-align: center; position: relative; }
+.uploader .thumbs { display: flex; gap: 8px; margin-top: 8px; justify-content: center; align-items: center; }
+.uploader .thumbs button { padding: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.uploader .thumbs img { width: 72px; height: 72px; object-fit: cover; display: block; }
+
+.card:hover {
+  transform: translateY(0);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.12);
+  border-color: color-mix(in srgb, var(--primary), transparent 84%);
+}
+
+.card:focus-within { outline: none; }
+
+/* Prefer showing the card outline only when a descendant is keyboard-focused.
+   Uses :has() to detect a focus-visible descendant; browsers that don't support
+   :has() will still hide the mouse-click halo (fallback above) while keyboard
+   users retain a visible ring where supported. */
+.card:has(:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.card-body { padding: 10px 12px; display: grid; gap: 10px; }
+.caption {
+  font-size: 15px;
+  font-family: 'Patrick Hand', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  line-height: 1.35;
+  text-align: center;
+  /* allow long captions/newlines to wrap */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.action {
+  display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
+  font-size: 13px; cursor: pointer; padding: 6px 8px; border-radius: 8px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.action:hover { background: color-mix(in srgb, var(--primary-weak), transparent 70%); color: var(--text); }
+
+/* Tap / press feedback for action icons */
+/* Ensure svgs inherit color and animate smoothly */
+.action svg { width: 18px; height: 18px; display: inline-block; vertical-align: middle; transition: transform 160ms var(--transition-fast), opacity 160ms var(--transition-fast), color 200ms var(--transition-fast), stroke 200ms var(--transition-fast); color: inherit; }
+
+/* Subtle press scale and color change for most actions (but not overriding favorite active state) */
+.action:active { transform: translateY(1px) scale(0.992); }
+.action:not(.favorite):active { color: var(--primary); }
+.action:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 4px; border-radius: 8px; }
+
+/* Also provide a tiny hover/press lift on pointer devices */
+@media (hover: hover) and (pointer: fine) {
+  .action:hover { transform: translateY(-2px); }
+}
+
+/* Favorite (star) animation and color feedback */
+.action.favorite { transition: transform 220ms var(--transition-mid), color 220ms var(--transition-mid); }
+.action.favorite .star { display: inline-block; font-size: 16px; line-height: 1; transition: transform 220ms cubic-bezier(.2,.8,.2,1), color 220ms var(--transition-mid), text-shadow 220ms var(--transition-mid); color: color-mix(in srgb, var(--muted), transparent 20%); }
+.action.favorite.active { color: #FFD700; }
+.action.favorite.active .star { animation: starPop 420ms cubic-bezier(.2,.8,.2,1); color: #FFD700; text-shadow: 0 6px 18px rgba(255,215,0,0.18); }
+.action.favorite.active svg { 
+  fill: currentColor; 
+  /* thicker darker outline so the yellow star reads on light backgrounds */
+  stroke: rgba(0,0,0,0.48);
+  stroke-width: 1.8px;
+}
+
+/* Dark theme: use a lighter stroke for contrast on dark backgrounds */
+:root[data-theme="dark"] .action.favorite.active svg {
+  stroke: rgba(255,255,255,0.22);
+  stroke-width: 1.8px;
+}
+/* share action */
+.action.share { opacity: 0.82; transition: opacity 180ms var(--transition-mid), transform 200ms var(--transition-mid); }
+.action.share:hover { opacity: 1; }
+.action.share:active { transform: scale(.9); }
+
+/* Double-tap favorite overlay */
+.favorite-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  pointer-events: none;
+  z-index: 100;
+  will-change: transform, opacity;
+}
+
+.favorite-overlay.adding {
+  color: #FFD700;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.2), 0 0 20px rgba(255,215,0,0.4);
+  animation: favoriteAdd 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.favorite-overlay.removing {
+  color: #999;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  animation: favoriteRemove 500ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+@keyframes favoriteAdd {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.5); 
+    opacity: 0; 
+  }
+  30% {
+    opacity: 1;
+  }
+  60% { 
+    transform: translate(-50%, -50%) scale(1.08); 
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1) translateY(-8px); 
+    opacity: 0; 
+  }
+}
+
+@keyframes favoriteRemove {
+  0% { 
+    transform: translate(-50%, -50%) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(0.3); 
+    opacity: 0; 
+  }
+}
+
+@keyframes starPop {
+  0% { transform: scale(0.9) rotate(-6deg); }
+  40% { transform: scale(1.18) rotate(6deg); }
+  70% { transform: scale(0.98) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Comments open/close animation
+   Notes:
+   - Animating `grid-template-rows: 1fr` -> `0fr` can be janky in some browsers
+     because `fr` units are not interpolated smoothly. Switch to a max-height
+     + opacity approach for consistent, organic open/close timing.
+   - JavaScript will set an inline `max-height` to the element's scrollHeight
+     when opening/closing so the transition is accurate for content of any size.
+*/
+.comments {
+  /* collapsed by default */
+  max-height: 0px;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.comments > * {
+  /* ensure inner wrapper doesn't overflow visually during the transition */
+  overflow: hidden;
+}
+.comments.open {
+  /* visible state; JS will typically set an inline max-height equal to the
+     actual content height for a smooth transition. The CSS fallback max-height
+     keeps things working even if JS is disabled. */
+  opacity: 1;
+  max-height: 800px; /* fallback - should be larger than typical comment panes */
+}
+
+.comment-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.input {
+  width: 100%; border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+}
+.input:focus { outline: 2px solid color-mix(in srgb, var(--primary), transparent 60%); border-color: var(--primary); }
+.bio-editor {
+  width: 100%; border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+  /* prevent the user from manually resizing the textarea (we control sizing via grid/CSS) */
+  resize: none;
+  /* allow internal scrolling if content overflows the configured height */
+  overflow: auto;
+}
+.input-wrapper { position: relative; }
+.input-ghost-placeholder {
+  position: absolute;
+  left: 12px; right: 12px; top: 50%; transform: translateY(-50%);
+  pointer-events: none; color: color-mix(in srgb, var(--muted), transparent 12%);
+  font-size: 14px; line-height: 1; overflow: hidden; white-space: nowrap;
+}
+.input-ghost-placeholder { display: flex; align-items: center; gap: 6px; }
+.input-ghost-placeholder .typewriter {
+  display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--muted), transparent 8%);
+}
+.input-ghost-placeholder .caret {
+  color: color-mix(in srgb, var(--muted), transparent 12%);
+  opacity: 0.95;
+  animation: blinkCaret 900ms steps(1) infinite;
+  font-weight: 700;
+}
+
+@keyframes blinkCaret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input-ghost-placeholder .typewriter { animation: none; border-right: none; }
+}
+.comment-list { display: grid; gap: 6px; }
+.comment-item { font-size: 14px; }
+.comment-item .author { font-weight: 700; margin-right: 6px; }
+
+.comment-list { display: grid; gap: 10px; }
+.comment-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; background: color-mix(in srgb, var(--bg-elev), transparent 6%); border: 1px solid var(--border); }
+.comment-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; flex: 0 0 36px; }
+.comment-body { display: block; min-width: 0; }
+.comment-head { display:flex; gap:8px; align-items:center; margin-bottom:4px; }
+.comment-text { 
+  font-size: 14px; 
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Appear animation for comment items (staggered) */
+.appear { opacity: 0; transform: translateY(6px) scale(.998); animation: appearIn 300ms cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes appearIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* Skeleton placeholder styles */
+.skeleton { background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); color: transparent; pointer-events: none; }
+.skeleton .comment-avatar { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 6%), color-mix(in srgb, var(--bg-elev), transparent 2%)); border-radius: 10px; }
+.skeleton-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); }
+.skeleton-line { height: 12px; border-radius: 8px; margin-bottom: 8px; background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); }
+.skeleton-author { width: 110px; height: 14px; margin-right: 8px; display: inline-block; }
+.skeleton-time { width: 40px; height: 12px; display: inline-block; }
+.skeleton-text { width: 100%; height: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .appear { animation: none; opacity: 1; transform: none; }
+}
+
+.comment-box { display:flex; gap:8px; align-items:center; }
+.comment-box .input { flex: 1 1 auto; border-radius: 999px; padding: 10px 14px; }
+.comment-box .btn.primary { border-radius: 999px; padding: 8px 12px; }
+
+/* Remove the strong blue outline/halo specifically for the comment input when focused.
+   Keep global focus styles for other controls, but avoid the heavy highlight for this
+   compact input to match the desired look. */
+.comment-box .input:focus,
+.comment-box .input:focus-visible {
+  outline: none;
+  box-shadow: none;
+  /* keep a subtle border change for affordance if you want, otherwise keep base border */
+  border-color: var(--border);
+}
+
+/* Confirm-once delete badge: first click enters .confirming state (tinted danger)
+   second click proceeds with removal. Auto-cancels after a short timeout. */
+.comment-badge.confirming {
+  background: color-mix(in srgb, var(--danger), var(--bg-elev) 8%);
+  border-color: color-mix(in srgb, var(--danger), transparent 72%);
+  color: #fff;
+  transform: scale(1.04);
+  /* intentionally no glow/drop-shadow to keep the confirm visual subtle */
+}
+.comment-badge.confirming svg { stroke: #fff; color: #fff; filter: none; }
+
+/* Inline post delete button confirming state: first click toggles confirming,
+   second click (within timeout) proceeds. Visual matches comment confirm style. */
+.delete-btn.confirming {
+  /* Use a semi-opaque background-color (animatable) instead of a gradient so
+     entering and exiting the confirming state can transition smoothly. */
+  background-color: color-mix(in srgb, var(--danger), var(--bg-elev) 14%) !important;
+  /* keep the visible label readable against the tinted background */
+  color: var(--text) !important;
+  /* ensure the border and background remain visible even though we globally
+     suppress button backgrounds for edit/delete — use !important to win */
+  border-color: color-mix(in srgb, var(--danger), transparent 72%) !important;
+  transform: scale(1.02);
+  will-change: transform, background-color, border-color, opacity;
+}
+.delete-btn.confirming .icon { color: var(--danger) !important; }
+
+/* Ensure the confirming label remains visible even when the button is collapsed
+   and always reads "Confirm". We visually hide the original label text and
+   render a pseudo-element with the desired string so collapse/expand
+   transitions won't switch back to the default label. */
+.delete-btn.confirming .reveal.label {
+  /* override any collapsed-state rules */
+  max-width: 160px !important;
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  color: transparent !important; /* hide original text */
+  position: relative !important;
+}
+.delete-btn.confirming .reveal.label::after {
+  content: "Confirm";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+
+.comment-badge { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:6px; background:color-mix(in srgb, var(--bg-elev), transparent 20%); border-radius:8px; border:1px solid var(--border); color:var(--muted); }
+
+.empty {
+  padding: 32px 16px; text-align: center; color: var(--muted);
+}
+
+.uploader { display: grid; gap: 12px; }
+.drop {
+  border: 2px dashed var(--border);
+  padding: 16px; border-radius: var(--radius); text-align: center; color: var(--muted);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+  position: relative;
+}
+.drop.dragover { border-color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 70%); color: var(--text); }
+.drop-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.6));
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  border-radius: var(--radius);
+  color: var(--text);
+}
+.drop-loader svg {
+  color: var(--primary);
+}
+.preview { overflow: hidden; border-radius: var(--radius); }
+.preview img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
+
+/* Enhanced uploader styles */
+.drop { display: grid; place-items: center; min-height: 160px; cursor: pointer; }
+.drop-inner { display: grid; place-items: center; gap: 6px; }
+.drop-icon { width: 62px; height: 62px; border-radius: 18px; display: grid; place-items: center; font-weight: 700; color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 28%); border: 1px dashed color-mix(in srgb, var(--primary), transparent 70%); font-size: 28px; }
+.drop-text { font-weight: 600; }
+
+.preview { display: none; }
+.preview img { max-width: 100%; max-height: 480px; width: auto; height: auto; object-fit: contain; display: block; background: var(--bg); }
+.preview-inner { max-height: 480px; overflow: hidden; border-radius: 14px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.preview.editing { overflow: visible; }
+.preview-inner.editing { overflow: visible; z-index: 70; position: relative; }
+
+/* Desktop uploader tweaks: keep preview from growing so large it pushes
+  the publish/cancel controls offscreen at default browser zoom. Reserve
+  extra bottom padding when a preview exists and cap preview heights
+  relative to the viewport so buttons remain visible. */
+@media (min-width: 900px) {
+  /* Reserve more space at the bottom of the page when the uploader has a preview
+    so the tabbar and publish controls do not overlap the form at default zoom. */
+  /* Make more room at the bottom for the tabbar + action row so the publish
+    controls are unlikely to be occluded on tall images at 100% zoom. */
+  /* Reserve space equal to the fixed action bar height so page content
+    (caption input, etc.) doesn't get overlapped. The action bar is fixed
+    to the bottom and visually sits above the tabbar; keep container
+    padding in sync with the action bar height. */
+  .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
+
+  /* Aggressively cap preview height on desktop so the form controls remain
+    visible without requiring the user to scroll. */
+  /* Cap preview heights so the form controls remain visible without forcing
+    excessive empty space below the preview on desktop. Reduced chrome offset
+    prevents unnecessarily large gaps that create a vertical scrollbar. */
+  .uploader .preview-inner { max-height: min(40vh, calc(100dvh - 180px)); }
+  .uploader .preview img { max-height: min(40vh, calc(100dvh - 180px)); }
+
+  /* On wide screens, keep the normal layout spacing, but when a preview
+     exists show the uploader action row as a fixed, centered bar above
+     the bottom nav. This prevents reserving large blank space while
+     keeping controls accessible. */
+  .uploader .form-row { margin-top: 2px; }
+
+  .uploader.has-preview .form-row {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(12px + var(--safe-bottom));
+    z-index: 100002; /* must be above .tabbar (100001) */
+    width: min(calc(100% - 48px), var(--maxw));
+    height: 72px; /* reserve a consistent action bar height */
+    display: flex;
+    align-items: center; /* vertically center the buttons */
+    justify-content: space-between;
+   gap: 12px;
+   /* Keep layout/spacing but remove the visible rounded container so
+     buttons don't sit inside a separate box. */
+   background: transparent;
+   border-radius: 0;
+   padding: 0 6px; /* keep a little horizontal breathing room */
+   pointer-events: auto;
+   box-shadow: none;
+   z-index: 120000;
+  }
+}
+
+/* Spacer to prevent the fixed action bar from overlapping page content.
+   Adds an invisible block at the end of the uploader equal to the action
+   bar height + safe area so inputs are always visible above the fixed bar. */
+@media (min-width: 900px) {
+  .uploader.has-preview::after {
+    content: "";
+    display: block;
+    height: calc(32px + var(--safe-bottom));
+    width: 100%;
+    pointer-events: none;
+  }
+}
+
+/* Reduce the vertical gap between the caption input and action pills specifically
+   inside the uploader to make the controls feel more compact on desktop and mobile */
+.uploader .form-row { margin-top: 2px; gap: 6px; }
+
+/* Additional, page-scoped desktop override: prevent additive bottom padding
+   (from .content + .uploader) from creating excessive empty space on wide
+   screens. Keep the action row comfortably above the bottom nav. */
+@media (min-width: 900px) {
+  .content .uploader.has-preview { padding-bottom: calc(36px + var(--safe-bottom)) !important; }
+  .content .uploader .form-row { bottom: calc(12px + var(--safe-bottom)) !important; }
+}
+
+/* When the upload UI includes a preview, reduce the outer content padding so
+   the uploader controls don't create a large empty area. Use :has() to target
+   the page container when it contains the uploader. Modern Chromium browsers
+   support :has(); if the browser doesn't support it the fixed action bar
+   fallback will still keep controls accessible. */
+@media (min-width: 900px) {
+  .content:has(.uploader.has-preview) {
+    padding-bottom: calc(24px + var(--safe-bottom)) !important;
+  }
+}
+
+/* Fallback for browsers without :has() — toggled by the uploader JS */
+@media (min-width: 900px) {
+  body.uploader-has-preview .content { padding-bottom: calc(24px + var(--safe-bottom)) !important; }
+}
+
+.image-editor { z-index: 80; position: relative; }
+.preview:not(.hidden) { display: block; }
+
+/* Image action buttons (edit/change) - icon-only with animations */
+.image-actions { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 8px; z-index: 10; }
+.image-action-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px) saturate(140%); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; cursor: pointer; transition: all 240ms cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
+.image-action-btn svg { width: 20px; height: 20px; transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 180ms ease; }
+.image-action-btn:hover { transform: scale(1.08) translateY(-2px); background: rgba(0, 0, 0, 0.85); border-color: rgba(255, 255, 255, 0.25); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
+.image-action-btn:hover svg { transform: scale(1.1) rotate(-3deg); }
+.image-action-btn:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+.image-action-btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; }
+
+/* Specific button animations */
+.image-action-btn.edit-btn:hover svg { transform: scale(1.12) rotate(6deg); }
+.image-action-btn.change-btn:hover svg { transform: scale(1.12) translateY(-2px); }
+
+/* Light theme adjustments */
+:root[data-theme="light"] .image-action-btn { background: rgba(255, 255, 255, 0.92); color: var(--text); border-color: rgba(0, 0, 0, 0.08); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); }
+:root[data-theme="light"] .image-action-btn:hover { background: rgba(255, 255, 255, 0.98); border-color: rgba(0, 0, 0, 0.12); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16); }
+
+/* Mobile: slightly smaller icons */
+@media (max-width: 640px) {
+  .image-action-btn { width: 40px; height: 40px; }
+  .image-action-btn svg { width: 18px; height: 18px; }
+  .image-actions { right: 10px; bottom: 10px; gap: 6px; }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .image-action-btn, .image-action-btn svg { transition: none !important; }
+  .image-action-btn:hover { transform: none; }
+  .image-action-btn:hover svg { transform: scale(1); }
+}
+
+.form-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 6px; }
+.form-row .vis-label { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.visibility-select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+
+/* Segmented visibility buttons (Public / Private) */
+.form-row .vis-label .btn {
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  box-shadow: none;
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
+}
+.form-row .vis-label .btn:hover {
+  transform: translateY(-1px);
+}
+.form-row .vis-label .btn.active,
+.form-row .vis-label .btn[aria-pressed="true"] {
+  background: var(--primary);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--primary), transparent 70%);
+  transform: translateY(-6px);
+}
+.form-row .vis-label .btn:focus {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%);
+  outline-offset: 4px;
+}
+
+/* Visibility icon and subtle animation */
+.vis-icon { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 8px; position: relative; }
+.vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; color: currentColor; transition: opacity 180ms var(--transition-fast), transform 200ms var(--transition-fast); }
+/* default: show open eye for Public, hide closed eye */
+.form-row .vis-label button[data-type="public"] .vis-icon .eye-open { opacity: 1; transform: scale(1); }
+.form-row .vis-label button[data-type="public"] .vis-icon .eye-closed { opacity: 0; transform: scale(0.92) rotate(-6deg); }
+/* default: show closed eye for Private (muted) */
+.form-row .vis-label button[data-type="private"] .vis-icon .eye-open { opacity: 0.42; transform: scale(0.98); }
+.form-row .vis-label button[data-type="private"] .vis-icon .eye-closed { opacity: 0.9; transform: scale(1); }
+/* when active, swap to the correct icon and apply subtle motion */
+.form-row .vis-label button[data-type="public"][aria-pressed="true"] .vis-icon .eye-open {
+  opacity: 1; transform: scale(1) rotate(0deg);
+}
+.form-row .vis-label button[data-type="public"][aria-pressed="true"] .vis-icon .eye-closed {
+  opacity: 0; transform: scale(0.92) rotate(-6deg);
+}
+
+.form-row .vis-label button[data-type="private"][aria-pressed="true"] .vis-icon .eye-open {
+  opacity: 0; transform: scale(0.92) rotate(6deg);
+}
+.form-row .vis-label button[data-type="private"][aria-pressed="true"] .vis-icon .eye-closed {
+  opacity: 1; transform: scale(1) rotate(0deg);
+}
+
+/* active pill glow and lift */
+.form-row .vis-label .btn.active {
+  transform: translateY(-6px);
+  color: #fff;
+}
+.form-row .vis-label .btn.active .vis-icon svg { color: #fff; }
+.form-row .vis-label .btn.active::after {
+  content: "";
+  position: absolute;
+  inset: -8px; /* expand behind the pill */
+  border-radius: 999px;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--primary), transparent 40%), transparent 60%);
+  filter: blur(10px);
+  opacity: 0.95;
+  transition: opacity 220ms var(--transition-fast), transform 220ms var(--transition-fast);
+}
+
+/* Public active pill: strong primary color */
+.form-row .vis-label button[data-type="public"].active {
+  background: var(--primary);
+  border-color: transparent;
+}
+
+/* In light theme use dark text for the active visibility pill (pastel/weak primary)
+   but keep white text in dark theme for contrast. These selectors are placed
+   after the base rules to take precedence. */
+:root[data-theme="light"] .form-row .vis-label .btn.active,
+:root[data-theme="light"] .form-row .vis-label button[data-type="public"].active {
+  color: var(--text) !important;
+}
+:root[data-theme="light"] .form-row .vis-label .btn.active .vis-icon svg,
+:root[data-theme="light"] .form-row .vis-label button[data-type="public"].active .vis-icon svg {
+  color: var(--text) !important;
+}
+
+/* Also ensure the vis-toggle CSS variable used for color is dark in light theme
+   (vis-toggle uses --vis-color and applies it with !important). */
+:root[data-theme="light"] .vis-toggle.public,
+:root[data-theme="light"] .btn.vis-toggle.public,
+:root[data-theme="light"] .form-row .vis-label button[data-type="public"].active.vis-toggle {
+  --vis-color: var(--text) !important;
+}
+
+/* Private active pill: muted but still with visible accent */
+.form-row .vis-label button[data-type="private"].active {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), rgba(255,255,255,0.02)), color-mix(in srgb, var(--primary), transparent 92%));
+  border-color: transparent;
+}
+
+/* In light theme make Private active pill use dark text (match Public) */
+:root[data-theme="light"] .form-row .vis-label button[data-type="private"].active {
+  /* mix primary with the light background to produce a subtle blue pill */
+  background: color-mix(in srgb, var(--primary), var(--bg) 62%);
+  border-color: transparent;
+  box-shadow: 0 12px 30px rgba(37,99,235,0.10);
+  color: var(--text) !important;
+}
+
+/* Also ensure the vis-toggle CSS variable for private is dark in light theme */
+:root[data-theme="light"] .vis-toggle.private,
+:root[data-theme="light"] .btn.vis-toggle.private,
+:root[data-theme="light"] .form-row .vis-label button[data-type="private"].active.vis-toggle {
+  --vis-color: var(--text) !important;
+}
+
+/* Single toggle style for visibility (eye icon) */
+/* ensure vis-toggle overrides base .btn styles when both are present */
+.btn.vis-toggle,
+.vis-toggle {
+  /* use CSS vars so transitions are smooth between states */
+  --vis-bg: var(--bg-elev);
+  --vis-color: var(--text);
+  --vis-glow: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px; /* unified pill spacing */
+  min-height: var(--action-pill-height,42px);
+  border-radius: 999px;
+  background: var(--vis-bg) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--vis-color) !important;
+  position: relative;
+  transition: background 360ms cubic-bezier(.2,.8,.2,1), color 260ms var(--transition-fast), box-shadow 360ms cubic-bezier(.2,.8,.2,1), transform 220ms var(--transition-fast);
+}
+.vis-toggle::after {
+  /* remove the large outer halo completely to avoid double-outline */
+  display: none !important;
+}
+.vis-toggle .vis-icon { position: relative; width: 18px; height: 18px; display: inline-grid; place-items: center; }
+.vis-toggle .vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms var(--transition-fast); }
+
+.vis-toggle.public {
+  /* Public: blue-ish pill (active visible state) */
+  --vis-bg: color-mix(in srgb, var(--primary), var(--bg) 64%);
+  --vis-color: #fff;
+  --vis-glow: color-mix(in srgb, var(--primary), transparent 70%);
+  transform: none;
+  border-color: transparent;
+  box-shadow: none; /* remove strong outer shadow that looks like an outline */
+}
+
+/* Ensure the toggle does not show an outline or shadow when focused */
+.vis-toggle:focus,
+.vis-toggle:focus-visible,
+.btn.vis-toggle:focus,
+.btn.vis-toggle:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.vis-toggle.public .eye-open { opacity: 1; transform: translateY(0) scale(1); }
+.vis-toggle.public .eye-closed { opacity: 0; transform: translateY(-6px) scale(0.92) rotate(-6deg); }
+
+.vis-toggle.private {
+  /* Private: dark-ish pill (hidden/private state) */
+  --vis-bg: color-mix(in srgb, rgba(0,0,0,0.6), var(--bg) 36%);
+  --vis-color: #fff;
+  --vis-glow: transparent;
+  transform: translateY(-1px);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+.vis-toggle.private .eye-open { opacity: 0; transform: translateY(6px) scale(0.92); }
+.vis-toggle.private .eye-closed { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+
+/* focus state for accessibility */
+.vis-toggle:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%); outline-offset: 4px; }
+
+/* subtle press feedback */
+.vis-toggle:active { transform: translateY(-1px) scale(0.997); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vis-toggle, .vis-toggle .vis-icon svg { transition: none !important; }
+  .vis-toggle::after { transition: none !important; }
+}
+
+/* Improve contrast and affordance for the upload drop area on mobile */
+.drop { transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); }
+.drop:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(0,0,0,0.08); }
+.drop .drop-icon { transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid); }
+.drop.dragover .drop-icon { transform: scale(1.06); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+
+/* make the drop icon circle more distinct on mobile and dark theme */
+@media (max-width: 640px) {
+  .drop { border-radius: 12px; }
+  .drop .drop-icon { background: linear-gradient(180deg, color-mix(in srgb, var(--primary-weak), transparent 12%), color-mix(in srgb, var(--primary-weak), transparent 28%)); color: var(--primary); }
+}
+
+/* smaller label under buttons to emphasize primary action on mobile */
+@media (max-width: 640px) {
+  .form-row .vis-label .btn { padding: 10px 12px; }
+}
+
+.btn-group { display: flex; gap: 8px; align-items: center; }
+.btn.primary { padding: 10px 14px; border-radius: 12px; font-weight: 700; }
+.btn.ghost.replace { padding: 10px 12px; }
+/* Cancel button unified logic
+   - Base: neutral subtle pill (light/dark adapt via bg vars)
+   - Confirm (double-tap): solid danger emphasis
+   Keep transitions minimal & accessible. */
+.btn.cancel-btn {
+  position: relative;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  min-height: var(--action-pill-height,42px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: .25px;
+  background: color-mix(in srgb, var(--bg-elev), var(--danger) 4%);
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 86%);
+  color: color-mix(in srgb, var(--danger), var(--text) 65%);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+.btn.cancel-btn:hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%); transform: translateY(-2px); }
+.btn.cancel-btn:active { transform: translateY(0); }
+.btn.cancel-btn.confirm {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 6%), color-mix(in srgb, var(--danger), transparent 2%));
+  color: #fff;
+  border-color: color-mix(in srgb, var(--danger), transparent 12%);
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--danger), transparent 72%), 0 0 0 1px color-mix(in srgb, var(--danger), transparent 40%) inset;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+.btn.cancel-btn.confirm:hover { background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 4%), color-mix(in srgb, var(--danger), transparent 0%)); }
+.btn.cancel-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 70%), 0 4px 16px rgba(0,0,0,0.18); }
+.btn.cancel-btn.confirm:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 55%), 0 6px 20px rgba(0,0,0,0.30); }
+.btn.cancel-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.btn.cancel-btn .cancel-inner { position: relative; z-index: 1; }
+
+/* Dark theme slight desaturation for base state for balance */
+:root[data-theme="dark"] .btn.cancel-btn:not(.confirm) {
+  background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%);
+  border-color: color-mix(in srgb, var(--danger), transparent 78%);
+  color: color-mix(in srgb, var(--danger), var(--text) 72%);
+}
+:root[data-theme="dark"] .btn.cancel-btn:not(.confirm):hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 8%); }
+
+/* Mobile full-width stacking coherence */
+@media (max-width:640px){
+  .btn-group .btn.cancel-btn { width:100%; }
+}
+
+.hidden { display: none !important; }
+
+/* Mobile: stack form row */
+@media (max-width: 640px) {
+  .form-row { flex-direction: column; align-items: stretch; }
+  .btn-group { justify-content: stretch; }
+  .visibility-select { width: 100%; }
+}
+
+/* Uploader-specific mobile improvements: avoid overlap with bottom tabbar, tighten dropzone and thumbnails */
+@media (max-width: 640px) {
+  /* give uploader extra bottom padding only when images present so initial empty state doesn't force scroll */
+  .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
+
+
+/* Mobile refinement: make stacked action pills (visibility / publish / cancel) align and breathe */
+@media (max-width: 640px) {
+  /* Slightly reduce pill height on small screens for a tighter stack */
+  :root { --action-pill-height: 38px; }
+
+  .uploader .form-row { gap: 10px; align-items: center; }
+  .uploader .form-row .btn-group { width: 100%; gap: 10px; align-items: center; }
+
+  /* Give all three pills a consistent width, centered. Clamp to avoid overly wide on large phones */
+  .uploader .form-row .vis-toggle,
+  .uploader .form-row .publish-button,
+  .uploader .form-row .btn.cancel-btn { 
+    width: 100%;
+    max-width: 240px; 
+    margin: 0 auto; 
+  }
+
+  /* Ensure internal padding adapts with smaller height */
+  .uploader .form-row .vis-toggle { padding: 8px 16px; }
+  .uploader .form-row .publish-button { padding: 8px 18px; }
+  .uploader .form-row .btn.cancel-btn { padding: 8px 18px; }
+}
+  /* slightly smaller drop area to fit mobile screens comfortably */
+  .drop { min-height: 140px; padding: 12px; }
+  .drop-icon { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; }
+  .drop-text { font-size: 14px; }
+
+  /* reduce preview max height to keep controls visible and avoid large images pushing buttons off-screen */
+  .preview-inner { max-height: 56vh; }
+  .preview img { max-height: 52vh; }
+
+  /* make thumbnail strip smaller and easier to tap */
+  .uploader .thumbs img { width: 56px; height: 56px; }
+
+  /* stack publish/replace buttons and make them full-width for easier tapping */
+  .btn-group { display: flex; flex-direction: column; gap: 8px; }
+  .btn-group .btn { width: 100%; display: inline-flex; justify-content: center; }
+
+  /* center visibility controls under the caption input on small screens */
+  .form-row .vis-label { align-items: center; width: 100%; }
+  .form-row .vis-label [role="radiogroup"] { display: flex !important; justify-content: center; width: 100%; gap: 8px; }
+
+  /* inputs stretch to full width and have comfortable spacing */
+  .input { font-size: 15px; padding: 12px; }
+
+  /* reduce carousel control sizes on small screens */
+  .carousel-arrow { width: 34px; height: 34px; }
+}
+
+/* small helper: visually hidden but available to screen readers */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Auth form styles (sign in / sign up popup) */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  /* unified vertical spacing between inputs/buttons across sign-in/sign-up */
+  gap: 12px; /* restore top spacing; we'll adjust inputs->button spacing separately */
+  min-width: 260px;
+}
+
+/* Reduce the vertical space between the inputs block and the primary action
+   without changing the spacing between inputs themselves. The form uses
+   `gap` for overall vertical rhythm; we counteract it below for the single
+   case of inputs -> actions to create a slightly tighter relationship. */
+.auth-form .auth-actions {
+  /* keep the actions flush with the form flow; spacing to inputs is
+     controlled by `.inputs-wrap { margin-bottom }` so it remains
+     consistent whether the username field is shown or hidden. */
+  margin-top: 0 !important;
+}
+
+/* Fixed spacing between the inputs container and the actions. This
+   provides a stable, predictable distance regardless of whether the
+   compact username field (signup) is open or closed. */
+.auth-form .inputs-wrap {
+  margin-bottom: -6px; /* pull the actions up slightly so the inputs->button gap is smaller while top gaps remain 12px */
+}
+.auth-form.enhanced { max-width: 480px; width: 100%; margin: 0 auto; }
+.auth-form.enhanced .field-group { width: 100%; }
+.auth-form.enhanced .fancy-input { 
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 4%), color-mix(in srgb, var(--bg-elev), transparent 14%));
+  border: 1px solid color-mix(in srgb, var(--border), transparent 10%);
+  backdrop-filter: saturate(140%) blur(4px);
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform 160ms var(--transition-fast);
+  text-align: center;
+}
+.auth-form.enhanced .fancy-input:focus {
+  border-color: color-mix(in srgb, var(--primary), transparent 40%);
+  background: color-mix(in srgb, var(--primary-weak), transparent 82%);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary), transparent 86%), 0 4px 18px rgba(0,0,0,0.24);
+}
+.auth-form.enhanced .fancy-input:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--primary), transparent 76%);
+}
+
+.auth-form .username-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }
+.auth-form .username-wrap.open { overflow: visible; max-height: 160px; opacity: 1; transform: translateY(0); }
+.auth-form .username-wrap .help { margin-top: 4px; }
+
+/* Subtle reveal for the username help only when the user focuses or starts
+   typing in the username input. Uses :not(:placeholder-shown) to detect
+   non-empty input in supporting browsers. */
+.auth-form .username-wrap .help {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 260ms var(--transition-mid), transform 320ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-form .username-wrap input:focus ~ .help,
+.auth-form .username-wrap input:not(:placeholder-shown) ~ .help {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* For browsers without :placeholder-shown support, also reveal on focus-within */
+.auth-form .username-wrap:focus-within .help { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-form .username-wrap .help,
+  .auth-form .username-wrap input:focus ~ .help,
+  .auth-form .username-wrap input:not(:placeholder-shown) ~ .help,
+  .auth-form .username-wrap:focus-within .help {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+.auth-form .username-wrap .validity-indicator { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; pointer-events: none; }
+.auth-form .username-wrap .check { width: 22px; height: 22px; opacity: 0; transform: scale(.6) rotate(-12deg); transition: opacity 200ms var(--transition-fast), transform 260ms var(--transition-mid), color 260ms var(--transition-fast); color: var(--muted); }
+.auth-form .username-wrap .check.pending { opacity: .5; transform: scale(.8); color: var(--danger); }
+.auth-form .username-wrap .check.ok { opacity: 1; transform: scale(1) rotate(0); color: var(--accent); }
+
+/* Toggle pill improvements */
+.auth-toggle {
+  --auth-toggle-transition: 260ms cubic-bezier(.2,.8,.2,1);
+  position: relative;
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--bg-elev), transparent 12%);
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 40%);
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* subtle sliding indicator behind the active pill
+   - keep the visual weight low (no harsh white rings)
+   - prefer transform-based movement where possible (smoother on most browsers)
+   - JS may still set left/width; we ensure transitions are consistent */
+.auth-toggle-indicator {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  height: calc(100% - 8px);
+  width: calc(50% - 8px);
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary-weak), transparent 8%), color-mix(in srgb, var(--primary-weak), transparent 28%));
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transition: transform var(--auth-toggle-transition), left var(--auth-toggle-transition), width var(--auth-toggle-transition), background 180ms ease;
+  z-index: 1;
+  will-change: transform, left, width;
+}
+
+.auth-toggle .pill-switch {
+  position: relative;
+  z-index: 2; /* sit above the indicator */
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 180ms var(--auth-toggle-transition), transform 180ms var(--auth-toggle-transition);
+}
+
+.auth-toggle .pill-switch:hover { transform: translateY(-1px); }
+.auth-toggle .pill-switch:active { transform: translateY(0); }
+
+.auth-toggle .pill-switch.active {
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+.auth-toggle .pill-switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 70%);
+}
+
+/* Submit button animation */
+.submit-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 160px;
+  will-change: transform, box-shadow, background-color;
+  transition: box-shadow 260ms var(--transition-mid), transform 220ms var(--transition-fast);
+}
+.submit-btn::after {
+  /* gradient overlay used to smoothly animate into signup look */
+  content: '';
+  position: absolute; inset: 0; z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#4da9ff,#6cc8ff);
+  opacity: 0; pointer-events: none;
+  transition: opacity 280ms cubic-bezier(.2,.85,.32,1);
+}
+.submit-btn .label-text { position: relative; z-index: 2; transition: opacity 220ms var(--transition-fast), transform 260ms var(--transition-mid); display: inline-block; }
+.submit-btn svg { position: relative; z-index: 2; transition: transform 240ms var(--transition-mid), opacity 200ms var(--transition-fast); }
+.submit-btn .spinner { position: absolute; left: 14px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--bg), transparent 50%); border-top-color: #fff; animation: authSpin 780ms linear infinite; opacity: 0; transform: scale(.6); transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast); }
+.submit-btn.loading .spinner { opacity: 1; transform: scale(1); }
+.submit-btn.loading .label-text { opacity: .82; transform: translateY(-4px); }
+
+/* Signup visual state: fade in the overlay and lift the button slightly */
+.submit-btn.signup-btn::after { opacity: 1; }
+.submit-btn.signup-btn { box-shadow: 0 10px 30px rgba(77,169,255,0.18); transform: translateY(-2px); }
+.submit-btn.signup-btn svg { transform: translateX(-4px); }
+.submit-btn:not(.signup-btn) svg { transform: translateX(0); }
+@keyframes authSpin { to { transform: rotate(360deg); } }
+@keyframes fadeInSlide { 
+  from { 
+    opacity: 0; 
+    transform: translateY(-8px); 
+  } 
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  } 
+}
+.cancel-btn { position: relative; }
+.cancel-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.card.minimal { box-shadow: none; border-style: dashed; backdrop-filter: saturate(120%) blur(4px); }
+.auth-toggle { display: inline-flex; gap: 8px; align-items: center; }
+.auth-toggle .btn { border-radius: 999px; padding: 6px 12px; transition: transform 180ms var(--auth-toggle-transition), color 160ms ease; }
+.auth-toggle .btn:hover { transform: translateY(-1px); }
+.auth-toggle .btn.active {
+  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 70%);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+
+.auth-form .input {
+  width: 100%;
+  background: color-mix(in srgb, var(--bg-elev), transparent 8%);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text);
+}
+.auth-form .input::placeholder { color: color-mix(in srgb, var(--muted), transparent 20%); }
+.auth-form .input { text-align: center; }
+.auth-form .input::placeholder { text-align: center; }
+
+.auth-actions { display: flex; gap: 12px; }
+.auth-actions .btn { padding: 8px 12px; border-radius: 999px; }
+.auth-actions .btn.ghost { background: transparent; border-color: var(--border); }
+
+/* When the auth submit button is in its loading state we hide the visible
+   label text and center the loader so only the animated indicator is shown.
+   Keep the accessible label (aria-label) for screen readers. */
+.auth-actions .btn.following-anim {
+  /* Keep button padding intact so width doesn't collapse when loading */
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.auth-actions .btn .label,
+.auth-actions .btn .label-text,
+.auth-actions .btn .btn-label {
+  transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-actions .btn.following-anim .label,
+.auth-actions .btn.following-anim .label-text,
+.auth-actions .btn.following-anim .btn-label,
+.auth-actions .btn.following-anim .reveal.label {
+  /* visually hide the label while keeping layout space; use !important so
+     this wins over later .follow-btn rules that may re-enable the label. */
+  opacity: 0 !important;
+  transform: translateY(-4px) scale(.995) !important;
+  pointer-events: none !important;
+  /* keep the label beneath the loader when present */
+  z-index: 0 !important;
+}
+
+/* Center the inline dot loader absolutely inside the button so it doesn't
+   affect layout when shown. The button already has `position: relative`. */
+.auth-actions .btn {
+  position: relative; /* make button the positioning context for the loader */
+}
+
+.auth-actions .btn .dot-loader {
+  transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-actions .btn.following-anim .dot-loader {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1) !important;
+  left: 50% !important;
+  top: 50% !important;
+  position: absolute !important;
+  z-index: 3;
+}
+
+/* By default hide loader (opacity 0) so it can fade in smoothly */
+.auth-actions .btn .dot-loader { opacity: 0; transform: translate(-50%, -50%) scale(.92); }
+
+/* Crossfade between svg icon and loader */
+.auth-actions .btn .icon-svg { transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid); will-change: opacity, transform; display: inline-block; vertical-align: middle; }
+.auth-actions .btn.following-anim .icon-svg { opacity: 0; transform: translateY(2px) scale(.96); pointer-events: none; }
+.auth-actions .btn .icon-svg { opacity: 1; }
+
+/* Ensure loader visually sits above the icon/text when active */
+.auth-actions .btn.following-anim .icon-svg { z-index: 1; }
+.auth-actions .btn.following-anim .label { z-index: 1; }
+
+/* Ensure the icon SVG sits exactly centered in the 18x18 icon container so
+   it doesn't appear off-center relative to the button text. */
+.follow-btn .icon .icon-svg {
+  display: grid !important;
+  place-items: center !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+.follow-btn .icon .icon-svg svg,
+.auth-actions .btn .icon-svg svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+}
+
+/* slightly tighter layout when displayed inside Account dropdown */
+.card .auth-form { min-width: 220px; }
+
+/* Auth form desktop tightening (keep mobile comfortable) */
+@media (min-width: 640px) {
+  .auth-form-tight .inputs-wrap .input { padding-top: 9px; padding-bottom: 9px; }
+  .auth-form-tight .field-group { gap: 12px !important; }
+  .auth-form-tight .auth-actions { gap: 12px; }
+  .auth-form-tight .auth-message strong { font-size: 19px; }
+  .auth-form-tight .auth-message { margin-top: -4px; }
+  .auth-form-tight .username-wrap.open { margin-top: 2px; }
+}
+
+  /* Host container spacing tweak for auth (desktop) */
+  @media (min-width: 640px) {
+    .auth-host { --auth-host-gap-top: 28px; }
+    .auth-host { margin-top: var(--auth-host-gap-top) !important; }
+  }
+
+/* Auth dialog backdrop and modal positioning */
+.auth-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+}
+
+.auth-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  background: var(--bg);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  max-width: min(420px, 90vw);
+  width: 100%;
+  animation: authDialogIn 260ms var(--transition-mid) both;
+}
+
+@keyframes authDialogIn {
+  from { opacity: 0; transform: translate(-50%, -50%) translateY(12px) scale(.97); }
+  to { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1); }
+}
+
+/* Mobile-specific adjustments for auth dialog to account for bottom nav */
+@media (max-width: 640px) {
+  .auth-dialog {
+    /* On mobile, shift the dialog up slightly to account for the bottom nav bar
+       so it appears more centered in the visible viewport area */
+    top: calc(50% - 30px);
+    max-width: 90vw;
+    /* Ensure dialog doesn't get too close to top of screen on small devices */
+    max-height: calc(100vh - 120px);
+    overflow: auto;
+  }
+}
+
+/* Very small screens: make dialog take more space but keep margins */
+@media (max-width: 400px) {
+  .auth-dialog {
+    max-width: 94vw;
+    top: calc(50% - 40px);
+  }
+}
+
+/* Toast notifications (used via ToastProvider/useToast)
+   - Consolidated single rule below to ensure consistent behavior and avoid
+     duplicate conflicting definitions elsewhere in the file.
+*/
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(80px + var(--safe-bottom)); /* sits above tabbar / nav */
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--bg-elev), transparent 8%);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  z-index: 99999; /* ensure above most UI */
+  font-weight: 600;
+  animation: toastIn 260ms var(--transition-mid) both;
+  max-width: min(92vw, 720px); /* keep toasts readable on desktop */
+  width: auto;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-message {
+  text-transform: none; /* message casing handled in JS */
+  white-space: normal; /* allow wrapping */
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.3;
+  padding: 4px 0; /* vertical padding inside pill */
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(.995); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  to { opacity: 0; transform: translateX(-50%) translateY(6px) scale(.98); }
+}
+
+.toast-fadeout {
+  animation: toastOut 300ms var(--transition-mid) both;
+}
+
+.kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; background: var(--bg-elev); border: 1px solid var(--border); padding: 2px 6px; border-radius: 6px; }
+
+.calendar { 
+  display: grid; 
+  gap: 8px; 
+  width: 100%; 
+  box-sizing: border-box; 
+  margin-bottom: 36px;
+}
+.calendar-page { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 12px 40px; box-sizing: border-box; }
+@media (min-width: 900px) { .calendar-page { padding-left: 12px; padding-right: 12px; } }
+.calendar .header {
+  display: flex; justify-content: space-between; align-items: center;
+  border: none; background: transparent;
+}
+.calendar-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+  font-size: 11px; color: var(--muted);
+}
+.calendar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%;
+}
+.day {
+  border: 1px solid var(--border); border-radius: 10px; padding: 8px; min-height: 64px;
+  display: grid; align-content: space-between; background: var(--bg-elev);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+  min-width: 0;
+}
+.day:hover { transform: translateY(-2px); border-color: var(--primary); }
+.day:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 2px; }
+.day .d { font-weight: 700; font-size: 13px; }
+.day .d.date-anim {
+  opacity: 0;
+  transform: translateY(6px) scale(.995);
+  will-change: transform, opacity;
+  /* use a CSS var so JS can stagger each day */
+  animation: dateIn 360ms var(--transition-mid) both;
+  animation-delay: var(--date-delay, 0ms);
+}
+
+@keyframes dateIn {
+  0% { opacity: 0; transform: translateY(6px) scale(.995); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.day .count { position: absolute; left: 8px; bottom: 8px; font-size: 11px; color: var(--muted); background: transparent; padding: 0 6px; border-radius: 999px; pointer-events: none; }
+.day.today { outline: 2px solid color-mix(in srgb, var(--accent), transparent 60%); }
+
+/* make day a positioned container so we can add subtle indicators */
+.day { position: relative; }
+
+/* subtle indicator for days that include the current user's posts
+   - keep the day's base appearance unchanged and add a small accent dot
+     in the top-right so it's discoverable but not loud */
+.day.mine::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  opacity: 0.96;
+  pointer-events: none;
+}
+
+/* Legend styles used in the calendar header */
+.calendar-legend .legend-dot {
+  display: inline-block;
+  width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.calendar-legend .legend-dot.post { background: var(--primary); }
+.calendar-legend .legend-dot.mine { background: var(--accent); }
+
+/* selected day styling */
+.day.selected { border-color: var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.08); background: color-mix(in srgb, var(--primary-weak), transparent 86%); }
+
+/* make selected animation a gentle scale + ring so it's obvious without being loud */
+.day.selected {
+  transform: translateY(-4px) scale(1.01);
+  transition: transform 240ms var(--transition-mid), box-shadow 220ms var(--transition-fast), border-color 220ms var(--transition-fast);
+}
+
+/* skeleton placeholder for stats loading */
+.day.skeleton { background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 80%), color-mix(in srgb, var(--bg-elev), transparent 60%)); color: transparent; }
+.day.skeleton .dot, .day.skeleton .count { opacity: 0; }
+
+/* Today badge: small rounded pill near the date number to improve discoverability */
+.today-badge {
+  font-size: 11px; color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 68%); padding: 4px 6px; border-radius: 999px; justify-self: start; align-self: start; margin-top: 4px; font-weight: 700;
+}
+
+/* slightly larger touch targets and clearer spacing for mobile */
+@media (max-width: 640px) {
+  .day { padding: 10px; min-height: 76px; border-radius: 12px; }
+  .calendar-grid { gap: 8px; }
+  .day .d { font-size: 15px; }
+}
+
+/* small dot indicator for days with posts */
+.day .dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--primary); justify-self: end; align-self: start; margin-top: -2px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+/* lighter visual cue for days with posts when not selected */
+.day.has-posts { background: color-mix(in srgb, var(--primary-weak), transparent 94%); }
+
+/* count badge - floats at bottom-left */
+.day .count {
+  /* absolutely position count badge so it does not change layout when it appears */
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  padding: 0 6px;
+  border-radius: 999px;
+  pointer-events: none; /* non-interactive; keeps clicks targeting the day */
+  white-space: nowrap;
+}
+
+/* header buttons and title improvements */
+.calendar .header { gap: 8px; }
+.calendar .header .btn { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border-radius: 10px; }
+.calendar .header .btn:hover { background: color-mix(in srgb, var(--primary-weak), transparent 92%); border-color: color-mix(in srgb, var(--primary), transparent 80%); }
+.calendar .header #title { cursor: pointer; }
+.calendar .header #title:hover { text-decoration: underline; }
+
+/* responsive tweaks: make days a bit taller on small screens for touch */
+@media (max-width: 420px) {
+  .day { min-height: 78px; padding: 10px; border-radius: 12px; }
+  .calendar-weekdays { font-size: 12px; }
+}
+
+.grid { 
+  display: grid; 
+  gap: 12px; 
+  grid-template-columns: repeat(3, 1fr);
+  padding-top: 8px;
+}
+@media (min-width: 680px) {
+  .grid { 
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+}
+.tile { 
+  aspect-ratio: 1 / 1; 
+  border-radius: 12px; 
+  overflow: hidden; 
+  border: 1px solid var(--border); 
+  background: var(--bg-elev); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid), border-color 220ms var(--transition-fast);
+  position: relative;
+}
+.tile:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border);
+}
+.tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Fill the frame, crop if needed */
+  object-position: center center;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* ensure anchors used as user links have a clear focus ring */
+.user-link:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+/* show a visible ring only for keyboard focus */
+.user-link:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 60%); outline-offset: 4px; border-radius: 999px; }
+
+/* make user links (avatar + name) more spacious */
+.user-link {
+  display: flex; /* redundant with some inline styles but safe to keep */
+  align-items: center;
+  gap: 12px; /* increased spacing between avatar and name */
+  min-width: 0; /* Allow flex item to shrink below content size */
+  flex: 1; /* Take available space but don't push buttons off */
+  overflow: hidden; /* Contain overflowing content */
+}
+
+/* Followed user ring + subtle pop animation */
+/* Subtle follow ring that stays close to the button and pops gently */
+.btn.following {
+  position: relative; /* create stacking context for ring */
+  transition: transform 200ms var(--transition-mid), background 200ms var(--transition-mid);
+}
+.btn.following::after {
+  content: "";
+  position: absolute; inset: 0; /* match button box */
+  margin: -6px; /* keep ring tight but visible */
+  border-radius: 999px;
+  pointer-events: none;
+  border: 2px solid rgba(34,197,94,0.06); /* subtle outline */
+  box-shadow: 0 6px 14px rgba(34,197,94,0.06); /* gentle glow */
+  opacity: 1;
+  transform: scale(1);
+}
+.btn.following-anim::after {
+  animation: followPop 420ms cubic-bezier(.2,.8,.2,1);
+}
+.btn.unfollow-anim::after {
+  animation: unfollowPop 420ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes followPop {
+  0% { transform: scale(.96); opacity: .0; }
+  40% { transform: scale(1.06); opacity: 1; }
+  70% { transform: scale(1.02); opacity: .95; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes unfollowPop {
+  0% { transform: scale(1); opacity: 1; }
+  40% { transform: scale(.96); opacity: .8; }
+  70% { transform: scale(.98); opacity: .4; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* Follow button specific styles — minimalistic */
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 20%);
+  color: var(--text);
+  font-weight: 700;
+  /* smoother, slightly springy transitions for organic feel - unified variables */
+  transition: background var(--follow-duration) var(--follow-ease),
+              border-color var(--follow-duration) var(--follow-ease),
+              color var(--follow-duration) var(--follow-ease),
+              transform var(--follow-duration) var(--follow-ease);
+}
+.follow-btn .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; color: var(--muted); transition: color var(--follow-duration) var(--follow-ease), transform var(--follow-duration) var(--follow-ease); will-change: transform; }
+.follow-btn .label { display: inline-block; font-weight: 600; transform-origin: left center; transition: opacity var(--follow-duration) var(--follow-ease), transform var(--follow-duration) var(--follow-ease); }
+
+/* Not following: subtle outline using primary, minimal fill */
+.follow-btn.not-following { background: transparent; border-color: color-mix(in srgb, var(--primary), var(--border) 85%); color: var(--primary); }
+.follow-btn.not-following .icon { color: var(--primary); }
+
+/* When a follow-style animation class is present (used for the send button
+   while submitting), pop the icon and tint it to the primary color briefly. */
+.follow-btn.following-anim .icon {
+  color: var(--primary);
+  transform: translateY(-3px) scale(1.08);
+  transition: transform var(--follow-duration) var(--follow-ease), color var(--follow-duration) var(--follow-ease);
+}
+.follow-btn.following-anim .label {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  transition: transform var(--follow-duration) var(--follow-ease), opacity var(--follow-duration) var(--follow-ease);
+}
+
+/* Remove shadow on hover/focus for follow-style buttons (prevents the
+   larger shadow used by generic .btn:hover from appearing). */
+.follow-btn:hover,
+.follow-btn:focus,
+.follow-btn:focus-visible,
+.follow-btn:active {
+  box-shadow: none !important;
+}
+
+/* Remove colored glow: prefer neutral outline instead of blue/green mix */
+.follow-btn.not-following { border-color: var(--border); }
+
+/* Following: subtle muted filled state */
+.follow-btn.following { background: color-mix(in srgb, var(--bg-elev), transparent 6%); border-color: color-mix(in srgb, var(--border), transparent 40%); color: var(--muted); }
+.follow-btn.following .icon { color: var(--muted); transform: translateY(-1px) scale(1.02); }
+.follow-btn.following::after { content: ""; position: absolute; inset: 0; margin: -6px; border-radius: 999px; pointer-events: none; border: 1px solid rgba(0,0,0,0.03); box-shadow: none; }
+
+/* Smaller, subtler pop animations */
+.follow-btn.following-anim::after { animation: followPop 320ms cubic-bezier(.2,.8,.2,1); }
+.follow-btn.unfollow-anim::after { animation: unfollowPop 320ms cubic-bezier(.2,.8,.2,1); }
+
+/* Animate the icon and label when the temporary animation class is added.
+   This creates an organic transition between states when JS toggles follow. */
+.follow-btn.following-anim .icon {
+  animation: followIcon 380ms cubic-bezier(.22,.9,.28,1);
+}
+.follow-btn.following-anim .label {
+  animation: followLabelIn 380ms cubic-bezier(.22,.9,.28,1);
+}
+.follow-btn.unfollow-anim .icon {
+  animation: unfollowIcon 320ms cubic-bezier(.22,.9,.28,1);
+}
+.follow-btn.unfollow-anim .label {
+  animation: followLabelOut 320ms cubic-bezier(.22,.9,.28,1);
+}
+
+/* Icon/label keyframes */
+@keyframes followIcon {
+  0% { transform: translateY(0) scale(.92) rotate(-4deg); opacity: 0.9; }
+  45% { transform: translateY(-6px) scale(1.14) rotate(8deg); opacity: 1; }
+  100% { transform: translateY(-1px) scale(1.02) rotate(0deg); opacity: 1; }
+}
+@keyframes unfollowIcon {
+  0% { transform: translateY(-1px) scale(1.02) rotate(0deg); opacity: 1; }
+  50% { transform: translateY(2px) scale(.94) rotate(-6deg); opacity: 0.92; }
+  100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes followLabelIn {
+  0% { transform: translateX(6px) scale(.98); opacity: 0; }
+  60% { transform: translateX(-2px) scale(1.03); opacity: 1; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes followLabelOut {
+  0% { transform: translateX(0) scale(1); opacity: 1; }
+  50% { transform: translateX(4px) scale(.98); opacity: 0.6; }
+  100% { transform: translateX(6px) scale(.96); opacity: 0; }
+}
+
+/* Subtle expanded-state animations for follow/unfollow transitions.
+   These animate only when the button is in the expanded (pill) state so
+   the user sees a gentle pop & label update when they click Follow/Following. */
+.follow-btn.expanded {
+  /* smooth color/background transitions for the pill */
+  transition: background 260ms cubic-bezier(.22,.9,.28,1), color 220ms ease, transform 220ms ease;
+}
+
+.follow-btn.expanded.following-anim .icon {
+  animation: expandedFollowIcon 360ms cubic-bezier(.22,.9,.28,1);
+  transform-origin: center center;
+}
+.follow-btn.expanded.unfollow-anim .icon {
+  animation: expandedUnfollowIcon 300ms cubic-bezier(.22,.9,.28,1);
+  transform-origin: center center;
+}
+
+.follow-btn.expanded.following-anim .reveal.label {
+  animation: expandedLabelIn 360ms cubic-bezier(.22,.9,.28,1);
+}
+.follow-btn.expanded.unfollow-anim .reveal.label {
+  animation: expandedLabelOut 300ms cubic-bezier(.22,.9,.28,1);
+}
+
+@keyframes expandedFollowIcon {
+  0% { transform: translateY(0) scale(.96); opacity: .92; }
+  45% { transform: translateY(-6px) scale(1.08); opacity: 1; }
+  100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
+@keyframes expandedUnfollowIcon {
+  0% { transform: translateY(-2px) scale(1); opacity: 1; }
+  50% { transform: translateY(2px) scale(.96); opacity: .92; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes expandedLabelIn {
+  0% { transform: translateX(6px) scale(.98); opacity: 0; }
+  60% { transform: translateX(-2px) scale(1.02); opacity: 1; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes expandedLabelOut {
+  0% { transform: translateX(0) scale(1); opacity: 1; }
+  50% { transform: translateX(4px) scale(.98); opacity: .6; }
+  100% { transform: translateX(6px) scale(.96); opacity: 0; }
+}
+
+/* Simple three-dot loader used in buttons (subtle, low-contrast) */
+.dot-loader {
+  /* absolutely positioned inside the .icon container so it doesn't affect
+     the button's inline layout when hidden. */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(.92);
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid);
+}
+.dot-loader span { display: block; width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--text), transparent 60%); opacity: 0.18; transform: translateY(0); }
+.dot-loader span:nth-child(1) { animation: dotPulse 900ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 0ms; }
+.dot-loader span:nth-child(2) { animation: dotPulse 900ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 140ms; }
+.dot-loader span:nth-child(3) { animation: dotPulse 900ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 280ms; }
+
+@keyframes dotPulse {
+  0% { opacity: 0.16; transform: translateY(0); }
+  35% { opacity: 0.9; transform: translateY(-4px); }
+  70% { opacity: 0.32; transform: translateY(0); }
+  100% { opacity: 0.16; transform: translateY(0); }
+}
+
+/* When a follow-style temporary animation is present, tint the dots slightly */
+.follow-btn.following-anim .dot-loader span { background: color-mix(in srgb, var(--primary), transparent 30%); }
+
+/* Icon-reveal helpers (kept but tuned) */
+.follow-btn.icon-reveal .icon { transition: transform 180ms var(--transition-fast), opacity 160ms var(--transition-fast); }
+.follow-btn.icon-reveal .label { transition: transform 200ms var(--transition-fast), opacity 160ms var(--transition-fast); }
+
+@media (max-width: 640px) {
+  .follow-btn { padding: 8px 10px; gap: 6px; }
+  .follow-btn .label { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .label { transition: none !important; animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-actions .btn .dot-loader,
+  .auth-actions .btn .icon-svg,
+  .auth-actions .btn .label { transition: none !important; transform: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn.following-anim .icon,
+  .follow-btn.unfollow-anim .icon,
+  .follow-btn.following-anim .label,
+  .follow-btn.unfollow-anim .label,
+  .follow-btn.following-anim::after,
+  .follow-btn.unfollow-anim::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Theme-specific adjustments for follow button so it reads well in light/dark */
+:root[data-theme="light"] .btn.following::after,
+:root:not([data-theme="dark"]) .btn.following::after {
+  border-color: color-mix(in srgb, var(--accent), transparent 86%);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--accent), transparent 88%);
+}
+
+:root[data-theme="dark"] .btn.following::after {
+  /* darker theme: slightly brighter ring to be visible on dark bg */
+  border-color: color-mix(in srgb, var(--accent), transparent 72%);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent), transparent 74%);
+}
+
+:root[data-theme="light"] .follow-btn.not-following {
+  /* keep the subtle primary outline but slightly softer on light */
+  border-color: color-mix(in srgb, var(--primary), var(--border) 88%);
+}
+
+:root[data-theme="dark"] .follow-btn.not-following {
+  /* on dark backgrounds, use a slightly more opaque primary outline for clarity */
+  border-color: color-mix(in srgb, var(--primary), rgba(255,255,255,0.04) 40%);
+}
+
+:root[data-theme="light"] .follow-btn.following {
+  background: color-mix(in srgb, var(--bg-elev), transparent 6%);
+  border-color: color-mix(in srgb, var(--border), transparent 40%);
+  /* ensure label/icon use the dark text color in light theme for better contrast */
+  color: var(--text);
+}
+
+:root[data-theme="light"] .follow-btn.following .icon {
+  color: var(--text);
+}
+
+/* Neutralize any colored ring/glow for following in light theme */
+:root[data-theme="light"] .btn.following::after,
+:root:not([data-theme="dark"]) .btn.following::after {
+  border-color: color-mix(in srgb, var(--border), transparent 40%) !important;
+  box-shadow: none !important;
+}
+
+/* Global override: completely remove colored glow for any follow button variants */
+/* This covers legacy selectors and ensures no colored box-shadow shows up */
+.follow-btn.following::after,
+.btn.following::after,
+.follow-btn.following,
+.btn.following {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  border-color: var(--border) !important;
+  background: transparent !important;
+}
+
+/* ensure the inner icon/text doesn't inherit a colored shadow or filter */
+.follow-btn.following .icon,
+.btn.following .icon,
+.follow-btn.following .label,
+.btn.following .label {
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Remove the visible outline/halo when the follow button is clicked (mouse).
+   Keep keyboard focus visible by only hiding for :focus that is NOT :focus-visible. */
+.follow-btn:focus:not(:focus-visible),
+.btn.following:focus:not(:focus-visible),
+.follow-btn.following:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.follow-btn:focus:not(:focus-visible)::after,
+.btn.following:focus:not(:focus-visible)::after,
+.follow-btn.following:focus:not(:focus-visible)::after {
+  box-shadow: none !important;
+}
+
+/* Strong override: ensure the dot loader is always centered in the button
+   when the loading class is present. Use !important so this wins against
+   any earlier/less-specific rules. */
+.auth-actions .btn.following-anim .dot-loader,
+.follow-btn.following-anim .dot-loader {
+  /* Explicit centering: left/top 50% + translate to ensure the loader
+     visually sits in the exact middle of the button. */
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 28px !important;
+  height: 18px !important;
+  right: auto !important;
+  margin: 0 !important;
+  z-index: 999 !important;
+  display: inline-flex !important;
+}
+
+:root[data-theme="dark"] .follow-btn.following {
+  /* make sure the filled state contrasts on dark backgrounds */
+  background: color-mix(in srgb, var(--bg-elev), transparent 10%);
+  border-color: color-mix(in srgb, var(--border), transparent 36%);
+}
+
+/* Profile header layout refinements */
+.profile-header {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  /* allow the avatar to overflow slightly (shadow, transform) without being clipped */
+  overflow: visible;
+  z-index: 60; /* sit above nearby cards but below modals/overlays */
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+/* On wider screens keep the profile header constrained and centered so
+   it doesn't stretch edge-to-edge like a full-bleed element. This matches
+   the app's main content max width. */
+@media (min-width: 900px) {
+  .profile-header {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* Ensure the posts grid that appears after the profile header is aligned
+   to the same centered max width so images line up with the header panel. */
+@media (min-width: 900px) {
+  .profile-header ~ .grid {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+  }
+}
+
+/* Keep post pages, post editor, and uploader content aligned with the app
+   max width on larger screens so they don't render edge-to-edge. */
+@media (min-width: 900px) {
+  .post-view-wrap,
+  .post-editor,
+  .uploader {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  /* Ensure the toolbar inside post pages also aligns visually with the content */
+  .post-view-wrap .toolbar,
+  .uploader .toolbar {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+}
+/* left column: avatar + text. Use flex so text can shrink/wrap without pushing avatar */
+.profile-left { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  align-items: center; 
+  min-width: 0; 
+  width: 100%;
+}
+.profile-left > div { 
+  min-width: 0; 
+  overflow: visible; 
+  text-align: center;
+  width: 100%;
+}
+.profile-left .username { 
+  font-size: 22px; 
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* Ensure bio inside header doesn't push/clip avatar. Keep it readable but constrained. */
+.profile-bio {
+  margin-top: 12px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px;
+  background: color-mix(in srgb, var(--bg), transparent 50%);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  max-width: 600px;
+  width: fit-content;
+  text-align: center;
+  /* clamp to ~4 lines and show ellipsis; include both vendor and newer property for compatibility */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  /* standard property for newer toolchains / linter compatibility */
+  line-clamp: 4;
+  white-space: normal;
+}
+
+/* keep the left column from touching container edges and ensure avatar is not clipped */
+.profile-left { overflow: visible !important; padding-left: 6px; }
+
+/* ensure avatar doesn't shrink and remains visible */
+.profile-avatar { flex: 0 0 auto; }
+
+/* let the avatar and avatar button sit above nearby rounded elements that might overlap */
+.profile-avatar { position: relative; z-index: 4; }
+.avatar-button { position: relative; z-index: 5; }
+
+/* Ensure header and its immediate containers don't clip the avatar image */
+.toolbar, .profile-header, .profile-left, .profile-actions, .user-link {
+  overflow: visible !important;
+}
+
+/* make sure the avatar image renders as a block-level element so rounding/outline are consistent */
+.profile-avatar { display: block; box-sizing: border-box; }
+
+/* Make avatar clickable without showing native button chrome */
+.avatar-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-block;
+  line-height: 0;
+  cursor: pointer;
+  position: relative; /* required for tooltip positioning */
+  transition: transform 160ms var(--transition-fast), box-shadow 160ms var(--transition-fast);
+}
+.avatar-button:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%); outline-offset: 4px; border-radius: 10px; }
+
+/* actionable avatar hover highlight and subtle lift */
+.avatar-button .profile-avatar {
+  transition: transform 180ms var(--transition-fast), box-shadow 180ms var(--transition-fast);
+  will-change: transform, box-shadow;
+}
+.avatar-button:hover .profile-avatar,
+.avatar-button:focus .profile-avatar {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.28);
+}
+
+/* gentle idle pulse to indicate the avatar is actionable (not on touch devices) */
+@media (hover: hover) {
+  .avatar-button[data-tooltip] .profile-avatar { animation: idlePulse 4.2s ease-in-out infinite 1s; }
+  @keyframes idlePulse {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-2px) scale(1.01); }
+    100% { transform: translateY(0) scale(1); }
+  }
+}
+
+/* Tooltip: only show on devices that support hover to avoid interfering with touch */
+@media (hover: hover) {
+  .avatar-button[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: -36px;
+    right: 0;
+    background: var(--bg-elev);
+    color: var(--muted);
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 160ms var(--transition-fast), transform 160ms var(--transition-fast);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 80;
+  }
+  .avatar-button[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    top: -22px;
+    right: 12px;
+    width: 10px; height: 10px; background: var(--bg-elev);
+    border-left: 1px solid var(--border); border-top: 1px solid var(--border);
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 120ms var(--transition-fast);
+    z-index: 79;
+  }
+  .avatar-button:hover[data-tooltip]::after,
+  .avatar-button:focus[data-tooltip]::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .avatar-button:hover[data-tooltip]::before,
+  .avatar-button:focus[data-tooltip]::before {
+    opacity: 1;
+  }
+}
+
+/* keep action buttons grouped and anchored so overlays can align to them */
+.profile-actions {
+  white-space: nowrap;
+  position: relative; /* anchor for .edit-panel */
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* Edit profile overlay panel to avoid pushing layout when toggling edit mode */
+.edit-panel {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-6px) scale(.995);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  /* ensure the panel floats above fixed nav and other overlays */
+  z-index: 100002;
+  width: 360px;
+  opacity: 0;
+  transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast);
+  animation: popIn 220ms var(--transition-mid) both;
+}
+
+/* caret arrow pointing to the actions group */
+.edit-panel::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 14px;
+  height: 14px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  box-shadow: -2px -2px 6px rgba(0,0,0,0.04);
+}
+
+/* cap the panel height and allow scrolling for small screens or long content */
+.edit-panel { max-height: calc(100vh - 120px); overflow: auto; }
+
+/* On wider screens use a two-column layout for the edit panel so the bio can
+   sit in the right column and align vertically with the stacked inputs on the left. */
+@media (min-width: 720px) {
+  .edit-panel {
+    display: grid;
+    grid-template-columns: 1fr 340px; /* left column for display/username, right for bio */
+    gap: 12px;
+    align-items: start;
+    width: 560px; /* keep a comfortable width when anchored to actions */
+  }
+
+  .edit-panel label { margin-bottom: 0; }
+
+  /* place the bio label/textarea in the right column and span the height of
+     the two inputs so the textarea lines up with them */
+  .edit-panel label:nth-child(3) {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+
+  .edit-panel .bio-editor {
+    height: 100%;
+    min-height: 64px;
+    box-sizing: border-box;
+  }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(.98); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+/* Small screens: anchor the edit panel as a compact popover from the
+   profile actions area so it doesn't cover a large portion of the grid.
+   Cap the height so it never dominates the screen; make inner content
+   scrollable and keep the caret/arrow visible. */
+@media (max-width: 680px) {
+  .profile-header { position: relative; }
+
+  /* Keep cancel button compact instead of stretching full width */
+  .btn-group .btn.cancel-btn { width: auto; align-self: center; padding-left: 18px; padding-right: 18px; min-width: 120px; }
+  .edit-panel {
+   /* center in viewport on small screens so the popover never appears off-center
+     when the actions container flows or wraps. Use fixed to avoid ancestor
+     overflow/scrolling issues and ensure it sits above the tabbar/header. */
+   position: fixed;
+   left: 50%;
+   top: 50%;
+   transform: translate(-50%, -50%);
+   /* Allow the panel to be noticeably wider on modern phones while capping
+     at a comfortable maximum so desktop/tablet layouts are unaffected. */
+   width: min(94vw, 420px);
+   /* Increase max-height so taller phones can show more content before scrolling */
+   max-height: calc(100vh - 120px);
+   overflow: auto;
+   box-shadow: var(--shadow);
+   border: 1px solid var(--border);
+   background: var(--bg);
+   padding: 12px;
+   border-radius: 12px;
+   z-index: 99999;
+   animation: popIn 220ms var(--transition-mid) both;
+   display: flex;
+   flex-direction: column;
+  }
+
+  .edit-panel::before {
+    /* hide caret when centered in viewport */
+    display: none;
+  }
+
+  /* make the content area scroll if needed, keep actions visible */
+  .edit-panel > :not(.edit-actions) {
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+
+  .edit-panel .edit-actions {
+    position: sticky;
+    bottom: 8px;
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    z-index: 2;
+  }
+
+  /* Slightly tighter spacing inside the popover so more fields fit */
+  .edit-panel .input,
+  .edit-panel .bio-editor { padding: 8px; font-size: 14px; }
+
+  /* center display name / username inputs on small screens to match mobile layout */
+  .edit-panel .input,
+  .inline-edit-card .input {
+    text-align: center;
+  }
+  .edit-panel .input::placeholder,
+  .inline-edit-card .input::placeholder {
+    text-align: center;
+  }
+
+  .edit-panel .edit-actions .btn { padding: 6px 10px; font-size: 13px; }
+}
+
+/* Profile: improved mobile layout so header content doesn't overflow */
+@media (max-width: 640px) {
+  /* stack header content and tighten padding */
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 16px;
+  }
+
+  /* keep avatar and name stacked vertically, allow actions to flow beneath */
+  .profile-left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* let actions wrap to new lines instead of overflowing; make them full-width area */
+  .profile-actions {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  /* slightly smaller avatar on phones */
+  .profile-avatar { 
+    width: 80px; 
+    height: 80px; 
+    border-radius: 20px; 
+  }
+
+  /* reduce button padding and font-size so more buttons fit per row */
+  .profile-actions .btn { padding: 10px 14px; font-size: 14px; }
+  
+  .profile-left .username { font-size: 20px; }
+
+  /* ensure username wraps and doesn't push layout */
+  .profile-left > div { min-width: 0; }
+
+  /* make the posts grid easier to view on mobile */
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  
+  .profile-bio {
+    font-size: 13px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+}
+
+/* Very small screens: single column grid to maximize image size */
+@media (max-width: 360px) {
+  .grid { grid-template-columns: 1fr; }
+  .profile-actions { justify-content: flex-start; }
+}
+
+/* Profile stats section */
+.profile-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  border-bottom: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  margin: 8px 0;
+  width: 100%;
+}
+
+.profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.profile-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--text), color-mix(in srgb, var(--primary), var(--text) 40%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.profile-stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .profile-stats {
+    gap: 20px;
+    padding: 12px 0;
+  }
+  
+  .profile-stat-value {
+    font-size: 18px;
+  }
+  
+  .profile-stat-label {
+    font-size: 11px;
+  }
+}
+
+/* ensure buttons in actions are vertically aligned and have consistent spacing */
+.profile-actions .btn { vertical-align: middle; }
+
+/* improve toolbar density on small screens */
+.toolbar { padding: 10px; }
+
+/* subtle refinement to username line spacing */
+.user-line { line-height: 1.05; }
+
+.toolbar {
+  display: flex; gap: 8px; align-items: center; justify-content: space-between;
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+/* Remove the extra panel background for the post view toolbar so the back
+   button sits directly on the page content (no full-width rounded panel). */
+.post-view-wrap .toolbar {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 8px 0 !important;
+}
+
+/* Make the Back button in the post toolbar text-only (no pill/decoration).
+   Preserve keyboard focus visibility while removing background, border,
+   padding and shadows so the button appears as plain text. Targets both
+   <button class="btn"> and <a class="btn"> use-cases. */
+.post-view-wrap .toolbar .btn,
+.post-view-wrap .toolbar a.btn,
+.post-view-wrap .toolbar button.btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  line-height: 1 !important;
+  color: var(--text) !important;
+  background-clip: padding-box !important;
+  transform: none !important;
+}
+
+/* Remove hover lift and background for pointer devices so it's pure text */
+@media (hover: hover) and (pointer: fine) {
+  .post-view-wrap .toolbar .btn:hover,
+  .post-view-wrap .toolbar a.btn:hover,
+  .post-view-wrap .toolbar button.btn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+}
+
+/* Keep an accessible keyboard focus ring for users who tab to the button */
+.post-view-wrap .toolbar .btn:focus-visible,
+.post-view-wrap .toolbar a.btn:focus-visible,
+.post-view-wrap .toolbar button.btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* subtle entrance for toolbar title and subtitle */
+@keyframes toolbarIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toolbar-title {
+  display: block;
+  animation: toolbarIn 420ms var(--transition-mid) both;
+}
+.toolbar-sub {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  animation: toolbarIn 520ms var(--transition-mid) both;
+  animation-delay: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-title, .toolbar-sub { animation: none !important; transform: none !important; }
+}
+
+/* profile header specific */
+.profile-avatar { 
+  width: 96px; 
+  height: 96px; 
+  border-radius: 24px; 
+  object-fit: cover; 
+  border: 2px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid);
+}
+.profile-avatar:hover {
+  transform: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+.profile-header .username { font-size: 22px; }
+.profile-header .dim { 
+  font-size: 14px; 
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+.follow-btn { 
+  padding: 10px 18px; 
+  border-radius: 999px;
+  font-weight: 600;
+  transition: all 220ms var(--transition-mid);
+}
+.follow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.follow-btn[aria-pressed="true"] { 
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 30%));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary), transparent 60%);
+}
+
+/* Smooth, subtle animation between follow/unfollow states.
+   - animate icon and label concurrently for an organic feel
+   - use separate helper animation classes applied by the component
+     (following-anim / unfollow-anim) so we can finely control the
+     entrance/exit timing without changing the DOM structure. */
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  transition: background 300ms cubic-bezier(.2,.8,.2,1), color 260ms cubic-bezier(.2,.8,.2,1), box-shadow 300ms cubic-bezier(.2,.8,.2,1), transform 220ms ease;
+  will-change: transform, box-shadow, background, color;
+}
+
+.follow-btn .icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 300ms cubic-bezier(.2,.8,.2,1), color 220ms ease, opacity 220ms ease;
+  will-change: transform, opacity;
+}
+
+.follow-btn .reveal.label {
+  transform-origin: left center;
+  transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease, max-width 320ms cubic-bezier(.2,.8,.2,1);
+  will-change: transform, opacity, max-width;
+}
+
+/* Explicit states to ensure consistent visuals */
+.follow-btn.not-following { background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); }
+.follow-btn.following { background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 20%)); color: #fff; border-color: transparent; box-shadow: 0 8px 28px color-mix(in srgb, var(--primary), transparent 60%); transform: translateY(-2px); }
+.follow-btn.following .icon { transform: translateY(-2px) scale(1.02); }
+.follow-btn.not-following .icon { transform: translateY(0) scale(1); }
+
+/* Entrance / exit micro-animations triggered by JS classes */
+@keyframes followIn {
+  0% { transform: translateY(0) scale(0.98); opacity: 0.0; filter: blur(2px); }
+  60% { transform: translateY(-6px) scale(1.06); opacity: 1; filter: blur(0); }
+  100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
+@keyframes unfollowOut {
+  0% { transform: translateY(-2px) scale(1); opacity: 1; }
+  60% { transform: translateY(-4px) scale(0.985); opacity: 0.86; }
+  100% { transform: translateY(0) scale(0.99); opacity: 0.98; }
+}
+.following-anim {
+  animation: followIn 420ms cubic-bezier(.2,.9,.2,1);
+}
+.unfollow-anim {
+  animation: unfollowOut 420ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* ensure label reveal behavior remains snappy but smooth */
+.follow-btn.not-following .reveal.label { transform: translateX(-6px) scale(.98); opacity: 0; max-width: 0; overflow: hidden; }
+.follow-btn.following .reveal.label { transform: translateX(0) scale(1); opacity: 1; max-width: 160px; }
+
+/* Default: collapsed (icon-only) unless explicitly expanded.
+   Use max-width animation (not width) so expansions/collapses animate smoothly
+   even when the expanded size is intrinsically determined. Sequence label
+   fade/contract before the container shrinks to avoid clipping/glitching. */
+.follow-btn {
+  --icon-size: 36px;
+  --max-expanded: 220px; /* reasonable cap for the expanded pill */
+  /* unify expand & collapse so animations are symmetric */
+  --follow-duration: 260ms;
+  --follow-ease: cubic-bezier(.22,.9,.28,1);
+  --expand-ease: var(--follow-ease);
+  --collapse-ease: var(--follow-ease);
+  --shrink-delay: 0ms; /* no delay: collapse should match expand */
+  --grow-delay: 0ms;
+
+  /* Keep height fixed for perfect circle in collapsed state */
+  height: var(--icon-size);
+  min-height: var(--icon-size);
+  padding-left: 0;
+  padding-right: 0;
+
+  /* Use max-width so we can animate between icon-only and pill smoothly */
+  max-width: var(--icon-size);
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+
+  /* animate container max-width & padding using unified duration/easing */
+  transition: max-width var(--follow-duration) var(--follow-ease) var(--grow-delay),
+              padding var(--follow-duration) var(--follow-ease) var(--grow-delay),
+              box-shadow var(--follow-duration) var(--follow-ease), background var(--follow-duration) var(--follow-ease), transform var(--follow-duration) var(--follow-ease);
+}
+
+.follow-btn .reveal.label {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
+  margin-left: 8px;
+
+  /* start hidden and contracted in collapsed state */
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(6px) scale(.98);
+
+  /* synchronize label fade/transform with container max-width so collapse is one step */
+  transition: opacity var(--follow-duration) var(--follow-ease) 0ms, transform var(--follow-duration) var(--follow-ease) 0ms, max-width var(--follow-duration) var(--follow-ease) 0ms;
+}
+
+.follow-btn.expanded {
+  /* allow the pill to grow to the capped expanded width */
+  max-width: var(--max-expanded);
+  padding-left: 12px;
+  padding-right: 14px;
+  height: var(--icon-size);
+  /* expansion uses unified follow duration/easing for symmetry */
+  transition: max-width var(--follow-duration) var(--follow-ease) 0ms, padding var(--follow-duration) var(--follow-ease) 0ms, box-shadow var(--follow-duration) var(--follow-ease);
+}
+.follow-btn.expanded .reveal.label { max-width: 220px; opacity: 1; transform: translateX(0) scale(1); }
+
+/* Keep the icon centered visually */
+.follow-btn .icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn { transition: none !important; }
+}
+
+/* Ensure collapsed icon is truly centered: reset any translate transforms
+   and make the inner svg a block-level element with an explicit size. */
+.follow-btn:not(.expanded) {
+  box-sizing: border-box;
+  padding: 0 !important;
+}
+.follow-btn:not(.expanded) .icon {
+  transform: none !important; /* avoid micro-transforms that nudge icon */
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.follow-btn .icon svg {
+  display: block; /* remove inline baseline shifts */
+  width: 18px; height: 18px;
+}
+
+/* Collapsed follow button: keep icon centered with flexbox and animate width
+   when expanding/collapsing. The label animates via opacity + max-width so it
+   fades and contracts before the button shrinks. Avoid absolute positioning
+   to prevent layout jumps during the transition. */
+.follow-btn {
+  --icon-size: 36px;
+  --width-delay: 0ms; /* can be overridden by collapsed state */
+  height: var(--icon-size);
+  min-height: var(--icon-size);
+  padding-left: 0;
+  padding-right: 0;
+  width: var(--icon-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+  transition: width var(--follow-duration) var(--follow-ease) var(--width-delay), padding var(--follow-duration) var(--follow-ease), box-shadow var(--follow-duration) var(--follow-ease), background var(--follow-duration) var(--follow-ease);
+}
+.follow-btn .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+.follow-btn .icon svg { display: block; width: 18px; height: 18px; }
+.follow-btn.expanded {
+  width: auto;
+  padding-left: 12px;
+  padding-right: 14px;
+  height: var(--icon-size);
+  --width-delay: 0ms;
+}
+/* Contracted label state: fade & contract quickly. When NOT expanded we
+   sequence container shrink after the label transition to avoid overlap. */
+.follow-btn:not(.expanded) .reveal.label {
+  /* fade & contract in sync with the container (no separate shrink delay) */
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--follow-duration) var(--collapse-ease) 0ms, transform var(--follow-duration) var(--collapse-ease) 0ms, max-width var(--follow-duration) var(--collapse-ease) 0ms;
+}
+
+/* ensure the collapsed container waits before shrinking so the label can finish */
+.follow-btn:not(.expanded) {
+  /* collapse the container in sync with the label with no artificial delay */
+  transition: max-width 260ms var(--collapse-ease) 0ms, padding 220ms var(--collapse-ease) 0ms, box-shadow 220ms ease, background 220ms ease, transform 220ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; animation: none !important; transform: none !important; }
+}
+
+/* Remove the visual ring/outline for collapsed (icon-only) follow buttons.
+   This prevents the ::after border or glow from appearing around the small
+   follow/unfollow icon while preserving the ring for expanded/pill states
+   where the label is visible. Use high-specificity and !important to win
+   over earlier theme-specific rules. */
+.follow-btn:not(.expanded)::after,
+.follow-btn:not(.expanded).following::after,
+.follow-btn:not(.expanded).following-anim::after,
+.follow-btn:not(.expanded).unfollow-anim::after,
+.btn.following:not(.expanded)::after {
+  display: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also remove the button's own border for the collapsed icon-only state so
+   the small circular icon appears without any surrounding stroke. Keep this
+   scoped to follow-style buttons only. */
+.follow-btn:not(.expanded),
+.follow-btn:not(.expanded).not-following,
+.btn.following:not(.expanded),
+.btn.follow-btn:not(.expanded),
+.follow-btn:not(.expanded)[aria-pressed],
+.follow-btn:not(.expanded)[aria-pressed="true"] {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Extra high-specificity rules to cover other legacy/utility selectors and
+   pseudo-elements that might draw an outline (e.g. .btn::before or theme
+   overrides). This forces no visible ring for icon-only follow buttons. */
+button.follow-btn:not(.expanded),
+.card .follow-btn:not(.expanded),
+.card-head .follow-btn:not(.expanded),
+.user-link + .follow-btn:not(.expanded),
+.profile-actions .follow-btn:not(.expanded),
+.follow-btn.icon-reveal:not(.expanded) {
+  border: 0 !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
+}
+
+/* Hide pseudo-elements that can look like a border/ring */
+.follow-btn:not(.expanded)::after,
+.follow-btn:not(.expanded)::before,
+.card .follow-btn:not(.expanded)::after,
+.card .follow-btn:not(.expanded)::before,
+.follow-btn.icon-reveal:not(.expanded)::after,
+.follow-btn.icon-reveal:not(.expanded)::before {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also ensure any focus halos are suppressed for mouse/touch where not focus-visible */
+.follow-btn:not(.expanded):focus:not(:focus-visible),
+.follow-btn:not(.expanded).following:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ------------------------------------------------------------------
+   Remove outline/ring for expanded (pill) follow buttons as requested.
+   Keep the visual fill/color of the pill (background/foreground) but
+   remove any outline, border stroke, pseudo-element rings, and focus
+   halos so the pill displays without the extra ring.
+   ------------------------------------------------------------------ */
+.follow-btn.expanded,
+.follow-btn.expanded.not-following,
+.follow-btn.expanded.following,
+.follow-btn.expanded.following-anim,
+.follow-btn.expanded.unfollow-anim,
+.btn.following.expanded,
+.card .follow-btn.expanded,
+.profile-actions .follow-btn.expanded,
+.follow-btn.expanded[aria-pressed],
+.follow-btn.expanded[aria-pressed="true"] {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  outline: none !important;
+  background-clip: padding-box !important;
+}
+
+/* Hide any pseudo-elements that create a ring/halo for expanded follow buttons */
+.follow-btn.expanded::after,
+.follow-btn.expanded::before,
+.follow-btn.expanded.following::after,
+.follow-btn.expanded.following::before,
+.follow-btn.expanded.following-anim::after,
+.follow-btn.expanded.unfollow-anim::after,
+.card .follow-btn.expanded::after,
+.profile-actions .follow-btn.expanded::after {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Remove focus halos for mouse/touch on expanded state; preserve :focus-visible
+   behavior unless the app explicitly wants to keep a halo — the user asked
+   to remove the outline so suppress both. */
+.follow-btn.expanded:focus,
+.follow-btn.expanded:focus-visible,
+.follow-btn.expanded.following:focus,
+.follow-btn.expanded.following:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent label/icon color from transitioning (causes a flash/invert effect
+   when the pill expands/collapses). Only animate background, transform,
+   opacity and max-width so the text remains stable. */
+.follow-btn,
+.follow-btn.expanded,
+.follow-btn.not-following,
+.follow-btn.following {
+  /* Explicitly list the properties we want to animate; include max-width and padding
+     so the follow pill can expand/collapse smoothly. Avoid animating color here. */
+  transition: max-width 260ms var(--follow-ease),
+              padding 260ms var(--follow-ease),
+              background 260ms cubic-bezier(.22,.9,.28,1),
+              box-shadow 260ms cubic-bezier(.22,.9,.28,1),
+              transform 220ms ease !important;
+}
+
+.follow-btn .reveal.label {
+  color: inherit !important; /* keep label color stable */
+  transition: opacity var(--follow-duration) var(--follow-ease) 0ms,
+              transform var(--follow-duration) var(--follow-ease) 0ms,
+              max-width var(--follow-duration) var(--follow-ease) 0ms !important;
+}
+
+.follow-btn .icon,
+.follow-btn .icon svg {
+  color: inherit !important; /* avoid icon color flashes */
+  transition: transform 220ms var(--follow-ease), opacity 220ms ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; }
+}
+
+/* Prevent follow button from creating a perceived depth shift on hover/active/click
+   Some earlier rules applied translateY or box-shadow to provide a lift effect.
+   The following overrides neutralize those transforms and shadows so the button
+   doesn't visually push itself in/out when interacted with. We still allow
+   color/background changes for feedback but avoid any translate/box-shadow. */
+.follow-btn,
+.follow-btn:hover,
+.follow-btn:focus,
+.follow-btn:focus-visible,
+.follow-btn:active,
+.follow-btn[aria-pressed],
+.follow-btn.following,
+.follow-btn.expanded {
+  transform: none !important;
+  -webkit-transform: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+
+.follow-btn .icon,
+.follow-btn.following .icon,
+.follow-btn .reveal.label {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+/* Keep subtle non-positional feedback (color/opacity) while avoiding depth changes */
+.follow-btn:hover,
+.follow-btn:focus-visible {
+  /* use color change only for hover/focus feedback */
+  opacity: 0.98;
+}
+
+/* Collapsed follow button: keep inline-flex so layout doesn't jump between
+   display modes. Use max-width + overflow to animate between icon-only and
+   expanded pill smoothly. This avoids abrupt display changes which cause
+   instant snapping on collapse. */
+.follow-btn:not(.expanded) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* keep the container constrained via max-width so the transition can animate */
+  width: auto !important;
+  max-width: var(--icon-size, 36px) !important;
+  height: var(--icon-size, 36px) !important;
+  min-width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.follow-btn:not(.expanded) .icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.follow-btn:not(.expanded) .icon svg {
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Edit/Delete icon-reveal buttons: reuse the same icon reveal behavior as follow */
+.edit-btn, .delete-btn {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  /* include background, border-color and opacity so entering/exiting states animate smoothly */
+  transition: transform 200ms var(--transition-mid), box-shadow 200ms var(--transition-mid), color 160ms var(--transition-fast), background 260ms var(--transition-mid), border-color 260ms var(--transition-mid), opacity 220ms var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Keep consistent icon sizing with existing helpers */
+.icon-reveal .icon { width: 18px; height: 18px; }
+
+/* Edit: subtle primary accent on the icon */
+.edit-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.edit-btn .icon { color: var(--primary); }
+/* Remove hover/animation effects for the inline edit button.
+   Keep visual appearance static: no translate/box-shadow/ripple/animations. */
+.edit-btn:hover,
+.edit-btn:focus,
+.edit-btn:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+/* .edit-btn.active keeps its visual styles defined below; no empty ruleset needed. */
+.edit-btn::before { display: none !important; }
+
+/* Prevent keyframe animations on the edit button when not active/expanded
+   (keep transitions so the expanded/active state can animate both in and out). */
+.edit-btn:not(.active):not(.expanded),
+.edit-btn:not(.active):not(.expanded) * {
+  animation: none !important;
+}
+
+/* Edit button reveal behavior: show the label when the button is explicitly
+   expanded (JS toggles .expanded) or when it's active (editing). Prevent
+   hover/focus from revealing the label; only explicit click should. */
+.edit-btn .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1);
+}
+
+.edit-btn:not(.active):not(.expanded):hover .reveal.label,
+.edit-btn:not(.active):not(.expanded):focus .reveal.label,
+.edit-btn:not(.active):not(.expanded):focus-visible .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+}
+
+.edit-btn.expanded .reveal.label,
+.edit-btn.active .reveal.label {
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  max-width: 160px !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}
+
+/* Prevent icon-reveal hover/focus effects for edit buttons */
+.edit-btn.icon-reveal:hover .icon,
+.edit-btn.icon-reveal:focus .icon {
+  transform: none !important;
+}
+.edit-btn.icon-reveal:hover .reveal,
+.edit-btn.icon-reveal:focus .reveal {
+  transform: none !important;
+  opacity: 0 !important;
+  max-width: 0 !important;
+}
+
+/* When the edit UI is active, keep the edit button visible and give it a
+   subtle active treatment so users can always cancel or re-open the editor. */
+.edit-btn.active {
+  background: color-mix(in srgb, var(--primary-weak), var(--bg) 48%);
+  border-color: transparent;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--primary), transparent 72%);
+  transform: translateY(-2px);
+}
+.edit-btn.active .icon { color: var(--primary); }
+
+/* small entrance animation for edit active state */
+@keyframes editActiveIn {
+  0% { transform: translateY(0.6px) scale(.996); opacity: 0; }
+  60% { transform: translateY(-4px) scale(1.03); opacity: 1; }
+ 100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
+.edit-btn.active {
+  animation: editActiveIn 260ms cubic-bezier(.2,.9,.28,1) both;
+}
+
+/* Delete: ghost style but with danger icon; pressing-delete animation preserved */
+.delete-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.delete-btn .icon { color: var(--danger); }
+/* Remove hover/animation effects for the inline delete post button.
+   Keep visual appearance static: no translate/box-shadow/ripple/animations. */
+.delete-btn:hover,
+.delete-btn:focus,
+.delete-btn:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+.delete-btn.pressing-delete { animation: none !important; }
+
+/* Prevent the global .btn::before ripple overlay from appearing on delete buttons */
+.delete-btn::before { display: none !important; }
+
+/* Prevent keyframe animations on the delete button when not confirming
+   (keep transitions so the confirming state can animate both in and out). */
+.delete-btn:not(.confirming),
+.delete-btn:not(.confirming) * {
+  animation: none !important;
+}
+
+/* Specifically prevent icon-reveal hover/focus effects for delete buttons */
+.delete-btn.icon-reveal:hover .icon,
+.delete-btn.icon-reveal:focus .icon {
+  transform: none !important;
+}
+.delete-btn.icon-reveal:hover .reveal,
+.delete-btn.icon-reveal:focus .reveal {
+  transform: none !important;
+  opacity: 0 !important;
+  max-width: 0 !important;
+}
+
+/* The delete confirm state uses transitions so it can both animate in and out.
+   Avoid one-shot keyframe animations which don't reverse when the state is removed. */
+.delete-btn.confirming {
+  /* ensure transitions run when entering AND exiting the confirming state */
+  transition: background 220ms cubic-bezier(.2,.85,.2,1), border-color 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), opacity 220ms cubic-bezier(.2,.85,.2,1);
+}
+.delete-btn.confirming .icon { transition: color 180ms ease; }
+
+/* ----------------------
+   Delete button reveal behavior
+   - Prevent the reveal label from animating on hover/focus so hovering the
+     delete icon doesn't expand the label. The reveal should only animate
+     when the user explicitly triggers the confirming state (click/tap).
+   - We use a more specific selector and !important where needed to win the
+     cascade against the generic .icon-reveal hover transitions.
+ */
+.delete-btn .reveal.label {
+  /* default collapsed state (do not animate on hover) */
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  /* keep transitions so toggling .confirming animates in and out */
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1);
+}
+
+/* Explicitly prevent hover/focus from revealing the label when NOT confirming */
+.delete-btn:not(.confirming):hover .reveal.label,
+.delete-btn:not(.confirming):focus .reveal.label,
+.delete-btn:not(.confirming):focus-visible .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+}
+
+/* When in the confirming state, reveal the label and animate the transition */
+.delete-btn.confirming .reveal.label {
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  max-width: 160px !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}
+
+/* Strong override: Edit button should only show its label when explicitly
+   expanded (JS) or when editing (active). Ignore hover entirely so the
+   label doesn't toggle on pointer moves. This block must come after the
+   generic icon-reveal rules to win the cascade. */
+.edit-btn .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}
+
+/* Prevent hover/focus from revealing the label for edit buttons */
+.edit-btn:hover .reveal.label,
+.edit-btn:focus .reveal.label,
+.edit-btn:focus-visible .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+}
+
+/* Reveal label only when explicitly expanded or when editing */
+.edit-btn.expanded .reveal.label,
+.edit-btn.active .reveal.label {
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  max-width: 160px !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}
+
+/* Hide mouse-focus halo but preserve keyboard focus visibility */
+.edit-btn:focus:not(:focus-visible),
+.delete-btn:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.edit-btn:focus:not(:focus-visible)::after,
+.delete-btn:focus:not(:focus-visible)::after {
+  box-shadow: none !important;
+}
+
+/* ------------------------------------------------------------------
+   Make edit/delete buttons behave like follow-style buttons: remove
+   visible outline/halo/pseudo-elements so they don't show the blue/colored
+   ring on mouse/touch interactions. This preserves their active/confirming
+   visual states but prevents the extra ring/outline that was previously
+   appearing on posts.
+ ------------------------------------------------------------------ */
+.edit-btn,
+.delete-btn,
+button.edit-btn,
+button.delete-btn,
+.card .edit-btn,
+.card .delete-btn,
+.profile-actions .edit-btn,
+.profile-actions .delete-btn {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
+  background-clip: padding-box !important;
+}
+
+/* Hide any pseudo-elements that can draw a ring/halo around the button */
+.edit-btn::after, .edit-btn::before,
+.delete-btn::after, .delete-btn::before,
+.card .edit-btn::after, .card .edit-btn::before,
+.card .delete-btn::after, .card .delete-btn::before,
+.profile-actions .edit-btn::after, .profile-actions .edit-btn::before,
+.profile-actions .delete-btn::after, .profile-actions .delete-btn::before {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also ensure focus halos are suppressed for both mouse/touch and keyboard
+   interactions to match the follow button behavior requested. */
+.edit-btn:focus,
+.edit-btn:focus-visible,
+.delete-btn:focus,
+.delete-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .edit-btn, .delete-btn { transition: none !important; animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Ensure our small state animations are suppressed for reduced-motion users */
+  .edit-btn.active, .delete-btn.confirming { animation: none !important; }
+}
+
+/* About card: constrain very long bios so they don't push header/avatar off-screen */
+.about-card .card-body { max-height: 220px; overflow: auto; }
+.about-card .card-body .dim { white-space: pre-wrap; }
+
+/* view toggle */
+/* Constrain the toggle bar to the same centered width/padding as the feed content
+   so its title/subtitle and the list/grid button align with post cards. */
+.view-toggle {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  max-width: var(--maxw);
+  margin: 0 auto 4px; /* center and add a little spacing below */
+  padding: 0 12px; /* match horizontal padding of .feed */
+  box-sizing: border-box;
+  background: transparent;
+}
+.view-toggle .btn { padding: 6px 10px; }
+
+/* Uploader: blurred preview while processing */
+.preview img {
+  /* make unblur feel subtle and intentional: longer, smoother filter transition */
+  transition: filter 560ms cubic-bezier(.2,.7,.2,1), transform 300ms var(--transition-fast), opacity 360ms var(--transition-mid);
+  will-change: filter, transform, opacity;
+}
+.preview.processing img {
+  /* slightly stronger blur while processing and a gentle scale/opacity change */
+  filter: blur(10px) saturate(0.92) opacity(0.88);
+  transform: scale(1.01);
+}
+.preview-badge {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  background: color-mix(in srgb, var(--bg-elev), var(--primary) 6%);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 70;
+}
+.preview-badge svg { width: 16px; height: 16px; color: var(--primary); }
+
+/* feed/explore grid variations */
+.feed.grid-view { padding: 4px 0; }
+.feed.grid-view .grid { gap: 8px; grid-template-columns: repeat(3, 1fr); }
+@media (min-width: 900px) { .feed.grid-view .grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* make grid tiles slightly taller on large screens */
+@media (min-width: 900px) { .grid .tile { aspect-ratio: 4 / 3; } }
+
+/* duplicate toast rules removed (consolidated earlier) */
+
+.skeleton {
+  background: linear-gradient(90deg, #0000, #0001, #0000);
+  background-size: 200% 100%;
+  animation: shimmer 1.1s infinite linear;
+}
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+.hidden { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* When rendering initially, the html element may have .no-transitions to
+   suppress animations while theme is applied. This must be present in the
+   server CSS to prevent hydration mismatches. */
+.no-transitions, .no-transitions * , .no-transitions *::before, .no-transitions *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Preloader splash overlay */
+.preloader-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg), transparent 8%);
+  z-index: 999999;
+  pointer-events: auto; /* block interactions while shown */
+  /* make these transitions important so the initial server-side
+    `.no-transitions` rule (which uses `!important`) doesn't prevent
+    the preloader from animating once the client removes that class.
+    Use a longer, gentler duration so the overlay fade feels softer. */
+  transition: opacity 640ms var(--transition-mid), transform 640ms var(--transition-mid) !important;
+  opacity: 1;
+}
+.preloader-exit { opacity: 0; transform: scale(0.996) translateY(-6px); pointer-events: none; }
+:root{
+  /* preloader motion tuning */
+  --preloader-ease-quick: cubic-bezier(.18,.9,.34,1);
+  --preloader-ease-smooth: cubic-bezier(.22,.95,.18,1);
+  --preloader-ease-in: cubic-bezier(.25,.1,.25,1);
+}
+
+.preloader-inner {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  background: transparent; color: var(--text);
+  /* entrance: subtle lift + fade */
+  animation: preloader-in 560ms var(--preloader-ease-quick) both;
+}
+.preloader-logo {
+  display: block;
+  width: 86px; height: 86px;
+  color: var(--primary);
+  /* combined slow spin with a tiny scale wobble for a more organic feel
+     - uses a custom easing so the rotation speeds up early, then eases into the slower sweep */
+  animation: preloader-spin-scale 2400ms var(--preloader-ease-smooth) infinite !important;
+  position: relative;
+  z-index: 2;
+}
+.preloader-inner::before {
+  /* faint pulsing ring behind the logo for subtle emphasis */
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary), transparent 88%) 0%, transparent 60%);
+  opacity: .08;
+  z-index: 1;
+  filter: blur(6px);
+  animation: preloader-pulse 2000ms var(--preloader-ease-quick) infinite;
+}
+.preloader-wordmark {
+  font-weight: 800; letter-spacing: 0.6px; font-size: 16px; color: var(--text);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: preloader-wordmark-in 560ms var(--preloader-ease-quick) both;
+  animation-delay: 220ms; /* reveal shortly after the logo */
+}
+
+/* In dark mode the preloader shows over a dark background; invert the logo so
+  the SVG (which may be dark) remains visible. We target both the dataset
+  based theme and the legacy `.dark` class. */
+:root[data-theme="dark"] .preloader-logo img,
+:root[data-theme="dark"] .preloader-logo,
+.dark .preloader-logo img,
+.dark .preloader-logo {
+  /* invert only the logo visual. If the logo is an inline SVG or uses currentColor
+    the color variables will handle it, but we include filter invert as a safe fallback. */
+  filter: invert(1) hue-rotate(180deg);
+}
+
+@keyframes preloader-spin-scale {
+  /* ramp: quick acceleration first 20%, then smooth mid-sweep, gentle deceleration to 360deg */
+  0%   { transform: rotate(0deg)   scale(0.986); }
+  12%  { transform: rotate(55deg)  scale(1.04); }
+  28%  { transform: rotate(120deg) scale(1.02); }
+  60%  { transform: rotate(230deg) scale(0.995); }
+  88%  { transform: rotate(320deg) scale(1.002); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes preloader-pulse {
+  0%   { opacity: 0.05; transform: translate(-50%, -50%) scale(0.96); }
+  35%  { opacity: 0.12; transform: translate(-50%, -50%) scale(1.08); }
+  65%  { opacity: 0.10; transform: translate(-50%, -50%) scale(1.02); }
+  100% { opacity: 0.05; transform: translate(-50%, -50%) scale(0.96); }
+}
+
+@keyframes preloader-in {
+  from { opacity: 0; transform: translateY(10px) scale(.994); }
+  40%  { opacity: 1; transform: translateY(0px) scale(1.006); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes preloader-wordmark-in {
+  0%   { opacity: 0; transform: translateY(8px) scale(.998); }
+  60%  { opacity: 0.65; transform: translateY(3px) scale(1.002); }
+  100% { opacity: 0.98; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader-logo { animation: none !important; }
+  .preloader-overlay { transition: none !important; }
+}
+
+/* If the html carries .no-transitions to suppress initial animations during
+   server render, explicitly opt this preloader back in. This selector is
+   more specific than the generic `.no-transitions *` rule and will ensure
+   the splash animates while the client hydrates. We still respect the
+   user's `prefers-reduced-motion` media query above which disables animations. */
+.no-transitions .preloader-logo {
+  animation: preloader-spin 2400ms linear infinite !important;
+}
+.no-transitions .preloader-overlay {
+  transition: opacity 640ms var(--transition-mid), transform 640ms var(--transition-mid) !important;
+}
+
+/* Blur content while preloader is active, then smoothly remove blur when it exits */
+:root, html {
+  /* ensure transition targets exist */
+  --preloader-blur: 8px;
+}
+.app-content {
+  /* ensure filter transitions are defined on the element itself so removing
+     the `.preloader-active` class animates the change (otherwise the
+     transition is removed at the same moment the class is removed and it
+     snaps). Use a slightly longer duration for a subtle unblur. */
+  transition: filter 1000ms cubic-bezier(.2,.65,.2,1);
+  will-change: filter;
+}
+
+.preloader-active .app-content {
+  filter: blur(var(--preloader-blur)) saturate(0.95);
+  pointer-events: none; /* prevent interaction with app during preload */
+}
+.preloader-active body { overflow: hidden; }
+
+/* Ensure the navigation (and header if present outside .app-content) also
+   blurs while the preloader is active so they unblur in sync with the page
+   content. Define the same transition on the nav/header so the removal of
+   the `.preloader-active` class animates the filter change. */
+.tabbar, .header {
+  transition: filter 1000ms cubic-bezier(.2,.65,.2,1);
+  will-change: filter;
+}
+
+.preloader-active .tabbar,
+.preloader-active .header {
+  filter: blur(var(--preloader-blur)) saturate(0.95);
+  pointer-events: none; /* keep nav non-interactive while preloading */
+}
+
+/* When .preloader-active is removed the filter transition back to none creates the unblur effect */
+@media (prefers-reduced-motion: reduce) {
+  .preloader-active #app-root { filter: none !important; transition: none !important; }
+}
+
+/* --- Fix: keep image editor toolbar visible at different zoom levels --- */
+/*
+  Problem: The editor's top toolbar can be clipped or pushed behind sticky
+  header at certain browser zooms because ancestor containers use
+  overflow: hidden / stacking contexts. To avoid layout regressions we
+  only change positioning while a preview is in editing mode.
+*/
+.preview.editing {
+  /* ensure inner preview can escape ancestor clipping */
+  overflow: visible;
+}
+
+.preview-inner.editing {
+  /* lift the editing preview out of normal flow so its toolbar is never
+     clipped by .content (which uses overflow:hidden). Using fixed keeps
+     it centered and stable at any zoom level. */
+  position: fixed;
+  top: calc(50% + 10px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, var(--maxw));
+  max-height: calc(92vh - 40px);
+  z-index: 99999; /* above header, tabbar, and other overlays */
+  margin: 0;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+  border-radius: 14px;
+}
+
+.preview-inner.editing .image-editor,
+.preview-inner.editing .image-editor * {
+  z-index: 99999 !important; /* ensure toolbar & controls stay on top */
+}
+
+/* Inline edit card used in header for editing profile directly in place */
+.inline-edit-card {
+  position: relative;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.22);
+  animation: cardPop 220ms var(--transition-mid) both;
+  display: grid;
+  gap: 10px;
+}
+.inline-edit-card .input, .inline-edit-card .bio-editor { width: 100%; }
+
+@keyframes cardPop {
+  from { opacity: 0; transform: translateY(-8px) scale(.994); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Use two-column layout on wider screens so editor uses horizontal space efficiently */
+@media (min-width: 720px) {
+  .inline-edit-card {
+    grid-template-columns: 1fr 340px; /* left fields + right-side bio */
+    align-items: start;
+  }
+  .inline-edit-card label { margin-bottom: 0; }
+  .inline-edit-card label:nth-child(1) { grid-column: 1 / 2; }
+  .inline-edit-card label:nth-child(2) { grid-column: 1 / 2; }
+  /* place the bio panel in the right column and align it to the top so
+     it lines up with the Display name field. Span the rows so the textarea
+     has enough vertical space beside the stacked inputs. */
+  .inline-edit-card label:nth-child(3) {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 2;
+    /* stretch to fill the vertical space of the spanned rows so the
+       bottom of the bio lines up with the username on the left column */
+    align-self: stretch;
+  }
+
+  /* Prefer class-based selector to avoid relying on exact DOM order */
+  .inline-edit-card .bio-col {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+
+  .inline-edit-card .bio-col .bio-editor {
+    height: 85%;
+    min-height: 64px; /* slightly reduced so the bio doesn't feel too tall */
+    box-sizing: border-box;
+  }
+}
+
+/* Make inline edit card more usable on small screens (match edit-panel behavior) */
+@media (max-width: 680px) {
+  .inline-edit-card {
+    /* Keep inline positioning but ensure proper centering and sizing on mobile */
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    /* Add some constraints for better mobile UX */
+    max-height: 70vh !important;
+    overflow: auto !important;
+  }
+  .inline-edit-card .input,
+  .inline-edit-card .bio-editor { 
+    padding: 10px; 
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Center text inputs on mobile for better visual balance */
+  .inline-edit-card .input {
+    text-align: center;
+  }
+  
+  .inline-edit-card .input::placeholder {
+    text-align: center;
+  }
+}
+
+/* Very small screens: ensure comfortable spacing */
+@media (max-width: 400px) {
+  .inline-edit-card {
+    padding: 12px !important;
+  }
+}
+
+/* Portal root styles: ensure full-screen overlay for modals rendered into the portal */
+#modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  /* align to top so tall content can scroll into view; center horizontally */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px; /* breathing room on small screens */
+  overflow: auto; /* allow vertical scrolling when content exceeds viewport */
+  -webkit-overflow-scrolling: touch;
+  pointer-events: none; /* allow inner modal to opt into pointer events */
+}
+
+#modal-root > * {
+  pointer-events: auto;
+  /* constrain immediate child so it never exceeds viewport and can scroll internally */
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  width: 100%;
+}
+
+/* --- Upload page desktop spacing fix --------------------------------------
+   At default desktop zoom the action row (visibility toggle + Publish/Cancel)
+   could sit partially beneath the fixed bottom nav because only the mobile
+   breakpoint added extra bottom padding to .uploader. Give the uploader a
+   generous bottom padding on wider screens too so the user can always scroll
+   the buttons fully above the nav. Kept separate from the mobile rule so the
+   existing mobile value still applies there. */
+@media (min-width: 641px) {
+  .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
+}
+
+/* Make Swiper slides full-bleed and responsive so they fill the content area
+   and avoid rendering as a narrow centered column in small viewports. */
+  .swipe-views {
+    width: 100% !important;
+    /* don't force a fixed height here; let individual slides size themselves */
+    /* Ensure touch events can be detected for horizontal swipes */
+    touch-action: pan-y pinch-zoom;
+  }
+  .swipe-views .swiper-wrapper {
+    width: 100% !important;
+    /* don't force a fixed height here; let the active slide determine wrapper height */
+    touch-action: pan-y pinch-zoom;
+  }
+.swipe-views .swiper-slide {
+  width: 100% !important;
+  height: auto !important; /* allow taller content while still guaranteeing full-touch area */
+  display: block;
+  /* Ensure every main slide (feed, explore, upload, calendar, profile) covers the viewport height
+     beneath the header + bottom nav so horizontal swipes register anywhere on screen, not just
+     where content exists. Previously only the feed slide had this min-height which caused the
+     calendar slide to leave a dead swipe zone below its content. */
+  min-height: calc(100vh - 160px);
+  /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
+  touch-action: pan-y pinch-zoom;
+}
+
+@media (max-width: 900px) {
+  .swipe-views .swiper-slide { min-height: calc(100vh - 140px); }
+}
+
+/* Break out of centered .content container so the Swiper can be full-bleed
+   while preserving the normal layout for other pages. Targets the Swiper
+   when it's a direct child of .content (our usage in AppShell). */
+.content > .swipe-views {
+  /* Use dynamic viewport units (dvw) to avoid horizontal shifts when
+     the browser shows/hides scrollbars (e.g. after logging in). We center
+     using a calc() that breaks out of the centered .content container so
+     the swiper truly matches the viewport rather than the centered content. */
+  width: 100dvw !important;
+  max-width: 100dvw !important;
+  margin-left: calc(50% - 50dvw) !important; /* center full-bleed child */
+  margin-right: calc(50% - 50dvw) !important;
+  /* remove app padding from the full-bleed wrapper so slides can be
+     exactly viewport width; slide content will receive padding instead */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* Prevent neighbouring slides from peeking on small screens */
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Make each swiper slide exactly the viewport width and apply the app padding
+   to slide content so visuals match the rest of the app while keeping the
+   slide clipping correct. */
+.swipe-views .swiper-slide {
+  /* Make slides match the dynamic viewport width so they stay centered
+     and don't produce a horizontal shift when the vertical scrollbar
+     appears/disappears. */
+  width: 100dvw !important;
+  min-width: 100dvw !important;
+  box-sizing: border-box !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.swipe-views .swiper-slide {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* DEBUG HELPERS (temporary) -------------------------------------------------
+   These subtle outlines help identify which container is misaligned when
+   you sign in. They'll be easy to spot in the devtools device emulation.
+   Remove these rules after debugging. */
+.debug-guides .content { outline: 1px dashed rgba(255,255,255,0.04); }
+.debug-guides .content > .swipe-views { outline: 1px dashed rgba(255,0,128,0.06); }
+.debug-guides .header-inner { outline: 1px dashed rgba(0,200,255,0.05); }
+.debug-guides .tabbar-inner { outline: 1px dashed rgba(0,255,128,0.04); }
+/* Apply by adding class "debug-guides" to the <body> element in the console:
+   document.body.classList.add('debug-guides')
+ */
+
+/* If content within a slide needs to center vertically, pages/components
+   can use .slide-center to opt-in to vertical centering without affecting
+   general layout. */
+.slide-center { display: grid; place-items: start center; }
+
+
+
+/* keep the preview visually contained when not editing */
+.preview-inner { transition: none; }
+
+/* Confirm popover anchored to action buttons (used for Delete) */
+.confirm-popover {
+  position: absolute;
+  right: 8px;
+  top: calc(100% + 10px);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+  z-index: 60;
+  width: min(320px, 86vw);
+  transform-origin: top right;
+  animation: popConfirm 200ms var(--transition-mid) both;
+}
+.confirm-popover-arrow {
+  position: absolute;
+  top: -8px;
+  right: 18px;
+  width: 14px;
+  height: 14px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  transform: rotate(45deg);
+  z-index: -1;
+}
+.confirm-popover-body { display: grid; gap: 8px; }
+.confirm-message { color: var(--muted); font-size: 14px; }
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+@keyframes popConfirm {
+  from { opacity: 0; transform: translateY(-6px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Danger / Delete button styling */
+.btn.danger {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 12%), var(--danger));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--danger), transparent 70%);
+}
+.btn.danger:hover { transform: translateY(-2px) scale(1.01); }
+.btn.danger:active { transform: translateY(0) scale(.998); }
+
+/* subtle red pulse when header delete is pressing */
+.pressing-delete {
+  animation: pressDanger 400ms ease-in-out;
+}
+@keyframes pressDanger {
+  0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.0); }
+  30% { box-shadow: 0 6px 20px rgba(239,68,68,0.08); transform: translateY(1px) scale(.998); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); transform: translateY(0) scale(1); }
+}
+
+/* Explore view subtle discovery hint */
+.explore-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--bg-elev), transparent 30%);
+  border: 1px solid color-mix(in srgb, var(--border), transparent 40%);
+  padding: 8px 10px;
+  border-radius: 12px;
+  max-width: 640px;
+  margin: 0 auto 12px;
+  opacity: 0;
+  transform: translateY(4px) scale(.985);
+  animation: exploreHintIn 560ms var(--transition-mid) forwards;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+@keyframes exploreHintIn {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .explore-hint { animation: none; opacity: 1; transform: none; }
+}
+
+/* Lazy image loading states */
+.lazy-image {
+  transition: opacity 320ms ease-out;
+  will-change: opacity;
+}
+.lazy-image.loading {
+  opacity: 0;
+  background: var(--bg-elev);
+}
+.lazy-image.loaded {
+  opacity: 1;
+}
+
+/* Improved skeleton loading animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-elev) 0%,
+    color-mix(in srgb, var(--border), transparent 50%) 20%,
+    var(--bg-elev) 40%,
+    var(--bg-elev) 100%
+  );
+  background-size: 1000px 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Reduce skeleton animation on slow connections or preference */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--bg-elev);
+  }
+}
+
+/* Final override: ensure follow button uses max-width sequencing and not the
+   older width-based rules that can cause an instantaneous snap. Placed at
+   the end of the stylesheet so it wins in the cascade. */
+.follow-btn {
+  /* let width be auto; control visible size via max-width for smooth animation */
+  width: auto !important;
+  max-width: var(--icon-size, 36px) !important;
+  overflow: hidden !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* collapse in a single synchronized step (no shrink delay) */
+  transition: max-width var(--follow-duration) var(--collapse-ease) 0ms,
+              padding var(--follow-duration) var(--collapse-ease) 0ms,
+              box-shadow var(--follow-duration) var(--collapse-ease),
+              background var(--follow-duration) var(--collapse-ease) !important;
+}
+
+.follow-btn.expanded {
+  max-width: var(--max-expanded, 220px) !important;
+  padding-left: 12px !important;
+  padding-right: 14px !important;
+  transition: max-width var(--follow-duration) var(--expand-ease) 0ms,
+              padding var(--follow-duration) var(--expand-ease) 0ms !important;
+}
+
+.follow-btn:not(.expanded) {
+  max-width: var(--icon-size, 36px) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.follow-btn:not(.expanded) .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--follow-duration) var(--collapse-ease) 0ms, transform var(--follow-duration) var(--collapse-ease) 0ms, max-width var(--follow-duration) var(--collapse-ease) 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; animation: none !important; transform: none !important; }
+}

@@ -61,39 +61,37 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
 
   async function submit(e?: any) {
     e?.preventDefault();
+    const start = Date.now();
+    const MIN_MS = 2000; /* minimum time to show loading animation (ms) */
     setLoading(true);
+
+    let shouldCloseAndRefresh = false;
     try {
       const sb = getSupabaseClient();
       if (mode === "signin") {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
-        // Ensure the user's profile row exists in the users table.
-        // Fire-and-forget: create a minimal profile in the background ONLY if it doesn't exist.
-        // Use INSERT (not UPSERT) to avoid overwriting existing profile data.
+        // Ensure the user's profile row exists in the users table (fire-and-forget)
         (async () => {
           try {
             const get = await sb.auth.getUser();
             const u = (get as any)?.data?.user;
             if (u) {
-              // First check if profile already exists
               const { data: existing } = await sb.from('users').select('id').eq('id', u.id).limit(1).maybeSingle();
-              
-              // Only insert if profile doesn't exist yet
               if (!existing) {
                 const synthUsername = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : u.id);
                 const synthDisplay = u.user_metadata?.name || synthUsername;
                 try {
                   await sb.from('users').insert({ id: u.id, username: synthUsername, display_name: synthDisplay, avatar_url: '/logo.svg' });
-                } catch (e) {
-                  // ignore insert failures (e.g., duplicate key); this is best-effort
-                }
+                } catch (e) { /* ignore */ }
               }
             }
-          } catch (e) {
-            // ignore background errors
-          }
+          } catch (e) { /* ignore background errors */ }
         })();
+
+        // mark that we should close/refresh after ensuring the minimum animation time
+        shouldCloseAndRefresh = true;
       } else {
         // require username for signup
         const chosen = normalizeUsername(username || email.split("@")[0]);
@@ -105,7 +103,6 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         const { data: existing, error: exErr } = await sb.from("users").select("id").eq("username", chosen).limit(1).single();
         if (exErr && (exErr as any).code !== "PGRST116") {
           // ignore not found (single returns error when no row), but propagate other errors
-          // PGRST116 is PostgREST "result contains no rows" error code sometimes surfaced; be defensive
         }
         if (existing) {
           throw new Error("That username is already taken. Please choose another.");
@@ -116,30 +113,45 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         // when signing up, create a users profile row with chosen username
         const userId = (data as any)?.user?.id;
         if (userId) {
-          // create a profile row (best-effort)
           try {
-            // Set default avatar to the app logo so new users aren't blank
             await sb.from("users").upsert({ id: userId, username: chosen, display_name: chosen, avatar_url: "/logo.svg" });
           } catch (e) { /* ignore upsert errors for now */ }
         }
         // indicate that a confirmation email (or magic link) was sent
         setSignupSent(true);
-        toast.show("Check your email to confirm your account. After confirming, sign in.");
         // switch to sign-in mode so the user can immediately try signing in after confirmation
         setMode("signin");
-        // don't auto-close the modal or refresh the app here; wait for user to confirm via email
+        // Delay the visible toast until the minimum loader time has elapsed so
+        // the animation is not cut off. Compute remaining time from the same
+        // `start` / `MIN_MS` used for the sign-in loading minimum.
+        try {
+          const elapsedSignup = Date.now() - start;
+          const remainingSignup = Math.max(0, MIN_MS - elapsedSignup);
+          if (remainingSignup > 0) await new Promise((res) => setTimeout(res, remainingSignup));
+        } catch (_) {
+          /* ignore timing errors */
+        }
+        toast.show("Check your email to confirm your account. After confirming, sign in.");
+        // Do not close/refresh for signup flow — let the user handle confirmation
         return;
       }
-      // dispatch auth changed event, then close modal and refresh (only for sign-in flow)
-      try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
-      if (onClose) {
-        await onClose();
-      }
-      router.refresh();
     } catch (err: any) {
       toast.show(err?.message || String(err));
     } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, MIN_MS - elapsed);
+      if (remaining > 0) {
+        await new Promise((res) => setTimeout(res, remaining));
+      }
       setLoading(false);
+
+      if (shouldCloseAndRefresh) {
+        try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
+        if (onClose) {
+          try { await onClose(); } catch (_) { /* ignore */ }
+        }
+        try { router.refresh(); } catch (_) { /* ignore */ }
+      }
     }
   }
 
@@ -294,23 +306,42 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
 
   <div className="auth-actions flex gap-2 justify-center w-full" style={{ maxWidth: 400, marginTop: 2 }}>
         <button
-          className="btn primary submit-btn"
+          className={`btn follow-btn not-following ${loading ? 'following-anim' : ''}`}
           disabled={loading}
           type="submit"
           aria-busy={loading}
           aria-live="polite"
+          aria-label={mode === 'signup' ? (loading ? 'Creating account' : 'Create account') : (loading ? 'Signing in' : 'Sign in')}
         >
-          <span className="label-text">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
+          <span className="icon" aria-hidden>
+            {/* svg icon stays inside the icon container */}
+            <span className="icon-svg" aria-hidden>
+              {mode === 'signup' ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              )}
+            </span>
+          </span>
+
+          {/* move dot-loader out so it can be absolutely centered in the button */}
+          <span className="dot-loader" aria-hidden>
+            <span />
+            <span />
+            <span />
+          </span>
+
+          {/* Always render the visible label so the button shape doesn't change.
+              CSS will fade the visible label out when loading and center the loader.
+              Also keep an sr-only label for screen readers while loading. */}
+          <span className="label">{mode === 'signin' ? 'Continue' : 'Create account'}</span>
+          {loading && <span className="sr-only">{mode === 'signup' ? 'Creating account' : 'Signing in'}</span>}
         </button>
-        <button
-          type="button"
-            className="btn ghost cancel-btn"
-            onClick={() => { if (!loading) onClose?.(); }}
-            aria-label="Cancel and close"
-            disabled={loading}
-        >
-          Cancel
-        </button>
+        {/* Cancel button intentionally removed */}
       </div>
 
       <div className={`signup-hint transition-opacity duration-300 ${signupSent ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">

@@ -1704,6 +1704,35 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .auth-form .username-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }
 .auth-form .username-wrap.open { max-height: 160px; opacity: 1; transform: translateY(0); }
 .auth-form .username-wrap .help { margin-top: 6px; }
+
+/* Subtle reveal for the username help only when the user focuses or starts
+   typing in the username input. Uses :not(:placeholder-shown) to detect
+   non-empty input in supporting browsers. */
+.auth-form .username-wrap .help {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 260ms var(--transition-mid), transform 320ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-form .username-wrap input:focus ~ .help,
+.auth-form .username-wrap input:not(:placeholder-shown) ~ .help {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* For browsers without :placeholder-shown support, also reveal on focus-within */
+.auth-form .username-wrap:focus-within .help { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-form .username-wrap .help,
+  .auth-form .username-wrap input:focus ~ .help,
+  .auth-form .username-wrap input:not(:placeholder-shown) ~ .help,
+  .auth-form .username-wrap:focus-within .help {
+    transition: none !important;
+    transform: none !important;
+  }
+}
 .auth-form .username-wrap .validity-indicator { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; pointer-events: none; }
 .auth-form .username-wrap .check { width: 22px; height: 22px; opacity: 0; transform: scale(.6) rotate(-12deg); transition: opacity 200ms var(--transition-fast), transform 260ms var(--transition-mid), color 260ms var(--transition-fast); color: var(--muted); }
 .auth-form .username-wrap .check.pending { opacity: .5; transform: scale(.8); color: var(--danger); }
@@ -1767,10 +1796,36 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 
 /* Submit button animation */
-.submit-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 160px; }
+.submit-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 160px;
+  will-change: transform, box-shadow, background-color;
+  transition: box-shadow 260ms var(--transition-mid), transform 220ms var(--transition-fast);
+}
+.submit-btn::after {
+  /* gradient overlay used to smoothly animate into signup look */
+  content: '';
+  position: absolute; inset: 0; z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#4da9ff,#6cc8ff);
+  opacity: 0; pointer-events: none;
+  transition: opacity 280ms cubic-bezier(.2,.85,.32,1);
+}
+.submit-btn .label-text { position: relative; z-index: 2; transition: opacity 220ms var(--transition-fast), transform 260ms var(--transition-mid); display: inline-block; }
+.submit-btn svg { position: relative; z-index: 2; transition: transform 240ms var(--transition-mid), opacity 200ms var(--transition-fast); }
 .submit-btn .spinner { position: absolute; left: 14px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--bg), transparent 50%); border-top-color: #fff; animation: authSpin 780ms linear infinite; opacity: 0; transform: scale(.6); transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast); }
 .submit-btn.loading .spinner { opacity: 1; transform: scale(1); }
-.submit-btn.loading .label-text { opacity: .82; }
+.submit-btn.loading .label-text { opacity: .82; transform: translateY(-4px); }
+
+/* Signup visual state: fade in the overlay and lift the button slightly */
+.submit-btn.signup-btn::after { opacity: 1; }
+.submit-btn.signup-btn { box-shadow: 0 10px 30px rgba(77,169,255,0.18); transform: translateY(-2px); }
+.submit-btn.signup-btn svg { transform: translateX(-4px); }
+.submit-btn:not(.signup-btn) svg { transform: translateX(0); }
 @keyframes authSpin { to { transform: rotate(360deg); } }
 @keyframes fadeInSlide { 
   from { 
@@ -1811,6 +1866,77 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .auth-actions { display: flex; gap: 8px; }
 .auth-actions .btn { padding: 8px 12px; border-radius: 999px; }
 .auth-actions .btn.ghost { background: transparent; border-color: var(--border); }
+
+/* When the auth submit button is in its loading state we hide the visible
+   label text and center the loader so only the animated indicator is shown.
+   Keep the accessible label (aria-label) for screen readers. */
+.auth-actions .btn.following-anim {
+  /* Keep button padding intact so width doesn't collapse when loading */
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.auth-actions .btn .label,
+.auth-actions .btn .label-text,
+.auth-actions .btn .btn-label {
+  transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-actions .btn.following-anim .label,
+.auth-actions .btn.following-anim .label-text,
+.auth-actions .btn.following-anim .btn-label {
+  /* visually fade the label while keeping layout space */
+  opacity: 0;
+  transform: translateY(-4px) scale(.995);
+  pointer-events: none;
+}
+
+/* Center the inline dot loader absolutely inside the button so it doesn't
+   affect layout when shown. The button already has `position: relative`. */
+.auth-actions .btn {
+  position: relative; /* make button the positioning context for the loader */
+}
+
+.auth-actions .btn .dot-loader {
+  transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-actions .btn.following-anim .dot-loader {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1) !important;
+  left: 50% !important;
+  top: 50% !important;
+  position: absolute !important;
+  z-index: 3;
+}
+
+/* By default hide loader (opacity 0) so it can fade in smoothly */
+.auth-actions .btn .dot-loader { opacity: 0; transform: translate(-50%, -50%) scale(.92); }
+
+/* Crossfade between svg icon and loader */
+.auth-actions .btn .icon-svg { transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid); will-change: opacity, transform; display: inline-block; vertical-align: middle; }
+.auth-actions .btn.following-anim .icon-svg { opacity: 0; transform: translateY(2px) scale(.96); pointer-events: none; }
+.auth-actions .btn .icon-svg { opacity: 1; }
+
+/* Ensure loader visually sits above the icon/text when active */
+.auth-actions .btn.following-anim .icon-svg { z-index: 1; }
+.auth-actions .btn.following-anim .label { z-index: 1; }
+
+/* Ensure the icon SVG sits exactly centered in the 18x18 icon container so
+   it doesn't appear off-center relative to the button text. */
+.follow-btn .icon .icon-svg {
+  display: grid !important;
+  place-items: center !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+.follow-btn .icon .icon-svg svg,
+.auth-actions .btn .icon-svg svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+}
 
 /* slightly tighter layout when displayed inside Account dropdown */
 .card .auth-form { min-width: 220px; }
@@ -2230,6 +2356,38 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   100% { transform: translateX(6px) scale(.96); opacity: 0; }
 }
 
+/* Simple three-dot loader used in buttons (subtle, low-contrast) */
+.dot-loader {
+  /* absolutely positioned inside the .icon container so it doesn't affect
+     the button's inline layout when hidden. */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(.92);
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid);
+}
+.dot-loader span { display: block; width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--text), transparent 60%); opacity: 0.18; transform: translateY(0); }
+.dot-loader span:nth-child(1) { animation: dotPulse 900ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 0ms; }
+.dot-loader span:nth-child(2) { animation: dotPulse 900ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 140ms; }
+.dot-loader span:nth-child(3) { animation: dotPulse 900ms cubic-bezier(.2,.9,.2,1) infinite; animation-delay: 280ms; }
+
+@keyframes dotPulse {
+  0% { opacity: 0.16; transform: translateY(0); }
+  35% { opacity: 0.9; transform: translateY(-4px); }
+  70% { opacity: 0.32; transform: translateY(0); }
+  100% { opacity: 0.16; transform: translateY(0); }
+}
+
+/* When a follow-style temporary animation is present, tint the dots slightly */
+.follow-btn.following-anim .dot-loader span { background: color-mix(in srgb, var(--primary), transparent 30%); }
+
 /* Icon-reveal helpers (kept but tuned) */
 .follow-btn.icon-reveal .icon { transition: transform 180ms var(--transition-fast), opacity 160ms var(--transition-fast); }
 .follow-btn.icon-reveal .label { transition: transform 200ms var(--transition-fast), opacity 160ms var(--transition-fast); }
@@ -2241,6 +2399,12 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 
 @media (prefers-reduced-motion: reduce) {
   .follow-btn, .follow-btn .icon, .follow-btn .label { transition: none !important; animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-actions .btn .dot-loader,
+  .auth-actions .btn .icon-svg,
+  .auth-actions .btn .label { transition: none !important; transform: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2329,6 +2493,25 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .btn.following:focus:not(:focus-visible)::after,
 .follow-btn.following:focus:not(:focus-visible)::after {
   box-shadow: none !important;
+}
+
+/* Strong override: ensure the dot loader is always centered in the button
+   when the loading class is present. Use !important so this wins against
+   any earlier/less-specific rules. */
+.auth-actions .btn.following-anim .dot-loader,
+.follow-btn.following-anim .dot-loader {
+  /* Explicit centering: left/top 50% + translate to ensure the loader
+     visually sits in the exact middle of the button. */
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 28px !important;
+  height: 18px !important;
+  right: auto !important;
+  margin: 0 !important;
+  z-index: 999 !important;
+  display: inline-flex !important;
 }
 
 :root[data-theme="dark"] .follow-btn.following {

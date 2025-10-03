@@ -306,7 +306,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
 
   <div className="auth-actions flex gap-2 justify-center w-full" style={{ maxWidth: 400, marginTop: 2 }}>
         <button
-          className={`btn follow-btn not-following ${loading ? 'following-anim' : ''}`}
+          className={`btn follow-btn not-following expanded ${loading ? 'following-anim' : ''}`}
           disabled={loading}
           type="submit"
           aria-busy={loading}
@@ -335,10 +335,10 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
             <span />
           </span>
 
-          {/* Always render the visible label so the button shape doesn't change.
-              CSS will fade the visible label out when loading and center the loader.
-              Also keep an sr-only label for screen readers while loading. */}
-          <span className="label">{mode === 'signin' ? 'Continue' : 'Create account'}</span>
+      {/* Always render the visible label so the button shape doesn't change.
+        CSS will fade the visible label out when loading and center the loader.
+        Also keep an sr-only label for screen readers while loading. */}
+  <span className="reveal label">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
           {loading && <span className="sr-only">{mode === 'signup' ? 'Creating account' : 'Signing in'}</span>}
         </button>
         {/* Cancel button intentionally removed */}

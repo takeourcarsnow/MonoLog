@@ -919,7 +919,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
                     <span className="icon" aria-hidden="true">
                       {isFollowing ? <UserCheck size={16} /> : <UserPlus size={16} />}
                     </span>
-                    <span className="reveal label">{isFollowing ? 'Following' : 'Follow'}</span>
+                    <span className="reveal label">{isFollowing ? 'Followed' : 'Unfollowed'}</span>
                   </button>
                   {showAuth ? (
                     <>

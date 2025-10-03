@@ -761,20 +761,38 @@ export const supabaseApi: Api = {
     ensureAuthListener(sb);
     const user = await getCachedAuthUser(sb);
     if (!user) return { allowed: false, reason: "Not logged in" };
-    // Check for the most recent post by this user and return a 24h cooldown
-    const { data: recent, error: recentErr } = await sb
-      .from("posts")
-      .select("created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (recentErr) throw recentErr;
-    if (recent && (recent as any).created_at) {
-      const lastTs = new Date((recent as any).created_at).getTime();
-      const next = lastTs + 24 * 60 * 60 * 1000;
-      const allowed = Date.now() >= next;
-      if (!allowed) return { allowed: false, reason: "You already posted in the last 24 hours", nextAllowedAt: next };
+    // Calendar-day rule: users may post once per calendar day (local date).
+    // Fetch the most recent post and compare its local date key to today.
+    try {
+      const { data: recent, error: recentErr } = await sb
+        .from("posts")
+        .select("created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (recentErr) throw recentErr;
+      if (recent && (recent as any).created_at) {
+        const lastCreated = new Date((recent as any).created_at);
+        // toDateKey uses local timezone and lives in src/lib/date.ts
+        // Avoid importing entire module here to prevent circulars; compute local date key inline.
+        const toDateKeyLocal = (d: Date) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          return `${y}-${m}-${day}`;
+        };
+        const lastKey = toDateKeyLocal(lastCreated);
+        const todayKey = toDateKeyLocal(new Date());
+        if (lastKey === todayKey) {
+          // next allowed at start of next local calendar day
+          const nextDay = new Date(lastCreated);
+          nextDay.setHours(24, 0, 0, 0); // move to next midnight local time
+          return { allowed: false, reason: "You already posted today", nextAllowedAt: nextDay.getTime(), lastPostedAt: lastCreated.getTime() };
+        }
+      }
+    } catch (e) {
+      throw e;
     }
     return { allowed: true };
   },

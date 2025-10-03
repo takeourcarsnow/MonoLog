@@ -72,7 +72,10 @@ export interface Api {
   getPostsByDate(dateKey: string): Promise<HydratedPost[]>;
   getPost(id: string): Promise<HydratedPost | null>;
 
-  canPostToday(): Promise<{ allowed: boolean; reason?: string; nextAllowedAt?: number }>;
+  // When not allowed, implementations may provide a `nextAllowedAt` timestamp
+  // and the `lastPostedAt` timestamp so clients can show a progress/countdown
+  // from the last post until when the next calendar day begins.
+  canPostToday(): Promise<{ allowed: boolean; reason?: string; nextAllowedAt?: number; lastPostedAt?: number }>;
   // Accept either a single `imageUrl` (legacy) or `imageUrls` (array up to 5 urls).
   createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; replace?: boolean; public?: boolean }): Promise<HydratedPost>;
 

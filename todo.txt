@@ -22,3 +22,12 @@ when rotating crop in so theres no empty canvas
 
 photo editor should subtly blur in
 text turns from confirm to delete in delete button
+Turn off background focus effect on edit post button 
+
+Zoom in when rotating image
+
+Remove click effect from reset settings button 
+
+Discard draft button is white with red outline in light theme instead of red
+
+

@@ -70,6 +70,22 @@ export async function POST(req: Request) {
       }
     }
 
+    // If not replacing, enforce calendar-day rule server-side: disallow creating
+    // a new post when the user already has a post for the current local date.
+    if (!replace) {
+      const start = new Date(); start.setHours(0, 0, 0, 0);
+      const end = new Date(start); end.setDate(start.getDate() + 1);
+      const { data: todays } = await sb.from('posts').select('created_at').eq('user_id', userId).gte('created_at', start.toISOString()).lt('created_at', end.toISOString());
+      if ((todays || []).length) {
+        // find most recent post timestamp
+        let lastMs = 0;
+        for (const p of (todays || [])) {
+          try { const t = new Date(p.created_at).getTime(); if (t > lastMs) lastMs = t; } catch (e) {}
+        }
+        return NextResponse.json({ error: 'You already posted today', nextAllowedAt: end.getTime(), lastPostedAt: lastMs || null }, { status: 409 });
+      }
+    }
+
     // Insert new post
     const id = uid();
     const created_at = new Date().toISOString();

@@ -480,7 +480,7 @@ export function ProfileView({ userId }: { userId?: string }) {
                   {/* follow / person icon */}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </span>
-                <span className="reveal">{following ? 'Following' : 'Follow'}</span>
+                <span className="reveal">{following ? 'Followed' : 'Unfollowed'}</span>
               </button>
             )}
         </div>

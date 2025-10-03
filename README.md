@@ -6,7 +6,7 @@ This project has received several updates since the original README: it uses Nex
 
 Highlights
 
-- One-post-per-day workflow (create or replace today's entry)
+- One-post-per-calendar-day workflow (create or replace today's entry)
 - Multi-image posts (client supports multiple images per post)
 - Local browser storage mode (default) for zero-config, private use
 - Optional Supabase persistence with client & server adapters
@@ -103,12 +103,12 @@ Validate env vars locally with:
 npm run check-env
 ```
 
-Configuration
-
-Runtime configuration is in `src/lib/config.ts` (exported `CONFIG` and `SUPABASE`). Notable options:
-
+- Configuration
+-
+- Runtime configuration is in `src/lib/config.ts` (exported `CONFIG` and `SUPABASE`). Notable options:
+-
 - CONFIG.seedDemoData — when true (local mode) the app seeds sample users/posts for development (default: false)
-- CONFIG.dailyPostingLimit — posts allowed per day (default: 1)
+- CONFIG.dailyPostingLimit — posts allowed per calendar day (default: 1)
 - CONFIG.imageMaxSizeMB / CONFIG.imageMaxEdge — client image constraints (defaults: 8 MB, 1600px)
 - CONFIG.enableServiceWorker — currently `false` by default
 

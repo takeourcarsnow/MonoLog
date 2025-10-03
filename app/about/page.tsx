@@ -15,7 +15,7 @@ export default function AboutPage() {
         <section style={{ marginBottom: '1.5em' }}>
           <h3>Why MonoLog exists</h3>
           <p className="dim" style={{ margin: '0.5em auto' }}>
-            Many social platforms are optimized to maximize attention and engagement. MonoLog takes a different path: one post per day, no pressure to perform, and a chronological feed so your memories remain yours — not content for an algorithm.
+            Many social platforms are optimized to maximize attention and engagement. MonoLog takes a different path: one post per calendar day (create or replace today&apos;s entry), no pressure to perform, and a chronological feed so your memories remain yours — not content for an algorithm.
           </p>
 
           <p className="dim" style={{ margin: '0.8em auto', fontStyle: 'italic' }}>
@@ -26,7 +26,7 @@ export default function AboutPage() {
         <section style={{ marginBottom: '1.5em' }}>
           <h3>How it&apos;s different from Instagram</h3>
           <ul className={styles.aboutList}>
-            <li><strong>One post per day</strong> — No spam, no overthinking. Just one daily entry with up to five images.</li>
+            <li><strong>One post per calendar day</strong> — No spam, no overthinking. Create (or replace) a single entry per local calendar day with up to five images. If you posted late in the evening you may post again the next morning once the local date rolls over.</li>
             <li><strong>Favorites instead of public likes</strong> — You can favorite posts you love; there are no public like counts to chase.</li>
             <li><strong>Chronological feed</strong> — See posts from people you follow in the order they were posted. No algorithmic ranking.</li>
             <li><strong>Privacy control</strong> — Choose whether a post is public or private. You control your sharing.</li>
@@ -38,7 +38,7 @@ export default function AboutPage() {
         <section style={{ marginBottom: '1.5em' }}>
           <h3>What you can do</h3>
           <ul className={styles.aboutList}>
-            <li><strong>Post</strong> — Create one entry per day with up to five images and a caption.</li>
+            <li><strong>Post</strong> — Create one entry per calendar day with up to five images and a caption. You can replace today&apos;s entry if you want to revise it.</li>
             <li><strong>Feed</strong> — Follow friends and see their daily posts in a clean, chronological timeline.</li>
             <li><strong>Explore</strong> — Discover public posts from the community at your own pace.</li>
             <li><strong>Calendar</strong> — View your entire photo journal in calendar form and jump to any date.</li>

@@ -306,6 +306,20 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .upload-empty .content { padding-bottom: 28px; }
 .content { position: relative; /* allow certain header elements to overflow (e.g. avatar shadows) */ overflow: visible; }
 
+/* Strong page-level override when uploader has an active preview (JS toggles
+  `body.uploader-has-preview`). This lives immediately after the base
+  `.content` so it reliably overrides earlier padding. Adjust to taste. */
+body.uploader-has-preview .content {
+  padding-bottom: calc(28px + var(--safe-bottom)) !important;
+}
+
+/* Debug outline: add `document.body.classList.add('debug-uploader-outline')`
+  in browser console to reveal outlines for the main containers while
+  debugging the remaining vertical gap. Remove the class when done. */
+body.debug-uploader-outline .content { outline: 3px dashed rgba(255,0,0,0.95); }
+body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); }
+body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
+
 /* Page slide: support swipe-to-navigate with smooth transforms. We keep
    a single .page-slide element and animate its transform/opacity on
    navigation or during pointer/touch drags. Respect prefers-reduced-motion
@@ -1368,6 +1382,99 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 .preview.editing { overflow: visible; }
 .preview-inner.editing { overflow: visible; z-index: 70; position: relative; }
 
+/* Desktop uploader tweaks: keep preview from growing so large it pushes
+  the publish/cancel controls offscreen at default browser zoom. Reserve
+  extra bottom padding when a preview exists and cap preview heights
+  relative to the viewport so buttons remain visible. */
+@media (min-width: 900px) {
+  /* Reserve more space at the bottom of the page when the uploader has a preview
+    so the tabbar and publish controls do not overlap the form at default zoom. */
+  /* Make more room at the bottom for the tabbar + action row so the publish
+    controls are unlikely to be occluded on tall images at 100% zoom. */
+  /* Reserve space equal to the fixed action bar height so page content
+    (caption input, etc.) doesn't get overlapped. The action bar is fixed
+    to the bottom and visually sits above the tabbar; keep container
+    padding in sync with the action bar height. */
+  .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
+
+  /* Aggressively cap preview height on desktop so the form controls remain
+    visible without requiring the user to scroll. */
+  /* Cap preview heights so the form controls remain visible without forcing
+    excessive empty space below the preview on desktop. Reduced chrome offset
+    prevents unnecessarily large gaps that create a vertical scrollbar. */
+  .uploader .preview-inner { max-height: min(40vh, calc(100dvh - 180px)); }
+  .uploader .preview img { max-height: min(40vh, calc(100dvh - 180px)); }
+
+  /* On wide screens, keep the normal layout spacing, but when a preview
+     exists show the uploader action row as a fixed, centered bar above
+     the bottom nav. This prevents reserving large blank space while
+     keeping controls accessible. */
+  .uploader .form-row { margin-top: 2px; }
+
+  .uploader.has-preview .form-row {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(12px + var(--safe-bottom));
+    z-index: 100002; /* must be above .tabbar (100001) */
+    width: min(calc(100% - 48px), var(--maxw));
+    height: 72px; /* reserve a consistent action bar height */
+    display: flex;
+    align-items: center; /* vertically center the buttons */
+    justify-content: space-between;
+   gap: 12px;
+   /* Keep layout/spacing but remove the visible rounded container so
+     buttons don't sit inside a separate box. */
+   background: transparent;
+   border-radius: 0;
+   padding: 0 6px; /* keep a little horizontal breathing room */
+   pointer-events: auto;
+   box-shadow: none;
+   z-index: 120000;
+  }
+}
+
+/* Spacer to prevent the fixed action bar from overlapping page content.
+   Adds an invisible block at the end of the uploader equal to the action
+   bar height + safe area so inputs are always visible above the fixed bar. */
+@media (min-width: 900px) {
+  .uploader.has-preview::after {
+    content: "";
+    display: block;
+    height: calc(32px + var(--safe-bottom));
+    width: 100%;
+    pointer-events: none;
+  }
+}
+
+/* Reduce the vertical gap between the caption input and action pills specifically
+   inside the uploader to make the controls feel more compact on desktop and mobile */
+.uploader .form-row { margin-top: 2px; gap: 6px; }
+
+/* Additional, page-scoped desktop override: prevent additive bottom padding
+   (from .content + .uploader) from creating excessive empty space on wide
+   screens. Keep the action row comfortably above the bottom nav. */
+@media (min-width: 900px) {
+  .content .uploader.has-preview { padding-bottom: calc(36px + var(--safe-bottom)) !important; }
+  .content .uploader .form-row { bottom: calc(12px + var(--safe-bottom)) !important; }
+}
+
+/* When the upload UI includes a preview, reduce the outer content padding so
+   the uploader controls don't create a large empty area. Use :has() to target
+   the page container when it contains the uploader. Modern Chromium browsers
+   support :has(); if the browser doesn't support it the fixed action bar
+   fallback will still keep controls accessible. */
+@media (min-width: 900px) {
+  .content:has(.uploader.has-preview) {
+    padding-bottom: calc(24px + var(--safe-bottom)) !important;
+  }
+}
+
+/* Fallback for browsers without :has() — toggled by the uploader JS */
+@media (min-width: 900px) {
+  body.uploader-has-preview .content { padding-bottom: calc(24px + var(--safe-bottom)) !important; }
+}
+
 .image-editor { z-index: 80; position: relative; }
 .preview:not(.hidden) { display: block; }
 
@@ -1676,7 +1783,7 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 /* Uploader-specific mobile improvements: avoid overlap with bottom tabbar, tighten dropzone and thumbnails */
 @media (max-width: 640px) {
   /* give uploader extra bottom padding only when images present so initial empty state doesn't force scroll */
-  .uploader.has-preview { padding-bottom: calc(96px + var(--safe-bottom)); }
+  .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
 
 
 /* Mobile refinement: make stacked action pills (visibility / publish / cancel) align and breathe */
@@ -4368,7 +4475,7 @@ button.delete-btn,
    the buttons fully above the nav. Kept separate from the mobile rule so the
    existing mobile value still applies there. */
 @media (min-width: 641px) {
-  .uploader.has-preview { padding-bottom: calc(140px + var(--safe-bottom)); }
+  .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
 }
 
 /* Make Swiper slides full-bleed and responsive so they fill the content area

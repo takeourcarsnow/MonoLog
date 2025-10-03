@@ -29,4 +29,4 @@ Remove click effect from reset settings button
 
 Discard draft button is white with red outline in light theme instead of red
 
-
+? when im on desktop hide the navbar when i enter photo editor

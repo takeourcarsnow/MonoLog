@@ -589,16 +589,21 @@ function UploaderCore() {
 
   // main uploader UI (toolbar removed per request)
   const hasPreview = Boolean(dataUrl || dataUrls.length);
-  // Toggle a body class so we can shrink bottom padding when empty to avoid unnecessary scrollbar
+  // Toggle body classes so we can shrink bottom padding when empty and
+  // reduce outer content padding when a preview exists (fallback for browsers
+  // without :has()). Keeps the upload layout compact and avoids an extra scrollbar.
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const cls = 'upload-empty';
+    const emptyCls = 'upload-empty';
+    const previewCls = 'uploader-has-preview';
     if (!hasPreview) {
-      document.body.classList.add(cls);
+      document.body.classList.add(emptyCls);
+      document.body.classList.remove(previewCls);
     } else {
-      document.body.classList.remove(cls);
+      document.body.classList.remove(emptyCls);
+      document.body.classList.add(previewCls);
     }
-    return () => { document.body.classList.remove(cls); };
+    return () => { document.body.classList.remove(emptyCls); document.body.classList.remove(previewCls); };
   }, [hasPreview]);
   const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
 

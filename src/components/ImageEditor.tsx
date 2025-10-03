@@ -2,6 +2,15 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { RotateCcw, RotateCw, RefreshCw, X, Check, Circle, Film, Droplet, Feather, Camera, Sun, Snowflake, Clapperboard, Sliders, Palette, Sparkles, Image as ImageIcon, Scissors, SunDim, Scale, Rainbow, Thermometer, Aperture, Layers, ZapOff, Square, Ruler } from "lucide-react";
+import BasicPanel from './imageEditor/panels/BasicPanel';
+import ColorPanel from './imageEditor/panels/ColorPanel';
+import EffectsPanel from './imageEditor/panels/EffectsPanel';
+import CropPanel from './imageEditor/panels/CropPanel';
+import FramePanel from './imageEditor/panels/FramePanel';
+import { draw as canvasDraw } from './imageEditor/CanvasRenderer';
+import { FILTER_PRESETS, CATEGORY_COLORS, FILTER_COLORS } from './imageEditor/constants';
+import { rangeBg, announceDirection } from './imageEditor/utils';
+import type { EditorSettings } from './imageEditor/types';
 
 // Filter icon mapping
 const FILTER_ICONS: Record<string, React.ComponentType<any>> = {
@@ -37,23 +46,6 @@ function generateNoiseCanvas(w: number, h: number, intensity: number) {
   ctx.putImageData(imgData, 0, 0);
   return c;
 }
-
-export type EditorSettings = {
-  exposure?: number;
-  contrast?: number;
-  saturation?: number;
-  temperature?: number;
-  vignette?: number;
-  rotation?: number;
-  frameColor?: 'white' | 'black';
-  frameThickness?: number;
-  selectedFilter?: string;
-  filterStrength?: number;
-  grain?: number;
-  softFocus?: number;
-  fade?: number;
-  matte?: number;
-};
 
 type Props = {
   initialDataUrl: string;
@@ -117,55 +109,7 @@ function ensureAriaLive() {
   return el;
 }
 
-function announceDirection(control: string, prev: number, next: number) {
-  const el = ensureAriaLive();
-  if (!el) return;
-  let dir = 'unchanged';
-  if (next > prev) dir = 'increased';
-  else if (next < prev) dir = 'decreased';
-  // give a short semantic phrase
-  const label = control === 'temperature' ? (next > prev ? 'warmer' : (next < prev ? 'cooler' : 'unchanged')) : (dir === 'increased' ? 'higher' : dir === 'decreased' ? 'lower' : 'unchanged');
-  el.textContent = `${control} ${label}`;
-}
 
-// central filter presets map (CSS filter fragments). Add new presets here.
-const FILTER_PRESETS: Record<string, string> = {
-  none: '',
-  sepia: 'sepia(0.45)',
-  mono: 'grayscale(0.95)',
-  cinema: 'contrast(1.15) saturate(1.05) hue-rotate(-5deg)',
-  bleach: 'saturate(1.3) contrast(0.95) brightness(1.02)',
-  vintage: 'sepia(0.35) contrast(0.95) saturate(0.9) brightness(0.98)',
-  lomo: 'contrast(1.25) saturate(1.35) brightness(1.02) sepia(0.08)',
-  warm: 'saturate(1.05) hue-rotate(6deg) brightness(1.01)',
-  cool: 'saturate(0.95) hue-rotate(-6deg) brightness(0.99)',
-  invert: 'invert(1)',
-  film: 'contrast(1.08) saturate(0.92) brightness(0.98)'
-};
-
-// unique colors for each category button when selected
-const CATEGORY_COLORS: Record<string, string> = {
-  basic: '#2d9cff',    // blue
-  color: '#ff6b6b',    // red/pink
-  effects: '#9b5cff',  // purple
-  crop: '#00c48c',     // green
-  frame: '#ffb703'     // warm yellow
-};
-
-// unique colors for each filter button when selected
-const FILTER_COLORS: Record<string, string> = {
-  none: '#94a3b8',    // neutral
-  sepia: '#d97706',   // amber
-  mono: '#374151',    // slate
-  cinema: '#0ea5a5',  // teal
-  bleach: '#ef4444',  // red
-  vintage: '#8b5cf6', // violet
-  lomo: '#fb923c',    // orange
-  warm: '#ffb86b',    // warm
-  cool: '#60a5fa',    // cool blue
-  invert: '#64748b',  // gray-blue
-  film: '#16a34a'     // green
-};
 
 export default function ImageEditor({ initialDataUrl, initialSettings, onCancel, onApply }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -471,366 +415,33 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   }, [sel]);
 
   function draw(info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number }, overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; matte: number; frameEnabled: boolean; frameThickness: number; frameColor: string }>) {
-  const canvas = canvasRef.current; const img = previewOriginalRef.current && originalImgRef.current ? originalImgRef.current : imgRef.current;
-  if (!canvas || !img) return;
-    const ctx = canvas.getContext("2d")!;
-    const dpr = window.devicePixelRatio || 1;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-
-    // prefer using the provided layout info to avoid state update races
-    let left: number, top: number, dispW: number, dispH: number;
-    if (info) {
-      left = info.left; top = info.top; dispW = info.dispW; dispH = info.dispH;
-    } else {
-        // Try to compute current layout from the canvas to avoid using a stale `offset` value
-        const computed = computeImageLayout();
-        if (computed) {
-          left = computed.left; top = computed.top; dispW = computed.dispW; dispH = computed.dispH;
-        } else {
-          const rect = canvas.getBoundingClientRect();
-          const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
-          dispW = img.naturalWidth * baseScale;
-          dispH = img.naturalHeight * baseScale;
-          left = offset.x; top = offset.y;
-        }
-    }
-
-  // Apply color adjustments via canvas filter for live preview
-  // If previewOriginal is true we skip all adjustments/filters and draw the raw original image
-  const isPreviewOrig = previewOriginalRef.current && originalImgRef.current;
-  // temperature mapped to hue-rotate degrees (-30..30 deg)
-  const curExposure = isPreviewOrig ? 1 : (overrides?.exposure ?? exposureRef.current ?? exposure);
-  const curContrast = overrides?.contrast ?? contrastRef.current ?? contrast;
-  const curSaturation = overrides?.saturation ?? saturationRef.current ?? saturation;
-  const curTemperature = overrides?.temperature ?? temperatureRef.current ?? temperature;
-  const curVignette = overrides?.vignette ?? vignetteRef.current ?? vignette;
-  const curSelectedFilter = overrides?.selectedFilter ?? selectedFilterRef.current ?? selectedFilter;
-  const curFilterStrength = filterStrengthRef.current ?? filterStrength;
-  const curGrain = overrides?.grain ?? grainRef.current ?? grain;
-  const curSoftFocus = overrides?.softFocus ?? softFocusRef.current ?? softFocus;
-  const curFade = overrides?.fade ?? fadeRef.current ?? fade;
-  const curMatte = overrides?.matte ?? matteRef.current ?? matte;
-  // frame is considered "on" when thickness > 0. Allow overrides to pass a thickness.
-  const curFrameThickness = overrides?.frameThickness ?? frameThicknessRef.current ?? frameThickness;
-  const curFrameEnabled = curFrameThickness > 0;
-  const curFrameColor = overrides?.frameColor ?? frameColorRef.current ?? frameColor;
-  const hue = Math.round((curTemperature / 100) * 30);
-    // map selectedFilter to additional filter fragments
-  const preset = FILTER_PRESETS[curSelectedFilter] || '';
-  const angle = (overrides?.rotation ?? rotationRef.current ?? rotation) || 0;
-  const angleRad = (angle * Math.PI) / 180;
-
-  // helper to draw an image/canvas with rotation around its center
-  function drawRotated(source: CanvasImageSource, left: number, top: number, w: number, h: number, rad: number) {
-    const cx = left + w / 2;
-    const cy = top + h / 2;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(rad);
-    ctx.drawImage(source as any, -w / 2, -h / 2, w, h);
-    ctx.restore();
-  }
-  // base color adjustments (exposure/contrast/saturation) + hue
-  const baseFilter = `brightness(${curExposure}) contrast(${curContrast}) saturate(${curSaturation}) hue-rotate(${hue}deg)`;
-  const filter = `${baseFilter} ${preset}`;
-  // If filter strength < 1, we'll composite a filtered layer on top with alpha
-  // When a frame is enabled, shrink the displayed image rectangle (uniform inset)
-  // so the frame occupies the outer margin. Aspect ratio is preserved by applying
-  // identical padding on all sides derived from min(dispW, dispH).
-  let imgLeft = left; let imgTop = top; let imgW = dispW; let imgH = dispH;
-  if (curFrameEnabled) {
-    // Previous approach subtracted identical absolute padding from width & height,
-    // which changes aspect ratio when the image isn't square. Instead, compute a
-    // desired padding based on the min dimension, derive candidate horizontal &
-    // vertical scale factors, then choose a single uniform scale so the image
-    // shrinks proportionally (aspect ratio preserved). The actual visual frame
-    // thickness may differ slightly between axes if the image is not square.
-    const minDim = Math.min(dispW, dispH);
-    const padDesired = Math.min(minDim * Math.max(0, Math.min(0.5, curFrameThickness)), minDim * 0.49);
-    const scaleW = (dispW - 2 * padDesired) / dispW;
-    const scaleH = (dispH - 2 * padDesired) / dispH;
-    const scale = Math.max(0.01, Math.min(scaleW, scaleH));
-    const scaledW = dispW * scale;
-    const scaledH = dispH * scale;
-    imgLeft = left + (dispW - scaledW) / 2;
-    imgTop = top + (dispH - scaledH) / 2;
-    imgW = scaledW;
-    imgH = scaledH;
-  }
-  if (isPreviewOrig) {
-    // Draw raw original with no filters/effects
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
-  } else if (curFilterStrength >= 0.999) {
-    ctx.filter = filter;
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
-    ctx.filter = 'none';
-  } else if (curFilterStrength <= 0.001) {
-    ctx.filter = baseFilter;
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
-    ctx.filter = 'none';
-  } else {
-    // draw base with baseFilter, then composite filtered version on top with globalAlpha = strength
-    ctx.filter = baseFilter;
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
-    ctx.filter = filter;
-    ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad);
-    ctx.globalAlpha = 1;
-    ctx.filter = 'none';
-  }
-  // Soft focus: draw a subtle blurred layer on top with low alpha
-  if (curSoftFocus > 0.001) {
-    try {
-      // Create a dreamy, soft focus effect by layering a blurred version
-      const tmp = document.createElement('canvas'); 
-      tmp.width = Math.max(1, Math.round(imgW)); 
-      tmp.height = Math.max(1, Math.round(imgH));
-      const tctx = tmp.getContext('2d')!;
-      
-      // Draw from the original image source (not the processed canvas)
-  tctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, tmp.width, tmp.height);
-      
-      // Apply blur
-      const blurAmount = Math.max(3, curSoftFocus * 12);
-      tctx.filter = `blur(${blurAmount}px) brightness(1.05)`;
-      tctx.drawImage(tmp, 0, 0);
-      tctx.filter = 'none';
-      
-      // Composite the blurred layer on top with lighten blend for glow
-  ctx.save();
-  ctx.globalAlpha = Math.min(0.4, curSoftFocus * 0.45);
-  ctx.globalCompositeOperation = 'lighten';
-  drawRotated(tmp, imgLeft, imgTop, imgW, imgH, angleRad);
-  ctx.restore();
-    } catch (e) {
-      // fallback: subtle white overlay
-      ctx.save(); 
-      ctx.globalAlpha = Math.min(0.25, curSoftFocus * 0.3); 
-      ctx.fillStyle = 'rgba(255,255,255,0.3)'; 
-      ctx.fillRect(imgLeft, imgTop, imgW, imgH); 
-      ctx.restore();
-    }
-  }
-  // Fade: produce a visible faded look by compositing a lower-contrast, slightly brighter copy on top
-  if (curFade > 0.001) {
-    try {
-      // Create a lifted blacks, reduced contrast fade effect (washed out vintage look)
-      ctx.save();
-      
-      // First, apply a light overlay to lift the blacks
-      ctx.globalAlpha = Math.min(0.35, curFade * 0.4);
-      ctx.globalCompositeOperation = 'lighten';
-      ctx.fillStyle = 'rgba(230, 230, 230, 0.5)';
-      ctx.fillRect(imgLeft, imgTop, imgW, imgH);
-      
-      // Then reduce contrast with a gray overlay
-      ctx.globalAlpha = Math.min(0.25, curFade * 0.3);
-      ctx.globalCompositeOperation = 'overlay';
-      ctx.fillStyle = 'rgba(200, 200, 200, 0.6)';
-      ctx.fillRect(imgLeft, imgTop, imgW, imgH);
-      
-      ctx.restore();
-    } catch (e) {
-      // fallback: stronger white overlay
-      ctx.save(); 
-      ctx.globalAlpha = Math.min(0.4, curFade * 0.45); 
-      ctx.fillStyle = 'rgba(245,245,240,0.3)'; 
-      ctx.fillRect(imgLeft, imgTop, imgW, imgH); 
-      ctx.restore();
-    }
-  }
-  // Matte: stronger matte look using a desaturated, flattened layer composited with soft-light for a filmic matte
-  if (curMatte > 0.001) {
-    try {
-      // Rich, cinematic matte look with crushed blacks and film-like tonality
-      ctx.save();
-      
-      // Darken with multiply for crushed blacks
-      ctx.globalCompositeOperation = 'multiply';
-      ctx.globalAlpha = Math.min(0.25, curMatte * 0.3);
-      ctx.fillStyle = 'rgba(30, 25, 35, 0.8)';
-      ctx.fillRect(imgLeft, imgTop, imgW, imgH);
-      
-      // Add warm film tone with color-dodge for highlights
-      ctx.globalCompositeOperation = 'soft-light';
-      ctx.globalAlpha = Math.min(0.2, curMatte * 0.25);
-      ctx.fillStyle = 'rgba(200, 180, 150, 0.5)';
-      ctx.fillRect(imgLeft, imgTop, imgW, imgH);
-      
-      ctx.restore();
-    } catch (e) {
-      ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = Math.min(0.35, curMatte * 0.4); ctx.fillStyle = 'rgba(25,25,25,0.3)'; ctx.fillRect(imgLeft, imgTop, imgW, imgH); ctx.restore();
-    }
-  }
-    // optional vignette overlay — apply only over the displayed image area
-      if (curVignette > 0) {
-        try {
-          // center the radial gradient on the image display area
-          const cx = imgLeft + imgW / 2;
-          const cy = imgTop + imgH / 2;
-          const innerR = Math.min(imgW, imgH) * 0.2;
-          const outerR = Math.max(imgW, imgH) * 0.8;
-          const g = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
-          g.addColorStop(0, 'rgba(0,0,0,0)');
-          g.addColorStop(1, `rgba(0,0,0,${Math.min(0.85, curVignette)})`);
-          ctx.save();
-          ctx.globalCompositeOperation = 'multiply';
-          // clip to the image rectangle so the vignette won't darken the surrounding UI
-          ctx.beginPath();
-          ctx.rect(imgLeft, imgTop, imgW, imgH);
-          ctx.clip();
-          ctx.fillStyle = g;
-          ctx.fillRect(imgLeft, imgTop, imgW, imgH);
-          ctx.restore();
-        } catch (e) {
-          // fallback: if anything goes wrong, apply a conservative vignette over the canvas
-          const r = info?.rect || canvas.getBoundingClientRect();
-          const g = ctx.createRadialGradient(r.width / 2, r.height / 2, Math.min(r.width, r.height) * 0.2, r.width / 2, r.height / 2, Math.max(r.width, r.height) * 0.8);
-          g.addColorStop(0, `rgba(0,0,0,0)`);
-          g.addColorStop(1, `rgba(0,0,0,${Math.min(0.85, curVignette)})`);
-          ctx.save();
-          ctx.globalCompositeOperation = 'multiply';
-          ctx.fillStyle = g;
-          ctx.fillRect(0, 0, r.width, r.height);
-          ctx.restore();
-        }
-      }
-
-    // grain/noise overlay (preview)
-    if (curGrain > 0) {
-      // draw grain only over the displayed image area (use shrunken image rect if frame is enabled)
-      const nImgLeft = imgLeft; const nImgTop = imgTop; const nImgW = imgW; const nImgH = imgH;
-      const noiseW = Math.max(1, Math.round(imgW));
-      const noiseH = Math.max(1, Math.round(imgH));
-      const noise = generateNoiseCanvas(noiseW, noiseH, curGrain);
-      ctx.save();
-      ctx.globalAlpha = Math.min(0.85, curGrain);
-      ctx.globalCompositeOperation = 'overlay';
-      // draw the noise scaled to the image area so grain doesn't bleed outside the photo
-      drawRotated(noise, nImgLeft, nImgTop, nImgW, nImgH, angleRad);
-      ctx.restore();
-    }
-
-    // simple frame overlay (stroke around image)
-    if (curFrameEnabled) {
-      // Draw frame bands between outer disp rect and inner uniformly-scaled image.
-      // If the image is rotated, draw the frame inside a rotated coordinate
-      // system so the frame rotates with the photo.
-      ctx.save();
-      ctx.fillStyle = curFrameColor === 'white' ? '#ffffff' : '#000000';
-      // When no rotation is applied we can draw axis-aligned bands (fast path)
-      if (Math.abs(angleRad) < 1e-6) {
-        // Round all coordinates to whole pixels to eliminate gaps
-        const outerL = Math.floor(left);
-        const outerT = Math.floor(top);
-        const outerR = Math.ceil(left + dispW);
-        const outerB = Math.ceil(top + dispH);
-        const innerL = Math.floor(imgLeft);
-        const innerT = Math.floor(imgTop);
-        const innerR = Math.ceil(imgLeft + imgW);
-        const innerB = Math.ceil(imgTop + imgH);
-
-        // Draw frame as overlapping rectangles to ensure no gaps
-        if (innerT > outerT) ctx.fillRect(outerL, outerT, outerR - outerL, innerT - outerT + 1);
-        if (innerB < outerB) ctx.fillRect(outerL, innerB - 1, outerR - outerL, outerB - innerB + 1);
-        if (innerL > outerL) ctx.fillRect(outerL, outerT, innerL - outerL + 1, outerB - outerT);
-        if (innerR < outerR) ctx.fillRect(innerR - 1, outerT, outerR - innerR + 1, outerB - outerT);
-      } else {
-        // Rotated path: translate to image center and draw relative to that center
-        const cx = left + dispW / 2;
-        const cy = top + dispH / 2;
-        ctx.translate(cx, cy);
-        ctx.rotate(angleRad);
-
-        // Outer rect relative to center
-        const outerL = Math.floor(-dispW / 2);
-        const outerT = Math.floor(-dispH / 2);
-        const outerR = Math.ceil(dispW / 2);
-        const outerB = Math.ceil(dispH / 2);
-
-        // Inner rect relative to center
-        const innerL = Math.floor(imgLeft - left - dispW / 2);
-        const innerT = Math.floor(imgTop - top - dispH / 2);
-        const innerR = Math.ceil(imgLeft + imgW - left - dispW / 2);
-        const innerB = Math.ceil(imgTop + imgH - top - dispH / 2);
-
-        if (innerT > outerT) ctx.fillRect(outerL, outerT, outerR - outerL, innerT - outerT + 1);
-        if (innerB < outerB) ctx.fillRect(outerL, innerB - 1, outerR - outerL, outerB - innerB + 1);
-        if (innerL > outerL) ctx.fillRect(outerL, outerT, innerL - outerL + 1, outerB - outerT);
-        if (innerR < outerR) ctx.fillRect(innerR - 1, outerT, outerR - innerR + 1, outerB - outerT);
-      }
-      ctx.restore();
-    }
-
-    if (sel) {
-      ctx.save();
-      ctx.strokeStyle = "#00aaff";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6, 4]);
-      // animate marching-dashed selection using an offset
-      ctx.lineDashOffset = dashOffsetRef.current;
-      ctx.strokeRect(sel.x, sel.y, sel.w, sel.h);
-      ctx.restore();
-      // rule-of-thirds overlay inside the selection (double-stroke for contrast)
-      try {
-        ctx.save();
-        ctx.lineWidth = 1;
-        ctx.setLineDash([]);
-        // compute thirds
-        const tx1 = sel.x + sel.w / 3;
-        const tx2 = sel.x + (sel.w * 2) / 3;
-        const ty1 = sel.y + sel.h / 3;
-        const ty2 = sel.y + (sel.h * 2) / 3;
-
-        // draw darker base lines for contrast on light backgrounds
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(0,0,0,0.32)';
-        ctx.moveTo(tx1, sel.y); ctx.lineTo(tx1, sel.y + sel.h);
-        ctx.moveTo(tx2, sel.y); ctx.lineTo(tx2, sel.y + sel.h);
-        ctx.moveTo(sel.x, ty1); ctx.lineTo(sel.x + sel.w, ty1);
-        ctx.moveTo(sel.x, ty2); ctx.lineTo(sel.x + sel.w, ty2);
-        ctx.stroke();
-
-        // subtle light lines on top for visibility on dark backgrounds
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-        ctx.moveTo(tx1, sel.y); ctx.lineTo(tx1, sel.y + sel.h);
-        ctx.moveTo(tx2, sel.y); ctx.lineTo(tx2, sel.y + sel.h);
-        ctx.moveTo(sel.x, ty1); ctx.lineTo(sel.x + sel.w, ty1);
-        ctx.moveTo(sel.x, ty2); ctx.lineTo(sel.x + sel.w, ty2);
-        ctx.stroke();
-        ctx.restore();
-      } catch (e) {
-        // drawing extras should never crash; if it does, silently continue
-      }
-      // dim outside selection
-      ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.beginPath();
-      ctx.rect(0, 0, canvas.width / dpr, canvas.height / dpr);
-      ctx.rect(sel.x, sel.y, sel.w, sel.h);
-      // @ts-ignore
-      ctx.fill("evenodd");
-      ctx.restore();
-
-      // Draw resize handles
-      const handleSize = 8;
-      ctx.fillStyle = "#00aaff";
-      const handles = [
-        { x: sel.x - handleSize/2, y: sel.y - handleSize/2 }, // top-left
-        { x: sel.x + sel.w - handleSize/2, y: sel.y - handleSize/2 }, // top-right
-        { x: sel.x - handleSize/2, y: sel.y + sel.h - handleSize/2 }, // bottom-left
-        { x: sel.x + sel.w - handleSize/2, y: sel.y + sel.h - handleSize/2 }, // bottom-right
-        { x: sel.x + sel.w/2 - handleSize/2, y: sel.y - handleSize/2 }, // top
-        { x: sel.x + sel.w/2 - handleSize/2, y: sel.y + sel.h - handleSize/2 }, // bottom
-        { x: sel.x - handleSize/2, y: sel.y + sel.h/2 - handleSize/2 }, // left
-        { x: sel.x + sel.w - handleSize/2, y: sel.y + sel.h/2 - handleSize/2 }, // right
-      ];
-      handles.forEach(h => {
-        ctx.fillRect(h.x, h.y, handleSize, handleSize);
-      });
-    }
+    const canvas = canvasRef.current;
+    const img = previewOriginalRef.current && originalImgRef.current ? originalImgRef.current : imgRef.current;
+    if (!canvas || !img) return;
+  canvasDraw({
+    canvasRef,
+    imgRef,
+    originalImgRef,
+    previewOriginalRef,
+    offset,
+    sel,
+    exposureRef,
+    contrastRef,
+    saturationRef,
+    temperatureRef,
+    vignetteRef,
+    frameColorRef,
+    frameThicknessRef,
+    selectedFilterRef,
+    filterStrengthRef,
+    grainRef,
+    softFocusRef,
+    fadeRef,
+    matteRef,
+    rotationRef,
+    dashOffsetRef,
+    computeImageLayout
+  }, info, overrides);
   }
 
   // animate dashed selection while a selection exists
@@ -1980,379 +1591,91 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   <div className="imgedit-panels" style={{ maxWidth: 820, margin: '16px auto 0', position: 'relative', borderRadius: 12, minHeight: 200 }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
           {/* Basic panel */}
-          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'basic' ? 'grid' : 'none', width: '100%' }}>
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <SunDim size={18} strokeWidth={2} aria-hidden />
-                <span>Exposure</span>
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <input className="imgedit-range" type="range" min={0.2} max={1.8} step={0.01} value={exposure} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('exposure', exposureRef.current, v); exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('exposure')} style={{ flex: 1, background: rangeBg(exposure, 0.2, 1.8, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }} />
-              </span>
-            </label>
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <Scale size={18} strokeWidth={2} aria-hidden />
-                <span>Contrast</span>
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <input className="imgedit-range" type="range" min={0.2} max={1.8} step={0.01} value={contrast} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('contrast', contrastRef.current, v); contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('contrast')} style={{ flex: 1, background: rangeBg(contrast, 0.2, 1.8, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }} />
-              </span>
-            </label>
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <Rainbow size={18} strokeWidth={2} aria-hidden />
-                <span>Saturation</span>
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <input className="imgedit-range" type="range" min={0} max={2} step={0.01} value={saturation} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('saturation', saturationRef.current, v); saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('saturation')} style={{ flex: 1, background: rangeBg(saturation, 0, 2, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }} />
-              </span>
-            </label>
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <Thermometer size={18} strokeWidth={2} aria-hidden />
-                <span>Temperature</span>
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <input className="imgedit-range" type="range" min={-100} max={100} step={1} value={temperature} onInput={(e: any) => { const v = Number(e.target.value); announceDirection('temperature', temperatureRef.current, v); temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('temperature')} style={{ flex: 1, background: rangeBg(temperature, -100, 100, 'var(--slider-temperature-cold)', 'var(--slider-temperature-warm)') }} />
-              </span>
-            </label>
-          </div>
+          <BasicPanel
+            exposure={exposure}
+            setExposure={setExposure}
+            exposureRef={exposureRef}
+            contrast={contrast}
+            setContrast={setContrast}
+            contrastRef={contrastRef}
+            saturation={saturation}
+            setSaturation={setSaturation}
+            saturationRef={saturationRef}
+            temperature={temperature}
+            setTemperature={setTemperature}
+            temperatureRef={temperatureRef}
+            draw={draw}
+            resetControlToDefault={resetControlToDefault}
+          />
 
           {/* Color panel */}
-          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'color' ? 'grid' : 'none', width: '100%' }}>
-            {/* panel heading removed (tab already shows Filters) */}
-            <div ref={filtersContainerRef} style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: '8px 0' }}>
-              {/* animated highlight pill sits behind buttons and moves between them */}
-              <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', transition: suppressFilterTransitionRef.current ? 'none' : 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease', pointerEvents: 'none', opacity: filterHighlight ? 0.95 : 0, boxShadow: 'none', border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)' }} />
-              {Object.keys(FILTER_PRESETS).map(f => {
-                const Icon = FILTER_ICONS[f] || FILTER_ICONS.default;
-                return (
-                  <button
-                    key={f}
-                    data-filter={f}
-                    type="button"
-                    onMouseDown={() => { selectedFilterRef.current = f; setSelectedFilter(f); draw(undefined, { selectedFilter: f }); requestAnimationFrame(() => draw()); }}
-                    style={{ padding: '8px 12px', borderRadius: 10, background: 'transparent', color: 'var(--text)', transition: 'transform 120ms ease, box-shadow 200ms ease, color 200ms ease', display: 'inline-flex', gap: 8, alignItems: 'center', position: 'relative', zIndex: 1, border: 'none', fontWeight: selectedFilter === f ? 700 : 500 }}
-                    onMouseDownCapture={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')}
-                    onMouseUpCapture={(e)=> (e.currentTarget.style.transform = '')}
-                    onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}
-                    onFocus={(e)=> (e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)')}
-                    onBlur={(e)=> (e.currentTarget.style.boxShadow = '')}
-                    aria-pressed={selectedFilter===f}
-                  >
-                    <Icon size={18} strokeWidth={2} aria-hidden style={{ color: selectedFilter === f ? FILTER_COLORS[f] ?? undefined : undefined }} />
-                    <span style={{ fontSize: 13 }}>{f}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
-              <span style={{ width: 120, color: 'var(--text)', fontWeight: 600, fontSize: 14 }}>Strength</span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={filterStrength} onInput={(e: any) => { const v = Number(e.target.value); filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('filterStrength')} style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }} />
-            </div>
-          </div>
+          <ColorPanel
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
+            selectedFilterRef={selectedFilterRef}
+            filterStrength={filterStrength}
+            setFilterStrength={setFilterStrength}
+            filterStrengthRef={filterStrengthRef}
+            draw={draw}
+            resetControlToDefault={resetControlToDefault}
+            filtersContainerRef={filtersContainerRef}
+            filterHighlight={filterHighlight}
+          />
 
           {/* Effects panel */}
-          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'effects' ? 'grid' : 'none', width: '100%' }}>
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <Aperture size={18} strokeWidth={2} aria-hidden />
-                <span>Vignette</span>
-              </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={vignette} onInput={(e: any) => { const v = Number(e.target.value); vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('vignette')} style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#1a1a1a', '#000000') }} />
-            </label>
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <Layers size={18} strokeWidth={2} aria-hidden />
-                <span>Grain</span>
-              </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={grain} onInput={(e: any) => { const v = Number(e.target.value); grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('grain')} style={{ flex: 1, background: rangeBg(grain, 0, 1, '#e8d5b7', '#8b7355') }} />
-            </label>
-
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <ZapOff size={18} strokeWidth={2} aria-hidden />
-                <span>Soft Focus</span>
-              </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={softFocus} onInput={(e: any) => { const v = Number(e.target.value); softFocusRef.current = v; setSoftFocus(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('softFocus')} style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }} />
-            </label>
-
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <Film size={18} strokeWidth={2} aria-hidden />
-                <span>Fade</span>
-              </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={fade} onInput={(e: any) => { const v = Number(e.target.value); fadeRef.current = v; setFade(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('fade')} style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }} />
-            </label>
-
-            <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                <Square size={18} strokeWidth={2} aria-hidden />
-                <span>Matte</span>
-              </span>
-              <input className="imgedit-range" type="range" min={0} max={1} step={0.01} value={matte} onInput={(e: any) => { const v = Number(e.target.value); matteRef.current = v; setMatte(v); draw(undefined, {  }); requestAnimationFrame(() => draw()); }} onDoubleClick={() => resetControlToDefault('matte')} style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }} />
-            </label>
-          </div>
+          <EffectsPanel
+            vignette={vignette}
+            setVignette={setVignette}
+            vignetteRef={vignetteRef}
+            grain={grain}
+            setGrain={setGrain}
+            grainRef={grainRef}
+            softFocus={softFocus}
+            setSoftFocus={setSoftFocus}
+            softFocusRef={softFocusRef}
+            fade={fade}
+            setFade={setFade}
+            fadeRef={fadeRef}
+            matte={matte}
+            setMatte={setMatte}
+            matteRef={matteRef}
+            draw={draw}
+            resetControlToDefault={resetControlToDefault}
+          />
 
           {/* Crop panel */}
-          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'crop' ? 'grid' : 'none', width: '100%' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}><span className="sr-only">Crop Aspect Ratio</span></div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  {/* header rotate buttons removed; use controls beside the Straighten slider */}
-                </div>
-              </div>
-
-              {/* Responsive aspect switcher: grid on desktop, carousel on mobile */}
-              <div className="aspect-presets-container">
-                {/* Desktop: Show all presets in a grid */}
-                <div className="aspect-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(56px, 1fr))', gridAutoRows: 'minmax(44px, auto)', gap: 4, paddingBottom: 2, alignItems: 'start' }}>
-                  {ASPECT_PRESETS.map((r, i) => {
-                    const selected = cropRatio.current === r.v;
-                    const base = 16 / 9;
-                    const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
-                    const previewInnerWidth = Math.round(18 * previewRatio);
-                    return (
-                      <button key={r.label} type="button" onClick={() => {
-                        // Toggle: if selecting the same preset again, clear selection
-                        if (cropRatio.current === r.v) {
-                          cropRatio.current = null;
-                          setSel(null);
-                          return;
-                        }
-                        setPresetIndex(i);
-                        cropRatio.current = r.v;
-                        const canvas = canvasRef.current;
-                        if (!canvas) return;
-                        const info = computeImageLayout();
-                        const pad = 0.08;
-                        if (info) {
-                          let w = info.dispW * (1 - pad * 2);
-                          let h = info.dispH * (1 - pad * 2);
-                          if (r.v) {
-                            h = w / r.v;
-                            if (h > info.dispH * (1 - pad * 2)) {
-                              h = info.dispH * (1 - pad * 2);
-                              w = h * r.v;
-                            }
-                          }
-                          const x = info.left + (info.dispW - w) / 2;
-                          const y = info.top + (info.dispH - h) / 2;
-                          setSel({ x, y, w, h });
-                        } else {
-                          const rect = canvas.getBoundingClientRect();
-                          let w = rect.width * (1 - pad * 2);
-                          let h = rect.height * (1 - pad * 2);
-                          if (r.v) {
-                            h = w / r.v;
-                            if (h > rect.height * (1 - pad * 2)) {
-                              h = rect.height * (1 - pad * 2);
-                              w = h * r.v;
-                            }
-                          }
-                          const x = (rect.width - w) / 2;
-                          const y = (rect.height - h) / 2;
-                          setSel({ x, y, w, h });
-                        }
-                      }} aria-pressed={selected} style={{ 
-                        padding: '6px 4px', 
-                        borderRadius: 6, 
-                        background: selected ? 'color-mix(in srgb, var(--text) 6%, transparent)' : 'var(--bg-elev)', 
-                        color: selected ? 'var(--text)' : 'var(--text)', 
-                        border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)', 
-                        boxShadow: 'none', 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        gap: 6, 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        transition: 'transform 100ms ease, box-shadow 140ms ease, background 140ms ease', 
-                        fontSize: 11,
-                        fontWeight: selected ? 700 : 600,
-                        cursor: 'pointer',
-                        minHeight: 44,
-                        lineHeight: 1
-                      }}
-                      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 3px 8px rgba(0,0,0,0.06)'; }}
-                      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'; }}
-                      >
-                        <span aria-hidden style={{ width: 28, height: 14, background: selected ? 'color-mix(in srgb, var(--bg-elev) 92%, color-mix(in srgb, var(--text) 6%, transparent))' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none', flexShrink: 0 }}>
-                          <span style={{ width: previewInnerWidth, height: 8, background: selected ? 'color-mix(in srgb, var(--text) 36%, #fff)' : 'color-mix(in srgb, var(--text) 28%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
-                        </span>
-                        <span style={{ fontSize: 11, fontWeight: selected ? 700 : 600, opacity: selected ? 1 : 0.85, lineHeight: 1 }}>{r.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Mobile: Carousel with arrows */}
-                <div className="aspect-presets-carousel" style={{ display: 'none', alignItems: 'center', gap: 8, paddingBottom: 4 }}>
-                  <button type="button" aria-label="Previous preset" onClick={() => setPresetIndex((presetIndex - 1 + ASPECT_PRESETS.length) % ASPECT_PRESETS.length)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent', fontSize: 18 }}>◀</button>
-                  <div style={{ overflow: 'hidden', width: 240, borderRadius: 10 }}>
-                    <div style={{ display: 'flex', gap: 8, transition: 'transform 300ms cubic-bezier(.2,.9,.2,1)', transform: `translateX(-${presetIndex * 92}px)` }}>
-                      {ASPECT_PRESETS.map((r, i) => {
-                        const selected = cropRatio.current === r.v;
-                        const base = 16 / 9;
-                        const previewRatio = r.v ? Math.min(1.2, r.v / base) : 0.7;
-                        const previewInnerWidth = Math.round(14 * previewRatio);
-                        return (
-                          <div key={r.label} style={{ flex: '0 0 64px' }}>
-                            <button type="button" onClick={() => {
-                              // mirror desktop behavior: clicking the already-selected preset clears the crop
-                              setPresetIndex(i);
-                              const already = cropRatio.current === r.v;
-                              if (already) {
-                                cropRatio.current = null;
-                                setSel(null);
-                                return;
-                              }
-                              cropRatio.current = r.v;
-                              const canvas = canvasRef.current;
-                              if (!canvas) return;
-                              const info = computeImageLayout();
-                              const pad = 0.08;
-                              if (info) {
-                                let w = info.dispW * (1 - pad * 2);
-                                let h = info.dispH * (1 - pad * 2);
-                                if (r.v) {
-                                  h = w / r.v;
-                                  if (h > info.dispH * (1 - pad * 2)) {
-                                    h = info.dispH * (1 - pad * 2);
-                                    w = h * r.v;
-                                  }
-                                }
-                                const x = info.left + (info.dispW - w) / 2;
-                                const y = info.top + (info.dispH - h) / 2;
-                                setSel({ x, y, w, h });
-                              } else {
-                                const rect = canvas.getBoundingClientRect();
-                                let w = rect.width * (1 - pad * 2);
-                                let h = rect.height * (1 - pad * 2);
-                                if (r.v) {
-                                  h = w / r.v;
-                                  if (h > rect.height * (1 - pad * 2)) {
-                                    h = rect.height * (1 - pad * 2);
-                                    w = h * r.v;
-                                  }
-                                }
-                                const x = (rect.width - w) / 2;
-                                const y = (rect.height - h) / 2;
-                                setSel({ x, y, w, h });
-                              }
-                            }} aria-pressed={selected} style={{ minWidth: 48, padding: '4px 6px', borderRadius: 6, background: selected ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)', color: selected ? 'var(--text)' : 'var(--text)', border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)', boxShadow: 'none', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 100ms ease, box-shadow 140ms ease, background 140ms ease', fontSize: 11 }}>
-                              <span aria-hidden style={{ width: 28, height: 14, background: selected ? 'color-mix(in srgb, var(--primary) 6%, transparent)' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none' }}>
-                                <span style={{ width: previewInnerWidth, height: 8, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
-                              </span>
-                              <span style={{ fontSize: 11, fontWeight: 600, opacity: selected ? 1 : 0.95 }}>{r.label}</span>
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <button type="button" aria-label="Next preset" onClick={() => setPresetIndex((presetIndex + 1) % ASPECT_PRESETS.length)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent', fontSize: 18 }}>▶</button>
-                </div>
-
-                <style>{`
-                  /* Always show the full presets grid; hide the carousel variant */
-                  .aspect-presets-grid { display: grid !important; }
-                  .aspect-presets-carousel { display: none !important; }
-                  /* Ensure aspect buttons don't wrap text */
-                  .aspect-presets-grid button { white-space: nowrap; overflow: visible; }
-                `}</style>
-              </div>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <button type="button" title="Rotate -90°" onClick={async () => { await bakeRotateMinus90(); /* after bake, keep slider controlled rotation at 0 so user can fine-tune */ rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate -90°" style={{ padding: 6, borderRadius: 8 }}>
-                      <RotateCw size={14} aria-hidden />
-                    </button>
-                    <button type="button" title="Rotate +90°" onClick={async () => { await bakeRotate90(); rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate +90°" style={{ padding: 6, borderRadius: 8 }}>
-                      <RotateCcw size={14} aria-hidden />
-                    </button>
-                  </div>
-                  <span className="sr-only">Straighten</span>
-                </span>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
-                  <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')} style={{ flex: 1, background: rangeBg(rotation, -30, 30, 'var(--slider-rotation-start)', 'var(--slider-rotation-end)') }} />
-                </div>
-              </label>
-            </div>
-            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button type="button" className="btn ghost" onClick={() => resetCrop()} disabled={!(sel || cropRatio.current != null || presetIndex > 0 || imageSrc !== originalRef.current)} aria-disabled={!(sel || cropRatio.current != null || presetIndex > 0 || imageSrc !== originalRef.current)} style={{ padding: '8px 12px', borderRadius: 8 }}>Reset crop</button>
-              <button type="button" className="btn primary" onClick={() => applyCropOnly()} disabled={!sel} aria-disabled={!sel} style={{ padding: '8px 12px', borderRadius: 8 }}>Apply crop</button>
-            </div>
-          </div>
+          <CropPanel
+            sel={sel}
+            setSel={setSel}
+            cropRatio={cropRatio}
+            presetIndex={presetIndex}
+            setPresetIndex={setPresetIndex}
+            rotation={rotation}
+            setRotation={setRotation}
+            rotationRef={rotationRef}
+            draw={draw}
+            resetControlToDefault={resetControlToDefault}
+            computeImageLayout={computeImageLayout}
+            canvasRef={canvasRef}
+            applyCropOnly={applyCropOnly}
+            resetCrop={resetCrop}
+            imageSrc={imageSrc}
+            originalRef={originalRef}
+            bakeRotate90={bakeRotate90}
+            bakeRotateMinus90={bakeRotateMinus90}
+          />
 
           {/* Frame panel */}
-          <div className="imgedit-panel-inner" style={{ display: selectedCategory === 'frame' ? 'grid' : 'none', width: '100%' }}>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}><span className="sr-only">Photo Frame</span></div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <span style={{ width: 100, display: 'flex', gap: 6, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-                    <Ruler size={18} strokeWidth={2} aria-hidden />
-                    <span>Thickness</span>
-                  </span>
-                  <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} onDoubleClick={() => resetControlToDefault('frameThickness')} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#d4c5b9', '#8b7355') }} />
-                </label>
-
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}><span className="sr-only">Frame Color</span></div>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button 
-                      type="button" 
-                      className={frameColor === 'white' ? 'btn primary' : 'btn ghost'} 
-                      onClick={() => { frameColorRef.current = 'white'; setFrameColor('white'); draw(); }} 
-                      style={{ 
-                        padding: '10px 20px', 
-                        fontSize: 14, 
-                        flex: 1,
-                        opacity: frameThickness > 0 ? 1 : 0.5, 
-                        pointerEvents: frameThickness > 0 ? 'auto' : 'none',
-                        transition: 'all 200ms ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8
-                      }}
-                    >
-                      <span style={{ fontSize: 18 }}>⚪</span>
-                      <span>White</span>
-                    </button>
-                    <button 
-                      type="button" 
-                      className={frameColor === 'black' ? 'btn primary' : 'btn ghost'} 
-                      onClick={() => { frameColorRef.current = 'black'; setFrameColor('black'); draw(); }} 
-                      style={{ 
-                        padding: '10px 20px', 
-                        fontSize: 14, 
-                        flex: 1,
-                        opacity: frameThickness > 0 ? 1 : 0.5, 
-                        pointerEvents: frameThickness > 0 ? 'auto' : 'none',
-                        transition: 'all 200ms ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8
-                      }}
-                    >
-                      <span style={{ fontSize: 18 }}>⚫</span>
-                      <span>Black</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* hint removed as requested */}
-              </div>
-            </div>
-          </div>
+          <FramePanel
+            frameThickness={frameThickness}
+            setFrameThickness={setFrameThickness}
+            frameThicknessRef={frameThicknessRef}
+            frameColor={frameColor}
+            setFrameColor={setFrameColor}
+            frameColorRef={frameColorRef}
+            draw={draw}
+            resetControlToDefault={resetControlToDefault}
+          />
         </div>
       </div>
       {/* Bottom controls removed per request */}

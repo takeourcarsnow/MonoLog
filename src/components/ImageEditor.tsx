@@ -1,51 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
-import { RotateCcw, RotateCw, RefreshCw, X, Check, Circle, Film, Droplet, Feather, Camera, Sun, Snowflake, Clapperboard, Sliders, Palette, Sparkles, Image as ImageIcon, Scissors, SunDim, Scale, Rainbow, Thermometer, Aperture, Layers, ZapOff, Square, Ruler } from "lucide-react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { RotateCcw, RotateCw, RefreshCw, X, Check, Circle, Film, Droplet, Feather, Camera, Sun, Snowflake, Clapperboard, Sliders, Palette, Sparkles, Scissors, ImageIcon } from "lucide-react";
 import BasicPanel from './imageEditor/panels/BasicPanel';
 import ColorPanel from './imageEditor/panels/ColorPanel';
 import EffectsPanel from './imageEditor/panels/EffectsPanel';
 import CropPanel from './imageEditor/panels/CropPanel';
 import FramePanel from './imageEditor/panels/FramePanel';
+import { FILTER_PRESETS, CATEGORY_COLORS } from './imageEditor/constants';
+import { rangeBg, generateNoiseCanvas } from './imageEditor/utils';
+import { useImageEditorState } from './imageEditor/useImageEditorState';
+import { drawImage as drawImageImport } from './imageEditor/imageEditorDrawing';
+import { usePointerEvents, useSliderEvents } from './imageEditor/imageEditorEvents';
 import { draw as canvasDraw } from './imageEditor/CanvasRenderer';
-import { FILTER_PRESETS, CATEGORY_COLORS, FILTER_COLORS } from './imageEditor/constants';
-import { rangeBg, announceDirection } from './imageEditor/utils';
 import type { EditorSettings } from './imageEditor/types';
-
-// Filter icon mapping
-const FILTER_ICONS: Record<string, React.ComponentType<any>> = {
-  none: RotateCcw,
-  sepia: Circle,
-  mono: Circle,
-  cinema: Clapperboard,
-  bleach: Droplet,
-  vintage: Feather,
-  lomo: Camera,
-  warm: Sun,
-  cool: Snowflake,
-  default: Film
-};
-
-// helper: generate a small noise canvas scaled to requested size for grain effect
-function generateNoiseCanvas(w: number, h: number, intensity: number) {
-  const c = document.createElement('canvas');
-  c.width = Math.max(1, Math.round(w));
-  c.height = Math.max(1, Math.round(h));
-  const ctx = c.getContext('2d')!;
-  const imgData = ctx.createImageData(c.width, c.height);
-  const data = imgData.data;
-  // intensity controls alpha-ish by choosing noise amplitude
-  const amp = Math.min(1, Math.max(0, intensity));
-  for (let i = 0; i < data.length; i += 4) {
-    const v = Math.round((Math.random() * 255) * amp);
-    data[i] = v;
-    data[i + 1] = v;
-    data[i + 2] = v;
-    data[i + 3] = 255;
-  }
-  ctx.putImageData(imgData, 0, 0);
-  return c;
-}
+import {
+  applyEdit as actionsApplyEdit,
+  resetAdjustments as actionsResetAdjustments,
+  resetControlToDefault as actionsResetControlToDefault,
+  bakeRotate90 as actionsBakeRotate90,
+  bakeRotateMinus90 as actionsBakeRotateMinus90,
+} from './imageEditor/imageEditorActions';
 
 type Props = {
   initialDataUrl: string;
@@ -54,133 +29,134 @@ type Props = {
   onApply: (dataUrl: string, settings: EditorSettings) => void;
 };
 
-// simple linear interpolation helper for colors (hex) — returns a CSS color string
-function lerpColor(hexA: string, hexB: string, t: number) {
-  const a = parseInt(hexA.replace('#',''), 16);
-  const b = parseInt(hexB.replace('#',''), 16);
-  const ar = (a >> 16) & 0xff, ag = (a >> 8) & 0xff, ab = a & 0xff;
-  const br = (b >> 16) & 0xff, bg = (b >> 8) & 0xff, bb = b & 0xff;
-  const rr = Math.round(ar + (br - ar) * t);
-  const rg = Math.round(ag + (bg - ag) * t);
-  const rb = Math.round(ab + (bb - ab) * t);
-  return `rgb(${rr}, ${rg}, ${rb})`;
-}
-
-function exposureColor(v: number) {
-  // v range 0.2..1.8 -> normalize to 0..1 (we keep neutral=1 centered)
-  const EXPOSURE_MIN = 0.2;
-  const EXPOSURE_MAX = 1.8;
-  const t = Math.max(0, Math.min(1, (v - EXPOSURE_MIN) / (EXPOSURE_MAX - EXPOSURE_MIN)));
-  return lerpColor('#fff6db', '#ffd166', t);
-}
-
-function contrastColor(v: number) {
-  // contrast uses same numeric range as exposure so normalize against the same bounds
-  const CONTRAST_MIN = 0.2;
-  const CONTRAST_MAX = 1.8;
-  const t = Math.max(0, Math.min(1, (v - CONTRAST_MIN) / (CONTRAST_MAX - CONTRAST_MIN)));
-  return lerpColor('#fff3e6', '#ff9f43', t);
-}
-
-function saturationColor(v: number) {
-  const t = Math.max(0, Math.min(1, v / 2));
-  return lerpColor('#ffe9e9', '#ff6b6b', t);
-}
-
-function temperatureColor(v: number) {
-  // v range -100..100 -> 0..1 (cold to warm)
-  const t = Math.max(0, Math.min(1, (v + 100) / 200));
-  return lerpColor('#66d1ff', '#ffb86b', t);
-}
-
-// ARIA live announcer — updates a hidden live region to announce semantic direction
-const ariaLiveId = 'imgedit-aria-live';
-function ensureAriaLive() {
-  if (typeof document === 'undefined') return null;
-  let el = document.getElementById(ariaLiveId) as HTMLElement | null;
-  if (!el) {
-    el = document.createElement('div');
-    el.id = ariaLiveId;
-    el.setAttribute('aria-live', 'polite');
-    el.setAttribute('aria-atomic', 'true');
-    el.className = 'sr-only';
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
 
 
 export default function ImageEditor({ initialDataUrl, initialSettings, onCancel, onApply }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  const originalImgRef = useRef<HTMLImageElement | null>(null);
-  const [imageSrc, setImageSrc] = useState(initialDataUrl);
-  const originalRef = useRef<string>(initialDataUrl);
-  const [previewOriginal, setPreviewOriginal] = useState(false);
-  const previewPointerIdRef = useRef<number | null>(null);
-  const previewOriginalRef = useRef<boolean>(false);
+  const {
+    canvasRef,
+    containerRef,
+    imgRef,
+    originalImgRef,
+    imageSrc,
+    setImageSrc,
+    originalRef,
+    previewOriginal,
+    setPreviewOriginal,
+    previewPointerIdRef,
+    previewOriginalRef,
+    offset,
+    setOffset,
+    dragging,
+    sel,
+    setSel,
+    exposure,
+    setExposure,
+    contrast,
+    setContrast,
+    saturation,
+    setSaturation,
+    temperature,
+    setTemperature,
+    vignette,
+    setVignette,
+    frameColor,
+    setFrameColor,
+    frameThickness,
+    setFrameThickness,
+    controlsOpen,
+    setControlsOpen,
+    selectedCategory,
+    setSelectedCategory,
+    ASPECT_PRESETS,
+    presetIndex,
+    setPresetIndex,
+    selectedFilter,
+    setSelectedFilter,
+    filterStrength,
+    setFilterStrength,
+    rotation,
+    setRotation,
+    grain,
+    setGrain,
+    rotationRef,
+    softFocus,
+    setSoftFocus,
+    fade,
+    setFade,
+    matte,
+    setMatte,
+    exposureRef,
+    contrastRef,
+    saturationRef,
+    temperatureRef,
+    vignetteRef,
+    frameColorRef,
+    frameThicknessRef,
+    selectedFilterRef,
+    filterStrengthRef,
+    grainRef,
+    softFocusRef,
+    fadeRef,
+    matteRef,
+    filtersContainerRef,
+    filterHighlight,
+    setFilterHighlight,
+    suppressFilterTransitionRef,
+    categoriesContainerRef,
+    categoryHighlight,
+    setCategoryHighlight,
+    dashOffsetRef,
+    dashAnimRef,
+    mounted,
+    setMounted,
+    cropRatio,
+  } = useImageEditorState(initialDataUrl, initialSettings);
 
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const dragging = useRef<null | {
-    startX: number;
-    startY: number;
-    mode: "pan" | "crop";
-    action?: "move" | "draw" | "resize";
-    origSel?: { x: number; y: number; w: number; h: number };
-    anchorX?: number;
-    anchorY?: number;
-    handleIndex?: number;
-  }>(null);
-  const [sel, setSel] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  const [exposure, setExposure] = useState<number>(initialSettings?.exposure ?? 1);
-  const [contrast, setContrast] = useState<number>(initialSettings?.contrast ?? 1);
-  const [saturation, setSaturation] = useState<number>(initialSettings?.saturation ?? 1);
-  const [temperature, setTemperature] = useState<number>(initialSettings?.temperature ?? 0); // -100..100 mapped to hue-rotate
-  const [vignette, setVignette] = useState<number>(initialSettings?.vignette ?? 0); // 0..1
-  const [frameColor, setFrameColor] = useState<'white' | 'black'>(initialSettings?.frameColor ?? 'white');
-  const [frameThickness, setFrameThickness] = useState<number>(initialSettings?.frameThickness ?? 0); // fraction of min(image dim) — default disabled
-  const [controlsOpen, setControlsOpen] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects' | 'crop' | 'frame'>('basic');
-  const ASPECT_PRESETS = [
-    { label: 'Free', v: null },
-    { label: '16:9', v: 16 / 9 },
-    { label: '4:3', v: 4 / 3 },
-    { label: '3:2', v: 3 / 2 },
-    { label: '1:1', v: 1 },
-    // 4:5 removed per request
-  ];
-  const [presetIndex, setPresetIndex] = useState<number>(0);
-  const [selectedFilter, setSelectedFilter] = useState<string>(initialSettings?.selectedFilter ?? 'none');
-  const [filterStrength, setFilterStrength] = useState<number>(initialSettings?.filterStrength ?? 1); // 0..1
-  const [rotation, setRotation] = useState<number>(initialSettings?.rotation ?? 0); // degrees, -180..180
-  const [grain, setGrain] = useState<number>(initialSettings?.grain ?? 0); // 0..1
-  const rotationRef = useRef<number>(rotation);
-  const [softFocus, setSoftFocus] = useState<number>(initialSettings?.softFocus ?? 0); // gentle blur overlay
-  const [fade, setFade] = useState<number>(initialSettings?.fade ?? 0); // faded matte look
-  const [matte, setMatte] = useState<number>(initialSettings?.matte ?? 0); // matte tone curve
-  // refs mirror state for immediate reads inside draw() to avoid stale-state draws
-  const exposureRef = useRef<number>(exposure);
-  const contrastRef = useRef<number>(contrast);
-  const saturationRef = useRef<number>(saturation);
-  const temperatureRef = useRef<number>(temperature);
-  const vignetteRef = useRef<number>(vignette);
-  const frameColorRef = useRef<'white' | 'black'>(frameColor);
-  const frameThicknessRef = useRef<number>(frameThickness);
-  const selectedFilterRef = useRef<string>(selectedFilter);
-  const filterStrengthRef = useRef<number>(filterStrength);
-  const grainRef = useRef<number>(grain);
+  // Local draw wrapper binds all refs/state to the lower-level drawImage helper so
+  // callers can simply call draw() or draw(info).
+  function draw(info?: any, overrides?: any) {
+    drawImageImport(
+      canvasRef,
+      imgRef,
+      originalImgRef,
+      previewOriginalRef,
+      offset,
+      sel,
+      exposureRef,
+      contrastRef,
+      saturationRef,
+      temperatureRef,
+      vignetteRef,
+      frameColorRef,
+      frameThicknessRef,
+      selectedFilterRef,
+      filterStrengthRef,
+      grainRef,
+      softFocusRef,
+      fadeRef,
+      matteRef,
+      rotationRef,
+      dashOffsetRef,
+      computeImageLayout,
+      info,
+      overrides
+    );
+  }
+
   useEffect(() => { rotationRef.current = rotation; }, [rotation]);
-  // keep rotationRef available for draw/export
-  const softFocusRef = useRef<number>(softFocus);
-  const fadeRef = useRef<number>(fade);
-  const matteRef = useRef<number>(matte);
-  const filtersContainerRef = useRef<HTMLDivElement | null>(null);
-  const [filterHighlight, setFilterHighlight] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
-  const suppressFilterTransitionRef = useRef<boolean>(false);
-  const categoriesContainerRef = useRef<HTMLDivElement | null>(null);
-  const [categoryHighlight, setCategoryHighlight] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  useEffect(() => { exposureRef.current = exposure; }, [exposure]);
+  useEffect(() => { contrastRef.current = contrast; }, [contrast]);
+  useEffect(() => { saturationRef.current = saturation; }, [saturation]);
+  useEffect(() => { temperatureRef.current = temperature; }, [temperature]);
+  useEffect(() => { vignetteRef.current = vignette; }, [vignette]);
+  useEffect(() => { frameColorRef.current = frameColor; }, [frameColor]);
+  useEffect(() => { frameThicknessRef.current = frameThickness; }, [frameThickness]);
+  useEffect(() => { selectedFilterRef.current = selectedFilter; }, [selectedFilter]);
+  useEffect(() => { filterStrengthRef.current = filterStrength; }, [filterStrength]);
+  useEffect(() => { grainRef.current = grain; }, [grain]);
+  useEffect(() => { softFocusRef.current = softFocus; }, [softFocus]);
+  useEffect(() => { fadeRef.current = fade; }, [fade]);
+  useEffect(() => { matteRef.current = matte; }, [matte]);
 
   useEffect(() => {
     let alive = true;
@@ -236,14 +212,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       window.removeEventListener('resize', compute);
     };
   }, [selectedFilter, selectedCategory]);
-  // animated dash offset for the selection stroke (marching ants)
-  const dashOffsetRef = useRef<number>(0);
-  const dashAnimRef = useRef<number | null>(null);
-  const [mounted, setMounted] = useState(false);
-  // default behavior: drag to create/move crop selection.
-  const cropRatio = useRef<number | null>(null); // null = free
-  // default behavior: drag to create/move crop selection.
-
   // when opening the Filters category, suppress the highlight transition for the initial placement
   useEffect(() => {
     if (selectedCategory === 'color') {
@@ -414,36 +382,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sel]);
 
-  function draw(info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number }, overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; matte: number; frameEnabled: boolean; frameThickness: number; frameColor: string }>) {
-    const canvas = canvasRef.current;
-    const img = previewOriginalRef.current && originalImgRef.current ? originalImgRef.current : imgRef.current;
-    if (!canvas || !img) return;
-  canvasDraw({
-    canvasRef,
-    imgRef,
-    originalImgRef,
-    previewOriginalRef,
-    offset,
-    sel,
-    exposureRef,
-    contrastRef,
-    saturationRef,
-    temperatureRef,
-    vignetteRef,
-    frameColorRef,
-    frameThicknessRef,
-    selectedFilterRef,
-    filterStrengthRef,
-    grainRef,
-    softFocusRef,
-    fadeRef,
-    matteRef,
-    rotationRef,
-    dashOffsetRef,
-    computeImageLayout
-  }, info, overrides);
-  }
-
   // animate dashed selection while a selection exists
   useEffect(() => {
     function step() {
@@ -485,10 +423,109 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     return false;
   }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, frameThickness]);
 
-  // slider background helper: colored fill up to percentage
-  function rangeBg(value: number, min: number, max: number, leftColor = '#1e90ff', rightColor = '#e6e6e6') {
-    const pct = Math.round(((value - min) / (max - min)) * 100);
-    return `linear-gradient(90deg, ${leftColor} ${pct}%, ${rightColor} ${pct}%)`;
+  // Action wrappers that delegate to the standalone action helpers
+  function applyEdit() {
+    actionsApplyEdit(
+      imgRef,
+      canvasRef,
+      offset,
+      sel,
+      exposure,
+      contrast,
+      saturation,
+      temperature,
+      vignette,
+      frameColor,
+      frameThickness,
+      selectedFilter,
+      filterStrength,
+      grain,
+      softFocus,
+      fade,
+      matte,
+      rotation,
+      rotationRef,
+      onApply
+    );
+  }
+
+  function resetAdjustments() {
+    actionsResetAdjustments(
+      setExposure,
+      exposureRef,
+      setContrast,
+      contrastRef,
+      setSaturation,
+      saturationRef,
+      setTemperature,
+      temperatureRef,
+      setVignette,
+      vignetteRef,
+      setFrameColor,
+      frameColorRef,
+      setFrameThickness,
+      frameThicknessRef,
+      setSelectedFilter,
+      selectedFilterRef,
+      setFilterStrength,
+      filterStrengthRef,
+      setGrain,
+      grainRef,
+      setSoftFocus,
+      softFocusRef,
+      setFade,
+      fadeRef,
+      setMatte,
+      matteRef,
+      setRotation,
+      rotationRef,
+      setSel,
+      cropRatio,
+      setPresetIndex
+    );
+    // ensure canvas redraw after reset
+    requestAnimationFrame(() => draw());
+  }
+
+  function resetControlToDefault(control: string) {
+    actionsResetControlToDefault(
+      control,
+      exposureRef,
+      setExposure,
+      contrastRef,
+      setContrast,
+      saturationRef,
+      setSaturation,
+      temperatureRef,
+      setTemperature,
+      filterStrengthRef,
+      setFilterStrength,
+      vignetteRef,
+      setVignette,
+      grainRef,
+      setGrain,
+      softFocusRef,
+      setSoftFocus,
+      fadeRef,
+      setFade,
+      matteRef,
+      setMatte,
+      rotationRef,
+      setRotation,
+      frameThicknessRef,
+      setFrameThickness,
+      draw
+    );
+  }
+
+  async function bakeRotate90() {
+    await actionsBakeRotate90(imgRef, setImageSrc, setSel, setOffset);
+    requestAnimationFrame(() => draw());
+  }
+
+  async function bakeRotateMinus90() {
+    await actionsBakeRotateMinus90(imgRef, setImageSrc, setSel, setOffset);
+    requestAnimationFrame(() => draw());
   }
 
   // Ensure slider interactions don't cause the outer app swiper to change slides.
@@ -844,372 +881,17 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, softFocus, fade, matte, sel, offset]);
 
-  async function bakeRotate90() {
-    const img = imgRef.current; if (!img) return;
-    const tmp = document.createElement('canvas');
-    tmp.width = img.naturalHeight; tmp.height = img.naturalWidth;
-    const t = tmp.getContext('2d')!;
-    t.translate(tmp.width / 2, tmp.height / 2);
-    t.rotate(Math.PI / 2);
-    t.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
-    const dataUrl = tmp.toDataURL('image/png');
-    setImageSrc(dataUrl);
-    setSel(null);
-    setOffset({ x: 0, y: 0 });
-  }
 
-  async function bakeRotateMinus90() {
-    const img = imgRef.current; if (!img) return;
-    const tmp = document.createElement('canvas');
-    tmp.width = img.naturalHeight; tmp.height = img.naturalWidth;
-    const t = tmp.getContext('2d')!;
-    t.translate(tmp.width / 2, tmp.height / 2);
-    t.rotate(-Math.PI / 2);
-    t.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
-    const dataUrl = tmp.toDataURL('image/png');
-    setImageSrc(dataUrl);
-    setSel(null);
-    setOffset({ x: 0, y: 0 });
-  }
 
-  function resetAll() {
-    setImageSrc(originalRef.current);
-    setSel(null); setOffset({ x: 0, y: 0 });
-  }
 
-  // Reset only the adjustment/settings (color corrections, filters, effects, frame)
-  function resetAdjustments() {
-    // Default values
-    const defExposure = 1;
-    const defContrast = 1;
-    const defSaturation = 1;
-    const defTemperature = 0;
-    const defVignette = 0;
-    const defFrameColor: 'white' | 'black' = 'white';
-    const defFrameThickness = 0;
-    const defSelectedFilter = 'none';
-    const defFilterStrength = 1;
-    const defGrain = 0;
-    const defSoftFocus = 0;
-    const defFade = 0;
-    const defMatte = 0;
-  const defRotation = 0;
 
-    // Update state
-    setExposure(defExposure); exposureRef.current = defExposure;
-    setContrast(defContrast); contrastRef.current = defContrast;
-    setSaturation(defSaturation); saturationRef.current = defSaturation;
-    setTemperature(defTemperature); temperatureRef.current = defTemperature;
-    setVignette(defVignette); vignetteRef.current = defVignette;
-    setFrameColor(defFrameColor); frameColorRef.current = defFrameColor;
-    setFrameThickness(defFrameThickness); frameThicknessRef.current = defFrameThickness;
-    setSelectedFilter(defSelectedFilter); selectedFilterRef.current = defSelectedFilter;
-    setFilterStrength(defFilterStrength); filterStrengthRef.current = defFilterStrength;
-    setGrain(defGrain); grainRef.current = defGrain;
-    setSoftFocus(defSoftFocus); softFocusRef.current = defSoftFocus;
-    setFade(defFade); fadeRef.current = defFade;
-    setMatte(defMatte); matteRef.current = defMatte;
-  setRotation(defRotation); rotationRef.current = defRotation;
 
-  // Also clear any crop selection/preset
-  setSel(null);
-  if (typeof cropRatio !== 'undefined' && cropRatio) cropRatio.current = null;
-  setPresetIndex(0);
 
-    // Redraw with defaults
-    requestAnimationFrame(() => draw());
-  }
 
-  // Reset a single control to its default value (used by double-click on sliders)
-  function resetControlToDefault(control: string) {
-    switch (control) {
-      case 'exposure': {
-        const v = 1;
-        exposureRef.current = v; setExposure(v); draw(undefined, { exposure: v }); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'contrast': {
-        const v = 1;
-        contrastRef.current = v; setContrast(v); draw(undefined, { contrast: v }); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'saturation': {
-        const v = 1;
-        saturationRef.current = v; setSaturation(v); draw(undefined, { saturation: v }); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'temperature': {
-        const v = 0;
-        temperatureRef.current = v; setTemperature(v); draw(undefined, { temperature: v }); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'filterStrength': {
-        const v = 1;
-        filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'vignette': {
-        const v = 0;
-        vignetteRef.current = v; setVignette(v); draw(undefined, { vignette: v }); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'grain': {
-        const v = 0;
-        grainRef.current = v; setGrain(v); draw(undefined, { grain: v }); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'softFocus': {
-        const v = 0;
-        softFocusRef.current = v; setSoftFocus(v); draw(); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'fade': {
-        const v = 0;
-        fadeRef.current = v; setFade(v); draw(); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'matte': {
-        const v = 0;
-        matteRef.current = v; setMatte(v); draw(); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'rotation': {
-        const v = 0;
-        rotationRef.current = v; setRotation(v); draw(); requestAnimationFrame(() => draw());
-        break;
-      }
-      case 'frameThickness': {
-        const v = 0;
-        frameThicknessRef.current = v; setFrameThickness(v); draw(); requestAnimationFrame(() => draw());
-        break;
-      }
-      default:
-        break;
-    }
-  }
 
-  async function applyEdit() {
-    const img = imgRef.current; if (!img) return;
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-  const rect = canvas.getBoundingClientRect();
-  const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
-  const scaleFactor = baseScale;
 
-    let srcX = 0, srcY = 0, srcW = img.naturalWidth, srcH = img.naturalHeight;
-    if (sel) {
-      srcX = Math.max(0, Math.round((sel.x - offset.x) / scaleFactor));
-      srcY = Math.max(0, Math.round((sel.y - offset.y) / scaleFactor));
-      srcW = Math.max(1, Math.round(sel.w / scaleFactor));
-      srcH = Math.max(1, Math.round(sel.h / scaleFactor));
-      srcW = Math.min(srcW, img.naturalWidth - srcX);
-      srcH = Math.min(srcH, img.naturalHeight - srcY);
-    }
 
-  // If frame thickness > 0 we expand the output canvas so the frame sits outside the image
-  const padPx = frameThickness > 0 ? Math.max(1, Math.round(Math.min(srcW, srcH) * Math.max(0, Math.min(0.5, frameThickness)))) : 0;
-  // Handle rotation: if rotation is set, output canvas needs to accommodate rotated bounds
-  const rot = rotationRef.current ?? rotation;
-  const angle = (rot * Math.PI) / 180;
-  // compute rotated bounding box
-  const absCos = Math.abs(Math.cos(angle));
-  const absSin = Math.abs(Math.sin(angle));
-  const rotatedW = Math.max(1, Math.round((srcW) * absCos + (srcH) * absSin));
-  const rotatedH = Math.max(1, Math.round((srcW) * absSin + (srcH) * absCos));
-  const out = document.createElement('canvas');
-  out.width = rotatedW + padPx * 2; out.height = rotatedH + padPx * 2;
-  const octx = out.getContext('2d')!;
-  octx.imageSmoothingQuality = 'high';
-  // Apply color adjustments to exported image
-  const hue = Math.round((temperature / 100) * 30);
-  const filterMap: Record<string, string> = {
-    none: '',
-    sepia: 'sepia(0.45)',
-    mono: 'grayscale(0.95)',
-    cinema: 'contrast(1.15) saturate(1.05) hue-rotate(-5deg)',
-    bleach: 'saturate(1.3) contrast(0.95) brightness(1.02)'
-  };
-  const preset = FILTER_PRESETS[selectedFilter] || '';
-  const baseFilterExport = `brightness(${exposure}) contrast(${contrast}) saturate(${saturation}) hue-rotate(${hue}deg)`;
-  // draw with rotation: translate to center of out canvas, rotate, then draw image centered
-  const centerX = out.width / 2;
-  const centerY = out.height / 2;
-  const drawExport = () => {
-    if (filterStrength >= 0.999) {
-      octx.filter = `${baseFilterExport} ${preset}`;
-      octx.save();
-      octx.translate(centerX, centerY);
-      octx.rotate(angle);
-      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
-      octx.restore();
-      octx.filter = 'none';
-    } else if (filterStrength <= 0.001) {
-      octx.filter = baseFilterExport;
-      octx.save();
-      octx.translate(centerX, centerY);
-      octx.rotate(angle);
-      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
-      octx.restore();
-      octx.filter = 'none';
-    } else {
-      octx.filter = baseFilterExport;
-      octx.save();
-      octx.translate(centerX, centerY);
-      octx.rotate(angle);
-      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
-      octx.restore();
-      octx.filter = `${baseFilterExport} ${preset}`;
-      octx.globalAlpha = Math.min(1, Math.max(0, filterStrength));
-      octx.save();
-      octx.translate(centerX, centerY);
-      octx.rotate(angle);
-      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
-      octx.restore();
-      octx.globalAlpha = 1;
-      octx.filter = 'none';
-    }
-  };
-  drawExport();
-  // image content has been drawn above with filters applied where appropriate;
-  // ensure filter state is cleared before applying additional effects
-  octx.filter = 'none';
-  // --- Bake additional visual effects (Soft Focus / Fade / Matte) into export ---
-  const curSoft = Math.min(1, Math.max(0, softFocus));
-  const curFade = Math.min(1, Math.max(0, fade));
-  const curMatte = Math.min(1, Math.max(0, matte));
-  // Soft Focus: blurred overlay composited on top with lighten blend for dreamy glow
-  if (curSoft > 0.001) {
-    try {
-      const tmp = document.createElement('canvas'); tmp.width = srcW; tmp.height = srcH;
-      const t = tmp.getContext('2d')!;
-      // Draw from source image
-      t.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-      // Apply blur with slight brightness boost
-      const blurPx = Math.max(3, curSoft * 12);
-      t.filter = `blur(${blurPx}px) brightness(1.05)`;
-      t.drawImage(tmp, 0, 0);
-      t.filter = 'none';
-      octx.save();
-      octx.globalAlpha = Math.min(0.4, curSoft * 0.45);
-      octx.globalCompositeOperation = 'lighten';
-      octx.drawImage(tmp, padPx, padPx, srcW, srcH);
-      octx.restore();
-    } catch (e) {
-      // fallback subtle overlay
-      octx.save(); octx.globalAlpha = Math.min(0.25, curSoft * 0.3); octx.fillStyle = 'rgba(255,255,255,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
-    }
-  }
 
-  
-  // Fade: washed out, lifted blacks vintage look (like sun-bleached photos)
-  if (curFade > 0.001) {
-    try {
-      octx.save();
-      
-      // First, apply a light overlay to lift the blacks
-      octx.globalAlpha = Math.min(0.35, curFade * 0.4);
-      octx.globalCompositeOperation = 'lighten';
-      octx.fillStyle = 'rgba(230, 230, 230, 0.5)';
-      octx.fillRect(padPx, padPx, srcW, srcH);
-      
-      // Then reduce contrast with a gray overlay
-      octx.globalAlpha = Math.min(0.25, curFade * 0.3);
-      octx.globalCompositeOperation = 'overlay';
-      octx.fillStyle = 'rgba(200, 200, 200, 0.6)';
-      octx.fillRect(padPx, padPx, srcW, srcH);
-      
-      octx.restore();
-    } catch (e) {
-      octx.save(); octx.globalAlpha = Math.min(0.4, curFade * 0.45); octx.fillStyle = 'rgba(245,245,240,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
-    }
-  }
-  // Matte: rich, cinematic matte look with crushed blacks and film-like tonality
-  if (curMatte > 0.001) {
-    try {
-      octx.save();
-      
-      // Darken with multiply for crushed blacks
-      octx.globalCompositeOperation = 'multiply';
-      octx.globalAlpha = Math.min(0.25, curMatte * 0.3);
-      octx.fillStyle = 'rgba(30, 25, 35, 0.8)';
-      octx.fillRect(padPx, padPx, srcW, srcH);
-      
-      // Add warm film tone
-      octx.globalCompositeOperation = 'soft-light';
-      octx.globalAlpha = Math.min(0.2, curMatte * 0.25);
-      octx.fillStyle = 'rgba(200, 180, 150, 0.5)';
-      octx.fillRect(padPx, padPx, srcW, srcH);
-      
-      octx.restore();
-    } catch (e) {
-      octx.save(); octx.globalCompositeOperation = 'multiply'; octx.globalAlpha = Math.min(0.35, curMatte * 0.4); octx.fillStyle = 'rgba(25,25,25,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
-    }
-  }
-  // apply grain to exported image by compositing a noise canvas
-  if (grain > 0) {
-    const noise = generateNoiseCanvas(srcW, srcH, grain);
-    octx.save();
-    octx.globalAlpha = Math.min(0.85, grain);
-    octx.globalCompositeOperation = 'overlay';
-    octx.drawImage(noise, 0, 0, srcW, srcH);
-    octx.restore();
-  }
-  // draw frame if thickness > 0
-  if (frameThickness > 0) {
-    octx.save();
-    const thicknessPx = Math.max(1, Math.round(Math.min(srcW, srcH) * Math.max(0, Math.min(0.5, frameThickness))));
-    octx.fillStyle = frameColor === 'white' ? '#ffffff' : '#000000';
-    // Use integer coords and add 1px overlap to eliminate any sub-pixel gaps/seams
-    const outerX = 0;
-    const outerY = 0;
-    const outerW = Math.ceil(srcW + padPx * 2);
-    const outerH = Math.ceil(srcH + padPx * 2);
-    const innerX = Math.floor(padPx);
-    const innerY = Math.floor(padPx);
-    const innerW = Math.ceil(srcW);
-    const innerH = Math.ceil(srcH);
-    const innerR = innerX + innerW;
-    const innerB = innerY + innerH;
-    
-    // Draw overlapping bands to ensure no gaps
-    // top band (with 1px overlap on sides)
-    if (innerY > outerY) {
-      octx.fillRect(outerX, outerY, outerW, innerY - outerY + 1);
-    }
-    // bottom band (with 1px overlap on sides)
-    if (innerB < outerH) {
-      octx.fillRect(outerX, innerB - 1, outerW, outerH - innerB + 1);
-    }
-    // left band (full height)
-    if (innerX > outerX) {
-      octx.fillRect(outerX, outerY, innerX - outerX + 1, outerH);
-    }
-    // right band (full height)
-    if (innerR < outerW) {
-      octx.fillRect(innerR - 1, outerY, outerW - innerR + 1, outerH);
-    }
-    octx.restore();
-  }
-  const dataUrl = out.toDataURL('image/jpeg', 0.92);
-    // Return both the edited image and the current settings
-    const settings: EditorSettings = {
-      exposure,
-      contrast,
-      saturation,
-      temperature,
-      rotation,
-      vignette,
-      frameColor,
-      frameThickness,
-      selectedFilter,
-      filterStrength,
-      grain,
-      softFocus,
-      fade,
-      matte,
-    };
-    onApply(dataUrl, settings);
-  }
 
   // Apply only the current crop (and rotation) to the image without confirming all edits.
   // This bakes geometry (crop + rotation) into the underlying image source so the user
@@ -1590,92 +1272,97 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       {/* Sliding category panels container */}
   <div className="imgedit-panels" style={{ maxWidth: 820, margin: '16px auto 0', position: 'relative', borderRadius: 12, minHeight: 200 }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-          {/* Basic panel */}
-          <BasicPanel
-            exposure={exposure}
-            setExposure={setExposure}
-            exposureRef={exposureRef}
-            contrast={contrast}
-            setContrast={setContrast}
-            contrastRef={contrastRef}
-            saturation={saturation}
-            setSaturation={setSaturation}
-            saturationRef={saturationRef}
-            temperature={temperature}
-            setTemperature={setTemperature}
-            temperatureRef={temperatureRef}
-            draw={draw}
-            resetControlToDefault={resetControlToDefault}
-          />
+          {selectedCategory === 'basic' && (
+            <BasicPanel
+              exposure={exposure}
+              setExposure={setExposure}
+              exposureRef={exposureRef}
+              contrast={contrast}
+              setContrast={setContrast}
+              contrastRef={contrastRef}
+              saturation={saturation}
+              setSaturation={setSaturation}
+              saturationRef={saturationRef}
+              temperature={temperature}
+              setTemperature={setTemperature}
+              temperatureRef={temperatureRef}
+              draw={draw}
+              resetControlToDefault={resetControlToDefault}
+            />
+          )}
 
-          {/* Color panel */}
-          <ColorPanel
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-            selectedFilterRef={selectedFilterRef}
-            filterStrength={filterStrength}
-            setFilterStrength={setFilterStrength}
-            filterStrengthRef={filterStrengthRef}
-            draw={draw}
-            resetControlToDefault={resetControlToDefault}
-            filtersContainerRef={filtersContainerRef}
-            filterHighlight={filterHighlight}
-          />
+          {selectedCategory === 'color' && (
+            <ColorPanel
+              selectedFilter={selectedFilter}
+              setSelectedFilter={setSelectedFilter}
+              selectedFilterRef={selectedFilterRef}
+              filterStrength={filterStrength}
+              setFilterStrength={setFilterStrength}
+              filterStrengthRef={filterStrengthRef}
+              draw={draw}
+              resetControlToDefault={resetControlToDefault}
+              filtersContainerRef={filtersContainerRef}
+              filterHighlight={filterHighlight}
+            />
+          )}
 
-          {/* Effects panel */}
-          <EffectsPanel
-            vignette={vignette}
-            setVignette={setVignette}
-            vignetteRef={vignetteRef}
-            grain={grain}
-            setGrain={setGrain}
-            grainRef={grainRef}
-            softFocus={softFocus}
-            setSoftFocus={setSoftFocus}
-            softFocusRef={softFocusRef}
-            fade={fade}
-            setFade={setFade}
-            fadeRef={fadeRef}
-            matte={matte}
-            setMatte={setMatte}
-            matteRef={matteRef}
-            draw={draw}
-            resetControlToDefault={resetControlToDefault}
-          />
+          {selectedCategory === 'effects' && (
+            <EffectsPanel
+              vignette={vignette}
+              setVignette={setVignette}
+              vignetteRef={vignetteRef}
+              grain={grain}
+              setGrain={setGrain}
+              grainRef={grainRef}
+              softFocus={softFocus}
+              setSoftFocus={setSoftFocus}
+              softFocusRef={softFocusRef}
+              fade={fade}
+              setFade={setFade}
+              fadeRef={fadeRef}
+              matte={matte}
+              setMatte={setMatte}
+              matteRef={matteRef}
+              draw={draw}
+              resetControlToDefault={resetControlToDefault}
+            />
+          )}
 
-          {/* Crop panel */}
-          <CropPanel
-            sel={sel}
-            setSel={setSel}
-            cropRatio={cropRatio}
-            presetIndex={presetIndex}
-            setPresetIndex={setPresetIndex}
-            rotation={rotation}
-            setRotation={setRotation}
-            rotationRef={rotationRef}
-            draw={draw}
-            resetControlToDefault={resetControlToDefault}
-            computeImageLayout={computeImageLayout}
-            canvasRef={canvasRef}
-            applyCropOnly={applyCropOnly}
-            resetCrop={resetCrop}
-            imageSrc={imageSrc}
-            originalRef={originalRef}
-            bakeRotate90={bakeRotate90}
-            bakeRotateMinus90={bakeRotateMinus90}
-          />
+          {selectedCategory === 'crop' && (
+            <CropPanel
+              sel={sel}
+              setSel={setSel}
+              cropRatio={cropRatio}
+              presetIndex={presetIndex}
+              setPresetIndex={setPresetIndex}
+              rotation={rotation}
+              setRotation={setRotation}
+              rotationRef={rotationRef}
+              draw={draw}
+              resetControlToDefault={resetControlToDefault}
+              computeImageLayout={computeImageLayout}
+              canvasRef={canvasRef}
+              applyCropOnly={applyCropOnly}
+              resetCrop={resetCrop}
+              imageSrc={imageSrc}
+              originalRef={originalRef}
+              bakeRotate90={bakeRotate90}
+              bakeRotateMinus90={bakeRotateMinus90}
+            />
+          )}
 
-          {/* Frame panel */}
-          <FramePanel
-            frameThickness={frameThickness}
-            setFrameThickness={setFrameThickness}
-            frameThicknessRef={frameThicknessRef}
-            frameColor={frameColor}
-            setFrameColor={setFrameColor}
-            frameColorRef={frameColorRef}
-            draw={draw}
-            resetControlToDefault={resetControlToDefault}
-          />
+          {selectedCategory === 'frame' && (
+            <FramePanel
+              frameThickness={frameThickness}
+              setFrameThickness={setFrameThickness}
+              frameThicknessRef={frameThicknessRef}
+              frameColor={frameColor}
+              setFrameColor={setFrameColor}
+              frameColorRef={frameColorRef}
+              draw={draw}
+              resetControlToDefault={resetControlToDefault}
+            />
+          )}
         </div>
       </div>
       {/* Bottom controls removed per request */}

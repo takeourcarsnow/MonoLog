@@ -86,7 +86,7 @@ try {
 
 // Check 5: CSS containment in globals.css
 try {
-  const cssPath = path.join(__dirname, '..', 'app', 'globals.css');
+  const cssPath = path.join(__dirname, '..', 'app', 'styles', 'global.css');
   const cssContent = fs.readFileSync(cssPath, 'utf8');
   
   if (cssContent.includes('contain:') || cssContent.includes('content-visibility:')) {

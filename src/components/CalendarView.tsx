@@ -64,7 +64,7 @@ export function CalendarView() {
       }
     } catch (e) { /* ignore */ }
     // run only when month/year changes or selectedDay updates
-  }, [curYear, curMonth]);
+  }, [curYear, curMonth, selectedDay, showDay]);
 
   const matrix = monthMatrix(curYear, curMonth);
 

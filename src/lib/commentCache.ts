@@ -28,4 +28,6 @@ export function clearCachedComments(postId: string) {
   cache.delete(postId);
 }
 
-export default { getCachedComments, setCachedComments, hasCachedComments, prefetchComments, clearCachedComments };
+const commentCache = { getCachedComments, setCachedComments, hasCachedComments, prefetchComments, clearCachedComments };
+
+export default commentCache;

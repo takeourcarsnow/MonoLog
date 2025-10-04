@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface CarouselViewProps {
   dataUrls: string[];
   alt: string | string[];
@@ -61,7 +63,7 @@ export function CarouselView({
         }} role="list">
           {dataUrls.map((u, idx) => (
             <div className="carousel-slide" key={idx} role="listitem" aria-roledescription="slide" aria-label={`Preview ${idx+1} of ${dataUrls.length}`} style={{ position: 'relative' }}>
-              <img alt={(Array.isArray(alt) ? (alt[idx] || '') : (alt || `Preview ${idx+1}`))} src={u} onLoad={() => {}} onError={() => {}} />
+              <Image alt={(Array.isArray(alt) ? (alt[idx] || '') : (alt || `Preview ${idx+1}`))} src={u || "/logo.svg"} fill style={{ objectFit: 'contain' }} unoptimized />
               <button
                 className="btn"
                 style={{ position: 'absolute', right: 8, bottom: 8 }}

@@ -6,6 +6,7 @@ import { uid } from "@/lib/id";
 import { useToast } from "../Toast";
 import { SignOutButton } from "@/components/SignOut";
 import Link from "next/link";
+import Image from "next/image";
 import type { User } from "@/lib/types";
 
 interface ProfileHeaderProps {
@@ -129,12 +130,12 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
               onClick={() => avatarInputRef.current?.click()}
               type="button"
             >
-              <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
+              <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName} width={96} height={96} />
             </button>
             <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} />
           </>
         ) : (
-          <img className="profile-avatar" src={user.avatarUrl} alt={user.displayName} />
+          <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName} width={96} height={96} />
         )}
         <div style={{ textAlign: "center", minWidth: 0, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           {!isEditingProfile ? (

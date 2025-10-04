@@ -57,11 +57,13 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   -webkit-overflow-scrolling: touch;
   position: relative;
   z-index: 1;
+  contain: layout style;
 }
 
 .app-content {
   display: grid;
   grid-template-rows: auto 1fr;
+  contain: layout;
 }
 
 /* When rendering initially, the html element may have .no-transitions to

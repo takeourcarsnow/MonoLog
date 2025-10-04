@@ -34,6 +34,15 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Allow Supabase storage domain
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'gfvdnpcrscszzyicsycp.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
   },
   // Enable SWC minification for better performance
   swcMinify: true,

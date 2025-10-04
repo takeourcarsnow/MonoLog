@@ -3,6 +3,7 @@ import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
 import { formatRelative } from "@/lib/date";
 import Link from "next/link";
+import Image from "next/image";
 import { Lock, UserPlus, UserCheck, Edit, Trash } from "lucide-react";
 import { AuthForm } from "../AuthForm";
 import { useToast } from "../Toast";
@@ -84,7 +85,7 @@ export const UserHeader = memo(function UserHeader({
   return (
     <div className="card-head">
       <Link className="user-link" href={`/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
-        <img className="avatar" src={post.user.avatarUrl} alt={post.user.displayName} />
+        <Image className="avatar" src={post.user.avatarUrl || "/logo.svg"} alt={post.user.displayName} width={30} height={30} />
         <div className="user-line">
           <span className="username">{post.user.displayName}</span>
           <span className="dim">{userLine}</span>

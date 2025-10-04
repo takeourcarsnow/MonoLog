@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface SingleImageViewProps {
   dataUrl: string | null;
   dataUrls: string[];
@@ -29,7 +31,9 @@ export function SingleImageView({
 }: SingleImageViewProps) {
   return (
     <div>
-      <img alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')} src={dataUrls[0] || dataUrl || ""} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} />
+      <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
+        <Image alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')} src={dataUrls[0] || dataUrl || "/logo.svg"} fill style={{ objectFit: 'contain' }} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} unoptimized />
+      </div>
       { (dataUrl || dataUrls.length === 1) ? (
         <div className="image-actions">
           <button

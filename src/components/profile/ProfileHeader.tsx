@@ -68,15 +68,19 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
     setEditProcessing(true);
     try {
       await api.updateCurrentUser({ username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200) });
-      // Refresh will happen via the useUserData hook listening to auth changes
+      // Notify any listeners and revalidate app-router data so the UI updates
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (_) {}
+      try { router.refresh?.(); } catch (_) {}
+
       setIsEditingProfile(false);
 
       // If username changed and we're on a username route, redirect to new username
-      if (usernameChanged && user.username && typeof window !== 'undefined') {
+      if (usernameChanged && oldUsername && typeof window !== 'undefined') {
         // Check if current path contains the old username
         const currentPath = window.location.pathname;
         if (currentPath.includes(`/${oldUsername}`)) {
-          router.push(`/${user.username}`);
+          // use the new username value (uname) for redirect
+          router.push(`/${uname}`);
         }
       }
     } catch (e: any) {

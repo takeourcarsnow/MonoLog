@@ -102,10 +102,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     } catch (e) {
       setIsTouchDevice(false);
     }
-    try {
-      // eslint-disable-next-line no-console
-      console.debug('[AppShell] isTouchDevice initial:', isTouchDevice);
-    } catch (_) {}
+    // Debug logging removed per user request.
 
     // support a quick runtime override for testing: ?forceTouch=1 or localStorage monolog.forceTouch=1
     try {
@@ -114,11 +111,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         const q = params.get('forceTouch');
         const ls = window.localStorage?.getItem('monolog.forceTouch');
         const val = q === '1' || ls === '1';
-        if (val) {
-          setForceTouch(true);
-          // eslint-disable-next-line no-console
-          console.debug('[AppShell] forceTouch enabled via', q === '1' ? 'query' : 'localStorage');
-        }
+        if (val) setForceTouch(true);
       }
     } catch (_) {}
   }, []);
@@ -131,10 +124,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         inst.slideTo(currentIndex);
       } catch (_) { /* ignore */ }
     }
-    try {
-      // eslint-disable-next-line no-console
-      console.debug('[AppShell] slideTo currentIndex:', currentIndex, 'inst?', Boolean(inst));
-    } catch (_) {}
+    // SlideTo debug logging removed per user request.
   }, [currentIndex]);
 
   // Listen for carousel drag events from inner components and temporarily
@@ -145,28 +135,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) inst.allowTouchMove = false;
-        try { console.debug('[AppShell] onDragStart -> allowTouchMove=false'); } catch(_){}
+  // debug removed
       } catch (_) { /* ignore */ }
     }
     function onDragEnd() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
-        try { console.debug('[AppShell] onDragEnd -> allowTouchMove=', Boolean(isTouchDevice)); } catch(_){}
+  // debug removed
       } catch (_) { /* ignore */ }
     }
     function onZoomStart() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) inst.allowTouchMove = false;
-        try { console.debug('[AppShell] onZoomStart -> allowTouchMove=false'); } catch(_){}
+  // debug removed
       } catch (_) { /* ignore */ }
     }
     function onZoomEnd() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
-        try { console.debug('[AppShell] onZoomEnd -> allowTouchMove=', Boolean(isTouchDevice)); } catch(_){}
+  // debug removed
       } catch (_) { /* ignore */ }
     }
     if (typeof window !== 'undefined') {
@@ -198,7 +188,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       // Special handling for profile - maintain username route if we're already on one
       if (newPath === "/profile") {
         const pathSegments = pathname.split('/').filter(Boolean);
-        if (pathSegments.length === 1) {
+          if (pathSegments.length === 1) {
           const segment = pathSegments[0];
           const RESERVED_ROUTES = [
             'about', 'api', 'calendar', 'explore', 'favorites', 
@@ -206,14 +196,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             'settings', 'help', 'terms', 'privacy', 'login', 
             'register', 'signup', 'signin', 'logout', 'auth'
           ];
-          // If we're already on a username route, don't navigate away from it
-          if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-            console.debug('[AppShell] slideChange aborted: on username route', segment);
-            return;
-          }
+          if (!RESERVED_ROUTES.includes(segment.toLowerCase())) return;
         }
       }
-      console.debug('[AppShell] navigating to', newPath);
+  // navigation debug removed
       router.push(newPath);
     }
   };

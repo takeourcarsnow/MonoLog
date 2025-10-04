@@ -49,3 +49,4 @@ When uploading photos show like placeholder cards that would show that you can u
 
 
 When not logged in the auth form should show up in center of screen on mobile now when i slide to section with auth form (Post and Profile) page kind of scrolls up to show the form, if i get in from another section when im not all the way up to page
+        

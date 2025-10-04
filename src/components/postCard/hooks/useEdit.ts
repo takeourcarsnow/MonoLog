@@ -14,10 +14,7 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
   // until the minimum time has passed. This centralizes the "flap" protection
   // so callers don't need to handle it themselves.
   const setEditing = (value: boolean) => {
-  // Diagnostic: log the call site immediately so we can see who invoked setEditing
-  // Keep the message but avoid printing full stack traces which flood the console.
-  // eslint-disable-next-line no-console
-  console.debug(`[useEdit] setEditing(${value}) called`);
+  // logging removed per user request
     const MIN_OPEN_MS = 300;
     if (value) {
       // opening -> record timestamp and cancel any pending close
@@ -58,8 +55,7 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
     try {
       const updated = await api.updatePost(post.id, patch);
       setPost(updated);
-      // eslint-disable-next-line no-console
-      console.debug('[useEdit] handleSave -> closing editor');
+  // debug removed
       setEditing(false);
     } catch (e: any) {
       toast.show(e?.message || "Failed to update post");
@@ -69,8 +65,7 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
   };
 
   const handleCancel = () => {
-    // eslint-disable-next-line no-console
-    console.debug('[useEdit] handleCancel -> closing editor');
+  // debug removed
     setEditing(false);
   };
 
@@ -79,10 +74,7 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
   // Remove or gate this in production if noisy.
   useEffect(() => {
     if (!editing) {
-      // eslint-disable-next-line no-console
-      // Note: we intentionally avoid dumping an Error stack here because it
-      // was producing very large repetitive logs during normal UI activity.
-      console.debug('[useEdit] editing=false (trace)');
+      // debug removed
     }
     return () => {
       // cleanup any pending timers on unmount

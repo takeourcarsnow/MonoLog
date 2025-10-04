@@ -83,6 +83,4 @@ export const api: Api = new Proxy({} as Api, {
 });
 
 // Print which adapter the bundle initially chose (build-time info).
-if (process.env.NODE_ENV !== 'production') {
-	try { logger.info('[api] selected mode -> ' + (CONFIG.mode === 'local' ? 'local' : 'supabase')); } catch (e) {}
-}
+// Development info logging removed per user request.

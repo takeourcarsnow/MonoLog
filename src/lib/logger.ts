@@ -14,9 +14,9 @@ function safeWrap(fn: LogFn, level: 'debug' | 'log') : LogFn {
 }
 
 export const logger = {
-  debug: safeWrap((...a) => console.debug(...a), 'debug'),
-  info: safeWrap((...a) => console.log(...a), 'log'),
-  log: safeWrap((...a) => console.log(...a), 'log'),
+  debug: safeWrap(() => {}, 'debug'),
+  info: safeWrap(() => {}, 'log'),
+  log: safeWrap(() => {}, 'log'),
   warn: (...a: any[]) => { try { console.warn(...a); } catch {} },
   error: (...a: any[]) => { try { console.error(...a); } catch {} },
 };

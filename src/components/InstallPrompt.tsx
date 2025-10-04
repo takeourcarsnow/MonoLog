@@ -47,7 +47,7 @@ export function InstallPrompt() {
     // Wait for the user to respond
     const { outcome } = await deferredPrompt.userChoice;
 
-    console.log(`User response to install prompt: ${outcome}`);
+  // install prompt response logging removed per user request
 
     // Clear the deferred prompt
     setDeferredPrompt(null);

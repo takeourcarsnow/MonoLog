@@ -18,9 +18,7 @@ export function PostView({ id, initialPost }: { id: string; initialPost?: Hydrat
     (async () => {
       try {
         // client debug
-        try { console.log(`[PostView] fetching id param=${id}`); } catch (e) {}
-        const p = await api.getPost(id);
-        try { console.log('[PostView] api.getPost returned', !!p); } catch (e) {}
+  const p = await api.getPost(id);
         setPost(p);
       } catch (e) {
         try { console.error('[PostView] getPost error', e); } catch (er) {}

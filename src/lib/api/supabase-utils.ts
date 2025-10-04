@@ -57,15 +57,7 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
   try {
     if (typeof window !== 'undefined') {
       const shouldLog = Array.isArray(imageUrls) && imageUrls.length > 1 || typeof row.image_urls === 'string' && row.image_urls.length > 0;
-      if (shouldLog) {
-        // Print a compact, paste-friendly object
-        console.debug('[supabase.mapRowToHydratedPost]', {
-          id: row.id,
-          rawShape: typeof row.image_urls === 'string' ? 'string' : Array.isArray(row.image_urls) ? 'array' : (row.image_url ? 'legacy_single' : typeof row.image_urls),
-          rawValue: typeof row.image_urls === 'string' ? row.image_urls : (Array.isArray(row.image_urls) ? row.image_urls.slice(0,5) : row.image_url || row.imageUrl),
-          mapped: imageUrls && imageUrls.slice(0,5),
-        });
-      }
+      // logging removed per user request
     }
   } catch (e) { /* ignore logging errors */ }
 

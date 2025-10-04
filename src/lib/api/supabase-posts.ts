@@ -153,9 +153,9 @@ export async function getPost(id: string) {
   }
 
   // Try exact match first
-  try { console.log(`[supabase.getPost] trying exact id=${candidateId}`); } catch (e) {}
+  // debug removed
   let res: any = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("id", candidateId).limit(1).maybeSingle();
-  try { console.log('[supabase.getPost] exact result', { error: res?.error, data: !!res?.data }); } catch (e) {}
+  // debug removed
   if (!res.error && res.data) {
     logSupabaseError("getPost", res);
     return mapRowToHydratedPost(res.data) as any;
@@ -164,9 +164,7 @@ export async function getPost(id: string) {
   // If candidateId is a short prefix (<= 12 chars), try prefix match
   if (!res.data && candidateId.length <= 12) {
     try {
-      try { console.log(`[supabase.getPost] trying prefix match id like ${candidateId}%`); } catch (e) {}
       const prefRes: any = await sb.from("posts").select("*, users:users(*), comments:comments(id)").ilike("id", `${candidateId}%`).limit(1).maybeSingle();
-      try { console.log('[supabase.getPost] prefix result', { error: prefRes?.error, data: !!prefRes?.data }); } catch (e) {}
       logSupabaseError("getPost(prefix)", prefRes);
       if (!prefRes.error && prefRes.data) return mapRowToHydratedPost(prefRes.data) as any;
     } catch (e) {
@@ -176,9 +174,7 @@ export async function getPost(id: string) {
 
   // lastly, try exact match on the original raw value
   try {
-    try { console.log(`[supabase.getPost] trying raw exact id=${raw}`); } catch (e) {}
     const rawRes: any = await sb.from("posts").select("*, users:users(*), comments:comments(id)").eq("id", raw).limit(1).maybeSingle();
-    try { console.log('[supabase.getPost] raw result', { error: rawRes?.error, data: !!rawRes?.data }); } catch (e) {}
     logSupabaseError("getPost(raw)", rawRes);
     if (!rawRes.error && rawRes.data) return mapRowToHydratedPost(rawRes.data) as any;
   } catch (e) {

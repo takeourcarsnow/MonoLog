@@ -21,10 +21,7 @@ export function initWebVitals(options?: { endpoint?: string; sampleRate?: number
   const handler: ReportHandler = (metric: any) => {
         try {
           // Basic client console log for quick inspection during development.
-          if (process.env.NODE_ENV !== 'production') {
-            // eslint-disable-next-line no-console
-            console.log('[web-vitals]', metric.name, Math.round(metric.value), metric);
-          }
+          // web-vitals console output removed per user request
           if (!endpoint) return;
           if (Math.random() > sampleRate) return;
           const body = JSON.stringify({

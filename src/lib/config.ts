@@ -32,7 +32,7 @@ if (process.env.NODE_ENV !== 'production') {
   try {
     // only print whether the URL is present, not the value
     // eslint-disable-next-line no-console
-    console.log('[config] mode=%s, hasSupabaseUrl=%s', CONFIG.mode, SUPABASE.url ? 'yes' : 'no');
+    // Debug logging removed per user request.
   } catch (e) {
     // swallow errors
   }

@@ -121,9 +121,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
       setOpening(false);
     }
 
-  // debug trace for editing changes
-  // eslint-disable-next-line no-console
-  console.debug('[PostCard] editing change ->', editing, { showEditor, lastOpenAt: lastOpenAtRef.current });
+  // debug logging removed per user request
 
   if (editing && !showEditor) {
       setShowEditor(true);

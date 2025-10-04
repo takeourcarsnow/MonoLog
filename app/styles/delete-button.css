@@ -1,0 +1,78 @@
+/* Delete: ghost style but with danger icon; pressing-delete animation preserved */
+.delete-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.delete-btn .icon { color: var(--danger); }
+/* Remove hover/animation effects for the inline delete post button.
+   Keep visual appearance static: no translate/box-shadow/ripple/animations. */
+.delete-btn:hover,
+.delete-btn:focus,
+.delete-btn:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+.delete-btn.pressing-delete { animation: none !important; }
+
+/* Prevent the global .btn::before ripple overlay from appearing on delete buttons */
+.delete-btn::before { display: none !important; }
+
+/* Prevent keyframe animations on the delete button when not confirming
+   (keep transitions so the confirming state can animate both in and out). */
+.delete-btn:not(.confirming),
+.delete-btn:not(.confirming) * {
+  animation: none !important;
+}
+
+/* Specifically prevent icon-reveal hover/focus effects for delete buttons */
+.delete-btn.icon-reveal:hover .icon,
+.delete-btn.icon-reveal:focus .icon {
+  transform: none !important;
+}
+.delete-btn.icon-reveal:hover .reveal,
+.delete-btn.icon-reveal:focus .reveal {
+  transform: none !important;
+  opacity: 0 !important;
+  max-width: 0 !important;
+}
+
+/* The delete confirm state uses transitions so it can both animate in and out.
+   Avoid one-shot keyframe animations which don't reverse when the state is removed. */
+.delete-btn.confirming {
+  /* ensure transitions run when entering AND exiting the confirming state */
+  transition: background 220ms cubic-bezier(.2,.85,.2,1), border-color 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), opacity 220ms cubic-bezier(.2,.85,.2,1);
+}
+.delete-btn.confirming .icon { transition: color 180ms ease; }
+
+/* ----------------------
+   Delete button reveal behavior
+   - Prevent the reveal label from animating on hover/focus so hovering the
+     delete icon doesn't expand the label. The reveal should only animate
+     when the user explicitly triggers the confirming state (click/tap).
+   - We use a more specific selector and !important where needed to win the
+     cascade against the generic .icon-reveal hover transitions.
+ */
+.delete-btn .reveal.label {
+  /* default collapsed state (do not animate on hover) */
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  /* keep transitions so toggling .confirming animates in and out */
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1);
+}
+
+/* Explicitly prevent hover/focus from revealing the label when NOT confirming */
+.delete-btn:not(.confirming):hover .reveal.label,
+.delete-btn:not(.confirming):focus .reveal.label,
+.delete-btn:not(.confirming):focus-visible .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+}
+
+/* When in the confirming state, reveal the label and animate the transition */
+.delete-btn.confirming .reveal.label {
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  max-width: 160px !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}

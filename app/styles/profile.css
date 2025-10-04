@@ -1,5 +1,7 @@
 @import './profile-header.css';
-@import './profile-actions.css';
+@import './follow-button.css';
+@import './edit-button.css';
+@import './delete-button.css';
 @import './profile-edit.css';
 @import './profile-responsive.css';
 @import './profile-preloader.css';

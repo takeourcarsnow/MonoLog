@@ -1,19 +1,3 @@
-/* keep action buttons grouped and anchored so overlays can align to them */
-.profile-actions {
-  white-space: nowrap;
-  position: relative; /* anchor for .edit-panel */
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-/* ensure buttons in actions are vertically aligned and have consistent spacing */
-.profile-actions .btn { vertical-align: middle; }
-
 /* Follow button styles */
 .follow-btn {
   padding: 10px 18px;
@@ -149,26 +133,26 @@
 }
 .follow-btn.expanded .reveal.label { max-width: 220px; opacity: 1; transform: translateX(0) scale(1); }
 
+/* Contracted label state: fade & contract quickly. When NOT expanded we
+   sequence container shrink after the label transition to avoid overlap. */
+.follow-btn:not(.expanded) .reveal.label {
+  /* fade & contract in sync with the container (no separate shrink delay) */
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--follow-duration) var(--collapse-ease) 0ms, transform var(--follow-duration) var(--collapse-ease) 0ms, max-width var(--follow-duration) var(--collapse-ease) 0ms;
+}
+
+/* ensure the collapsed container waits before shrinking so the label can finish */
+.follow-btn:not(.expanded) {
+  /* collapse the container in sync with the label with no artificial delay */
+  transition: max-width 260ms var(--collapse-ease) 0ms, padding 220ms var(--collapse-ease) 0ms, box-shadow 220ms ease, background 220ms ease, transform 220ms ease;
+}
+
 /* Keep the icon centered visually */
 .follow-btn .icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
 
-@media (prefers-reduced-motion: reduce) {
-  .follow-btn { transition: none !important; }
-}
-
-/* Ensure collapsed icon is truly centered: reset any translate transforms
-   and make the inner svg a block-level element with an explicit size. */
-.follow-btn:not(.expanded) {
-  box-sizing: border-box;
-  padding: 0 !important;
-}
-.follow-btn:not(.expanded) .icon {
-  transform: none !important; /* avoid micro-transforms that nudge icon */
-  margin: 0 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
 .follow-btn .icon svg {
   display: block; /* remove inline baseline shifts */
   width: 18px; height: 18px;
@@ -211,22 +195,12 @@
 /* Contracted label state: fade & contract quickly. When NOT expanded we
    sequence container shrink after the label transition to avoid overlap. */
 .follow-btn:not(.expanded) .reveal.label {
-  /* fade & contract in sync with the container (no separate shrink delay) */
+  /* fade & contract in sync with the container (no shrink delay) */
   opacity: 0 !important;
   transform: translateX(6px) scale(.98) !important;
   max-width: 0 !important;
   pointer-events: none !important;
   transition: opacity var(--follow-duration) var(--collapse-ease) 0ms, transform var(--follow-duration) var(--collapse-ease) 0ms, max-width var(--follow-duration) var(--collapse-ease) 0ms;
-}
-
-/* ensure the collapsed container waits before shrinking so the label can finish */
-.follow-btn:not(.expanded) {
-  /* collapse the container in sync with the label with no artificial delay */
-  transition: max-width 260ms var(--collapse-ease) 0ms, padding 220ms var(--collapse-ease) 0ms, box-shadow 220ms ease, background 220ms ease, transform 220ms ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; animation: none !important; transform: none !important; }
 }
 
 /* Remove the visual ring/outline for collapsed (icon-only) follow buttons.
@@ -363,7 +337,7 @@ button.follow-btn:not(.expanded),
   transition: max-width 260ms var(--follow-ease),
               padding 260ms var(--follow-ease),
               background 260ms cubic-bezier(.22,.9,.28,1),
-              box-shadow 260ms cubic-bezier(.22,.9,.28,1),
+              box-shadow 260ms var(--follow-ease),
               transform 220ms ease !important;
 }
 
@@ -378,10 +352,6 @@ button.follow-btn:not(.expanded),
 .follow-btn .icon svg {
   color: inherit !important; /* avoid icon color flashes */
   transition: transform 220ms var(--follow-ease), opacity 220ms ease !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; }
 }
 
 /* Prevent follow button from creating a perceived depth shift on hover/active/click
@@ -450,282 +420,6 @@ button.follow-btn:not(.expanded),
   display: block !important;
   width: 18px !important;
   height: 18px !important;
-}
-
-/* Edit/Delete icon-reveal buttons: reuse the same icon reveal behavior as follow */
-.edit-btn, .delete-btn {
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: 600;
-  /* include background, border-color and opacity so entering/exiting states animate smoothly */
-  transition: transform 200ms var(--transition-mid), box-shadow 200ms var(--transition-mid), color 160ms var(--transition-fast), background 260ms var(--transition-mid), border-color 260ms var(--transition-mid), opacity 220ms var(--transition-fast);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Keep consistent icon sizing with existing helpers */
-.icon-reveal .icon { width: 18px; height: 18px; }
-
-/* Edit: subtle primary accent on the icon */
-.edit-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
-.edit-btn .icon { color: var(--primary); }
-/* Remove hover/animation effects for the inline edit button.
-   Keep visual appearance static: no translate/box-shadow/ripple/animations. */
-.edit-btn:hover,
-.edit-btn:focus,
-.edit-btn:active {
-  transform: none !important;
-  box-shadow: none !important;
-}
-/* .edit-btn.active keeps its visual styles defined below; no empty ruleset needed. */
-.edit-btn::before { display: none !important; }
-
-/* Prevent keyframe animations on the edit button when not active/expanded
-   (keep transitions so the expanded/active state can animate both in and out). */
-.edit-btn:not(.active):not(.expanded),
-.edit-btn:not(.active):not(.expanded) * {
-  animation: none !important;
-}
-
-/* Edit button reveal behavior: show the label when the button is explicitly
-   expanded (JS toggles .expanded) or when it's active (editing). Prevent
-   hover/focus from revealing the label; only explicit click should. */
-.edit-btn .reveal.label {
-  opacity: 0 !important;
-  transform: translateX(6px) scale(.98) !important;
-  max-width: 0 !important;
-  pointer-events: none !important;
-  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1);
-}
-
-.edit-btn:not(.active):not(.expanded):hover .reveal.label,
-.edit-btn:not(.active):not(.expanded):focus .reveal.label,
-.edit-btn:not(.active):not(.expanded):focus-visible .reveal.label {
-  opacity: 0 !important;
-  transform: translateX(6px) scale(.98) !important;
-  max-width: 0 !important;
-}
-
-.edit-btn.expanded .reveal.label,
-.edit-btn.active .reveal.label {
-  opacity: 1 !important;
-  transform: translateX(0) scale(1) !important;
-  max-width: 160px !important;
-  pointer-events: none !important;
-  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
-}
-
-/* Prevent icon-reveal hover/focus effects for edit buttons */
-.edit-btn.icon-reveal:hover .icon,
-.edit-btn.icon-reveal:focus .icon {
-  transform: none !important;
-}
-.edit-btn.icon-reveal:hover .reveal,
-.edit-btn.icon-reveal:focus .reveal {
-  transform: none !important;
-  opacity: 0 !important;
-  max-width: 0 !important;
-}
-
-/* When the edit UI is active, keep the edit button visible and give it a
-   subtle active treatment so users can always cancel or re-open the editor. */
-.edit-btn.active {
-  background: color-mix(in srgb, var(--primary-weak), var(--bg) 48%);
-  border-color: transparent;
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--primary), transparent 72%);
-  transform: translateY(-2px);
-}
-.edit-btn.active .icon { color: var(--primary); }
-
-/* small entrance animation for edit active state */
-@keyframes editActiveIn {
-  0% { transform: translateY(0.6px) scale(.996); opacity: 0; }
-  60% { transform: translateY(-4px) scale(1.03); opacity: 1; }
- 100% { transform: translateY(-2px) scale(1); opacity: 1; }
-}
-.edit-btn.active {
-  animation: editActiveIn 260ms cubic-bezier(.2,.9,.28,1) both;
-}
-
-/* Delete: ghost style but with danger icon; pressing-delete animation preserved */
-.delete-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
-.delete-btn .icon { color: var(--danger); }
-/* Remove hover/animation effects for the inline delete post button.
-   Keep visual appearance static: no translate/box-shadow/ripple/animations. */
-.delete-btn:hover,
-.delete-btn:focus,
-.delete-btn:active {
-  transform: none !important;
-  box-shadow: none !important;
-}
-.delete-btn.pressing-delete { animation: none !important; }
-
-/* Prevent the global .btn::before ripple overlay from appearing on delete buttons */
-.delete-btn::before { display: none !important; }
-
-/* Prevent keyframe animations on the delete button when not confirming
-   (keep transitions so the confirming state can animate both in and out). */
-.delete-btn:not(.confirming),
-.delete-btn:not(.confirming) * {
-  animation: none !important;
-}
-
-/* Specifically prevent icon-reveal hover/focus effects for delete buttons */
-.delete-btn.icon-reveal:hover .icon,
-.delete-btn.icon-reveal:focus .icon {
-  transform: none !important;
-}
-.delete-btn.icon-reveal:hover .reveal,
-.delete-btn.icon-reveal:focus .reveal {
-  transform: none !important;
-  opacity: 0 !important;
-  max-width: 0 !important;
-}
-
-/* The delete confirm state uses transitions so it can both animate in and out.
-   Avoid one-shot keyframe animations which don't reverse when the state is removed. */
-.delete-btn.confirming {
-  /* ensure transitions run when entering AND exiting the confirming state */
-  transition: background 220ms cubic-bezier(.2,.85,.2,1), border-color 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), opacity 220ms cubic-bezier(.2,.85,.2,1);
-}
-.delete-btn.confirming .icon { transition: color 180ms ease; }
-
-/* ----------------------
-   Delete button reveal behavior
-   - Prevent the reveal label from animating on hover/focus so hovering the
-     delete icon doesn't expand the label. The reveal should only animate
-     when the user explicitly triggers the confirming state (click/tap).
-   - We use a more specific selector and !important where needed to win the
-     cascade against the generic .icon-reveal hover transitions.
- */
-.delete-btn .reveal.label {
-  /* default collapsed state (do not animate on hover) */
-  opacity: 0 !important;
-  transform: translateX(6px) scale(.98) !important;
-  max-width: 0 !important;
-  pointer-events: none !important;
-  /* keep transitions so toggling .confirming animates in and out */
-  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1);
-}
-
-/* Explicitly prevent hover/focus from revealing the label when NOT confirming */
-.delete-btn:not(.confirming):hover .reveal.label,
-.delete-btn:not(.confirming):focus .reveal.label,
-.delete-btn:not(.confirming):focus-visible .reveal.label {
-  opacity: 0 !important;
-  transform: translateX(6px) scale(.98) !important;
-  max-width: 0 !important;
-}
-
-/* When in the confirming state, reveal the label and animate the transition */
-.delete-btn.confirming .reveal.label {
-  opacity: 1 !important;
-  transform: translateX(0) scale(1) !important;
-  max-width: 160px !important;
-  pointer-events: none !important;
-  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
-}
-
-/* Strong override: Edit button should only show its label when explicitly
-   expanded (JS) or when editing (active). Ignore hover entirely so the
-   label doesn't toggle on pointer moves. This block must come after the
-   generic icon-reveal rules to win the cascade. */
-.edit-btn .reveal.label {
-  opacity: 0 !important;
-  transform: translateX(6px) scale(.98) !important;
-  max-width: 0 !important;
-  pointer-events: none !important;
-  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
-}
-
-/* Prevent hover/focus from revealing the label for edit buttons */
-.edit-btn:hover .reveal.label,
-.edit-btn:focus .reveal.label,
-.edit-btn:focus-visible .reveal.label {
-  opacity: 0 !important;
-  transform: translateX(6px) scale(.98) !important;
-  max-width: 0 !important;
-}
-
-/* Reveal label only when explicitly expanded or when editing */
-.edit-btn.expanded .reveal.label,
-.edit-btn.active .reveal.label {
-  opacity: 1 !important;
-  transform: translateX(0) scale(1) !important;
-  max-width: 160px !important;
-  pointer-events: none !important;
-  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
-}
-
-/* Hide mouse-focus halo but preserve keyboard focus visibility */
-.edit-btn:focus:not(:focus-visible),
-.delete-btn:focus:not(:focus-visible) {
-  outline: none !important;
-  box-shadow: none !important;
-}
-.edit-btn:focus:not(:focus-visible)::after,
-.delete-btn:focus:not(:focus-visible)::after {
-  box-shadow: none !important;
-}
-
-/* ------------------------------------------------------------------
-   Make edit/delete buttons behave like follow-style buttons: remove
-   visible outline/halo/pseudo-elements so they don't show the blue/colored
-   ring on mouse/touch interactions. This preserves their active/confirming
-   visual states but prevents the extra ring/outline that was previously
-   appearing on posts.
- ------------------------------------------------------------------ */
-.edit-btn,
-.delete-btn,
-button.edit-btn,
-button.delete-btn,
-.card .edit-btn,
-.card .delete-btn,
-.profile-actions .edit-btn,
-.profile-actions .delete-btn {
-  border: none !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  background: transparent !important;
-  outline: none !important;
-  background-clip: padding-box !important;
-}
-
-/* Hide any pseudo-elements that can draw a ring/halo around the button */
-.edit-btn::after, .edit-btn::before,
-.delete-btn::after, .delete-btn::before,
-.card .edit-btn::after, .card .edit-btn::before,
-.card .delete-btn::after, .card .delete-btn::before,
-.profile-actions .edit-btn::after, .profile-actions .edit-btn::before,
-.profile-actions .delete-btn::after, .profile-actions .delete-btn::before {
-  display: none !important;
-  content: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  opacity: 0 !important;
-}
-
-/* Also ensure focus halos are suppressed for both mouse/touch and keyboard
-   interactions to match the follow button behavior requested. */
-.edit-btn:focus,
-.edit-btn:focus-visible,
-.delete-btn:focus,
-.delete-btn:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-
-@media (prefers-reduced-motion: reduce) {
-  .edit-btn, .delete-btn { transition: none !important; animation: none !important; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  /* Ensure our small state animations are suppressed for reduced-motion users */
-  .edit-btn.active, .delete-btn.confirming { animation: none !important; }
 }
 
 /* Final override: ensure follow button uses max-width sequencing and not the

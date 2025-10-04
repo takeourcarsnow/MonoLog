@@ -7,6 +7,8 @@ import { CarouselView } from "./CarouselView";
 import { SingleImageView } from "./SingleImageView";
 import { CameraModal } from "./CameraModal";
 import { ThumbnailStrip } from "./ThumbnailStrip";
+import { compressImage, approxDataUrlBytes } from "@/lib/image";
+
 
 export function PreviewSection({
   dataUrl,
@@ -68,8 +70,47 @@ export function PreviewSection({
     handleFile
   });
 
+  async function onDropPreview(e: React.DragEvent) {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/')).slice(0, 5);
+    if (!files.length) return;
+    // If there are multiple files, batch-process and append via setDataUrls
+    setProcessing(true);
+    setPreviewLoaded(false);
+    try {
+      const newUrls: string[] = [];
+      for (const f of files) {
+        try {
+          const url = await compressImage(f);
+          newUrls.push(url);
+        } catch (e) { console.error('Failed to process dropped file', e); }
+      }
+      if (newUrls.length) {
+        setDataUrls(d => {
+          const next = [...d, ...newUrls].slice(0, 5);
+          return next;
+        });
+        setOriginalDataUrls(d => {
+          const next = [...d, ...newUrls].slice(0, 5);
+          return next;
+        });
+        setEditorSettings(s => {
+          const next = [...s, ...newUrls.map(() => ({}))].slice(0, 5);
+          return next;
+        });
+        if (!dataUrl) { setDataUrl(newUrls[0]); setPreviewLoaded(false); }
+      }
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   return (
-    <div className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${editing ? 'editing' : ''} ${(processing || !previewLoaded) ? 'processing' : ''}`}>
+    <div
+      className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${editing ? 'editing' : ''} ${(processing || !previewLoaded) ? 'processing' : ''}`}
+      onDragOver={(e) => { e.preventDefault(); }}
+      onDrop={onDropPreview}
+    >
       <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
         <LoadingBadge processing={processing} previewLoaded={previewLoaded} />
 

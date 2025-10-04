@@ -558,6 +558,30 @@ function UploaderCore() {
         handleFile={handleFile}
       />
 
+      {/* Add photos button when preview exists to append more images */}
+      {hasPreview ? (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => {
+              // ensure we're in append mode then open the file selector
+              fileActionRef.current = 'append';
+              try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
+              try { fileInputRef.current?.click(); } catch (_) {}
+            }}
+            disabled={processing}
+          >
+            Add photos
+          </button>
+        </div>
+      ) : null}
+      {hasPreview ? (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6 }}>
+          <div className="dim">You can add up to 5 photos per post</div>
+        </div>
+      ) : null}
+
       <div style={{ marginTop: 8 }}>
         {compressedSize != null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024 ? (
           <div className="warn">Compressed image exceeds the maximum of {CONFIG.imageMaxSizeMB} MB. Please resize or choose a smaller file.</div>

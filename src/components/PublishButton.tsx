@@ -19,7 +19,6 @@ export function PublishButton({
   remaining,
   remainingMs,
   countdownTotalMs,
-  processing,
   disabled = false,
   onPublish
 }: PublishButtonProps) {
@@ -72,12 +71,9 @@ export function PublishButton({
 
   // Enable pulse animation when ready to post
   useEffect(() => {
-    if (canPost && !processing) {
-      setPulseAnimation(true);
-    } else {
-      setPulseAnimation(false);
-    }
-  }, [canPost, processing]);
+    // Pulse only depends on readiness to post, not unrelated upload processing
+    setPulseAnimation(Boolean(canPost));
+  }, [canPost]);
 
   const handleClick = () => {
     if (!canPost) {
@@ -132,7 +128,7 @@ export function PublishButton({
     <button
       className={`publish-button ${canPost ? 'ready' : 'cooldown'} ${pulseAnimation ? 'pulse' : ''} ${flash ? 'flash' : ''}`}
       onClick={handleClick}
-      disabled={disabled || processing}
+      disabled={disabled}
       aria-label={
         canPost
           ? 'Publish your daily post'
@@ -151,12 +147,7 @@ export function PublishButton({
         </span>
       )}
       <span className="publish-content">
-          {processing ? ( 
-          <span className="publish-text">
-            <span className="spinner" aria-hidden="true" />
-            Processing…
-          </span>
-        ) : canPost ? (
+        {canPost ? (
           <span className="publish-text ready-text">
             <svg className="icon-publish" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M12 2L12 14M12 2L7 7M12 2L17 7" strokeLinecap="round" strokeLinejoin="round"/>
@@ -166,17 +157,17 @@ export function PublishButton({
           </span>
         ) : (
           <span className="countdown-display">
-              {/* both elements are present so we can cross-fade/slide between them */}
-              <span className={`wait-message ${waitMsgVisible ? 'visible' : ''}`}>
-                <span className="wait-icon" aria-hidden style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }}>
-                  {ICONS[currentWaitIconIndex]}
-                </span>
-                {currentWaitMessage}
+            {/* both elements are present so we can cross-fade/slide between them */}
+            <span className={`wait-message ${waitMsgVisible ? 'visible' : ''}`}>
+              <span className="wait-icon" aria-hidden style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }}>
+                {ICONS[currentWaitIconIndex]}
               </span>
-              <span className={`countdown-time ${!waitMsgVisible ? 'visible' : ''}`}>
-                <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }} aria-hidden>{timeIcon}</span>
-                {displayTime}
-              </span>
+              {currentWaitMessage}
+            </span>
+            <span className={`countdown-time ${!waitMsgVisible ? 'visible' : ''}`}>
+              <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }} aria-hidden>{timeIcon}</span>
+              {displayTime}
+            </span>
           </span>
         )}
       </span>

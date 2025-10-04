@@ -38,11 +38,81 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.6));
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.62));
+  backdrop-filter: blur(6px) saturate(120%);
+  animation: droploader-fade 220ms ease both;
   z-index: 10;
   border-radius: var(--radius);
   color: var(--text);
+}
+
+.drop-loader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.44));
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  opacity: 0;
+  transition: opacity 220ms ease, backdrop-filter 260ms ease;
+  z-index: -1;
+}
+.drop-loader.show-blur::before { opacity: 1; }
+.logo-loader { display: flex; align-items: center; justify-content: center; }
+.logo-loader svg { color: var(--primary); width: 86px; height: 86px; }
+.logo-box { transition: stroke-opacity 360ms ease, transform 360ms cubic-bezier(.2,.8,.2,1); }
+.logo-dot { transform-origin: 48px 48px; animation: logo-pulse 1.2s ease-in-out infinite; opacity: 0.98; }
+.logo-ring-arc { stroke: color-mix(in srgb, var(--primary), transparent 18%); stroke-linejoin: round; }
+.logo-ring-arc.faint { stroke: color-mix(in srgb, var(--primary), transparent 38%); }
+.logo-ring { filter: drop-shadow(0 10px 28px rgba(0,0,0,0.32)); }
+
+/* Rotation layers */
+.logo-rotate-slow { animation: rotate-slow 4.6s linear infinite; }
+.logo-rotate-fast { animation: rotate-fast 1s linear infinite; }
+
+/* Sparks orbit: rotate group and each spark pulses */
+.logo-sparks { transform-origin: 48px 48px; animation: rotate-fast-reverse 1.35s linear infinite; }
+.logo-sparks .spark { opacity: 0.9; transform-origin: 48px 48px; animation: spark-pulse 1.4s ease-in-out infinite; }
+.logo-sparks .spark:nth-child(2) { animation-delay: 0.18s; }
+.logo-sparks .spark:nth-child(3) { animation-delay: 0.36s; }
+.logo-sparks .spark:nth-child(4) { animation-delay: 0.54s; }
+
+@keyframes logo-pulse {
+  0% { transform: scale(0.98); opacity: 0.95; }
+  50% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(0.98); opacity: 0.95; }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotate-fast {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotate-fast-reverse {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes spark-pulse {
+  0% { transform: translateZ(0) scale(0.9); opacity: 0.7; }
+  50% { transform: translateZ(0) scale(1.15); opacity: 1; }
+  100% { transform: translateZ(0) scale(0.9); opacity: 0.7; }
+}
+
+@keyframes droploader-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .logo-dot, .logo-ring-arc, .logo-box { animation: none !important; transition: none !important; }
 }
 .drop-loader svg {
   color: var(--primary);
@@ -172,6 +242,20 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 /* Light theme adjustments */
 :root[data-theme="light"] .image-action-btn { background: rgba(255, 255, 255, 0.92); color: var(--text); border-color: rgba(0, 0, 0, 0.08); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); }
 :root[data-theme="light"] .image-action-btn:hover { background: rgba(255, 255, 255, 0.98); border-color: rgba(0, 0, 0, 0.12); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16); }
+
+/* Make the processing overlay plain white in light theme and remove blur */
+:root[data-theme="light"] .drop-loader {
+  background: #fff !important;
+  color: var(--text) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root[data-theme="light"] .drop-loader::before {
+  background: #fff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 1 !important; /* ensure the pseudo-overlay is visible as solid white */
+}
 
 /* Mobile: slightly smaller icons */
 @media (max-width: 640px) {

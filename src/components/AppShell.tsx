@@ -21,6 +21,60 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Virtual } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/virtual";
+
+// Small wrapper used around each slide to ensure inactive slides are removed
+// from the accessibility tree and tab order. This avoids focus leaking into
+// offscreen sections which can cause layout/glitch issues when users tab.
+function SlideWrapper({ children, active }: { children: React.ReactNode; active: boolean }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    // aria-hidden for screen readers
+    if (!active) {
+      el.setAttribute('aria-hidden', 'true');
+      // prefer the inert attribute when available
+      try { (el as any).inert = true; } catch (_) { /* ignore */ }
+    } else {
+      el.removeAttribute('aria-hidden');
+      try { (el as any).inert = false; } catch (_) { /* ignore */ }
+    }
+
+    // Also update tabIndex on all focusable descendants so tabbing skips them.
+    const focusable = el.querySelectorAll<HTMLElement>(
+      'a[href], button, input, textarea, select, [tabindex]'
+    );
+    focusable.forEach((node) => {
+      // store original tabindex so we can restore when re-activating
+      if (!node.hasAttribute('data-orig-tabindex')) {
+        node.setAttribute('data-orig-tabindex', node.hasAttribute('tabindex') ? node.getAttribute('tabindex') || '' : '');
+      }
+      if (!active) {
+        node.setAttribute('tabindex', '-1');
+      } else {
+        const orig = node.getAttribute('data-orig-tabindex');
+        if (orig === '') node.removeAttribute('tabindex'); else node.setAttribute('tabindex', orig || '0');
+        node.removeAttribute('data-orig-tabindex');
+      }
+    });
+
+    return () => {
+      // cleanup: restore attributes
+      try { (el as any).inert = false; } catch (_) {}
+      el.removeAttribute('aria-hidden');
+      const nodes = el.querySelectorAll<HTMLElement>('a[href], button, input, textarea, select, [tabindex]');
+      nodes.forEach((node) => {
+        const orig = node.getAttribute('data-orig-tabindex');
+        if (orig === '') node.removeAttribute('tabindex'); else if (orig !== null) node.setAttribute('tabindex', orig);
+        node.removeAttribute('data-orig-tabindex');
+      });
+    };
+  }, [active]);
+
+  return <div ref={ref} className={active ? 'slide-active' : 'slide-inactive'}>{children}</div>;
+}
 export function AppShell({ children }: { children: React.ReactNode }) {
   "use client";
   const [ready, setReady] = useState(false);
@@ -73,6 +127,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
   
   const currentIndex = getCurrentIndex();
+  const [activeIndex, setActiveIndex] = useState<number>(currentIndex);
+
+  // Keep activeIndex in sync when currentIndex (route) changes externally
+  useEffect(() => {
+    setActiveIndex(currentIndex);
+  }, [currentIndex]);
 
   useEffect(() => {
     initTheme();
@@ -177,6 +237,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleSlideChange = (swiper: any) => {
   const newPath = views[swiper.activeIndex]?.path;
+    // keep local state for which slide is active so we can mark others inert
+    try { setActiveIndex(typeof swiper.activeIndex === 'number' ? swiper.activeIndex : currentIndex); } catch (_) {}
     // Immediately dispatch event so NavBar can update active state before route changes
     if (typeof window !== 'undefined' && newPath) {
       window.dispatchEvent(new CustomEvent('monolog:slide_change', { 
@@ -275,7 +337,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {views.map((view, index) => (
                 <SwiperSlide key={view.path} virtualIndex={index} className={view.path === '/feed' ? 'slide-feed' : undefined}>
-                  <view.component />
+                  <SlideWrapper active={index === activeIndex}>
+                    {(index === activeIndex || index === activeIndex - 1 || index === activeIndex + 1) ? <view.component /> : null}
+                  </SlideWrapper>
                 </SwiperSlide>
               ))}
             </Swiper>

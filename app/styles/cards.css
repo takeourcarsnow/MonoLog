@@ -240,6 +240,36 @@
   align-self: stretch;
 }
 
+/* subtle entrance for grid tiles (match list .card animation feel) */
+@keyframes gridIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.feed.grid-view .grid .tile {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: gridIn 420ms var(--transition-mid) forwards;
+}
+
+/* small stagger so tiles cascade visually across rows (3-column default) */
+.feed.grid-view .grid .tile:nth-child(3n+1) { animation-delay: 40ms; }
+.feed.grid-view .grid .tile:nth-child(3n+2) { animation-delay: 80ms; }
+.feed.grid-view .grid .tile:nth-child(3n)   { animation-delay: 120ms; }
+
+/* on wider screens where grid is 4 columns, adjust the stagger rhythm */
+@media (min-width: 900px) {
+  .feed.grid-view .grid .tile { animation-duration: 420ms; }
+  .feed.grid-view .grid .tile:nth-child(4n+1) { animation-delay: 40ms; }
+  .feed.grid-view .grid .tile:nth-child(4n+2) { animation-delay: 80ms; }
+  .feed.grid-view .grid .tile:nth-child(4n+3) { animation-delay: 120ms; }
+  .feed.grid-view .grid .tile:nth-child(4n)   { animation-delay: 160ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed.grid-view .grid .tile { animation: none !important; transform: none !important; opacity: 1 !important; }
+}
+
 /* Ensure images inside grid tiles fill and are center-cropped */
 .feed.grid-view .grid .tile img,
 .feed.grid-view .grid .tile .card-media img,

@@ -6,6 +6,15 @@ export function toDateKey(d: Date | string = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
+// UTC version for server-side date calculations
+export function toUTCDateKey(d: Date | string = new Date()): string {
+  const dt = new Date(d);
+  const y = dt.getUTCFullYear();
+  const m = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(dt.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function monthMatrix(year: number, monthIdx: number) {
   const first = new Date(year, monthIdx, 1);
   const last = new Date(year, monthIdx + 1, 0);

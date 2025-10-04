@@ -41,9 +41,11 @@ export async function POST(req: Request) {
 
     // If replace is true, delete today's posts for the user first
     if (replace) {
-      const start = new Date(); start.setHours(0, 0, 0, 0);
-      const end = new Date(start); end.setDate(start.getDate() + 1);
-      const { data: todays } = await sb.from('posts').select('*').eq('user_id', userId).gte('created_at', start.toISOString()).lt('created_at', end.toISOString());
+      // Use UTC-based date boundaries to match database timestamps
+      const now = new Date();
+      const startOfDayUTC = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000);
+      const { data: todays } = await sb.from('posts').select('*').eq('user_id', userId).gte('created_at', startOfDayUTC.toISOString()).lt('created_at', endOfDayUTC.toISOString());
       if ((todays || []).length) {
         const ids = (todays || []).map((p: any) => p.id);
         // delete comments
@@ -75,16 +77,18 @@ export async function POST(req: Request) {
   // Allow a temporary bypass for testing via env var NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT
   const DISABLE_UPLOAD_LIMIT = (process.env.NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT === '1' || process.env.NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT === 'true');
   if (!replace && !DISABLE_UPLOAD_LIMIT) {
-      const start = new Date(); start.setHours(0, 0, 0, 0);
-      const end = new Date(start); end.setDate(start.getDate() + 1);
-      const { data: todays } = await sb.from('posts').select('created_at').eq('user_id', userId).gte('created_at', start.toISOString()).lt('created_at', end.toISOString());
+      // Use UTC-based date boundaries to match database timestamps
+      const now = new Date();
+      const startOfDayUTC = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000);
+      const { data: todays } = await sb.from('posts').select('created_at').eq('user_id', userId).gte('created_at', startOfDayUTC.toISOString()).lt('created_at', endOfDayUTC.toISOString());
       if ((todays || []).length) {
         // find most recent post timestamp
         let lastMs = 0;
         for (const p of (todays || [])) {
           try { const t = new Date(p.created_at).getTime(); if (t > lastMs) lastMs = t; } catch (e) {}
         }
-        return NextResponse.json({ error: 'You already posted today', nextAllowedAt: end.getTime(), lastPostedAt: lastMs || null }, { status: 409 });
+        return NextResponse.json({ error: 'You already posted today', nextAllowedAt: endOfDayUTC.getTime(), lastPostedAt: lastMs || null }, { status: 409 });
       }
     } else if (!replace && DISABLE_UPLOAD_LIMIT) {
       try { logger.debug('[posts.create] upload limit disabled by NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT'); } catch (e) {}
@@ -94,134 +98,55 @@ export async function POST(req: Request) {
     const id = uid();
     const created_at = new Date().toISOString();
     const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: !!isPublic };
-    // Always set primary image_url to preserve compatibility with older schemas.
-    if (imageUrls && imageUrls.length >= 1) insertObj.image_url = imageUrls[0];
-    // Prefer storing multiple urls when provided, but this column may not exist in
-    // older / minimal schemas. We'll attempt the insert with image_urls and fall
-    // back to inserting only image_url if the DB rejects the unknown column.
-    if (imageUrls && imageUrls.length > 1) insertObj.image_urls = imageUrls;
-
-    // Try insert; if it fails due to missing `image_urls` column, try a few
-    // fallbacks (json/jsonb column names) before giving up and inserting only
-    // the legacy single `image_url`.
-    let insertData: any = null;
-    let error: any = null;
-    try {
-      const res = await sb.from('posts').insert(insertObj).select('*').limit(1).single();
-      error = res.error;
-      insertData = res.data;
-    } catch (e: any) {
-      error = e;
-    }
-
-    if (error) {
-      const msg = (error && (error.message || String(error))).toLowerCase();
-      // common error when a column doesn't exist or schema cache mismatch
-      if (msg.includes('image_urls') || msg.includes('column') || msg.includes('could not find')) {
-        // Try alternative column names that some schemas use
-        const tryNames = ['image_urls_json', 'image_urls_jsonb'];
-        let success = false;
-        for (const name of tryNames) {
-          try {
-            const altObj: any = { ...insertObj };
-            delete altObj.image_urls; // remove the original array field
-            // store as an actual array/JSON value in the alternate column so
-            // json/jsonb columns receive a proper array value instead of a string
-            // (Supabase/Postgres will accept JS arrays for jsonb columns).
-            altObj[name] = imageUrls || [];
-            const res2 = await sb.from('posts').insert(altObj).select('*').limit(1).single();
-            if (!res2.error && res2.data) {
-              insertData = res2.data;
-              success = true;
-              break;
-            }
-          } catch (e: any) {
-            // ignore and try next fallback
-          }
-        }
-        if (!success) {
-          // final attempt: insert without multi-image column (legacy fallback)
-          try {
-            const safeObj = { ...insertObj };
-            delete safeObj.image_urls;
-            const res3 = await sb.from('posts').insert(safeObj).select('*').limit(1).single();
-            if (res3.error) return NextResponse.json({ error: res3.error.message || res3.error }, { status: 500 });
-            insertData = res3.data;
-          } catch (e: any) {
-            return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
-          }
-        }
-      } else {
-        return NextResponse.json({ error: error.message || error }, { status: 500 });
+    
+    // Handle image URLs - prefer array format when multiple images
+    if (imageUrls && imageUrls.length > 0) {
+      insertObj.image_url = imageUrls[0]; // Always set primary for compatibility
+      if (imageUrls.length > 1) {
+        insertObj.image_urls = imageUrls; // Try array column
       }
     }
 
-    // Compute a normalized imageUrls representation from whatever the DB returned
-    let normalizedImageUrls: string[] | undefined = undefined;
+    // Attempt to insert the post
+    let insertData: any = null;
+    try {
+      const res = await sb.from('posts').insert(insertObj).select('*').limit(1).single();
+      if (res.error) {
+        // If the error is about the image_urls column not existing, try without it
+        if (res.error.message?.toLowerCase().includes('image_urls') || res.error.message?.toLowerCase().includes('column')) {
+          const fallbackObj = { ...insertObj };
+          delete fallbackObj.image_urls; // Remove the problematic column
+          const fallbackRes = await sb.from('posts').insert(fallbackObj).select('*').limit(1).single();
+          if (fallbackRes.error) {
+            return NextResponse.json({ error: `Database schema error: ${fallbackRes.error.message}` }, { status: 500 });
+          }
+          insertData = fallbackRes.data;
+        } else {
+          return NextResponse.json({ error: res.error.message || res.error }, { status: 500 });
+        }
+      } else {
+        insertData = res.data;
+      }
+    } catch (e: any) {
+      return NextResponse.json({ error: `Database error: ${e?.message || String(e)}` }, { status: 500 });
+    }
+
+    // Normalize image URLs from the inserted data
+    let normalizedImageUrls: string[] = [];
     try {
       if (insertData) {
-        normalizedImageUrls = insertData.image_urls ?? insertData.image_urls_json ?? insertData.image_urls_jsonb ?? (insertData.image_url ? [insertData.image_url] : undefined);
-        // If the value is a string containing JSON, attempt to parse it
-        if (typeof normalizedImageUrls === 'string') {
-          try {
-            const parsed = JSON.parse(normalizedImageUrls as any);
-            if (Array.isArray(parsed)) normalizedImageUrls = parsed.map(String);
-          } catch (e) {
-            normalizedImageUrls = [String(normalizedImageUrls)];
-          }
+        if (Array.isArray(insertData.image_urls)) {
+          normalizedImageUrls = insertData.image_urls;
+        } else if (insertData.image_url) {
+          normalizedImageUrls = [insertData.image_url];
         }
       }
     } catch (e) {
-      // ignore normalization failures
+      // If normalization fails, at least return the primary image
+      normalizedImageUrls = insertData?.image_url ? [insertData.image_url] : [];
     }
 
-  try { logger.debug('[posts.create] inserted', { id: insertData?.id, normalizedImageUrls: normalizedImageUrls?.slice(0,5) }); } catch (e) {}
-
-    // If the client provided multiple images but the returned row doesn't
-    // include a multi-image column, attempt a follow-up update to persist
-    // the array into common fallback columns. This helps when the initial
-    // insert path had to drop the unknown column and returned a legacy row.
-    if ((imageUrls && imageUrls.length > 1) && insertData) {
-      const hasArrayOnRow = Array.isArray(insertData.image_urls) || Array.isArray(insertData.image_urls_json) || Array.isArray(insertData.image_urls_jsonb);
-      if (!hasArrayOnRow) {
-        try {
-          const updateTryNames = ['image_urls', 'image_urls_json', 'image_urls_jsonb'];
-          for (const name of updateTryNames) {
-            try {
-              const payload: any = {};
-              payload[name] = imageUrls || [];
-              const upRes: any = await sb.from('posts').update(payload).eq('id', insertData.id).select('*').limit(1).single();
-              if (!upRes.error && upRes.data) {
-                insertData = upRes.data;
-                try { logger.debug('[posts.create] post-insert updated', { id: insertData.id, updatedBy: name }); } catch (e) {}
-                break;
-              }
-            } catch (e) {
-              // ignore and try next
-            }
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
-    }
-
-    // Recompute normalizedImageUrls based on possibly-updated row
-    try {
-      if (insertData) {
-        normalizedImageUrls = insertData.image_urls ?? insertData.image_urls_json ?? insertData.image_urls_jsonb ?? (insertData.image_url ? [insertData.image_url] : undefined);
-        if (typeof normalizedImageUrls === 'string') {
-          try {
-            const parsed = JSON.parse(normalizedImageUrls as any);
-            if (Array.isArray(parsed)) normalizedImageUrls = parsed.map(String);
-          } catch (e) {
-            normalizedImageUrls = [String(normalizedImageUrls)];
-          }
-        }
-      }
-    } catch (e) {}
-
-  try { logger.debug('[posts.create] final', { id: insertData?.id, normalizedImageUrls: normalizedImageUrls?.slice(0,5) }); } catch (e) {}
+    try { logger.debug('[posts.create] inserted', { id: insertData?.id, imageCount: normalizedImageUrls.length }); } catch (e) {}
 
     return NextResponse.json({ ok: true, post: insertData, normalizedImageUrls });
   } catch (e: any) {

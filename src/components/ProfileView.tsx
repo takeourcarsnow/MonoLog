@@ -16,8 +16,6 @@ export function ProfileView({ userId }: { userId?: string }) {
 
   const [showAuth, setShowAuth] = useState(false);
 
-  try { console.debug('[ProfileView] mounted with userId ->', userId, ' currentUserId ->', currentUserId, ' isOtherParam ->', isOtherParam); } catch (_) {}
-
   
 
   if (!user) {

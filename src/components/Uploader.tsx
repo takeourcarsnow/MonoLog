@@ -430,24 +430,26 @@ function UploaderCore() {
                   setCompressedSize(bytes);
                   const replaceAt = replaceIndexRef.current ?? (dataUrls.length ? index : 0);
                   if (dataUrls.length) {
+                    // Ensure replaceAt is within bounds
+                    const safeReplaceAt = Math.min(replaceAt, dataUrls.length - 1);
                     setDataUrls(d => {
                       const copy = [...d];
-                      copy[replaceAt] = url;
+                      copy[safeReplaceAt] = url;
                       return copy;
                     });
                     // also update the original
                     setOriginalDataUrls(d => {
                       const copy = [...d];
-                      copy[replaceAt] = url;
+                      copy[safeReplaceAt] = url;
                       return copy;
                     });
                     // reset settings for replaced image
                     setEditorSettings(s => {
                       const copy = [...s];
-                      copy[replaceAt] = {};
+                      copy[safeReplaceAt] = {};
                       return copy;
                     });
-                    if (replaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
+                    if (safeReplaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
                   } else {
                     // no array yet, just set primary preview
                     setDataUrl(url);

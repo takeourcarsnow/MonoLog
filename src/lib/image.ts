@@ -158,10 +158,29 @@ export async function compressImage(fileOrDataUrl: File | string, maxEdge = CONF
   // pick smallest size (prefer webp when same size)
   candidates.sort((a, b) => a.result.size - b.result.size || (a.mime === 'image/webp' ? -1 : 1));
   const chosen = candidates[0];
-  // If chosen dataUrl is empty, fallback to a default jpeg encode
+
+  // Ensure we have a valid result
   if (!chosen || !chosen.result || !chosen.result.dataUrl) {
-    const fallback = await tryEncode('image/jpeg', Math.max(0.5, initialQuality - 0.2));
-    return fallback;
+    // Try multiple fallback strategies
+    const fallbacks = [
+      () => tryEncode('image/jpeg', Math.max(0.5, initialQuality - 0.2)),
+      () => tryEncode('image/jpeg', 0.7),
+      () => tryEncode('image/png', 1.0), // PNG as last resort (usually larger)
+    ];
+
+    for (const fallback of fallbacks) {
+      try {
+        const result = await fallback();
+        if (result && result.length > 100) { // Basic check for valid data URL
+          return result;
+        }
+      } catch (e) {
+        // Continue to next fallback
+      }
+    }
+
+    // If all fallbacks fail, throw an error
+    throw new Error('Failed to compress image: all encoding attempts failed');
   }
 
   return chosen.result.dataUrl;

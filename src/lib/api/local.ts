@@ -1,6 +1,6 @@
 import { storage } from "../storage";
 import { uid } from "../id";
-import { toDateKey } from "../date";
+import { toDateKey, toUTCDateKey } from "../date";
 import type { Api, User, Post, Comment, HydratedPost } from "../types";
 
 const KEYS = {
@@ -301,16 +301,16 @@ export const localApi: Api = {
     const map: Record<string, number> = {};
     for (const p of cache.posts) {
       const d = new Date(p.createdAt);
-      if (d.getFullYear() === year && d.getMonth() === monthIdx) {
-        const dk = toDateKey(d);
+      if (d.getUTCFullYear() === year && d.getUTCMonth() === monthIdx) {
+        const dk = toUTCDateKey(d);
         map[dk] = (map[dk] || 0) + 1;
       }
     }
     const me = getUserById(cache.currentUserId);
     const myKeys = new Set(
       cache.posts
-        .filter(p => p.userId === me?.id && new Date(p.createdAt).getMonth() === monthIdx && new Date(p.createdAt).getFullYear() === year)
-        .map(p => toDateKey(p.createdAt))
+        .filter(p => p.userId === me?.id && new Date(p.createdAt).getUTCMonth() === monthIdx && new Date(p.createdAt).getUTCFullYear() === year)
+        .map(p => toUTCDateKey(p.createdAt))
     );
     return { counts: map, mine: myKeys };
   },

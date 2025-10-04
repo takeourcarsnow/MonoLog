@@ -14,6 +14,101 @@ import { tabs } from "./NavBarClient";
 import { useRouter } from "next/navigation";
 import { Home } from "lucide-react";
 
+// Custom hook to handle grid view double-click logic with proper cleanup
+function useGridDoubleClick(toast: any, router: any) {
+  const clickCountsRef = useRef(new Map<string, number>());
+  const clickTimersRef = useRef(new Map<string, any>());
+  const dblClickFlagsRef = useRef(new Map<string, boolean>());
+  const overlayTimeoutsRef = useRef(new Map<string, any>());
+
+  const showOverlay = useCallback((postId: string, action: 'adding' | 'removing') => {
+    // Clear any existing timeout for this post
+    const existingTimeout = overlayTimeoutsRef.current.get(postId);
+    if (existingTimeout) clearTimeout(existingTimeout);
+
+    const duration = action === 'adding' ? 600 : 500;
+    const timeout = setTimeout(() => {
+      overlayTimeoutsRef.current.delete(postId);
+    }, duration);
+    overlayTimeoutsRef.current.set(postId, timeout);
+  }, []);
+
+  const handleTileClick = useCallback((e: React.MouseEvent, post: HydratedPost) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (dblClickFlagsRef.current.get(post.id)) return;
+    
+    const href = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
+    const count = (clickCountsRef.current.get(post.id) || 0) + 1;
+    clickCountsRef.current.set(post.id, count);
+    
+    if (count === 1) {
+      const timer = setTimeout(() => {
+        if (!dblClickFlagsRef.current.get(post.id)) {
+          try { router.push(href); } catch (_) {}
+        }
+        clickCountsRef.current.set(post.id, 0);
+        dblClickFlagsRef.current.delete(post.id);
+      }, 280);
+      clickTimersRef.current.set(post.id, timer);
+    }
+  }, [router]);
+
+  const handleTileDblClick = useCallback(async (e: React.MouseEvent, post: HydratedPost) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    dblClickFlagsRef.current.set(post.id, true);
+    
+    const timer = clickTimersRef.current.get(post.id);
+    if (timer) {
+      clearTimeout(timer);
+      clickTimersRef.current.delete(post.id);
+    }
+    
+    clickCountsRef.current.set(post.id, 0);
+    
+    try {
+      const cur = await api.getCurrentUser();
+      if (!cur) { toast.show('Sign in to favorite'); return; }
+      
+      // Check if already favorited to toggle properly
+      const isFav = await api.isFavorite(post.id);
+      if (isFav) {
+        await api.unfavoritePost(post.id);
+        toast.show('Removed from favorites');
+        showOverlay(post.id, 'removing');
+      } else {
+        await api.favoritePost(post.id);
+        toast.show('Added to favorites');
+        showOverlay(post.id, 'adding');
+      }
+    } catch (e:any) {
+      toast.show(e?.message || 'Failed');
+    }
+    
+    setTimeout(() => {
+      dblClickFlagsRef.current.delete(post.id);
+    }, 400);
+  }, [toast, showOverlay]);
+
+  // Cleanup function
+  const cleanup = useCallback(() => {
+    // Clear all timers
+    clickTimersRef.current.forEach(timer => clearTimeout(timer));
+    clickTimersRef.current.clear();
+    
+    overlayTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    overlayTimeoutsRef.current.clear();
+    
+    clickCountsRef.current.clear();
+    dblClickFlagsRef.current.clear();
+  }, []);
+
+  return { handleTileClick, handleTileDblClick, showOverlay, cleanup };
+}
+
 export function FeedView() {
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   // Keep a ref to latest posts for event handlers without re-binding
@@ -31,6 +126,7 @@ export function FeedView() {
   const toast = useToast();
   const router = useRouter();
   const [overlayStates, setOverlayStates] = useState<Record<string, 'adding' | 'removing' | null>>({});
+  const { handleTileClick, handleTileDblClick, showOverlay, cleanup: cleanupGrid } = useGridDoubleClick(toast, router);
 
   // Memoize the initial load function
   const loadInitialPosts = useCallback(async () => {
@@ -63,8 +159,9 @@ export function FeedView() {
   useEffect(() => {
     return () => {
       try { setSlideState('feed', { scrollY: typeof window !== 'undefined' ? window.scrollY : 0 }); } catch (_) {}
+      cleanupGrid(); // Clean up grid timers
     };
-  }, []);
+  }, [cleanupGrid]);
 
   // Refresh feed only when a FOLLOW action occurs elsewhere AND the newly
   // followed user's posts are not already in the current list. This prevents
@@ -93,6 +190,10 @@ export function FeedView() {
   useEffect(() => {
     if (!sentinelRef.current) return;
     const el = sentinelRef.current;
+    
+    // Use a ref to store the current observer to avoid recreation
+    const observerRef = { current: null as IntersectionObserver | null };
+    
     const obs = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         (async () => {
@@ -117,9 +218,16 @@ export function FeedView() {
         })();
       });
     }, { rootMargin: '200px' });
+    
+    observerRef.current = obs;
     obs.observe(el);
-    return () => obs.disconnect();
-  }, [posts, loadingMore, hasMore]);
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []); // Empty dependency array - only create observer once
 
   // Refresh feed when a new post is created (user returns to feed after upload)
   useEffect(() => {
@@ -133,76 +241,9 @@ export function FeedView() {
     if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
     if (!posts.length) return <div className="empty">Your feed is quiet. Follow people in Explore to see their daily photo.</div>;
     if (view === "grid") {
-      const clickCounts = new Map<string, number>();
-      const clickTimers = new Map<string, any>();
-      const dblClickFlags = new Map<string, boolean>();
-
-      const showOverlay = (postId: string, action: 'adding' | 'removing') => {
+      const handleOverlayUpdate = (postId: string, action: 'adding' | 'removing') => {
         setOverlayStates(prev => ({ ...prev, [postId]: action }));
-        const duration = action === 'adding' ? 600 : 500;
-        setTimeout(() => {
-          setOverlayStates(prev => ({ ...prev, [postId]: null }));
-        }, duration);
-      };
-
-      const handleTileClick = (e: React.MouseEvent, post: HydratedPost) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (dblClickFlags.get(post.id)) return;
-        
-        const href = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
-        const count = (clickCounts.get(post.id) || 0) + 1;
-        clickCounts.set(post.id, count);
-        
-        if (count === 1) {
-          const timer = setTimeout(() => {
-            if (!dblClickFlags.get(post.id)) {
-              try { router.push(href); } catch (_) {}
-            }
-            clickCounts.set(post.id, 0);
-            dblClickFlags.delete(post.id);
-          }, 280);
-          clickTimers.set(post.id, timer);
-        }
-      };
-
-      const handleTileDblClick = async (e: React.MouseEvent, post: HydratedPost) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        dblClickFlags.set(post.id, true);
-        
-        const timer = clickTimers.get(post.id);
-        if (timer) {
-          clearTimeout(timer);
-          clickTimers.delete(post.id);
-        }
-        
-        clickCounts.set(post.id, 0);
-        
-        try {
-          const cur = await api.getCurrentUser();
-          if (!cur) { toast.show('Sign in to favorite'); return; }
-          
-          // Check if already favorited to toggle properly
-          const isFav = await api.isFavorite(post.id);
-          if (isFav) {
-            await api.unfavoritePost(post.id);
-            toast.show('Removed from favorites');
-            showOverlay(post.id, 'removing');
-          } else {
-            await api.favoritePost(post.id);
-            toast.show('Added to favorites');
-            showOverlay(post.id, 'adding');
-          }
-        } catch (e:any) {
-          toast.show(e?.message || 'Failed');
-        }
-        
-        setTimeout(() => {
-          dblClickFlags.delete(post.id);
-        }, 400);
+        showOverlay(postId, action);
       };
 
       return (
@@ -243,7 +284,7 @@ export function FeedView() {
         {loadingMore ? <div className="card skeleton" style={{ height: 120 }} /> : null}
       </>
     );
-  }, [loading, posts, view, hasMore, loadingMore, overlayStates, toast, router]);
+  }, [loading, posts, view, hasMore, loadingMore, overlayStates, handleTileClick, handleTileDblClick, showOverlay]);
 
   return (
     <div className="view-fade">

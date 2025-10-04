@@ -1,5 +1,6 @@
 import type { CalendarStats } from "../types";
 import { getClient } from "./supabase-client";
+import { toUTCDateKey } from "../date";
 
 export async function calendarStats({ year, monthIdx }: { year: number; monthIdx: number }) {
   const sb = getClient();
@@ -11,7 +12,7 @@ export async function calendarStats({ year, monthIdx }: { year: number; monthIdx
   const map: Record<string, number> = {};
   const mine = new Set<string>();
   for (const p of data || []) {
-    const dk = new Date(p.created_at).toISOString().slice(0, 10);
+    const dk = toUTCDateKey(p.created_at);
     map[dk] = (map[dk] || 0) + 1;
   }
   return { counts: map, mine } as CalendarStats;

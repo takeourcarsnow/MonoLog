@@ -12,7 +12,6 @@ function looksLikeUuid(s: string) {
 // Accept either a user id (UUID) or a username. If a non-UUID string is
 // provided, resolve it via api.getUserByUsername so callers can pass either.
 export function useUserData(userId?: string) {
-  try { console.debug('[useUserData] called with userId/username ->', userId); } catch (_) {}
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,8 +41,6 @@ export function useUserData(userId?: string) {
       } else {
         u = me;
       }
-
-      try { console.debug('[useUserData] resolved user ->', u ? { id: u.id, username: u.username } : null); } catch (_) {}
 
       if (!u) {
         setUser(null);

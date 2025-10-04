@@ -6,6 +6,8 @@ let supabase: SupabaseClient | null = null;
 // undefined = not yet fetched, null = fetched and no active session, object = auth user
 let cachedAuthUser: any | null | undefined = undefined;
 let authStateSub: any = null;
+// Prevent concurrent auth fetches
+let authFetchPromise: Promise<any> | null = null;
 
 export function getClient() {
   if (supabase) return supabase;
@@ -35,21 +37,32 @@ export function getClient() {
 // Fetch auth user once and cache the result. If an auth error indicates no session,
 // cache null. Also log unexpected errors via logSupabaseError for visibility.
 export async function fetchAndCacheAuthUser(sb: SupabaseClient) {
-  try {
-    const { data, error } = await sb.auth.getUser();
-    logSupabaseError("auth.getUser", { data, error });
-    if (error) {
-      // benign missing-session errors are filtered by logSupabaseError; still cache null
+  // If already fetching, wait for the existing request
+  if (authFetchPromise) {
+    return await authFetchPromise;
+  }
+
+  authFetchPromise = (async () => {
+    try {
+      const { data, error } = await sb.auth.getUser();
+      logSupabaseError("auth.getUser", { data, error });
+      if (error) {
+        // benign missing-session errors are filtered by logSupabaseError; still cache null
+        cachedAuthUser = null;
+        return null;
+      }
+      const user = (data as any)?.user ?? null;
+      cachedAuthUser = user;
+      return user;
+    } catch (e) {
       cachedAuthUser = null;
       return null;
+    } finally {
+      authFetchPromise = null;
     }
-    const user = (data as any)?.user ?? null;
-    cachedAuthUser = user;
-    return user;
-  } catch (e) {
-    cachedAuthUser = null;
-    return null;
-  }
+  })();
+
+  return await authFetchPromise;
 }
 
 // Return cached auth user when available, otherwise fetch and cache it.
@@ -65,6 +78,8 @@ export function ensureAuthListener(sb: SupabaseClient) {
   try {
     // supabase-js v2 returns a { data: { subscription } } shape from onAuthStateChange
     const sub = sb.auth.onAuthStateChange((event: string, session: any) => {
+      // Clear any pending auth fetch when auth state changes
+      authFetchPromise = null;
       // session may be null on sign-out
       cachedAuthUser = session?.user ?? null;
     });

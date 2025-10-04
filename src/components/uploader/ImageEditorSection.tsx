@@ -1,7 +1,10 @@
 import { usePathname } from "next/navigation";
-import ImageEditor from "../ImageEditor";
+import { lazy, Suspense } from "react";
 import { EditorSettings } from "../imageEditor/types";
 import { compressImage, approxDataUrlBytes } from "@/lib/image";
+
+// Lazy load the heavy ImageEditor component
+const ImageEditor = lazy(() => import("../ImageEditor"));
 
 interface ImageEditorSectionProps {
   editing: boolean;
@@ -48,55 +51,57 @@ export function ImageEditorSection({
 
   return (
     <div style={{ width: '100%' }}>
-      <ImageEditor
-        initialDataUrl={(originalDataUrls[editingIndex] || dataUrls[editingIndex] || originalDataUrls[0] || dataUrl) as string}
-        initialSettings={editorSettings[editingIndex] || {}}
-        onCancel={() => setEditing(false)}
-        onApply={async (newUrl, settings) => {
-          setAlt(prev => {
-            if (Array.isArray(prev)) {
+      <Suspense fallback={<div className="card skeleton" style={{ height: 400 }} />}>
+        <ImageEditor
+          initialDataUrl={(originalDataUrls[editingIndex] || dataUrls[editingIndex] || originalDataUrls[0] || dataUrl) as string}
+          initialSettings={editorSettings[editingIndex] || {}}
+          onCancel={() => setEditing(false)}
+          onApply={async (newUrl, settings) => {
+            setAlt(prev => {
+              if (Array.isArray(prev)) {
+                const copy = [...prev];
+                copy[editingIndex] = editingAlt || "";
+                return copy;
+              }
+              if (dataUrls.length > 1) {
+                const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
+                return arr;
+              }
+              return editingAlt || "";
+            });
+            setEditorSettings(prev => {
               const copy = [...prev];
-              copy[editingIndex] = editingAlt || "";
-              return copy;
-            }
-            if (dataUrls.length > 1) {
-              const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
-              return arr;
-            }
-            return editingAlt || "";
-          });
-          setEditorSettings(prev => {
-            const copy = [...prev];
-            while (copy.length <= editingIndex) copy.push({});
-            copy[editingIndex] = settings;
-            return copy;
-          });
-          setProcessing(true);
-          try {
-            const compressed = await compressImage(newUrl as any);
-            setDataUrls(d => {
-              const copy = [...d];
-              copy[editingIndex] = compressed;
+              while (copy.length <= editingIndex) copy.push({});
+              copy[editingIndex] = settings;
               return copy;
             });
-            if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
-            setCompressedSize(approxDataUrlBytes(compressed));
-            setOriginalSize(approxDataUrlBytes(newUrl));
-          } catch (e) {
-            console.error(e);
-            setDataUrls(d => {
-              const copy = [...d];
-              copy[editingIndex] = newUrl as string;
-              return copy;
-            });
-            if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
-            setCompressedSize(approxDataUrlBytes(newUrl as string));
-          } finally {
-            setProcessing(false);
-            setEditing(false);
-          }
-        }}
-      />
+            setProcessing(true);
+            try {
+              const compressed = await compressImage(newUrl as any);
+              setDataUrls(d => {
+                const copy = [...d];
+                copy[editingIndex] = compressed;
+                return copy;
+              });
+              if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
+              setCompressedSize(approxDataUrlBytes(compressed));
+              setOriginalSize(approxDataUrlBytes(newUrl));
+            } catch (e) {
+              console.error(e);
+              setDataUrls(d => {
+                const copy = [...d];
+                copy[editingIndex] = newUrl as string;
+                return copy;
+              });
+              if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
+              setCompressedSize(approxDataUrlBytes(newUrl as string));
+            } finally {
+              setProcessing(false);
+              setEditing(false);
+            }
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

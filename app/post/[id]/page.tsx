@@ -1,6 +1,9 @@
-import { PostView } from "@/components/PostView";
+import { lazy, Suspense } from "react";
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import type { HydratedPost } from '@/lib/types';
+
+// Lazy load the PostView component
+const PostView = lazy(() => import("@/components/PostView").then(mod => ({ default: mod.PostView })));
 
 // Helper to map database row to HydratedPost
 function mapRowToHydratedPost(row: any): HydratedPost {
@@ -52,14 +55,22 @@ export default async function PostIdPage({ params }: { params: { id: string } })
     try { console.log('[post-page] exact lookup result', { error: exact?.error, data: !!exact?.data }); } catch (e) {}
     if (exact && !exact.error && exact.data) {
       const post = mapRowToHydratedPost(exact.data);
-      return <PostView id={post.id} initialPost={post} />;
+      return (
+        <Suspense fallback={<div className="card skeleton" style={{ height: 400 }} />}>
+          <PostView id={post.id} initialPost={post} />
+        </Suspense>
+      );
     }
     if (candidate.length <= 12) {
       try {
         const pref = await sb.from('posts').select('*, users:users(*), comments:comments(id)').ilike('id', `${candidate}%`).limit(1).maybeSingle();
         if (pref && !pref.error && pref.data) {
           const post = mapRowToHydratedPost(pref.data);
-          return <PostView id={post.id} initialPost={post} />;
+          return (
+            <Suspense fallback={<div className="card skeleton" style={{ height: 400 }} />}>
+              <PostView id={post.id} initialPost={post} />
+            </Suspense>
+          );
         }
       } catch (e) {
         // ignore and fallthrough to not-found
@@ -69,7 +80,11 @@ export default async function PostIdPage({ params }: { params: { id: string } })
     const rawRes = await sb.from('posts').select('*, users:users(*), comments:comments(id)').eq('id', raw).limit(1).maybeSingle();
     if (rawRes && !rawRes.error && rawRes.data) {
       const post = mapRowToHydratedPost(rawRes.data);
-      return <PostView id={post.id} initialPost={post} />;
+      return (
+        <Suspense fallback={<div className="card skeleton" style={{ height: 400 }} />}>
+          <PostView id={post.id} initialPost={post} />
+        </Suspense>
+      );
     }
   } catch (e) {
     // swallow and show not-found below

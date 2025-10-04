@@ -12,15 +12,18 @@ import { seedIfNeeded } from "@/lib/seed";
 import { ToastHost, ToastProvider } from "./Toast";
 import { NotificationListener } from "./NotificationListener";
 import { InstallPrompt } from "./InstallPrompt";
-import { FeedView } from "./FeedView";
-import { ExploreView } from "./ExploreView";
-import { Uploader } from "./Uploader";
-import { CalendarView } from "./CalendarView";
-import { ProfileView } from "./ProfileView";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Virtual } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/virtual";
+import { lazy, Suspense } from "react";
+
+// Lazy load view components to reduce initial bundle size
+const FeedView = lazy(() => import("./FeedView").then(mod => ({ default: mod.FeedView })));
+const ExploreView = lazy(() => import("./ExploreView").then(mod => ({ default: mod.ExploreView })));
+const Uploader = lazy(() => import("./Uploader").then(mod => ({ default: mod.Uploader })));
+const CalendarView = lazy(() => import("./CalendarView").then(mod => ({ default: mod.CalendarView })));
+const ProfileView = lazy(() => import("./ProfileView").then(mod => ({ default: mod.ProfileView })));
 
 // Small wrapper used around each slide to ensure inactive slides are removed
 // from the accessibility tree and tab order. This avoids focus leaking into
@@ -377,11 +380,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                               'register', 'signup', 'signin', 'logout', 'auth'
                             ];
                             if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-                              return <view.component userId={segment} />;
+                              return (
+                                <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
+                                  <view.component userId={segment} />
+                                </Suspense>
+                              );
                             }
                           }
                         }
-                        return <view.component />;
+                        return (
+                          <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
+                            <view.component />
+                          </Suspense>
+                        );
                       })()
                     ) : null}
                   </SlideWrapper>

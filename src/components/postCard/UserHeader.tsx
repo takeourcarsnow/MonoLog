@@ -31,6 +31,7 @@ interface UserHeaderProps {
   setOverlayEnabled: (value: boolean) => void;
   deleteBtnRef: React.RefObject<HTMLButtonElement>;
   deleteHandlerRef: React.MutableRefObject<(() => void) | null>;
+  editorRef?: React.MutableRefObject<{ save?: () => Promise<void>; cancel?: () => void } | null>;
   followBtnRef: React.RefObject<HTMLButtonElement>;
   followAnim: 'following-anim' | 'unfollow-anim' | null;
   setFollowAnim: (value: 'following-anim' | 'unfollow-anim' | null) => void;
@@ -73,6 +74,7 @@ export const UserHeader = memo(function UserHeader({
   followExpandTimerRef,
   followAnimTimerRef,
   followInFlightRef,
+  editorRef,
   toast,
 }: UserHeaderProps) {
   const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
@@ -156,7 +158,14 @@ export const UserHeader = memo(function UserHeader({
                   setEditing(true);
                   return;
                 }
-                // Save logic handled in parent
+                // When already editing, try to save via editorRef (if provided)
+                try {
+                  if (editorRef && editorRef.current && typeof editorRef.current.save === 'function') {
+                    await editorRef.current.save();
+                  }
+                } catch (e) {
+                  // ignore — parent hook will show toast on failure
+                }
               }}
             >
               <span className="icon" aria-hidden="true"><Edit size={16} /></span>

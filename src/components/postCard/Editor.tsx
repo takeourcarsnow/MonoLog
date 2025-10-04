@@ -49,7 +49,7 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
           }
         }}
       />
-      <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 10 }}>
         <div>
           <button
             type="button"
@@ -72,7 +72,27 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
             <span style={{ marginLeft: 8 }}>{visibility === 'private' ? 'Private' : 'Public'}</span>
           </button>
         </div>
-      </label>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            className={`btn ${saving ? 'disabled' : ''}`}
+            onClick={async () => { if (!saving) await doSave(); }}
+            aria-label="Save edits"
+            disabled={saving}
+          >
+            {saving ? 'Saving…' : 'Save edits'}
+          </button>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => onCancel()}
+            aria-label="Cancel edits"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 });

@@ -1,0 +1,274 @@
+/* Profile header layout refinements */
+.profile-header {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  /* allow the avatar to overflow slightly (shadow, transform) without being clipped */
+  overflow: visible;
+  z-index: 60; /* sit above nearby cards but below modals/overlays */
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+/* On wider screens keep the profile header constrained and centered so
+   it doesn't stretch edge-to-edge like a full-bleed element. This matches
+   the app's main content max width. */
+@media (min-width: 900px) {
+  .profile-header {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* Ensure the posts grid that appears after the profile header is aligned
+   to the same centered max width so images line up with the header panel. */
+@media (min-width: 900px) {
+  .profile-header ~ .grid {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+  }
+}
+
+/* Keep post pages, post editor, and uploader content aligned with the app
+   max width on larger screens so they don't render edge-to-edge. */
+@media (min-width: 900px) {
+  .post-view-wrap,
+  .post-editor,
+  .uploader {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  /* Ensure the toolbar inside post pages also aligns visually with the content */
+  .post-view-wrap .toolbar,
+  .uploader .toolbar {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+}
+
+/* left column: avatar + text. Use flex so text can shrink/wrap without pushing avatar */
+.profile-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+}
+.profile-left > div {
+  min-width: 0;
+  overflow: visible;
+  text-align: center;
+  width: 100%;
+}
+.profile-left .username {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* Ensure bio inside header doesn't push/clip avatar. Keep it readable but constrained. */
+.profile-bio {
+  margin-top: 12px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px;
+  background: color-mix(in srgb, var(--bg), transparent 50%);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  max-width: 600px;
+  width: fit-content;
+  text-align: center;
+  /* clamp to ~4 lines and show ellipsis; include both vendor and newer property for compatibility */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  /* standard property for newer toolchains / linter compatibility */
+  line-clamp: 4;
+  white-space: normal;
+}
+
+/* keep the left column from touching container edges and ensure avatar is not clipped */
+.profile-left { overflow: visible !important; padding-left: 6px; }
+
+/* ensure avatar doesn't shrink and remains visible */
+.profile-avatar { flex: 0 0 auto; }
+
+/* let the avatar and avatar button sit above nearby rounded elements that might overlap */
+.profile-avatar { position: relative; z-index: 4; }
+.avatar-button { position: relative; z-index: 5; }
+
+/* Ensure header and its immediate containers don't clip the avatar image */
+.toolbar, .profile-header, .profile-left, .profile-actions, .user-link {
+  overflow: visible !important;
+}
+
+/* make sure the avatar image renders as a block-level element so rounding/outline are consistent */
+.profile-avatar { display: block; box-sizing: border-box; }
+
+/* Make avatar clickable without showing native button chrome */
+.avatar-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-block;
+  line-height: 0;
+  cursor: pointer;
+  position: relative; /* required for tooltip positioning */
+  transition: transform 160ms var(--transition-fast), box-shadow 160ms var(--transition-fast);
+}
+.avatar-button:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%); outline-offset: 4px; border-radius: 10px; }
+
+/* actionable avatar hover highlight and subtle lift */
+.avatar-button .profile-avatar {
+  transition: transform 180ms var(--transition-fast), box-shadow 180ms var(--transition-fast);
+  will-change: transform, box-shadow;
+}
+.avatar-button:hover .profile-avatar,
+.avatar-button:focus .profile-avatar {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.28);
+}
+
+/* gentle idle pulse to indicate the avatar is actionable (not on touch devices) */
+@media (hover: hover) {
+  .avatar-button[data-tooltip] .profile-avatar { animation: idlePulse 4.2s ease-in-out infinite 1s; }
+  @keyframes idlePulse {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-2px) scale(1.01); }
+    100% { transform: translateY(0) scale(1); }
+  }
+}
+
+/* Tooltip: only show on devices that support hover to avoid interfering with touch */
+@media (hover: hover) {
+  .avatar-button[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: -36px;
+    right: 0;
+    background: var(--bg-elev);
+    color: var(--muted);
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 160ms var(--transition-fast), transform 160ms var(--transition-fast);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 80;
+  }
+  .avatar-button[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    top: -22px;
+    right: 12px;
+    width: 10px; height: 10px; background: var(--bg-elev);
+    border-left: 1px solid var(--border); border-top: 1px solid var(--border);
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 120ms var(--transition-fast);
+    z-index: 79;
+  }
+  .avatar-button:hover[data-tooltip]::after,
+  .avatar-button:focus[data-tooltip]::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .avatar-button:hover[data-tooltip]::before,
+  .avatar-button:focus[data-tooltip]::before {
+    opacity: 1;
+  }
+}
+
+/* profile header specific */
+.profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 24px;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid);
+}
+.profile-avatar:hover {
+  transform: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+.profile-header .username { font-size: 22px; }
+.profile-header .dim {
+  font-size: 14px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* Profile stats section */
+.profile-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  border-bottom: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  margin: 8px 0;
+  width: 100%;
+}
+
+.profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.profile-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--text), color-mix(in srgb, var(--primary), var(--text) 40%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.profile-stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}

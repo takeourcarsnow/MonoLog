@@ -1,0 +1,277 @@
+.feed {
+  display: grid;
+  gap: 14px;
+  /* center feed/explore content to match the app's main max width */
+  max-width: var(--maxw);
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  /* keep a small horizontal padding so full-bleed slides don't touch the edges */
+  padding: 0 12px 80px 12px; /* Added 80px bottom padding for space above navbar */
+}
+.card {
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  /* Changed from overflow:hidden to visible to avoid 1px vertical cropping
+     of contained media at certain desktop zoom levels due to fractional
+     rounding between image height and card box. Media-specific clipping
+     still handled inside .card-media which retains overflow hidden. */
+  overflow: visible;
+  transform: translateY(4px); opacity: 0; animation: in 460ms var(--transition-mid) forwards;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  
+  /* Performance optimizations */
+  contain: layout style paint;
+  content-visibility: auto;
+}
+@keyframes in {
+  to { transform: translateY(0); opacity: 1; }
+}
+.view-fade { 
+  animation: viewFade 280ms var(--transition-mid) both;
+}
+@keyframes viewFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.comment-item.new { animation: commentIn 360ms cubic-bezier(.2,.8,.2,1); }
+@keyframes commentIn { from { opacity: 0; transform: translateY(6px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* animate removed comments: fade out and slide up slightly */
+.comment-item.removing {
+  animation: commentOut 320ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes commentOut {
+  from { opacity: 1; transform: translateY(0) scale(1); height: auto; }
+  to { opacity: 0; transform: translateY(-6px) scale(.995); height: 0; margin: 0; padding: 0; }
+}
+
+.card-head {
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 10px 12px; 
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-elev), transparent 10%);
+  flex-wrap: nowrap; /* Prevent wrapping on mobile */
+  min-width: 0; /* Allow flex children to shrink */
+}
+
+/* Subtle, card-scoped button micro-interactions (used on About and other card actions) */
+.card .btn {
+  transition: transform 160ms var(--transition-mid), box-shadow 200ms var(--transition-mid), background 140ms ease;
+  padding: 10px 14px; /* slightly larger touch target inside cards */
+}
+.card .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+}
+.card .btn.primary:hover {
+  box-shadow: 0 10px 28px rgba(37,99,235,0.10), 0 1px 4px rgba(0,0,0,0.04) inset;
+}
+.card .btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary), transparent 88%), 0 6px 18px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+.card .btn:active {
+  transform: translateY(1px) scale(.997);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+/* Icon reveal buttons: show a small icon and gently reveal the text on hover/focus
+  or when JS toggles the `.expanded` class (used to reveal labels on click). */
+.icon-reveal { display: inline-flex; align-items: center; gap: 8px; overflow: hidden; }
+.icon-reveal .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; transition: transform 220ms var(--transition-mid), opacity 220ms var(--transition-fast); }
+.icon-reveal .reveal { display: inline-block; transform-origin: left center; transition: transform 260ms var(--transition-mid), opacity 220ms var(--transition-fast), max-width 260ms var(--transition-mid); opacity: 1; white-space: nowrap; max-width: 120px; overflow: hidden; }
+
+/* default: slightly hide the reveal label on compact buttons to emphasize the icon */
+.icon-reveal:not(.primary) .reveal { transform: translateX(-6px) scale(0.98); opacity: 0; max-width: 0; }
+
+.icon-reveal:hover .icon,
+.icon-reveal:focus .icon { transform: translateY(-3px) scale(1.06); }
+.icon-reveal:hover .reveal,
+.icon-reveal:focus .reveal { transform: translateX(0) scale(1); opacity: 1; max-width: 120px; }
+
+/* Explicit expanded state: reveal label when JS toggles .expanded */
+.icon-reveal.expanded .reveal { transform: translateX(0) scale(1); opacity: 1; max-width: 220px; }
+
+/* make primary buttons slightly more pronounced */
+.btn.primary.icon-reveal .reveal { font-weight: 700; }
+
+/* keep motion minimal for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .icon-reveal .icon, .icon-reveal .reveal, .icon-reveal:hover .icon, .icon-reveal:focus .icon, .icon-reveal:hover .reveal, .icon-reveal:focus .reveal { transition: none !important; transform: none !important; }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .card .btn, .card .btn:hover, .card .btn:focus { transition: none; transform: none; box-shadow: none; }
+}
+.avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.user-line { 
+  display: flex; 
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* Allow flex item to shrink below content size */
+  flex: 1; /* Take available space */
+  overflow: hidden; /* Contain overflowing text */
+}
+.username { 
+  font-weight: 700; 
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.dim { 
+  color: var(--muted); 
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.card-media img {
+  width: 100%; height: auto; display: block;
+  background: #00000008; opacity: 0; transition: opacity 220ms ease;
+}
+.card-media img.loaded { opacity: 1; }
+
+.card-media {
+  background: #00000006;
+  /* Keep the media container clipping for rounded frame, while parent
+     .card now uses overflow:visible to prevent fractional cropping. */
+  overflow: hidden;
+  max-width: 100%;
+  /* center media (single images) horizontally inside the card */
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+/* Subtle frame for photos in feed / explore
+   - uses an inset 1px ring to emulate a photo frame without changing layout
+   - applies to single images, carousel slides, and grid tiles
+*/
+.card-media img,
+.carousel-slide img,
+.grid .tile img {
+  border-radius: 10px;
+  background-clip: padding-box; /* keep the inset ring sharp */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border), transparent 58%), 0 8px 20px rgba(0,0,0,0.04);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+/* Slightly emphasize the frame on hover/focus for affordance without being loud */
+.card:hover .card-media img,
+.card-media:hover img,
+.grid .tile:hover img,
+.carousel-slide img:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border), transparent 40%), 0 12px 30px rgba(0,0,0,0.06);
+}
+
+.card:hover {
+  transform: translateY(0);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.12);
+  border-color: color-mix(in srgb, var(--primary), transparent 84%);
+}
+
+.card:focus-within { outline: none; }
+
+/* Prefer showing the card outline only when a descendant is keyboard-focused.
+   Uses :has() to detect a focus-visible descendant; browsers that don't support
+   :has() will still hide the mouse-click halo (fallback above) while keyboard
+   users retain a visible ring where supported. */
+.card:has(:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.card-body { padding: 10px 12px; display: grid; gap: 10px; }
+.caption {
+  font-size: 15px;
+  font-family: 'Patrick Hand', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  line-height: 1.35;
+  text-align: center;
+  /* allow long captions/newlines to wrap */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.action {
+  display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
+  font-size: 13px; cursor: pointer; padding: 6px 8px; border-radius: 8px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.action:hover { background: color-mix(in srgb, var(--primary-weak), transparent 70%); color: var(--text); }
+
+/* Tap / press feedback for action icons */
+/* Ensure svgs inherit color and animate smoothly */
+.action svg { width: 18px; height: 18px; display: inline-block; vertical-align: middle; transition: transform 160ms var(--transition-fast), opacity 160ms var(--transition-fast), color 200ms var(--transition-fast), stroke 200ms var(--transition-fast); color: inherit; }
+
+/* Subtle press scale and color change for most actions (but not overriding favorite active state) */
+.action:active { transform: translateY(1px) scale(0.992); }
+.action:not(.favorite):active { color: var(--primary); }
+.action:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 4px; border-radius: 8px; }
+
+/* Also provide a tiny hover/press lift on pointer devices */
+@media (hover: hover) and (pointer: fine) {
+  .action:hover { transform: translateY(-2px); }
+}
+
+/* Favorite (star) animation and color feedback */
+.action.favorite { transition: transform 220ms var(--transition-mid), color 220ms var(--transition-mid); }
+.action.favorite .star { display: inline-block; font-size: 16px; line-height: 1; transition: transform 220ms cubic-bezier(.2,.8,.2,1), color 220ms var(--transition-mid), text-shadow 220ms var(--transition-mid); color: color-mix(in srgb, var(--muted), transparent 20%); }
+.action.favorite.active { color: #FFD700; }
+.action.favorite.active .star { animation: starPop 420ms cubic-bezier(.2,.8,.2,1); color: #FFD700; text-shadow: 0 6px 18px rgba(255,215,0,0.18); }
+.action.favorite.active svg { 
+  fill: currentColor; 
+  /* thicker darker outline so the yellow star reads on light backgrounds */
+  stroke: rgba(0,0,0,0.48);
+  stroke-width: 1.8px;
+}
+
+/* Dark theme: use a lighter stroke for contrast on dark backgrounds */
+:root[data-theme="dark"] .action.favorite.active svg {
+  stroke: rgba(255,255,255,0.22);
+  stroke-width: 1.8px;
+}
+/* share action */
+.action.share { opacity: 0.82; transition: opacity 180ms var(--transition-mid), transform 200ms var(--transition-mid); }
+.action.share:hover { opacity: 1; }
+.action.share:active { transform: scale(.9); }
+
+/* Double-tap favorite overlay */
+.favorite-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  pointer-events: none;
+  z-index: 100;
+  will-change: transform, opacity;
+}
+
+.favorite-overlay.adding {
+  color: #FFD700;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.2), 0 0 20px rgba(255,215,0,0.4);
+  animation: favoriteAdd 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.favorite-overlay.removing {
+  color: #999;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  animation: favoriteRemove 500ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}

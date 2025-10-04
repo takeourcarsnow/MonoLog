@@ -1,0 +1,354 @@
+/* Auth form styles (sign in / sign up popup) */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  /* unified vertical spacing between inputs/buttons across sign-in/sign-up */
+  gap: 12px; /* restore top spacing; we'll adjust inputs->button spacing separately */
+  min-width: 260px;
+}
+
+/* Reduce the vertical space between the inputs block and the primary action
+   without changing the spacing between inputs themselves. The form uses
+   `gap` for overall vertical rhythm; we counteract it below for the single
+   case of inputs -> actions to create a slightly tighter relationship. */
+.auth-form .auth-actions {
+  /* keep the actions flush with the form flow; spacing to inputs is
+     controlled by `.inputs-wrap { margin-bottom }` so it remains
+     consistent whether the username field is shown or hidden. */
+  margin-top: 0 !important;
+}
+
+/* Fixed spacing between the inputs container and the actions. This
+   provides a stable, predictable distance regardless of whether the
+   compact username field (signup) is open or closed. */
+.auth-form .inputs-wrap {
+  margin-bottom: -6px; /* pull the actions up slightly so the inputs->button gap is smaller while top gaps remain 12px */
+}
+.auth-form.enhanced { max-width: 480px; width: 100%; margin: 0 auto; }
+.auth-form.enhanced .field-group { width: 100%; }
+.auth-form.enhanced .fancy-input { 
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 4%), color-mix(in srgb, var(--bg-elev), transparent 14%));
+  border: 1px solid color-mix(in srgb, var(--border), transparent 10%);
+  backdrop-filter: saturate(140%) blur(4px);
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform 160ms var(--transition-fast);
+  text-align: center;
+}
+.auth-form.enhanced .fancy-input:focus {
+  border-color: color-mix(in srgb, var(--primary), transparent 40%);
+  background: color-mix(in srgb, var(--primary-weak), transparent 82%);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary), transparent 86%), 0 4px 18px rgba(0,0,0,0.24);
+}
+.auth-form.enhanced .fancy-input:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--primary), transparent 76%);
+}
+
+.auth-form .username-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }
+.auth-form .username-wrap.open { overflow: visible; max-height: 160px; opacity: 1; transform: translateY(0); }
+.auth-form .username-wrap .help { margin-top: 4px; }
+
+/* Subtle reveal for the username help only when the user focuses or starts
+   typing in the username input. Uses :not(:placeholder-shown) to detect
+   non-empty input in supporting browsers. */
+.auth-form .username-wrap .help {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 260ms var(--transition-mid), transform 320ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-form .username-wrap input:focus ~ .help,
+.auth-form .username-wrap input:not(:placeholder-shown) ~ .help {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* For browsers without :placeholder-shown support, also reveal on focus-within */
+.auth-form .username-wrap:focus-within .help { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-form .username-wrap .help,
+  .auth-form .username-wrap input:focus ~ .help,
+  .auth-form .username-wrap input:not(:placeholder-shown) ~ .help,
+  .auth-form .username-wrap:focus-within .help {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+.auth-form .username-wrap .validity-indicator { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; pointer-events: none; }
+.auth-form .username-wrap .check { width: 22px; height: 22px; opacity: 0; transform: scale(.6) rotate(-12deg); transition: opacity 200ms var(--transition-fast), transform 260ms var(--transition-mid), color 260ms var(--transition-fast); color: var(--muted); }
+.auth-form .username-wrap .check.pending { opacity: .5; transform: scale(.8); color: var(--danger); }
+.auth-form .username-wrap .check.ok { opacity: 1; transform: scale(1) rotate(0); color: var(--accent); }
+
+/* Toggle pill improvements */
+.auth-toggle {
+  --auth-toggle-transition: 260ms cubic-bezier(.2,.8,.2,1);
+  position: relative;
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--bg-elev), transparent 12%);
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 40%);
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* subtle sliding indicator behind the active pill
+   - keep the visual weight low (no harsh white rings)
+   - prefer transform-based movement where possible (smoother on most browsers)
+   - JS may still set left/width; we ensure transitions are consistent */
+.auth-toggle-indicator {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  height: calc(100% - 8px);
+  width: calc(50% - 8px);
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary-weak), transparent 8%), color-mix(in srgb, var(--primary-weak), transparent 28%));
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transition: transform var(--auth-toggle-transition), left var(--auth-toggle-transition), width var(--auth-toggle-transition), background 180ms ease;
+  z-index: 1;
+  will-change: transform, left, width;
+}
+
+.auth-toggle .pill-switch {
+  position: relative;
+  z-index: 2; /* sit above the indicator */
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 180ms var(--auth-toggle-transition), transform 180ms var(--auth-toggle-transition);
+}
+
+.auth-toggle .pill-switch:hover { transform: translateY(-1px); }
+.auth-toggle .pill-switch:active { transform: translateY(0); }
+
+.auth-toggle .pill-switch.active {
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+.auth-toggle .pill-switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 70%);
+}
+
+/* Submit button animation */
+.submit-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 160px;
+  will-change: transform, box-shadow, background-color;
+  transition: box-shadow 260ms var(--transition-mid), transform 220ms var(--transition-fast);
+}
+.submit-btn::after {
+  /* gradient overlay used to smoothly animate into signup look */
+  content: '';
+  position: absolute; inset: 0; z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#4da9ff,#6cc8ff);
+  opacity: 0; pointer-events: none;
+  transition: opacity 280ms cubic-bezier(.2,.85,.32,1);
+}
+.submit-btn .label-text { position: relative; z-index: 2; transition: opacity 220ms var(--transition-fast), transform 260ms var(--transition-mid); display: inline-block; }
+.submit-btn svg { position: relative; z-index: 2; transition: transform 240ms var(--transition-mid), opacity 200ms var(--transition-fast); }
+.submit-btn .spinner { position: absolute; left: 14px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--bg), transparent 50%); border-top-color: #fff; animation: authSpin 780ms linear infinite; opacity: 0; transform: scale(.6); transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast); }
+.submit-btn.loading .spinner { opacity: 1; transform: scale(1); }
+.submit-btn.loading .label-text { opacity: .82; transform: translateY(-4px); }
+
+/* Signup visual state: fade in the overlay and lift the button slightly */
+.submit-btn.signup-btn::after { opacity: 1; }
+.submit-btn.signup-btn { box-shadow: 0 10px 30px rgba(77,169,255,0.18); transform: translateY(-2px); }
+.submit-btn.signup-btn svg { transform: translateX(-4px); }
+.submit-btn:not(.signup-btn) svg { transform: translateX(0); }
+@keyframes authSpin { to { transform: rotate(360deg); } }
+@keyframes fadeInSlide { 
+  from { 
+    opacity: 0; 
+    transform: translateY(-8px); 
+  } 
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  } 
+}
+.cancel-btn { position: relative; }
+.cancel-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.card.minimal { box-shadow: none; border-style: dashed; backdrop-filter: saturate(120%) blur(4px); }
+.auth-toggle { display: inline-flex; gap: 8px; align-items: center; }
+.auth-toggle .btn { border-radius: 999px; padding: 6px 12px; transition: transform 180ms var(--auth-toggle-transition), color 160ms ease; }
+.auth-toggle .btn:hover { transform: translateY(-1px); }
+.auth-toggle .btn.active {
+  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 70%);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+
+.auth-form .input {
+  width: 100%;
+  background: color-mix(in srgb, var(--bg-elev), transparent 8%);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text);
+}
+.auth-form .input::placeholder { color: color-mix(in srgb, var(--muted), transparent 20%); }
+.auth-form .input { text-align: center; }
+.auth-form .input::placeholder { text-align: center; }
+
+.auth-actions { display: flex; gap: 12px; }
+.auth-actions .btn { padding: 8px 12px; border-radius: 999px; }
+.auth-actions .btn.ghost { background: transparent; border-color: var(--border); }
+
+/* When the auth submit button is in its loading state we hide the visible
+   label text and center the loader so only the animated indicator is shown.
+   Keep the accessible label (aria-label) for screen readers. */
+.auth-actions .btn.following-anim {
+  /* Keep button padding intact so width doesn't collapse when loading */
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.auth-actions .btn .label,
+.auth-actions .btn .label-text,
+.auth-actions .btn .btn-label {
+  transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-actions .btn.following-anim .label,
+.auth-actions .btn.following-anim .label-text,
+.auth-actions .btn.following-anim .btn-label,
+.auth-actions .btn.following-anim .reveal.label {
+  /* visually hide the label while keeping layout space; use !important so
+     this wins over later .follow-btn rules that may re-enable the label. */
+  opacity: 0 !important;
+  transform: translateY(-4px) scale(.995) !important;
+  pointer-events: none !important;
+  /* keep the label beneath the loader when present */
+  z-index: 0 !important;
+}
+
+/* Center the inline dot loader absolutely inside the button so it doesn't
+   affect layout when shown. The button already has `position: relative`. */
+.auth-actions .btn {
+  position: relative; /* make button the positioning context for the loader */
+}
+
+.auth-actions .btn .dot-loader {
+  transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid);
+  will-change: opacity, transform;
+}
+
+.auth-actions .btn.following-anim .dot-loader {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1) !important;
+  left: 50% !important;
+  top: 50% !important;
+  position: absolute !important;
+  z-index: 3;
+}
+
+/* By default hide loader (opacity 0) so it can fade in smoothly */
+.auth-actions .btn .dot-loader { opacity: 0; transform: translate(-50%, -50%) scale(.92); }
+
+/* Crossfade between svg icon and loader */
+.auth-actions .btn .icon-svg { transition: opacity 220ms var(--transition-mid), transform 260ms var(--transition-mid); will-change: opacity, transform; display: inline-block; vertical-align: middle; }
+.auth-actions .btn.following-anim .icon-svg { opacity: 0; transform: translateY(2px) scale(.96); pointer-events: none; }
+.auth-actions .btn .icon-svg { opacity: 1; }
+
+/* Ensure loader visually sits above the icon/text when active */
+.auth-actions .btn.following-anim .icon-svg { z-index: 1; }
+.auth-actions .btn.following-anim .label { z-index: 1; }
+
+/* Ensure the icon SVG sits exactly centered in the 18x18 icon container so
+   it doesn't appear off-center relative to the button text. */
+.follow-btn .icon .icon-svg {
+  display: grid !important;
+  place-items: center !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+.follow-btn .icon .icon-svg svg,
+.auth-actions .btn .icon-svg svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+}
+
+/* slightly tighter layout when displayed inside Account dropdown */
+.card .auth-form { min-width: 220px; }
+
+/* Auth form desktop tightening (keep mobile comfortable) */
+@media (min-width: 640px) {
+  .auth-form-tight .inputs-wrap .input { padding-top: 9px; padding-bottom: 9px; }
+  .auth-form-tight .field-group { gap: 12px !important; }
+  .auth-form-tight .auth-actions { gap: 12px; }
+  .auth-form-tight .auth-message strong { font-size: 19px; }
+  .auth-form-tight .auth-message { margin-top: -4px; }
+  .auth-form-tight .username-wrap.open { margin-top: 2px; }
+}
+
+  /* Host container spacing tweak for auth (desktop) */
+  @media (min-width: 640px) {
+    .auth-host { --auth-host-gap-top: 28px; }
+    .auth-host { margin-top: var(--auth-host-gap-top) !important; }
+  }
+
+/* Auth dialog backdrop and modal positioning */
+.auth-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+}
+
+.auth-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  background: var(--bg);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  max-width: min(420px, 90vw);
+  width: 100%;
+  animation: authDialogIn 260ms var(--transition-mid) both;
+}
+
+@keyframes authDialogIn {
+  from { opacity: 0; transform: translate(-50%, -50%) translateY(12px) scale(.97); }
+  to { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1); }
+}
+
+/* Mobile-specific adjustments for auth dialog to account for bottom nav */
+@media (max-width: 640px) {
+  .auth-dialog {
+    /* On mobile, shift the dialog up slightly to account for the bottom nav bar
+       so it appears more centered in the visible viewport area */
+    top: calc(50% - 30px);
+    max-width: 90vw;
+    /* Ensure dialog doesn't get too close to top of screen on small devices */
+    max-height: calc(100vh - 120px);
+    overflow: auto;
+  }
+}
+
+/* Very small screens: make dialog take more space but keep margins */
+@media (max-width: 400px) {
+  .auth-dialog {
+    max-width: 94vw;
+    top: calc(50% - 40px);
+  }
+}

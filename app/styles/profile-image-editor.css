@@ -1,0 +1,63 @@
+/* Uploader: blurred preview while processing */
+.preview img {
+  /* make unblur feel subtle and intentional: longer, smoother filter transition */
+  transition: filter 560ms cubic-bezier(.2,.7,.2,1), transform 300ms var(--transition-fast), opacity 360ms var(--transition-mid);
+  will-change: filter, transform, opacity;
+}
+.preview.processing img {
+  /* slightly stronger blur while processing and a gentle scale/opacity change */
+  filter: blur(10px) saturate(0.92) opacity(0.88);
+  transform: scale(1.01);
+}
+.preview-badge {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  background: color-mix(in srgb, var(--bg-elev), var(--primary) 6%);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 70;
+}
+.preview-badge svg { width: 16px; height: 16px; color: var(--primary); }
+
+/* --- Fix: keep image editor toolbar visible at different zoom levels --- */
+/*
+  Problem: The editor's top toolbar can be clipped or pushed behind sticky
+  header at certain browser zooms because ancestor containers use
+  overflow: hidden / stacking contexts. To avoid layout regressions we
+  only change positioning while a preview is in editing mode.
+*/
+.preview.editing {
+  /* ensure inner preview can escape ancestor clipping */
+  overflow: visible;
+}
+
+.preview-inner.editing {
+  /* lift the editing preview out of normal flow so its toolbar is never
+     clipped by .content (which uses overflow:hidden). Using fixed keeps
+     it centered and stable at any zoom level. */
+  position: fixed;
+  top: calc(50% + 10px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, var(--maxw));
+  max-height: calc(92vh - 40px);
+  z-index: 99999; /* above header, tabbar, and other overlays */
+  margin: 0;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+  border-radius: 14px;
+}
+
+.preview-inner.editing .image-editor,
+.preview-inner.editing .image-editor * {
+  z-index: 99999 !important; /* ensure toolbar & controls stay on top */
+}
+
+/* keep the preview visually contained when not editing */
+.preview-inner { transition: none; }

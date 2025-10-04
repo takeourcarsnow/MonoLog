@@ -1,0 +1,231 @@
+/* Edit profile overlay panel to avoid pushing layout when toggling edit mode */
+.edit-panel {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-6px) scale(.995);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  /* ensure the panel floats above fixed nav and other overlays */
+  z-index: 100002;
+  width: 360px;
+  opacity: 0;
+  transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast);
+  animation: popIn 220ms var(--transition-mid) both;
+}
+
+/* caret arrow pointing to the actions group */
+.edit-panel::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 14px;
+  height: 14px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  box-shadow: -2px -2px 6px rgba(0,0,0,0.04);
+}
+
+/* cap the panel height and allow scrolling for small screens or long content */
+.edit-panel { max-height: calc(100vh - 120px); overflow: auto; }
+
+/* On wider screens use a two-column layout for the edit panel so the bio can
+   sit in the right column and align vertically with the stacked inputs on the left. */
+@media (min-width: 720px) {
+  .edit-panel {
+    display: grid;
+    grid-template-columns: 1fr 340px; /* left column for display/username, right for bio */
+    gap: 12px;
+    align-items: start;
+    width: 560px; /* keep a comfortable width when anchored to actions */
+  }
+
+  .edit-panel label { margin-bottom: 0; }
+
+  /* place the bio label/textarea in the right column and span the height of
+     the two inputs so the textarea lines up with them */
+  .edit-panel label:nth-child(3) {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+
+  .edit-panel .bio-editor {
+    height: 100%;
+    min-height: 64px;
+    box-sizing: border-box;
+  }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(.98); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+/* Small screens: anchor the edit panel as a compact popover from the
+   profile actions area so it doesn't cover a large portion of the grid.
+   Cap the height so it never dominates the screen; make inner content
+   scrollable and keep the caret/arrow visible. */
+@media (max-width: 680px) {
+  .profile-header { position: relative; }
+
+  /* Keep cancel button compact instead of stretching full width */
+  .btn-group .btn.cancel-btn { width: auto; align-self: center; padding-left: 18px; padding-right: 18px; min-width: 120px; }
+  .edit-panel {
+   /* center in viewport on small screens so the popover never appears off-center
+     when the actions container flows or wraps. Use fixed to avoid ancestor
+     overflow/scrolling issues and ensure it sits above the tabbar/header. */
+   position: fixed;
+   left: 50%;
+   top: 50%;
+   transform: translate(-50%, -50%);
+   /* Allow the panel to be noticeably wider on modern phones while capping
+     at a comfortable maximum so desktop/tablet layouts are unaffected. */
+   width: min(94vw, 420px);
+   /* Increase max-height so taller phones can show more content before scrolling */
+   max-height: calc(100vh - 120px);
+   overflow: auto;
+   box-shadow: var(--shadow);
+   border: 1px solid var(--border);
+   background: var(--bg);
+   padding: 12px;
+   border-radius: 12px;
+   z-index: 99999;
+   animation: popIn 220ms var(--transition-mid) both;
+   display: flex;
+   flex-direction: column;
+  }
+
+  .edit-panel::before {
+    /* hide caret when centered in viewport */
+    display: none;
+  }
+
+  /* make the content area scroll if needed, keep actions visible */
+  .edit-panel > :not(.edit-actions) {
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+
+  .edit-panel .edit-actions {
+    position: sticky;
+    bottom: 8px;
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    z-index: 2;
+  }
+
+  /* Slightly tighter spacing inside the popover so more fields fit */
+  .edit-panel .input,
+  .edit-panel .bio-editor { padding: 8px; font-size: 14px; }
+
+  /* center display name / username inputs on small screens to match mobile layout */
+  .edit-panel .input,
+  .inline-edit-card .input {
+    text-align: center;
+  }
+  .edit-panel .input::placeholder,
+  .inline-edit-card .input::placeholder {
+    text-align: center;
+  }
+
+  .edit-panel .edit-actions .btn { padding: 6px 10px; font-size: 13px; }
+}
+
+/* Inline edit card used in header for editing profile directly in place */
+.inline-edit-card {
+  position: relative;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.22);
+  animation: cardPop 220ms var(--transition-mid) both;
+  display: grid;
+  gap: 10px;
+}
+.inline-edit-card .input, .inline-edit-card .bio-editor { width: 100%; }
+
+@keyframes cardPop {
+  from { opacity: 0; transform: translateY(-8px) scale(.994); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Use two-column layout on wider screens so editor uses horizontal space efficiently */
+@media (min-width: 720px) {
+  .inline-edit-card {
+    grid-template-columns: 1fr 340px; /* left fields + right-side bio */
+    align-items: start;
+  }
+  .inline-edit-card label { margin-bottom: 0; }
+  .inline-edit-card label:nth-child(1) { grid-column: 1 / 2; }
+  .inline-edit-card label:nth-child(2) { grid-column: 1 / 2; }
+  /* place the bio panel in the right column and align it to the top so
+     it lines up with the Display name field. Span the rows so the textarea
+     has enough vertical space beside the stacked inputs. */
+  .inline-edit-card label:nth-child(3) {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+
+  /* Prefer class-based selector to avoid relying on exact DOM order */
+  .inline-edit-card .bio-col {
+    grid-column: 2 / 3;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+
+  .inline-edit-card .bio-col .bio-editor {
+    height: 85%;
+    min-height: 64px; /* slightly reduced so the bio doesn't feel too tall */
+    box-sizing: border-box;
+  }
+}
+
+/* Make inline edit card more usable on small screens (match edit-panel behavior) */
+@media (max-width: 680px) {
+  .inline-edit-card {
+    /* Keep inline positioning but ensure proper centering and sizing on mobile */
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    /* Add some constraints for better mobile UX */
+    max-height: 70vh !important;
+    overflow: auto !important;
+  }
+  .inline-edit-card .input,
+  .inline-edit-card .bio-editor { 
+    padding: 10px; 
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Center text inputs on mobile for better visual balance */
+  .inline-edit-card .input {
+    text-align: center;
+  }
+  
+  .inline-edit-card .input::placeholder {
+    text-align: center;
+  }
+}
+
+/* Very small screens: ensure comfortable spacing */
+@media (max-width: 400px) {
+  .inline-edit-card {
+    padding: 12px !important;
+  }
+}

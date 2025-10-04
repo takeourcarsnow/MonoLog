@@ -1,0 +1,232 @@
+.input {
+  width: 100%; border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+}
+.input:focus { outline: 2px solid color-mix(in srgb, var(--primary), transparent 60%); border-color: var(--primary); }
+.bio-editor {
+  width: 100%; border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+  /* prevent the user from manually resizing the textarea (we control sizing via grid/CSS) */
+  resize: none;
+  /* allow internal scrolling if content overflows the configured height */
+  overflow: auto;
+}
+.input-wrapper { position: relative; }
+.input-ghost-placeholder {
+  position: absolute;
+  left: 12px; right: 12px; top: 50%; transform: translateY(-50%);
+  pointer-events: none; color: color-mix(in srgb, var(--muted), transparent 12%);
+  font-size: 14px; line-height: 1; overflow: hidden; white-space: nowrap;
+}
+.input-ghost-placeholder { display: flex; align-items: center; gap: 6px; }
+.input-ghost-placeholder .typewriter {
+  display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--muted), transparent 8%);
+}
+.input-ghost-placeholder .caret {
+  color: color-mix(in srgb, var(--muted), transparent 12%);
+  opacity: 0.95;
+  animation: blinkCaret 900ms steps(1) infinite;
+  font-weight: 700;
+}
+
+@keyframes blinkCaret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input-ghost-placeholder .typewriter { animation: none; border-right: none; }
+}
+
+.form-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 6px; }
+.form-row .vis-label { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.visibility-select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+
+/* Segmented visibility buttons (Public / Private) */
+.form-row .vis-label .btn {
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  box-shadow: none;
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
+}
+.form-row .vis-label .btn:hover {
+  transform: translateY(-1px);
+}
+.form-row .vis-label .btn.active,
+.form-row .vis-label .btn[aria-pressed="true"] {
+  background: var(--primary);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--primary), transparent 70%);
+  transform: translateY(-6px);
+}
+.form-row .vis-label .btn:focus {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%);
+  outline-offset: 4px;
+}
+
+/* Visibility icon and subtle animation */
+.vis-icon { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 8px; position: relative; }
+.vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; color: currentColor; transition: opacity 180ms var(--transition-fast), transform 200ms var(--transition-fast); }
+/* default: show open eye for Public, hide closed eye */
+.form-row .vis-label button[data-type="public"] .vis-icon .eye-open { opacity: 1; transform: scale(1); }
+.form-row .vis-label button[data-type="public"] .vis-icon .eye-closed { opacity: 0; transform: scale(0.92) rotate(-6deg); }
+/* default: show closed eye for Private (muted) */
+.form-row .vis-label button[data-type="private"] .vis-icon .eye-open { opacity: 0.42; transform: scale(0.98); }
+.form-row .vis-label button[data-type="private"] .vis-icon .eye-closed { opacity: 0.9; transform: scale(1); }
+/* when active, swap to the correct icon and apply subtle motion */
+.form-row .vis-label button[data-type="public"][aria-pressed="true"] .vis-icon .eye-open {
+  opacity: 1; transform: scale(1) rotate(0deg);
+}
+.form-row .vis-label button[data-type="public"][aria-pressed="true"] .vis-icon .eye-closed {
+  opacity: 0; transform: scale(0.92) rotate(-6deg);
+}
+
+.form-row .vis-label button[data-type="private"][aria-pressed="true"] .vis-icon .eye-open {
+  opacity: 0; transform: scale(0.92) rotate(6deg);
+}
+.form-row .vis-label button[data-type="private"][aria-pressed="true"] .vis-icon .eye-closed {
+  opacity: 1; transform: scale(1) rotate(0deg);
+}
+
+/* active pill glow and lift */
+.form-row .vis-label .btn.active {
+  transform: translateY(-6px);
+  color: #fff;
+}
+.form-row .vis-label .btn.active .vis-icon svg { color: #fff; }
+.form-row .vis-label .btn.active::after {
+  content: "";
+  position: absolute;
+  inset: -8px; /* expand behind the pill */
+  border-radius: 999px;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--primary), transparent 40%), transparent 60%);
+  filter: blur(10px);
+  opacity: 0.95;
+  transition: opacity 220ms var(--transition-fast), transform 220ms var(--transition-fast);
+}
+
+/* Public active pill: strong primary color */
+.form-row .vis-label button[data-type="public"].active {
+  background: var(--primary);
+  border-color: transparent;
+}
+
+/* In light theme use dark text for the active visibility pill (pastel/weak primary)
+   but keep white text in dark theme for contrast. These selectors are placed
+   after the base rules to take precedence. */
+:root[data-theme="light"] .form-row .vis-label .btn.active,
+:root[data-theme="light"] .form-row .vis-label button[data-type="public"].active {
+  color: var(--text) !important;
+}
+:root[data-theme="light"] .form-row .vis-label .btn.active .vis-icon svg,
+:root[data-theme="light"] .form-row .vis-label button[data-type="public"].active .vis-icon svg {
+  color: var(--text) !important;
+}
+
+/* Also ensure the vis-toggle CSS variable used for color is dark in light theme
+   (vis-toggle uses --vis-color and applies it with !important). */
+:root[data-theme="light"] .vis-toggle.public,
+:root[data-theme="light"] .btn.vis-toggle.public,
+:root[data-theme="light"] .form-row .vis-label button[data-type="public"].active.vis-toggle {
+  --vis-color: var(--text) !important;
+}
+
+/* Private active pill: muted but still with visible accent */
+.form-row .vis-label button[data-type="private"].active {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), rgba(255,255,255,0.02)), color-mix(in srgb, var(--primary), transparent 92%));
+  border-color: transparent;
+}
+
+/* In light theme make Private active pill use dark text (match Public) */
+:root[data-theme="light"] .form-row .vis-label button[data-type="private"].active {
+  /* mix primary with the light background to produce a subtle blue pill */
+  background: color-mix(in srgb, var(--primary), var(--bg) 62%);
+  border-color: transparent;
+  box-shadow: 0 12px 30px rgba(37,99,235,0.10);
+  color: var(--text) !important;
+}
+
+/* Also ensure the vis-toggle CSS variable for private is dark in light theme */
+:root[data-theme="light"] .vis-toggle.private,
+:root[data-theme="light"] .btn.vis-toggle.private,
+:root[data-theme="light"] .form-row .vis-label button[data-type="private"].active.vis-toggle {
+  --vis-color: var(--text) !important;
+}
+
+/* Single toggle style for visibility (eye icon) */
+/* ensure vis-toggle overrides base .btn styles when both are present */
+.btn.vis-toggle,
+.vis-toggle {
+  /* use CSS vars so transitions are smooth between states */
+  --vis-bg: var(--bg-elev);
+  --vis-color: var(--text);
+  --vis-glow: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px; /* unified pill spacing */
+  min-height: var(--action-pill-height,42px);
+  border-radius: 999px;
+  background: var(--vis-bg) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--vis-color) !important;
+  position: relative;
+  transition: background 360ms cubic-bezier(.2,.8,.2,1), color 260ms var(--transition-fast), box-shadow 360ms cubic-bezier(.2,.8,.2,1), transform 220ms var(--transition-fast);
+}
+.vis-toggle::after {
+  /* remove the large outer halo completely to avoid double-outline */
+  display: none !important;
+}
+.vis-toggle .vis-icon { position: relative; width: 18px; height: 18px; display: inline-grid; place-items: center; }
+.vis-toggle .vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms var(--transition-fast); }
+
+.vis-toggle.public {
+  /* Public: blue-ish pill (active visible state) */
+  --vis-bg: color-mix(in srgb, var(--primary), var(--bg) 64%);
+  --vis-color: #fff;
+  --vis-glow: color-mix(in srgb, var(--primary), transparent 70%);
+  transform: none;
+  border-color: transparent;
+  box-shadow: none; /* remove strong outer shadow that looks like an outline */
+}
+
+/* Ensure the toggle does not show an outline or shadow when focused */
+.vis-toggle:focus,
+.vis-toggle:focus-visible,
+.btn.vis-toggle:focus,
+.btn.vis-toggle:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.vis-toggle.public .eye-open { opacity: 1; transform: translateY(0) scale(1); }
+.vis-toggle.public .eye-closed { opacity: 0; transform: translateY(-6px) scale(0.92) rotate(-6deg); }
+
+.vis-toggle.private {
+  /* Private: dark-ish pill (hidden/private state) */
+  --vis-bg: color-mix(in srgb, rgba(0,0,0,0.6), var(--bg) 36%);
+  --vis-color: #fff;
+  --vis-glow: transparent;
+  transform: translateY(-1px);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+.vis-toggle.private .eye-open { opacity: 0; transform: translateY(6px) scale(0.92); }
+.vis-toggle.private .eye-closed { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+
+/* focus state for accessibility */
+.vis-toggle:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%); outline-offset: 4px; }
+
+/* subtle press feedback */
+.vis-toggle:active { transform: translateY(-1px) scale(0.997); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vis-toggle, .vis-toggle .vis-icon svg { transition: none !important; }
+  .vis-toggle::after { transition: none !important; }
+}

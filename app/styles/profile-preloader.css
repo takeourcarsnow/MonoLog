@@ -1,0 +1,158 @@
+/* Preloader splash overlay */
+.preloader-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg), transparent 8%);
+  z-index: 999999;
+  pointer-events: auto; /* block interactions while shown */
+  /* make these transitions important so the initial server-side
+    `.no-transitions` rule (which uses `!important`) doesn't prevent
+    the preloader from animating once the client removes that class.
+    Use a longer, gentler duration so the overlay fade feels softer. */
+  transition: opacity 640ms var(--transition-mid), transform 640ms var(--transition-mid) !important;
+  opacity: 1;
+}
+.preloader-exit { opacity: 0; transform: scale(0.996) translateY(-6px); pointer-events: none; }
+:root{
+  /* preloader motion tuning */
+  --preloader-ease-quick: cubic-bezier(.18,.9,.34,1);
+  --preloader-ease-smooth: cubic-bezier(.22,.95,.18,1);
+  --preloader-ease-in: cubic-bezier(.25,.1,.25,1);
+}
+
+.preloader-inner {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  background: transparent; color: var(--text);
+  /* entrance: subtle lift + fade */
+  animation: preloader-in 560ms var(--preloader-ease-quick) both;
+}
+.preloader-logo {
+  display: block;
+  width: 86px; height: 86px;
+  color: var(--primary);
+  /* combined slow spin with a tiny scale wobble for a more organic feel
+     - uses a custom easing so the rotation speeds up early, then eases into the slower sweep */
+  animation: preloader-spin-scale 2400ms var(--preloader-ease-smooth) infinite !important;
+  position: relative;
+  z-index: 2;
+}
+.preloader-inner::before {
+  /* faint pulsing ring behind the logo for subtle emphasis */
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary), transparent 88%) 0%, transparent 60%);
+  opacity: .08;
+  z-index: 1;
+  filter: blur(6px);
+  animation: preloader-pulse 2000ms var(--preloader-ease-quick) infinite;
+}
+.preloader-wordmark {
+  font-weight: 800; letter-spacing: 0.6px; font-size: 16px; color: var(--text);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: preloader-wordmark-in 560ms var(--preloader-ease-quick) both;
+  animation-delay: 220ms; /* reveal shortly after the logo */
+}
+
+/* In dark mode the preloader shows over a dark background; invert the logo so
+  the SVG (which may be dark) remains visible. We target both the dataset
+  based theme and the legacy `.dark` class. */
+:root[data-theme="dark"] .preloader-logo img,
+:root[data-theme="dark"] .preloader-logo,
+.dark .preloader-logo img,
+.dark .preloader-logo {
+  /* invert only the logo visual. If the logo is an inline SVG or uses currentColor
+    the color variables will handle it, but we include filter invert as a safe fallback. */
+  filter: invert(1) hue-rotate(180deg);
+}
+
+@keyframes preloader-spin-scale {
+  /* ramp: quick acceleration first 20%, then smooth mid-sweep, gentle deceleration to 360deg */
+  0%   { transform: rotate(0deg)   scale(0.986); }
+  12%  { transform: rotate(55deg)  scale(1.04); }
+  28%  { transform: rotate(120deg) scale(1.02); }
+  60%  { transform: rotate(230deg) scale(0.995); }
+  88%  { transform: rotate(320deg) scale(1.002); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes preloader-pulse {
+  0%   { opacity: 0.05; transform: translate(-50%, -50%) scale(0.96); }
+  35%  { opacity: 0.12; transform: translate(-50%, -50%) scale(1.08); }
+  65%  { opacity: 0.10; transform: translate(-50%, -50%) scale(1.02); }
+  100% { opacity: 0.05; transform: translate(-50%, -50%) scale(0.96); }
+}
+
+@keyframes preloader-in {
+  from { opacity: 0; transform: translateY(10px) scale(.994); }
+  40%  { opacity: 1; transform: translateY(0px) scale(1.006); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes preloader-wordmark-in {
+  from { opacity: 0; transform: translateY(8px) scale(.998); }
+  60%  { opacity: 0.65; transform: translateY(3px) scale(1.002); }
+  100% { opacity: 0.98; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader-logo { animation: none !important; }
+  .preloader-overlay { transition: none !important; }
+}
+
+/* If the html carries .no-transitions to suppress initial animations during
+   server render, explicitly opt this preloader back in. This selector is
+   more specific than the generic `.no-transitions *` rule and will ensure
+   the splash animates while the client hydrates. We still respect the
+   user's `prefers-reduced-motion` media query above which disables animations. */
+.no-transitions .preloader-logo {
+  animation: preloader-spin 2400ms linear infinite !important;
+}
+.no-transitions .preloader-overlay {
+  transition: opacity 640ms var(--transition-mid), transform 640ms var(--transition-mid) !important;
+}
+
+/* Blur content while preloader is active, then smoothly remove blur when it exits */
+:root, html {
+  /* ensure transition targets exist */
+  --preloader-blur: 8px;
+}
+.app-content {
+  /* ensure filter transitions are defined on the element itself so removing
+     the `.preloader-active` class animates the change (otherwise the
+     transition is removed at the same moment the class is removed and it
+     snaps). Use a slightly longer duration for a subtle unblur. */
+  transition: filter 1000ms cubic-bezier(.2,.65,.2,1);
+  will-change: filter;
+}
+
+.preloader-active .app-content {
+  filter: blur(var(--preloader-blur)) saturate(0.95);
+  pointer-events: none; /* prevent interaction with app during preload */
+}
+.preloader-active body { overflow: hidden; }
+
+/* Ensure the navigation (and header if present outside .app-content) also
+   blurs while the preloader is active so they unblur in sync with the page
+   content. Define the same transition on the nav/header so the removal of
+   the `.preloader-active` class animates the filter change. */
+.tabbar, .header {
+  transition: filter 1000ms cubic-bezier(.2,.65,.2,1);
+  will-change: filter;
+}
+
+.preloader-active .tabbar,
+.preloader-active .header {
+  filter: blur(var(--preloader-blur)) saturate(0.95);
+  pointer-events: none; /* keep nav non-interactive while preloading */
+}
+
+/* When .preloader-active is removed the filter transition back to none creates the unblur effect */
+@media (prefers-reduced-motion: reduce) {
+  .preloader-active #app-root { filter: none !important; transition: none !important; }
+}

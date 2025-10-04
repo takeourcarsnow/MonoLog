@@ -1,0 +1,295 @@
+/* subtle refinement to username line spacing */
+.user-line { line-height: 1.05; }
+
+.toolbar {
+  display: flex; gap: 8px; align-items: center; justify-content: space-between;
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+/* Remove the extra panel background for the post view toolbar so the back
+   button sits directly on the page content (no full-width rounded panel). */
+.post-view-wrap .toolbar {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 8px 0 !important;
+}
+
+/* Make the Back button in the post toolbar text-only (no pill/decoration).
+   Preserve keyboard focus visibility while removing background, border,
+   padding and shadows so the button appears as plain text. Targets both
+   <button class="btn"> and <a class="btn"> use-cases. */
+.post-view-wrap .toolbar .btn,
+.post-view-wrap .toolbar a.btn,
+.post-view-wrap .toolbar button.btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  line-height: 1 !important;
+  color: var(--text) !important;
+  background-clip: padding-box !important;
+  transform: none !important;
+}
+
+/* Remove hover lift and background for pointer devices so it's pure text */
+@media (hover: hover) and (pointer: fine) {
+  .post-view-wrap .toolbar .btn:hover,
+  .post-view-wrap .toolbar a.btn:hover,
+  .post-view-wrap .toolbar button.btn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+}
+
+/* Keep an accessible keyboard focus ring for users who tab to the button */
+.post-view-wrap .toolbar .btn:focus-visible,
+.post-view-wrap .toolbar a.btn:focus-visible,
+.post-view-wrap .toolbar button.btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* subtle entrance for toolbar title and subtitle */
+@keyframes toolbarIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toolbar-title {
+  display: block;
+  animation: toolbarIn 420ms var(--transition-mid) both;
+}
+.toolbar-sub {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  animation: toolbarIn 520ms var(--transition-mid) both;
+  animation-delay: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-title, .toolbar-sub { animation: none !important; transform: none !important; }
+}
+
+/* improve toolbar density on small screens */
+.toolbar { padding: 10px; }
+
+/* Confirm popover anchored to action buttons (used for Delete) */
+.confirm-popover {
+  position: absolute;
+  right: 8px;
+  top: calc(100% + 10px);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+  z-index: 60;
+  width: min(320px, 86vw);
+  transform-origin: top right;
+  animation: popConfirm 200ms var(--transition-mid) both;
+}
+.confirm-popover-arrow {
+  position: absolute;
+  top: -8px;
+  right: 18px;
+  width: 14px;
+  height: 14px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  transform: rotate(45deg);
+  z-index: -1;
+}
+.confirm-popover-body { display: grid; gap: 8px; }
+.confirm-message { color: var(--muted); font-size: 14px; }
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+@keyframes popConfirm {
+  from { opacity: 0; transform: translateY(-6px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Danger / Delete button styling */
+.btn.danger {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 12%), var(--danger));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--danger), transparent 70%);
+}
+.btn.danger:hover { transform: translateY(-2px) scale(1.01); }
+.btn.danger:active { transform: translateY(0) scale(.998); }
+
+/* subtle red pulse when header delete is pressing */
+.pressing-delete {
+  animation: pressDanger 400ms ease-in-out;
+}
+@keyframes pressDanger {
+  0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.0); }
+  30% { box-shadow: 0 6px 20px rgba(239,68,68,0.08); transform: translateY(1px) scale(.998); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); transform: translateY(0) scale(1); }
+}
+
+/* Explore view subtle discovery hint */
+.explore-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--bg-elev), transparent 30%);
+  border: 1px solid color-mix(in srgb, var(--border), transparent 40%);
+  padding: 8px 10px;
+  border-radius: 12px;
+  max-width: 640px;
+  margin: 0 auto 12px;
+  opacity: 0;
+  transform: translateY(4px) scale(.985);
+  animation: exploreHintIn 560ms var(--transition-mid) forwards;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+@keyframes exploreHintIn {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .explore-hint { animation: none; opacity: 1; transform: none; }
+}
+
+/* Lazy image loading states */
+.lazy-image {
+  transition: opacity 320ms ease-out;
+  will-change: opacity;
+}
+.lazy-image.loading {
+  opacity: 0;
+  background: var(--bg-elev);
+}
+.lazy-image.loaded {
+  opacity: 1;
+}
+
+/* Improved skeleton loading animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-elev) 0%,
+    color-mix(in srgb, var(--border), transparent 50%) 20%,
+    var(--bg-elev) 40%,
+    var(--bg-elev) 100%
+  );
+  background-size: 1000px 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+/* Reduce skeleton animation on slow connections or preference */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--bg-elev);
+  }
+}
+
+/* About card: constrain very long bios so they don't push header/avatar off-screen */
+.about-card .card-body { max-height: 220px; overflow: auto; }
+.about-card .card-body .dim { white-space: pre-wrap; }
+
+/* view toggle */
+/* Constrain the toggle bar to the same centered width/padding as the feed content
+   so its title/subtitle and the list/grid button align with post cards. */
+.view-toggle {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  max-width: var(--maxw);
+  margin: 0 auto 4px; /* center and add a little spacing below */
+  padding: 0 12px; /* match horizontal padding of .feed */
+  box-sizing: border-box;
+  background: transparent;
+}
+.view-toggle .btn { padding: 6px 10px; }
+
+/* feed/explore grid variations */
+.feed.grid-view { padding: 4px 0; }
+.feed.grid-view .grid { gap: 8px; grid-template-columns: repeat(3, 1fr); }
+@media (min-width: 900px) { .feed.grid-view .grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* make grid tiles slightly taller on large screens */
+@media (min-width: 900px) { .grid .tile { aspect-ratio: 4 / 3; } }
+
+/* duplicate toast rules removed (consolidated earlier) */
+
+.skeleton {
+  background: linear-gradient(90deg, #0000, #0001, #0000);
+  background-size: 200% 100%;
+  animation: shimmer 1.1s infinite linear;
+}
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+.hidden { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* When rendering initially, the html element may have .no-transitions to
+   suppress animations while theme is applied. This must be present in the
+   server CSS to prevent hydration mismatches. */
+.no-transitions, .no-transitions * , .no-transitions *::before, .no-transitions *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Portal root styles: ensure full-screen overlay for modals rendered into the portal */
+#modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  /* align to top so tall content can scroll into view; center horizontally */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px; /* breathing room on small screens */
+  overflow: auto; /* allow vertical scrolling when content exceeds viewport */
+  -webkit-overflow-scrolling: touch;
+  pointer-events: none; /* allow inner modal to opt into pointer events */
+}
+
+#modal-root > * {
+  pointer-events: auto;
+  /* constrain immediate child so it never exceeds viewport and can scroll internally */
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  width: 100%;
+}
+
+/* --- Upload page desktop spacing fix --------------------------------------
+   At default desktop zoom the action row (visibility toggle + Publish/Cancel)
+   could sit partially beneath the fixed bottom nav because only the mobile
+   breakpoint added extra bottom padding to .uploader. Give the uploader a
+   generous bottom padding on wider screens too so the user can always scroll
+   the buttons fully above the nav. Kept separate from the mobile rule so the
+   existing mobile value still applies there. */
+@media (min-width: 641px) {
+  .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
+}

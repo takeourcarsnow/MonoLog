@@ -1,0 +1,106 @@
+/* Carousel: horizontally scrollable set of images for posts with multiple images */
+.card-media .carousel {
+  display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+}
+.card-media .carousel img {
+  flex: 0 0 100%; scroll-snap-align: center; width: 100%; height: auto; object-fit: contain; display: block;
+}
+
+/* Controlled transform-based carousel for posts (better UX than free horizontal scroll) */
+.carousel-wrapper { position: relative; overflow: hidden; }
+.carousel-wrapper { touch-action: pan-y; }
+.carousel-track {
+  display: flex; transition: transform 320ms cubic-bezier(.2,.8,.2,1); width: 100%; will-change: transform;
+}
+.carousel-slide { flex: 0 0 100%; display: flex; align-items: center; justify-content: center; }
+.carousel-slide img { width: 100%; height: auto; object-fit: contain; display: block; }
+
+/* arrows */
+.carousel-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+  background: color-mix(in srgb, var(--bg), transparent 60%); border: 1px solid var(--border);
+  width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08); color: var(--text); font-size: 22px; line-height: 1;
+  opacity: 0; pointer-events: none; transition: opacity 180ms var(--transition-fast), transform 180ms var(--transition-fast);
+}
+.carousel-arrow.left { left: 8px; }
+.carousel-arrow.right { right: 8px; }
+.carousel-arrow:hover { transform: translateY(-50%) scale(1.03); }
+
+/* Edge hover areas: reveal arrows when user is hovering near the left/right edges */
+.carousel-wrapper { position: relative; }
+.carousel-wrapper:focus { outline: none; }
+.edge-area {
+  position: absolute; top: 0; bottom: 0; width: 14%; z-index: 5; background: transparent;
+  /* don't block clicks on slide content (Edit button) */
+  pointer-events: none;
+}
+.edge-area.left { left: 0; }
+.edge-area.right { right: 0; }
+
+/* When hovering the left/right edge, reveal the corresponding arrow */
+.edge-area.left:hover ~ .carousel-track + .carousel-arrow.left,
+.carousel-wrapper:hover .edge-area.left:hover ~ .carousel-track + .carousel-arrow.left {
+  opacity: 1; pointer-events: auto;
+}
+.edge-area.right:hover ~ .carousel-track + .carousel-arrow.right,
+.carousel-wrapper:hover .edge-area.right:hover ~ .carousel-track + .carousel-arrow.right {
+  opacity: 1; pointer-events: auto;
+}
+
+/* Also reveal arrows when wrapper is focused (keyboard users) or hovered overall */
+.carousel-wrapper:focus .carousel-arrow,
+.carousel-wrapper:hover .carousel-arrow {
+  opacity: 0.9; pointer-events: auto;
+}
+
+/* dots */
+.carousel-dots { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; display: flex; gap: 8px; z-index: 11; }
+.carousel-dots .dot {
+  width: 8px; height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--bg-elev), transparent 40%); border: 1px solid var(--border); padding: 0; cursor: pointer;
+}
+.carousel-dots .dot.active { background: var(--primary); border-color: transparent; box-shadow: 0 6px 18px rgba(0,0,0,0.12); transform: scale(1.15); }
+
+/* make arrows and dots smaller on small screens */
+@media (max-width: 640px) {
+  .carousel-arrow { width: 34px; height: 34px; font-size: 20px; }
+  .carousel-dots .dot { width: 7px; height: 7px; }
+}
+
+/* Desktop: cap feed/explore card image height so single posts don't fill the
+   whole viewport at normal browser zoom. Keeps images large but prevents the
+   'zoomed in' feeling on wide screens. Mobile rules above remain unchanged. */
+/* Desktop image sizing: previously 64vh could cause fractional rounding
+   at certain desktop zoom levels (esp. 100% on some displays) leading to
+   a 1px vertical crop because the container was overflow:hidden while
+   the intrinsic image computed a slightly larger pixel height. Give a
+   little headroom (+2vh) and also cap by available dynamic viewport
+   height minus a conservative chrome offset so tall landscape windows
+   still keep images comfortably sized. Use dvh so browser UI changes
+   (URL bar hide/show) on some platforms don't cause jumpy resizes. */
+@media (min-width: 900px) {
+  :root { --chrome-offset: 220px; }
+  .card-media {
+    /* allow the card to size to the image but not exceed viewport height */
+    max-height: min(66vh, calc(100dvh - var(--chrome-offset)));
+    display: block;
+    /* avoid inadvertent vertical clipping; we still hide horizontal overflow for carousel drag */
+    overflow-y: visible;
+    overflow-x: hidden;
+  }
+
+  .card-media img,
+  .card-media .carousel img,
+  .carousel-slide img {
+    /* respect image aspect ratio while constraining height */
+    max-height: min(66vh, calc(100dvh - var(--chrome-offset)));
+    max-width: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* keep carousel slides vertically centered when images are constrained */
+  .carousel-slide { align-items: center; justify-content: center; }
+}

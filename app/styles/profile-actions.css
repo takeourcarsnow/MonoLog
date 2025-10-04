@@ -1,0 +1,772 @@
+/* keep action buttons grouped and anchored so overlays can align to them */
+.profile-actions {
+  white-space: nowrap;
+  position: relative; /* anchor for .edit-panel */
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* ensure buttons in actions are vertically aligned and have consistent spacing */
+.profile-actions .btn { vertical-align: middle; }
+
+/* Follow button styles */
+.follow-btn {
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: all 220ms var(--transition-mid);
+}
+.follow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.follow-btn[aria-pressed="true"] {
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 30%));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary), transparent 60%);
+}
+
+/* Smooth, subtle animation between follow/unfollow states.
+   - animate icon and label concurrently for an organic feel
+   - use separate helper animation classes applied by the component
+     (following-anim / unfollow-anim) so we can finely control the
+     entrance/exit timing without changing the DOM structure. */
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  transition: background 300ms cubic-bezier(.2,.8,.2,1), color 260ms cubic-bezier(.2,.8,.2,1), box-shadow 300ms cubic-bezier(.2,.8,.2,1), transform 220ms ease;
+  will-change: transform, box-shadow, background, color;
+}
+
+.follow-btn .icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 300ms cubic-bezier(.2,.8,.2,1), color 220ms ease, opacity 220ms ease;
+  will-change: transform, opacity;
+}
+
+.follow-btn .reveal.label {
+  transform-origin: left center;
+  transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease, max-width 320ms cubic-bezier(.2,.8,.2,1);
+  will-change: transform, opacity, max-width;
+}
+
+/* Explicit states to ensure consistent visuals */
+.follow-btn.not-following { background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); }
+.follow-btn.following { background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 20%)); color: #fff; border-color: transparent; box-shadow: 0 8px 28px color-mix(in srgb, var(--primary), transparent 60%); transform: translateY(-2px); }
+.follow-btn.following .icon { transform: translateY(-2px) scale(1.02); }
+.follow-btn.not-following .icon { transform: translateY(0) scale(1); }
+
+/* Entrance / exit micro-animations triggered by JS classes */
+@keyframes followIn {
+  0% { transform: translateY(0) scale(0.98); opacity: 0.0; filter: blur(2px); }
+  60% { transform: translateY(-6px) scale(1.06); opacity: 1; filter: blur(0); }
+  100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
+@keyframes unfollowOut {
+  0% { transform: translateY(-2px) scale(1); opacity: 1; }
+  60% { transform: translateY(-4px) scale(0.985); opacity: 0.86; }
+  100% { transform: translateY(0) scale(0.99); opacity: 0.98; }
+}
+.following-anim {
+  animation: followIn 420ms cubic-bezier(.2,.9,.2,1);
+}
+.unfollow-anim {
+  animation: unfollowOut 420ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* ensure label reveal behavior remains snappy but smooth */
+.follow-btn.not-following .reveal.label { transform: translateX(-6px) scale(.98); opacity: 0; max-width: 0; overflow: hidden; }
+.follow-btn.following .reveal.label { transform: translateX(0) scale(1); opacity: 1; max-width: 160px; }
+
+/* Default: collapsed (icon-only) unless explicitly expanded.
+   Use max-width animation (not width) so expansions/collapses animate smoothly
+   even when the expanded size is intrinsically determined. Sequence label
+   fade/contract before the container shrinks to avoid clipping/glitching. */
+.follow-btn {
+  --icon-size: 36px;
+  --max-expanded: 220px; /* reasonable cap for the expanded pill */
+  /* unify expand & collapse so animations are symmetric */
+  --follow-duration: 260ms;
+  --follow-ease: cubic-bezier(.22,.9,.28,1);
+  --expand-ease: var(--follow-ease);
+  --collapse-ease: var(--follow-ease);
+  --shrink-delay: 0ms; /* no delay: collapse should match expand */
+  --grow-delay: 0ms;
+
+  /* Keep height fixed for perfect circle in collapsed state */
+  height: var(--icon-size);
+  min-height: var(--icon-size);
+  padding-left: 0;
+  padding-right: 0;
+
+  /* Use max-width so we can animate between icon-only and pill smoothly */
+  max-width: var(--icon-size);
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+
+  /* animate container max-width & padding using unified duration/easing */
+  transition: max-width var(--follow-duration) var(--follow-ease) var(--grow-delay),
+              padding var(--follow-duration) var(--follow-ease) var(--grow-delay),
+              box-shadow var(--follow-duration) var(--follow-ease), background var(--follow-duration) var(--follow-ease), transform var(--follow-duration) var(--follow-ease);
+}
+
+.follow-btn .reveal.label {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
+  margin-left: 8px;
+
+  /* start hidden and contracted in collapsed state */
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(6px) scale(.98);
+
+  /* synchronize label fade/transform with container max-width so collapse is one step */
+  transition: opacity var(--follow-duration) var(--follow-ease) 0ms, transform var(--follow-duration) var(--follow-ease) 0ms, max-width var(--follow-duration) var(--follow-ease) 0ms;
+}
+
+.follow-btn.expanded {
+  /* allow the pill to grow to the capped expanded width */
+  max-width: var(--max-expanded);
+  padding-left: 12px;
+  padding-right: 14px;
+  height: var(--icon-size);
+  /* expansion uses unified follow duration/easing for symmetry */
+  transition: max-width var(--follow-duration) var(--follow-ease) 0ms, padding var(--follow-duration) var(--follow-ease) 0ms, box-shadow var(--follow-duration) var(--follow-ease);
+}
+.follow-btn.expanded .reveal.label { max-width: 220px; opacity: 1; transform: translateX(0) scale(1); }
+
+/* Keep the icon centered visually */
+.follow-btn .icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn { transition: none !important; }
+}
+
+/* Ensure collapsed icon is truly centered: reset any translate transforms
+   and make the inner svg a block-level element with an explicit size. */
+.follow-btn:not(.expanded) {
+  box-sizing: border-box;
+  padding: 0 !important;
+}
+.follow-btn:not(.expanded) .icon {
+  transform: none !important; /* avoid micro-transforms that nudge icon */
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.follow-btn .icon svg {
+  display: block; /* remove inline baseline shifts */
+  width: 18px; height: 18px;
+}
+
+/* Collapsed follow button: keep inline-flex so layout doesn't jump between
+   display modes. Use max-width + overflow to animate between icon-only and
+   expanded pill smoothly. This avoids abrupt display changes which cause
+   instant snapping on collapse. */
+.follow-btn {
+  --icon-size: 36px;
+  --width-delay: 0ms; /* can be overridden by collapsed state */
+  height: var(--icon-size);
+  min-height: var(--icon-size);
+  padding-left: 0;
+  padding-right: 0;
+  width: var(--icon-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+  transition: width var(--follow-duration) var(--follow-ease) var(--width-delay), padding var(--follow-duration) var(--follow-ease), box-shadow var(--follow-duration) var(--follow-ease), background var(--follow-duration) var(--follow-ease);
+}
+.follow-btn .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+.follow-btn .icon svg { display: block; width: 18px; height: 18px; }
+.follow-btn.expanded {
+  width: auto;
+  padding-left: 12px;
+  padding-right: 14px;
+  height: var(--icon-size);
+  --width-delay: 0ms;
+}
+/* Contracted label state: fade & contract quickly. When NOT expanded we
+   sequence container shrink after the label transition to avoid overlap. */
+.follow-btn:not(.expanded) .reveal.label {
+  /* fade & contract in sync with the container (no separate shrink delay) */
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--follow-duration) var(--collapse-ease) 0ms, transform var(--follow-duration) var(--collapse-ease) 0ms, max-width var(--follow-duration) var(--collapse-ease) 0ms;
+}
+
+/* ensure the collapsed container waits before shrinking so the label can finish */
+.follow-btn:not(.expanded) {
+  /* collapse the container in sync with the label with no artificial delay */
+  transition: max-width 260ms var(--collapse-ease) 0ms, padding 220ms var(--collapse-ease) 0ms, box-shadow 220ms ease, background 220ms ease, transform 220ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; animation: none !important; transform: none !important; }
+}
+
+/* Remove the visual ring/outline for collapsed (icon-only) follow buttons.
+   This prevents the ::after border or glow from appearing around the small
+   follow/unfollow icon while preserving the ring for expanded/pill states
+   where the label is visible. Use high-specificity and !important to win
+   over earlier theme-specific rules. */
+.follow-btn:not(.expanded)::after,
+.follow-btn:not(.expanded).following::after,
+.follow-btn:not(.expanded).following-anim::after,
+.follow-btn:not(.expanded).unfollow-anim::after,
+.btn.following:not(.expanded)::after {
+  display: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also remove the button's own border for the collapsed icon-only state so
+   the small circular icon appears without any surrounding stroke. Keep this
+   scoped to follow-style buttons only. */
+.follow-btn:not(.expanded),
+.follow-btn:not(.expanded).not-following,
+.btn.following:not(.expanded),
+.btn.follow-btn:not(.expanded),
+.follow-btn:not(.expanded)[aria-pressed],
+.follow-btn:not(.expanded)[aria-pressed="true"] {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Extra high-specificity rules to cover other legacy/utility selectors and
+   pseudo-elements that might draw an outline (e.g. .btn::before or theme
+   overrides). This forces no visible ring for icon-only follow buttons. */
+button.follow-btn:not(.expanded),
+.card .follow-btn:not(.expanded),
+.card-head .follow-btn:not(.expanded),
+.user-link + .follow-btn:not(.expanded),
+.profile-actions .follow-btn:not(.expanded),
+.follow-btn.icon-reveal:not(.expanded) {
+  border: 0 !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
+}
+
+/* Hide pseudo-elements that can look like a border/ring */
+.follow-btn:not(.expanded)::after,
+.follow-btn:not(.expanded)::before,
+.card .follow-btn:not(.expanded)::after,
+.card .follow-btn:not(.expanded)::before,
+.follow-btn.icon-reveal:not(.expanded)::after,
+.follow-btn.icon-reveal:not(.expanded)::before {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also ensure any focus halos are suppressed for mouse/touch where not focus-visible */
+.follow-btn:not(.expanded):focus:not(:focus-visible),
+.follow-btn:not(.expanded).following:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ------------------------------------------------------------------
+   Remove outline/ring for expanded (pill) follow buttons as requested.
+   Keep the visual fill/color of the pill (background/foreground) but
+   remove any outline, border stroke, pseudo-element rings, and focus
+   halos so the pill displays without the extra ring.
+   ------------------------------------------------------------------ */
+.follow-btn.expanded,
+.follow-btn.expanded.not-following,
+.follow-btn.expanded.following,
+.follow-btn.expanded.following-anim,
+.follow-btn.expanded.unfollow-anim,
+.btn.following.expanded,
+.card .follow-btn.expanded,
+.profile-actions .follow-btn.expanded,
+.follow-btn.expanded[aria-pressed],
+.follow-btn.expanded[aria-pressed="true"] {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  outline: none !important;
+  background-clip: padding-box !important;
+}
+
+/* Hide any pseudo-elements that create a ring/halo for expanded follow buttons */
+.follow-btn.expanded::after,
+.follow-btn.expanded::before,
+.follow-btn.expanded.following::after,
+.follow-btn.expanded.following::before,
+.follow-btn.expanded.following-anim::after,
+.follow-btn.expanded.unfollow-anim::after,
+.card .follow-btn.expanded::after,
+.profile-actions .follow-btn.expanded::after {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Remove focus halos for mouse/touch on expanded state; preserve :focus-visible
+   behavior unless the app explicitly wants to keep a halo — the user asked
+   to remove the outline so suppress both. */
+.follow-btn.expanded:focus,
+.follow-btn.expanded:focus-visible,
+.follow-btn.expanded.following:focus,
+.follow-btn.expanded.following:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent label/icon color from transitioning (causes a flash/invert effect
+   when the pill expands/collapses). Only animate background, transform,
+   opacity and max-width so the text remains stable. */
+.follow-btn,
+.follow-btn.expanded,
+.follow-btn.not-following,
+.follow-btn.following {
+  /* Explicitly list the properties we want to animate; include max-width and padding
+     so the follow pill can expand/collapse smoothly. Avoid animating color here. */
+  transition: max-width 260ms var(--follow-ease),
+              padding 260ms var(--follow-ease),
+              background 260ms cubic-bezier(.22,.9,.28,1),
+              box-shadow 260ms cubic-bezier(.22,.9,.28,1),
+              transform 220ms ease !important;
+}
+
+.follow-btn .reveal.label {
+  color: inherit !important; /* keep label color stable */
+  transition: opacity var(--follow-duration) var(--follow-ease) 0ms,
+              transform var(--follow-duration) var(--follow-ease) 0ms,
+              max-width var(--follow-duration) var(--follow-ease) 0ms !important;
+}
+
+.follow-btn .icon,
+.follow-btn .icon svg {
+  color: inherit !important; /* avoid icon color flashes */
+  transition: transform 220ms var(--follow-ease), opacity 220ms ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; }
+}
+
+/* Prevent follow button from creating a perceived depth shift on hover/active/click
+   Some earlier rules applied translateY or box-shadow to provide a lift effect.
+   The following overrides neutralize those transforms and shadows so the button
+   doesn't visually push itself in/out when interacted with. We still allow
+   color/background changes for feedback but avoid any translate/box-shadow. */
+.follow-btn,
+.follow-btn:hover,
+.follow-btn:focus,
+.follow-btn:focus-visible,
+.follow-btn:active,
+.follow-btn[aria-pressed],
+.follow-btn.following {
+  transform: none !important;
+  -webkit-transform: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+
+.follow-btn .icon,
+.follow-btn.following .icon,
+.follow-btn .reveal.label {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+/* Keep subtle non-positional feedback (color/opacity) while avoiding depth changes */
+.follow-btn:hover,
+.follow-btn:focus-visible {
+  /* use color change only for hover/focus feedback */
+  opacity: 0.98;
+}
+
+/* Collapsed follow button: keep inline-flex so layout doesn't jump between
+   display modes. Use max-width + overflow to animate between icon-only and
+   expanded pill smoothly. This avoids abrupt display changes which cause
+   instant snapping on collapse. */
+.follow-btn:not(.expanded) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* keep the container constrained via max-width so the transition can animate */
+  width: auto !important;
+  max-width: var(--icon-size, 36px) !important;
+  height: var(--icon-size, 36px) !important;
+  min-width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.follow-btn:not(.expanded) .icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.follow-btn:not(.expanded) .icon svg {
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Edit/Delete icon-reveal buttons: reuse the same icon reveal behavior as follow */
+.edit-btn, .delete-btn {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  /* include background, border-color and opacity so entering/exiting states animate smoothly */
+  transition: transform 200ms var(--transition-mid), box-shadow 200ms var(--transition-mid), color 160ms var(--transition-fast), background 260ms var(--transition-mid), border-color 260ms var(--transition-mid), opacity 220ms var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Keep consistent icon sizing with existing helpers */
+.icon-reveal .icon { width: 18px; height: 18px; }
+
+/* Edit: subtle primary accent on the icon */
+.edit-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.edit-btn .icon { color: var(--primary); }
+/* Remove hover/animation effects for the inline edit button.
+   Keep visual appearance static: no translate/box-shadow/ripple/animations. */
+.edit-btn:hover,
+.edit-btn:focus,
+.edit-btn:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+/* .edit-btn.active keeps its visual styles defined below; no empty ruleset needed. */
+.edit-btn::before { display: none !important; }
+
+/* Prevent keyframe animations on the edit button when not active/expanded
+   (keep transitions so the expanded/active state can animate both in and out). */
+.edit-btn:not(.active):not(.expanded),
+.edit-btn:not(.active):not(.expanded) * {
+  animation: none !important;
+}
+
+/* Edit button reveal behavior: show the label when the button is explicitly
+   expanded (JS toggles .expanded) or when it's active (editing). Prevent
+   hover/focus from revealing the label; only explicit click should. */
+.edit-btn .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1);
+}
+
+.edit-btn:not(.active):not(.expanded):hover .reveal.label,
+.edit-btn:not(.active):not(.expanded):focus .reveal.label,
+.edit-btn:not(.active):not(.expanded):focus-visible .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+}
+
+.edit-btn.expanded .reveal.label,
+.edit-btn.active .reveal.label {
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  max-width: 160px !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}
+
+/* Prevent icon-reveal hover/focus effects for edit buttons */
+.edit-btn.icon-reveal:hover .icon,
+.edit-btn.icon-reveal:focus .icon {
+  transform: none !important;
+}
+.edit-btn.icon-reveal:hover .reveal,
+.edit-btn.icon-reveal:focus .reveal {
+  transform: none !important;
+  opacity: 0 !important;
+  max-width: 0 !important;
+}
+
+/* When the edit UI is active, keep the edit button visible and give it a
+   subtle active treatment so users can always cancel or re-open the editor. */
+.edit-btn.active {
+  background: color-mix(in srgb, var(--primary-weak), var(--bg) 48%);
+  border-color: transparent;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--primary), transparent 72%);
+  transform: translateY(-2px);
+}
+.edit-btn.active .icon { color: var(--primary); }
+
+/* small entrance animation for edit active state */
+@keyframes editActiveIn {
+  0% { transform: translateY(0.6px) scale(.996); opacity: 0; }
+  60% { transform: translateY(-4px) scale(1.03); opacity: 1; }
+ 100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
+.edit-btn.active {
+  animation: editActiveIn 260ms cubic-bezier(.2,.9,.28,1) both;
+}
+
+/* Delete: ghost style but with danger icon; pressing-delete animation preserved */
+.delete-btn { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.delete-btn .icon { color: var(--danger); }
+/* Remove hover/animation effects for the inline delete post button.
+   Keep visual appearance static: no translate/box-shadow/ripple/animations. */
+.delete-btn:hover,
+.delete-btn:focus,
+.delete-btn:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+.delete-btn.pressing-delete { animation: none !important; }
+
+/* Prevent the global .btn::before ripple overlay from appearing on delete buttons */
+.delete-btn::before { display: none !important; }
+
+/* Prevent keyframe animations on the delete button when not confirming
+   (keep transitions so the confirming state can animate both in and out). */
+.delete-btn:not(.confirming),
+.delete-btn:not(.confirming) * {
+  animation: none !important;
+}
+
+/* Specifically prevent icon-reveal hover/focus effects for delete buttons */
+.delete-btn.icon-reveal:hover .icon,
+.delete-btn.icon-reveal:focus .icon {
+  transform: none !important;
+}
+.delete-btn.icon-reveal:hover .reveal,
+.delete-btn.icon-reveal:focus .reveal {
+  transform: none !important;
+  opacity: 0 !important;
+  max-width: 0 !important;
+}
+
+/* The delete confirm state uses transitions so it can both animate in and out.
+   Avoid one-shot keyframe animations which don't reverse when the state is removed. */
+.delete-btn.confirming {
+  /* ensure transitions run when entering AND exiting the confirming state */
+  transition: background 220ms cubic-bezier(.2,.85,.2,1), border-color 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), opacity 220ms cubic-bezier(.2,.85,.2,1);
+}
+.delete-btn.confirming .icon { transition: color 180ms ease; }
+
+/* ----------------------
+   Delete button reveal behavior
+   - Prevent the reveal label from animating on hover/focus so hovering the
+     delete icon doesn't expand the label. The reveal should only animate
+     when the user explicitly triggers the confirming state (click/tap).
+   - We use a more specific selector and !important where needed to win the
+     cascade against the generic .icon-reveal hover transitions.
+ */
+.delete-btn .reveal.label {
+  /* default collapsed state (do not animate on hover) */
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  /* keep transitions so toggling .confirming animates in and out */
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1);
+}
+
+/* Explicitly prevent hover/focus from revealing the label when NOT confirming */
+.delete-btn:not(.confirming):hover .reveal.label,
+.delete-btn:not(.confirming):focus .reveal.label,
+.delete-btn:not(.confirming):focus-visible .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+}
+
+/* When in the confirming state, reveal the label and animate the transition */
+.delete-btn.confirming .reveal.label {
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  max-width: 160px !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}
+
+/* Strong override: Edit button should only show its label when explicitly
+   expanded (JS) or when editing (active). Ignore hover entirely so the
+   label doesn't toggle on pointer moves. This block must come after the
+   generic icon-reveal rules to win the cascade. */
+.edit-btn .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}
+
+/* Prevent hover/focus from revealing the label for edit buttons */
+.edit-btn:hover .reveal.label,
+.edit-btn:focus .reveal.label,
+.edit-btn:focus-visible .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+}
+
+/* Reveal label only when explicitly expanded or when editing */
+.edit-btn.expanded .reveal.label,
+.edit-btn.active .reveal.label {
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  max-width: 160px !important;
+  pointer-events: none !important;
+  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
+}
+
+/* Hide mouse-focus halo but preserve keyboard focus visibility */
+.edit-btn:focus:not(:focus-visible),
+.delete-btn:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.edit-btn:focus:not(:focus-visible)::after,
+.delete-btn:focus:not(:focus-visible)::after {
+  box-shadow: none !important;
+}
+
+/* ------------------------------------------------------------------
+   Make edit/delete buttons behave like follow-style buttons: remove
+   visible outline/halo/pseudo-elements so they don't show the blue/colored
+   ring on mouse/touch interactions. This preserves their active/confirming
+   visual states but prevents the extra ring/outline that was previously
+   appearing on posts.
+ ------------------------------------------------------------------ */
+.edit-btn,
+.delete-btn,
+button.edit-btn,
+button.delete-btn,
+.card .edit-btn,
+.card .delete-btn,
+.profile-actions .edit-btn,
+.profile-actions .delete-btn {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
+  background-clip: padding-box !important;
+}
+
+/* Hide any pseudo-elements that can draw a ring/halo around the button */
+.edit-btn::after, .edit-btn::before,
+.delete-btn::after, .delete-btn::before,
+.card .edit-btn::after, .card .edit-btn::before,
+.card .delete-btn::after, .card .delete-btn::before,
+.profile-actions .edit-btn::after, .profile-actions .edit-btn::before,
+.profile-actions .delete-btn::after, .profile-actions .delete-btn::before {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Also ensure focus halos are suppressed for both mouse/touch and keyboard
+   interactions to match the follow button behavior requested. */
+.edit-btn:focus,
+.edit-btn:focus-visible,
+.delete-btn:focus,
+.delete-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .edit-btn, .delete-btn { transition: none !important; animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Ensure our small state animations are suppressed for reduced-motion users */
+  .edit-btn.active, .delete-btn.confirming { animation: none !important; }
+}
+
+/* Final override: ensure follow button uses max-width sequencing and not the
+   older width-based rules that can cause an instantaneous snap. Placed at
+   the end of the stylesheet so it wins in the cascade. */
+.follow-btn {
+  /* let width be auto; control visible size via max-width for smooth animation */
+  width: auto !important;
+  max-width: var(--icon-size, 36px) !important;
+  overflow: hidden !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* collapse in a single synchronized step (no shrink delay) */
+  transition: max-width var(--follow-duration) var(--collapse-ease) 0ms,
+              padding var(--follow-duration) var(--collapse-ease) 0ms,
+              box-shadow var(--follow-duration) var(--collapse-ease),
+              background var(--follow-duration) var(--collapse-ease) !important;
+}
+
+.follow-btn.expanded {
+  max-width: var(--max-expanded, 220px) !important;
+  padding-left: 12px !important;
+  padding-right: 14px !important;
+  transition: max-width var(--follow-duration) var(--expand-ease) 0ms,
+              padding var(--follow-duration) var(--expand-ease) 0ms !important;
+}
+
+.follow-btn:not(.expanded) {
+  max-width: var(--icon-size, 36px) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.follow-btn:not(.expanded) .reveal.label {
+  opacity: 0 !important;
+  transform: translateX(6px) scale(.98) !important;
+  max-width: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--follow-duration) var(--collapse-ease) 0ms, transform var(--follow-duration) var(--collapse-ease) 0ms, max-width var(--follow-duration) var(--collapse-ease) 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; animation: none !important; transform: none !important; }
+}

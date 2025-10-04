@@ -1,0 +1,75 @@
+/* Profile: improved mobile layout so header content doesn't overflow */
+@media (max-width: 640px) {
+  /* stack header content and tighten padding */
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 16px;
+  }
+
+  /* keep avatar and name stacked vertically, allow actions to flow beneath */
+  .profile-left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* let actions wrap to new lines instead of overflowing; make them full-width area */
+  .profile-actions {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  /* slightly smaller avatar on phones */
+  .profile-avatar { 
+    width: 80px; 
+    height: 80px; 
+    border-radius: 20px; 
+  }
+
+  /* reduce button padding and font-size so more buttons fit per row */
+  .profile-actions .btn { padding: 10px 14px; font-size: 14px; }
+  
+  .profile-left .username { font-size: 20px; }
+
+  /* ensure username wraps and doesn't push layout */
+  .profile-left > div { min-width: 0; }
+
+  /* make the posts grid easier to view on mobile */
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  
+  .profile-bio {
+    font-size: 13px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+}
+
+/* Very small screens: single column grid to maximize image size */
+@media (max-width: 360px) {
+  .grid { grid-template-columns: 1fr; }
+  .profile-actions { justify-content: flex-start; }
+}
+
+@media (max-width: 640px) {
+  .profile-stats {
+    gap: 20px;
+    padding: 12px 0;
+  }
+  
+  .profile-stat-value {
+    font-size: 18px;
+  }
+  
+  .profile-stat-label {
+    font-size: 11px;
+  }
+}

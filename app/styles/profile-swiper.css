@@ -1,0 +1,88 @@
+/* Make Swiper slides full-bleed and responsive so they fill the content area
+   and avoid rendering as a narrow centered column in small viewports. */
+  .swipe-views {
+    width: 100% !important;
+    /* don't force a fixed height here; let individual slides size themselves */
+    /* Ensure touch events can be detected for horizontal swipes */
+    touch-action: pan-y pinch-zoom;
+  }
+  .swipe-views .swiper-wrapper {
+    width: 100% !important;
+    /* don't force a fixed height here; let the active slide determine wrapper height */
+    touch-action: pan-y pinch-zoom;
+  }
+.swipe-views .swiper-slide {
+  width: 100% !important;
+  height: auto !important; /* allow taller content while still guaranteeing full-touch area */
+  display: block;
+  /* Ensure every main slide (feed, explore, upload, calendar, profile) covers the viewport height
+     beneath the header + bottom nav so horizontal swipes register anywhere on screen, not just
+     where content exists. Previously only the feed slide had this min-height which caused the
+     calendar slide to leave a dead swipe zone below its content. */
+  min-height: calc(100vh - 160px);
+  /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
+  touch-action: pan-y pinch-zoom;
+}
+
+@media (max-width: 900px) {
+  .swipe-views .swiper-slide { min-height: calc(100vh - 140px); }
+}
+
+/* Break out of centered .content container so the Swiper can be full-bleed
+   while preserving the normal layout for other pages. Targets the Swiper
+   when it's a direct child of .content (our usage in AppShell). */
+.content > .swipe-views {
+  /* Use dynamic viewport units (dvw) to avoid horizontal shifts when
+     the browser shows/hides scrollbars (e.g. after logging in). We center
+     using a calc() that breaks out of the centered content container so
+     the swiper truly matches the viewport rather than the centered content. */
+  width: 100dvw !important;
+  max-width: 100dvw !important;
+  margin-left: calc(50% - 50dvw) !important; /* center full-bleed child */
+  margin-right: calc(50% - 50dvw) !important;
+  /* remove app padding from the full-bleed wrapper so slides can be
+     exactly viewport width; slide content will receive padding instead */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* Prevent neighbouring slides from peeking on small screens */
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Make each swiper slide exactly the viewport width and apply the app padding
+   to slide content so visuals match the rest of the app while keeping the
+   slide clipping correct. */
+.swipe-views .swiper-slide {
+  /* Make slides match the dynamic viewport width so they stay centered
+     and don't produce a horizontal shift when the vertical scrollbar
+     appears/disappears. */
+  width: 100dvw !important;
+  min-width: 100dvw !important;
+  box-sizing: border-box !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.swipe-views .swiper-slide {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* DEBUG HELPERS (temporary) -------------------------------------------------
+   These subtle outlines help identify which container is misaligned when
+   you sign in. They'll be easy to spot in the devtools device emulation.
+   Remove these rules after debugging. */
+.debug-guides .content { outline: 1px dashed rgba(255,255,255,0.04); }
+.debug-guides .content > .swipe-views { outline: 1px dashed rgba(0,128,255,0.06); }
+.debug-guides .header-inner { outline: 1px dashed rgba(0,200,255,0.05); }
+.debug-guides .tabbar-inner { outline: 1px dashed rgba(0,255,128,0.04); }
+/* Apply by adding class "debug-guides" to the <body> element in the console:
+   document.body.classList.add('debug-guides')
+ */
+
+/* If content within a slide needs to center vertically, pages/components
+   can use .slide-center to opt-in to vertical centering without affecting
+   general layout. */
+.slide-center { display: grid; place-items: start center; }

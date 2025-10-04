@@ -1,0 +1,69 @@
+.header {
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: saturate(180%) blur(8px);
+  background: color-mix(in srgb, var(--bg), transparent 10%);
+  border-bottom: 1px solid var(--border);
+  padding-top: var(--safe-top);
+}
+.header-inner {
+  max-width: var(--maxw); margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px; justify-content: space-between;
+  /* Ensure the header never expands beyond its container (prevents
+     long inline labels from increasing the app width on small screens). */
+  width: 100%;
+  box-sizing: border-box;
+}
+.brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.brand .logo {
+  width: 28px; height: 28px; border-radius: 8px; background: var(--text); position: relative; overflow: hidden;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.brand .logo::after {
+  content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg);
+}
+.brand:hover .logo {
+  transform: rotate(5deg) scale(1.05);
+}
+.brand .logo.animate-bounce {
+  animation: logo-bounce 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.2px; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; }
+/* allow header action group to shrink when space is tight (prevents
+  the header from growing wider than the viewport when account text
+  is present). */
+.header-actions { min-width: 0; }
+
+/* Normalize header action button heights so icon-only and text buttons match */
+.header-actions .btn {
+  height: 36px; /* match .btn.icon width/height for visual consistency */
+  padding: 0 12px; /* vertical padding removed since height is fixed */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Keep existing square sizing for icon variant; remove extra horizontal padding */
+.header-actions .btn.icon {
+  padding: 0; /* .btn.icon already sets fixed size; zero padding ensures perfect circle */
+}
+
+/* Account switcher button: prevent long usernames from expanding the header.
+   Keep avatar fixed size and clamp the label with ellipsis. */
+.account-switcher .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* allow truncation */
+  padding: 6px 10px; /* slightly smaller touch target for header */
+}
+.account-switcher .btn img.avatar {
+  width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;
+}
+.account-switcher .btn span {
+  display: inline-block;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

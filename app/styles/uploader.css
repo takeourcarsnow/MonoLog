@@ -14,8 +14,10 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 /* Uploader-specific carousel/thumbnail layout to avoid interfering with post card styles */
 .uploader .preview-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.uploader .preview-inner .carousel { width: 100%; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.uploader .preview-inner .carousel { width: 100%; display: flex; gap: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.uploader .preview-inner .carousel.carousel-track { overflow-x: visible; }
 .uploader .preview-inner .carousel > div { flex: 0 0 100%; scroll-snap-align: center; position: relative; }
+.uploader .preview-inner .carousel-track { width: auto; }
 .uploader .thumbs { display: flex; gap: 8px; margin-top: 8px; justify-content: center; align-items: center; }
 .uploader .thumbs button { padding: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 .uploader .thumbs img { width: 72px; height: 72px; object-fit: cover; display: block; }

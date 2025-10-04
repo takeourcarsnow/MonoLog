@@ -33,14 +33,12 @@ export function SingleImageView({
     <div>
       {/* Give the image wrapper a definite size so Next/Image with `fill` can render. */}
       <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', minHeight: 220 }}>
-        <Image
-          alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')}
-          src={dataUrls[0] || dataUrl || "/logo.svg"}
-          fill
-          style={{ objectFit: 'contain' }}
+        <img
+          alt={Array.isArray(alt) ? (alt[index] || 'Preview') : (alt || 'Preview')}
+          src={(dataUrls.length ? dataUrls[index] : dataUrl) || "/logo.svg"}
+          style={{ objectFit: 'contain', width: '100%', height: '100%', display: 'block' }}
           onLoad={() => setPreviewLoaded(true)}
           onError={() => setPreviewLoaded(true)}
-          unoptimized
         />
       </div>
       { (dataUrl || dataUrls.length === 1) ? (
@@ -48,7 +46,7 @@ export function SingleImageView({
           <button
             className="image-action-btn edit-btn"
             aria-label="Edit photo"
-            onClick={() => { setEditingIndex(0); setEditing(true); }}
+            onClick={() => { setEditingIndex(index); setEditing(true); }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />

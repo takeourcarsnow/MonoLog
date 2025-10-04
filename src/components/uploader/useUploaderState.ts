@@ -139,7 +139,15 @@ export function useUploaderState() {
 
   // apply transform when index changes
   useEffect(() => {
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+    if (trackRef.current) {
+      try {
+        const wrapper = trackRef.current.parentElement as HTMLElement | null;
+        const w = wrapper ? wrapper.clientWidth : trackRef.current.clientWidth;
+        trackRef.current.style.transform = `translateX(-${index * w}px)`;
+      } catch (e) {
+        trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+      }
+    }
   }, [index]);
 
   // when entering edit mode, populate editingAlt for the current index

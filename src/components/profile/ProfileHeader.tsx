@@ -261,10 +261,8 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
 
               // Treat null/undefined as not-following
               const prev = !!following;
-              // Optimistic update: flip state immediately
+              // Optimistic update: flip state immediately so local UI responds fast
               setFollowing(!prev);
-              // Dispatch follow change immediately so other UI can respond optimistically
-              try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: user.id, following: !prev } })); } catch (_) {}
 
               followInFlightRef.current = true;
               try {
@@ -273,6 +271,10 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
                 } else {
                   await api.unfollow(user.id);
                 }
+                // Only dispatch the global follow_changed event after the
+                // server operation succeeds. This avoids other views
+                // re-fetching on optimistic-only failures.
+                try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: user.id, following: !prev } })); } catch (_) {}
               } catch (e: any) {
                 // Revert optimistic change on error and show toast
                 setFollowing(prev);

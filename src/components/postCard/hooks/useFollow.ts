@@ -63,10 +63,8 @@ export function useFollow(userId: string) {
 
     // Treat null/undefined as not-following
     const prev = !!isFollowing;
-    // Optimistic update: flip state immediately
+    // Optimistic update: flip state immediately so local UI responds fast
     setIsFollowing(!prev);
-    // Dispatch follow change immediately so other UI can respond optimistically
-    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId, following: !prev } })); } catch (_) {}
 
     followInFlightRef.current = true;
     try {
@@ -75,6 +73,10 @@ export function useFollow(userId: string) {
       } else {
         await api.unfollow(userId);
       }
+      // Only dispatch the global follow_changed event after the server
+      // operation succeeds. This ensures listeners (like FeedView) will
+      // re-fetch from the server and see the updated follow list.
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId, following: !prev } })); } catch (_) {}
       return true;
     } catch (e: any) {
       // Revert optimistic change on error and show toast

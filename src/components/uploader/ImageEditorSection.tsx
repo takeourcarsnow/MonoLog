@@ -49,7 +49,7 @@ export function ImageEditorSection({
   return (
     <div style={{ width: '100%' }}>
       <ImageEditor
-        initialDataUrl={(originalDataUrls[editingIndex] || originalDataUrls[0] || dataUrls[editingIndex] || dataUrl) as string}
+        initialDataUrl={(originalDataUrls[editingIndex] || dataUrls[editingIndex] || originalDataUrls[0] || dataUrl) as string}
         initialSettings={editorSettings[editingIndex] || {}}
         onCancel={() => setEditing(false)}
         onApply={async (newUrl, settings) => {

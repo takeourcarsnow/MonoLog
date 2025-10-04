@@ -39,6 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
+  const [forceTouch, setForceTouch] = useState(false);
 
   const views = [
     { path: "/feed", component: FeedView },
@@ -101,6 +102,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     } catch (e) {
       setIsTouchDevice(false);
     }
+    try {
+      // eslint-disable-next-line no-console
+      console.debug('[AppShell] isTouchDevice initial:', isTouchDevice);
+    } catch (_) {}
+
+    // support a quick runtime override for testing: ?forceTouch=1 or localStorage monolog.forceTouch=1
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URL(window.location.href).searchParams;
+        const q = params.get('forceTouch');
+        const ls = window.localStorage?.getItem('monolog.forceTouch');
+        const val = q === '1' || ls === '1';
+        if (val) {
+          setForceTouch(true);
+          // eslint-disable-next-line no-console
+          console.debug('[AppShell] forceTouch enabled via', q === '1' ? 'query' : 'localStorage');
+        }
+      }
+    } catch (_) {}
   }, []);
 
   useEffect(() => {
@@ -111,6 +131,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         inst.slideTo(currentIndex);
       } catch (_) { /* ignore */ }
     }
+    try {
+      // eslint-disable-next-line no-console
+      console.debug('[AppShell] slideTo currentIndex:', currentIndex, 'inst?', Boolean(inst));
+    } catch (_) {}
   }, [currentIndex]);
 
   // Listen for carousel drag events from inner components and temporarily
@@ -121,24 +145,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) inst.allowTouchMove = false;
+        try { console.debug('[AppShell] onDragStart -> allowTouchMove=false'); } catch(_){}
       } catch (_) { /* ignore */ }
     }
     function onDragEnd() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
+        try { console.debug('[AppShell] onDragEnd -> allowTouchMove=', Boolean(isTouchDevice)); } catch(_){}
       } catch (_) { /* ignore */ }
     }
     function onZoomStart() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) inst.allowTouchMove = false;
+        try { console.debug('[AppShell] onZoomStart -> allowTouchMove=false'); } catch(_){}
       } catch (_) { /* ignore */ }
     }
     function onZoomEnd() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
+        try { console.debug('[AppShell] onZoomEnd -> allowTouchMove=', Boolean(isTouchDevice)); } catch(_){}
       } catch (_) { /* ignore */ }
     }
     if (typeof window !== 'undefined') {
@@ -226,7 +254,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="swipe-views"
               ref={swiperRef}
               onSwiper={(s) => { swiperRef.current = s; }}
-              modules={[]}
+              modules={[Virtual]}
               spaceBetween={0}
               slidesPerView={1}
               initialSlide={currentIndex}
@@ -234,8 +262,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               touchStartPreventDefault={false}
               passiveListeners={false}
               // only allow touch/swipe interactions on touch-capable devices
-              simulateTouch={isTouchDevice}
-              allowTouchMove={isTouchDevice}
+              simulateTouch={isTouchDevice || forceTouch}
+              allowTouchMove={isTouchDevice || forceTouch}
               // Enable rubber-band effect at edges: allows some drag but prevents
               // slides from going completely off-screen. resistanceRatio controls
               // how much resistance (0.5 = moderate resistance, good balance between

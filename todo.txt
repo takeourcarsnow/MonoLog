@@ -34,6 +34,5 @@ make reset crop work
 
 swiping doesnt work again
 
-in feed new posts from users i just followed in explore section only appear after refreshing the page
-photo preview doesnt appear when uploading multiple photos
-when i swipe over multiple photo post disable vertical scrolling
+photo preview messed up layout on desktop 
+when i swipe over multiple photo post disable 

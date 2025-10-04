@@ -118,7 +118,6 @@ export const UserHeader = memo(function UserHeader({
                 followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
                 const willFollow = !prev;
                 setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
-                try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
                 followInFlightRef.current = true;
                 try {
                   if (!prev) {
@@ -126,6 +125,9 @@ export const UserHeader = memo(function UserHeader({
                   } else {
                     await api.unfollow(post.userId);
                   }
+                  // Dispatch confirmed change after success so other views can
+                  // refresh reliably.
+                  try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
                 } catch (e: any) {
                   setIsFollowing(prev);
                   try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}

@@ -388,7 +388,7 @@ function UploaderCore() {
         fileInputRef={fileInputRef}
         cameraInputRef={cameraInputRef}
         onFileChange={async () => {
-          const files = Array.from(fileInputRef.current?.files || []);
+          const files = Array.from(fileInputRef.current?.files || []).slice(0, 5);
           if (fileActionRef.current === 'replace') {
             // replace only the first selected file at the provided index
             const f = files[0];
@@ -438,8 +438,45 @@ function UploaderCore() {
             fileActionRef.current = 'append';
             replaceIndexRef.current = null;
           } else {
-            for (const f of files.slice(0, 5)) {
-              await handleFile(f);
+            // Batch-process selections to avoid interleaved state updates which
+            // could leave only the first image visible in the preview.
+            if (!files.length) return;
+            setProcessing(true);
+            setPreviewLoaded(false);
+            try {
+              const newUrls: string[] = [];
+              for (const f of files) {
+                try {
+                  const url = await compressImage(f);
+                  newUrls.push(url);
+                } catch (e) {
+                  console.error('Failed to process one of selected files', e);
+                }
+              }
+              if (!newUrls.length) return;
+              // Append all new urls in a single state update
+              setDataUrls(d => {
+                const next = [...d, ...newUrls].slice(0, 5);
+                return next;
+              });
+              setOriginalDataUrls(d => {
+                const next = [...d, ...newUrls].slice(0, 5);
+                return next;
+              });
+              setEditorSettings(s => {
+                const next = [...s, ...newUrls.map(() => ({}))].slice(0, 5);
+                return next;
+              });
+              // ensure primary preview is set to the first image if not already
+              if (!dataUrl) {
+                setDataUrl(newUrls[0]);
+                setPreviewLoaded(false);
+              }
+              // set size hints using the first processed file
+              try { setCompressedSize(approxDataUrlBytes(newUrls[0])); } catch (_) {}
+              try { setOriginalSize(files[0].size); } catch (_) {}
+            } finally {
+              setProcessing(false);
             }
           }
         }}

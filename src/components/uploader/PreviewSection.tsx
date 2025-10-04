@@ -112,7 +112,8 @@ export function PreviewSection({
                 videoRef={videoRef}
                 streamRef={streamRef}
                 cameraInputRef={cameraInputRef}
-                toast={toast}
+                  toast={toast}
+                  setPreviewLoaded={setPreviewLoaded}
               />
             ) : (
               <SingleImageView

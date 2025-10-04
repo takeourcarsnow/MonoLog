@@ -31,8 +31,17 @@ export function SingleImageView({
 }: SingleImageViewProps) {
   return (
     <div>
-      <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
-        <Image alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')} src={dataUrls[0] || dataUrl || "/logo.svg"} fill style={{ objectFit: 'contain' }} onLoad={() => setPreviewLoaded(true)} onError={() => setPreviewLoaded(true)} unoptimized />
+      {/* Give the image wrapper a definite size so Next/Image with `fill` can render. */}
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', minHeight: 220 }}>
+        <Image
+          alt={Array.isArray(alt) ? (alt[0] || 'Preview') : (alt || 'Preview')}
+          src={dataUrls[0] || dataUrl || "/logo.svg"}
+          fill
+          style={{ objectFit: 'contain' }}
+          onLoad={() => setPreviewLoaded(true)}
+          onError={() => setPreviewLoaded(true)}
+          unoptimized
+        />
       </div>
       { (dataUrl || dataUrls.length === 1) ? (
         <div className="image-actions">

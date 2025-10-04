@@ -32,6 +32,7 @@ interface UserHeaderProps {
   deleteBtnRef: React.RefObject<HTMLButtonElement>;
   deleteHandlerRef: React.MutableRefObject<(() => void) | null>;
   editorRef?: React.MutableRefObject<{ save?: () => Promise<void>; cancel?: () => void } | null>;
+  editorOpeningRef?: React.MutableRefObject<boolean | null>;
   followBtnRef: React.RefObject<HTMLButtonElement>;
   followAnim: 'following-anim' | 'unfollow-anim' | null;
   setFollowAnim: (value: 'following-anim' | 'unfollow-anim' | null) => void;
@@ -75,8 +76,10 @@ export const UserHeader = memo(function UserHeader({
   followAnimTimerRef,
   followInFlightRef,
   editorRef,
+  editorOpeningRef,
   toast,
 }: UserHeaderProps) {
+  const editClickLockRef = useRef<number | null>(null);
   const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
   const userLine = (
     <>
@@ -150,17 +153,45 @@ export const UserHeader = memo(function UserHeader({
           <>
             <button
               className={`btn icon-reveal edit-btn ${editExpanded ? 'expanded' : ''} ${editing ? 'active' : ''} ${editorSaving ? 'saving' : ''}`}
-              onClick={async () => {
+              onClick={async (e) => {
+                // Guard against rapid double-clicks that can immediately trigger the
+                // save branch right after opening. If a click occurred very recently,
+                // ignore this one.
+                const now = Date.now();
+                const LOCK_MS = 400;
+                if (editClickLockRef.current && (now - editClickLockRef.current) < LOCK_MS) {
+                  // eslint-disable-next-line no-console
+                  console.debug('[UserHeader] Ignoring rapid duplicate edit click');
+                  try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
+                  return;
+                }
+
                 if (!editing) {
+                  // Record click time so a follow-up click is ignored briefly
+                  editClickLockRef.current = now;
+                  setTimeout(() => { editClickLockRef.current = null; }, LOCK_MS);
+
                   setEditExpanded(true);
                   if (editTimerRef.current) { window.clearTimeout(editTimerRef.current); editTimerRef.current = null; }
                   editTimerRef.current = window.setTimeout(() => { setEditExpanded(false); editTimerRef.current = null; }, 3500);
+                  // eslint-disable-next-line no-console
+                  console.debug('[UserHeader] setEditing(true) via Edit button');
                   setEditing(true);
                   return;
                 }
+
                 // When already editing, try to save via editorRef (if provided)
                 try {
+                  // If the editor is still opening, ignore the save click to avoid
+                  // triggering an immediate close via the save path.
+                  if (editorOpeningRef && editorOpeningRef.current) {
+                    // eslint-disable-next-line no-console
+                    console.debug('[UserHeader] Save requested while editor is opening; ignoring');
+                    return;
+                  }
                   if (editorRef && editorRef.current && typeof editorRef.current.save === 'function') {
+                    // eslint-disable-next-line no-console
+                    console.debug('[UserHeader] invoking editorRef.save()');
                     await editorRef.current.save();
                   }
                 } catch (e) {

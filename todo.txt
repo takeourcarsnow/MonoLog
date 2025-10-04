@@ -33,3 +33,7 @@ Discard draft button is white with red outline in light theme instead of red
 make reset crop work
 
 swiping doesnt work again
+
+in feed new posts from users i just followed in explore section only appear after refreshing the page
+photo preview doesnt appear when uploading multiple photos
+when i swipe over multiple photo post disable vertical scrolling

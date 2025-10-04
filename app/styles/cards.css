@@ -206,6 +206,42 @@
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+
+/* Edit panel enter/exit: animate height and opacity so card borders expand smoothly */
+.post-editor-wrap {
+  overflow: hidden; /* contain the editor for max-height animation */
+  max-height: 0; /* collapsed by default */
+  opacity: 0;
+  transition: max-height 260ms var(--transition-mid), opacity 220ms var(--transition-mid);
+  will-change: max-height, opacity;
+}
+.post-editor-wrap.enter {
+  /* a large enough max-height to fit editor content without snapping;
+     it's tuned to typical editor height; using a sufficiently large value
+     prevents clipping while keeping the transition smooth. */
+  max-height: 420px;
+  opacity: 1;
+}
+.post-editor-wrap.exit {
+  max-height: 0;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-editor-wrap { transition: none !important; max-height: none !important; opacity: 1 !important; }
+}
+/* Caption/actions wrap: animate collapse/fade to avoid sudden content jump when editor opens */
+.caption-wrap {
+  overflow: hidden;
+  max-height: 1000px; /* large default so visible state expands to content */
+  opacity: 1;
+  transition: max-height 260ms var(--transition-mid), opacity 220ms var(--transition-mid);
+}
+.card.editor-opening .caption-wrap {
+  max-height: 0;
+  opacity: 0;
+}
+
 .actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .action {
   display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
@@ -339,4 +375,20 @@
   color: #999;
   text-shadow: 0 2px 8px rgba(0,0,0,0.15);
   animation: favoriteRemove 500ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+/* When editor is open, subtly emphasize the card border and lift shadow; transition is defined on .card */
+.card.editor-open {
+  border-color: color-mix(in srgb, var(--primary), transparent 72%);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.10);
+}
+
+/* Give the editor itself a subtle top border that animates to match the card border */
+.post-editor {
+  border-top: 1px solid transparent;
+  padding-top: 8px;
+  transition: border-color 220ms var(--transition-mid), padding-top 220ms var(--transition-mid);
+}
+.card.editor-open .post-editor {
+  border-top-color: color-mix(in srgb, var(--primary), transparent 84%);
 }

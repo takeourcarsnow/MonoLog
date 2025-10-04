@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/lib/types";
 
 export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
@@ -9,6 +9,7 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   const [caption, setCaption] = useState(post.caption || "");
   const [visibility, setVisibility] = useState(post.public ? "public" : "private");
   const [saving, setSaving] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   const doSave = useCallback(async () => {
     if (saving) return;
@@ -26,15 +27,17 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   }), [doSave, onCancel]);
 
   useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onCancel();
     }
-    if (typeof window !== 'undefined') window.addEventListener('keydown', onKey);
-    return () => { if (typeof window !== 'undefined') window.removeEventListener('keydown', onKey); };
+    el.addEventListener('keydown', onKey);
+    return () => { el.removeEventListener('keydown', onKey); };
   }, [onCancel]);
 
   return (
-    <div className="post-editor">
+    <div ref={editorRef} className="post-editor" tabIndex={-1}>
       <input
         className="edit-caption input"
         type="text"
@@ -42,6 +45,7 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         aria-label="Edit caption"
         value={caption}
         onChange={e => setCaption(e.target.value)}
+        autoFocus
         onKeyDown={async (e) => {
           if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
             e.preventDefault();

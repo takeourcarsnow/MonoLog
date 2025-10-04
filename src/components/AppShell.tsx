@@ -71,6 +71,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const swiperRef = useRef<any>(null);
   const [forceTouch, setForceTouch] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isHorizontalSwipe = useRef(false);
 
   const views = [
     { path: "/feed", component: FeedView },
@@ -212,6 +216,45 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [isTouchDevice]);
 
+  // Prevent vertical scrolling when swiping horizontally to change sections
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+      isHorizontalSwipe.current = false;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const deltaX = Math.abs(e.touches[0].clientX - touchStartX.current);
+      const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current);
+
+      // If horizontal movement is greater than vertical and exceeds threshold, consider it horizontal swipe
+      if (deltaX > deltaY && deltaX > 10) {
+        isHorizontalSwipe.current = true;
+        e.preventDefault(); // Prevent vertical scrolling
+      }
+    };
+
+    const handleTouchEnd = () => {
+      isHorizontalSwipe.current = false;
+    };
+
+    main.addEventListener('touchstart', handleTouchStart, { passive: true });
+    main.addEventListener('touchmove', handleTouchMove, { passive: false });
+    main.addEventListener('touchend', handleTouchEnd, { passive: true });
+    main.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+    return () => {
+      main.removeEventListener('touchstart', handleTouchStart);
+      main.removeEventListener('touchmove', handleTouchMove);
+      main.removeEventListener('touchend', handleTouchEnd);
+      main.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, []);
+
   const handleSlideChange = (swiper: any) => {
   const newPath = views[swiper.activeIndex]?.path;
     // keep local state for which slide is active so we can mark others inert
@@ -271,6 +314,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="app-content">
         <Header />
         <main
+          ref={mainRef}
           className="content"
           id="view"
         >

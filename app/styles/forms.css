@@ -230,3 +230,31 @@
   .vis-toggle, .vis-toggle .vis-icon svg { transition: none !important; }
   .vis-toggle::after { transition: none !important; }
 }
+
+/* Mobile: stack form rows and ensure button group fills width */
+@media (max-width: 640px) {
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    justify-content: flex-start;
+  }
+
+  .form-row .vis-label {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  /* Make the button group stack vertically and fill available width */
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+  }
+}

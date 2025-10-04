@@ -18,7 +18,7 @@ import { useImageEditorHighlights } from './imageEditor/useImageEditorHighlights
 import { useDashAnimation } from './imageEditor/useDashAnimation';
 import { drawImage } from './imageEditor/imageEditorDrawing';
 import ImageEditorCanvas from './imageEditor/ImageEditorCanvas';
-import ImageEditorToolbar from './imageEditor/ImageEditorToolbar';
+import ImageEditorToolbar, { ImageEditorToolbarHeader, ImageEditorToolbarCategories } from './imageEditor/ImageEditorToolbar';
 import ImageEditorPanels from './imageEditor/ImageEditorPanels';
 
 type Props = {
@@ -404,6 +404,14 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           gap: 14px;
           display: grid;
         }
+        /* Reduce header icon button size to make the top bar less tall */
+        .image-editor-buttons .btn.icon {
+          padding: 6px; /* smaller hit area while keeping icons tappable */
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          font-size: 13px;
+        }
         @media (min-width: 720px) { .imgedit-panels { max-height: 280px; } }
         @media (max-width: 720px) { .imgedit-panels { max-height: calc(100vh - 140px); } }
       `}</style>
@@ -436,18 +444,13 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       `}</style>
 
-      <ImageEditorToolbar
-        onCancel={onCancel}
-        resetAdjustments={resetAdjustments}
-        applyEdit={applyEdit}
-        isEdited={isEdited}
-        categoriesContainerRef={categoriesContainerRef}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        categoryHighlight={categoryHighlight}
-      />
+      {/* Toolbar header (buttons) above the canvas */}
+      <ImageEditorToolbarHeader onCancel={onCancel} resetAdjustments={resetAdjustments} applyEdit={applyEdit} isEdited={isEdited} />
 
       <ImageEditorCanvas canvasRef={canvasRef} mounted={mounted} />
+
+      {/* Category selector (Filters / Basic / Effects / Crop / Frame) below the canvas */}
+      <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} categoryHighlight={categoryHighlight} />
 
       <ImageEditorPanels
         selectedCategory={selectedCategory}

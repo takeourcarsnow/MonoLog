@@ -239,6 +239,15 @@
   .time-value { font-size: 15px; }
 }
 
+/* When form controls are stacked (mobile), make publish & cancel buttons full width */
+@media (max-width: 640px) {
+  .publish-button,
+  .btn.cancel-btn {
+    min-width: 0; /* allow flexed width */
+    width: 100%;
+  }
+}
+
 /* Make the Cancel button match the publish button's size and pill shape */
 .btn.cancel-btn {
   display: inline-flex;

@@ -235,6 +235,15 @@
 /* make grid tiles slightly taller on large screens */
 @media (min-width: 900px) { .grid .tile { aspect-ratio: 4 / 3; } }
 
+/* Ensure feed grid view always uses square tiles and consistent row sizing.
+  This override is intentionally placed here so it takes precedence over
+  more general profile grid rules and prevents tall/portrait tiles from
+  breaking the Instagram-style square layout. */
+.feed.grid-view { padding: 4px 0; }
+.feed.grid-view .grid { display: grid !important; gap: 8px !important; grid-template-columns: repeat(3, 1fr) !important; grid-auto-rows: 1fr !important; }
+.feed.grid-view .grid .tile { aspect-ratio: 1 / 1 !important; }
+.feed.grid-view .grid .tile > * { width: 100% !important; height: 100% !important; }
+
 /* duplicate toast rules removed (consolidated earlier) */
 
 .skeleton {

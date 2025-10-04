@@ -259,7 +259,7 @@ export function ExploreView() {
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }} />
       {/* hint removed per user request */}
-      <div className="feed">{render()}</div>
+      <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>{render()}</div>
     </div>
   );
 }

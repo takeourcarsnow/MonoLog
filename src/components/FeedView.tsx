@@ -235,7 +235,7 @@ export function FeedView() {
   return (
     <div className="view-fade">
       <ViewToggle title={<Home size={20} strokeWidth={2} />} subtitle="MonoLogs from people that you follow" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("feedView", v); }} />
-      <div className="feed">{render}</div>
+      <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>{render}</div>
     </div>
   );
 }

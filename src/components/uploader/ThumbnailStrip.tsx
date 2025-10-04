@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface ThumbnailStripProps {
   dataUrls: string[];
@@ -14,7 +14,13 @@ export function ThumbnailStrip({ dataUrls, alt, index, setIndex }: ThumbnailStri
     <div className="thumbs">
       {dataUrls.map((u, idx) => (
         <button key={idx} type="button" onClick={() => { setIndex(idx); }} aria-pressed={index === idx} style={{ border: index === idx ? '2px solid var(--primary)' : '1px solid var(--border)' }}>
-          <img src={u || "/logo.svg"} alt={Array.isArray(alt) ? (alt[idx] || `Thumbnail ${idx+1}`) : (alt || `Thumbnail ${idx+1}`)} width={72} height={72} style={{ width: 72, height: 72, objectFit: 'cover', display: 'block' }} />
+          <OptimizedImage
+            src={u || "/logo.svg"}
+            alt={Array.isArray(alt) ? (alt[idx] || `Thumbnail ${idx+1}`) : (alt || `Thumbnail ${idx+1}`)}
+            width={72}
+            height={72}
+            style={{ width: 72, height: 72, objectFit: 'cover', display: 'block' }}
+          />
         </button>
       ))}
     </div>

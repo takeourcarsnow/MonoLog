@@ -11,6 +11,8 @@ interface OptimizedImageProps {
   style?: React.CSSProperties;
   unoptimized?: boolean;
   priority?: boolean;
+  sizes?: string;
+  loading?: 'eager' | 'lazy';
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -25,6 +27,8 @@ export const OptimizedImage = memo(function OptimizedImage({
   style,
   unoptimized = false,
   priority = false,
+  sizes,
+  loading,
   onLoad,
   onError,
 }: OptimizedImageProps) {
@@ -39,6 +43,8 @@ export const OptimizedImage = memo(function OptimizedImage({
       style={style}
       unoptimized={unoptimized}
       priority={priority}
+      sizes={sizes}
+      loading={loading}
       onLoad={onLoad}
       onError={onError}
     />

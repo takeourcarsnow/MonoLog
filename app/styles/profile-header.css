@@ -272,3 +272,17 @@
   letter-spacing: 0.5px;
   font-weight: 600;
 }
+
+/* Avatar uploading subtle blur/fade */
+.avatar-wrap { position: relative; display: inline-block; border-radius: 24px; overflow: visible; }
+.avatar-wrap .profile-avatar { transition: filter 260ms ease, opacity 260ms ease, transform 260ms ease; }
+.avatar-wrap.avatar-uploading .profile-avatar { filter: blur(3px); opacity: 0.65; transform: scale(0.995); }
+
+/* Spinner centered over avatar */
+.avatar-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.avatar-spinner svg { color: var(--muted); opacity: 0.95; }
+
+/* Make spinner animation a little softer on pref motion */
+@media (prefers-reduced-motion: reduce) {
+  .avatar-spinner svg { animation: none; }
+}

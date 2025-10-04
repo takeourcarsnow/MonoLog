@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { api, getSupabaseClient } from "@/lib/api";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import type { User } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
@@ -117,7 +118,7 @@ export function AccountSwitcher() {
           </span>
         ) : current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <img src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" style={{ width: 22, height: 22 }} />
+            <OptimizedImage src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" width={22} height={22} />
             <span>@{current.username || current.id}</span>
           </span>
         ) : (

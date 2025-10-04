@@ -1,8 +1,10 @@
-/* eslint-disable @next/next/no-img-element */
+// Avatar images should use the OptimizedImage wrapper so Next can
+// serve appropriately sized versions via its image optimizer.
 "use client";
 
 import { useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
 import { api } from "@/lib/api";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { getCachedComments, setCachedComments } from "@/lib/commentCache";
 import { useToast } from "./Toast";
 
@@ -137,7 +139,14 @@ export function Comments({ postId, onCountChange }: Props) {
         ) : (
           comments.map((c, idx) => (
             <div key={c.id} className={`comment-item appear ${c.id === newCommentId ? 'new' : ''} ${removingIds.has(c.id) ? 'removing' : ''}`} style={{ animationDelay: `${idx * 40}ms` }}>
-              <img className="comment-avatar" src={c.user?.avatarUrl || "/logo.svg"} alt={c.user?.displayName || "User"} />
+              <OptimizedImage
+                className="comment-avatar"
+                src={c.user?.avatarUrl || "/logo.svg"}
+                alt={c.user?.displayName || "User"}
+                width={32}
+                height={32}
+                unoptimized={false}
+              />
               <div className="comment-body">
                 <div className="comment-head">
                   <span className="author">{c.user?.displayName || "User"}</span>

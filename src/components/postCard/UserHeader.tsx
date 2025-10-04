@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import Image from "next/image";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { Lock, UserPlus, UserCheck, Edit, Trash } from "lucide-react";
 import { AuthForm } from "../AuthForm";
 import { useToast } from "../Toast";
@@ -90,7 +91,7 @@ export const UserHeader = memo(function UserHeader({
   return (
     <div className="card-head">
       <Link className="user-link" href={`/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
-        <Image className="avatar" src={post.user.avatarUrl || "/logo.svg"} alt={post.user.displayName} width={30} height={30} />
+  <OptimizedImage className="avatar" src={post.user.avatarUrl || "/logo.svg"} alt={post.user.displayName} width={30} height={30} loading="lazy" sizes="30px" />
         <div className="user-line">
           <span className="username">{post.user.displayName}</span>
           <span className="dim">{userLine}</span>

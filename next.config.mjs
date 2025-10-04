@@ -1,4 +1,10 @@
 /** @type {import('next').NextConfig} */
+import bundleAnalyzer from '@next/bundle-analyzer'
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
@@ -21,6 +27,15 @@ const nextConfig = {
     // Reduce bundle size by auto-rewriting deep imports for listed packages.
     // lucide-react tree-shakes well, but this shaves a few KB of parser/edge cases.
     optimizePackageImports: ['lucide-react', 'react-swipeable'],
+    // Enable faster builds with turbo
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
   // Enable compression
   compress: true,
@@ -63,6 +78,16 @@ const nextConfig = {
         sideEffects: false,
       };
     }
+
+    // Add performance hints
+    if (!dev) {
+      config.performance = {
+        hints: 'warning',
+        maxAssetSize: 512000, // 512 KB
+        maxEntrypointSize: 512000, // 512 KB
+      };
+    }
+
     return config;
   },
   async headers() {
@@ -98,4 +123,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

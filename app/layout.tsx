@@ -110,6 +110,13 @@ function WebVitalsScript() {
       try {
         const { initWebVitals } = await import('@/lib/performance');
         initWebVitals({ sampleRate: 1 });
+
+        // Register service worker for caching
+        if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+          navigator.serviceWorker.register('/sw.js').catch((error) => {
+            console.warn('Service worker registration failed:', error);
+          });
+        }
       } catch (e) {
         // ignore
       }

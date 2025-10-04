@@ -53,7 +53,7 @@ export function Comments({ postId, onCountChange }: Props) {
     setCachedComments(postId, list);
     notifyCount(list.length);
     setLoading(false);
-  }, [postId, onCountChange]);
+  }, [postId, notifyCount]);
 
   useEffect(() => { load(); }, [load]);
 

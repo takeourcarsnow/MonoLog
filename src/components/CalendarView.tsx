@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { monthMatrix, toDateKey } from "@/lib/date";
 import { api } from "@/lib/api";
 import { PostCard } from "./PostCard";
@@ -33,7 +33,7 @@ export function CalendarView() {
     })();
   }, [curYear, curMonth]);
 
-  const showDay = async (dk: string) => {
+  const showDay = useCallback(async (dk: string) => {
     // toggle selection: clicking the same day again will close the feed
     if (selectedDay === dk) {
       setSelectedDay(null);
@@ -49,7 +49,7 @@ export function CalendarView() {
     } finally {
       setLoadingDay(false);
     }
-  };
+  }, [selectedDay]);
 
   // Auto-select today when the calendar initially shows the current month/year
   useEffect(() => {

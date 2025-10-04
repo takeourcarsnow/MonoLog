@@ -52,9 +52,9 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
     toggleFollow
   } = useFollow(post.userId);
   const {
-    confirming,
     deleteExpanded,
     setDeleteExpanded,
+    showConfirmText,
     deleteExpandTimerRef,
     isPressingDelete,
     setIsPressingDelete,
@@ -180,9 +180,9 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   editorSaving={editorSaving}
   editorRef={editorRef}
   editorOpeningRef={editorOpeningRef}
-        confirming={confirming}
         deleteExpanded={deleteExpanded}
         setDeleteExpanded={setDeleteExpanded}
+        showConfirmText={showConfirmText}
         deleteExpandTimerRef={deleteExpandTimerRef}
         isPressingDelete={isPressingDelete}
         setIsPressingDelete={setIsPressingDelete}

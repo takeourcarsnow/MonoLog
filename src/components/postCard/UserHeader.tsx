@@ -21,9 +21,9 @@ interface UserHeaderProps {
   setEditExpanded: (value: boolean) => void;
   editTimerRef: React.MutableRefObject<number | null>;
   editorSaving: boolean;
-  confirming: boolean;
   deleteExpanded: boolean;
   setDeleteExpanded: (value: boolean) => void;
+  showConfirmText: boolean;
   deleteExpandTimerRef: React.MutableRefObject<number | null>;
   isPressingDelete: boolean;
   setIsPressingDelete: (value: boolean) => void;
@@ -57,9 +57,9 @@ export const UserHeader = memo(function UserHeader({
   setEditExpanded,
   editTimerRef,
   editorSaving,
-  confirming,
   deleteExpanded,
   setDeleteExpanded,
+  showConfirmText,
   deleteExpandTimerRef,
   isPressingDelete,
   setIsPressingDelete,
@@ -204,10 +204,10 @@ export const UserHeader = memo(function UserHeader({
               <span className="icon" aria-hidden="true"><Edit size={16} /></span>
               <span className="reveal label">{editorSaving ? 'Saving…' : 'Edit'}</span>
             </button>
-            <div className={`btn ghost icon-reveal delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${confirming ? 'confirming' : ''} ${deleteExpanded ? 'expanded' : ''}`} style={{ position: 'relative' }}>
+            <div className={`btn ghost icon-reveal delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${deleteExpanded ? 'confirming expanded' : ''}`} style={{ position: 'relative' }}>
               <div aria-hidden="true">
                 <span className="icon"><Trash size={16} /></span>
-                <span className="reveal label">{confirming ? 'Confirm' : 'Delete'}</span>
+                <span className="reveal label">{showConfirmText ? 'Confirm' : 'Delete'}</span>
               </div>
               {overlayEnabled && (
                 <div
@@ -227,7 +227,7 @@ export const UserHeader = memo(function UserHeader({
                 />
               )}
               <button
-                aria-label={confirming ? 'Confirm delete' : 'Delete post'}
+                aria-label={showConfirmText ? 'Confirm delete' : 'Delete post'}
                 onClick={() => { deleteHandlerRef.current && deleteHandlerRef.current(); }}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); deleteHandlerRef.current && deleteHandlerRef.current(); } }}
                 style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}

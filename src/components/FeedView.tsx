@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
+import { getSlideState, setSlideState } from '@/lib/slideStateCache';
 import type { HydratedPost } from "@/lib/types";
 import { PostCard } from "./PostCard";
 import ImageZoom from "./ImageZoom";
@@ -50,8 +51,20 @@ export function FeedView() {
     (async () => {
       if (mounted) await loadInitialPosts();
     })();
+    // restore scroll position if cached
+    const cached = getSlideState<{ scrollY?: number }>('feed');
+    if (cached?.scrollY && typeof window !== 'undefined') {
+      try { window.scrollTo(0, cached.scrollY); } catch (_) {}
+    }
     return () => { mounted = false; };
   }, [loadInitialPosts]);
+
+  // Persist scroll position when FeedView unmounts
+  useEffect(() => {
+    return () => {
+      try { setSlideState('feed', { scrollY: typeof window !== 'undefined' ? window.scrollY : 0 }); } catch (_) {}
+    };
+  }, []);
 
   // Refresh feed only when a FOLLOW action occurs elsewhere AND the newly
   // followed user's posts are not already in the current list. This prevents

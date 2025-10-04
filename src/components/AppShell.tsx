@@ -25,51 +25,28 @@ import "swiper/css/virtual";
 // Small wrapper used around each slide to ensure inactive slides are removed
 // from the accessibility tree and tab order. This avoids focus leaking into
 // offscreen sections which can cause layout/glitch issues when users tab.
+import { disableFocusWithin, restoreFocusWithin } from '@/lib/focusUtils';
+
 function SlideWrapper({ children, active }: { children: React.ReactNode; active: boolean }) {
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
-    // aria-hidden for screen readers
     if (!active) {
       el.setAttribute('aria-hidden', 'true');
-      // prefer the inert attribute when available
-      try { (el as any).inert = true; } catch (_) { /* ignore */ }
+      try { (el as any).inert = true; } catch (_) {}
+      disableFocusWithin(el);
     } else {
       el.removeAttribute('aria-hidden');
-      try { (el as any).inert = false; } catch (_) { /* ignore */ }
+      try { (el as any).inert = false; } catch (_) {}
+      restoreFocusWithin(el);
     }
 
-    // Also update tabIndex on all focusable descendants so tabbing skips them.
-    const focusable = el.querySelectorAll<HTMLElement>(
-      'a[href], button, input, textarea, select, [tabindex]'
-    );
-    focusable.forEach((node) => {
-      // store original tabindex so we can restore when re-activating
-      if (!node.hasAttribute('data-orig-tabindex')) {
-        node.setAttribute('data-orig-tabindex', node.hasAttribute('tabindex') ? node.getAttribute('tabindex') || '' : '');
-      }
-      if (!active) {
-        node.setAttribute('tabindex', '-1');
-      } else {
-        const orig = node.getAttribute('data-orig-tabindex');
-        if (orig === '') node.removeAttribute('tabindex'); else node.setAttribute('tabindex', orig || '0');
-        node.removeAttribute('data-orig-tabindex');
-      }
-    });
-
     return () => {
-      // cleanup: restore attributes
       try { (el as any).inert = false; } catch (_) {}
       el.removeAttribute('aria-hidden');
-      const nodes = el.querySelectorAll<HTMLElement>('a[href], button, input, textarea, select, [tabindex]');
-      nodes.forEach((node) => {
-        const orig = node.getAttribute('data-orig-tabindex');
-        if (orig === '') node.removeAttribute('tabindex'); else if (orig !== null) node.setAttribute('tabindex', orig);
-        node.removeAttribute('data-orig-tabindex');
-      });
+      restoreFocusWithin(el);
     };
   }, [active]);
 

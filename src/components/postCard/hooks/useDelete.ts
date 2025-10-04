@@ -4,12 +4,10 @@ import { api } from "@/lib/api";
 import { useToast } from "../../Toast";
 
 export function useDelete(postId: string) {
-  const [confirming, setConfirming] = useState(false);
-  const [confirmTimer, setConfirmTimer] = useState<number | null>(null);
   const [deleteExpanded, setDeleteExpanded] = useState(false);
+  const [showConfirmText, setShowConfirmText] = useState(false);
   const [isPressingDelete, setIsPressingDelete] = useState(false);
   const [overlayEnabled, setOverlayEnabled] = useState(true);
-  const confirmTimerRef = useRef<number | null>(null);
   const deleteExpandTimerRef = useRef<number | null>(null);
   const deleteBtnRef = useRef<HTMLButtonElement | null>(null);
   const touchActivatedRef = useRef(false);
@@ -19,13 +17,9 @@ export function useDelete(postId: string) {
   const pathname = usePathname();
   const toast = useToast();
 
-  // cleanup any pending confirm timer when component unmounts
+  // cleanup any pending delete expand timer when component unmounts
   useEffect(() => {
     return () => {
-      if (confirmTimerRef.current) {
-        try { window.clearTimeout(confirmTimerRef.current); } catch (_) {}
-        confirmTimerRef.current = null;
-      }
       if (deleteExpandTimerRef.current) { try { window.clearTimeout(deleteExpandTimerRef.current); } catch (_) {} deleteExpandTimerRef.current = null; }
     };
   }, []);
@@ -160,8 +154,8 @@ export function useDelete(postId: string) {
     // Clear pressing visual state
     try { setIsPressingDelete(false); } catch (_) {}
 
-    // If already confirming, proceed to delete
-    if (confirming) {
+    // If already expanded, proceed to delete
+    if (deleteExpanded) {
       try {
         (document.getElementById(`post-${postId}`)?.remove?.());
         await api.deletePost(postId);
@@ -169,25 +163,23 @@ export function useDelete(postId: string) {
       } catch (e: any) {
         toast.show(e?.message || "Failed to delete post");
       } finally {
-        setConfirming(false);
-        if (confirmTimerRef.current) { window.clearTimeout(confirmTimerRef.current); confirmTimerRef.current = null; setConfirmTimer(null); }
+        setDeleteExpanded(false);
+        setShowConfirmText(false);
+        if (deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
       }
       return;
     }
 
-    // Enter confirming state and reveal label (expanded) and clear after timeout
-    setConfirming(true);
+    // Enter expanded state and clear after timeout
     setDeleteExpanded(true);
+    setShowConfirmText(true);
     if (deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
-    deleteExpandTimerRef.current = window.setTimeout(() => { setDeleteExpanded(false); deleteExpandTimerRef.current = null; }, 3500);
-    const t = window.setTimeout(() => {
-      setConfirming(false);
-      confirmTimerRef.current = null;
-      setConfirmTimer(null);
-      setDeleteExpanded(false);
+    deleteExpandTimerRef.current = window.setTimeout(() => { 
+      setDeleteExpanded(false); 
+      // Keep text as "Confirm" during collapse animation (220ms)
+      window.setTimeout(() => setShowConfirmText(false), 220);
+      deleteExpandTimerRef.current = null; 
     }, 3500);
-    confirmTimerRef.current = t;
-    setConfirmTimer(t);
     // final debug snapshot a little later
     setTimeout(() => { try { console.debug('[PostCard] final activeElement', document.activeElement?.tagName, document.activeElement?.id, document.activeElement?.className); } catch (_) {} }, 1200);
   };
@@ -196,9 +188,9 @@ export function useDelete(postId: string) {
   deleteHandlerRef.current = handleDeleteActivation;
 
   return {
-    confirming,
     deleteExpanded,
     setDeleteExpanded,
+    showConfirmText,
     deleteExpandTimerRef,
     isPressingDelete,
     setIsPressingDelete,

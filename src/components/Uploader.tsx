@@ -391,47 +391,78 @@ function UploaderCore() {
           const files = Array.from(fileInputRef.current?.files || []).slice(0, 5);
           if (fileActionRef.current === 'replace') {
             // replace only the first selected file at the provided index
-            const f = files[0];
-            if (f) {
+            // If the user selected multiple files while in "replace" mode,
+            // treat it as replacing the single image with the selected set
+            // (convert single->multi). Otherwise just replace the single file.
+            if (files.length > 1) {
               setProcessing(true);
+              setPreviewLoaded(false);
               try {
-                const url = await compressImage(f);
-                const bytes = approxDataUrlBytes(url);
-                setCompressedSize(bytes);
-                const replaceAt = replaceIndexRef.current ?? (dataUrls.length ? index : 0);
-                if (dataUrls.length) {
-                  setDataUrls(d => {
-                    const copy = [...d];
-                    copy[replaceAt] = url;
-                    return copy;
-                  });
-                  // also update the original
-                  setOriginalDataUrls(d => {
-                    const copy = [...d];
-                    copy[replaceAt] = url;
-                    return copy;
-                  });
-                  // reset settings for replaced image
-                  setEditorSettings(s => {
-                    const copy = [...s];
-                    copy[replaceAt] = {};
-                    return copy;
-                  });
-                  if (replaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
-                } else {
-                  // no array yet, just set primary preview
-                  setDataUrl(url);
-                  setPreviewLoaded(false);
-                  setDataUrls([url]);
-                  setOriginalDataUrls([url]);
-                  setEditorSettings([{}]);
+                const newUrls: string[] = [];
+                for (const f of files) {
+                  try {
+                    const url = await compressImage(f);
+                    newUrls.push(url);
+                  } catch (e) {
+                    console.error('Failed to process one of replacement files', e);
+                  }
                 }
-                setOriginalSize(approxDataUrlBytes(f as any));
-              } catch (e) {
-                console.error(e);
-                toast.show('Failed to process replacement image');
+                if (newUrls.length) {
+                  // Replace existing state with the new selection (limit 5)
+                  const next = newUrls.slice(0, 5);
+                  setDataUrls(next);
+                  setOriginalDataUrls(next.slice());
+                  setEditorSettings(next.map(() => ({})));
+                  setDataUrl(next[0]);
+                  try { setCompressedSize(approxDataUrlBytes(next[0])); } catch (_) {}
+                  try { setOriginalSize(files[0].size); } catch (_) {}
+                }
               } finally {
                 setProcessing(false);
+              }
+            } else {
+              const f = files[0];
+              if (f) {
+                setProcessing(true);
+                try {
+                  const url = await compressImage(f);
+                  const bytes = approxDataUrlBytes(url);
+                  setCompressedSize(bytes);
+                  const replaceAt = replaceIndexRef.current ?? (dataUrls.length ? index : 0);
+                  if (dataUrls.length) {
+                    setDataUrls(d => {
+                      const copy = [...d];
+                      copy[replaceAt] = url;
+                      return copy;
+                    });
+                    // also update the original
+                    setOriginalDataUrls(d => {
+                      const copy = [...d];
+                      copy[replaceAt] = url;
+                      return copy;
+                    });
+                    // reset settings for replaced image
+                    setEditorSettings(s => {
+                      const copy = [...s];
+                      copy[replaceAt] = {};
+                      return copy;
+                    });
+                    if (replaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
+                  } else {
+                    // no array yet, just set primary preview
+                    setDataUrl(url);
+                    setPreviewLoaded(false);
+                    setDataUrls([url]);
+                    setOriginalDataUrls([url]);
+                    setEditorSettings([{}]);
+                  }
+                  setOriginalSize(approxDataUrlBytes(f as any));
+                } catch (e) {
+                  console.error(e);
+                  toast.show('Failed to process replacement image');
+                } finally {
+                  setProcessing(false);
+                }
               }
             }
             // reset action

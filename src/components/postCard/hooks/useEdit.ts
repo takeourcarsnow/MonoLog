@@ -14,10 +14,10 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
   // until the minimum time has passed. This centralizes the "flap" protection
   // so callers don't need to handle it themselves.
   const setEditing = (value: boolean) => {
-    // Diagnostic: log the call site immediately so we can see who invoked setEditing
-    // (this is run synchronously when callers call the setter).
-    // eslint-disable-next-line no-console
-    console.debug(`[useEdit] setEditing(${value}) called`, new Error().stack);
+  // Diagnostic: log the call site immediately so we can see who invoked setEditing
+  // Keep the message but avoid printing full stack traces which flood the console.
+  // eslint-disable-next-line no-console
+  console.debug(`[useEdit] setEditing(${value}) called`);
     const MIN_OPEN_MS = 300;
     if (value) {
       // opening -> record timestamp and cancel any pending close
@@ -80,7 +80,9 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
   useEffect(() => {
     if (!editing) {
       // eslint-disable-next-line no-console
-      console.debug('[useEdit] editing=false (trace)', new Error().stack);
+      // Note: we intentionally avoid dumping an Error stack here because it
+      // was producing very large repetitive logs during normal UI activity.
+      console.debug('[useEdit] editing=false (trace)');
     }
     return () => {
       // cleanup any pending timers on unmount

@@ -30,9 +30,7 @@ Remove click effect from reset settings button
 Discard draft button is white with red outline in light theme instead of red
 
 ? when im on desktop hide the navbar when i enter photo editor
-make reset crop work
+make re set crop work
 
-swiping doesnt work again
 
 photo preview messed up layout on desktop 
-when i swipe over multiple photo post disable 

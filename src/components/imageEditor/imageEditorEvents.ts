@@ -20,6 +20,7 @@ export function usePointerEvents(
     anchorX?: number;
     anchorY?: number;
     handleIndex?: number;
+    moved?: boolean;
   }>,
   sel: { x: number; y: number; w: number; h: number } | null,
   setSel: (sel: { x: number; y: number; w: number; h: number } | null) => void,
@@ -73,7 +74,7 @@ export function usePointerEvents(
       // If no aspect ratio is selected (free mode), treat the click as a pan so the user still gets the
       // A/B preview on press instead of immediately creating a selection.
       if (selectedCategory === 'crop' && cropRatio.current != null) {
-        dragging.current = { startX: p.x, startY: p.y, mode: 'crop', action: 'draw' };
+        dragging.current = { startX: p.x, startY: p.y, mode: 'crop', action: 'draw', moved: false };
         setSel({ x: p.x, y: p.y, w: 0, h: 0 });
         return;
       }
@@ -259,6 +260,9 @@ export function usePointerEvents(
           setSel(newSel);
         } else {
           // drawing new selection
+          if (!dragging.current.moved && (p.x !== dragging.current.startX || p.y !== dragging.current.startY)) {
+            dragging.current.moved = true;
+          }
           const sx = dragging.current.startX; const sy = dragging.current.startY;
           let nx = Math.min(sx, p.x); let ny = Math.min(sy, p.y);
           let nw = Math.abs(p.x - sx); let nh = Math.abs(p.y - sy);
@@ -294,6 +298,31 @@ export function usePointerEvents(
       // prevent parent handlers from interpreting this as a swipe/drag
       ev.stopPropagation?.();
       try { (ev.target as Element).releasePointerCapture(ev.pointerId); } catch {}
+      // If it was a single click for drawing crop and no move, set to full image
+      if (dragging.current && dragging.current.action === 'draw' && !dragging.current.moved) {
+        const info = computeImageLayout();
+        if (info) {
+          const { left, top, dispW, dispH } = info;
+          let fullSel = { x: left, y: top, w: dispW, h: dispH };
+          if (cropRatio.current) {
+            // Adjust to fit aspect ratio within the image
+            const ratio = cropRatio.current;
+            let adjW = dispW;
+            let adjH = dispH;
+            if (dispW / dispH > ratio) {
+              // Image is wider, fit height
+              adjH = dispH;
+              adjW = adjH * ratio;
+            } else {
+              // Image is taller, fit width
+              adjW = dispW;
+              adjH = adjW / ratio;
+            }
+            fullSel = { x: left + (dispW - adjW) / 2, y: top + (dispH - adjH) / 2, w: adjW, h: adjH };
+          }
+          setSel(fullSel);
+        }
+      }
       dragging.current = null;
       // Only clear the preview if this pointer matches the one that started it
       if (previewPointerIdRef.current == null || previewPointerIdRef.current === ev.pointerId) {

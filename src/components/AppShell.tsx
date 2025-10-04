@@ -315,7 +315,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {views.map((view, index) => (
                 <SwiperSlide key={view.path} virtualIndex={index} className={view.path === '/feed' ? 'slide-feed' : undefined}>
                   <SlideWrapper active={index === activeIndex}>
-                    {(index === activeIndex || index === activeIndex - 1 || index === activeIndex + 1) ? <view.component /> : null}
+                    {(index === activeIndex || index === activeIndex - 1 || index === activeIndex + 1) ? (
+                      // If this is the profile slide and we're currently on a username
+                      // route (single path segment that's not reserved), pass that
+                      // segment down as `userId` so the ProfileView can load the
+                      // requested user's profile instead of defaulting to the
+                      // signed-in user's profile.
+                      (() => {
+                        if (view.path === '/profile') {
+                          const pathSegments = pathname.split('/').filter(Boolean);
+                          if (pathSegments.length === 1) {
+                            const segment = pathSegments[0];
+                            const RESERVED_ROUTES = [
+                              'about', 'api', 'calendar', 'explore', 'favorites', 
+                              'feed', 'post', 'profile', 'upload', 'admin', 
+                              'settings', 'help', 'terms', 'privacy', 'login', 
+                              'register', 'signup', 'signin', 'logout', 'auth'
+                            ];
+                            if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+                              return <view.component userId={segment} />;
+                            }
+                          }
+                        }
+                        return <view.component />;
+                      })()
+                    ) : null}
                   </SlideWrapper>
                 </SwiperSlide>
               ))}

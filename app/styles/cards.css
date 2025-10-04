@@ -51,10 +51,22 @@
 .card-head {
   display: flex; 
   align-items: center; 
-  gap: 10px; 
+  gap: 14px; /* increased gap to give more space between avatar and text */
   padding: 10px 12px; 
   border-bottom: 1px solid var(--border);
   min-width: 0; /* Allow flex children to shrink */
+}
+
+/* The avatar and user text are wrapped in a link which itself is a flex container
+   (set via inline styles). Add an explicit gap here so the avatar and text separate
+   even when the link is the immediate flex child. Keeping display/align-items here
+   is safe if inline styles are removed later. */
+.card-head .user-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: inherit;
 }
 
 /* Subtle, card-scoped button micro-interactions (used on About and other card actions) */

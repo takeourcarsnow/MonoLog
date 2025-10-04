@@ -16,6 +16,8 @@ export function ProfileView({ userId }: { userId?: string }) {
 
   const [showAuth, setShowAuth] = useState(false);
 
+  try { console.debug('[ProfileView] mounted with userId ->', userId, ' currentUserId ->', currentUserId, ' isOtherParam ->', isOtherParam); } catch (_) {}
+
   
 
   if (!user) {
@@ -96,7 +98,9 @@ export function ProfileView({ userId }: { userId?: string }) {
         }}
       />
       <div style={{ height: 8 }} />
-      <PostsGrid posts={posts} />
+      <div className={`feed grid-view`}>
+        <PostsGrid posts={posts} />
+      </div>
     </div>
   );
 }

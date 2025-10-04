@@ -198,6 +198,13 @@ export const localApi: Api = {
   },
 
   async canPostToday() {
+    try {
+      // allow quick local override for testing: set localStorage 'monolog:disableUploadLimit' to '1' or 'true'
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const v = window.localStorage.getItem('monolog:disableUploadLimit');
+        if (v === '1' || v === 'true') return { allowed: true };
+      }
+    } catch (e) {}
     const me = getUserById(cache.currentUserId);
     if (!me) return { allowed: false, reason: "Not logged in" };
     const today = toDateKey(new Date());

@@ -202,6 +202,11 @@ export async function canPostToday() {
   ensureAuthListener(sb);
   const user = await getCachedAuthUser(sb);
   if (!user) return { allowed: false, reason: "Not logged in" };
+  // Allow temporary bypass for testing via client-exposed env var
+  try {
+    const DISABLE_UPLOAD_LIMIT = (typeof process !== 'undefined' && (process.env.NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT === '1' || process.env.NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT === 'true')) || (typeof window !== 'undefined' && window.localStorage && (window.localStorage.getItem('monolog:disableUploadLimit') === '1' || window.localStorage.getItem('monolog:disableUploadLimit') === 'true'));
+    if (DISABLE_UPLOAD_LIMIT) return { allowed: true };
+  } catch (e) {}
   // Calendar-day rule: users may post once per calendar day (local date).
   // Fetch the most recent post and compare its local date key to today.
   try {

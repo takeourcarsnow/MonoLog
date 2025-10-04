@@ -8,6 +8,7 @@ import { SignOutButton } from "@/components/SignOut";
 import Link from "next/link";
 import Image from "next/image";
 import type { User } from "@/lib/types";
+import { ViewToggle } from "@/components/ViewToggle";
 
 interface ProfileHeaderProps {
   user: User;
@@ -16,9 +17,13 @@ interface ProfileHeaderProps {
   following: boolean | null;
   setFollowing: (following: boolean | null) => void;
   onAvatarChange: () => void;
+  // optional view state for toggling grid/list in profile
+  view?: "list" | "grid";
+  setView?: (v: "list" | "grid") => void;
 }
 
-export function ProfileHeader({ user, currentUserId, isOtherParam, following, setFollowing, onAvatarChange }: ProfileHeaderProps) {
+export function ProfileHeader({ user, currentUserId, isOtherParam, following, setFollowing, onAvatarChange, view, setView }: ProfileHeaderProps) {
+  // view toggle handled by parent optionally via `view` / `setView` props
   const router = useRouter();
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const toast = useToast();
@@ -323,6 +328,15 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
         </div>
       </div>
       <div className="profile-actions" style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 8 }}>
+        {/* Optional view toggle (grid / list) - parent can pass view & setView props */}
+        {setView ? (
+          <ViewToggle
+            title={<strong>Posts</strong>}
+            subtitle="Toggle posts layout"
+            selected={view || "grid"}
+            onSelect={(v) => setView(v)}
+          />
+        ) : null}
         {/* Show owner actions when the signed-in user is viewing their own profile.
             This handles both /profile (no param) and /profile/[id] when the id
             matches the current user. */}
@@ -370,7 +384,7 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
           // it because the viewed id matched the signed-in user — in that case
           // we won't render this branch because the owner branch executes above.
           <button
-            className={`btn icon-reveal follow-btn${following ? ' following' : ''}`}
+            className={`btn icon-reveal profile-follow-btn${following ? ' following' : ''}`}
             aria-pressed={!!following || false}
             onClick={async () => {
               const cur = await api.getCurrentUser();

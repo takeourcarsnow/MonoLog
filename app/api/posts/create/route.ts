@@ -70,9 +70,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // If not replacing, enforce calendar-day rule server-side: disallow creating
-    // a new post when the user already has a post for the current local date.
-    if (!replace) {
+  // If not replacing, enforce calendar-day rule server-side: disallow creating
+  // a new post when the user already has a post for the current local date.
+  // Allow a temporary bypass for testing via env var NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT
+  const DISABLE_UPLOAD_LIMIT = (process.env.NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT === '1' || process.env.NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT === 'true');
+  if (!replace && !DISABLE_UPLOAD_LIMIT) {
       const start = new Date(); start.setHours(0, 0, 0, 0);
       const end = new Date(start); end.setDate(start.getDate() + 1);
       const { data: todays } = await sb.from('posts').select('created_at').eq('user_id', userId).gte('created_at', start.toISOString()).lt('created_at', end.toISOString());
@@ -84,6 +86,8 @@ export async function POST(req: Request) {
         }
         return NextResponse.json({ error: 'You already posted today', nextAllowedAt: end.getTime(), lastPostedAt: lastMs || null }, { status: 409 });
       }
+    } else if (!replace && DISABLE_UPLOAD_LIMIT) {
+      try { logger.debug('[posts.create] upload limit disabled by NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT'); } catch (e) {}
     }
 
     // Insert new post

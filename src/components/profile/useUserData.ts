@@ -5,7 +5,14 @@ import { uid } from "@/lib/id";
 import { dedupe } from "@/lib/requestDeduplication";
 import type { HydratedPost, User } from "@/lib/types";
 
+function looksLikeUuid(s: string) {
+  return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);
+}
+
+// Accept either a user id (UUID) or a username. If a non-UUID string is
+// provided, resolve it via api.getUserByUsername so callers can pass either.
 export function useUserData(userId?: string) {
+  try { console.debug('[useUserData] called with userId/username ->', userId); } catch (_) {}
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,10 +27,23 @@ export function useUserData(userId?: string) {
       const me = await dedupe('getCurrentUser', () => api.getCurrentUser());
       setCurrentUserId(me?.id || null);
 
-      // Fetch user profile with deduplication
-      const u = userId
-        ? await dedupe(`getUser:${userId}`, () => api.getUser(userId))
-        : me;
+      // If caller passed a non-UUID string, treat it as a username and
+      // resolve to a user profile. Otherwise treat value as an id.
+      let u: User | null = null;
+      if (userId) {
+        if (looksLikeUuid(userId)) {
+          u = await dedupe(`getUser:${userId}`, () => api.getUser(userId));
+        } else if (api.getUserByUsername) {
+          u = await dedupe(`getUserByUsername:${userId}`, () => api.getUserByUsername!(userId));
+        } else {
+          // Fallback: try getUser which may accept username in some adapters
+          u = await dedupe(`getUser:${userId}`, () => api.getUser(userId));
+        }
+      } else {
+        u = me;
+      }
+
+      try { console.debug('[useUserData] resolved user ->', u ? { id: u.id, username: u.username } : null); } catch (_) {}
 
       if (!u) {
         setUser(null);

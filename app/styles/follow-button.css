@@ -267,8 +267,15 @@ button.follow-btn:not(.expanded),
 }
 
 /* Also ensure any focus halos are suppressed for mouse/touch where not focus-visible */
-.follow-btn:not(.expanded):focus:not(:focus-visible),
-.follow-btn:not(.expanded).following:focus:not(:focus-visible) {
+.follow-btn:not(.expanded):focus,
+.follow-btn:not(.expanded):focus-visible,
+.follow-btn:not(.expanded).following:focus,
+.follow-btn:not(.expanded).following:focus-visible {
+  /* Intentionally suppress default browser focus halos for collapsed
+     follow buttons in feed contexts to avoid the large blue ring.
+     Note: this removes the visible keyboard focus indicator; if you
+     prefer an accessible alternative we can add a subtle, theme-aware
+     focus style instead. */
   outline: none !important;
   box-shadow: none !important;
 }
@@ -463,4 +470,70 @@ button.follow-btn:not(.expanded),
 
 @media (prefers-reduced-motion: reduce) {
   .follow-btn, .follow-btn .icon, .follow-btn .reveal.label { transition: none !important; animation: none !important; transform: none !important; }
+}
+
+/* Profile-specific follow button: distinct, more visible pill used on profile pages
+   so the control doesn't look identical to feed (icon-only) follow buttons. */
+.profile-follow-btn {
+  --icon-size: 44px;
+  /* Use solid elevated background for reliable contrast on light themes */
+  background: var(--bg-elev) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.profile-follow-btn .icon { width: 20px; height: 20px; }
+.profile-follow-btn.following {
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 24%));
+  color: white;
+  border-color: transparent;
+}
+.profile-follow-btn .reveal.label { opacity: 1; transform: none; max-width: 220px; }
+
+/* Ensure SVG icons inherit the text color and stroke for maximum contrast */
+.profile-follow-btn .icon svg,
+.profile-follow-btn .icon svg * {
+  stroke: currentColor !important;
+  fill: none !important;
+  color: currentColor !important;
+}
+
+/* Slight hover darkening for better affordance on light backgrounds */
+.profile-follow-btn:not(.following):hover {
+  background: color-mix(in srgb, var(--bg-elev), black 6%) !important;
+}
+
+/* Final catch-all: ensure any browser-global :focus-visible rule does not
+   draw a blue ring around follow buttons in feeds or profiles. This is
+   deliberately placed at the end of the stylesheet and uses element+class
+   selectors with !important so it wins the cascade. If you'd prefer a
+   keyboard-accessible visible indicator, I can replace this with a
+   subtle color-aware :focus-visible style instead. */
+button.follow-btn:focus,
+button.follow-btn:focus-visible,
+.follow-btn:focus,
+.follow-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  outline-offset: 0 !important;
+}
+
+/* If a follow button receives focus, some ancestor rules (e.g. .card:has(:focus-visible))
+   draw a large outline around the card which looks like a blue ring around the
+   follow pill in feed cards. Suppress those ancestor outlines specifically when
+   the focused element is a follow button so the visual doesn't look like a halo
+   around the follow control. This keeps focus-visible for other controls intact. */
+.card:has(.follow-btn:focus-visible),
+.card:has(.follow-btn:focus),
+.card-head:has(.follow-btn:focus-visible),
+.card-head:has(.follow-btn:focus),
+.profile-actions:has(.follow-btn:focus-visible),
+.profile-actions:has(.follow-btn:focus) {
+  outline: none !important;
+  box-shadow: none !important;
 }

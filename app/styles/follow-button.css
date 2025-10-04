@@ -1,4 +1,9 @@
-/* Follow button styles */
+/* Follow b.follow-btn[aria-pressed="true"] {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+  box-shadow: none;
+}styles */
 .follow-btn {
   padding: 10px 18px;
   border-radius: 999px;
@@ -10,10 +15,10 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 .follow-btn[aria-pressed="true"] {
-  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 30%));
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent), var(--primary) 30%));
   color: white;
   border-color: transparent;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary), transparent 60%);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent), transparent 60%);
 }
 
 /* Smooth, subtle animation between follow/unfollow states.
@@ -45,8 +50,8 @@
 
 /* Explicit states to ensure consistent visuals */
 .follow-btn.not-following { background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); }
-.follow-btn.following { background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 20%)); color: #fff; border-color: transparent; box-shadow: 0 8px 28px color-mix(in srgb, var(--primary), transparent 60%); transform: translateY(-2px); }
-.follow-btn.following .icon { transform: translateY(-2px) scale(1.02); }
+.follow-btn.following { background: transparent; color: var(--text); border-color: var(--border); box-shadow: none; transform: none; }
+.follow-btn.following .icon { transform: none; }
 .follow-btn.not-following .icon { transform: translateY(0) scale(1); }
 
 /* Entrance / exit micro-animations triggered by JS classes */
@@ -267,15 +272,8 @@ button.follow-btn:not(.expanded),
 }
 
 /* Also ensure any focus halos are suppressed for mouse/touch where not focus-visible */
-.follow-btn:not(.expanded):focus,
-.follow-btn:not(.expanded):focus-visible,
-.follow-btn:not(.expanded).following:focus,
-.follow-btn:not(.expanded).following:focus-visible {
-  /* Intentionally suppress default browser focus halos for collapsed
-     follow buttons in feed contexts to avoid the large blue ring.
-     Note: this removes the visible keyboard focus indicator; if you
-     prefer an accessible alternative we can add a subtle, theme-aware
-     focus style instead. */
+.follow-btn:not(.expanded):focus:not(:focus-visible),
+.follow-btn:not(.expanded).following:focus:not(:focus-visible) {
   outline: none !important;
   box-shadow: none !important;
 }
@@ -506,34 +504,4 @@ button.follow-btn:not(.expanded),
 /* Slight hover darkening for better affordance on light backgrounds */
 .profile-follow-btn:not(.following):hover {
   background: color-mix(in srgb, var(--bg-elev), black 6%) !important;
-}
-
-/* Final catch-all: ensure any browser-global :focus-visible rule does not
-   draw a blue ring around follow buttons in feeds or profiles. This is
-   deliberately placed at the end of the stylesheet and uses element+class
-   selectors with !important so it wins the cascade. If you'd prefer a
-   keyboard-accessible visible indicator, I can replace this with a
-   subtle color-aware :focus-visible style instead. */
-button.follow-btn:focus,
-button.follow-btn:focus-visible,
-.follow-btn:focus,
-.follow-btn:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-  outline-offset: 0 !important;
-}
-
-/* If a follow button receives focus, some ancestor rules (e.g. .card:has(:focus-visible))
-   draw a large outline around the card which looks like a blue ring around the
-   follow pill in feed cards. Suppress those ancestor outlines specifically when
-   the focused element is a follow button so the visual doesn't look like a halo
-   around the follow control. This keeps focus-visible for other controls intact. */
-.card:has(.follow-btn:focus-visible),
-.card:has(.follow-btn:focus),
-.card-head:has(.follow-btn:focus-visible),
-.card-head:has(.follow-btn:focus),
-.profile-actions:has(.follow-btn:focus-visible),
-.profile-actions:has(.follow-btn:focus) {
-  outline: none !important;
-  box-shadow: none !important;
 }

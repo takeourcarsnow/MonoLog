@@ -79,6 +79,14 @@ export function PublishControls({
               disabled={compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024}
               onPublish={onPublish}
             />
+            {/* Fallback hint: show remaining time beneath the button when on cooldown so
+                users always see a readable timer even if the button's internal layout
+                fails to render for some reason. */}
+            {(!canPost && remaining) ? (
+              <div className="publish-hint" aria-hidden style={{ marginTop: 6, textAlign: 'center' }}>
+                Next allowed: {remaining}
+              </div>
+            ) : null}
             <button
               type="button"
               className={`btn cancel-btn${confirmCancel ? ' confirm' : ''}`}

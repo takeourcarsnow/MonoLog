@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent body scrolling so header stays fixed */
+html, body {
+  overflow: hidden;
+}
+
 /* --- MonoLog original CSS + variables (kept) --- */
 :root {
   color-scheme: light dark;
@@ -141,3 +146,33 @@
 @import './styles/utilities.css';
 @import './styles/overlays.css';
 @import './styles/navbar.css';
+
+/* Custom scrollbar styling - minimalistic and modern */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border), transparent 40%);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--border), transparent 20%);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: color-mix(in srgb, var(--border), transparent 10%);
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--border), transparent 40%) transparent;
+}

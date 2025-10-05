@@ -3,7 +3,7 @@
 html, body { 
   height: 100%; 
   overflow-x: hidden; 
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 html {
   -webkit-overflow-scrolling: touch;
@@ -48,7 +48,7 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 
 body {
-  overflow-y: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   position: relative;
 }
@@ -74,12 +74,7 @@ body {
 }
 
 /* The header is fixed (position: fixed) and removed from document flow.
-   Add top padding equal to the measured header height so the main content
-   sits below it. The JS measures and sets --header-height at runtime; the
-   fallback matches the header's CSS fallback. */
-.app-content {
-  padding-top: var(--header-height, calc(48px + var(--safe-top, 0px)));
-}
+   No need for top padding here since .content handles it. */
 
 /* Debug helper: add `document.body.classList.add('debug-layout-outline')` in
    the browser console to reveal outlines for the header, content, tabbar

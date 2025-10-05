@@ -241,71 +241,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [ready]);
 
-  // Optional visual debug overlay to inspect measured values. Enable by
-  // adding ?layoutDebug=1 to the URL or setting localStorage.monolog.debugLayout = '1'.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const params = new URL(window.location.href).searchParams;
-      const enabled = params.get('layoutDebug') === '1' || window.localStorage?.getItem('monolog.debugLayout') === '1';
-      if (!enabled) return;
-
-      const overlay = document.createElement('div');
-      overlay.style.position = 'fixed';
-      overlay.style.right = '12px';
-      overlay.style.top = '12px';
-      overlay.style.zIndex = '99999';
-      overlay.style.background = 'rgba(0,0,0,0.7)';
-      overlay.style.color = 'white';
-      overlay.style.padding = '10px 12px';
-      overlay.style.borderRadius = '8px';
-      overlay.style.fontSize = '12px';
-      overlay.style.maxWidth = '280px';
-      overlay.style.lineHeight = '1.3';
-      overlay.id = 'monolog-layout-debug';
-
-      const close = document.createElement('button');
-      close.textContent = '×';
-      close.style.position = 'absolute';
-      close.style.left = '6px';
-      close.style.top = '6px';
-      close.style.background = 'transparent';
-      close.style.border = 'none';
-      close.style.color = 'white';
-      close.style.fontSize = '14px';
-      close.style.cursor = 'pointer';
-      overlay.appendChild(close);
-
-      const content = document.createElement('div');
-      content.style.marginTop = '6px';
-      overlay.appendChild(content);
-
-      function update() {
-        const header = document.querySelector<HTMLElement>('.header');
-        const rootStyles = getComputedStyle(document.documentElement);
-        const headerRaw = rootStyles.getPropertyValue('--header-height') || 'unset';
-        const contentEl = document.querySelector<HTMLElement>('.content');
-        const contentPad = contentEl ? getComputedStyle(contentEl).paddingBottom : 'unset';
-        const slideChild = document.querySelector<HTMLElement>('.swipe-views .swiper-slide > *');
-        const slidePad = slideChild ? getComputedStyle(slideChild).paddingBottom : 'unset';
-
-        content.innerHTML = `header: ${header ? Math.ceil(header.getBoundingClientRect().height) + 'px' : headerRaw}<br/>` +
-                            `--header-height: ${headerRaw.trim()}<br/>` +
-                            `content padding-bottom: ${contentPad}<br/>` +
-                            `slide child padding-bottom: ${slidePad}`;
-      }
-
-      close.addEventListener('click', () => { try { overlay.remove(); } catch(_) {} });
-      document.body.appendChild(overlay);
-      update();
-      const id = window.setInterval(update, 700);
-
-      return () => {
-        try { clearInterval(id); } catch (_) {}
-        try { overlay.remove(); } catch (_) {}
-      };
-    } catch (_) { /* ignore */ }
-  }, [ready]);
+  // Layout debug overlay removed to avoid showing the runtime debug UI in production
 
   useEffect(() => {
     // swiperRef will be set via onSwiper; support both shapes for safety

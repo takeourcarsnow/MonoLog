@@ -6,8 +6,8 @@
   box-sizing: border-box; 
   margin-bottom: 36px;
 }
-.calendar-page { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 12px 40px; box-sizing: border-box; }
-@media (min-width: 900px) { .calendar-page { padding-left: 12px; padding-right: 12px; } }
+.calendar-page { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 60px 12px 40px; box-sizing: border-box; }
+@media (min-width: 900px) { .calendar-page { padding-left: 12px; padding-right: 12px; padding-top: 40px; padding-bottom: 20px; } }
 .calendar .header {
   display: flex; justify-content: space-between; align-items: center;
   border: none; background: transparent;
@@ -131,4 +131,15 @@
 @media (max-width: 420px) {
   .day { min-height: 78px; padding: 10px; border-radius: 12px; }
   .calendar-weekdays { font-size: 12px; }
+}
+
+/* make calendar more compact on desktop */
+@media (min-width: 900px) {
+  .calendar { gap: 6px; }
+  .calendar-grid { gap: 4px; }
+  .day { min-height: 56px; padding: 6px; }
+  .calendar-weekdays { gap: 4px; }
+  .day .d { font-size: 12px; }
+  .day .count { font-size: 10px; left: 6px; bottom: 6px; }
+  .day.mine::after { top: 6px; right: 6px; }
 }

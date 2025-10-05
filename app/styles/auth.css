@@ -325,6 +325,10 @@
   max-width: min(420px, 90vw);
   width: 100%;
   animation: authDialogIn 260ms var(--transition-mid) both;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes authDialogIn {
@@ -335,20 +339,69 @@
 /* Mobile-specific adjustments for auth dialog to account for bottom nav */
 @media (max-width: 640px) {
   .auth-dialog {
-    /* On mobile, shift the dialog up slightly to account for the bottom nav bar
-       so it appears more centered in the visible viewport area */
-    top: calc(50% - 30px);
+    /* Center the dialog in the viewport on mobile */
+    top: 50%;
     max-width: 90vw;
     /* Ensure dialog doesn't get too close to top of screen on small devices */
-    max-height: calc(100vh - 120px);
+    height: calc(100vh - 120px);
     overflow: auto;
   }
+  .auth-form {
+    height: 100%;
+    /* increase vertical rhythm on small screens so controls are easier to tap */
+    gap: 18px;
+    padding: 8px 6px;
+  }
+
+  /* Make the inputs block breathe more from the actions on mobile */
+  .auth-form .inputs-wrap {
+    margin-bottom: 8px; /* previously -6px, pull-up removed on mobile */
+    padding: 0 6px;
+  }
+
+  /* Larger touch targets for inputs on phones */
+  .auth-form .input {
+    padding: 14px 14px;
+    border-radius: 12px;
+  }
+
+  .auth-form .auth-message { margin-bottom: 8px; }
+
+  .auth-toggle { padding: 8px 10px; margin-bottom: 6px; }
+
+  .auth-form .auth-actions { margin-top: 8px; gap: 12px; }
 }
 
 /* Very small screens: make dialog take more space but keep margins */
 @media (max-width: 400px) {
   .auth-dialog {
     max-width: 94vw;
-    top: calc(50% - 40px);
+    top: 50%;
+    height: calc(100vh - 140px);
+  }
+  .auth-form {
+    height: 100%;
+    gap: 20px;
+    padding: 6px 6px;
+  }
+}
+
+/* Center auth form in the middle of the display on mobile when not in dialog */
+@media (max-width: 640px) {
+  .auth-host {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--header-height) - var(--tabbar-height) - 60px);
+    margin: 0 auto;
+  }
+}
+
+/* Center auth form vertically on desktop */
+@media (min-width: 641px) {
+  .auth-host {
+    margin-top: 15vh !important;
+    margin-bottom: 0 !important;
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { monthMatrix, toDateKey } from "@/lib/date";
 import { api } from "@/lib/api";
 import { PostCard } from "./PostCard";
@@ -18,6 +18,7 @@ export function CalendarView() {
   const [dayPosts, setDayPosts] = useState<HydratedPost[] | null>(null);
   const [loadingDay, setLoadingDay] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
 
   // Load stats whenever the current month/year changes. Inline the async call
   // so we don't need to include the `loadStats` function in the dependency list.
@@ -65,6 +66,13 @@ export function CalendarView() {
     } catch (e) { /* ignore */ }
     // run only when month/year changes or selectedDay updates
   }, [curYear, curMonth, selectedDay, showDay]);
+
+  // Scroll to feed on desktop when posts are loaded
+  useEffect(() => {
+    if (dayPosts && feedRef.current && window.innerWidth >= 900) {
+      feedRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [dayPosts]);
 
   const matrix = monthMatrix(curYear, curMonth);
 
@@ -148,7 +156,7 @@ export function CalendarView() {
           </div>
         </div>
       </div>
-  <div className="feed" id="day-feed">
+  <div className="feed" id="day-feed" ref={feedRef}>
         {selectedDay ? (
           <div style={{ marginBottom: 8, textAlign: 'center' }}>
             {/* keyed wrapper so changing selectedDay or counts will retrigger CSS animation */}

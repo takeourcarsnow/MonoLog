@@ -12,9 +12,7 @@ import { ToastHost, ToastProvider } from "./Toast";
 import { NotificationListener } from "./NotificationListener";
 import { InstallPrompt } from "./InstallPrompt";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Virtual } from "swiper/modules";
 import "swiper/css";
-import "swiper/css/virtual";
 import { lazy, Suspense } from "react";
 
 // Lazy load view components to reduce initial bundle size
@@ -74,9 +72,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const swiperRef = useRef<any>(null);
   const [forceTouch, setForceTouch] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const isHorizontalSwipe = useRef(false);
 
   const views = [
     { path: "/feed", component: FeedView },
@@ -304,41 +299,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Prevent vertical scrolling when swiping horizontally to change sections
   useEffect(() => {
-    const main = mainRef.current;
-    if (!main) return;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX.current = e.touches[0].clientX;
-      touchStartY.current = e.touches[0].clientY;
-      isHorizontalSwipe.current = false;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      const deltaX = Math.abs(e.touches[0].clientX - touchStartX.current);
-      const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current);
-
-      // If horizontal movement is greater than vertical and exceeds threshold, consider it horizontal swipe
-      if (deltaX > deltaY && deltaX > 10) {
-        isHorizontalSwipe.current = true;
-        if (e.cancelable) e.preventDefault(); // Prevent vertical scrolling
-      }
-    };
-
-    const handleTouchEnd = () => {
-      isHorizontalSwipe.current = false;
-    };
-
-    main.addEventListener('touchstart', handleTouchStart, { passive: true });
-    main.addEventListener('touchmove', handleTouchMove, { passive: false });
-    main.addEventListener('touchend', handleTouchEnd, { passive: true });
-    main.addEventListener('touchcancel', handleTouchEnd, { passive: true });
-
-    return () => {
-      main.removeEventListener('touchstart', handleTouchStart);
-      main.removeEventListener('touchmove', handleTouchMove);
-      main.removeEventListener('touchend', handleTouchEnd);
-      main.removeEventListener('touchcancel', handleTouchEnd);
-    };
+    // Removed: Swiper now handles touch events with touch-action: none
   }, []);
 
   const handleSlideChange = (swiper: any) => {
@@ -446,7 +407,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="swipe-views"
               ref={swiperRef}
               onSwiper={(s) => { swiperRef.current = s; }}
-              modules={[Virtual]}
               spaceBetween={0}
               slidesPerView={1}
               initialSlide={currentIndex}
@@ -454,8 +414,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               touchStartPreventDefault={false}
               passiveListeners={false}
               // only allow touch/swipe interactions on touch-capable devices
-              simulateTouch={isTouchDevice || forceTouch}
-              allowTouchMove={isTouchDevice || forceTouch}
+              simulateTouch={true}
+              allowTouchMove={true}
               // Enable rubber-band effect at edges: allows some drag but prevents
               // slides from going completely off-screen. resistanceRatio controls
               // how much resistance (0.6 = moderate resistance, good balance between
@@ -484,7 +444,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               watchSlidesProgress={true}
             >
               {views.map((view, index) => (
-                <SwiperSlide key={view.path} virtualIndex={index} className={view.path === '/feed' ? 'slide-feed' : undefined}>
+                <SwiperSlide key={view.path} className={view.path === '/feed' ? 'slide-feed' : undefined}>
                   <SlideWrapper active={index === activeIndex}>
                     <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
                       {view.path === '/profile' ? (

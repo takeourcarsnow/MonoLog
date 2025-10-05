@@ -22,11 +22,11 @@ export function DropZone({
 }: DropZoneProps) {
   return (
     <div
-      className="drop"
+      className="drop-zone"
       ref={dropRef}
       tabIndex={0}
       role="button"
-      aria-label="Drop an image or click to select"
+      aria-label="Drop images here or click to select files"
       onClick={() => { if (!processing) onFileSelect(); }}
       onKeyDown={(e) => { if (!processing && (e.key === 'Enter' || e.key === ' ')) onFileSelect(); }}
       onDragOver={onDragOver}
@@ -34,31 +34,47 @@ export function DropZone({
       onDrop={onDrop}
     >
       {processing && (
-        <div className="drop-loader show-blur" role="status" aria-live="polite">
+        <div className="drop-zone-loader" role="status" aria-live="polite">
           <LogoLoader size={86} />
-          <span style={{ fontSize: 15, fontWeight: 600 }}>Processing image…</span>
+          <span className="processing-text">Processing image…</span>
         </div>
       )}
-      <div className="drop-inner" style={{ opacity: processing ? 0.3 : 1, pointerEvents: processing ? 'none' : 'auto' }}>
-        <div className="drop-icon" aria-hidden>+</div>
-  <div className="drop-text">Drop images here or click to select</div>
-  <div className="dim" style={{ marginTop: 6 }}>JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB</div>
-  <div className="dim" style={{ marginTop: 6 }}>You can add up to 5 photos per post</div>
-        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-          <button type="button" className="btn icon-reveal" onClick={(e) => { e.stopPropagation(); onFileSelect(); }} disabled={processing}>
-            <span className="icon" aria-hidden>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
-            <span className="reveal">Add files</span>
-          </button>
-          <button type="button" className="btn icon-reveal" onClick={(e) => {
-            e.stopPropagation();
-            onCameraSelect();
-          }} disabled={processing}>
-            <span className="icon" aria-hidden>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
-            <span className="reveal">Take photo</span>
+
+      <div className="drop-zone-content" style={{ opacity: processing ? 0.3 : 1, pointerEvents: processing ? 'none' : 'auto' }}>
+        <div className="drop-zone-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor" opacity="0.8"/>
+            <path d="M8.5 13.5L10.5 15.5L15.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+
+        <div className="drop-zone-text">
+          <h3 className="drop-zone-title">Drop your images</h3>
+          <p className="drop-zone-subtitle">or click to browse</p>
+        </div>
+
+        <div className="drop-zone-meta">
+          <span className="file-limits">
+            JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
+          </span>
+          <span className="file-limits">
+            Up to 5 photos per post
+          </span>
+        </div>
+
+        <div className="drop-zone-actions">
+          <button
+            type="button"
+            className="camera-btn"
+            onClick={(e) => { e.stopPropagation(); onCameraSelect(); }}
+            aria-label="Take photo with camera"
+            disabled={processing}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="camera-btn-text">Camera</span>
           </button>
         </div>
       </div>

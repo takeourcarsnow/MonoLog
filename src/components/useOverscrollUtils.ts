@@ -71,3 +71,20 @@ export function useOverscrollUtils() {
 
   return { getScrollContainer, findFeedContainer, isInFeedOrExplore };
 }
+
+// Helper to decide whether overscroll handlers should process events.
+// Returns false while the preloader is active or when the root scroll
+// container is not actually scrollable (avoids instant rubberband when
+// the page's content fits in the viewport).
+export function shouldProcessOverscroll(): boolean {
+  try {
+    if (typeof document === 'undefined') return false;
+    if (document.documentElement.classList.contains('preloader-active')) return false;
+    const sc = document.getElementById('app-root');
+    if (!sc) return false;
+    // Only process overscroll when there's a vertical overflow to scroll
+    return sc.scrollHeight > sc.clientHeight + 1;
+  } catch (e) {
+    return false;
+  }
+}

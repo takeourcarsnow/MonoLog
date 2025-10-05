@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useOverscrollUtils } from './useOverscrollUtils';
+import { useOverscrollUtils, shouldProcessOverscroll } from './useOverscrollUtils';
 
 export function useOverscrollPointer() {
   const { getScrollContainer, findFeedContainer, isInFeedOrExplore } = useOverscrollUtils();
@@ -18,6 +18,7 @@ export function useOverscrollPointer() {
   const TOUCH_MAX_STRETCH = 32; // px
 
   const handlePointerDown = (e: PointerEvent) => {
+    if (!shouldProcessOverscroll()) return;
     // Only left button drags
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (!isInFeedOrExplore(e.target)) return;

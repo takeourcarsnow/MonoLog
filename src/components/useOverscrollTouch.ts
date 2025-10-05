@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useOverscrollUtils } from './useOverscrollUtils';
+import { useOverscrollUtils, shouldProcessOverscroll } from './useOverscrollUtils';
 
 export function useOverscrollTouch() {
   const { getScrollContainer, findFeedContainer, isInFeedOrExplore } = useOverscrollUtils();
@@ -29,6 +29,7 @@ export function useOverscrollTouch() {
   };
 
   const handleTouchStart = (e: TouchEvent) => {
+    if (!shouldProcessOverscroll()) return;
     const scrollContainer = getScrollContainer();
     if (!scrollContainer) return;
 
@@ -50,6 +51,7 @@ export function useOverscrollTouch() {
   };
 
   const handleTouchMove = (e: TouchEvent) => {
+    if (!shouldProcessOverscroll()) return;
     const scrollContainer = getScrollContainer();
     if (!scrollContainer || !targetFeed.current) return;
 

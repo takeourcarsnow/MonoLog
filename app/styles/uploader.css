@@ -23,107 +23,317 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .uploader .thumbs img { width: 72px; height: 72px; object-fit: cover; display: block; }
 
 .uploader { display: grid; gap: 12px; }
-.drop {
-  border: 2px dashed var(--border);
-  padding: 16px; border-radius: var(--radius); text-align: center; color: var(--muted);
-  transition: border-color var(--transition-fast), background var(--transition-fast);
+/* Subtle Minimalistic Drop Zone Styles */
+.drop-zone {
   position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: 40px 32px;
+  border: 1px dashed color-mix(in srgb, var(--border), transparent 60%);
+  border-radius: 16px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: gentle-float 6s ease-in-out infinite;
 }
-.drop.dragover { border-color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 70%); color: var(--text); }
-.drop-loader {
+
+.drop-zone:hover {
+  border-color: color-mix(in srgb, var(--primary), transparent 40%);
+  background: color-mix(in srgb, var(--primary-weak), transparent 95%);
+  transform: translateY(-1px);
+}
+
+.drop-zone.dragover {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary-weak), transparent 90%);
+  transform: translateY(-2px);
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+.drop-zone:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary), transparent 60%);
+  outline-offset: 2px;
+}
+
+.drop-zone-loader {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.62));
-  backdrop-filter: blur(6px) saturate(120%);
-  animation: droploader-fade 220ms ease both;
+  gap: 20px;
+  background: color-mix(in srgb, var(--bg), rgba(255,255,255,0.8));
+  backdrop-filter: blur(4px) saturate(110%);
+  animation: fade-in 0.4s ease both;
   z-index: 10;
-  border-radius: var(--radius);
+  border-radius: 16px;
   color: var(--text);
 }
 
-.drop-loader::before {
+.drop-zone-loader::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.44));
-  backdrop-filter: blur(6px) saturate(120%);
-  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  background: color-mix(in srgb, var(--bg), rgba(255,255,255,0.6));
+  backdrop-filter: blur(4px) saturate(110%);
+  -webkit-backdrop-filter: blur(4px) saturate(110%);
   opacity: 0;
-  transition: opacity 220ms ease, backdrop-filter 260ms ease;
+  transition: opacity 0.4s ease;
   z-index: -1;
 }
-.drop-loader.show-blur::before { opacity: 1; }
-.logo-loader { display: flex; align-items: center; justify-content: center; }
-.logo-loader svg { color: var(--primary); width: 86px; height: 86px; }
-.logo-box { transition: stroke-opacity 360ms ease, transform 360ms cubic-bezier(.2,.8,.2,1); }
-.logo-dot { transform-origin: 48px 48px; animation: logo-pulse 1.2s ease-in-out infinite; opacity: 0.98; }
-.logo-ring-arc { stroke: color-mix(in srgb, var(--primary), transparent 18%); stroke-linejoin: round; }
-.logo-ring-arc.faint { stroke: color-mix(in srgb, var(--primary), transparent 38%); }
-.logo-ring { filter: drop-shadow(0 10px 28px rgba(0,0,0,0.32)); }
 
-/* Rotation layers */
-.logo-rotate-slow { animation: rotate-slow 4.6s linear infinite; }
-.logo-rotate-fast { animation: rotate-fast 1s linear infinite; }
+.drop-zone-loader.show-blur::before { opacity: 1; }
 
-/* Sparks orbit: rotate group and each spark pulses */
-.logo-sparks { transform-origin: 48px 48px; animation: rotate-fast-reverse 1.35s linear infinite; }
-.logo-sparks .spark { opacity: 0.9; transform-origin: 48px 48px; animation: spark-pulse 1.4s ease-in-out infinite; }
-.logo-sparks .spark:nth-child(2) { animation-delay: 0.18s; }
-.logo-sparks .spark:nth-child(3) { animation-delay: 0.36s; }
-.logo-sparks .spark:nth-child(4) { animation-delay: 0.54s; }
-
-@keyframes logo-pulse {
-  0% { transform: scale(0.98); opacity: 0.95; }
-  50% { transform: scale(1.06); opacity: 1; }
-  100% { transform: scale(0.98); opacity: 0.95; }
+.drop-zone-content {
+  display: grid;
+  place-items: center;
+  gap: 20px;
+  text-align: center;
+  transition: opacity 0.4s ease;
 }
 
-@keyframes rotate-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.drop-zone-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--primary-weak), transparent 85%);
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 90%);
+  color: var(--primary);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: gentle-breathe 4s ease-in-out infinite;
 }
 
-@keyframes rotate-fast {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.drop-zone:hover .drop-zone-icon {
+  transform: scale(1.05);
+  background: color-mix(in srgb, var(--primary-weak), transparent 75%);
+  border-color: color-mix(in srgb, var(--primary), transparent 80%);
 }
 
-@keyframes rotate-fast-reverse {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
+.drop-zone.dragover .drop-zone-icon {
+  transform: scale(1.08);
+  background: color-mix(in srgb, var(--primary-weak), transparent 70%);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
-@keyframes spark-pulse {
-  0% { transform: translateZ(0) scale(0.9); opacity: 0.7; }
-  50% { transform: translateZ(0) scale(1.15); opacity: 1; }
-  100% { transform: translateZ(0) scale(0.9); opacity: 0.7; }
+.drop-zone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-@keyframes droploader-fade {
-  from { opacity: 0; transform: translateY(6px); }
+.drop-zone-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.drop-zone-subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+  margin: 0;
+}
+
+.drop-zone-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.file-limits {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--bg-elev), transparent 60%);
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 80%);
+}
+
+.drop-zone-actions {
+  margin-top: 12px;
+}
+
+.camera-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 60%);
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.camera-btn:hover {
+  background: color-mix(in srgb, var(--bg-elev), transparent 50%);
+  border-color: color-mix(in srgb, var(--primary), transparent 70%);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+.camera-btn:active {
+  transform: translateY(0);
+}
+
+.camera-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.camera-btn-text {
+  font-weight: 500;
+}
+
+.processing-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Organic Animations */
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes gentle-breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% {
+    border-color: var(--primary);
+    background: color-mix(in srgb, var(--primary-weak), transparent 90%);
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--primary), transparent 20%);
+    background: color-mix(in srgb, var(--primary-weak), transparent 95%);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .logo-dot, .logo-ring-arc, .logo-box { animation: none !important; transition: none !important; }
+/* Light theme adjustments */
+:root[data-theme="light"] .drop-zone {
+  background: rgba(255, 255, 255, 0.4);
 }
-.drop-loader svg {
-  color: var(--primary);
-}
-.preview { overflow: hidden; border-radius: var(--radius); }
-.preview img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
 
-.preview img { max-width: 100%; max-height: 480px; width: auto; height: auto; object-fit: contain; display: block; background: var(--bg); }
-.preview-inner { max-height: 480px; overflow: hidden; border-radius: 14px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
-.preview.editing { overflow: visible; }
-.preview-inner.editing { overflow: visible; z-index: 70; position: relative; }
+:root[data-theme="light"] .drop-zone:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme="light"] .drop-zone.dragover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme="light"] .drop-zone-loader {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-theme="light"] .drop-zone-loader::before {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 1;
+}
+
+:root[data-theme="light"] .camera-btn {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .camera-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .drop-zone {
+    min-height: 180px;
+    padding: 32px 24px;
+  }
+
+  .drop-zone-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .drop-zone-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .drop-zone-title {
+    font-size: 15px;
+  }
+
+  .drop-zone-subtitle {
+    font-size: 12px;
+  }
+
+  .file-limits {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .camera-btn {
+    padding: 7px 14px;
+    font-size: 12px;
+  }
+
+  .camera-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .drop-zone,
+  .drop-zone-icon,
+  .camera-btn,
+  .drop-zone-loader {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .drop-zone:hover,
+  .drop-zone.dragover,
+  .drop-zone:hover .drop-zone-icon,
+  .drop-zone.dragover .drop-zone-icon,
+  .camera-btn:hover,
+  .camera-btn:active {
+    transform: none !important;
+  }
+}
 
 /* Desktop uploader tweaks: keep preview from growing so large it pushes
   the publish/cancel controls offscreen at default browser zoom. Reserve
@@ -230,10 +440,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .image-action-btn:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
 .image-action-btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; }
 
-.drop { display: grid; place-items: center; min-height: 160px; cursor: pointer; }
-.drop-inner { display: grid; place-items: center; gap: 6px; }
-.drop-icon { width: 62px; height: 62px; border-radius: 18px; display: grid; place-items: center; font-weight: 700; color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 28%); border: 1px dashed color-mix(in srgb, var(--primary), transparent 70%); font-size: 28px; }
-.drop-text { font-weight: 600; }
+
 
 /* Specific button animations */
 .image-action-btn.edit-btn:hover svg { transform: scale(1.12) rotate(6deg); }
@@ -463,17 +670,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .vis-toggle::after { transition: none !important; }
 }
 
-/* Improve contrast and affordance for the upload drop area on mobile */
-.drop { transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); }
-.drop:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(0,0,0,0.08); }
-.drop .drop-icon { transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid); }
-.drop.dragover .drop-icon { transform: scale(1.06); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
 
-/* make the drop icon circle more distinct on mobile and dark theme */
-@media (max-width: 640px) {
-  .drop { border-radius: 12px; }
-  .drop .drop-icon { background: linear-gradient(180deg, color-mix(in srgb, var(--primary-weak), transparent 12%), color-mix(in srgb, var(--primary-weak), transparent 28%)); color: var(--primary); }
-}
 
 /* smaller label under buttons to emphasize primary action on mobile */
 @media (max-width: 640px) {
@@ -561,10 +758,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .uploader .form-row .publish-button { padding: 8px 18px; }
   .uploader .form-row .btn.cancel-btn { padding: 8px 18px; }
 }
-  /* slightly smaller drop area to fit mobile screens comfortably */
-  .drop { min-height: 140px; padding: 12px; }
-  .drop-icon { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; }
-  .drop-text { font-size: 14px; }
+
 
   /* reduce preview max height to keep controls visible and avoid large images pushing buttons off-screen */
   .preview-inner { max-height: 56vh; }

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useOverscrollUtils } from './useOverscrollUtils';
+import { useOverscrollUtils, shouldProcessOverscroll } from './useOverscrollUtils';
 
 export function useOverscrollWheel() {
   const { getScrollContainer, findFeedContainer } = useOverscrollUtils();
@@ -75,6 +75,8 @@ export function useOverscrollWheel() {
     const nowCheck = performance.now();
     const inhibitUntil = (handleWheel as any).inhibitUntil || 0;
     if (nowCheck < inhibitUntil) return;
+
+    if (!shouldProcessOverscroll()) return;
 
     const scrollContainer = getScrollContainer();
     if (!scrollContainer) return;

@@ -81,7 +81,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
 
   const [showAuth, setShowAuth] = useState(false);
   const pathname = usePathname();
-  const isMe = useIsMe(post.userId);
+  const { isMe, isLoading: authLoading } = useIsMe(post.userId);
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
   const toast = useToast();
 
@@ -169,6 +169,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
       <UserHeader
         post={post}
         isMe={isMe}
+        authLoading={authLoading}
         isFollowing={isFollowing}
         setIsFollowing={setIsFollowing}
         showAuth={showAuth}

@@ -229,18 +229,15 @@
 
 /* feed/explore grid variations */
 .feed.grid-view { padding: 6px 0; }
-.feed.grid-view .grid { gap: 8px; grid-template-columns: repeat(3, 1fr); }
-@media (min-width: 900px) { .feed.grid-view .grid { grid-template-columns: repeat(4, 1fr); } }
-
-/* make grid tiles slightly taller on large screens */
-@media (min-width: 900px) { .grid .tile { aspect-ratio: 4 / 3; } }
+.feed.grid-view .grid { gap: 2px; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 900px) { .feed.grid-view .grid { grid-template-columns: repeat(3, 1fr); } }
 
 /* Ensure feed grid view always uses square tiles and consistent row sizing.
   This override is intentionally placed here so it takes precedence over
   more general profile grid rules and prevents tall/portrait tiles from
   breaking the Instagram-style square layout. */
 .feed.grid-view { padding: 4px 0; }
-.feed.grid-view .grid { display: grid !important; gap: 8px !important; grid-template-columns: repeat(3, 1fr) !important; grid-auto-rows: 1fr !important; }
+.feed.grid-view .grid { display: grid !important; gap: 2px !important; grid-template-columns: repeat(2, 1fr) !important; grid-auto-rows: 1fr !important; }
 .feed.grid-view .grid .tile { aspect-ratio: 1 / 1 !important; }
 .feed.grid-view .grid .tile > * { width: 100% !important; height: 100% !important; }
 

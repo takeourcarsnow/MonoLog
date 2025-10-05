@@ -16,6 +16,7 @@ interface ActionsSectionProps {
   sharePost: () => void;
   api: any;
   toast: any;
+  showFavoriteFeedback: (action: 'adding' | 'removing') => void;
 }
 
 export const ActionsSection = memo(function ActionsSection({
@@ -33,6 +34,7 @@ export const ActionsSection = memo(function ActionsSection({
   sharePost,
   api,
   toast,
+  showFavoriteFeedback,
 }: ActionsSectionProps) {
   return (
     <div className="actions">
@@ -103,6 +105,7 @@ export const ActionsSection = memo(function ActionsSection({
           }
           const prev = isFavorite;
           setIsFavorite(!prev);
+          showFavoriteFeedback(prev ? 'removing' : 'adding');
           try {
             if (prev) {
               await api.unfavoritePost(postId);

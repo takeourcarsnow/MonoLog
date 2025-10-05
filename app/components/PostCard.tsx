@@ -241,6 +241,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
             sharePost={sharePost}
             api={api}
             toast={toast}
+            showFavoriteFeedback={showFavoriteFeedback}
           />
           <CommentsSection
             postId={post.id}

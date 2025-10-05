@@ -22,14 +22,14 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .uploader .thumbs button { padding: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 .uploader .thumbs img { width: 72px; height: 72px; object-fit: cover; display: block; }
 
-.uploader { display: grid; gap: 12px; margin-top: 24px; padding: 0 16px; }
+.uploader { display: grid; gap: 12px; margin-top: 24px; padding: 16px 16px 0; }
 /* Subtle Minimalistic Drop Zone Styles */
 .drop-zone {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 220px;
-  padding: 40px 32px;
+  min-height: 120px;
+  padding: 20px 24px;
   border: 1px dashed color-mix(in srgb, var(--border), transparent 60%);
   border-radius: 16px;
   background: transparent;
@@ -90,14 +90,14 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .drop-zone-content {
   display: grid;
   place-items: center;
-  gap: 20px;
+  gap: 12px;
   text-align: center;
   transition: opacity 0.4s ease;
 }
 
 .drop-zone-icon {
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -160,7 +160,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .drop-zone-actions {
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .camera-btn {
@@ -277,18 +277,18 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .drop-zone {
-    min-height: 180px;
-    padding: 32px 24px;
+    min-height: 100px;
+    padding: 16px 20px;
   }
 
   .drop-zone-icon {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
   }
 
   .drop-zone-icon svg {
-    width: 28px;
-    height: 28px;
+    width: 20px;
+    height: 20px;
   }
 
   .drop-zone-title {

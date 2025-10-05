@@ -21,7 +21,7 @@ export const SingleMedia = memo(function SingleMedia({
   showFavoriteFeedback,
   pathname,
 }: SingleMediaProps) {
-  const { handleMediaClick, handleMediaDblClick } = useMediaClick({
+  const { handleMediaClick } = useMediaClick({
     isFavorite,
     toggleFavoriteWithAuth,
     showFavoriteFeedback,
@@ -35,7 +35,6 @@ export const SingleMedia = memo(function SingleMedia({
       className="media-link"
       draggable={false}
       onClick={handleMediaClick}
-      onDoubleClick={handleMediaDblClick}
       onDragStart={(e: React.DragEvent) => e.preventDefault()}
       role="button"
       tabIndex={0}
@@ -44,11 +43,6 @@ export const SingleMedia = memo(function SingleMedia({
       <ImageZoom
         loading="lazy"
         src={imageUrl}
-        onDoubleTap={(x: number, y: number) => {
-          const willAdd = !isFavorite;
-          toggleFavoriteWithAuth();
-          showFavoriteFeedback(willAdd ? 'adding' : 'removing');
-        }}
         alt={alt || "Photo"}
         onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => (e.currentTarget.classList.add("loaded"))}
       />

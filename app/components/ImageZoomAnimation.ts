@@ -17,8 +17,23 @@ export function useImageZoomAnimation(
 ) {
   const reset = () => {
     setScale(1);
-    setTxSafe(0);
-    setTySafe(0);
+    // Animate back to center instead of jumping
+    const targetTx = 0;
+    const targetTy = 0;
+    const startTx = txRef.current;
+    const startTy = tyRef.current;
+    const dur = 300;
+    const start = performance.now();
+    if (flingRaf.current) cancelAnimationFrame(flingRaf.current);
+    function step(now: number) {
+      const t = Math.min(1, (now - start) / dur);
+      const ease = 1 - Math.pow(1 - t, 3);
+      setTxSafe(startTx + (targetTx - startTx) * ease);
+      setTySafe(startTy + (targetTy - startTy) * ease);
+      if (t < 1) flingRaf.current = requestAnimationFrame(step);
+      else flingRaf.current = null;
+    }
+    flingRaf.current = requestAnimationFrame(step);
   };
 
   const springBack = () => {

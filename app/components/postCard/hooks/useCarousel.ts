@@ -17,6 +17,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname }: UseCaro
   const draggingRef = useRef(false);
   const activeTouchPointers = useRef<Set<number>>(new Set());
   const pointerSupported = typeof window !== 'undefined' && (window as any).PointerEvent !== undefined;
+  const lastMouseDownAt = useRef<number | null>(null);
 
   useEffect(() => {
     if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1));
@@ -35,8 +36,12 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname }: UseCaro
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (isZoomingRef.current) return;
-    e.stopPropagation();
-    try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
+    // Only stop propagation for single touch to allow carousel swipe.
+    // For multi-touch (pinch), let it propagate to ImageZoom.
+    if (e.touches.length === 1) {
+      e.stopPropagation();
+      try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
+    }
     for (let i = 0; i < e.touches.length; i++) {
       activeTouchPointers.current.add(e.touches[i].identifier as any as number);
     }
@@ -78,8 +83,12 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname }: UseCaro
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (isZoomingRef.current) return;
-    e.stopPropagation();
-    try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
+    // Only stop propagation for single touch to allow carousel swipe.
+    // For multi-touch (pinch), let it propagate to ImageZoom.
+    if ((e as any).pointerType === 'touch' && activeTouchPointers.current.size < 2) {
+      e.stopPropagation();
+      try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
+    }
     if (e.button !== 0) return;
     if ((e as any).pointerType === 'touch') {
       try { activeTouchPointers.current.add((e as any).pointerId); } catch (_) {}
@@ -91,6 +100,13 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname }: UseCaro
         return;
       }
     }
+    const now = Date.now();
+    if (lastMouseDownAt.current && now - lastMouseDownAt.current < 400 && (e as any).pointerType === 'mouse') {
+      // likely double-click, don't start dragging
+      lastMouseDownAt.current = now;
+      return;
+    }
+    if ((e as any).pointerType === 'mouse') lastMouseDownAt.current = now;
     touchStartX.current = e.clientX;
     touchDeltaX.current = 0;
     draggingRef.current = true;
@@ -192,6 +208,13 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname }: UseCaro
     e.stopPropagation();
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
     if (e.button !== 0) return;
+    const now = Date.now();
+    if (lastMouseDownAt.current && now - lastMouseDownAt.current < 400) {
+      // likely double-click, don't start dragging
+      lastMouseDownAt.current = now;
+      return;
+    }
+    lastMouseDownAt.current = now;
     touchStartX.current = e.clientX;
     touchDeltaX.current = 0;
     draggingRef.current = true;

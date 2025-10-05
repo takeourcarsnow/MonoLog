@@ -16,13 +16,27 @@ export function useImageZoomPointer(
   lastMovePos: React.MutableRefObject<{ x: number; y: number }>,
   velocity: React.MutableRefObject<{ x: number; y: number }>,
   pointerActive: React.MutableRefObject<boolean>,
+  pointerRaf: React.MutableRefObject<number | null>,
   containerRef: React.RefObject<HTMLDivElement>,
   imgRef: React.RefObject<HTMLImageElement>,
   natural: React.MutableRefObject<{ w: number; h: number }>
 ) {
   const reset = () => {
-    setTxSafe(0);
-    setTySafe(0);
+    // Animate back to center instead of jumping
+    const targetTx = 0;
+    const targetTy = 0;
+    const startTx = txRef.current;
+    const startTy = tyRef.current;
+    const dur = 300;
+    const start = performance.now();
+    function step(now: number) {
+      const t = Math.min(1, (now - start) / dur);
+      const ease = 1 - Math.pow(1 - t, 3);
+      setTxSafe(startTx + (targetTx - startTx) * ease);
+      setTySafe(startTy + (targetTy - startTy) * ease);
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
   };
 
   const springBack = () => {
@@ -107,8 +121,15 @@ export function useImageZoomPointer(
     const b = getBoundsForScale(scale, containerRef, imgRef, natural);
     const nextTx = clamp(lastPan.current.x + dx, -b.maxTx - 100, b.maxTx + 100);
     const nextTy = clamp(lastPan.current.y + dy, -b.maxTy - 100, b.maxTy + 100);
-    setTxSafe(nextTx);
-    setTySafe(nextTy);
+    
+    // Use requestAnimationFrame for smoother updates
+    if (!pointerRaf.current) {
+      pointerRaf.current = requestAnimationFrame(() => {
+        setTxSafe(nextTx);
+        setTySafe(nextTy);
+        pointerRaf.current = null;
+      });
+    }
 
     // velocity tracking
     const now = Date.now();
@@ -128,6 +149,13 @@ export function useImageZoomPointer(
     try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch (_) {}
     pointerActive.current = false;
     setIsPanning(false);
+    
+    // Cancel any pending RAF update
+    if (pointerRaf.current) {
+      cancelAnimationFrame(pointerRaf.current);
+      pointerRaf.current = null;
+    }
+    
     // check velocity and fling
     const v = velocity.current;
     const speed = Math.hypot(v.x, v.y);

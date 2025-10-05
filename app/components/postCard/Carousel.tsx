@@ -30,7 +30,7 @@ export const Carousel = memo(function Carousel({
     pathname,
   });
 
-  const { handleMediaClick, handleMediaDblClick } = useMediaClick({
+  const { handleMediaClick } = useMediaClick({
     isFavorite,
     toggleFavoriteWithAuth,
     showFavoriteFeedback,
@@ -69,7 +69,6 @@ export const Carousel = memo(function Carousel({
               className="media-link"
               draggable={false}
               onClick={handleMediaClick}
-              onDoubleClick={handleMediaDblClick}
               onDragStart={(e: React.DragEvent) => e.preventDefault()}
               role="button"
               tabIndex={0}
@@ -79,11 +78,6 @@ export const Carousel = memo(function Carousel({
                 loading="lazy"
                 src={u}
                 alt={alts[idx] || `Photo ${idx + 1}`}
-                onDoubleTap={(x: number, y: number) => {
-                  const willAdd = !isFavorite;
-                  toggleFavoriteWithAuth();
-                  showFavoriteFeedback(willAdd ? 'adding' : 'removing');
-                }}
                 onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => (e.currentTarget.classList.add("loaded"))}
                 onDragStart={(e: React.DragEvent) => e.preventDefault()}
               />

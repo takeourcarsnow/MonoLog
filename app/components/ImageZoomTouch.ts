@@ -26,8 +26,22 @@ export function useImageZoomTouch(
     startScale.current = 1;
     lastTouchDist.current = null;
     setScale(1);
-    setTxSafe(0);
-    setTySafe(0);
+    // Animate back to center instead of jumping
+    const b = getBoundsForScale(1, containerRef, imgRef, natural);
+    const targetTx = 0;
+    const targetTy = 0;
+    const startTx = tx;
+    const startTy = ty;
+    const dur = 300;
+    const start = performance.now();
+    function step(now: number) {
+      const t = Math.min(1, (now - start) / dur);
+      const ease = 1 - Math.pow(1 - t, 3);
+      setTxSafe(startTx + (targetTx - startTx) * ease);
+      setTySafe(startTy + (targetTy - startTy) * ease);
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
   };
 
   const onTouchStart: React.TouchEventHandler = (e) => {
@@ -65,6 +79,9 @@ export function useImageZoomTouch(
       startScale.current = scale;
       // record pan at the moment pinch starts so we can anchor translations
       pinchStartPan.current = { x: tx, y: ty };
+    } else if (scale > 1) {
+      // When zoomed, prevent carousel swipe by stopping propagation
+      e.stopPropagation();
     }
   };
 
@@ -88,11 +105,18 @@ export function useImageZoomTouch(
       const b = getBoundsForScale(next, containerRef, imgRef, natural);
       setTxSafe(() => clamp(pinchStartPan.current.x + dx, -b.maxTx, b.maxTx));
       setTySafe(() => clamp(pinchStartPan.current.y + dy, -b.maxTy, b.maxTy));
+    } else if (scale > 1) {
+      // When zoomed, prevent carousel swipe by stopping propagation
+      e.stopPropagation();
     }
   };
 
   const onTouchEnd: React.TouchEventHandler = (e) => {
     if (!containerRef.current) return;
+    if (scale > 1) {
+      // When zoomed, prevent carousel swipe by stopping propagation
+      e.stopPropagation();
+    }
     if (e.touches.length < 2) lastTouchDist.current = null;
     // If a pinch was active and the touch count dropped below 2 (either
     // to 1 or 0), stop the pinch entirely and reset back to the non-zoomed

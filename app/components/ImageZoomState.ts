@@ -18,6 +18,7 @@ export function useImageZoomState() {
   const lastMovePos = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, y: 0 });
   const flingRaf = useRef<number | null>(null);
+  const pointerRaf = useRef<number | null>(null);
   const isPinching = useRef(false);
   const wasPinched = useRef(false);
   const [scale, setScale] = useState(1);
@@ -30,6 +31,8 @@ export function useImageZoomState() {
   const [isTile, setIsTile] = useState(false);
   const doubleTapRef = useRef<number | null>(null);
   const pointerActive = useRef(false);
+  const lastDoubleTapAt = useRef<number | null>(null);
+  const lastClickAt = useRef<number | null>(null);
 
   type Updater = number | ((prev: number) => number);
   const setTxSafe = (v: Updater) => setTx((prev) => {
@@ -63,6 +66,7 @@ export function useImageZoomState() {
     lastMovePos,
     velocity,
     flingRaf,
+    pointerRaf,
     isPinching,
     wasPinched,
     scale,
@@ -81,5 +85,7 @@ export function useImageZoomState() {
     setIsTile,
     doubleTapRef,
     pointerActive,
+    lastDoubleTapAt,
+    lastClickAt,
   };
 }

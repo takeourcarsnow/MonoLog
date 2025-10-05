@@ -11,10 +11,9 @@ import { useImageZoomAnimation } from "./ImageZoomAnimation";
 
 type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   maxScale?: number;
-  onDoubleTap?: (clientX: number, clientY: number) => void;
 };
 
-export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTap, ...rest }: Props) {
+export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }: Props) {
   const state = useImageZoomState();
   const {
     containerRef,
@@ -27,6 +26,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTa
     setTySafe,
     isPinchingState,
     setIsPanning,
+    isPanning,
     isTile,
     setIsTile,
     lastPinchAt,
@@ -42,6 +42,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTa
     pinchStartPan,
     natural,
     flingRaf,
+    pointerRaf,
     doubleTapRef,
     pointerActive,
     lastPan,
@@ -49,6 +50,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTa
     lastMoveTs,
     lastMovePos,
     velocity,
+    lastDoubleTapAt,
+    lastClickAt,
   } = state;
 
   // Detect if this ImageZoom is rendered inside a grid tile so we can
@@ -99,6 +102,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTa
     lastMovePos,
     velocity,
     pointerActive,
+    pointerRaf,
     containerRef,
     imgRef,
     natural
@@ -115,7 +119,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTa
     doubleTapRef,
     containerRef,
     imgRef,
-    natural
+    natural,
+    lastDoubleTapAt
   );
 
   const { springBack: animationSpringBack, startFling: animationStartFling, reset: animationReset } = useImageZoomAnimation(
@@ -146,8 +151,20 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTa
       // reset the carousel. We use a short time window to allow normal clicks.
       onClick={(e) => {
         const t = lastPinchAt.current;
-        if (t && Date.now() - t < 700) {
-          try { e.stopPropagation(); e.preventDefault(); } catch (_) {}
+        const dt = lastDoubleTapAt.current;
+        const now = Date.now();
+        if (lastClickAt.current && now - lastClickAt.current < 400) {
+          // double click
+          e.preventDefault();
+          e.stopPropagation();
+          handleDoubleTap(e.clientX, e.clientY);
+          lastDoubleTapAt.current = now;
+          lastClickAt.current = null;
+        } else if ((t && Date.now() - t < 700) || (dt && Date.now() - dt < 700)) {
+          e.preventDefault();
+          e.stopPropagation();
+        } else {
+          lastClickAt.current = now;
         }
       }}
       className={className}
@@ -182,7 +199,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, onDoubleTa
         style={{
           transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
           transformOrigin: "center center",
-          transition: "transform 120ms ease-out",
+          transition: isPanning ? "none" : "transform 120ms ease-out",
           display: "block",
           // When rendered inside a square grid tile, fill the tile and
           // crop (object-fit: cover) so images are centered consistently.

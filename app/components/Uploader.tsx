@@ -188,7 +188,7 @@ function UploaderCore() {
       />
 
       {/* Add photos button when preview exists to append more images */}
-      {hasPreview ? (
+      {hasPreview && !editing ? (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
           <button
             type="button"
@@ -205,7 +205,7 @@ function UploaderCore() {
           </button>
         </div>
       ) : null}
-      {hasPreview ? (
+      {hasPreview && !editing ? (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6 }}>
           <div className="dim">You can add up to 5 photos per post</div>
         </div>
@@ -217,17 +217,19 @@ function UploaderCore() {
         ) : null}
       </div>
 
-      <CaptionInput
-        caption={caption}
-        setCaption={setCaption}
-        typed={typed}
-        captionFocused={captionFocused}
-        setCaptionFocused={setCaptionFocused}
-        hasPreview={hasPreview}
-        processing={processing}
-        CAPTION_MAX={CAPTION_MAX}
-        toast={toast}
-      />
+      {!editing && (
+        <CaptionInput
+          caption={caption}
+          setCaption={setCaption}
+          typed={typed}
+          captionFocused={captionFocused}
+          setCaptionFocused={setCaptionFocused}
+          hasPreview={hasPreview}
+          processing={processing}
+          CAPTION_MAX={CAPTION_MAX}
+          toast={toast}
+        />
+      )}
 
       <PublishControls
         hasPreview={hasPreview}

@@ -78,6 +78,7 @@ export const Carousel = memo(function Carousel({
                 loading="lazy"
                 src={u}
                 alt={alts[idx] || `Photo ${idx + 1}`}
+                isActive={idx === index}
                 onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => (e.currentTarget.classList.add("loaded"))}
                 onDragStart={(e: React.DragEvent) => e.preventDefault()}
               />

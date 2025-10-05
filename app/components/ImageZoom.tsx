@@ -11,9 +11,10 @@ import { useImageZoomAnimation } from "./ImageZoomAnimation";
 
 type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   maxScale?: number;
+  isActive?: boolean;
 };
 
-export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }: Props) {
+export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive = true, ...rest }: Props) {
   const state = useImageZoomState();
   const {
     containerRef,
@@ -66,6 +67,22 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, ...rest }:
       // ignore
     }
   }, []);
+
+  // Reset zoom state when src changes (e.g., when carousel switches images)
+  useEffect(() => {
+    setScale(1);
+    setTxSafe(0);
+    setTySafe(0);
+  }, [src]);
+
+  // Reset zoom when the image becomes inactive (not visible in carousel)
+  useEffect(() => {
+    if (!isActive) {
+      setScale(1);
+      setTxSafe(0);
+      setTySafe(0);
+    }
+  }, [isActive, setScale, setTxSafe, setTySafe]);
 
   const { onTouchStart, onTouchMove, onTouchEnd, reset } = useImageZoomTouch(
     containerRef,

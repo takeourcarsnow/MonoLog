@@ -27,7 +27,6 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname }: UseCaro
 
   useEffect(() => {
     if (!trackRef.current) return;
-    if (isZoomingRef.current) return;
     trackRef.current.style.transform = `translateX(-${index * 100}%)`;
   }, [index]);
 

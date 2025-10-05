@@ -80,7 +80,7 @@
   .edit-panel {
    /* center in viewport on small screens so the popover never appears off-center
      when the actions container flows or wraps. Use fixed to avoid ancestor
-     overflow/scrolling issues and ensure it sits above the tabbar/header. */
+     overflow/scrolling issues and ensure it sits above the header. */
    position: fixed;
    left: 50%;
    top: 50%;

@@ -4,7 +4,7 @@
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(80px + var(--safe-bottom)); /* sits above tabbar / nav */
+  bottom: 12px; /* sits above bottom of screen */
   transform: translateX(-50%);
   background: color-mix(in srgb, var(--bg-elev), transparent 8%);
   color: var(--text);

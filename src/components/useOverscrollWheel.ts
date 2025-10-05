@@ -79,6 +79,17 @@ export function useOverscrollWheel() {
     const scrollContainer = getScrollContainer();
     if (!scrollContainer) return;
 
+    // Reset any lingering transform at the start of wheel interaction
+    if (targetFeed.current && isOverscrolling.current) {
+      targetFeed.current.style.transform = '';
+      targetFeed.current.style.transition = '';
+      currentTransform.current = 0;
+      isOverscrolling.current = false;
+      if (bounceTimeout.current) clearTimeout(bounceTimeout.current);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      if (wheelBounceRaf.current) cancelAnimationFrame(wheelBounceRaf.current);
+    }
+
     // Find feed container
     let feed = findFeedContainer(e.target as EventTarget);
     if (!feed) {

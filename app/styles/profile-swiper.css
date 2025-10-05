@@ -13,19 +13,15 @@
   }
 .swipe-views .swiper-slide {
   width: 100% !important;
-  height: auto !important; /* allow taller content while still guaranteeing full-touch area */
+  height: calc(100vh - 160px) !important; /* fixed height for smooth transitions */
   display: block;
-  /* Ensure every main slide (feed, explore, upload, calendar, profile) covers the viewport height
-     beneath the header + bottom nav so horizontal swipes register anywhere on screen, not just
-     where content exists. Previously only the feed slide had this min-height which caused the
-     calendar slide to leave a dead swipe zone below its content. */
-  min-height: calc(100vh - 160px);
   /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
   touch-action: pan-y pinch-zoom;
+  overflow-y: auto; /* allow vertical scrolling if content is taller */
 }
 
 @media (max-width: 900px) {
-  .swipe-views .swiper-slide { min-height: calc(100vh - 140px); }
+  .swipe-views .swiper-slide { height: calc(100vh - 140px); }
 }
 
 /* Break out of centered .content container so the Swiper can be full-bleed
@@ -65,9 +61,8 @@
 }
 
 .swipe-views .swiper-slide {
-  display: flex !important;
-  flex-direction: column;
-  align-items: stretch;
+  display: block !important;
+  overflow-y: auto;
 }
 
 /* DEBUG HELPERS (temporary) -------------------------------------------------

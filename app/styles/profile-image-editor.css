@@ -48,7 +48,7 @@
   transform: translate(-50%, -50%);
   width: min(92vw, var(--maxw));
   max-height: calc(92vh - 40px);
-  z-index: 99999; /* above header, tabbar, and other overlays */
+  z-index: 99999; /* above header and other overlays */
   margin: 0;
   box-shadow: 0 18px 48px rgba(0,0,0,0.45);
   border-radius: 14px;

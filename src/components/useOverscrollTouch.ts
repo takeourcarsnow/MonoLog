@@ -32,6 +32,9 @@ export function useOverscrollTouch() {
     const scrollContainer = getScrollContainer();
     if (!scrollContainer) return;
 
+    // Reset any lingering transform from previous interactions
+    resetTransform();
+
     // Only proceed if touch is in feed or explore
     if (!isInFeedOrExplore(e.target)) {
       targetFeed.current = null;

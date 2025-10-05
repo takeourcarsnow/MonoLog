@@ -10,7 +10,6 @@ import ImageZoom from "./ImageZoom";
 import { useToast } from "./Toast";
 import Link from "next/link";
 import { ViewToggle } from "./ViewToggle";
-import { tabs } from "./NavBarClient";
 import { useRouter } from "next/navigation";
 import { Home } from "lucide-react";
 

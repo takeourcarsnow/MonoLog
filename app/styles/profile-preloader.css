@@ -141,12 +141,11 @@
    blurs while the preloader is active so they unblur in sync with the page
    content. Define the same transition on the nav/header so the removal of
    the `.preloader-active` class animates the filter change. */
-.tabbar, .header {
+.header {
   transition: filter 1000ms cubic-bezier(.2,.65,.2,1);
   will-change: filter;
 }
 
-.preloader-active .tabbar,
 .preloader-active .header {
   filter: blur(var(--preloader-blur)) saturate(0.95);
   pointer-events: none; /* keep nav non-interactive while preloading */

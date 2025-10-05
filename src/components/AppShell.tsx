@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Header } from "./Header";
-import { NavBar } from "./NavBar";
 import Preloader from "./Preloader";
 import { initTheme } from "@/lib/theme";
 import { api } from "@/lib/api";
@@ -24,6 +23,7 @@ const ExploreView = lazy(() => import("./ExploreView").then(mod => ({ default: m
 const Uploader = lazy(() => import("./Uploader").then(mod => ({ default: mod.Uploader })));
 const CalendarView = lazy(() => import("./CalendarView").then(mod => ({ default: mod.CalendarView })));
 const ProfileView = lazy(() => import("./ProfileView").then(mod => ({ default: mod.ProfileView })));
+const NavBar = lazy(() => import("./NavBar").then(mod => ({ default: mod.NavBar })));
 
 // Small wrapper used around each slide to ensure inactive slides are removed
 // from the accessibility tree and tab order. This avoids focus leaking into
@@ -262,7 +262,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const newPath = views[swiper.activeIndex]?.path;
     // keep local state for which slide is active so we can mark others inert
     try { setActiveIndex(typeof swiper.activeIndex === 'number' ? swiper.activeIndex : currentIndex); } catch (_) {}
-    // Immediately dispatch event so NavBar can update active state before route changes
+    // Immediately dispatch event so active state can update before route changes
     if (typeof window !== 'undefined' && newPath) {
       window.dispatchEvent(new CustomEvent('monolog:slide_change', { 
         detail: { path: newPath, index: swiper.activeIndex } 
@@ -338,10 +338,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               allowTouchMove={isTouchDevice || forceTouch}
               // Enable rubber-band effect at edges: allows some drag but prevents
               // slides from going completely off-screen. resistanceRatio controls
-              // how much resistance (0.5 = moderate resistance, good balance between
+              // how much resistance (0.6 = moderate resistance, good balance between
               // visual feedback and preventing excessive drag)
               resistance={true}
-              resistanceRatio={0.5}
+              resistanceRatio={0.6}
               // Allow both short (quick flick) and long swipes. The default
               // behavior was disabling them which made users have to drag a
               // large distance to change sections. Enable them and lower the
@@ -349,27 +349,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               // will navigate to the next section.
               shortSwipes={true}
               longSwipes={true}
-              longSwipesRatio={0.2}
-              threshold={10}
-              autoHeight={true}
+              longSwipesRatio={0.25}
+              threshold={15}
+              autoHeight={false}
               // Slightly increase touchRatio to make touch movements feel a bit
               // more responsive on devices with higher pixel density.
               touchRatio={1.1}
-              speed={300}
+              speed={250}
               effect="slide"
               watchSlidesProgress={true}
             >
               {views.map((view, index) => (
                 <SwiperSlide key={view.path} virtualIndex={index} className={view.path === '/feed' ? 'slide-feed' : undefined}>
                   <SlideWrapper active={index === activeIndex}>
-                    {(index === activeIndex || index === activeIndex - 1 || index === activeIndex + 1) ? (
-                      // If this is the profile slide and we're currently on a username
-                      // route (single path segment that's not reserved), pass that
-                      // segment down as `userId` so the ProfileView can load the
-                      // requested user's profile instead of defaulting to the
-                      // signed-in user's profile.
-                      (() => {
-                        if (view.path === '/profile') {
+                    <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
+                      {view.path === '/profile' ? (
+                        (() => {
                           const pathSegments = pathname.split('/').filter(Boolean);
                           if (pathSegments.length === 1) {
                             const segment = pathSegments[0];
@@ -380,29 +375,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                               'register', 'signup', 'signin', 'logout', 'auth'
                             ];
                             if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-                              return (
-                                <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
-                                  <view.component userId={segment} />
-                                </Suspense>
-                              );
+                              return <view.component userId={segment} />;
                             }
                           }
-                        }
-                        return (
-                          <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
-                            <view.component />
-                          </Suspense>
-                        );
-                      })()
-                    ) : null}
+                          return <view.component />;
+                        })()
+                      ) : (
+                        <view.component />
+                      )}
+                    </Suspense>
                   </SlideWrapper>
                 </SwiperSlide>
               ))}
             </Swiper>
           ) : children}
         </main>
+        <Suspense fallback={null}>
+          <NavBar />
+        </Suspense>
       </div>
-      <NavBar />
       <NotificationListener />
       <InstallPrompt />
       <ToastHost />

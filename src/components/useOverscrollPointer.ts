@@ -21,6 +21,15 @@ export function useOverscrollPointer() {
     // Only left button drags
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (!isInFeedOrExplore(e.target)) return;
+
+    // Reset any lingering transform
+    if (targetFeed.current) {
+      targetFeed.current.style.transform = '';
+      targetFeed.current.style.transition = '';
+      currentTransform.current = 0;
+      isOverscrolling.current = false;
+    }
+
     pointerActive.current = true;
     pointerStartY.current = e.clientY;
     // capture targetFeed for this pointer interaction

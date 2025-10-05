@@ -7,7 +7,7 @@
   width: 100%;
   box-sizing: border-box;
   /* keep a small horizontal padding so full-bleed slides don't touch the edges */
-  padding: 0 12px 80px 12px; /* Added 80px bottom padding for space above navbar */
+  padding: 0 12px 12px 12px;
 }
 .card {
   background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);

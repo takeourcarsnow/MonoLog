@@ -159,7 +159,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
     left: 50%;
     transform: translateX(-50%);
     bottom: calc(12px + var(--safe-bottom));
-    z-index: 100002; /* must be above .tabbar (100001) */
+    z-index: 100002;
     width: min(calc(100% - 48px), var(--maxw));
     height: 72px; /* reserve a consistent action bar height */
     display: flex;

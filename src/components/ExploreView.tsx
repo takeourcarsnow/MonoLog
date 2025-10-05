@@ -7,7 +7,6 @@ import { api } from "@/lib/api";
 import type { HydratedPost } from "@/lib/types";
 import Link from "next/link";
 import { ViewToggle } from "./ViewToggle";
-import { tabs } from "./NavBarClient";
 import { useToast } from "./Toast";
 import { useRouter } from "next/navigation";
 import { Compass } from "lucide-react";

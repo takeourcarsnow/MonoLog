@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { MessageCircle, Star as StarIcon, Link as LinkIcon } from "lucide-react";
+import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon } from "lucide-react";
 
 interface ActionsSectionProps {
   postId: string;
@@ -17,6 +17,7 @@ interface ActionsSectionProps {
   api: any;
   toast: any;
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
+  openFullscreen?: () => void;
 }
 
 export const ActionsSection = memo(function ActionsSection({
@@ -35,6 +36,7 @@ export const ActionsSection = memo(function ActionsSection({
   api,
   toast,
   showFavoriteFeedback,
+  openFullscreen,
 }: ActionsSectionProps) {
   return (
     <div className="actions">
@@ -127,6 +129,14 @@ export const ActionsSection = memo(function ActionsSection({
         onClick={() => { sharePost(); }}
       >
         <LinkIcon size={16} />
+      </button>
+      <button
+        className="action fullscreen"
+        title="View photo"
+        aria-label="View photo fullscreen"
+        onClick={() => { openFullscreen?.(); }}
+      >
+        <FullscreenIcon size={16} />
       </button>
     </div>
   );

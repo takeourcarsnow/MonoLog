@@ -7,6 +7,7 @@ import { AuthForm } from "./AuthForm";
 import { UserHeader } from "./postCard/UserHeader";
 import { MediaSection } from "./postCard/MediaSection";
 import { ActionsSection } from "./postCard/ActionsSection";
+import FullscreenViewer from "./FullscreenViewer";
 import { CommentsSection } from "./postCard/CommentsSection";
 import { Editor } from "./postCard/Editor";
 import { usePostState } from "./postCard/hooks/usePostState";
@@ -84,6 +85,15 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   const { isMe, isLoading: authLoading } = useIsMe(post.userId);
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
   const toast = useToast();
+  const [fsOpen, setFsOpen] = useState(false);
+  const [fsSrc, setFsSrc] = useState<string | null>(null);
+
+  const handleOpenFullscreen = (src?: string) => {
+    if (!src) return;
+    setFsSrc(src);
+    setFsOpen(true);
+  };
+  const handleCloseFullscreen = () => { setFsOpen(false); setFsSrc(null); };
 
   // Keep the editor mounted briefly when closing so we can animate the exit.
   const [showEditor, setShowEditor] = useState<boolean>(false);
@@ -242,6 +252,11 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
             api={api}
             toast={toast}
             showFavoriteFeedback={showFavoriteFeedback}
+            openFullscreen={() => {
+              // default to first image URL
+              const u = (post as any).imageUrls ? (post as any).imageUrls[0] : (post as any).imageUrl;
+              if (u) handleOpenFullscreen(Array.isArray(u) ? u[0] : u);
+            }}
           />
           <CommentsSection
             postId={post.id}
@@ -282,7 +297,10 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
             />
           </div>
         )}
-      </div>
+        </div>
+      {fsOpen && fsSrc && (
+        <FullscreenViewer src={Array.isArray(fsSrc) ? fsSrc[0] : fsSrc} alt={(post.alt && typeof post.alt === 'string') ? post.alt : 'Photo'} onClose={handleCloseFullscreen} />
+      )}
     </article>
   );
 }

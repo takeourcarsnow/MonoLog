@@ -12,6 +12,7 @@ interface CarouselProps {
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
   pathname: string;
   allowCarouselTouch?: boolean;
+  openFullscreen?: (src: string) => void;
 }
 
 export const Carousel = memo(function Carousel({
@@ -23,6 +24,7 @@ export const Carousel = memo(function Carousel({
   showFavoriteFeedback,
   pathname,
   allowCarouselTouch,
+  openFullscreen,
 }: CarouselProps) {
   const { index, setIndex, trackRef, prev, next, carouselTouchProps } = useCarousel({
     imageUrls,

@@ -10,6 +10,7 @@ interface SingleMediaProps {
   toggleFavoriteWithAuth: () => void;
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
   pathname: string;
+  openFullscreen?: (src: string) => void;
 }
 
 export const SingleMedia = memo(function SingleMedia({
@@ -20,6 +21,7 @@ export const SingleMedia = memo(function SingleMedia({
   toggleFavoriteWithAuth,
   showFavoriteFeedback,
   pathname,
+  openFullscreen,
 }: SingleMediaProps) {
   const { handleMediaClick } = useMediaClick({
     isFavorite,

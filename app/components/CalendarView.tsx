@@ -141,7 +141,6 @@ export function CalendarView() {
                 {/* date number: animate in subtly with a per-item stagger using --date-delay */}
                 <div className="d date-anim" style={{ ['--date-delay' as any]: `${idx * 28}ms` } as React.CSSProperties}>{d.getDate()}</div>
                 {/* Today badge removed per user request */}
-                <div className={loadingStats ? "count skeleton" : "count"}>{count > 0 ? `${count} post${count===1 ? '' : 's'}` : ''}</div>
                 {count > 0 ? <div className={loadingStats ? "dot skeleton" : "dot"} aria-hidden /> : null}
               </div>
             );

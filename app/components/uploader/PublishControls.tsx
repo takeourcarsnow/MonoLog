@@ -42,7 +42,6 @@ export function PublishControls({
       {(hasPreview) && !editing ? (
         <div className="form-row">
           <label className="vis-label">
-            <div>
               <button
                 type="button"
                 role="switch"
@@ -63,9 +62,8 @@ export function PublishControls({
                     <path d="M1 1l22 22" stroke="currentColor" />
                   </svg>
                 </span>
-                <span style={{ marginLeft: 8 }}>{visibility === 'private' ? 'Private' : 'Public'}</span>
+                <span>{visibility === 'private' ? 'Private' : 'Public'}</span>
               </button>
-            </div>
           </label>
 
           <div className="btn-group">

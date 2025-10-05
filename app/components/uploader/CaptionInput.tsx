@@ -31,8 +31,7 @@ export function CaptionInput({
         .caption-counter { opacity: 0; transform: translateY(-50%) scale(0.98); }
         .caption-counter.visible { opacity: 1; transform: translateY(-50%) scale(1); }
         .caption-counter.near { color: #c47700; }
-        .caption-counter.limit { color: #b91c1c; animation: caption-shake 420ms cubic-bezier(.2,.9,.2,1); }
-        @keyframes caption-shake { 0% { transform: translateY(-50%) translateX(0); } 25% { transform: translateY(-50%) translateX(-4px); } 50% { transform: translateY(-50%) translateX(4px); } 75% { transform: translateY(-50%) translateX(-2px); } 100% { transform: translateY(-50%) translateX(0); } }
+        .caption-counter.limit { color: #b91c1c; }
       `}</style>
       <div className="input-wrapper" style={{ flex: 1, position: 'relative' }}>
         {/** keep the ghost/typewriter visible even before a photo is selected,

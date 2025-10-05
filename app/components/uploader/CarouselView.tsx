@@ -128,44 +128,6 @@ export function CarouselView({
                 onLoad={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}
               />
-
-              <button
-                className="btn"
-                style={{ position: 'absolute', right: 8, bottom: 8 }}
-                onClick={() => { setEditingIndex(idx); setEditing(true); setIndex(idx); }}
-              >
-                Edit
-              </button>
-
-              <button
-                className="btn"
-                style={{ position: 'absolute', right: 8, bottom: 56 }}
-                onClick={() => {
-                  fileActionRef.current = 'replace';
-                  replaceIndexRef.current = idx;
-                  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    (async () => {
-                      setCameraOpen(true);
-                      try {
-                        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-                        streamRef.current = s;
-                        if (videoRef.current) videoRef.current.srcObject = s;
-                      } catch (e) {
-                        console.error(e);
-                        toast.show('Camera access denied or unavailable');
-                        setCameraOpen(false);
-                        try { fileActionRef.current = 'replace'; if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-                        try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
-                      }
-                    })();
-                  } else {
-                    try { fileActionRef.current = 'replace'; if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-                    try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
-                  }
-                }}
-              >
-                Capture
-              </button>
             </div>
           ))}
         </div>

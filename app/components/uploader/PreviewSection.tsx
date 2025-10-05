@@ -46,7 +46,8 @@ export function PreviewSection({
   fileInputRef,
   cameraInputRef,
   toast,
-  handleFile
+  handleFile,
+  openCamera
 }: PreviewSectionProps) {
   const pathname = usePathname();
 
@@ -170,6 +171,8 @@ export function PreviewSection({
                 setDataUrl={setDataUrl}
                 setPreviewLoaded={setPreviewLoaded}
                 fileInputRef={fileInputRef}
+                cameraInputRef={cameraInputRef}
+                openCamera={openCamera}
               />
             )}
           </>

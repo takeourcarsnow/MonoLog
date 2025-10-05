@@ -22,7 +22,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .uploader .thumbs button { padding: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 .uploader .thumbs img { width: 72px; height: 72px; object-fit: cover; display: block; }
 
-.uploader { display: grid; gap: 12px; }
+.uploader { display: grid; gap: 12px; margin-top: 24px; }
 /* Subtle Minimalistic Drop Zone Styles */
 .drop-zone {
   position: relative;
@@ -564,7 +564,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .form-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 6px; }
-.form-row .vis-label { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.form-row .vis-label { display: flex; justify-content: center; align-items: center; gap: 6px; }
 .visibility-select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
 
 /* Segmented visibility buttons (Public / Private) */
@@ -694,6 +694,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 10px 16px; /* unified pill spacing */
   min-height: var(--action-pill-height,42px);
@@ -826,14 +827,14 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   /* Slightly reduce pill height on small screens for a tighter stack */
   :root { --action-pill-height: 38px; }
 
-  .uploader .form-row { gap: 10px; align-items: center; }
+  .uploader .form-row { gap: 10px; align-items: center; flex-direction: column; }
   .uploader .form-row .btn-group { width: 100%; gap: 10px; align-items: center; }
 
   /* Give all three pills a consistent width, centered. Clamp to avoid overly wide on large phones */
   .uploader .form-row .vis-toggle,
   .uploader .form-row .publish-button,
   .uploader .form-row .btn.cancel-btn { 
-    width: 100%;
+    width: auto;
     max-width: 240px; 
     margin: 0 auto; 
   }

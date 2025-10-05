@@ -37,4 +37,7 @@ export interface PreviewSectionProps {
   cameraInputRef: React.RefObject<HTMLInputElement>;
   toast: any;
   handleFile: (file: File) => Promise<void>;
+  openCamera: () => Promise<void>;
 }
+
+export interface SingleImageViewProps {

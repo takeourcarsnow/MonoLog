@@ -201,6 +201,147 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [ready, pathname]);
 
+  // Measure tabbar height and publish as CSS variable so layouts can
+  // reserve space and avoid being covered by the fixed bottom nav.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const updateTabbarHeight = () => {
+      try {
+        const el = document.querySelector<HTMLElement>('.tabbar');
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const h = Math.ceil(rect.height);
+  // Add a small visual buffer so content/action buttons don't sit
+  // flush against the nav. Increase slightly to account for shadows/overhang.
+  const buffer = 40; // px (increased)
+        const final = h + buffer;
+        // expose raw measured value and buffered value
+        document.documentElement.style.setProperty('--tabbar-height-raw', `${h}px`);
+        document.documentElement.style.setProperty('--tabbar-height', `${final}px`);
+      } catch (e) {
+        /* ignore */
+      }
+    };
+
+    updateTabbarHeight();
+
+    let ro: ResizeObserver | null = null;
+    let mo: MutationObserver | null = null;
+    try {
+      if ((window as any).ResizeObserver) {
+        const el = document.querySelector<HTMLElement>('.tabbar');
+        if (el) {
+          ro = new ResizeObserver(updateTabbarHeight);
+          ro.observe(el);
+        }
+        else {
+          // NavBar may be lazy-loaded and portalled into document.body.
+          // Watch for the element being added and attach a ResizeObserver then.
+          try {
+            mo = new MutationObserver((mutations) => {
+              for (const m of mutations) {
+                if (m.type === 'childList' && m.addedNodes && m.addedNodes.length) {
+                  const found = document.querySelector<HTMLElement>('.tabbar');
+                  if (found) {
+                    updateTabbarHeight();
+                    try {
+                      ro = new ResizeObserver(updateTabbarHeight);
+                      ro.observe(found);
+                    } catch (_) {}
+                    if (mo) { try { mo.disconnect(); mo = null; } catch(_) {} }
+                    break;
+                  }
+                }
+              }
+            });
+            mo.observe(document.body, { childList: true, subtree: true });
+          } catch (_) { mo = null; }
+        }
+      }
+    } catch (_) { ro = null; }
+
+    window.addEventListener('resize', updateTabbarHeight);
+    window.addEventListener('orientationchange', updateTabbarHeight);
+
+    return () => {
+      try { ro && ro.disconnect(); } catch (_) {}
+      try { mo && mo.disconnect(); } catch (_) {}
+      window.removeEventListener('resize', updateTabbarHeight);
+      window.removeEventListener('orientationchange', updateTabbarHeight);
+    };
+  }, [ready]);
+
+  // Optional visual debug overlay to inspect measured values. Enable by
+  // adding ?layoutDebug=1 to the URL or setting localStorage.monolog.debugLayout = '1'.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URL(window.location.href).searchParams;
+      const enabled = params.get('layoutDebug') === '1' || window.localStorage?.getItem('monolog.debugLayout') === '1';
+      if (!enabled) return;
+
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.right = '12px';
+      overlay.style.top = '12px';
+      overlay.style.zIndex = '99999';
+      overlay.style.background = 'rgba(0,0,0,0.7)';
+      overlay.style.color = 'white';
+      overlay.style.padding = '10px 12px';
+      overlay.style.borderRadius = '8px';
+      overlay.style.fontSize = '12px';
+      overlay.style.maxWidth = '280px';
+      overlay.style.lineHeight = '1.3';
+      overlay.id = 'monolog-layout-debug';
+
+      const close = document.createElement('button');
+      close.textContent = '×';
+      close.style.position = 'absolute';
+      close.style.left = '6px';
+      close.style.top = '6px';
+      close.style.background = 'transparent';
+      close.style.border = 'none';
+      close.style.color = 'white';
+      close.style.fontSize = '14px';
+      close.style.cursor = 'pointer';
+      overlay.appendChild(close);
+
+      const content = document.createElement('div');
+      content.style.marginTop = '6px';
+      overlay.appendChild(content);
+
+      function update() {
+        const header = document.querySelector<HTMLElement>('.header');
+        const tab = document.querySelector<HTMLElement>('.tabbar');
+        const rootStyles = getComputedStyle(document.documentElement);
+        const headerRaw = rootStyles.getPropertyValue('--header-height') || 'unset';
+  const tabRaw = rootStyles.getPropertyValue('--tabbar-height-raw') || 'unset';
+        const contentEl = document.querySelector<HTMLElement>('.content');
+        const contentPad = contentEl ? getComputedStyle(contentEl).paddingBottom : 'unset';
+        const slideChild = document.querySelector<HTMLElement>('.swipe-views .swiper-slide > *');
+        const slidePad = slideChild ? getComputedStyle(slideChild).paddingBottom : 'unset';
+
+        content.innerHTML = `header: ${header ? Math.ceil(header.getBoundingClientRect().height) + 'px' : headerRaw}<br/>` +
+                            `--header-height: ${headerRaw.trim()}<br/>` +
+                            `tabbar (raw): ${tabRaw.trim()}<br/>` +
+                            `--tabbar-height: ${rootStyles.getPropertyValue('--tabbar-height').trim()}<br/>` +
+                            `content padding-bottom: ${contentPad}<br/>` +
+                            `slide child padding-bottom: ${slidePad}`;
+      }
+
+      close.addEventListener('click', () => { try { overlay.remove(); } catch(_) {} });
+      document.body.appendChild(overlay);
+      update();
+      const id = window.setInterval(update, 700);
+
+      return () => {
+        try { clearInterval(id); } catch (_) {}
+        try { overlay.remove(); } catch (_) {}
+      };
+    } catch (_) { /* ignore */ }
+  }, [ready]);
+
   useEffect(() => {
     // swiperRef will be set via onSwiper; support both shapes for safety
     const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
@@ -278,7 +419,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       // If horizontal movement is greater than vertical and exceeds threshold, consider it horizontal swipe
       if (deltaX > deltaY && deltaX > 10) {
         isHorizontalSwipe.current = true;
-        e.preventDefault(); // Prevent vertical scrolling
+        if (e.cancelable) e.preventDefault(); // Prevent vertical scrolling
       }
     };
 

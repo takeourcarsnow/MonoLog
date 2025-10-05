@@ -5,6 +5,9 @@
   bottom: 0;
   left: 0;
   right: 0;
+  /* expose the effective tabbar height so other layout rules can
+     reserve appropriate bottom spacing (JS may overwrite this at runtime) */
+  --tabbar-height: calc(56px + env(safe-area-inset-bottom, 0px));
   background: color-mix(in srgb, var(--bg-elev), transparent 15%);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(20px);

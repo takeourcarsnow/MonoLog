@@ -2,9 +2,13 @@
   max-width: var(--maxw);
   margin: 0 auto;
   width: 100%;
-  /* User-requested: remove top padding so content sits flush under
-    the header. Keep bottom safe-area padding. */
-  padding: 0px 12px calc(100px + var(--safe-bottom));
+  /* Let the header occupy its own space (it's sticky but remains in-flow).
+     Keep no top padding here to avoid double spacing. Bottom safe-area
+     padding is preserved. */
+  /* Reserve bottom space so the fixed tabbar doesn't cover content.
+    Use the measured --tabbar-height (set at runtime) and add a small
+    buffer so action buttons aren't flush against the nav. */
+  padding: 0 12px calc(var(--tabbar-height, 72px) + 12px);
 }
 .upload-empty .content { padding-bottom: calc(28px + var(--safe-bottom)); }
 .content { position: relative; /* allow certain header elements to overflow (e.g. avatar shadows) */ overflow: visible; }

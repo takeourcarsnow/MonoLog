@@ -12,16 +12,24 @@
     touch-action: pan-y pinch-zoom;
   }
 .swipe-views .swiper-slide {
-  width: 100% !important;
-  height: calc(100vh - 160px) !important; /* fixed height for smooth transitions */
-  display: block;
-  /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
-  touch-action: pan-y pinch-zoom;
-  overflow-y: auto; /* allow vertical scrolling if content is taller */
+   width: 100% !important;
+   /* Size each slide to fill the viewport minus the header and tabbar.
+       Use CSS variables (with sensible fallbacks) so measurements are
+       accurate across devices and update when JS measures the real sizes. */
+   height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px))) - var(--tabbar-height, calc(64px + var(--safe-bottom, 0px))) - 24px) !important;
+   display: block;
+   /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
+   touch-action: pan-y pinch-zoom;
+   overflow-y: auto; /* allow vertical scrolling if content is taller */
 }
 
+   /* Small internal bottom buffer so content doesn't sit flush against the tabbar */
+   .swipe-views .swiper-slide > * {
+      padding-bottom: calc(var(--tabbar-height, 72px) + 12px) !important;
+   }
+
 @media (max-width: 900px) {
-  .swipe-views .swiper-slide { height: calc(100vh - 140px); }
+   .swipe-views .swiper-slide { height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px))) - var(--tabbar-height, calc(64px + var(--safe-bottom, 0px))) - 20px); }
 }
 
 /* Break out of centered .content container so the Swiper can be full-bleed
@@ -46,6 +54,11 @@
   position: relative;
 }
 
+/* Ensure full-bleed swipe views account for the sticky header height.
+   Some pages render slides that break out of the normal .content padding
+   and may end up underneath the header. Apply a safe top padding using
+   the CSS variable (with a fallback) so slide content is never obscured. */
+
 /* Make each swiper slide exactly the viewport width and apply the app padding
    to slide content so visuals match the rest of the app while keeping the
    slide clipping correct. */
@@ -60,10 +73,22 @@
   padding-right: 12px !important;
 }
 
+/* Also ensure each slide's internal content begins below the header. We
+   set an explicit top padding so the slide's internal scrolling area
+   won't start underneath the sticky header. */
+/* No forced top padding on swipe views; header should be in-flow and
+   occupy layout space. Slides may still use top-safe spacing internally
+   if needed. */
+
 .swipe-views .swiper-slide {
   display: block !important;
   overflow-y: auto;
 }
+
+/* Reserve bottom spacing inside slides so content isn't covered by the
+    fixed tabbar. Use the tabbar variable with a sensible fallback. */
+/* slides rely on their computed height (which already accounts for the
+    header and tabbar). Avoid forcing additional bottom padding here. */
 
 /* DEBUG HELPERS (temporary) -------------------------------------------------
    These subtle outlines help identify which container is misaligned when

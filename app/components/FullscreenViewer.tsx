@@ -31,12 +31,7 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
           <ImageZoom src={src} alt={alt || 'Photo'} maxScale={6} />
         </div>
       </div>
-      <style>{`
-        .fullscreen-viewer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);}
-        .fv-close{position:absolute;right:18px;top:18px;background:transparent;border:none;color:#fff;font-size:20px;padding:8px;cursor:pointer}
-        .fv-inner{max-width:100%;max-height:100%;width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:20px}
-        .fv-inner img{max-width:100%;max-height:100%;}
-      `}</style>
+      {/* Styles moved to app/styles/overlays.css */}
     </Portal>
   );
 }

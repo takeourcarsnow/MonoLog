@@ -161,20 +161,17 @@
 .card-media img.loaded { opacity: 1; }
 
 .card-media {
-  background: #00000006;
-  /* Keep the media container clipping for rounded frame, while parent
-     .card now uses overflow:visible to prevent fractional cropping. */
-  overflow: hidden;
-  max-width: 100%;
-  /* center media (single images) horizontally inside the card */
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto;
-  background: var(--bg);
-  padding: 8px; /* Add space between photo and card border */
+  position: relative;
+  border-radius: var(--radius);
+  --photo-mat: 8px;
+  --photo-matte: var(--bg);
+  --inner-radius: calc(var(--radius) - var(--photo-mat));
+  padding: var(--photo-mat);
+  width: auto; max-width: 100%; display: block; margin: 0 auto;
+  /* draw the matte directly on the container for a simpler implementation */
+  background: var(--photo-matte);
+  /* remove outer drop shadow so the frame blends with the card background */
+  box-shadow: none;
 }
 
 /* List (single-column) view: constrain media height and allow vertical
@@ -209,18 +206,39 @@
 .card-media img,
 .carousel-slide img,
 .grid .tile img {
-  border-radius: 10px;
-  background-clip: padding-box; /* keep the inset ring sharp */
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border), transparent 58%), 0 8px 20px rgba(0,0,0,0.04);
-  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  /* image has inner rounding to match the matte — sits above the matte layer */
+  border-radius: calc(var(--radius) - var(--photo-mat));
+  background-clip: padding-box;
+  box-shadow: none;
+  transition: transform var(--transition-fast);
+  display: block; width: 100%; height: auto;
+  /* improve rendering during transforms/zoom */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Ensure the clickable link and ImageZoom container clip their contents
+   to the inner rounded matte so transforms are clipped consistently. */
+.card-media .media-link,
+.card-media .media-link > div {
+  position: relative;
+  z-index: 2;
+  display: block;
+  /* clip to the inner matte radius so the image keeps rounded corners while zooming */
+  border-radius: calc(var(--radius) - var(--photo-mat));
+  overflow: hidden;
+  /* create a stacking context so transforms on the image are properly clipped */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Slightly emphasize the frame on hover/focus for affordance without being loud */
-.card:hover .card-media img,
-.card-media:hover img,
-.grid .tile:hover img,
-.carousel-slide img:hover {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border), transparent 40%), 0 12px 30px rgba(0,0,0,0.06);
+.card:hover .card-media,
+.card-media:hover,
+.grid .tile:hover,
+.carousel-slide:hover {
+  /* intentionally no hover effect on media — keep appearance stable */
+  box-shadow: none !important;
 }
 
 .card:hover {

@@ -175,7 +175,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   }, [editing]);
 
   return (
-    <article className={`card ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}`}>
+    <article className={`card ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
       <UserHeader
         post={post}
         isMe={isMe}

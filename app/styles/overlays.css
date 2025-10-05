@@ -194,3 +194,59 @@
 @media (prefers-reduced-motion: reduce) {
   .preloader-active #app-root { filter: none !important; transition: none !important; }
 }
+
+/* Fullscreen image viewer */
+.fullscreen-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 99999; /* above cards/toasts but below global preloader */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.92);
+}
+.fullscreen-viewer .fv-close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  padding: 8px;
+  cursor: pointer;
+}
+.fullscreen-viewer .fv-close:focus {
+  outline: 2px solid rgba(255,255,255,0.14);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.fullscreen-viewer .fv-inner {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.fullscreen-viewer .fv-inner img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* When a fullscreen viewer is open, ensure the underlying card thumbnails
+   don't respond to pointer events or inherit transform state from shared
+   image elements. This prevents interactions/visual drift in the page while
+   the modal is active. */
+.fs-open .card-media,
+.fs-open .card-media * {
+  pointer-events: none !important;
+}
+
+/* If thumbnails share any transform styles with the ImageZoom implementation,
+   reset them while fullscreen is open so they remain visually static. */
+.fs-open .card-media img {
+  transform: none !important;
+}

@@ -1,9 +1,9 @@
 import { lazy, Suspense } from "react";
-import { getServiceSupabase } from '@/lib/api/serverSupabase';
-import type { HydratedPost } from '@/lib/types';
+import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import type { HydratedPost } from '@/src/lib/types';
 
 // Lazy load the PostView component
-const PostView = lazy(() => import("@/components/PostView").then(mod => ({ default: mod.PostView })));
+const PostView = lazy(() => import("@/app/components/PostView").then(mod => ({ default: mod.PostView })));
 
 // Helper to map database row to HydratedPost
 function mapRowToHydratedPost(row: any): HydratedPost {

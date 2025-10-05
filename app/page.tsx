@@ -1,5 +1,5 @@
 "use client";
-import { FeedView } from "@/components/FeedView";
+import { FeedView } from "@/app/components/FeedView";
 
 export default function Page() {
   return <FeedView />;

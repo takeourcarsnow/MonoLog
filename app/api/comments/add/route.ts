@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/lib/api/serverSupabase';
-import { uid } from '@/lib/id';
+import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { uid } from '@/src/lib/id';
 
 export async function POST(req: Request) {
   try {

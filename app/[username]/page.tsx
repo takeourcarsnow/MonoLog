@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ProfileView } from "@/components/ProfileView";
-import { supabaseApi } from "@/lib/api/supabase";
+import { ProfileView } from "@/app/components/ProfileView";
+import { supabaseApi } from "@/src/lib/api/supabase";
 import { notFound } from "next/navigation";
 
 function looksLikeUuid(s: string) {

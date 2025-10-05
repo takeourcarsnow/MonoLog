@@ -1,5 +1,5 @@
 "use client";
-import { ExploreView } from "@/components/ExploreView";
+import { ExploreView } from "@/app/components/ExploreView";
 
 export default function ExplorePage() {
   return <ExploreView />;

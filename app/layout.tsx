@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import { Patrick_Hand } from "next/font/google";
 import React from "react";
 import dynamic from "next/dynamic";
-import InertPolyfillClient from '@/components/InertPolyfillClient';
-import { Navbar } from '@/components/NavBar';
+import InertPolyfillClient from '@/app/components/InertPolyfillClient';
+import { Navbar } from '@/app/components/NavBar';
 
 // Self-host the previously imported Google Font for better performance & privacy.
 const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
@@ -13,7 +13,7 @@ const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '-
 // AppShell is a client component that uses next/navigation hooks. Dynamically
 // load it on the client only to avoid calling client-only hooks during server
 // rendering which can cause `useContext` to be null in dev/hydration.
-const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.AppShell), { 
+const AppShell = dynamic(() => import("@/app/components/AppShell").then(mod => mod.AppShell), { 
   ssr: false,
   // Avoid rendering an extra ad-hoc spinner while AppShell hydrates. The
   // app already provides a full-page Preloader inside AppShell, so render
@@ -104,7 +104,7 @@ function WebVitalsScript() {
   React.useEffect(() => {
     (async () => {
       try {
-        const { initWebVitals } = await import('@/lib/performance');
+        const { initWebVitals } = await import('@/src/lib/performance');
         initWebVitals({ sampleRate: 1 });
 
         // Register service worker for caching

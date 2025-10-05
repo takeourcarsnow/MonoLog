@@ -1,5 +1,5 @@
 // Lightweight Web Vitals reporter (client-only).
-// Usage: import { initWebVitals } from '@/lib/performance'; initWebVitals();
+// Usage: import { initWebVitals } from '@/src/lib/performance'; initWebVitals();
 // Sends metrics to console and (optionally) a custom endpoint for analytics.
 
 // Types are optional; if web-vitals types aren't installed we fallback to any.

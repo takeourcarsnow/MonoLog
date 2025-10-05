@@ -243,6 +243,18 @@ export function FeedView() {
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_created', onPostCreated as any); };
   }, [loadInitialPosts]);
 
+  // Remove deleted post from feed immediately
+  useEffect(() => {
+    const onPostDeleted = (e: any) => {
+      const deletedPostId = e?.detail?.postId;
+      if (deletedPostId) {
+        setPosts(prev => prev.filter(p => p.id !== deletedPostId));
+      }
+    };
+    if (typeof window !== 'undefined') window.addEventListener('monolog:post_deleted', onPostDeleted as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_deleted', onPostDeleted as any); };
+  }, []);
+
   // Memoize the render function to prevent unnecessary recalculations
   const render = useMemo(() => {
     if (loading) return <div className="card skeleton" style={{ height: 240 }} />;

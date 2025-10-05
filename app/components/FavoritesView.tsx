@@ -21,6 +21,18 @@ export function FavoritesView() {
       }
     })();
   }, []);
+
+  // Remove deleted post from favorites immediately
+  useEffect(() => {
+    const onPostDeleted = (e: any) => {
+      const deletedPostId = e?.detail?.postId;
+      if (deletedPostId) {
+        setPosts(prev => prev.filter(p => p.id !== deletedPostId));
+      }
+    };
+    if (typeof window !== 'undefined') window.addEventListener('monolog:post_deleted', onPostDeleted as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_deleted', onPostDeleted as any); };
+  }, []);
   if (loading) {
     return (
       <div className="view-fade">

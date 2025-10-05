@@ -159,6 +159,8 @@ export function useDelete(postId: string) {
       try {
         (document.getElementById(`post-${postId}`)?.remove?.());
         await api.deletePost(postId);
+        // Dispatch event to notify other components (e.g., feed) that post was deleted
+        window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId } }));
         if (pathname?.startsWith("/post/")) router.push("/");
       } catch (e: any) {
         toast.show(e?.message || "Failed to delete post");

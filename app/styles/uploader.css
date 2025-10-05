@@ -22,7 +22,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .uploader .thumbs button { padding: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 .uploader .thumbs img { width: 72px; height: 72px; object-fit: cover; display: block; }
 
-.uploader { display: grid; gap: 12px; margin-top: 24px; }
+.uploader { display: grid; gap: 12px; margin-top: 24px; padding: 0 16px; }
 /* Subtle Minimalistic Drop Zone Styles */
 .drop-zone {
   position: relative;

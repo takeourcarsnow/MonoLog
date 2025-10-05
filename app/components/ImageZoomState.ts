@@ -7,11 +7,6 @@ export function useImageZoomState() {
   const imgRef = useRef<HTMLImageElement | null>(null);
   const lastPan = useRef({ x: 0, y: 0 });
   const startPan = useRef({ x: 0, y: 0 });
-  const pinchStartPan = useRef({ x: 0, y: 0 });
-  const lastTouchDist = useRef<number | null>(null);
-  const lastPinchAt = useRef<number | null>(null);
-  const pinchAnchorsRef = useRef<Array<{ el: HTMLElement; prev: string }>>([]);
-  const startScale = useRef(1);
   const scaleRef = useRef(1);
   const natural = useRef({ w: 0, h: 0 });
   const lastMoveTs = useRef<number | null>(null);
@@ -19,14 +14,11 @@ export function useImageZoomState() {
   const velocity = useRef({ x: 0, y: 0 });
   const flingRaf = useRef<number | null>(null);
   const pointerRaf = useRef<number | null>(null);
-  const isPinching = useRef(false);
-  const wasPinched = useRef(false);
   const [scale, setScale] = useState(1);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
   const txRef = useRef(0);
   const tyRef = useRef(0);
-  const [isPinchingState, setIsPinchingState] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const [isTile, setIsTile] = useState(false);
   const doubleTapRef = useRef<number | null>(null);
@@ -55,11 +47,6 @@ export function useImageZoomState() {
     imgRef,
     lastPan,
     startPan,
-    pinchStartPan,
-    lastTouchDist,
-    lastPinchAt,
-    pinchAnchorsRef,
-    startScale,
     scaleRef,
     natural,
     lastMoveTs,
@@ -67,8 +54,6 @@ export function useImageZoomState() {
     velocity,
     flingRaf,
     pointerRaf,
-    isPinching,
-    wasPinched,
     scale,
     setScale,
     tx,
@@ -77,8 +62,6 @@ export function useImageZoomState() {
     tyRef,
     setTxSafe,
     setTySafe,
-    isPinchingState,
-    setIsPinchingState,
     isPanning,
     setIsPanning,
     isTile,

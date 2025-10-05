@@ -25,23 +25,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
     ty,
     setTxSafe,
     setTySafe,
-    isPinchingState,
     setIsPanning,
     isPanning,
     isTile,
     setIsTile,
-    lastPinchAt,
     scaleRef,
     txRef,
     tyRef,
-    lastTouchDist,
-    isPinching,
-    wasPinched,
-    setIsPinchingState,
-    pinchAnchorsRef,
-    startScale,
-    pinchStartPan,
-    natural,
     flingRaf,
     pointerRaf,
     doubleTapRef,
@@ -53,6 +43,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
     velocity,
     lastDoubleTapAt,
     lastClickAt,
+    natural,
   } = state;
 
   // Detect if this ImageZoom is rendered inside a grid tile so we can
@@ -93,14 +84,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
     setTxSafe,
     setTySafe,
     maxScale,
-    lastTouchDist,
-    lastPinchAt,
-    isPinching,
-    wasPinched,
-    setIsPinchingState,
-    pinchAnchorsRef,
-    startScale,
-    pinchStartPan,
     imgRef,
     natural
   );
@@ -167,7 +150,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
       // don't interpret the gesture as a tap/click which would navigate or
       // reset the carousel. We use a short time window to allow normal clicks.
       onClick={(e) => {
-        const t = lastPinchAt.current;
         const dt = lastDoubleTapAt.current;
         const now = Date.now();
         if (lastClickAt.current && now - lastClickAt.current < 400) {
@@ -177,7 +159,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
           handleDoubleTap(e.clientX, e.clientY);
           lastDoubleTapAt.current = now;
           lastClickAt.current = null;
-        } else if ((t && Date.now() - t < 700) || (dt && Date.now() - dt < 700)) {
+        } else if (dt && Date.now() - dt < 700) {
           e.preventDefault();
           e.stopPropagation();
         } else {
@@ -187,9 +169,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
       className={className}
       style={{
         overflow: "hidden",
-        // When not pinching or zoomed, allow default pointer behavior so
-        // parent carousels can receive mouse/pointer drags on desktop.
-        touchAction: isPinchingState || scale > 1 ? "none" : "auto",
+        // When zoomed, disable touch action to prevent scrolling
+        touchAction: scale > 1 ? "none" : "auto",
         // make the container fill the card width so images can center
         display: "block",
         width: "100%",
@@ -229,10 +210,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
           objectFit: isTile ? "cover" : "contain",
           objectPosition: "center center",
           userSelect: "none",
-          // Mirror the container touchAction here. When not zoomed, let
-          // pointer events behave normally so the carousel can handle
-          // horizontal swipes with the mouse on desktop.
-          touchAction: isPinchingState || scale > 1 ? "none" : "auto",
+          // When zoomed, disable touch action to prevent scrolling
+          touchAction: scale > 1 ? "none" : "auto",
         }}
         draggable={false}
       />

@@ -19,6 +19,7 @@ export function CalendarView() {
   const [loadingDay, setLoadingDay] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
+  const [shouldScroll, setShouldScroll] = useState(false);
 
   // Load stats whenever the current month/year changes. Inline the async call
   // so we don't need to include the `loadStats` function in the dependency list.
@@ -39,9 +40,11 @@ export function CalendarView() {
     if (selectedDay === dk) {
       setSelectedDay(null);
       setDayPosts(null);
+      setShouldScroll(false);
       return;
     }
 
+    setShouldScroll(true);
     setSelectedDay(dk);
     setLoadingDay(true);
     try {
@@ -69,10 +72,11 @@ export function CalendarView() {
 
   // Scroll to feed on desktop when posts are loaded
   useEffect(() => {
-    if (dayPosts && feedRef.current && window.innerWidth >= 900) {
-      feedRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [dayPosts]);
+    // Disabled: no longer scroll to feed on select
+    // if (shouldScroll && dayPosts && feedRef.current && window.innerWidth >= 900) {
+    //   feedRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // }
+  }, [shouldScroll, dayPosts]);
 
   const matrix = monthMatrix(curYear, curMonth);
 

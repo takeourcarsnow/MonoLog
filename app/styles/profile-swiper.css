@@ -17,10 +17,9 @@
    padding to protect content from the fixed tabbar. */
 .swipe-views .swiper-slide {
   width: 100% !important;
-  /* Size each slide to fill the viewport minus the header and tabbar.
-     Use CSS variables (with sensible fallbacks) so measurements are
-     accurate across devices and update when JS measures the real sizes. */
-  height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px))) - var(--tabbar-height, calc(64px + var(--safe-bottom, 0px))) - 24px) !important;
+  /* Size each slide to fill the full viewport since navbar is fixed positioned.
+     Use CSS variables for header height so content starts below the header. */
+  height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px)))) !important;
   display: block;
   /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
   touch-action: pan-y pinch-zoom;
@@ -61,7 +60,7 @@
     each slide fills the parent's height. This avoids differences between the
     parent's computed height and viewport-based calc() values. */
 .content > .swipe-views .swiper-slide {
-   height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px))) - var(--tabbar-height, calc(64px + var(--safe-bottom, 0px))) - 24px) !important;
+   height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px)))) !important;
 }
 
 /* Ensure full-bleed swipe views account for the sticky header height.

@@ -1,5 +1,5 @@
 .header {
-  position: fixed; top: 0; z-index: 10;
+  position: fixed; top: 0; z-index: 10; left: 0; right: 0;
   /* Use the CSS variable as the header's own height so it participates
      in layout and prevents content from jumping under it. JS will
      measure and update this variable at runtime when available. */
@@ -11,6 +11,7 @@
   padding-top: var(--safe-top);
 }
 .header-inner {
+  position: relative;
   max-width: var(--maxw); margin: 0 auto; padding: 8px 12px;
   display: flex; align-items: center; gap: 10px; justify-content: space-between;
   /* Ensure the header never expands beyond its container (prevents
@@ -39,6 +40,18 @@
   the header from growing wider than the viewport when account text
   is present). */
 .header-actions { min-width: 0; }
+
+/* Pin the action group to the right edge of the header (viewport).
+   Position absolutely so it sits at the far right even when the
+   centered .header-inner has a max-width. Vertically center it. */
+.header-actions {
+  position: absolute;
+  /* align with the inner container's right padding (keeps alignment with
+     other controls inside the inner grid like the grid switcher) */
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
 
 /* Normalize header action button heights so icon-only and text buttons match */
 .header-actions .btn {

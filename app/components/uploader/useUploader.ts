@@ -136,11 +136,6 @@ export function useUploader() {
     if (index >= dataUrls.length) setIndex(Math.max(0, dataUrls.length - 1));
   }, [dataUrls.length, index]);
 
-  // apply transform when index changes
-  useEffect(() => {
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
-  }, [index]);
-
   // when entering edit mode, populate editingAlt for the current index
   useEffect(() => {
     if (editing) {

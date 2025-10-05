@@ -13,14 +13,237 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
 body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 /* Uploader-specific carousel/thumbnail layout to avoid interfering with post card styles */
-.uploader .preview-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.uploader .preview-inner .carousel { width: 100%; display: flex; gap: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-.uploader .preview-inner .carousel.carousel-track { overflow-x: visible; }
-.uploader .preview-inner .carousel > div { flex: 0 0 100%; scroll-snap-align: center; position: relative; }
-.uploader .preview-inner .carousel-track { width: auto; }
-.uploader .thumbs { display: flex; gap: 8px; margin-top: 8px; justify-content: center; align-items: center; }
-.uploader .thumbs button { padding: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
-.uploader .thumbs img { width: 72px; height: 72px; object-fit: cover; display: block; }
+.uploader .preview-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.uploader .thumbs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--bg-elev);
+  border-radius: 12px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.uploader .thumbs button {
+  flex-shrink: 0;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.uploader .thumbs button:hover {
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.uploader .thumbs button[aria-pressed="true"] {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+.uploader .thumbs img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+/* Carousel Styles */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.carousel-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.carousel-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+.carousel-slide {
+  flex: 0 0 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.carousel-slide img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Navigation buttons */
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-nav:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.carousel-nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.carousel-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.carousel-nav-prev {
+  left: 12px;
+}
+
+.carousel-nav-next {
+  right: 12px;
+}
+
+/* Dot indicators */
+.carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.carousel-dot.active {
+  background: var(--primary);
+  transform: scale(1.2);
+}
+
+.carousel-dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .carousel-nav {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .carousel-nav-prev {
+    left: 8px;
+  }
+
+  .carousel-nav-next {
+    right: 8px;
+  }
+
+  .carousel-dots {
+    bottom: 8px;
+  }
+
+  .carousel-dot {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+/* Light theme adjustments */
+:root[data-theme="light"] .carousel-nav {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .carousel-nav:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+:root[data-theme="light"] .carousel-dot {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="light"] .carousel-dot.active {
+  background: var(--primary);
+}
+
+:root[data-theme="light"] .carousel-dot:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .carousel-track {
+    transition: none;
+  }
+
+  .carousel-nav,
+  .carousel-dot {
+    transition: none;
+  }
+
+  .carousel-nav:hover,
+  .carousel-dot.active {
+    transform: none;
+  }
+}
 
 .uploader { display: grid; gap: 12px; margin-top: 24px; padding: 16px 16px 0; }
 /* Subtle Minimalistic Drop Zone Styles */
@@ -876,3 +1099,19 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 /* small helper: visually hidden but available to screen readers */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Preview loading badge */
+.preview-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 10;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}

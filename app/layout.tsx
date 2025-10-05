@@ -5,6 +5,7 @@ import { Patrick_Hand } from "next/font/google";
 import React from "react";
 import dynamic from "next/dynamic";
 import InertPolyfillClient from '@/components/InertPolyfillClient';
+import { Navbar } from '@/components/NavBar';
 
 // Self-host the previously imported Google Font for better performance & privacy.
 const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
@@ -18,11 +19,6 @@ const AppShell = dynamic(() => import("@/components/AppShell").then(mod => mod.A
   // app already provides a full-page Preloader inside AppShell, so render
   // nothing here to prevent duplicate loading UIs.
   loading: () => null,
-});
-
-// Overscroll rubber band effect component
-const OverscrollRubberband = dynamic(() => import("@/components/OverscrollRubberband").then(mod => mod.OverscrollRubberband), {
-  ssr: false
 });
 
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
@@ -93,8 +89,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div id="app-root">
           <AppShell>{children}</AppShell>
         </div>
+        <Navbar />
         <InertPolyfillClient />
-        <OverscrollRubberband />
         <noscript>MonoLog requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}
         {process.env.NODE_ENV === 'production' ? <WebVitalsScript /> : null}

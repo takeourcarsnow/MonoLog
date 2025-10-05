@@ -11,26 +11,29 @@
     /* don't force a fixed height here; let the active slide determine wrapper height */
     touch-action: pan-y pinch-zoom;
   }
+/* Make each slide flexible: ensure slides fill the viewport minus header/tabbar
+   but allow taller content to grow. Use min-height rather than forcing a
+   fixed height to avoid clipping inner components. Also reserve bottom
+   padding to protect content from the fixed tabbar. */
 .swipe-views .swiper-slide {
-   width: 100% !important;
-   /* Size each slide to fill the viewport minus the header and tabbar.
-       Use CSS variables (with sensible fallbacks) so measurements are
-       accurate across devices and update when JS measures the real sizes. */
-   height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px))) - var(--tabbar-height, calc(64px + var(--safe-bottom, 0px))) - 24px) !important;
-   display: block;
-   /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
-   touch-action: pan-y pinch-zoom;
-   overflow-y: auto; /* allow vertical scrolling if content is taller */
+  width: 100% !important;
+  /* Size each slide to fill the viewport minus the header and tabbar.
+     Use CSS variables (with sensible fallbacks) so measurements are
+     accurate across devices and update when JS measures the real sizes. */
+  height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px))) - var(--tabbar-height, calc(64px + var(--safe-bottom, 0px))) - 24px) !important;
+  display: block;
+  /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
+  touch-action: pan-y pinch-zoom;
+  overflow-y: auto; /* allow vertical scrolling if content is taller */
 }
 
-   /* Small internal bottom buffer so content doesn't sit flush against the tabbar */
-   .swipe-views .swiper-slide > * {
-      padding-bottom: calc(var(--tabbar-height, 72px) + 12px) !important;
-   }
+  /* Small internal bottom buffer so content doesn't sit flush against the tabbar */
+  .swipe-views .swiper-slide > * {
+     padding-bottom: calc(var(--tabbar-height, 72px) + 12px) !important;
+  }
 
-@media (max-width: 900px) {
-   .swipe-views .swiper-slide { height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px))) - var(--tabbar-height, calc(64px + var(--safe-bottom, 0px))) - 20px); }
-}
+/* Uniform slide sizing handled via min-height above; no separate fixed-height
+   rules are necessary for narrow screens. */
 
 /* Break out of centered .content container so the Swiper can be full-bleed
    while preserving the normal layout for other pages. Targets the Swiper
@@ -54,6 +57,13 @@
   position: relative;
 }
 
+/* When the Swiper is the direct child of .content (AppShell usage), ensure
+    each slide fills the parent's height. This avoids differences between the
+    parent's computed height and viewport-based calc() values. */
+.content > .swipe-views .swiper-slide {
+   height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px))) - var(--tabbar-height, calc(64px + var(--safe-bottom, 0px))) - 24px) !important;
+}
+
 /* Ensure full-bleed swipe views account for the sticky header height.
    Some pages render slides that break out of the normal .content padding
    and may end up underneath the header. Apply a safe top padding using
@@ -66,11 +76,7 @@
   /* Make slides match the dynamic viewport width so they stay centered
      and don't produce a horizontal shift when the vertical scrollbar
      appears/disappears. */
-  width: 100dvw !important;
-  min-width: 100dvw !important;
-  box-sizing: border-box !important;
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  width: 100% !important;
 }
 
 /* Also ensure each slide's internal content begins below the header. We
@@ -84,6 +90,8 @@
   display: block !important;
   overflow-y: auto;
 }
+
+/* Removed: autoHeight-specific rules no longer needed */
 
 /* Reserve bottom spacing inside slides so content isn't covered by the
     fixed tabbar. Use the tabbar variable with a sensible fallback. */

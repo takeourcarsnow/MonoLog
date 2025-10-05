@@ -1,5 +1,5 @@
 .header {
-  position: sticky; top: 0; z-index: 10;
+  position: fixed; top: 0; z-index: 10;
   /* Use the CSS variable as the header's own height so it participates
      in layout and prevents content from jumping under it. JS will
      measure and update this variable at runtime when available. */

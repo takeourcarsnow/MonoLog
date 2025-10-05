@@ -23,7 +23,6 @@ const ExploreView = lazy(() => import("./ExploreView").then(mod => ({ default: m
 const Uploader = lazy(() => import("./Uploader").then(mod => ({ default: mod.Uploader })));
 const CalendarView = lazy(() => import("./CalendarView").then(mod => ({ default: mod.CalendarView })));
 const ProfileView = lazy(() => import("./ProfileView").then(mod => ({ default: mod.ProfileView })));
-const NavBar = lazy(() => import("./NavBar").then(mod => ({ default: mod.NavBar })));
 
 // Small wrapper used around each slide to ensure inactive slides are removed
 // from the accessibility tree and tab order. This avoids focus leaking into
@@ -201,8 +200,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [ready, pathname]);
 
-  // Measure tabbar height and publish as CSS variable so layouts can
-  // reserve space and avoid being covered by the fixed bottom nav.
+  // Measure the actual tabbar height at runtime and publish it as a CSS
+  // variable so layout padding can match the rendered tabbar size exactly.
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -211,52 +210,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         const el = document.querySelector<HTMLElement>('.tabbar');
         if (!el) return;
         const rect = el.getBoundingClientRect();
-        const h = Math.ceil(rect.height);
-  // Add a small visual buffer so content/action buttons don't sit
-  // flush against the nav. Increase slightly to account for shadows/overhang.
-  const buffer = 40; // px (increased)
-        const final = h + buffer;
-        // expose raw measured value and buffered value
-        document.documentElement.style.setProperty('--tabbar-height-raw', `${h}px`);
-        document.documentElement.style.setProperty('--tabbar-height', `${final}px`);
+        document.documentElement.style.setProperty('--tabbar-height', `${Math.ceil(rect.height)}px`);
       } catch (e) {
         /* ignore */
       }
     };
 
+    // Run once immediately to set initial value
     updateTabbarHeight();
 
+    // Use ResizeObserver when available to react to dynamic tabbar size changes
     let ro: ResizeObserver | null = null;
-    let mo: MutationObserver | null = null;
     try {
       if ((window as any).ResizeObserver) {
-        const el = document.querySelector<HTMLElement>('.tabbar');
-        if (el) {
+        const tabbarEl = document.querySelector<HTMLElement>('.tabbar');
+        if (tabbarEl) {
           ro = new ResizeObserver(updateTabbarHeight);
-          ro.observe(el);
-        }
-        else {
-          // NavBar may be lazy-loaded and portalled into document.body.
-          // Watch for the element being added and attach a ResizeObserver then.
-          try {
-            mo = new MutationObserver((mutations) => {
-              for (const m of mutations) {
-                if (m.type === 'childList' && m.addedNodes && m.addedNodes.length) {
-                  const found = document.querySelector<HTMLElement>('.tabbar');
-                  if (found) {
-                    updateTabbarHeight();
-                    try {
-                      ro = new ResizeObserver(updateTabbarHeight);
-                      ro.observe(found);
-                    } catch (_) {}
-                    if (mo) { try { mo.disconnect(); mo = null; } catch(_) {} }
-                    break;
-                  }
-                }
-              }
-            });
-            mo.observe(document.body, { childList: true, subtree: true });
-          } catch (_) { mo = null; }
+          ro.observe(tabbarEl);
         }
       }
     } catch (_) { ro = null; }
@@ -266,7 +236,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     return () => {
       try { ro && ro.disconnect(); } catch (_) {}
-      try { mo && mo.disconnect(); } catch (_) {}
       window.removeEventListener('resize', updateTabbarHeight);
       window.removeEventListener('orientationchange', updateTabbarHeight);
     };
@@ -313,10 +282,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       function update() {
         const header = document.querySelector<HTMLElement>('.header');
-        const tab = document.querySelector<HTMLElement>('.tabbar');
         const rootStyles = getComputedStyle(document.documentElement);
         const headerRaw = rootStyles.getPropertyValue('--header-height') || 'unset';
-  const tabRaw = rootStyles.getPropertyValue('--tabbar-height-raw') || 'unset';
         const contentEl = document.querySelector<HTMLElement>('.content');
         const contentPad = contentEl ? getComputedStyle(contentEl).paddingBottom : 'unset';
         const slideChild = document.querySelector<HTMLElement>('.swipe-views .swiper-slide > *');
@@ -324,8 +291,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         content.innerHTML = `header: ${header ? Math.ceil(header.getBoundingClientRect().height) + 'px' : headerRaw}<br/>` +
                             `--header-height: ${headerRaw.trim()}<br/>` +
-                            `tabbar (raw): ${tabRaw.trim()}<br/>` +
-                            `--tabbar-height: ${rootStyles.getPropertyValue('--tabbar-height').trim()}<br/>` +
                             `content padding-bottom: ${contentPad}<br/>` +
                             `slide child padding-bottom: ${slidePad}`;
       }
@@ -444,6 +409,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const newPath = views[swiper.activeIndex]?.path;
     // keep local state for which slide is active so we can mark others inert
     try { setActiveIndex(typeof swiper.activeIndex === 'number' ? swiper.activeIndex : currentIndex); } catch (_) {}
+    // Ensure Swiper recalculates height immediately when active slide changes
+    // Removed: no longer using autoHeight
     // Immediately dispatch event so active state can update before route changes
     if (typeof window !== 'undefined' && newPath) {
       window.dispatchEvent(new CustomEvent('monolog:slide_change', { 
@@ -470,6 +437,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       router.push(newPath);
     }
   };
+
+  // Listen for navbar clicks to change slides
+  useEffect(() => {
+    function onNavbarClick(e: any) {
+      const { path, index } = e.detail;
+      // Update swiper to the clicked index
+      const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
+      if (inst && typeof inst.slideTo === 'function') {
+        try {
+          inst.slideTo(index);
+        } catch (_) { /* ignore */ }
+      }
+      // Update active index state
+      setActiveIndex(index);
+      // Only navigate if path is different
+      if (path !== pathname) {
+        router.push(path);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:navbar_click', onNavbarClick);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:navbar_click', onNavbarClick);
+      }
+    };
+  }, [router, pathname]);
+  // Observe the active slide's content and call updateAutoHeight so the
+  // container height matches that slide only.
+  useEffect(() => {
+    // Simplified: no longer using autoHeight, so no need for complex observers
+  }, [activeIndex, ready]);
 
 
   // Treat the root path as a main swipe-view so the homepage renders
@@ -533,6 +535,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               longSwipes={true}
               longSwipesRatio={0.25}
               threshold={15}
+              // Let the Swiper container adjust its height to the active slide
+              // so each section sizes itself to its own content instead of the
+              // tallest slide. We also call updateAutoHeight when slides or
+              // content resize so measurements stay accurate.
               autoHeight={false}
               // Slightly increase touchRatio to make touch movements feel a bit
               // more responsive on devices with higher pixel density.
@@ -572,9 +578,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Swiper>
           ) : children}
         </main>
-        <Suspense fallback={null}>
-          <NavBar />
-        </Suspense>
       </div>
       <NotificationListener />
       <InstallPrompt />

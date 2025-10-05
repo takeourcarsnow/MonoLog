@@ -36,7 +36,7 @@
   /* Default bottom navigation (tabbar) height. JS/CSS can overwrite
     this if the runtime tabbar size differs. Using a variable lets
     other layout rules reserve the correct bottom space. */
-  --tabbar-height: calc(64px + var(--safe-bottom, 0px));
+  --tabbar-height: calc(56px + var(--safe-bottom, 0px));
 
   /* toggle indicator color (light default) */
   --auth-toggle-indicator: rgba(0,0,0,0.06);

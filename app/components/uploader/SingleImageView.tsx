@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { LoadingBadge } from "./LoadingBadge";
 
 interface SingleImageViewProps {
   dataUrl: string | null;
@@ -15,6 +16,7 @@ interface SingleImageViewProps {
   fileInputRef: React.RefObject<HTMLInputElement>;
   cameraInputRef: React.RefObject<HTMLInputElement>;
   openCamera: () => Promise<void>;
+  previewLoaded: boolean;
 }
 
 export function SingleImageView({
@@ -31,13 +33,33 @@ export function SingleImageView({
   setPreviewLoaded,
   fileInputRef,
   cameraInputRef,
-  openCamera
+  openCamera,
+  previewLoaded
 }: SingleImageViewProps) {
+  const onTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div>
+    <div
+      className="single-image-container no-swipe"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {/* Give the image wrapper a definite size so Next/Image with `fill` can render. */}
       <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', minHeight: 220 }}>
+        <LoadingBadge processing={processing} previewLoaded={previewLoaded} />
         <img
+          className="no-swipe"
           alt={Array.isArray(alt) ? (alt[index] || 'Preview') : (alt || 'Preview')}
           src={(dataUrls.length ? dataUrls[index] : dataUrl) || "/logo.svg"}
           style={{ objectFit: 'contain', width: '100%', height: '100%', display: 'block' }}

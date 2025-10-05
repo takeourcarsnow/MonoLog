@@ -43,11 +43,13 @@
 
 /* Keep post pages, post editor, and uploader content aligned with the app
    max width on larger screens so they don't render edge-to-edge. */
+/* Keep post pages, post editor, and uploader content aligned with the app
+   max width on larger screens so they don't render edge-to-edge. */
 @media (min-width: 900px) {
   .post-view-wrap,
   .post-editor,
   .uploader {
-    max-width: var(--maxw);
+    max-width: 300px;
     margin: 0 auto;
     padding-left: 12px;
     padding-right: 12px;
@@ -58,7 +60,7 @@
   /* Ensure the toolbar inside post pages also aligns visually with the content */
   .post-view-wrap .toolbar,
   .uploader .toolbar {
-    max-width: var(--maxw);
+    max-width: 300px;
     margin: 0 auto;
     padding-left: 12px;
     padding-right: 12px;

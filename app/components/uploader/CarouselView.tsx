@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { LoadingBadge } from "./LoadingBadge";
 
 interface CarouselViewProps {
   dataUrls: string[];
@@ -18,6 +19,8 @@ interface CarouselViewProps {
   cameraInputRef: React.RefObject<HTMLInputElement>;
   toast: any;
   setPreviewLoaded: React.Dispatch<React.SetStateAction<boolean>>;
+  processing: boolean;
+  previewLoaded: boolean;
 }
 
 export function CarouselView({
@@ -37,7 +40,9 @@ export function CarouselView({
   streamRef,
   cameraInputRef,
   toast,
-  setPreviewLoaded
+  setPreviewLoaded,
+  processing,
+  previewLoaded
 }: CarouselViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -55,6 +60,53 @@ export function CarouselView({
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
+  // Add touch event listeners with passive: false to allow preventDefault
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      touchStartX.current = e.touches[0].clientX;
+      touchDeltaX.current = 0;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (touchStartX.current == null || !trackRef.current || containerWidth === 0) return;
+      touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+      const position = index * containerWidth - touchDeltaX.current;
+      const clampedPosition = Math.max(0, Math.min((dataUrls.length - 1) * containerWidth, position));
+      trackRef.current.style.transform = `translateX(-${clampedPosition}px)`;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (touchStartX.current == null || containerWidth === 0) return;
+      const delta = touchDeltaX.current;
+      const threshold = 50;
+      let target = index;
+      if (delta > threshold) target = Math.max(0, index - 1);
+      else if (delta < -threshold) target = Math.min(dataUrls.length - 1, index + 1);
+      setIndex(target);
+      touchStartX.current = null;
+      touchDeltaX.current = 0;
+    };
+
+    track.addEventListener('touchstart', handleTouchStart, { passive: false });
+    track.addEventListener('touchmove', handleTouchMove, { passive: false });
+    track.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      track.removeEventListener('touchstart', handleTouchStart);
+      track.removeEventListener('touchmove', handleTouchMove);
+      track.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [containerWidth, index, dataUrls.length, setIndex]);
+
   // Update track transform when index or container width changes
   useEffect(() => {
     if (trackRef.current && containerWidth > 0) {
@@ -67,49 +119,25 @@ export function CarouselView({
     if (e.key === 'ArrowRight') setIndex(i => Math.min(dataUrls.length - 1, i + 1));
   };
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchDeltaX.current = 0;
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (touchStartX.current == null || !trackRef.current || containerWidth === 0) return;
-    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
-    trackRef.current.style.transform = `translateX(-${index * containerWidth - touchDeltaX.current}px)`;
-  };
-
-  const onTouchEnd = () => {
-    if (touchStartX.current == null || containerWidth === 0) return;
-    const delta = touchDeltaX.current;
-    const threshold = 50;
-    let target = index;
-    if (delta > threshold) target = Math.max(0, index - 1);
-    else if (delta < -threshold) target = Math.min(dataUrls.length - 1, index + 1);
-    setIndex(target);
-    touchStartX.current = null;
-    touchDeltaX.current = 0;
-  };
-
   if (dataUrls.length === 0) return null;
 
   return (
     <div
-      className="carousel-container"
+      className="carousel-container no-swipe"
       ref={containerRef}
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
       <div className="carousel-viewport">
+        <LoadingBadge processing={processing} previewLoaded={previewLoaded} />
         <div
           className="carousel-track"
           ref={trackRef}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
         >
           {dataUrls.map((u, idx) => (
             <div key={idx} className="carousel-slide">
               <img
+                className="no-swipe"
                 src={u || "/logo.svg"}
                 alt={Array.isArray(alt) ? (alt[idx] || `Image ${idx + 1}`) : (alt || `Image ${idx + 1}`)}
                 onLoad={() => setPreviewLoaded(true)}

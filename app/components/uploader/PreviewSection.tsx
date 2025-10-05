@@ -109,12 +109,10 @@ export function PreviewSection({
   return (
     <div
       className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${editing ? 'editing' : ''} ${(processing || !previewLoaded) ? 'processing' : ''}`}
-      onDragOver={(e) => { e.preventDefault(); }}
-      onDrop={onDropPreview}
+      onDragOver={dataUrls.length <= 1 ? (e) => { e.preventDefault(); } : undefined}
+      onDrop={dataUrls.length <= 1 ? onDropPreview : undefined}
     >
       <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
-        <LoadingBadge processing={processing} previewLoaded={previewLoaded} />
-
         {/* Render either the ImageEditor inline (replacing the visible photo) or the preview content. */}
         <ImageEditorSection
           editing={editing}
@@ -156,6 +154,8 @@ export function PreviewSection({
                 cameraInputRef={cameraInputRef}
                   toast={toast}
                   setPreviewLoaded={setPreviewLoaded}
+                  processing={processing}
+                  previewLoaded={previewLoaded}
               />
             ) : (
               <SingleImageView
@@ -173,6 +173,7 @@ export function PreviewSection({
                 fileInputRef={fileInputRef}
                 cameraInputRef={cameraInputRef}
                 openCamera={openCamera}
+                previewLoaded={previewLoaded}
               />
             )}
           </>

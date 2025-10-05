@@ -12,7 +12,7 @@ export function LoadingBadge({ processing, previewLoaded }: LoadingBadgeProps) {
   // identical to the dropzone loader so the visuals are consistent.
   if (processing) {
     return (
-      <div className="drop-loader show-blur" role="status" aria-live="polite">
+      <div className="drop-zone-loader show-blur" role="status" aria-live="polite">
         <LogoLoader size={86} />
         <span style={{ fontSize: 15, fontWeight: 600 }}>Processing image…</span>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Header } from "./Header";
 import Preloader from "./Preloader";
@@ -17,7 +17,6 @@ import { useAppShellNavigation } from "./AppShellNavigation";
 import { SlideWrapper } from "./SlideWrapper";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  "use client";
   const pathname = usePathname();
   const mainRef = useRef<HTMLElement>(null);
 
@@ -52,6 +51,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               // only allow touch/swipe interactions on touch-capable devices
               simulateTouch={true}
               allowTouchMove={true}
+              // Disable swiping when touch starts on photo areas
+              noSwipingSelector=".no-swipe"
               // Enable rubber-band effect at edges: allows some drag but prevents
               // slides from going completely off-screen. resistanceRatio controls
               // how much resistance (0.6 = moderate resistance, good balance between

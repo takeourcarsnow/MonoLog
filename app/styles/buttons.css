@@ -38,6 +38,8 @@
 }
 .btn.ghost { background: transparent; border-color: var(--border); }
 .btn.icon { padding: 8px; width: 36px; height: 36px; display: grid; place-items: center; }
+.btn.icon svg { transition: transform 0.2s ease; }
+.btn.icon:hover svg { transform: scale(1.1); }
 
 .btn { transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; }
 .btn:active { transform: translateY(1px) scale(.997); }

@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/src/lib/types";
+import { Check, X } from "lucide-react";
 
 export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   post: HydratedPost;
@@ -80,20 +81,22 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             type="button"
-            className={`btn ${saving ? 'disabled' : ''}`}
+            className={`btn icon-reveal ${saving ? 'disabled' : ''}`}
             onClick={async () => { if (!saving) await doSave(); }}
             aria-label="Save edits"
             disabled={saving}
           >
-            {saving ? 'Saving…' : 'Save edits'}
+            <span className="icon" aria-hidden="true"><Check size={16} /></span>
+            <span className="reveal label">{saving ? 'Saving…' : 'Save'}</span>
           </button>
           <button
             type="button"
-            className="btn ghost"
+            className="btn ghost icon-reveal"
             onClick={() => onCancel()}
             aria-label="Cancel edits"
           >
-            Cancel
+            <span className="icon" aria-hidden="true"><X size={16} /></span>
+            <span className="reveal label">Cancel</span>
           </button>
         </div>
       </div>

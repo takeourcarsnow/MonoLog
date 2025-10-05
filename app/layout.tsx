@@ -28,6 +28,7 @@ export const metadata: Metadata = {
   description: "Daily photo journal. Attach multiple images to a single post.",
   // themeColor must be placed in the `viewport` export in Next.js 14+
   manifest: '/manifest.webmanifest',
+  icons: '/logo.svg',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

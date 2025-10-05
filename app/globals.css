@@ -96,15 +96,15 @@ html, body {
 
 /* Prefer the user's OS preference only when no explicit saved preference exists - handled in JS init */
 :root[data-theme="dark"] {
-  --bg: #0c0c0e;
-  --bg-elev: #141418;
+  --bg: #141414;
+  --bg-elev: #1a1a1a;
   --text: #f7f7f7;
   --muted: #9ca3af;
   --primary: #60a5fa;
   --primary-weak: #0b2547;
   --accent: #34d399;
   --danger: #f87171;
-  --border: #1f2937;
+  --border: #2a2a2a;
   --shadow: 0 8px 30px rgba(0,0,0,.35);
   /* darker theme toggle indicator */
   --auth-toggle-indicator: rgba(255,255,255,0.04);

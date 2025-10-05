@@ -154,10 +154,12 @@ export function CarouselView({
                         console.error(e);
                         toast.show('Camera access denied or unavailable');
                         setCameraOpen(false);
+                        try { fileActionRef.current = 'replace'; if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
                         try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
                       }
                     })();
                   } else {
+                    try { fileActionRef.current = 'replace'; if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
                     try { fileActionRef.current = 'replace'; cameraInputRef.current?.click(); } catch (_) {}
                   }
                 }}

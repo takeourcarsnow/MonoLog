@@ -335,6 +335,91 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   }
 }
 
+/* LogoLoader Animations */
+.logo-rotate-slow {
+  animation: logo-rotate-slow 8s linear infinite;
+}
+
+.logo-rotate-fast {
+  animation: logo-rotate-fast 2s linear infinite;
+}
+
+.logo-sparks .spark:nth-child(1) {
+  animation: logo-spark-1 3s ease-in-out infinite;
+}
+
+.logo-sparks .spark:nth-child(2) {
+  animation: logo-spark-2 3s ease-in-out infinite 0.5s;
+}
+
+.logo-sparks .spark:nth-child(3) {
+  animation: logo-spark-3 3s ease-in-out infinite 1s;
+}
+
+.logo-sparks .spark:nth-child(4) {
+  animation: logo-spark-4 3s ease-in-out infinite 1.5s;
+}
+
+.logo-ring-arc {
+  animation: logo-ring-arc 4s ease-in-out infinite;
+}
+
+.logo-dot {
+  animation: logo-dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes logo-rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes logo-rotate-fast {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes logo-spark-1 {
+  0%, 100% { opacity: 0; transform: scale(0.8) translateY(0); }
+  50% { opacity: 1; transform: scale(1.2) translateY(-4px); }
+}
+
+@keyframes logo-spark-2 {
+  0%, 100% { opacity: 0; transform: scale(0.8) translateY(0); }
+  50% { opacity: 1; transform: scale(1.2) translateY(-4px); }
+}
+
+@keyframes logo-spark-3 {
+  0%, 100% { opacity: 0; transform: scale(0.8) translateY(0); }
+  50% { opacity: 1; transform: scale(1.2) translateY(-4px); }
+}
+
+@keyframes logo-spark-4 {
+  0%, 100% { opacity: 0; transform: scale(0.8) translateY(0); }
+  50% { opacity: 1; transform: scale(1.2) translateY(-4px); }
+}
+
+@keyframes logo-ring-arc {
+  0% { stroke-dashoffset: 88; }
+  50% { stroke-dashoffset: 44; }
+  100% { stroke-dashoffset: 88; }
+}
+
+@keyframes logo-dot-pulse {
+  0%, 100% { r: 18; opacity: 0.8; }
+  50% { r: 22; opacity: 1; }
+}
+
+/* Reduced motion support for LogoLoader */
+@media (prefers-reduced-motion: reduce) {
+  .logo-rotate-slow,
+  .logo-rotate-fast,
+  .logo-sparks .spark,
+  .logo-ring-arc,
+  .logo-dot {
+    animation: none !important;
+  }
+}
+
 /* Desktop uploader tweaks: keep preview from growing so large it pushes
   the publish/cancel controls offscreen at default browser zoom. Reserve
   extra bottom padding when a preview exists and cap preview heights

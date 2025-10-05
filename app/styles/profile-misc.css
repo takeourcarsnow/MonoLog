@@ -220,15 +220,15 @@
   gap:12px;
   width:100%;
   max-width: var(--maxw);
-  margin: 0 auto 4px; /* center and add a little spacing below */
-  padding: 0 12px; /* match horizontal padding of .feed */
+  margin: 6px auto 8px; /* slightly reduced space above and below the toggle */
+  padding: 4px 12px; /* slightly reduced vertical padding */
   box-sizing: border-box;
   background: transparent;
 }
 .view-toggle .btn { padding: 6px 10px; }
 
 /* feed/explore grid variations */
-.feed.grid-view { padding: 4px 0; }
+.feed.grid-view { padding: 6px 0; }
 .feed.grid-view .grid { gap: 8px; grid-template-columns: repeat(3, 1fr); }
 @media (min-width: 900px) { .feed.grid-view .grid { grid-template-columns: repeat(4, 1fr); } }
 

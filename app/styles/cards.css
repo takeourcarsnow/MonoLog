@@ -7,7 +7,7 @@
   width: 100%;
   box-sizing: border-box;
   /* keep a small horizontal padding so full-bleed slides don't touch the edges */
-  padding: 0 12px 12px 12px;
+  padding: calc(6px + var(--safe-top, 0px)) 12px 12px 12px; /* slightly reduced top padding for less vertical space */
   flex: 1;
 }
 .card {

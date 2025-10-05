@@ -12,7 +12,8 @@ import { useImageEditorState } from './imageEditor/useImageEditorState';
 import { draw as canvasDraw } from './imageEditor/CanvasRenderer';
 import type { EditorSettings } from './imageEditor/types';
 import { useImageEditorActions } from './useImageEditorActions';
-import { usePointerEvents, useSliderEvents } from './imageEditor/imageEditorEvents';
+import { usePointerEvents } from './imageEditor/pointerEvents';
+import { useSliderEvents } from './imageEditor/sliderEvents';
 import { useImageEditorLayout } from './imageEditor/useImageEditorLayout';
 import { useImageEditorHighlights } from './imageEditor/useImageEditorHighlights';
 import { useDashAnimation } from './imageEditor/useDashAnimation';
@@ -20,6 +21,9 @@ import { drawImage } from './imageEditor/imageEditorDrawing';
 import ImageEditorCanvas from './imageEditor/ImageEditorCanvas';
 import ImageEditorToolbar, { ImageEditorToolbarHeader, ImageEditorToolbarCategories } from './imageEditor/ImageEditorToolbar';
 import ImageEditorPanels from './imageEditor/ImageEditorPanels';
+import { useKeyboardEvents } from './imageEditor/useKeyboardEvents';
+import { useImageEditorDraw } from './imageEditor/useImageEditorDraw';
+import './imageEditor/ImageEditor.css';
 
 type Props = {
   initialDataUrl: string;
@@ -111,6 +115,18 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     cropRatio,
   } = useImageEditorState(initialDataUrl, initialSettings);
 
+  const { computeImageLayout } = useImageEditorLayout(
+    imageSrc,
+    canvasRef,
+    containerRef,
+    imgRef,
+    originalImgRef,
+    originalRef,
+    setOffset,
+    setMounted,
+    draw
+  );
+
   // Local draw wrapper binds all refs/state to the lower-level drawImage helper so
   // callers can simply call draw() or draw(info).
   function draw(info?: any, overrides?: any) {
@@ -141,18 +157,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       overrides
     );
   }
-
-  const { computeImageLayout } = useImageEditorLayout(
-    imageSrc,
-    canvasRef,
-    containerRef,
-    imgRef,
-    originalImgRef,
-    originalRef,
-    setOffset,
-    setMounted,
-    draw
-  );
 
   useImageEditorHighlights(
     selectedCategory,
@@ -286,164 +290,14 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
 
 
+  useKeyboardEvents(applyEdit, onCancel);
+
   return (
     <div
       ref={containerRef}
       tabIndex={0}
-      onKeyDown={(e) => {
-        const k = (e as any).key;
-        if (k === 'Enter') { applyEdit(); }
-        if (k === 'Escape') { onCancel(); }
-      }}
-      className="image-editor"
-      style={{
-        width: '100%',
-        maxWidth: 'min(92vw, 820px)',
-        margin: '0 auto',
-        background: 'var(--bg-elev)',
-        color: 'var(--text)',
-        padding: 12,
-        paddingBottom: 16,
-        borderRadius: 8,
-        overflowX: 'hidden',
-        // ensure the editor never exceeds the viewport height; allow internal scrolling
-        maxHeight: 'calc(100vh - 48px)',
-        overflowY: 'auto',
-        // subtle mount animation: only translate and fade (no scaling) to
-        // avoid a size jump when the canvas finishes sizing.
-        transform: mounted ? 'translateY(0)' : 'translateY(6px)',
-        opacity: mounted ? 1 : 0,
-        transition: 'opacity 220ms ease, transform 260ms cubic-bezier(.2,.9,.2,1)'
-      }}
+      className={`image-editor ${mounted ? '' : 'unmounted'}`}
     >
-      {/* scoped styles for sliders and subtle animations */}
-      <style>{`
-        /* Category button hover effects */
-        .cat-btn .cat-label {
-          max-width: 0;
-          opacity: 0;
-          transition: max-width 200ms ease, opacity 180ms ease, margin 180ms ease;
-          margin-left: 0;
-        }
-        .cat-btn[data-active="true"] .cat-label {
-          max-width: 80px;
-          opacity: 1;
-          margin-left: 8px;
-        }
-        .imgedit-range {
-          -webkit-appearance: none;
-          appearance: none;
-          height: 10px;
-          border-radius: 999px;
-          outline: none;
-          transition: box-shadow .2s ease, transform .2s ease;
-          cursor: pointer;
-          max-width: 100%;
-          box-sizing: border-box;
-        }
-        .imgedit-range:hover { transform: scaleY(1.1); }
-        .imgedit-range:active { box-shadow: 0 8px 24px rgba(0,0,0,0.16); }
-        .imgedit-range::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          background: white;
-          border: 3px solid var(--primary);
-          box-shadow: 0 4px 14px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1);
-          transition: transform .15s cubic-bezier(.2,.9,.2,1), box-shadow .15s ease;
-          cursor: grab;
-        }
-        .imgedit-range::-webkit-slider-thumb:hover {
-          transform: scale(1.15);
-          box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-        .imgedit-range::-webkit-slider-thumb:active {
-          transform: scale(1.05);
-          cursor: grabbing;
-        }
-        .imgedit-range::-moz-range-thumb {
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          background: white;
-          border: 3px solid var(--primary);
-          box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-          cursor: grab;
-        }
-        .imgedit-range::-moz-range-thumb:hover { transform: scale(1.15); }
-        .imgedit-range::-moz-range-thumb:active { transform: scale(1.05); cursor: grabbing; }
-        /* custom focus ring */
-        .imgedit-range:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent); }
-        .imgedit-range:focus::-webkit-slider-thumb { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 25%, transparent), 0 4px 14px rgba(0,0,0,0.2); }
-        /* Hide horizontal scrollbar for category selector but keep scrollable (touch/drag) */
-        .categories-scroll {
-          overflow-x: auto;
-          -ms-overflow-style: none; /* IE and Edge */
-          scrollbar-width: none; /* Firefox */
-        }
-        .categories-scroll::-webkit-scrollbar { height: 0; display: none; }
-        /* panels responsiveness: allow panels to grow and scroll on small viewports */
-        .imgedit-panels {
-          position: relative;
-          max-height: calc(100vh - 180px);
-          overflow: hidden;
-          overflow-x: hidden; /* prevent horizontal scroll */
-          border-radius: 12px;
-          background: color-mix(in srgb, var(--bg-elev) 95%, var(--primary) 5%);
-          box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
-        }
-        .imgedit-panels > div { height: 100%; }
-        .imgedit-panel-inner {
-          box-sizing: border-box;
-          overflow-y: auto;
-          overflow-x: hidden; /* avoid transient horizontal scroll */
-          -webkit-overflow-scrolling: touch;
-          padding: 16px;
-          gap: 14px;
-          display: grid;
-        }
-        /* Reduce header icon button size to make the top bar less tall */
-        .image-editor-buttons .btn.icon {
-          padding: 6px; /* smaller hit area while keeping icons tappable */
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          font-size: 13px;
-        }
-        @media (min-width: 720px) { .imgedit-panels { max-height: 280px; } }
-        @media (max-width: 720px) { .imgedit-panels { max-height: calc(100vh - 140px); } }
-      `}</style>
-      {/* slider color variables (theme-aware) */}
-      <style>{`
-        .image-editor {
-          /* defaults; app theme can override these CSS variables */
-          --slider-exposure-start: #fff6db;
-          --slider-exposure-end: #ffd166;
-          --slider-contrast-start: #fff3e6;
-          --slider-contrast-end: #ff9f43;
-          --slider-saturation-start: #ffe9e9;
-          --slider-saturation-end: #ff6b6b;
-          --slider-temperature-cold: #66d1ff;
-          --slider-temperature-warm: #ffb86b;
-          /* unified heat gradient used across primary sliders */
-          --slider-heat-start: #2d9cff;
-          --slider-heat-end: #ffd166;
-          /* rotation slider colors: left is subtle blue, right is warm so the track forms a blue->warm heat gradient */
-          --slider-rotation-start: var(--slider-heat-start);
-          --slider-rotation-end: var(--slider-heat-end);
-        }
-        /* Prefer a slightly lighter/whiter right-side color in dark mode so the filled portion remains visible */
-        @media (prefers-color-scheme: dark) {
-          .image-editor {
-            --slider-rotation-end: #ffdc99;
-          }
-        }
-        /* visually-hidden helper for screen readers */
-        .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-      `}</style>
-
       {/* Toolbar header (buttons) above the canvas */}
       <ImageEditorToolbarHeader onCancel={onCancel} resetAdjustments={resetAdjustments} applyEdit={applyEdit} isEdited={isEdited} />
 

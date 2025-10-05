@@ -41,3 +41,18 @@ export interface PreviewSectionProps {
 }
 
 export interface SingleImageViewProps {
+  dataUrl: string | null;
+  dataUrls: string[];
+  alt: string | string[];
+  setEditingIndex: React.Dispatch<React.SetStateAction<number>>;
+  setEditing: React.Dispatch<React.SetStateAction<boolean>>;
+  processing: boolean;
+  fileActionRef: React.MutableRefObject<'append' | 'replace'>;
+  replaceIndexRef: React.MutableRefObject<number | null>;
+  index: number;
+  setDataUrl: React.Dispatch<React.SetStateAction<string | null>>;
+  setPreviewLoaded: React.Dispatch<React.SetStateAction<boolean>>;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  cameraInputRef: React.RefObject<HTMLInputElement>;
+  openCamera: () => Promise<void>;
+}

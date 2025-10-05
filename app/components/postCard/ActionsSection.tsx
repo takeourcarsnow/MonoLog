@@ -105,9 +105,9 @@ export const ActionsSection = memo(function ActionsSection({
           setIsFavorite(!prev);
           try {
             if (prev) {
-              await api.unfavoritePost(/* post.id */);
+              await api.unfavoritePost(postId);
             } else {
-              await api.favoritePost(/* post.id */);
+              await api.favoritePost(postId);
             }
           } catch (e: any) {
             setIsFavorite(prev);

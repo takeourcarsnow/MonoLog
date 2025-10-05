@@ -19,6 +19,7 @@ import { useShare } from "./postCard/hooks/useShare";
 import { useIsMe } from "./postCard/hooks/useAuth";
 import { useToast } from "./Toast";
 import { usePathname } from "next/navigation";
+import { api } from "@/src/lib/api";
 
 // Memoize PostCard to prevent unnecessary re-renders when parent updates
 const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: HydratedPost; allowCarouselTouch?: boolean }) => {
@@ -237,8 +238,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
             showAuth={showAuth}
             setShowAuth={setShowAuth}
             sharePost={sharePost}
-            api={null}
-            toast={null}
+            api={api}
+            toast={toast}
           />
           <CommentsSection
             postId={post.id}

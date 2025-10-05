@@ -180,19 +180,15 @@
 /* List (single-column) view: constrain media height and allow vertical
    scrolling for tall photos so the post/card fits the viewport/container.
    This overrides the default overflow:hidden on .card-media for list view. */
-.feed:not(.grid-view) .card-media {
-  /* Limit media height to a portion of the viewport so very tall images
-     don't push the card beyond the visible area. */
-  max-height: 70vh;
-  overflow-y: auto; /* enable vertical scrolling for tall images */
-  overflow-x: hidden; /* avoid horizontal scrollbars */
-  -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
-}
-
-/* On mobile/narrow screens, use a slightly smaller max height so the
-   viewport remains comfortable when an image is open. */
-@media (max-width: 768px) {
-  .feed:not(.grid-view) .card-media { max-height: 50vh; }
+@media (min-width: 769px) {
+  .feed:not(.grid-view) .card-media {
+    /* Limit media height to a portion of the viewport so very tall images
+       don't push the card beyond the visible area. */
+    max-height: 70vh;
+    overflow-y: auto; /* enable vertical scrolling for tall images */
+    overflow-x: hidden; /* avoid horizontal scrollbars */
+    -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+  }
 }
 
 

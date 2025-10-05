@@ -11,7 +11,7 @@
   flex: 1;
 }
 .card {
-  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: var(--shadow);
   /* Changed from overflow:hidden to visible to avoid 1px vertical cropping
      of contained media at certain desktop zoom levels due to fractional
@@ -57,7 +57,6 @@
   align-items: center; 
   gap: 14px; /* increased gap to give more space between avatar and text */
   padding: 10px 12px; 
-  border-bottom: 1px solid var(--border);
   min-width: 0; /* Allow flex children to shrink */
 }
 

@@ -117,9 +117,13 @@ export function FeedView() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const hasMoreRef = useRef(true);
+  useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = 3;
   const loadingMoreRef = useRef(false);
+  const [sentinelMounted, setSentinelMounted] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
   
   // Move hooks to component level for grid view
   const toast = useToast();
@@ -187,22 +191,26 @@ export function FeedView() {
   }, [loadInitialPosts]);
 
   useEffect(() => {
-    if (!sentinelRef.current) return;
+    if (!sentinelMounted || !hasMore) {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      return;
+    }
     const el = sentinelRef.current;
-    
-    // Use a ref to store the current observer to avoid recreation
-    const observerRef = { current: null as IntersectionObserver | null };
+    if (!el) return;
     
     const obs = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         (async () => {
           if (!entry.isIntersecting) return;
-          if (loadingMoreRef.current || !hasMore) return;
+          if (loadingMoreRef.current || !hasMoreRef.current) return;
           loadingMoreRef.current = true;
           setLoadingMore(true);
           try { obs.unobserve(el); } catch (e) { /* ignore */ }
           try {
-            const last = posts[posts.length - 1];
+            const last = postsRef.current[postsRef.current.length - 1];
             const before = last?.createdAt;
             const next = await api.getFollowingFeedPage({ limit: PAGE_SIZE, before });
             setPosts(prev => [...prev, ...next]);
@@ -212,7 +220,7 @@ export function FeedView() {
           } finally {
             setLoadingMore(false);
             loadingMoreRef.current = false;
-            if (hasMore) try { obs.observe(el); } catch (e) { /* ignore */ }
+            if (hasMoreRef.current) try { obs.observe(el); } catch (e) { /* ignore */ }
           }
         })();
       });
@@ -226,7 +234,7 @@ export function FeedView() {
         observerRef.current.disconnect();
       }
     };
-  }, []); // Empty dependency array - only create observer once
+  }, [sentinelMounted, hasMore]); // Depend on sentinelMounted and hasMore
 
   // Refresh feed when a new post is created (user returns to feed after upload)
   useEffect(() => {
@@ -272,14 +280,14 @@ export function FeedView() {
               </Link>
             </div>
           ))}
-          {hasMore ? <div ref={sentinelRef} className="tile sentinel" aria-hidden /> : null}
+          {hasMore ? <div ref={(el) => { sentinelRef.current = el; setSentinelMounted(!!el); }} className="tile sentinel" aria-hidden /> : null}
         </div>
       );
     }
     return (
       <>
         {posts.map(p => <PostCard key={p.id} post={p} />)}
-        {hasMore ? <div ref={sentinelRef} className="feed-sentinel" /> : null}
+        {hasMore ? <div ref={(el) => { sentinelRef.current = el; setSentinelMounted(!!el); }} className="feed-sentinel" /> : null}
         {loadingMore ? <div className="card skeleton" style={{ height: 120 }} /> : null}
       </>
     );

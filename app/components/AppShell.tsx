@@ -65,8 +65,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               // will navigate to the next section.
               shortSwipes={true}
               longSwipes={true}
-              longSwipesRatio={0.25}
-              threshold={15}
+              longSwipesRatio={0.5}
+              threshold={50}
               // Let the Swiper container adjust its height to the active slide
               // so each section sizes itself to its own content instead of the
               // tallest slide. We also call updateAutoHeight when slides or

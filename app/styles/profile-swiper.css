@@ -4,12 +4,12 @@
     width: 100% !important;
     /* don't force a fixed height here; let individual slides size themselves */
     /* Ensure touch events can be detected for horizontal swipes */
-    touch-action: none;
+    touch-action: pan-x;
   }
   .swipe-views .swiper-wrapper {
     width: 100% !important;
     /* don't force a fixed height here; let the active slide determine wrapper height */
-    touch-action: none;
+    touch-action: pan-x;
   }
 /* Make each slide flexible: ensure slides fill the viewport minus header/tabbar
    but allow taller content to grow. Use min-height rather than forcing a
@@ -22,7 +22,7 @@
   height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px)))) !important;
   display: block;
   /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
-  touch-action: none;
+  touch-action: pan-y;
   overflow-y: auto; /* allow vertical scrolling if content is taller */
 }
 

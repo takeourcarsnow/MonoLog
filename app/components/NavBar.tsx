@@ -63,14 +63,6 @@ export function Navbar({ activeIndex }: NavbarProps) {
             >
               <div className="tab-icon">
                 <Icon size={20} strokeWidth={2} />
-                {active && (
-                  <div
-                    className="tab-indicator"
-                    style={{
-                      backgroundColor: item.color,
-                    }}
-                  />
-                )}
               </div>
               <span className="tab-label">{item.label}</span>
             </button>

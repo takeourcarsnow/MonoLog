@@ -3,8 +3,9 @@
   margin: 0 auto;
   width: 100%;
   /* Make content scrollable within viewport */
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   /* Reserve top space for fixed header */
   padding: var(--header-height, calc(48px + var(--safe-top, 0px))) 12px calc(var(--tabbar-height, 64px) + 12px);
 }

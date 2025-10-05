@@ -42,6 +42,8 @@ export const metadata: Metadata = {
 
 // Move themeColor into the viewport export to satisfy Next.js metadata rules
 export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
   // themeColor supports an array with media queries
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#0f0f10" },

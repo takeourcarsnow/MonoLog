@@ -1,12 +1,15 @@
 .header {
   position: sticky; top: 0; z-index: 10;
+  /* Expose the effective header height so other layout rules can
+    align content below the sticky header without hardcoding values. */
+  --header-height: 48px;
   backdrop-filter: saturate(180%) blur(8px);
   background: color-mix(in srgb, var(--bg), transparent 10%);
   border-bottom: 1px solid var(--border);
   padding-top: var(--safe-top);
 }
 .header-inner {
-  max-width: var(--maxw); margin: 0 auto; padding: 12px 16px;
+  max-width: var(--maxw); margin: 0 auto; padding: 8px 12px;
   display: flex; align-items: center; gap: 10px; justify-content: space-between;
   /* Ensure the header never expands beyond its container (prevents
      long inline labels from increasing the app width on small screens). */

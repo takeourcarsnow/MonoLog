@@ -2,9 +2,11 @@
   max-width: var(--maxw);
   margin: 0 auto;
   width: 100%;
-  padding: 12px 12px 100px; /* Increased bottom padding for navbar */
+  /* User-requested: remove top padding so content sits flush under
+    the header. Keep bottom safe-area padding. */
+  padding: 0px 12px calc(100px + var(--safe-bottom));
 }
-.upload-empty .content { padding-bottom: 28px; }
+.upload-empty .content { padding-bottom: calc(28px + var(--safe-bottom)); }
 .content { position: relative; /* allow certain header elements to overflow (e.g. avatar shadows) */ overflow: visible; }
 
 /* Strong page-level override when uploader has an active preview (JS toggles

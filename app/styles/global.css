@@ -66,6 +66,15 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
   contain: layout;
 }
 
+/* Debug helper: add `document.body.classList.add('debug-layout-outline')` in
+   the browser console to reveal outlines for the header, content, tabbar
+   and app-root. This helps diagnose which region is overlapping or being
+   clipped. Remove the class when done. */
+body.debug-layout-outline #app-root { outline: 3px dashed rgba(0,0,0,0.6); }
+body.debug-layout-outline .header { outline: 3px dashed rgba(255,0,0,0.95); }
+body.debug-layout-outline .content { outline: 3px dashed rgba(0,200,0,0.95); }
+body.debug-layout-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
+
 /* When rendering initially, the html element may have .no-transitions to
    suppress animations while theme is applied. This must be present in the
    server CSS to prevent hydration mismatches. */

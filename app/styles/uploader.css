@@ -117,15 +117,16 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(8px);
   color: white;
-  font-size: 20px;
+  font-size: 14px;
   font-weight: bold;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -133,10 +134,12 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   transition: all 0.2s ease;
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .carousel-nav:hover {
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.7);
   transform: translateY(-50%) scale(1.05);
 }
 
@@ -145,8 +148,9 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .carousel-nav:disabled {
-  opacity: 0.3;
+  opacity: 0 !important;
   cursor: not-allowed;
+  pointer-events: none !important;
 }
 
 .carousel-nav-prev {
@@ -155,6 +159,12 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 .carousel-nav-next {
   right: 12px;
+}
+
+/* Show arrows on hover over the carousel container */
+.carousel-container:hover .carousel-nav {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Dot indicators */
@@ -190,8 +200,8 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .carousel-nav {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     font-size: 16px;
   }
 
@@ -215,13 +225,19 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 /* Light theme adjustments */
 :root[data-theme="light"] .carousel-nav {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.7);
   color: var(--text);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 :root[data-theme="light"] .carousel-nav:hover {
-  background: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* Show arrows on hover over the carousel container in light theme */
+:root[data-theme="light"] .carousel-container:hover .carousel-nav {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 :root[data-theme="light"] .carousel-dot {

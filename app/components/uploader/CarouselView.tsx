@@ -21,6 +21,7 @@ interface CarouselViewProps {
   setPreviewLoaded: React.Dispatch<React.SetStateAction<boolean>>;
   processing: boolean;
   previewLoaded: boolean;
+  editing: boolean;
 }
 
 export function CarouselView({
@@ -42,10 +43,12 @@ export function CarouselView({
   toast,
   setPreviewLoaded,
   processing,
-  previewLoaded
+  previewLoaded,
+  editing
 }: CarouselViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Update container width on resize
   useEffect(() => {
@@ -60,12 +63,25 @@ export function CarouselView({
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
+  // Listen to slider drag events
+  useEffect(() => {
+    const start = () => setIsDragging(true);
+    const end = () => setIsDragging(false);
+    window.addEventListener('monolog:carousel_drag_start', start);
+    window.addEventListener('monolog:carousel_drag_end', end);
+    return () => {
+      window.removeEventListener('monolog:carousel_drag_start', start);
+      window.removeEventListener('monolog:carousel_drag_end', end);
+    };
+  }, []);
+
   // Add touch event listeners with passive: false to allow preventDefault
   useEffect(() => {
     const track = trackRef.current;
-    if (!track) return;
+    if (!track || editing) return;
 
     const handleTouchStart = (e: TouchEvent) => {
+      if (isDragging) return;
       e.stopPropagation();
       e.preventDefault();
       touchStartX.current = e.touches[0].clientX;
@@ -73,6 +89,7 @@ export function CarouselView({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      if (isDragging) return;
       e.stopPropagation();
       e.preventDefault();
       if (touchStartX.current == null || !trackRef.current || containerWidth === 0) return;
@@ -83,6 +100,7 @@ export function CarouselView({
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
+      if (isDragging) return;
       e.stopPropagation();
       e.preventDefault();
       if (touchStartX.current == null || containerWidth === 0) return;
@@ -105,7 +123,7 @@ export function CarouselView({
       track.removeEventListener('touchmove', handleTouchMove);
       track.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [containerWidth, index, dataUrls.length, setIndex]);
+  }, [containerWidth, index, dataUrls.length, setIndex, editing, isDragging]);
 
   // Update track transform when index or container width changes
   useEffect(() => {

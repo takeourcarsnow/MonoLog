@@ -113,50 +113,47 @@ export function PreviewSection({
     >
       <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
         {/* When editing, the ImageEditor is rendered at the top level, replacing all content */}
-        {!editing && (
-          <>
-            {dataUrls.length > 1 ? (
-              <CarouselView
-                dataUrls={dataUrls}
-                alt={alt}
-                index={index}
-                setIndex={setIndex}
-                trackRef={trackRef}
-                touchStartX={touchStartX}
-                touchDeltaX={touchDeltaX}
-                setEditingIndex={setEditingIndex}
-                setEditing={setEditing}
-                fileActionRef={fileActionRef}
-                replaceIndexRef={replaceIndexRef}
-                setCameraOpen={setCameraOpen}
-                videoRef={videoRef}
-                streamRef={streamRef}
-                cameraInputRef={cameraInputRef}
-                  toast={toast}
-                  setPreviewLoaded={setPreviewLoaded}
-                  processing={processing}
-                  previewLoaded={previewLoaded}
-              />
-            ) : (
-              <SingleImageView
-                dataUrl={dataUrl}
-                dataUrls={dataUrls}
-                alt={alt}
-                setEditingIndex={setEditingIndex}
-                setEditing={setEditing}
-                processing={processing}
-                fileActionRef={fileActionRef}
-                replaceIndexRef={replaceIndexRef}
-                index={index}
-                setDataUrl={setDataUrl}
-                setPreviewLoaded={setPreviewLoaded}
-                fileInputRef={fileInputRef}
-                cameraInputRef={cameraInputRef}
-                openCamera={openCamera}
-                previewLoaded={previewLoaded}
-              />
-            )}
-          </>
+        {dataUrls.length > 1 ? (
+          <CarouselView
+            dataUrls={dataUrls}
+            alt={alt}
+            index={index}
+            setIndex={setIndex}
+            trackRef={trackRef}
+            touchStartX={touchStartX}
+            touchDeltaX={touchDeltaX}
+            setEditingIndex={setEditingIndex}
+            setEditing={setEditing}
+            fileActionRef={fileActionRef}
+            replaceIndexRef={replaceIndexRef}
+            setCameraOpen={setCameraOpen}
+            videoRef={videoRef}
+            streamRef={streamRef}
+            cameraInputRef={cameraInputRef}
+              toast={toast}
+              setPreviewLoaded={setPreviewLoaded}
+              processing={processing}
+              previewLoaded={previewLoaded}
+              editing={editing}
+          />
+        ) : !editing && (
+          <SingleImageView
+            dataUrl={dataUrl}
+            dataUrls={dataUrls}
+            alt={alt}
+            setEditingIndex={setEditingIndex}
+            setEditing={setEditing}
+            processing={processing}
+            fileActionRef={fileActionRef}
+            replaceIndexRef={replaceIndexRef}
+            index={index}
+            setDataUrl={setDataUrl}
+            setPreviewLoaded={setPreviewLoaded}
+            fileInputRef={fileInputRef}
+            cameraInputRef={cameraInputRef}
+            openCamera={openCamera}
+            previewLoaded={previewLoaded}
+          />
         )}
       </div>
 

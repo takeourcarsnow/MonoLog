@@ -41,48 +41,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Swiper
               className="swipe-views"
               ref={swiperRef}
-              onSwiper={(s) => { swiperRef.current = s; }}
+              onSwiper={(s) => { 
+                swiperRef.current = s; 
+                console.log('Swiper initialized:', s);
+              }}
               spaceBetween={0}
               slidesPerView={1}
               initialSlide={currentIndex}
               onSlideChange={handleSlideChange}
-              touchStartPreventDefault={false}
-              passiveListeners={true}
-              // only allow touch/swipe interactions on touch-capable devices
+              // Basic touch support
               simulateTouch={true}
               allowTouchMove={true}
-              // Disable swiping when touch starts on photo areas
-              noSwipingSelector=".no-swipe"
-              // Enable rubber-band effect at edges: allows some drag but prevents
-              // slides from going completely off-screen. resistanceRatio controls
-              // how much resistance (0.6 = moderate resistance, good balance between
-              // visual feedback and preventing excessive drag)
-              resistance={true}
-              resistanceRatio={0.6}
-              // Allow both short (quick flick) and long swipes. The default
-              // behavior was disabling them which made users have to drag a
-              // large distance to change sections. Enable them and lower the
-              // longSwipesRatio so a smaller horizontal drag (<25% of width)
-              // will navigate to the next section.
-              shortSwipes={true}
-              longSwipes={true}
-              longSwipesRatio={0.5}
-              threshold={50}
-              // Let the Swiper container adjust its height to the active slide
-              // so each section sizes itself to its own content instead of the
-              // tallest slide. We also call updateAutoHeight when slides or
-              // content resize so measurements stay accurate.
-              autoHeight={false}
-              // Slightly increase touchRatio to make touch movements feel a bit
-              // more responsive on devices with higher pixel density.
-              touchRatio={1.1}
-              speed={200}
-              effect="slide"
-              watchSlidesProgress={true}
             >
               {views.map((view, index) => (
                 <SwiperSlide key={view.path} className={view.path === '/feed' ? 'slide-feed' : undefined}>
-                  <SlideWrapper active={index === activeIndex}>
+                  <div>
                     <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
                       {view.path === '/profile' ? (
                         (() => {
@@ -105,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <view.component />
                       )}
                     </Suspense>
-                  </SlideWrapper>
+                  </div>
                 </SwiperSlide>
               ))}
             </Swiper>

@@ -70,6 +70,7 @@ export function useAppShellNavigation(
   }, [isTouchDevice]);
 
   const handleSlideChange = (swiper: any) => {
+    console.log('Slide changed to:', swiper.activeIndex);
     const newPath = views[swiper.activeIndex]?.path;
     // keep local state for which slide is active so we can mark others inert
     try { setActiveIndex(typeof swiper.activeIndex === 'number' ? swiper.activeIndex : currentIndex); } catch (_) {}

@@ -95,7 +95,20 @@ export function PullToRefreshWrapper({
         pullDistance={pullDistance}
         threshold={threshold}
       />
-      <div className={isRefreshing || pullDistance > 0 ? 'pointer-events-none' : ''}>
+      {/* When pulling or refreshing, push the content down so the header
+          / avatar / follow button isn't obscured by the indicator. Use a
+          smooth margin transition for a nicer effect. */}
+      <div
+        className={isRefreshing || pullDistance > 0 ? 'pointer-events-none' : ''}
+        style={{
+          transition: isRefreshing ? 'margin-top 180ms ease' : 'none',
+          // While actively pulling, match the visual offset to the pull distance so
+          // the header/content moves with the user's gesture. When refreshing, use
+          // a fixed offset equal to the indicator's approximate height.
+          marginTop: isRefreshing ? 56 : pullDistance,
+          willChange: 'margin-top'
+        }}
+      >
         {children}
       </div>
     </div>

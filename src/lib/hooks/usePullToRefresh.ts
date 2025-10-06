@@ -106,6 +106,8 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   }, [disabled, state.pullDistance, threshold, onRefresh]);
 
   useEffect(() => {
+    if (disabled) return;
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -120,7 +122,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd, handleWheel]);
+  }, [disabled, handleTouchStart, handleTouchMove, handleTouchEnd, handleWheel]);
 
   const getPullStyles = useCallback(() => {
     if (!state.isPulling && !state.isRefreshing) return {};

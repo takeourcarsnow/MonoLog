@@ -41,6 +41,7 @@ export function FeedPage({
   const { isRefreshing, pullDistance, isPulling, containerRef, getPullStyles } = usePullToRefresh({
     threshold: 80,
     onRefresh: refresh,
+    disabled: posts.length === 0,
   });
 
   useEffect(() => {

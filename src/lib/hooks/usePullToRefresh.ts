@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+﻿import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface PullToRefreshOptions {
   threshold?: number;
@@ -6,182 +6,89 @@ interface PullToRefreshOptions {
   disabled?: boolean;
 }
 
-interface PullToRefreshState {
-  isRefreshing: boolean;
-  pullDistance: number;
-  isPulling: boolean;
-}
-
 export function usePullToRefresh(options: PullToRefreshOptions) {
   const { threshold = 60, onRefresh, disabled = false } = options;
 
-  const [state, setState] = useState<PullToRefreshState>({
-    isRefreshing: false,
-    pullDistance: 0,
-    isPulling: false,
-  });
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
 
-  const startY = useRef<number>(0);
-  const isDragging = useRef<boolean>(false);
+  const startY = useRef(0);
+  const isDragging = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastWheelTime = useRef<number>(0);
-  const isTriggeringRefresh = useRef<boolean>(false);
-  const lastWheelProcessTime = useRef<number>(0);
-  const lastRefreshEndTime = useRef<number>(0);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (disabled || state.isRefreshing) return;
+    if (disabled || isRefreshing) return;
 
-    const touch = e.touches[0];
-    startY.current = touch.clientY;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    if (scrollTop > 0) return;
+
+    startY.current = e.touches[0].clientY;
     isDragging.current = true;
-  }, [disabled, state.isRefreshing]);
+  }, [disabled, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (disabled || state.isRefreshing || !isDragging.current) return;
+    if (disabled || isRefreshing || !isDragging.current) return;
 
-    const touch = e.touches[0];
-    const currentY = touch.clientY;
-    const pullDistance = Math.max(0, Math.min(currentY - startY.current, threshold * 1.5));
-
-    // Only allow pull-to-refresh when at the top of the scrollable area
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    if (scrollTop > 0) return;
-
-    if (pullDistance > 0) {
-      e.preventDefault();
-      setState(prev => ({
-        ...prev,
-        pullDistance,
-        isPulling: true,
-      }));
+    const deltaY = e.touches[0].clientY - startY.current;
+    if (deltaY > 0) {
+      if (e.cancelable) e.preventDefault();
+      setPullDistance(Math.min(deltaY, threshold * 2));
+      setIsPulling(true);
     }
-  }, [disabled, state.isRefreshing]);
-
-  const handleWheel = useCallback((e: WheelEvent) => {
-    if (disabled || state.isRefreshing) return;
-
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    if (scrollTop > 0) return;
-
-    const now = Date.now();
-    if (now - lastWheelProcessTime.current < 12) return; // Throttle to prevent too frequent updates
-    if (now - lastRefreshEndTime.current < 2000) return; // Cooldown after refresh
-    lastWheelProcessTime.current = now;
-
-    lastWheelTime.current = now;
-
-    if (e.deltaY < 0) {  // Scrolling up (pull down gesture)
-      e.preventDefault();
-
-      if (isTriggeringRefresh.current) return;
-
-      setState(prev => {
-        const increment = Math.min(Math.abs(e.deltaY), 12); // Cap the increment
-        const newDistance = Math.min(prev.pullDistance + increment, threshold * 1.5);
-        if (newDistance >= threshold && !prev.isRefreshing) {
-          isTriggeringRefresh.current = true;
-          Promise.resolve(onRefresh()).then(() => {
-            setState(prev => ({ ...prev, isRefreshing: false, pullDistance: 0, isPulling: false }));
-            isTriggeringRefresh.current = false;
-            lastRefreshEndTime.current = Date.now();
-          });
-          return { ...prev, isRefreshing: true, isPulling: false };
-        }
-        return { ...prev, pullDistance: newDistance, isPulling: true };
-      });
-    } else if (e.deltaY > 0 && state.pullDistance > 0) {  // Scrolling down, reset pull distance
-      setState(prev => ({ ...prev, pullDistance: 0, isPulling: false }));
-    }
-  }, [disabled, state.isRefreshing, threshold, onRefresh]);
+  }, [disabled, isRefreshing, threshold]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (disabled || !isDragging.current) return;
-
+    if (!isDragging.current) return;
     isDragging.current = false;
 
-    if (state.pullDistance >= threshold && !isTriggeringRefresh.current) {
-      isTriggeringRefresh.current = true;
-      setState(prev => ({
-        ...prev,
-        isRefreshing: true,
-        isPulling: false,
-      }));
+    const shouldRefresh = pullDistance >= threshold;
+    setIsPulling(false);
 
+    if (shouldRefresh) {
+      setIsRefreshing(true);
       try {
         await onRefresh();
       } finally {
-        setState(prev => ({
-          ...prev,
-          isRefreshing: false,
-          pullDistance: 0,
-        }));
-        isTriggeringRefresh.current = false;
-        lastRefreshEndTime.current = Date.now();
+        setIsRefreshing(false);
+        setPullDistance(0);
       }
     } else {
-      setState(prev => ({
-        ...prev,
-        pullDistance: 0,
-        isPulling: false,
-      }));
+      setPullDistance(0);
     }
-  }, [disabled, state.pullDistance, threshold, onRefresh]);
+  }, [pullDistance, threshold, onRefresh]);
 
   useEffect(() => {
     if (disabled) return;
 
-    const interval = setInterval(() => {
-      const now = Date.now();
-      setState(prev => {
-        if (now - lastWheelTime.current > 150 && prev.pullDistance > 0 && !prev.isRefreshing && prev.pullDistance < threshold) {
-          return { ...prev, pullDistance: 0, isPulling: false };
-        }
-        return prev;
-      });
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [disabled, threshold]);
-
-  useEffect(() => {
-    if (disabled) return;
-
-    const container = containerRef.current;
-    if (!container) return;
-
-    window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd, { passive: false });
-    window.addEventListener('wheel', handleWheel, { passive: false });
+    const options = { passive: false };
+    window.addEventListener('touchstart', handleTouchStart, options);
+    window.addEventListener('touchmove', handleTouchMove, options);
+    window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('wheel', handleWheel);
-      if (wheelTimeoutRef.current) {
-        clearTimeout(wheelTimeoutRef.current);
-      }
     };
-  }, [disabled, handleTouchStart, handleTouchMove, handleTouchEnd, handleWheel]);
+  }, [disabled, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   const getPullStyles = useCallback(() => {
-    if (!state.isPulling && !state.isRefreshing) return {};
+    if (!isPulling && !isRefreshing) return {};
 
-    const progress = Math.min(state.pullDistance / threshold, 1);
-    const translateY = state.isRefreshing ? threshold : state.pullDistance * 0.4;
-
+    const translateY = isRefreshing ? 80 : pullDistance * 0.5;
     return {
       transform: `translateY(${translateY}px)`,
-      transition: state.isRefreshing ? 'transform 0.2s ease-out' : 'none',
+      transition: isRefreshing ? 'transform 0.3s ease-out' : 'none',
     };
-  }, [state, threshold]);
+  }, [isPulling, isRefreshing, pullDistance]);
 
   return {
-    ...state,
+    isRefreshing,
+    pullDistance,
+    isPulling,
     containerRef,
     getPullStyles,
   };
 }
+

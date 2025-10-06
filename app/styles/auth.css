@@ -32,6 +32,7 @@
   backdrop-filter: saturate(140%) blur(4px);
   transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform 160ms var(--transition-fast);
   text-align: center;
+  caret-color: transparent;
 }
 .auth-form.enhanced .fancy-input:focus {
   border-color: color-mix(in srgb, var(--primary), transparent 40%);

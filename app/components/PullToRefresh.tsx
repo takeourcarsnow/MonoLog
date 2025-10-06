@@ -13,19 +13,22 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
   threshold,
   className = ''
 }) => {
-  const isVisible = isRefreshing || pullDistance >= threshold;
+  const progress = Math.min(pullDistance / threshold, 1);
+  const isVisible = isRefreshing || progress > 0;
 
   return (
     <div
-      className={`absolute top-0 left-0 right-0 z-10 flex items-center justify-center py-4 ${className}`}
+      className={`flex items-center justify-center py-4 bg-white border-b border-gray-200 ${className}`}
       style={{
         opacity: isVisible ? 1 : 0,
-        transform: `translateY(${isVisible ? 0 : -100}%)`,
-        transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
+        height: isVisible ? 'auto' : 0,
+        overflow: 'hidden',
+        transition: isRefreshing ? 'opacity 0.3s ease-out, height 0.3s ease-out' : 'none',
       }}
     >
       <div className="flex items-center space-x-2">
         <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+        {isRefreshing && <span className="text-sm text-gray-600">Refreshing...</span>}
       </div>
     </div>
   );
@@ -50,32 +53,16 @@ export const PullToRefreshWrapper = React.memo<PullToRefreshWrapperProps>(({
   getPullStyles,
   className = ''
 }) => {
-  const effectivePull = React.useMemo(() => threshold * (1 - Math.exp(-pullDistance / threshold)), [pullDistance, threshold]);
-
   return (
-    <div
-      ref={containerRef}
-      className={`relative overflow-hidden ${className}`}
-      style={getPullStyles()}
-    >
+    <div className={`relative ${className}`}>
       <PullToRefreshIndicator
         isRefreshing={isRefreshing}
         pullDistance={pullDistance}
         threshold={threshold}
       />
-      {/* When pulling or refreshing, push the content down so the header
-          / avatar / follow button isn't obscured by the indicator. Use a
-          smooth transform transition for better performance. */}
       <div
-        className={isRefreshing || pullDistance > 0 ? 'pointer-events-none' : ''}
-        style={{
-          transition: 'transform 180ms ease',
-          // While actively pulling, match the visual offset to the pull distance so
-          // the header/content moves with the user's gesture. When refreshing, use
-          // a fixed offset equal to the indicator's approximate height.
-          transform: `translateY(${isRefreshing ? 56 : effectivePull}px)`,
-          willChange: 'transform'
-        }}
+        ref={containerRef}
+        style={getPullStyles()}
       >
         {children}
       </div>

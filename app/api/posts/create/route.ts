@@ -131,6 +131,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Database error: ${e?.message || String(e)}` }, { status: 500 });
     }
 
+    // Ensure the public field is set correctly
+    await sb.from('posts').update({ public: !!isPublic }).eq('id', id);
+
     // Normalize image URLs from the inserted data
     let normalizedImageUrls: string[] = [];
     try {

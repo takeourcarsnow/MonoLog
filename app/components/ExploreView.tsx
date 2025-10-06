@@ -25,7 +25,6 @@ export function ExploreView() {
   const postsRef = useRef<HydratedPost[]>(posts);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef(loading);
-  const userInteractedRef = useRef(false);
   
   // Move hooks to component level for grid view
   const toast = useToast();
@@ -69,11 +68,6 @@ export function ExploreView() {
     const obs = new IntersectionObserver(entries => {
       const anyIntersecting = entries.some(e => e.isIntersecting);
       if (!anyIntersecting) return;
-      // require explicit user interaction (scroll/wheel/touch/keys) before
-      // allowing the observer to auto-load more. This ensures a refresh that
-      // mounts the sentinel inside the viewport does not immediately trigger
-      // extra pages.
-      if (!userInteractedRef.current) return;
       if (loadingMoreRef.current || !hasMore) return;
       (async () => {
         loadingMoreRef.current = true;
@@ -97,27 +91,6 @@ export function ExploreView() {
     observerRef.current = obs;
     obs.observe(el);
   }, [hasMore]);
-
-  // listen for a user interaction that implies scrolling intent. Once any
-  // of these events fire, flip the flag and remove listeners.
-  useEffect(() => {
-    function mark() {
-      userInteractedRef.current = true;
-      remove();
-    }
-    function remove() {
-      try { window.removeEventListener('scroll', mark, true); } catch (e) { }
-      try { window.removeEventListener('wheel', mark, true); } catch (e) { }
-      try { window.removeEventListener('touchstart', mark, true); } catch (e) { }
-      try { window.removeEventListener('keydown', mark); } catch (e) { }
-    }
-    if (typeof window === 'undefined') return;
-  window.addEventListener('scroll', mark, { passive: true } as AddEventListenerOptions);
-  window.addEventListener('wheel', mark, { passive: true } as AddEventListenerOptions);
-  window.addEventListener('touchstart', mark, { passive: true } as AddEventListenerOptions);
-  window.addEventListener('keydown', mark);
-    return () => remove();
-  }, []);
 
   // keep loadingRef up-to-date so the callback ref can read it synchronously
   useEffect(() => { loadingRef.current = loading; }, [loading]);

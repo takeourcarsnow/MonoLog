@@ -1,15 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { memo, useState, useRef, useEffect } from "react";
+import { memo, useState, useRef, useEffect, lazy, Suspense } from "react";
 import type { HydratedPost } from "@/src/lib/types";
 import { AuthForm } from "./AuthForm";
 import { UserHeader } from "./postCard/UserHeader";
 import { MediaSection } from "./postCard/MediaSection";
 import { ActionsSection } from "./postCard/ActionsSection";
-import FullscreenViewer from "./FullscreenViewer";
 import { CommentsSection } from "./postCard/CommentsSection";
-import { Editor } from "./postCard/Editor";
 import { usePostState } from "./postCard/hooks/usePostState";
 import { useComments } from "./postCard/hooks/useComments";
 import { useFavorite } from "./postCard/hooks/useFavorite";
@@ -21,6 +19,10 @@ import { useIsMe } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
 import { usePathname } from "next/navigation";
 import { api } from "@/src/lib/api";
+
+// Lazy load heavy components
+const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
+const Editor = lazy(() => import("./postCard/Editor").then(mod => ({ default: mod.Editor })));
 
 // Memoize PostCard to prevent unnecessary re-renders when parent updates
 const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: HydratedPost; allowCarouselTouch?: boolean }) => {
@@ -297,17 +299,21 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
               }
             }}
           >
-            <Editor
-              ref={editorRef}
-              post={post}
-              onCancel={handleCancel}
-              onSave={handleSave}
-            />
+            <Suspense fallback={<div>Loading editor...</div>}>
+              <Editor
+                ref={editorRef}
+                post={post}
+                onCancel={handleCancel}
+                onSave={handleSave}
+              />
+            </Suspense>
           </div>
         )}
         </div>
       {fsOpen && fsSrc && (
-        <FullscreenViewer src={fsSrc} alt={fsAlt} onClose={handleCloseFullscreen} />
+        <Suspense fallback={<div>Loading...</div>}>
+          <FullscreenViewer src={fsSrc} alt={fsAlt} onClose={handleCloseFullscreen} />
+        </Suspense>
       )}
     </article>
   );

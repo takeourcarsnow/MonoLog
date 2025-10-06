@@ -1,16 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { getSlideState, setSlideState } from '@/src/lib/slideStateCache';
 import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
 import { ViewToggle } from "./ViewToggle";
 import { useFeed } from "@/src/lib/hooks/useFeed";
 import { usePullToRefresh } from "@/src/lib/hooks/usePullToRefresh";
-import { GridView } from "./GridView";
 import { PullToRefreshWrapper } from "./PullToRefresh";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
+
+// Lazy load GridView
+const GridView = lazy(() => import("./GridView").then(mod => ({ default: mod.GridView })));
 
 interface FeedPageProps {
   fetchFunction: (opts: { limit: number; before?: string }) => Promise<HydratedPost[]>;
@@ -73,12 +75,16 @@ export function FeedPage({
     if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
     if (!posts.length) return <div className="empty">{emptyMessage}</div>;
     if (view === "grid") {
-      return <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
-        const sentinel = document.querySelector('.tile.sentinel');
-        if (sentinel) {
-          setSentinel(sentinel as HTMLDivElement);
-        }
-      }} error={error} />;
+      return (
+        <Suspense fallback={<div>Loading grid...</div>}>
+          <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
+            const sentinel = document.querySelector('.tile.sentinel');
+            if (sentinel) {
+              setSentinel(sentinel as HTMLDivElement);
+            }
+          }} error={error} />
+        </Suspense>
+      );
     }
     return (
       <>

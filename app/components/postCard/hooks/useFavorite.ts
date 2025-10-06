@@ -1,41 +1,24 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { api } from "@/src/lib/api";
 import { useToast } from "../../Toast";
+import { useToggle } from "@/src/lib/hooks/useToggle";
 
 export function useFavorite(postId: string) {
-  const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteOverlayState, setFavoriteOverlayState] = useState<'adding' | 'removing' | null>(null);
   const overlayTimerRef = useRef<any>(null);
   const toast = useToast();
 
-  // Check favorite status on mount
-  useEffect(() => {
-    (async () => {
-      const cur = await api.getCurrentUser();
-      if (cur) {
-        setIsFavorite(await api.isFavorite(postId));
-      }
-    })();
-  }, [postId]);
-
-  const toggleFavoriteWithAuth = async () => {
-    const cur = await api.getCurrentUser();
-    if (!cur) {
-      return false;
-    }
-    const prev = isFavorite;
-    setIsFavorite(!prev);
-    try {
-      if (prev) await api.unfavoritePost(postId); else await api.favoritePost(postId);
-      // Dispatch event for optimistic updates in other views
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:favorite_changed', { detail: { postId, favorited: !prev } })); } catch (_) {}
-      return true;
-    } catch (e: any) {
-      setIsFavorite(prev);
-      toast.show(e?.message || "Failed to toggle favorite");
-      return false;
-    }
-  };
+  const { state: isFavorite, setState: setIsFavorite, toggleWithAuth } = useToggle({
+    id: postId,
+    checkApi: api.isFavorite,
+    toggleApi: async (id, current) => {
+      if (current) await api.unfavoritePost(id);
+      else await api.favoritePost(id);
+    },
+    eventName: 'monolog:favorite_changed',
+    eventDetailKey: 'postId',
+    onError: (e) => toast.show(e?.message || "Failed to toggle favorite")
+  });
 
   const showFavoriteFeedback = (action: 'adding' | 'removing') => {
     // Clear any existing overlay timer
@@ -54,7 +37,7 @@ export function useFavorite(postId: string) {
     isFavorite,
     setIsFavorite,
     favoriteOverlayState,
-    toggleFavoriteWithAuth,
+    toggleFavoriteWithAuth: toggleWithAuth,
     showFavoriteFeedback
   };
 }

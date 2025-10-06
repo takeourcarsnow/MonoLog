@@ -1,25 +1,26 @@
 import { useState, useRef, useEffect } from "react";
 import { api } from "@/src/lib/api";
 import { useToast } from "../../Toast";
+import { useToggle } from "@/src/lib/hooks/useToggle";
 
 export function useFollow(userId: string) {
-  const [isFollowing, setIsFollowing] = useState(false);
   const [followAnim, setFollowAnim] = useState<'following-anim' | 'unfollow-anim' | null>(null);
   const [followExpanded, setFollowExpanded] = useState(false);
-  const followInFlightRef = useRef(false);
   const followExpandTimerRef = useRef<number | null>(null);
   const followAnimTimerRef = useRef<number | null>(null);
   const toast = useToast();
 
-  // Check follow status on mount
-  useEffect(() => {
-    (async () => {
-      const cur = await api.getCurrentUser();
-      if (cur?.id !== userId) {
-        setIsFollowing(await api.isFollowing(userId));
-      }
-    })();
-  }, [userId]);
+  const { state: isFollowing, setState: setIsFollowing, toggleWithAuth } = useToggle({
+    id: userId,
+    checkApi: api.isFollowing,
+    toggleApi: async (id, current) => {
+      if (!current) await api.follow(id);
+      else await api.unfollow(id);
+    },
+    eventName: 'monolog:follow_changed',
+    eventDetailKey: 'userId',
+    onError: (e) => toast.show(e?.message || 'Failed to update follow')
+  });
 
   // Listen for follow changes triggered elsewhere (ProfileView) so this
   // PostCard can animate when its user's follow state changes externally.
@@ -30,7 +31,7 @@ export function useFollow(userId: string) {
         const following = !!e?.detail?.following;
         if (!changedUserId) return;
         if (changedUserId !== userId) return;
-        if (followInFlightRef.current) return; // ignore if we initiated it
+        if (followAnimTimerRef.current) return; // ignore if we initiated it
 
         setIsFollowing(prev => {
           if (prev === following) return prev;
@@ -47,7 +48,7 @@ export function useFollow(userId: string) {
     };
     if (typeof window !== 'undefined') window.addEventListener('monolog:follow_changed', onFollowChanged as any);
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:follow_changed', onFollowChanged as any); };
-  }, [userId]);
+  }, [userId, setIsFollowing]);
 
   const toggleFollow = async () => {
     const cur = await api.getCurrentUser();
@@ -58,34 +59,11 @@ export function useFollow(userId: string) {
     // Defensive: prevent following yourself
     if (cur.id === userId) return false;
 
-    // Prevent duplicate inflight requests
-    if (followInFlightRef.current) return false;
-
-    // Treat null/undefined as not-following
-    const prev = !!isFollowing;
-    // Optimistic update: flip state immediately so local UI responds fast
-    setIsFollowing(!prev);
-
-    followInFlightRef.current = true;
-    try {
-      if (!prev) {
-        await api.follow(userId);
-      } else {
-        await api.unfollow(userId);
-      }
-      // Only dispatch the global follow_changed event after the server
-      // operation succeeds. This ensures listeners (like FeedView) will
-      // re-fetch from the server and see the updated follow list.
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId, following: !prev } })); } catch (_) {}
-      return true;
-    } catch (e: any) {
-      // Revert optimistic change on error and show toast
-      setIsFollowing(prev);
-      try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}
-      return false;
-    } finally {
-      followInFlightRef.current = false;
+    const success = await toggleWithAuth();
+    if (success) {
+      // Animation is handled in the event listener above
     }
+    return success;
   };
 
   return {
@@ -97,7 +75,7 @@ export function useFollow(userId: string) {
     setFollowExpanded,
     followExpandTimerRef,
     followAnimTimerRef,
-    followInFlightRef,
+    followInFlightRef: { current: false }, // Not used anymore, but keeping for compatibility
     toggleFollow
   };
 }

@@ -10,6 +10,7 @@ import { useFeed } from "@/src/lib/hooks/useFeed";
 import { usePullToRefresh } from "@/src/lib/hooks/usePullToRefresh";
 import { PullToRefreshWrapper } from "./PullToRefresh";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
+import { SkeletonCard } from "./Skeleton";
 
 // Lazy load GridView
 const GridView = lazy(() => import("./GridView").then(mod => ({ default: mod.GridView })));
@@ -73,7 +74,7 @@ export function FeedPage({
 
   // Memoize the render function to prevent unnecessary recalculations
   const render = useMemo(() => {
-    if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
+    if (loading) return <SkeletonCard height={240} />;
     if (!posts.length) return <div className="empty">{emptyMessage}</div>;
     if (view === "grid") {
       return (

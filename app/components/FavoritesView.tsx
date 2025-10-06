@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/src/lib/api";
 import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
+import { SkeletonCard, SkeletonTile } from "./Skeleton";
+import { useEventListener } from "@/src/lib/hooks/useEventListener";
 
 export function FavoritesView() {
   const [posts, setPosts] = useState<HydratedPost[]>([]);
@@ -25,32 +27,26 @@ export function FavoritesView() {
   }, [loadFavorites]);
 
   // Handle favorite changes optimistically
-  useEffect(() => {
-    const onFavoriteChanged = (e: any) => {
-      const changedPostId = e?.detail?.postId;
-      const favorited = e?.detail?.favorited;
-      if (!changedPostId) return;
+  useEventListener('monolog:favorite_changed', (e: any) => {
+    const changedPostId = e?.detail?.postId;
+    const favorited = e?.detail?.favorited;
+    if (!changedPostId) return;
 
-      if (!favorited) {
-        // Unfavorited: remove from list
-        setPosts(prev => prev.filter(p => p.id !== changedPostId));
-      } else {
-        // Favorited: add to list (but we don't have the post data here, so refetch)
-        loadFavorites();
-      }
-    };
-    if (typeof window !== 'undefined') window.addEventListener('monolog:favorite_changed', onFavoriteChanged as any);
-    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:favorite_changed', onFavoriteChanged as any); };
+    if (!favorited) {
+      // Unfavorited: remove from list
+      setPosts(prev => prev.filter(p => p.id !== changedPostId));
+    } else {
+      // Favorited: add to list (but we don't have the post data here, so refetch)
+      loadFavorites();
+    }
   }, [loadFavorites]);
 
   if (loading) {
     return (
       <div className="view-fade">
-        <div className="card skeleton" style={{ height: 120, maxWidth: 800, margin: '24px auto' }} />
+        <SkeletonCard height={120} maxWidth={800} margin="24px auto" />
         <div className="grid" aria-label="Loading posts">
-          <div className="tile skeleton" style={{ height: 160 }} />
-          <div className="tile skeleton" style={{ height: 160 }} />
-          <div className="tile skeleton" style={{ height: 160 }} />
+          <SkeletonTile height={160} count={3} />
         </div>
       </div>
     );

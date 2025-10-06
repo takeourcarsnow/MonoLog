@@ -4,6 +4,7 @@ import { compressImage } from "@/src/lib/image";
 import { uid } from "@/src/lib/id";
 import { dedupe } from "@/src/lib/requestDeduplication";
 import type { HydratedPost, User } from "@/src/lib/types";
+import { useEventListener } from "@/src/lib/hooks/useEventListener";
 
 function looksLikeUuid(s: string) {
   return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);
@@ -82,91 +83,58 @@ export function useUserData(userId?: string) {
   }, [fetchUserData]);
 
   // Listen for newly created posts (from uploader) - optimized
-  useEffect(() => {
-    const onPostCreated = async () => {
-      try {
-        const me = await dedupe('getCurrentUser', () => api.getCurrentUser());
-        if (!me) return;
-        if (userId && userId !== me.id) return;
+  useEventListener('monolog:post_created', async () => {
+    try {
+      const me = await dedupe('getCurrentUser', () => api.getCurrentUser());
+      if (!me) return;
+      if (userId && userId !== me.id) return;
 
-        const list = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id));
-        setUser(prev => prev || me);
-        setPosts(list);
-      } catch (e) { /* ignore refresh errors */ }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('monolog:post_created', onPostCreated as any);
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('monolog:post_created', onPostCreated as any);
-      }
-    };
+      const list = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id));
+      setUser(prev => prev || me);
+      setPosts(list);
+    } catch (e) { /* ignore refresh errors */ }
   }, [userId]);
 
   // Listen for deleted posts
-  useEffect(() => {
-    const onPostDeleted = (e: any) => {
-      const deletedPostId = e?.detail?.postId;
-      if (deletedPostId) {
-        setPosts(prev => prev.filter(p => p.id !== deletedPostId));
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('monolog:post_deleted', onPostDeleted as any);
+  useEventListener('monolog:post_deleted', (e: any) => {
+    const deletedPostId = e?.detail?.postId;
+    if (deletedPostId) {
+      setPosts(prev => prev.filter(p => p.id !== deletedPostId));
     }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('monolog:post_deleted', onPostDeleted as any);
-      }
-    };
-  }, []);
+  });
 
   // When a global auth:changed event fires - optimized
-  useEffect(() => {
-    const handleAuthChanged = async () => {
-      if (isOtherParam && currentUserId && currentUserId !== userId) return;
+  useEventListener('auth:changed', async () => {
+    if (isOtherParam && currentUserId && currentUserId !== userId) return;
 
-      let me: any = null;
-      for (let i = 0; i < 8; i++) {
-        // Use deduplication for auth checks
-        me = await dedupe('getCurrentUser', () => api.getCurrentUser());
-        if (me) break;
-        await new Promise(r => setTimeout(r, 120));
-      }
-
-      if (me) {
-        setCurrentUserId(me.id);
-        setUser(me);
-        try {
-          const userPosts = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id));
-          setPosts(userPosts);
-        } catch (_) {}
-        setLoading(false);
-        return;
-      }
-
-      // No authenticated user found. Clear viewer state for the "own profile"
-      // route so the page can show the sign in / sign up form instead of
-      // incorrectly continuing to render a stale signed-in profile.
-      setCurrentUserId(null);
-      if (!isOtherParam) {
-        setUser(null);
-        setPosts([]);
-        setLoading(false);
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('auth:changed', handleAuthChanged as any);
+    let me: any = null;
+    for (let i = 0; i < 8; i++) {
+      // Use deduplication for auth checks
+      me = await dedupe('getCurrentUser', () => api.getCurrentUser());
+      if (me) break;
+      await new Promise(r => setTimeout(r, 120));
     }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('auth:changed', handleAuthChanged as any);
-      }
-    };
+
+    if (me) {
+      setCurrentUserId(me.id);
+      setUser(me);
+      try {
+        const userPosts = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id));
+        setPosts(userPosts);
+      } catch (_) {}
+      setLoading(false);
+      return;
+    }
+
+    // No authenticated user found. Clear viewer state for the "own profile"
+    // route so the page can show the sign in / sign up form instead of
+    // incorrectly continuing to render a stale signed-in profile.
+    setCurrentUserId(null);
+    if (!isOtherParam) {
+      setUser(null);
+      setPosts([]);
+      setLoading(false);
+    }
   }, [userId, isOtherParam, currentUserId]);
 
   return { user, setUser, posts, setPosts, loading, setLoading, following, setFollowing, currentUserId, isOtherParam };

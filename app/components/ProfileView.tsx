@@ -10,6 +10,7 @@ import { AuthForm } from "@/app/components/AuthForm";
 import { useUserData } from "./profile/useUserData";
 import { ProfileHeader } from "./profile/ProfileHeader";
 import { PostsGrid } from "./profile/PostsGrid";
+import { SkeletonAvatar, SkeletonText, SkeletonTile } from "./Skeleton";
 
 export function ProfileView({ userId }: { userId?: string }) {
   const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam } = useUserData(userId);
@@ -25,17 +26,17 @@ export function ProfileView({ userId }: { userId?: string }) {
         <div className="view-fade">
           <div className="profile-header toolbar">
             <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", width: "100%" }}>
-              <div className="skeleton" style={{ width: 96, height: 96, borderRadius: '50%' }} />
+              <SkeletonAvatar size={96} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', width: '100%' }}>
-                <div className="skeleton" style={{ width: 180, height: 20, borderRadius: 8 }} />
-                <div className="skeleton" style={{ width: 220, height: 16, borderRadius: 6 }} />
+                <SkeletonText width={180} height={20} borderRadius={8} />
+                <SkeletonText width={220} height={16} borderRadius={6} />
               </div>
             </div>
           </div>
           <div style={{ height: 8 }} />
           <div className="grid" aria-label="Loading posts">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="tile skeleton" style={{ height: 200, animationDelay: `${i * 60}ms` }} />
+            {Array.from({ length: 6 }, (_, i) => (
+              <SkeletonTile key={i} height={200} />
             ))}
           </div>
         </div>

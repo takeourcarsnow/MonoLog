@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { api } from "@/src/lib/api";
 import type { HydratedPost } from "@/src/lib/types";
+import { useEventListener } from "./useEventListener";
 
 interface UseFeedOptions {
   pageSize?: number;
@@ -115,47 +116,27 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
   }, [hasMore, loadMorePosts, rootMargin]);
 
   // Remove deleted post from feed
-  useEffect(() => {
-    const onPostDeleted = (e: any) => {
-      const deletedPostId = e?.detail?.postId;
-      if (deletedPostId) {
-        setPosts(prev => prev.filter(p => p.id !== deletedPostId));
-      }
-    };
-    if (typeof window !== 'undefined') {
-      window.addEventListener('monolog:post_deleted', onPostDeleted as any);
+  useEventListener('monolog:post_deleted', (e: any) => {
+    const deletedPostId = e?.detail?.postId;
+    if (deletedPostId) {
+      setPosts(prev => prev.filter(p => p.id !== deletedPostId));
     }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('monolog:post_deleted', onPostDeleted as any);
-      }
-    };
-  }, []);
+  });
 
   // Handle follow changes optimistically
-  useEffect(() => {
-    const onFollowChanged = (e: any) => {
-      const changedUserId = e?.detail?.userId;
-      const following = e?.detail?.following;
-      if (!changedUserId) return;
+  useEventListener('monolog:follow_changed', (e: any) => {
+    const changedUserId = e?.detail?.userId;
+    const following = e?.detail?.following;
+    if (!changedUserId) return;
 
-      if (!following) {
-        // Unfollowing: remove posts from this user optimistically
-        setPosts(prev => prev.filter(p => p.userId !== changedUserId));
-      } else {
-        // Following: for now, refetch to add new posts
-        // In future, could fetch user's posts and prepend, but refetch is simpler
-        loadInitialPosts();
-      }
-    };
-    if (typeof window !== 'undefined') {
-      window.addEventListener('monolog:follow_changed', onFollowChanged as any);
+    if (!following) {
+      // Unfollowing: remove posts from this user optimistically
+      setPosts(prev => prev.filter(p => p.userId !== changedUserId));
+    } else {
+      // Following: for now, refetch to add new posts
+      // In future, could fetch user's posts and prepend, but refetch is simpler
+      loadInitialPosts();
     }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('monolog:follow_changed', onFollowChanged as any);
-      }
-    };
   }, [loadInitialPosts]);
 
   // Cleanup observer on unmount

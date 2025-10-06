@@ -216,7 +216,7 @@
 .carousel-slide img,
 .grid .tile img {
   /* image has inner rounding to match the matte — sits above the matte layer */
-  border-radius: calc(var(--radius) - var(--photo-mat));
+  border-radius: var(--radius-sm);
   background-clip: padding-box;
   box-shadow: none;
   transition: transform var(--transition-fast);

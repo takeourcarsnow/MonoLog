@@ -92,6 +92,12 @@ export const localApi: Api = {
     const me = getUserById(cache.currentUserId);
     return !!me?.following?.includes(userId);
   },
+  async getFollowingUsers(userId?: string) {
+    const user = userId ? getUserById(userId) : getUserById(cache.currentUserId);
+    if (!user) return [];
+    const followingIds = user.following || [];
+    return followingIds.map(id => getUserById(id)).filter(Boolean) as User[];
+  },
 
   async favoritePost(postId: string) {
     const me = getUserById(cache.currentUserId);

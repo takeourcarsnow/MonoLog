@@ -36,7 +36,7 @@
 }
 .brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.2px; }
 
-.header-actions { display: flex; align-items: center; gap: 8px; }
+.header-actions { display: flex; align-items: center; gap: 4px; }
 /* allow header action group to shrink when space is tight (prevents
   the header from growing wider than the viewport when account text
   is present). */
@@ -57,7 +57,7 @@
 /* Normalize header action button heights so icon-only and text buttons match */
 .header-actions .btn {
   height: 36px; /* match .btn.icon width/height for visual consistency */
-  padding: 0 12px; /* vertical padding removed since height is fixed */
+  padding: 0 6px; /* vertical padding removed since height is fixed */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -90,9 +90,9 @@
 .account-switcher .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0; /* allow truncation */
-  padding: 6px 10px; /* slightly smaller touch target for header */
+  padding: 6px 6px; /* slightly smaller touch target for header */
 }
 .account-switcher .btn img.avatar {
   width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;

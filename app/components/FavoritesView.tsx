@@ -24,17 +24,24 @@ export function FavoritesView() {
     loadFavorites();
   }, [loadFavorites]);
 
-  // Remove deleted post from favorites immediately
+  // Handle favorite changes optimistically
   useEffect(() => {
-    const onPostDeleted = (e: any) => {
-      const deletedPostId = e?.detail?.postId;
-      if (deletedPostId) {
-        setPosts(prev => prev.filter(p => p.id !== deletedPostId));
+    const onFavoriteChanged = (e: any) => {
+      const changedPostId = e?.detail?.postId;
+      const favorited = e?.detail?.favorited;
+      if (!changedPostId) return;
+
+      if (!favorited) {
+        // Unfavorited: remove from list
+        setPosts(prev => prev.filter(p => p.id !== changedPostId));
+      } else {
+        // Favorited: add to list (but we don't have the post data here, so refetch)
+        loadFavorites();
       }
     };
-    if (typeof window !== 'undefined') window.addEventListener('monolog:post_deleted', onPostDeleted as any);
-    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_deleted', onPostDeleted as any); };
-  }, []);
+    if (typeof window !== 'undefined') window.addEventListener('monolog:favorite_changed', onFavoriteChanged as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:favorite_changed', onFavoriteChanged as any); };
+  }, [loadFavorites]);
 
   if (loading) {
     return (

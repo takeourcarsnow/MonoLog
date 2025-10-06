@@ -42,7 +42,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
 
     // Only allow pull-to-refresh when at the top of the scrollable area
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    if (scrollTop > 10) return;
+    if (scrollTop > 0) return;
 
     if (pullDistance > 0) {
       e.preventDefault();
@@ -53,6 +53,27 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
       }));
     }
   }, [disabled, state.isRefreshing]);
+
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (disabled || state.isRefreshing) return;
+
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    if (scrollTop > 0) return;
+
+    if (e.deltaY < 0) {
+      e.preventDefault();
+      setState(prev => {
+        const newDistance = prev.pullDistance + 20;
+        if (newDistance >= threshold && !prev.isRefreshing) {
+          Promise.resolve(onRefresh()).then(() => {
+            setState(prev => ({ ...prev, isRefreshing: false, pullDistance: 0, isPulling: false }));
+          });
+          return { ...prev, isRefreshing: true, isPulling: false };
+        }
+        return { ...prev, pullDistance: newDistance, isPulling: true };
+      });
+    }
+  }, [disabled, state.isRefreshing, threshold, onRefresh]);
 
   const handleTouchEnd = useCallback(async () => {
     if (disabled || !isDragging.current) return;
@@ -88,16 +109,18 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
     const container = containerRef.current;
     if (!container) return;
 
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
+    window.addEventListener('wheel', handleWheel, { passive: false });
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('wheel', handleWheel);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, handleWheel]);
 
   const getPullStyles = useCallback(() => {
     if (!state.isPulling && !state.isRefreshing) return {};

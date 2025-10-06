@@ -1,6 +1,6 @@
 .feed {
   display: grid;
-  gap: 14px;
+  gap: 20px;
   /* center feed/explore content to match the app's main max width */
   max-width: var(--maxw);
   margin: 0 auto;
@@ -470,7 +470,7 @@
 /* Mobile adjustments for tighter photos */
 @media (max-width: 768px) {
   .feed {
-    gap: 18px;
+    gap: 22px;
     padding: calc(14px + var(--safe-top, 0px)) 16px 16px 16px;
   }
   .feed.grid-view {
@@ -504,4 +504,18 @@
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* Ensure list (single-column) feed has extra breathing room so posts don't feel cramped.
+   Using a list-specific selector placed after other rules helps avoid accidental overrides. */
+.feed:not(.grid-view) {
+  gap: 28px;
+}
+
+/* The PullToRefreshWrapper renders an outer container and places the
+   actual feed children inside a second inner <div>. Target that inner
+   wrapper so grid layout/gap applies to the posts themselves. */
+.feed:not(.grid-view) > div:last-child {
+  display: grid;
+  gap: 28px;
 }

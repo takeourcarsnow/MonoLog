@@ -132,6 +132,32 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
     };
   }, []);
 
+  // Handle follow changes optimistically
+  useEffect(() => {
+    const onFollowChanged = (e: any) => {
+      const changedUserId = e?.detail?.userId;
+      const following = e?.detail?.following;
+      if (!changedUserId) return;
+
+      if (!following) {
+        // Unfollowing: remove posts from this user optimistically
+        setPosts(prev => prev.filter(p => p.userId !== changedUserId));
+      } else {
+        // Following: for now, refetch to add new posts
+        // In future, could fetch user's posts and prepend, but refetch is simpler
+        loadInitialPosts();
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:follow_changed', onFollowChanged as any);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:follow_changed', onFollowChanged as any);
+      }
+    };
+  }, [loadInitialPosts]);
+
   // Cleanup observer on unmount
   useEffect(() => {
     return () => {

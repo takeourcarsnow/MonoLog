@@ -27,6 +27,8 @@ export function useFavorite(postId: string) {
     setIsFavorite(!prev);
     try {
       if (prev) await api.unfavoritePost(postId); else await api.favoritePost(postId);
+      // Dispatch event for optimistic updates in other views
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:favorite_changed', { detail: { postId, favorited: !prev } })); } catch (_) {}
       return true;
     } catch (e: any) {
       setIsFavorite(prev);

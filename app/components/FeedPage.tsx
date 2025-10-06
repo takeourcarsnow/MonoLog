@@ -17,7 +17,6 @@ interface FeedPageProps {
   title: React.ReactNode;
   subtitle: string;
   viewStorageKey: string;
-  onFollowChange?: (posts: HydratedPost[], loadInitialPosts: () => Promise<void>) => (e: any) => void;
   scrollStateKey?: string;
   emptyMessage?: string;
 }
@@ -27,7 +26,6 @@ export function FeedPage({
   title,
   subtitle,
   viewStorageKey,
-  onFollowChange,
   scrollStateKey = 'feed',
   emptyMessage = "Your feed is quiet. Follow people in Explore to see their daily photo."
 }: FeedPageProps) {
@@ -62,18 +60,6 @@ export function FeedPage({
       try { setSlideState(scrollStateKey, { scrollY: typeof window !== 'undefined' ? window.scrollY : 0 }); } catch (_) {}
     };
   }, [scrollStateKey]);
-
-  // Refresh feed only when a FOLLOW action occurs elsewhere AND the newly
-  // followed user's posts are not already in the current list. This prevents
-  // a disruptive refetch when you quickly unfollow/refollow someone whose
-  // posts are already visible (original request: avoid instant feed refresh
-  // side-effects for these toggles).
-  useEffect(() => {
-    if (!onFollowChange) return;
-    const handler = onFollowChange(posts, loadInitialPosts);
-    if (typeof window !== 'undefined') window.addEventListener('monolog:follow_changed', handler as any);
-    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:follow_changed', handler as any); };
-  }, [onFollowChange, posts, loadInitialPosts]);
 
   // Refresh feed when a new post is created (user returns to feed after upload)
   useEffect(() => {

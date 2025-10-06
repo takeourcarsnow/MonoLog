@@ -57,9 +57,14 @@ export function DropZone({
           <span className="file-limits">
             JPEG/PNG up to ~{CONFIG.imageMaxSizeMB}MB
           </span>
-          <span className="file-limits">
-            Up to 5 photos per post
-          </span>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 4 }}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <svg key={i} viewBox="0 0 24 24" width="12" height="12">
+                <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" fill="none" stroke="#9ca3af" strokeWidth="1.5" />
+                <circle cx="12" cy="13" r="3" fill="none" stroke="#9ca3af" strokeWidth="1.5" />
+              </svg>
+            ))}
+          </div>
         </div>
 
         <div className="drop-zone-actions">

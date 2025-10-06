@@ -22,8 +22,6 @@ interface CropPanelProps {
   resetControlToDefault: (control: string) => void;
   computeImageLayout: () => { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number } | null;
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  applyCropOnly: () => void;
-  resetCrop: () => void;
   imageSrc: string;
   originalRef: React.MutableRefObject<string>;
   bakeRotate90: () => Promise<void>;
@@ -43,8 +41,6 @@ export default function CropPanel({
   resetControlToDefault,
   computeImageLayout,
   canvasRef,
-  applyCropOnly,
-  resetCrop,
   imageSrc,
   originalRef,
   bakeRotate90,
@@ -236,10 +232,6 @@ export default function CropPanel({
             <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')} style={{ flex: 1, background: rangeBg(rotation, -30, 30, 'var(--slider-rotation-start)', 'var(--slider-rotation-end)') }} />
           </div>
         </label>
-      </div>
-      <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-        <button type="button" className="btn ghost" onClick={() => resetCrop()} disabled={!(sel || cropRatio.current != null || presetIndex > 0 || imageSrc !== originalRef.current)} aria-disabled={!(sel || cropRatio.current != null || presetIndex > 0 || imageSrc !== originalRef.current)} style={{ padding: '8px 12px', borderRadius: 8 }}>Reset crop</button>
-        <button type="button" className="btn primary" onClick={() => applyCropOnly()} disabled={!sel} aria-disabled={!sel} style={{ padding: '8px 12px', borderRadius: 8 }}>Apply crop</button>
       </div>
     </div>
   );

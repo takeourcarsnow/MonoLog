@@ -58,8 +58,6 @@ interface ImageEditorPanelsProps {
   rotationRef: React.MutableRefObject<number>;
   computeImageLayout: () => any;
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  applyCropOnly: () => Promise<void>;
-  resetCrop: () => void;
   imageSrc: string;
   originalRef: React.MutableRefObject<string>;
   bakeRotate90: () => Promise<void>;
@@ -153,8 +151,6 @@ export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
             resetControlToDefault={props.resetControlToDefault}
             computeImageLayout={props.computeImageLayout}
             canvasRef={props.canvasRef}
-            applyCropOnly={props.applyCropOnly}
-            resetCrop={props.resetCrop}
             imageSrc={props.imageSrc}
             originalRef={props.originalRef}
             bakeRotate90={props.bakeRotate90}

@@ -5,12 +5,14 @@ import { useEffect, useRef, useState } from "react";
 import { CONFIG } from "@/src/lib/config";
 import { ThemeToggle } from "./ThemeToggle";
 import { AccountSwitcher } from "./AccountSwitcher";
+import { AboutModal } from "./AboutModal";
 import Link from "next/link";
 import { Info, Star } from "lucide-react";
 
 export function Header() {
   const router = useRouter();
   const [isLogoAnimating, setIsLogoAnimating] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const pathname = usePathname();
 
   const PREV_FAV_KEY = "monolog:prev-path-before-favorites";
@@ -134,9 +136,14 @@ export function Header() {
           <h1>{CONFIG.appName}</h1>
         </button>
         <div className="header-actions" id="header-actions">
-          <Link href="/about" className={`btn icon about-btn ${pathname === '/about' ? 'active' : ''}`} title="About MonoLog" aria-label="About MonoLog" aria-current={pathname === '/about' ? 'page' : undefined}>
+          <button
+            className="btn icon about-btn"
+            title="About MonoLog"
+            aria-label="About MonoLog"
+            onClick={() => setIsAboutModalOpen(true)}
+          >
             <Info size={20} strokeWidth={2} />
-          </Link>
+          </button>
           <ThemeToggle />
           <button
             className={`btn icon favorites-btn ${pathname === '/favorites' ? 'active' : ''}`}
@@ -151,6 +158,7 @@ export function Header() {
         </div>
       </div>
       {/* debug banner removed for cleaner UI */}
+      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </header>
   );
 }

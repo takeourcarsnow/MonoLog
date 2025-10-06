@@ -50,6 +50,7 @@ export interface Api {
   follow(userId: string): Promise<void>;
   unfollow(userId: string): Promise<void>;
   isFollowing(userId: string): Promise<boolean>;
+  getFollowingUsers(userId?: string): Promise<User[]>;
 
   // favorites
   favoritePost(postId: string): Promise<void>;

@@ -76,6 +76,24 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
     }
   }, [isActive, setScale, setTxSafe, setTySafe]);
 
+  // Set natural dimensions when image loads
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img) {
+      if (img.complete) {
+        natural.current.w = img.naturalWidth;
+        natural.current.h = img.naturalHeight;
+      } else {
+        const onLoad = () => {
+          natural.current.w = img.naturalWidth;
+          natural.current.h = img.naturalHeight;
+        };
+        img.addEventListener('load', onLoad);
+        return () => img.removeEventListener('load', onLoad);
+      }
+    }
+  }, [src]);
+
   const { onTouchStart, onTouchMove, onTouchEnd, reset } = useImageZoomTouch(
     containerRef,
     scale,

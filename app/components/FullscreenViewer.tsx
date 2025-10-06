@@ -79,7 +79,7 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       <div
         ref={rootRef}
         tabIndex={-1}
-        className={`fullscreen-viewer${isActive ? ' fs-active' : ''}`}
+        className={`fullscreen-viewer no-swipe${isActive ? ' fs-active' : ''}`}
         role="dialog"
         aria-modal="true"
       >

@@ -365,3 +365,31 @@ body.fs-blur .tabbar {
     transition: none !important;
   }
 }
+
+/* Blur background when about modal is open */
+body.modal-blur .app-content,
+body.modal-blur .content,
+body.modal-blur .header,
+body.modal-blur .tabbar {
+  filter: blur(4px) saturate(0.95) !important;
+  transition: filter 200ms cubic-bezier(.2,.65,.2,1) !important;
+  will-change: filter;
+  pointer-events: none; /* keep background non-interactive while modal is open */
+}
+
+/* Hide navbar when modal is open to prevent overlay */
+body.modal-blur .tabbar {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Respect reduced motion preference for modal blur */
+@media (prefers-reduced-motion: reduce) {
+  body.modal-blur .app-content,
+  body.modal-blur .content,
+  body.modal-blur .header,
+  body.modal-blur .tabbar {
+    filter: none !important;
+    transition: none !important;
+  }
+}

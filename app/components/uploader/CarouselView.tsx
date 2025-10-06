@@ -168,17 +168,6 @@ export function CarouselView({
           >
             ›
           </button>
-
-          <div className="carousel-dots">
-            {dataUrls.map((_, i) => (
-              <button
-                key={i}
-                className={`carousel-dot ${i === index ? 'active' : ''}`}
-                onClick={() => setIndex(i)}
-                aria-label={`Go to image ${i + 1}`}
-              />
-            ))}
-          </div>
         </>
       )}
     </div>

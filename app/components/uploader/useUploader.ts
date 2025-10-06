@@ -191,6 +191,32 @@ export function useUploader() {
     try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
   }
 
+  function removePhoto(atIndex: number) {
+    if (dataUrls.length === 0) return;
+    const safeIndex = Math.min(atIndex, dataUrls.length - 1);
+    const newDataUrls = dataUrls.filter((_, i) => i !== safeIndex);
+    const newOriginalDataUrls = originalDataUrls.filter((_, i) => i !== safeIndex);
+    const newEditorSettings = editorSettings.filter((_, i) => i !== safeIndex);
+    setDataUrls(newDataUrls);
+    setOriginalDataUrls(newOriginalDataUrls);
+    setEditorSettings(newEditorSettings);
+    if (Array.isArray(alt)) {
+      setAlt(alt.filter((_, i) => i !== safeIndex));
+    }
+    if (newDataUrls.length === 0) {
+      setDataUrl(null);
+      setIndex(0);
+    } else {
+      if (safeIndex === 0) {
+        setDataUrl(newDataUrls[0]);
+      }
+      if (index >= newDataUrls.length) {
+        setIndex(Math.max(0, newDataUrls.length - 1));
+      }
+    }
+    setPreviewLoaded(false);
+  }
+
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
       toast.show("Please select an image file");
@@ -469,6 +495,7 @@ export function useUploader() {
     // Functions
     setDrag,
     resetDraft,
+    removePhoto,
     handleFile,
     publish,
     handleFileInputChange,

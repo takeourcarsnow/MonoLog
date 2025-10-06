@@ -189,6 +189,17 @@ export function PreviewSection({
         onCapture={onCameraCapture}
       />
 
+      {dataUrls.length > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8, gap: 2 }}>
+          {Array.from({ length: 5 }, (_, i) => (
+            <svg key={i} viewBox="0 0 24 24" width="12" height="12">
+              <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" fill="none" stroke={i < dataUrls.length ? "#3b82f6" : "#9ca3af"} strokeWidth="1.5" />
+              <circle cx="12" cy="13" r="3" fill="none" stroke={i < dataUrls.length ? "#3b82f6" : "#9ca3af"} strokeWidth="1.5" />
+            </svg>
+          ))}
+        </div>
+      )}
+
       <ThumbnailStrip
         dataUrls={dataUrls}
         alt={alt}

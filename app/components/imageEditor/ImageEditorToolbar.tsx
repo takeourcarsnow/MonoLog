@@ -11,6 +11,9 @@ interface ImageEditorToolbarProps {
   selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame';
   setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame') => void;
   categoryHighlight: { left: number; top: number; width: number; height: number } | null;
+  sel: { x: number; y: number; w: number; h: number } | null;
+  applyCropOnly: () => void;
+  resetCrop: () => void;
 }
 
 function ImageEditorToolbarHeader({
@@ -48,8 +51,96 @@ function ImageEditorToolbarCategories({
   categoriesContainerRef,
   selectedCategory,
   setSelectedCategory,
-  categoryHighlight
-}: Pick<ImageEditorToolbarProps, 'categoriesContainerRef' | 'selectedCategory' | 'setSelectedCategory' | 'categoryHighlight'>) {
+  categoryHighlight,
+  sel,
+  applyCropOnly,
+  resetCrop
+}: Pick<ImageEditorToolbarProps, 'categoriesContainerRef' | 'selectedCategory' | 'setSelectedCategory' | 'categoryHighlight' | 'sel' | 'applyCropOnly' | 'resetCrop'>) {
+  // When in crop mode with a selection, show Confirm/Reset buttons instead of categories
+  if (selectedCategory === 'crop' && sel) {
+    return (
+      <div ref={categoriesContainerRef} className="categories-scroll" style={{
+        position: 'relative',
+        display: 'flex',
+        gap: 10,
+        marginTop: 16,
+        justifyContent: 'center',
+        flexWrap: 'nowrap',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        maxWidth: 820,
+        margin: '16px auto 0',
+        padding: '8px 10px',
+        alignItems: 'center',
+        whiteSpace: 'nowrap',
+        background: 'color-mix(in srgb, var(--bg-elev) 70%, transparent)',
+        borderRadius: 12,
+        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)'
+      }}>
+        <button
+          type="button"
+          aria-label="Confirm Crop"
+          title="Confirm Crop"
+          onClick={(e: any) => {
+            try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+            applyCropOnly();
+          }}
+          style={{
+            padding: '10px 16px',
+            borderRadius: 10,
+            background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
+            color: 'var(--text)',
+            transition: 'transform 140ms ease, box-shadow 220ms ease, background 140ms ease',
+            position: 'relative',
+            zIndex: 1,
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)',
+            fontWeight: 600,
+            overflow: 'hidden',
+            cursor: 'pointer'
+          }}
+        >
+          <Check size={20} strokeWidth={2} aria-hidden />
+          <span style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Confirm</span>
+        </button>
+
+        <button
+          type="button"
+          aria-label="Reset Crop"
+          title="Reset Crop"
+          onClick={(e: any) => {
+            try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+            resetCrop();
+          }}
+          style={{
+            padding: '10px 16px',
+            borderRadius: 10,
+            background: 'transparent',
+            color: 'var(--text)',
+            transition: 'transform 140ms ease, box-shadow 220ms ease, background 140ms ease',
+            position: 'relative',
+            zIndex: 1,
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            border: '1px solid color-mix(in srgb, var(--text) 4%, transparent)',
+            fontWeight: 500,
+            overflow: 'hidden',
+            cursor: 'pointer'
+          }}
+        >
+          <X size={20} strokeWidth={2} aria-hidden />
+          <span style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Reset</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Normal category buttons
   return (
     <div ref={categoriesContainerRef} className="categories-scroll" style={{
       position: 'relative',
@@ -253,7 +344,7 @@ export default function ImageEditorToolbar(props: ImageEditorToolbarProps) {
   return (
     <>
       <ImageEditorToolbarHeader onCancel={props.onCancel} resetAdjustments={props.resetAdjustments} applyEdit={props.applyEdit} isEdited={props.isEdited} />
-      <ImageEditorToolbarCategories categoriesContainerRef={props.categoriesContainerRef} selectedCategory={props.selectedCategory} setSelectedCategory={props.setSelectedCategory} categoryHighlight={props.categoryHighlight} />
+      <ImageEditorToolbarCategories categoriesContainerRef={props.categoriesContainerRef} selectedCategory={props.selectedCategory} setSelectedCategory={props.setSelectedCategory} categoryHighlight={props.categoryHighlight} sel={props.sel} applyCropOnly={props.applyCropOnly} resetCrop={props.resetCrop} />
     </>
   );
 }

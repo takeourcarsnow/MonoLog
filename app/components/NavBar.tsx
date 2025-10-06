@@ -32,7 +32,12 @@ export function Navbar({ activeIndex }: NavbarProps) {
   // Check if current path matches nav item (including username routes for profile)
   const isActive = (item: typeof navItems[0], index: number) => {
     if (item.path === '/profile') {
-      // Profile is active for /profile and username routes
+      // Profile tab should be active for any /profile/* route (e.g. /profile/following)
+      if (pathname.startsWith('/profile')) return true;
+
+      // Also keep existing username-route behavior: when the path is a single
+      // segment that isn't one of the reserved routes, treat it as a profile
+      // username page (e.g. /alice)
       const pathSegments = pathname.split('/').filter(Boolean);
       return pathname === '/profile' || (pathSegments.length === 1 && ![
         'about', 'api', 'calendar', 'explore', 'favorites',

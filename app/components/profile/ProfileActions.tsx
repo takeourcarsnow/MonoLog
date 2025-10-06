@@ -85,8 +85,15 @@ export function ProfileActions({
           matches the current user. */}
       {currentUserId && user?.id === currentUserId ? (
         <>
+          <Link className="btn" href="/profile/following" aria-label="Following">
+            <span className="icon" aria-hidden>
+              {/* people icon */}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </span>
+            <span>Following</span>
+          </Link>
           <button
-            className="btn icon-reveal edit-profile-btn"
+            className="btn edit-profile-btn"
             onClick={onEditToggle}
             aria-expanded={isEditingProfile}
             type="button"
@@ -95,15 +102,15 @@ export function ProfileActions({
               {/* edit/profile icon */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </span>
-            <span className="reveal">{isEditingProfile ? 'Close' : 'Edit Profile'}</span>
+            <span>{isEditingProfile ? 'Close' : 'Edit Profile'}</span>
           </button>
           {/* Save will occur when closing the inline card; no separate Save/Cancel buttons */}
-          <Link className="btn primary icon-reveal" href="/upload" aria-label="New Post">
+          <Link className="btn primary" href="/upload" aria-label="New Post">
             <span className="icon" aria-hidden>
               {/* camera icon */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </span>
-            <span className="reveal">New Post</span>
+            <span>New Post</span>
           </Link>
           {/* show sign out only when the viewed profile belongs to the signed-in user */}
           {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
@@ -114,7 +121,7 @@ export function ProfileActions({
         // it because the viewed id matched the signed-in user — in that case
         // we won't render this branch because the owner branch executes above.
         <button
-          className={`btn icon-reveal profile-follow-btn${following ? ' following' : ''}`}
+          className={`btn profile-follow-btn${following ? ' following' : ''}`}
           aria-pressed={!!following || false}
           onClick={handleFollowToggle}
         >
@@ -122,7 +129,7 @@ export function ProfileActions({
             {/* follow / person icon */}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </span>
-          <span className="reveal">{following ? 'Followed' : 'Unfollowed'}</span>
+          <span>{following ? 'Followed' : 'Unfollowed'}</span>
         </button>
       )}
     </div>

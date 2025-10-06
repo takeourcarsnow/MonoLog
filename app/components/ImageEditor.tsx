@@ -304,7 +304,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       <ImageEditorCanvas canvasRef={canvasRef} mounted={mounted} />
 
       {/* Category selector (Filters / Basic / Effects / Crop / Frame) below the canvas */}
-      <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} categoryHighlight={categoryHighlight} />
+      <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} categoryHighlight={categoryHighlight} sel={sel} applyCropOnly={applyCropOnly} resetCrop={resetCrop} />
 
       <ImageEditorPanels
         selectedCategory={selectedCategory}
@@ -355,8 +355,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         rotationRef={rotationRef}
         computeImageLayout={computeImageLayout}
         canvasRef={canvasRef}
-        applyCropOnly={applyCropOnly}
-        resetCrop={resetCrop}
         imageSrc={imageSrc}
         originalRef={originalRef}
         bakeRotate90={bakeRotate90}

@@ -1,3 +1,4 @@
+import React from "react";
 import Portal from "../Portal";
 import LogoLoader from "./LogoLoader";
 
@@ -18,6 +19,19 @@ export function CameraModal({
   processing,
   onCapture
 }: CameraModalProps) {
+  // Add modal-blur class when camera is open
+  React.useEffect(() => {
+    if (cameraOpen) {
+      document.body.classList.add('modal-blur');
+    } else {
+      document.body.classList.remove('modal-blur');
+    }
+
+    return () => {
+      document.body.classList.remove('modal-blur');
+    };
+  }, [cameraOpen]);
+
   return (
     cameraOpen ? (
       <Portal>

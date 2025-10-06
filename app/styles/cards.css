@@ -129,6 +129,15 @@
   .card .btn, .card .btn:hover, .card .btn:focus { transition: none; transform: none; box-shadow: none; }
 }
 .avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+/* larger avatar size used in profile lists (e.g. Following page) */
+.avatar.large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
 .user-line { 
   display: flex; 
   flex-direction: column;

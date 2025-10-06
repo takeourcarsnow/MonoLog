@@ -197,13 +197,27 @@
 
 /* Fullscreen image viewer */
 .fullscreen-viewer {
+  /* Ensure the viewer always covers the visible viewport (accounts for mobile UI)
+     and sits above everything else. Use the small viewport unit where supported
+     to avoid being shortened by browser UI (address/toolbars). */
   position: fixed;
-  inset: 0;
-  z-index: 99999; /* above cards/toasts but below global preloader */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100svh; /* fallback-friendly modern unit for visible viewport */
+  z-index: 2147483647; /* put above all other UI */
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.92);
+  background: black;
+  pointer-events: auto;
+  transition: opacity 0.15s ease;
+  opacity: 0;
+}
+
+.fullscreen-viewer.fs-active {
+  opacity: 1;
 }
 .fullscreen-viewer .fv-close {
   position: absolute;
@@ -215,6 +229,9 @@
   font-size: 20px;
   padding: 8px;
   cursor: pointer;
+  z-index: 1;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .fullscreen-viewer .fv-close:focus {
   outline: 2px solid rgba(255,255,255,0.14);
@@ -229,11 +246,60 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 0; /* no internal padding so image can use full area */
+  box-sizing: border-box;
+  /* respect device safe area so the close button / image doesn't collide with home indicator */
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 .fullscreen-viewer .fv-inner img {
   max-width: 100%;
   max-height: 100%;
+}
+
+/* When fullscreen is open, ensure the UI that usually reserves bottom space
+   (tabbar) is hidden. Support fs-open placed on body/html/article by matching
+   all common ancestors. Use !important to override layout rules. */
+/* NOTE: .tabbar handled separately below to allow a sliding transition */
+
+/* Also guarantee the viewer's inner padding is zero when active (covers any cascade) */
+body.fs-open .fullscreen-viewer .fv-inner,
+html.fs-open .fullscreen-viewer .fv-inner,
+.fs-open .fullscreen-viewer .fv-inner {
+  padding: 0 !important;
+}
+
+/* While fullscreen is active, avoid forcing layout variable changes (for
+   example --header-height) or altering #app-root size. Those aggressive
+   overrides cause the page to reflow and visible content to shift when the
+   viewer opens/closes. Instead we hide UI visually (opacity/visibility)
+   and disable transitions on layout containers so the overlay paints on top
+   without triggering layout recalculation. */
+
+/* (no layout variable overrides here to avoid reflow) */
+
+/* Immediately hide all main UI when fullscreen is opened so only the
+   fullscreen viewer is visible at the moment the user clicks the
+   fullscreen button. This uses `fs-open` which is added synchronously
+   in JavaScript before paint to lock scroll; the rule avoids transitions
+   so the disappearance is instantaneous. */
+body.fs-open .app-content,
+body.fs-open .content,
+body.fs-open .header,
+body.fs-open .tabbar,
+body.fs-open #app-root {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+/* While fullscreen is active, disable transitions on major layout regions
+   so they don't animate into their new sizes while the overlay is appearing. */
+html.fs-open .content,
+.fs-open .content,
+html.fs-open .header,
+.fs-open .header {
+  transition: none !important;
 }
 
 /* When a fullscreen viewer is open, ensure the underlying card thumbnails
@@ -245,8 +311,57 @@
   pointer-events: none !important;
 }
 
+/* Hide the navbar when fullscreen viewer is open */
+
+/* Tabbar slide transition: allow it to translate down and fade out when the
+   fullscreen viewer activates. We base the slide on `body.fs-blur` (which is
+   added on the next RAF) so the slide animates rather than disappearing
+   instantly. Use translateY(120%) to ensure it's fully offscreen.
+ */
+.tabbar {
+  transition: transform 260ms cubic-bezier(.2,.65,.2,1), opacity 220ms ease;
+  transform: translateY(0);
+  opacity: 1;
+  will-change: transform, opacity;
+}
+
+body.fs-blur .tabbar {
+  transform: translateY(120%);
+  opacity: 0;
+  pointer-events: none; /* keep nav non-interactive while fullscreen */
+}
+
 /* If thumbnails share any transform styles with the ImageZoom implementation,
    reset them while fullscreen is open so they remain visually static. */
 .fs-open .card-media img {
   transform: none !important;
+}
+
+/* Blur background when entering fullscreen viewer.
+   We apply the filter on the main layout containers (content, app-content,
+   header, tabbar) and explicitly set a filter transition here. The rule is
+   placed after the `.fs-open` transition-reset above and uses `!important`
+   so it takes precedence for the `filter` property (filter doesn't force
+   layout and is safe to animate). We also respect prefers-reduced-motion. */
+body.fs-blur .app-content,
+body.fs-blur .content,
+body.fs-blur .header,
+body.fs-blur .tabbar {
+  /* default blur amount can be overridden via --fs-blur */
+  filter: blur(var(--fs-blur, 6px)) saturate(0.95) !important;
+  transition: filter 220ms cubic-bezier(.2,.65,.2,1) !important;
+  will-change: filter;
+  pointer-events: none; /* keep background non-interactive while fullscreen */
+}
+
+/* On initial removal of fullscreen the transition above will animate the unblur.
+   Respect reduced motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  body.fs-blur .app-content,
+  body.fs-blur .content,
+  body.fs-blur .header,
+  body.fs-blur .tabbar {
+    filter: none !important;
+    transition: none !important;
+  }
 }

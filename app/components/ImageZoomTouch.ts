@@ -80,8 +80,8 @@ export function useImageZoomTouch(
   const dx = curX - startTouch.current.x;
   const dy = curY - startTouch.current.y;
     const b = getBoundsForScale(scale, containerRef, imgRef, natural);
-    const nextTx = clamp(startTx.current + dx, -b.maxTx - 100, b.maxTx + 100);
-    const nextTy = clamp(startTy.current + dy, -b.maxTy - 100, b.maxTy + 100);
+    const nextTx = clamp(startTx.current + dx, -b.maxTx, b.maxTx);
+    const nextTy = clamp(startTy.current + dy, -b.maxTy, b.maxTy);
 
     setTxSafe(nextTx);
     setTySafe(nextTy);
@@ -123,16 +123,14 @@ export function useImageZoomTouch(
   const nextTx = startTx.current + currVx * dt;
   const nextTy = startTy.current + currVy * dt;
         const b = getBoundsForScale(scale, containerRef, imgRef, natural);
-        const softX = b.maxTx + 100;
-        const softY = b.maxTy + 100;
-        const clampedTx = clamp(nextTx, -softX, softX);
-        const clampedTy = clamp(nextTy, -softY, softY);
+        const clampedTx = clamp(nextTx, -b.maxTx, b.maxTx);
+        const clampedTy = clamp(nextTy, -b.maxTy, b.maxTy);
         setTxSafe(clampedTx);
         setTySafe(clampedTy);
         currVx *= Math.pow(decay, dt * 60);
         currVy *= Math.pow(decay, dt * 60);
         if (Math.hypot(currVx, currVy) < 20) {
-          // spring back into bounds
+          // spring back into bounds (though already clamped)
           const bb = getBoundsForScale(scale, containerRef, imgRef, natural);
           setTxSafe((t) => clamp(t, -bb.maxTx, bb.maxTx));
           setTySafe((t) => clamp(t, -bb.maxTy, bb.maxTy));

@@ -70,22 +70,20 @@ export function useImageZoomPointer(
       const nextTx = txRef.current + currVx * dt;
       const nextTy = tyRef.current + currVy * dt;
       const b = getBoundsForScale(scale, containerRef, imgRef, natural);
-      // allow small overshoot
-      const softX = b.maxTx + 100;
-      const softY = b.maxTy + 100;
-      const clampedTx = clamp(nextTx, -softX, softX);
-      const clampedTy = clamp(nextTy, -softY, softY);
+      // clamp to hard bounds
+      const clampedTx = clamp(nextTx, -b.maxTx, b.maxTx);
+      const clampedTy = clamp(nextTy, -b.maxTy, b.maxTy);
       setTxSafe(clampedTx);
       setTySafe(clampedTy);
       // apply decay
       currVx *= Math.pow(decay, dt * 60);
       currVy *= Math.pow(decay, dt * 60);
       // if hit hard bounds, dampen velocity
-      if (clampedTx > b.maxTx || clampedTx < -b.maxTx) currVx *= 0.5;
-      if (clampedTy > b.maxTy || clampedTy < -b.maxTy) currVy *= 0.5;
+      if (clampedTx >= b.maxTx || clampedTx <= -b.maxTx) currVx *= 0.5;
+      if (clampedTy >= b.maxTy || clampedTy <= -b.maxTy) currVy *= 0.5;
       // stop conditions
       if (Math.hypot(currVx, currVy) < 20) {
-        // spring back into bounds if necessary
+        // spring back into bounds if necessary (though already clamped)
         springBack();
         return;
       }
@@ -100,7 +98,8 @@ export function useImageZoomPointer(
     // devices; only allow pointer-based panning for mouse/pen.
     if (scale <= 1) return;
     if ((e as any).pointerType === 'touch') return;
-    (e.target as Element).setPointerCapture?.(e.pointerId);
+    const target = containerRef.current || (e.target as Element);
+    target.setPointerCapture?.(e.pointerId);
     pointerActive.current = true;
     setIsPanning(true);
     lastPan.current = { x: txRef.current, y: tyRef.current };
@@ -119,8 +118,8 @@ export function useImageZoomPointer(
     const dx = cur.x - startPan.current.x;
     const dy = cur.y - startPan.current.y;
     const b = getBoundsForScale(scale, containerRef, imgRef, natural);
-    const nextTx = clamp(lastPan.current.x + dx, -b.maxTx - 100, b.maxTx + 100);
-    const nextTy = clamp(lastPan.current.y + dy, -b.maxTy - 100, b.maxTy + 100);
+    const nextTx = clamp(lastPan.current.x + dx, -b.maxTx, b.maxTx);
+    const nextTy = clamp(lastPan.current.y + dy, -b.maxTy, b.maxTy);
     
     // Use requestAnimationFrame for smoother updates
     if (!pointerRaf.current) {
@@ -146,7 +145,8 @@ export function useImageZoomPointer(
   const onPointerUp: React.PointerEventHandler = (e) => {
     // ignore touch pointer ups
     if ((e as any).pointerType === 'touch') return;
-    try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch (_) {}
+    const target = containerRef.current || (e.target as Element);
+    try { target.releasePointerCapture?.(e.pointerId); } catch (_) {}
     pointerActive.current = false;
     setIsPanning(false);
     

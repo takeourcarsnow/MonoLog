@@ -16,11 +16,13 @@ export function getBoundsForScale(
   const containerH = rect.height;
   const natW = img.naturalWidth || natural.current.w || containerW;
   const natH = img.naturalHeight || natural.current.h || containerH;
-  // image is rendered at width = containerW, height scaled by natural aspect ratio
-  const baseW = containerW;
-  const baseH = baseW * (natH / Math.max(1, natW));
-  const scaledW = baseW * scale;
-  const scaledH = baseH * scale;
+  // Calculate the scale factor to fit the image within the container with objectFit: contain
+  const fitScale = Math.min(containerW / natW, containerH / natH);
+  const renderedW = natW * fitScale;
+  const renderedH = natH * fitScale;
+  // When zoomed with transform: scale(scale), the effective size
+  const scaledW = renderedW * scale;
+  const scaledH = renderedH * scale;
   const maxTx = Math.max(0, (scaledW - containerW) / 2);
   const maxTy = Math.max(0, (scaledH - containerH) / 2);
   return { maxTx, maxTy, containerW, containerH };

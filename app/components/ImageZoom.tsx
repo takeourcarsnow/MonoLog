@@ -12,9 +12,10 @@ import { useImageZoomAnimation } from "./ImageZoomAnimation";
 type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   maxScale?: number;
   isActive?: boolean;
+  isFullscreen?: boolean;
 };
 
-export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive = true, ...rest }: Props) {
+export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive = true, isFullscreen = false, ...rest }: Props) {
   const state = useImageZoomState();
   const {
     containerRef,
@@ -177,10 +178,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
         // In profile/grid tiles we want the image to fully fill the square tile area.
         // The tile itself enforces aspect-ratio; giving the wrapper 100% height
         // allows the inner <img> (with object-fit:cover) to crop instead of letterboxing.
-        height: isTile ? "100%" : undefined,
+        height: isFullscreen ? "100%" : (isTile ? "100%" : undefined),
         boxSizing: "border-box",
         ...style,
       }}
+      onDragStart={(e) => e.preventDefault()}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEndCombined}
@@ -205,14 +207,17 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
           // and center the image within the card.
           width: isTile ? "100%" : "auto",
           maxWidth: isTile ? undefined : "100%",
-          height: isTile ? "100%" : "auto",
+          height: isFullscreen ? "100%" : (isTile ? "100%" : "auto"),
           margin: isTile ? undefined : "0 auto",
-          objectFit: isTile ? "cover" : "contain",
+          objectFit: isFullscreen ? "contain" : (isTile ? "cover" : "contain"),
           objectPosition: "center center",
           userSelect: "none",
           // When zoomed, disable touch action to prevent scrolling
           touchAction: scale > 1 ? "none" : "auto",
+          // In fullscreen, allow pointer events to pass through to close button
+          pointerEvents: isFullscreen ? "none" : "auto",
         }}
+        onDragStart={(e) => e.preventDefault()}
         draggable={false}
       />
     </div>

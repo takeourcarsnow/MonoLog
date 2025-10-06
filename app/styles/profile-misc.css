@@ -289,6 +289,27 @@
   width: 100%;
 }
 
+/* When fullscreen viewer is active, let the portal be transparent and
+   remove padding / child max-height so fullscreen overlays can fill the
+   entire viewport without being constrained by the portal container. */
+body.fs-open #modal-root,
+html.fs-open #modal-root,
+.fs-open #modal-root {
+  padding: 0 !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+}
+
+body.fs-open #modal-root > *,
+html.fs-open #modal-root > *,
+.fs-open #modal-root > * {
+  max-height: none !important;
+  height: 100svh !important;
+  width: 100svw !important;
+}
+
 /* --- Upload page desktop spacing fix --------------------------------------
    At default desktop zoom the action row (visibility toggle + Publish/Cancel)
    could sit partially beneath the fixed bottom nav because only the mobile

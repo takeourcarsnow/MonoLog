@@ -42,5 +42,5 @@ export function useSliderEvents(containerRef: React.RefObject<HTMLDivElement>) {
       window.removeEventListener('touchcancel', end);
       window.removeEventListener('mouseup', end);
     };
-  }, []);
+  }, [containerRef]);
 }

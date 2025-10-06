@@ -34,7 +34,7 @@ export function useImageEditorHighlights(
     }
     window.addEventListener('resize', compute);
     return () => { alive = false; cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener('resize', compute); };
-  }, [selectedCategory]);
+  }, [selectedCategory, categoriesContainerRef, setCategoryHighlight]);
 
   // Compute filter highlight position
   useEffect(() => {
@@ -63,7 +63,7 @@ export function useImageEditorHighlights(
       ro.disconnect();
       window.removeEventListener('resize', compute);
     };
-  }, [selectedFilter, selectedCategory]);
+  }, [selectedFilter, selectedCategory, filtersContainerRef, setFilterHighlight]);
 
   // Suppress filter transition when opening color category
   useEffect(() => {
@@ -75,5 +75,5 @@ export function useImageEditorHighlights(
     }
     // ensure flag is off when leaving
     suppressFilterTransitionRef.current = false;
-  }, [selectedCategory]);
+  }, [selectedCategory, suppressFilterTransitionRef]);
 }

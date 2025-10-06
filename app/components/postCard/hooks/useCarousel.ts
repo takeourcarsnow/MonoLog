@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseCarouselProps {
   imageUrls: string[];
@@ -190,7 +190,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
   };
 
-  const finishPointerDrag = (clientX?: number) => {
+  const finishPointerDrag = useCallback((clientX?: number) => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
     gestureLockedRef.current = false;
@@ -217,7 +217,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     touchDeltaX.current = 0;
     try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
-  };
+  }, [index, setIndex, imageUrls.length, trackRef, touchStartX, touchDeltaX, isZoomingRef]);
 
   const onPointerUp = (e: React.PointerEvent) => {
     const el = trackRef.current as any;
@@ -237,14 +237,14 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     finishPointerDrag();
   };
 
-  const handleDocMouseMove = (e: MouseEvent) => {
+  const handleDocMouseMove = useCallback((e: MouseEvent) => {
     if (!draggingRef.current || touchStartX.current == null) return;
     e.preventDefault();
     touchDeltaX.current = e.clientX - touchStartX.current;
     if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
-  };
+  }, [index, touchStartX, touchDeltaX, trackRef]);
 
-  const handleDocMouseUp = (e: MouseEvent) => {
+  const handleDocMouseUp = useCallback((e: MouseEvent) => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
     if (isZoomingRef.current) {
@@ -270,7 +270,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
     document.removeEventListener('mousemove', handleDocMouseMove);
     document.removeEventListener('mouseup', handleDocMouseUp);
-  };
+  }, [index, setIndex, imageUrls.length, trackRef, touchStartX, touchDeltaX, isZoomingRef, handleDocMouseMove]);
 
   const onMouseDown = (e: React.MouseEvent) => {
     if (isZoomingRef.current) return;
@@ -301,7 +301,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
         document.removeEventListener('mouseup', handleDocMouseUp);
       }
     };
-  }, [index]);
+  }, [index, handleDocMouseMove, handleDocMouseUp]);
 
   useEffect(() => {
     function onZoomStart() {
@@ -326,7 +326,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
         window.removeEventListener('monolog:zoom_end', onZoomEnd as EventListener);
       }
     };
-  }, []);
+  }, [finishPointerDrag]);
 
   const carouselTouchProps = (pathname?.startsWith('/post/') && !allowCarouselTouch) ? {} : (
     pointerSupported

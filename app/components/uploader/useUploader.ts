@@ -95,7 +95,7 @@ export function useUploader() {
       } catch {}
       setEditing(false);
     }
-  }, [pathname, editing]);
+  }, [pathname, editing, editingAlt, editingIndex]);
 
   // Persist or clear the session flag whenever editing state changes
   useEffect(() => {
@@ -131,7 +131,7 @@ export function useUploader() {
     } finally {
       attemptedEditorRestoreRef.current = true;
     }
-  }, [pathname, dataUrls.length, dataUrl, editing]);
+  }, [pathname, dataUrls.length, dataUrl, editing, dataUrls]);
 
   // keep index within bounds when number of images changes
   useEffect(() => {
@@ -144,7 +144,7 @@ export function useUploader() {
       const cur = Array.isArray(alt) ? alt[editingIndex] || "" : (alt || "");
       setEditingAlt(cur as string);
     }
-  }, [editing, editingIndex, alt]);
+  }, [editing, editingIndex, alt, editingAlt]);
 
   // add a class to body to allow CSS animations scoped to uploader when ready
   useEffect(() => {

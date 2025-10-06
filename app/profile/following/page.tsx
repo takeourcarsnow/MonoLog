@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { api } from "@/src/lib/api";
 import type { User } from "@/src/lib/types";
 import Link from "next/link";
@@ -71,10 +72,12 @@ export default function FollowingPage() {
           <div className="grid" style={{ gap: 16 }}>
             {following.map(user => (
               <div key={user.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16 }}>
-                <img
+                <Image
                   src={user.avatarUrl || "/logo.svg"}
                   alt={user.displayName}
                   className="avatar large"
+                  width={48}
+                  height={48}
                 />
                 <div style={{ flex: 1 }}>
                   <Link href={`/${user.username}`} style={{ fontWeight: 'bold', textDecoration: 'none', color: 'inherit' }}>

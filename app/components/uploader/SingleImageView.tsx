@@ -58,12 +58,13 @@ export function SingleImageView({
       {/* Give the image wrapper a definite size so Next/Image with `fill` can render. */}
       <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', minHeight: 220 }}>
         <LoadingBadge processing={processing} previewLoaded={previewLoaded} />
-        <img
+        <Image
           className="no-swipe"
           alt={Array.isArray(alt) ? (alt[index] || 'Preview') : (alt || 'Preview')}
           src={(dataUrls.length ? dataUrls[index] : dataUrl) || "/logo.svg"}
-          style={{ objectFit: 'contain', width: '100%', height: '100%', display: 'block' }}
-          onLoad={() => setPreviewLoaded(true)}
+          fill
+          style={{ objectFit: 'contain' }}
+          onLoadingComplete={() => setPreviewLoaded(true)}
           onError={() => setPreviewLoaded(true)}
         />
       </div>

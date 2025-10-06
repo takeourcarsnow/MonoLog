@@ -325,5 +325,5 @@ export function usePointerEvents(
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
     };
-  }, [selectedCategory, sel, offset]);
+  }, [selectedCategory, sel, offset, canvasRef, computeImageLayout, cropRatio, dragging, draw, previewOriginalRef, previewPointerIdRef, setOffset, setPreviewOriginal, setSel]);
 }

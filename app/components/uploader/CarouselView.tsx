@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { LoadingBadge } from "./LoadingBadge";
 
 interface CarouselViewProps {
@@ -123,7 +124,7 @@ export function CarouselView({
       track.removeEventListener('touchmove', handleTouchMove);
       track.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [containerWidth, index, dataUrls.length, setIndex, editing, isDragging]);
+  }, [containerWidth, index, dataUrls.length, setIndex, editing, isDragging, touchDeltaX, touchStartX, trackRef]);
 
   // Update track transform when index or container width changes
   useEffect(() => {
@@ -154,13 +155,14 @@ export function CarouselView({
         >
           {dataUrls.map((u, idx) => (
             <div key={idx} className="carousel-slide">
-              <img
+              <Image
                 className="no-swipe"
                 src={u || "/logo.svg"}
                 alt={Array.isArray(alt) ? (alt[idx] || `Image ${idx + 1}`) : (alt || `Image ${idx + 1}`)}
-                onLoad={() => setPreviewLoaded(true)}
+                fill
+                style={{ objectFit: 'contain' }}
+                onLoadingComplete={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
             </div>
           ))}

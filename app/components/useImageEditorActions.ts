@@ -79,7 +79,7 @@ export function useImageEditorActions(
     if (Math.abs(grain) > 0.001) return true;
     if (frameThickness > 0) return true;
     return false;
-  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, frameThickness]);
+  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, frameThickness, originalRef, rotation]);
 
   // Action wrappers that delegate to the standalone action helpers
   function applyEdit() {

@@ -32,9 +32,9 @@ export function Comments({ postId, onCountChange }: Props) {
 
   // helper to notify parent about comment count without causing
   // render-phase updates (defers the call to a microtask)
-  const notifyCount = (n: number) => {
+  const notifyCount = useCallback((n: number) => {
     Promise.resolve().then(() => onCountChange?.(n));
-  };
+  }, [onCountChange]);
 
   const load = useCallback(async (force?: boolean) => {
     if (!force) {

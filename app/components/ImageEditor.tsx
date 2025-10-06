@@ -191,20 +191,20 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   useSliderEvents(containerRef);
 
-  useEffect(() => { rotationRef.current = rotation; }, [rotation]);
-  useEffect(() => { exposureRef.current = exposure; }, [exposure]);
-  useEffect(() => { contrastRef.current = contrast; }, [contrast]);
-  useEffect(() => { saturationRef.current = saturation; }, [saturation]);
-  useEffect(() => { temperatureRef.current = temperature; }, [temperature]);
-  useEffect(() => { vignetteRef.current = vignette; }, [vignette]);
-  useEffect(() => { frameColorRef.current = frameColor; }, [frameColor]);
-  useEffect(() => { frameThicknessRef.current = frameThickness; }, [frameThickness]);
-  useEffect(() => { selectedFilterRef.current = selectedFilter; }, [selectedFilter]);
-  useEffect(() => { filterStrengthRef.current = filterStrength; }, [filterStrength]);
-  useEffect(() => { grainRef.current = grain; }, [grain]);
-  useEffect(() => { softFocusRef.current = softFocus; }, [softFocus]);
-  useEffect(() => { fadeRef.current = fade; }, [fade]);
-  useEffect(() => { matteRef.current = matte; }, [matte]);
+  useEffect(() => { rotationRef.current = rotation; }, [rotation, rotationRef]);
+  useEffect(() => { exposureRef.current = exposure; }, [exposure, exposureRef]);
+  useEffect(() => { contrastRef.current = contrast; }, [contrast, contrastRef]);
+  useEffect(() => { saturationRef.current = saturation; }, [saturation, saturationRef]);
+  useEffect(() => { temperatureRef.current = temperature; }, [temperature, temperatureRef]);
+  useEffect(() => { vignetteRef.current = vignette; }, [vignette, vignetteRef]);
+  useEffect(() => { frameColorRef.current = frameColor; }, [frameColor, frameColorRef]);
+  useEffect(() => { frameThicknessRef.current = frameThickness; }, [frameThickness, frameThicknessRef]);
+  useEffect(() => { selectedFilterRef.current = selectedFilter; }, [selectedFilter, selectedFilterRef]);
+  useEffect(() => { filterStrengthRef.current = filterStrength; }, [filterStrength, filterStrengthRef]);
+  useEffect(() => { grainRef.current = grain; }, [grain, grainRef]);
+  useEffect(() => { softFocusRef.current = softFocus; }, [softFocus, softFocusRef]);
+  useEffect(() => { fadeRef.current = fade; }, [fade, fadeRef]);
+  useEffect(() => { matteRef.current = matte; }, [matte, matteRef]);
 
   const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
     if (category === 'crop' && selectedCategory !== 'crop') {

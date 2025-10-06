@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Portal from "./Portal";
 import ImageZoom from "./ImageZoom";
 
@@ -17,6 +17,16 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
   const [isActive, setIsActive] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const scrollY = useRef<number>(0);
+
+  // Start close sequence: fade out then call onClose
+  const startClose = useCallback(() => {
+    if (!isActive) return;
+    document.body.classList.remove('fs-blur');
+    setIsActive(false);
+    setTimeout(() => {
+      onClose();
+    }, 180);
+  }, [isActive, onClose]);
 
   // Lock scroll and add fullscreen classes
   useEffect(() => {
@@ -57,17 +67,7 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, []);
-
-  // Start close sequence: fade out then call onClose
-  const startClose = () => {
-    if (!isActive) return;
-    document.body.classList.remove('fs-blur');
-    setIsActive(false);
-    setTimeout(() => {
-      onClose();
-    }, 180);
-  };
+  }, [startClose]);
 
   // Ensure the viewer root can be focused for accessibility when opened
   useEffect(() => {

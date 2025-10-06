@@ -177,7 +177,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
       if (pendingCloseTimerRef.current) { window.clearTimeout(pendingCloseTimerRef.current); pendingCloseTimerRef.current = null; }
       if (exitTimerRef.current) { window.clearTimeout(exitTimerRef.current); exitTimerRef.current = null; }
     };
-  }, [editing]);
+  }, [editing, showEditor]);
 
   return (
     <article className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>

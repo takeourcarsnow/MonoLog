@@ -58,14 +58,14 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
     } catch (e) {
       // ignore
     }
-  }, []);
+  }, [containerRef, setIsTile]);
 
   // Reset zoom state when src changes (e.g., when carousel switches images)
   useEffect(() => {
     setScale(1);
     setTxSafe(0);
     setTySafe(0);
-  }, [src]);
+  }, [src, setScale, setTxSafe, setTySafe]);
 
   // Reset zoom when the image becomes inactive (not visible in carousel)
   useEffect(() => {
@@ -92,7 +92,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
         return () => img.removeEventListener('load', onLoad);
       }
     }
-  }, [src]);
+  }, [src, imgRef, natural]);
 
   const { onTouchStart, onTouchMove, onTouchEnd, reset } = useImageZoomTouch(
     containerRef,

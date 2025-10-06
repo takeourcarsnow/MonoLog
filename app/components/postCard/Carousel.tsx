@@ -89,7 +89,7 @@ export const Carousel = memo(function Carousel({
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, []);
+  }, [measureImage]);
 
   const { handleMediaClick } = useMediaClick({
     isFavorite,

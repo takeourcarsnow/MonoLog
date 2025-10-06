@@ -24,6 +24,8 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   const startY = useRef<number>(0);
   const isDragging = useRef<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastWheelTime = useRef<number>(0);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (disabled || state.isRefreshing) return;
@@ -60,10 +62,14 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     if (scrollTop > 0) return;
 
+    lastWheelTime.current = Date.now();
+
     if (e.deltaY < 0) {
       e.preventDefault();
+
       setState(prev => {
-        const newDistance = prev.pullDistance + 20;
+        const increment = Math.min(Math.abs(e.deltaY), 20); // Cap the increment
+        const newDistance = prev.pullDistance + increment;
         if (newDistance >= threshold && !prev.isRefreshing) {
           Promise.resolve(onRefresh()).then(() => {
             setState(prev => ({ ...prev, isRefreshing: false, pullDistance: 0, isPulling: false }));
@@ -72,6 +78,8 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
         }
         return { ...prev, pullDistance: newDistance, isPulling: true };
       });
+    } else if (e.deltaY > 0) {
+      setState(prev => ({ ...prev, pullDistance: 0, isPulling: false }));
     }
   }, [disabled, state.isRefreshing, threshold, onRefresh]);
 
@@ -108,6 +116,22 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   useEffect(() => {
     if (disabled) return;
 
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setState(prev => {
+        if (now - lastWheelTime.current > 150 && prev.pullDistance > 0 && !prev.isRefreshing && prev.pullDistance < threshold) {
+          return { ...prev, pullDistance: 0, isPulling: false };
+        }
+        return prev;
+      });
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [disabled, threshold]);
+
+  useEffect(() => {
+    if (disabled) return;
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -121,6 +145,9 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('wheel', handleWheel);
+      if (wheelTimeoutRef.current) {
+        clearTimeout(wheelTimeoutRef.current);
+      }
     };
   }, [disabled, handleTouchStart, handleTouchMove, handleTouchEnd, handleWheel]);
 

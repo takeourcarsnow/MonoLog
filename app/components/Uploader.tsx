@@ -352,10 +352,6 @@ function UploaderCore() {
       <div aria-live="polite" className="sr-only status">
         {/* screen-reader updates for processing/errors */}
       </div>
-      {/* Screen reader hint when in confirm state */}
-      {confirmCancel ? (
-        <div className="sr-only" role="status">Tap Cancel again to discard this draft.</div>
-      ) : null}
     </div>
   );
 }

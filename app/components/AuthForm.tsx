@@ -12,6 +12,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   const [username, setUsername] = useState("");
   const [signupSent, setSignupSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [hasSuccess, setHasSuccess] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const router = useRouter();
   const toast = useToast();
@@ -93,6 +95,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
 
         // mark that we should close/refresh after ensuring the minimum animation time
         shouldCloseAndRefresh = true;
+        setHasSuccess(true);
       } else {
         // require username for signup
         const chosen = normalizeUsername(username || email.split("@")[0]);
@@ -137,14 +140,19 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         return;
       }
     } catch (err: any) {
+      setLoading(false);
+      setHasError(true);
       toast.show(err?.message || String(err));
     } finally {
       const elapsed = Date.now() - start;
       const remaining = Math.max(0, MIN_MS - elapsed);
-      if (remaining > 0) {
+      if (remaining > 0 && !hasError) {
         await new Promise((res) => setTimeout(res, remaining));
       }
-      setLoading(false);
+      if (!hasError) {
+        setLoading(false);
+      }
+      setTimeout(() => setHasError(false), 2000);
 
       if (shouldCloseAndRefresh) {
         try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
@@ -152,6 +160,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
           try { await onClose(); } catch (_) { /* ignore */ }
         }
         try { router.refresh(); } catch (_) { /* ignore */ }
+        setHasSuccess(false);
       }
     }
   }
@@ -307,7 +316,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
 
   <div className="auth-actions flex gap-1 justify-center w-full" style={{ maxWidth: 400, marginTop: 4 }}>
         <button
-          className={`auth-confirm-btn ${loading ? 'loading' : ''} ${signupSent ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : 'mode-signin'}`}
+          className={`auth-confirm-btn ${loading ? 'loading' : ''} ${signupSent ? 'sent' : ''} ${hasError ? 'error' : ''} ${hasSuccess ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : 'mode-signin'}`}
           disabled={loading}
           type="submit"
           aria-busy={loading}
@@ -315,23 +324,19 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
           aria-label={mode === 'signup' ? (loading ? 'Creating account' : 'Create account') : (loading ? 'Signing in' : 'Sign in')}
         >
           <span className="btn-inner">
-            <span className="btn-icon" aria-hidden>
-              {!loading && !signupSent ? (
-                // chevron-like icon to the left of the label (keeps the pill look from the attachment)
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M9 6l6 6-6 6" />
-                </svg>
-              ) : signupSent ? (
-                // success check
+            {signupSent ? (
+              <span className="btn-icon" aria-hidden>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
-              ) : (
+              </span>
+            ) : loading ? (
+              <span className="btn-icon" aria-hidden>
                 <span className="btn-spinner" aria-hidden>
                   <span />
                 </span>
-              )}
-            </span>
+              </span>
+            ) : null}
             <span className="btn-label">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
           </span>
           {/* visible hint for screen readers during loading */}

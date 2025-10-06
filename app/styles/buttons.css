@@ -47,56 +47,59 @@
 .btn-group { display: flex; gap: 8px; align-items: center; }
 .btn.primary { padding: 10px 14px; border-radius: 12px; font-weight: 700; }
 
-.btn.cancel-btn {
-  position: relative;
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 1;
-  min-height: var(--action-pill-height,42px);
+/* Discard button - matches pill button style */
+.discard-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  letter-spacing: .25px;
-  background: color-mix(in srgb, var(--bg-elev), var(--danger) 4%);
-  border: 1px solid color-mix(in srgb, var(--danger), transparent 86%);
-  color: color-mix(in srgb, var(--danger), var(--text) 65%);
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  padding: 10px 16px;
+  min-height: var(--action-pill-height, 42px);
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  line-height: 1;
 }
-.btn.cancel-btn:hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%); transform: translateY(-2px); }
-.btn.cancel-btn:active { transform: translateY(0); }
-.btn.cancel-btn.confirm {
-  background: linear-gradient(135deg, var(--danger-bg-start), var(--danger-bg-end));
-  color: #fff;
-  border-color: var(--danger-border);
-  box-shadow: 0 6px 22px var(--danger-shadow), 0 0 0 1px var(--danger-shadow-inset) inset;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+
+.discard-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  transform: translateY(-2px);
 }
-.btn.cancel-btn.confirm:hover { background: linear-gradient(135deg, var(--danger-bg-hover-start), var(--danger-bg-hover-end)); }
-.btn.cancel-btn.confirm:active { 
-  background: linear-gradient(135deg, var(--danger-bg-start), var(--danger-bg-end));
-  color: #fff;
-  border-color: var(--danger-border);
+
+.discard-btn:active:not(:disabled) {
   transform: translateY(0);
 }
-.btn.cancel-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--danger-focus-base), 0 4px 16px rgba(0,0,0,0.18); }
-.btn.cancel-btn.confirm:focus-visible { box-shadow: 0 0 0 3px var(--danger-focus), 0 6px 20px rgba(0,0,0,0.30); }
-.btn.cancel-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
-.btn.cancel-btn .cancel-inner { position: relative; z-index: 1; }
 
-/* Dark theme slight desaturation for base state for balance */
-:root[data-theme="dark"] .btn.cancel-btn:not(.confirm) {
-  background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%);
-  border-color: color-mix(in srgb, var(--danger), transparent 78%);
-  color: color-mix(in srgb, var(--danger), var(--text) 72%);
+.discard-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
-:root[data-theme="dark"] .btn.cancel-btn:not(.confirm):hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 8%); }
 
-/* Mobile full-width stacking coherence */
-@media (max-width:640px){
-  .btn-group .btn.cancel-btn { width:100%; }
+.discard-btn.confirm {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--danger), transparent 70%);
+}
+
+.discard-btn.confirm:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger), #000 10%);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--danger), transparent 60%);
+}
+
+.discard-btn.confirm:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--danger), transparent 70%);
+}
+
+.discard-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 70%);
 }
 
 .btn.danger {

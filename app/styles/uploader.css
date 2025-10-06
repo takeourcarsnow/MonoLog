@@ -1022,62 +1022,6 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .btn-group { display: flex; gap: 8px; align-items: center; }
 .btn.primary { padding: 10px 14px; border-radius: 12px; font-weight: 700; }
 .btn.ghost.replace { padding: 10px 12px; }
-/* Cancel button unified logic
-   - Base: neutral subtle pill (light/dark adapt via bg vars)
-   - Confirm (double-tap): solid danger emphasis
-   Keep transitions minimal & accessible. */
-.btn.cancel-btn {
-  position: relative;
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 1;
-  min-height: var(--action-pill-height,42px);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  letter-spacing: .25px;
-  background: color-mix(in srgb, var(--bg-elev), var(--danger) 4%);
-  border: 1px solid color-mix(in srgb, var(--danger), transparent 86%);
-  color: color-mix(in srgb, var(--danger), var(--text) 65%);
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
-}
-.btn.cancel-btn:hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%); transform: translateY(-2px); }
-.btn.cancel-btn:active { transform: translateY(0); }
-.btn.cancel-btn.confirm {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 6%), color-mix(in srgb, var(--danger), transparent 2%));
-  color: #fff;
-  border-color: color-mix(in srgb, var(--danger), transparent 12%);
-  box-shadow: 0 6px 22px color-mix(in srgb, var(--danger), transparent 72%), 0 0 0 1px color-mix(in srgb, var(--danger), transparent 40%) inset;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-}
-.btn.cancel-btn.confirm:hover { background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 4%), color-mix(in srgb, var(--danger), transparent 0%)); }
-.btn.cancel-btn.confirm:active { 
-  background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 6%), color-mix(in srgb, var(--danger), transparent 2%));
-  color: #fff;
-  border-color: color-mix(in srgb, var(--danger), transparent 12%);
-  transform: translateY(0);
-}
-.btn.cancel-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 70%), 0 4px 16px rgba(0,0,0,0.18); }
-.btn.cancel-btn.confirm:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 55%), 0 6px 20px rgba(0,0,0,0.30); }
-.btn.cancel-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
-.btn.cancel-btn .cancel-inner { position: relative; z-index: 1; }
-
-/* Dark theme slight desaturation for base state for balance */
-:root[data-theme="dark"] .btn.cancel-btn:not(.confirm) {
-  background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%);
-  border-color: color-mix(in srgb, var(--danger), transparent 78%);
-  color: color-mix(in srgb, var(--danger), var(--text) 72%);
-}
-:root[data-theme="dark"] .btn.cancel-btn:not(.confirm):hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 8%); }
-
-/* Mobile full-width stacking coherence */
-@media (max-width:640px){
-  .btn-group .btn.cancel-btn { width:100%; }
-}
-
 /* Uploader-specific mobile improvements: avoid overlap with bottom tabbar, tighten dropzone and thumbnails */
 @media (max-width: 640px) {
   /* give uploader extra bottom padding only when images present so initial empty state doesn't force scroll */
@@ -1095,7 +1039,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   /* Give all three pills a consistent width, centered. Clamp to avoid overly wide on large phones */
   .uploader .form-row .vis-toggle,
   .uploader .form-row .publish-button,
-  .uploader .form-row .btn.cancel-btn { 
+  .uploader .form-row .discard-btn { 
     width: auto;
     max-width: 240px; 
     margin: 0 auto; 
@@ -1104,7 +1048,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   /* Ensure internal padding adapts with smaller height */
   .uploader .form-row .vis-toggle { padding: 8px 16px; }
   .uploader .form-row .publish-button { padding: 8px 18px; }
-  .uploader .form-row .btn.cancel-btn { padding: 8px 18px; }
+  .uploader .form-row .discard-btn { padding: 8px 18px; }
 }
 
 

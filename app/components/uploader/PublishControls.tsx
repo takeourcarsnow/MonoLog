@@ -77,16 +77,13 @@ export function PublishControls({
               disabled={compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024}
               onPublish={onPublish}
             />
-            {/* fallback removed: the button displays the remaining time itself */}
             <button
               type="button"
-              className={`btn cancel-btn${confirmCancel ? ' confirm' : ''}`}
+              className={`discard-btn ${confirmCancel ? 'confirm' : ''}`}
               onClick={() => {
                 if (processing) return;
-                // First tap: enter confirm state
                 if (!confirmCancel) {
                   setConfirmCancel(true);
-                  // auto-revert after 4s if no second tap
                   if (confirmCancelTimerRef.current) window.clearTimeout(confirmCancelTimerRef.current);
                   confirmCancelTimerRef.current = window.setTimeout(() => {
                     setConfirmCancel(false);
@@ -94,7 +91,6 @@ export function PublishControls({
                   }, 4000);
                   return;
                 }
-                // Second tap: discard
                 if (confirmCancelTimerRef.current) {
                   window.clearTimeout(confirmCancelTimerRef.current);
                   confirmCancelTimerRef.current = null;
@@ -103,10 +99,9 @@ export function PublishControls({
                 resetDraft();
               }}
               disabled={processing}
-              aria-pressed={confirmCancel}
-              aria-label={confirmCancel ? 'Tap again to discard draft' : 'Cancel (double tap to discard)'}
+              aria-label={confirmCancel ? 'Click again to discard draft' : 'Discard draft'}
             >
-              <span className="cancel-inner">{confirmCancel ? 'Discard draft' : 'Cancel'}</span>
+              {confirmCancel ? 'Click again to confirm' : 'Discard draft'}
             </button>
           </div>
         </div>
@@ -115,10 +110,6 @@ export function PublishControls({
       <div aria-live="polite" className="sr-only status">
         {/* screen-reader updates for processing/errors */}
       </div>
-      {/* Screen reader hint when in confirm state */}
-      {confirmCancel ? (
-        <div className="sr-only" role="status">Tap Cancel again to discard this draft.</div>
-      ) : null}
     </>
   );
 }

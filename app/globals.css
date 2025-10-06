@@ -81,6 +81,16 @@ html, body {
   stroke: rgba(255,255,255,0.22);
 }
 
+/* Dark mode button colors for auth confirm button */
+:root[data-theme="dark"] {
+  --btn-bg: #1a1a1a;
+  --btn-border: #2a2a2a;
+  --btn-ink: #f7f7f7;
+  --accent: #60a5fa;
+  --success: #34d399;
+  --shadow: rgba(0,0,0,0.35);
+}
+
 /* About header button active styling: match favorites look so it becomes colored when active */
 .header .about-btn.active svg {
   /* subtle pastel blue (softer than the favorites gold) */

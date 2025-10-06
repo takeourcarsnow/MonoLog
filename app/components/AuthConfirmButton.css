@@ -23,7 +23,7 @@
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  transition: transform .12s ease, box-shadow .12s ease, background .12s ease, color .12s ease;
+  transition: transform .15s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow .15s cubic-bezier(0.4, 0.0, 0.2, 1), background .15s cubic-bezier(0.4, 0.0, 0.2, 1), color .15s cubic-bezier(0.4, 0.0, 0.2, 1);
   box-shadow: 0 6px 14px -6px var(--shadow);
   /* entrance animation so the button pops into view organically */
   animation: popIn 360ms cubic-bezier(.2,.9,.3,1);
@@ -32,16 +32,23 @@
 .auth-confirm-btn:active{ transform: translateY(1px) scale(.997); }
 .auth-confirm-btn:disabled{ opacity: .6; cursor: not-allowed; }
 
+/* Dark mode active state color adjustment */
+:root[data-theme="dark"] .auth-confirm-btn:active {
+  background: color-mix(in srgb, var(--btn-bg), var(--accent) 8%);
+  border-color: color-mix(in srgb, var(--btn-border), var(--accent) 20%);
+}
+
 .auth-confirm-btn .btn-inner{ display:inline-flex; gap:10px; align-items:center; }
 .auth-confirm-btn .btn-icon{ display:inline-flex; width:18px; height:18px; align-items:center; justify-content:center; }
 .auth-confirm-btn .btn-label{ display:inline-block; }
 
-/* loading state centers a spinner and dims the label */
+/* loading state animates the text instead of showing spinner */
 .auth-confirm-btn.loading{
-  background: linear-gradient(90deg, rgba(37,99,235,0.06), rgba(37,99,235,0.03));
-  border-color: rgba(37,99,235,0.18);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent), transparent 94%), color-mix(in srgb, var(--accent), transparent 97%));
+  border-color: color-mix(in srgb, var(--accent), transparent 82%);
 }
-.auth-confirm-btn.loading .btn-label{ opacity: .001; transform: translateY(-2px); }
+.auth-confirm-btn.loading .btn-label{ opacity: 1; animation: textFun 0.8s ease-in-out infinite; }
+.auth-confirm-btn.loading .btn-icon{ display: none; }
 
 .btn-spinner{ display:inline-flex; width:18px; height:18px; align-items:center; justify-content:center; }
 .btn-spinner span{ box-sizing: border-box; width:14px; height:14px; border-radius:50%; border:2px solid transparent; border-top-color:var(--accent); border-left-color:var(--accent); animation: spin 700ms linear infinite; }
@@ -49,9 +56,22 @@
 
 /* sent state shows green background briefly and check icon */
 .auth-confirm-btn.sent{
-  background: linear-gradient(90deg, rgba(16,185,129,0.09), rgba(16,185,129,0.04));
-  border-color: rgba(16,185,129,0.18);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--success), transparent 91%), color-mix(in srgb, var(--success), transparent 96%));
+  border-color: color-mix(in srgb, var(--success), transparent 82%);
   color: var(--success);
+}
+
+/* error state shows red background and shake animation */
+.auth-confirm-btn.error{
+  background: var(--danger);
+  border-color: var(--danger);
+  color: white;
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Dark mode adjustments for better visibility */
+:root[data-theme="dark"] .auth-confirm-btn.sent {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--success), transparent 70%), color-mix(in srgb, var(--success), transparent 80%));
 }
 
 /* organic hover / focus interactions */
@@ -59,7 +79,16 @@
   transform: translateY(-3px) scale(1.005);
   box-shadow: 0 10px 30px -10px var(--shadow);
 }
-.auth-confirm-btn:focus{ outline: none; box-shadow: 0 0 0 6px rgba(37,99,235,0.08); }
+.auth-confirm-btn:focus{ outline: none; box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent), transparent 92%); }
+
+/* Remove hover effects in dark mode */
+:root[data-theme="dark"] .auth-confirm-btn:not(:disabled):hover {
+  transform: none;
+  box-shadow: none;
+}
+:root[data-theme="dark"] .auth-confirm-btn:not(:disabled):hover::before {
+  opacity: 0;
+}
 
 /* idle micro pulse when button is visually ready (not loading/sent) */
 .auth-confirm-btn:not(.loading):not(.sent){
@@ -110,6 +139,25 @@
   100% { transform: scale(1); opacity: 1 }
 }
 
+@keyframes textPulse{
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes textFun{
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  25% { transform: scale(1.05) rotate(1deg); opacity: 0.9; }
+  50% { transform: scale(1.1) rotate(0deg); opacity: 0.8; }
+  75% { transform: scale(1.05) rotate(-1deg); opacity: 0.9; }
+}
+
+@keyframes shake{
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
 /* Sliding auth-mode indicator (under the Sign in / Sign up pills) */
 .auth-toggle{ position: relative; display: inline-flex; align-items: center; }
 .auth-toggle-indicator{
@@ -117,8 +165,8 @@
   top: 6px; /* small inset so the pill labels sit above */
   height: calc(100% - 12px);
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(37,99,235,0.08), rgba(37,99,235,0.02));
-  box-shadow: 0 8px 18px -10px rgba(37,99,235,0.12);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent), transparent 92%), color-mix(in srgb, var(--accent), transparent 98%));
+  box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--accent), transparent 88%);
   transition: left .38s cubic-bezier(.2,.9,.3,1), width .38s cubic-bezier(.2,.9,.3,1), transform .38s ease, opacity .28s ease;
   transform-origin: left center;
   will-change: left, width, transform, opacity;
@@ -142,7 +190,7 @@
 .auth-toggle .pill-switch{ position: relative; z-index: 5; }
 
 /* subtle focus ring */
-.auth-confirm-btn:focus{ outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,0.08); }
+.auth-confirm-btn:focus{ outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent), transparent 92%); }
 
 /* small responsive tweak */
 @media (max-width:420px){

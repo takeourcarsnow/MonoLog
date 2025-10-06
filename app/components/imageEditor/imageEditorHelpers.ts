@@ -3,8 +3,10 @@
 // Generate a small noise canvas scaled to requested size for grain effect
 export function generateNoiseCanvas(w: number, h: number, intensity: number) {
   const c = document.createElement('canvas');
-  c.width = Math.max(1, Math.round(w));
-  c.height = Math.max(1, Math.round(h));
+  const width = isNaN(w) || w <= 0 ? 1 : Math.max(1, Math.round(w));
+  const height = isNaN(h) || h <= 0 ? 1 : Math.max(1, Math.round(h));
+  c.width = width;
+  c.height = height;
   const ctx = c.getContext('2d')!;
   const imgData = ctx.createImageData(c.width, c.height);
   const data = imgData.data;

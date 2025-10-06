@@ -179,8 +179,8 @@ export function applyGrainEffect(
   const nImgTop = imgTop;
   const nImgW = imgW;
   const nImgH = imgH;
-  const noiseW = Math.max(1, Math.round(imgW));
-  const noiseH = Math.max(1, Math.round(imgH));
+  const noiseW = isNaN(imgW) || imgW <= 0 ? 1 : Math.max(1, Math.round(imgW));
+  const noiseH = isNaN(imgH) || imgH <= 0 ? 1 : Math.max(1, Math.round(imgH));
   const noise = generateNoiseCanvas(noiseW, noiseH, curGrain);
   ctx.save();
   ctx.globalAlpha = Math.min(0.85, curGrain);

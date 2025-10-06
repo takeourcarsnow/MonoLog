@@ -5,7 +5,7 @@ export function computeImageLayout(params: DrawParams, info?: LayoutInfo) {
 
   const canvas = canvasRef.current;
   const img = imgRef.current;
-  if (!canvas || !img) return null;
+  if (!canvas || !img || img.naturalWidth === 0 || img.naturalHeight === 0) return null;
 
   // prefer using the provided layout info to avoid state update races
   let left: number, top: number, dispW: number, dispH: number;

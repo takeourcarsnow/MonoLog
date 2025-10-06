@@ -64,7 +64,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
 
     lastWheelTime.current = Date.now();
 
-    if (e.deltaY < 0) {
+    if (e.deltaY > 0) {  // Only trigger on scroll down (pull down gesture)
       e.preventDefault();
 
       setState(prev => {
@@ -78,7 +78,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
         }
         return { ...prev, pullDistance: newDistance, isPulling: true };
       });
-    } else if (e.deltaY > 0) {
+    } else if (e.deltaY < 0 && state.pullDistance > 0) {  // Only reset if there's existing pull distance
       setState(prev => ({ ...prev, pullDistance: 0, isPulling: false }));
     }
   }, [disabled, state.isRefreshing, threshold, onRefresh]);

@@ -106,7 +106,7 @@ try {
 
 // Check 6: OptimizedImage component exists
 try {
-  const optImgPath = path.join(__dirname, '..', 'src', 'components', 'OptimizedImage.tsx');
+  const optImgPath = path.join(__dirname, '..', 'app', 'components', 'OptimizedImage.tsx');
   if (fs.existsSync(optImgPath)) {
     checks.push('✅ Optimized image component exists');
   } else {

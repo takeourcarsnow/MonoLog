@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { memo } from "react";
+import { memo, useState } from "react";
 
 interface OptimizedImageProps {
   src: string;
@@ -15,6 +15,8 @@ interface OptimizedImageProps {
   loading?: 'eager' | 'lazy';
   onLoad?: () => void;
   onError?: () => void;
+  blurDataURL?: string;
+  placeholder?: 'blur' | 'empty';
 }
 
 export const OptimizedImage = memo(function OptimizedImage({
@@ -31,7 +33,16 @@ export const OptimizedImage = memo(function OptimizedImage({
   loading,
   onLoad,
   onError,
+  blurDataURL,
+  placeholder = 'blur',
 }: OptimizedImageProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Generate a simple blur placeholder if none provided and blur is requested
+  const defaultBlurDataURL = blurDataURL || (placeholder === 'blur' ?
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+IRjWjBqO6O2mhP//Z" :
+    undefined);
+
   return (
     <Image
       src={src}
@@ -40,12 +51,21 @@ export const OptimizedImage = memo(function OptimizedImage({
       height={fill ? undefined : height}
       fill={fill}
       className={className}
-      style={style}
+      style={{
+        ...style,
+        transition: 'opacity 0.3s ease-in-out',
+        opacity: isLoading ? 0.7 : 1,
+      }}
       unoptimized={unoptimized}
       priority={priority}
       sizes={sizes}
       loading={loading}
-      onLoad={onLoad}
+      placeholder={placeholder}
+      blurDataURL={defaultBlurDataURL}
+      onLoad={() => {
+        setIsLoading(false);
+        onLoad?.();
+      }}
       onError={onError}
     />
   );

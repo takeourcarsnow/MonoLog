@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "@/src/lib/api";
 import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
@@ -9,18 +9,20 @@ export function FavoritesView() {
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await api.getFavoritePosts();
-        setPosts(data);
-      } catch (e) {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const loadFavorites = useCallback(async () => {
+    try {
+      const data = await api.getFavoritePosts();
+      setPosts(data);
+    } catch (e) {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
 
   // Remove deleted post from favorites immediately
   useEffect(() => {
@@ -33,6 +35,7 @@ export function FavoritesView() {
     if (typeof window !== 'undefined') window.addEventListener('monolog:post_deleted', onPostDeleted as any);
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_deleted', onPostDeleted as any); };
   }, []);
+
   if (loading) {
     return (
       <div className="view-fade">

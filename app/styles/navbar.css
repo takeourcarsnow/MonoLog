@@ -1,3 +1,57 @@
+/* Static tab item (server-rendered) - will be enhanced by client component */
+.tab-item-static {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px;
+  border-radius: 12px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  min-width: 60px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--muted);
+  overflow: hidden;
+}
+
+.tab-item-static.active {
+  color: var(--tab-color);
+  transform: translateY(-4px) scale(1.08);
+}
+
+.tab-item-static .tab-icon {
+  margin-bottom: 4px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.tab-item-static.active .tab-icon {
+  transform: scale(1.15) rotate(3deg);
+}
+
+.tab-item-static .tab-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1;
+  opacity: 0.7;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1;
+  position: relative;
+}
+
+.tab-item-static.active .tab-label {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.tab-item-static:not(.active) .tab-label {
+  transform: translateY(0);
+}
+
 /* Bottom navigation bar styles */
 
 .tabbar {
@@ -85,20 +139,26 @@
 @media (prefers-reduced-motion: reduce) {
   .tab-item,
   .tab-icon,
-  .tab-label {
+  .tab-label,
+  .tab-item-static,
+  .tab-item-static .tab-icon,
+  .tab-item-static .tab-label {
     transition: none;
     animation: none;
   }
 
-  .tab-item.active {
+  .tab-item.active,
+  .tab-item-static.active {
     transform: none;
   }
 
-  .tab-item.active .tab-icon {
+  .tab-item.active .tab-icon,
+  .tab-item-static.active .tab-icon {
     transform: none;
   }
 
-  .tab-item.active .tab-label {
+  .tab-item.active .tab-label,
+  .tab-item-static.active .tab-label {
     transform: none;
   }
 }
@@ -109,22 +169,26 @@
     padding: 6px 0;
   }
 
-  .tab-item {
+  .tab-item,
+  .tab-item-static {
     padding: 8px 6px;
     min-width: 50px;
   }
 
-  .tab-item.active {
+  .tab-item.active,
+  .tab-item-static.active {
     transform: translateY(-2px) scale(1.06);
   }
 
-  .tab-item.active .tab-icon {
+  .tab-item.active .tab-icon,
+  .tab-item-static.active .tab-icon {
     transform: scale(1.12) rotate(2deg);
   }
 }
 
 /* Enhanced focus states for accessibility */
-.tab-item:focus-visible {
+.tab-item:focus-visible,
+.tab-item-static:focus-visible {
   outline: 2px solid var(--tab-color);
   outline-offset: 2px;
 }

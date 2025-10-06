@@ -17,7 +17,7 @@ import { useFollow } from "./postCard/hooks/useFollow";
 import { useDelete } from "./postCard/hooks/useDelete";
 import { useEdit } from "./postCard/hooks/useEdit";
 import { useShare } from "./postCard/hooks/useShare";
-import { useIsMe } from "./postCard/hooks/useAuth";
+import { useIsMe } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
 import { usePathname } from "next/navigation";
 import { api } from "@/src/lib/api";

@@ -7,7 +7,7 @@ import { api } from "@/src/lib/api";
 import { AuthForm } from "./AuthForm";
 import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
 import { CONFIG } from "@/src/lib/config";
-import { useAuth } from "./uploader/useAuth";
+import { useAuth } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
 import { DropZone } from "./uploader/DropZone";
 import { FileInputs } from "./uploader/FileInputs";

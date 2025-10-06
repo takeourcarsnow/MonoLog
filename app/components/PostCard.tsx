@@ -25,6 +25,8 @@ import { api } from "@/src/lib/api";
 // Memoize PostCard to prevent unnecessary re-renders when parent updates
 const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: HydratedPost; allowCarouselTouch?: boolean }) => {
   const { post, setPost } = usePostState(initial);
+  const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+  const isMultipost = imageUrls.length > 1;
   const {
     commentsOpen,
     setCommentsOpen,
@@ -178,7 +180,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   }, [editing]);
 
   return (
-    <article className={`card ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
+    <article className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
       <UserHeader
         post={post}
         isMe={isMe}

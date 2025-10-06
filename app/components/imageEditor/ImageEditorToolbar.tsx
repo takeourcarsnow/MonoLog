@@ -57,8 +57,10 @@ function ImageEditorToolbarCategories({
   resetCrop,
   cancelCrop
 }: Pick<ImageEditorToolbarProps, 'categoriesContainerRef' | 'selectedCategory' | 'setSelectedCategory' | 'categoryHighlight' | 'sel' | 'applyCropOnly' | 'resetCrop' | 'cancelCrop'>) {
+  const category = selectedCategory as 'basic' | 'color' | 'effects' | 'crop' | 'frame';
+
   // When in crop mode, show Confirm/Reset/Cancel buttons
-  if (selectedCategory === 'crop') {
+  if (category === 'crop') {
     return (
       <div ref={categoriesContainerRef} className="categories-scroll" style={{
         position: 'relative',
@@ -208,7 +210,7 @@ function ImageEditorToolbarCategories({
 
       <button
         data-cat="basic"
-        data-active={selectedCategory === 'basic'}
+        data-active={category === 'basic'}
         type="button"
         aria-label="Basic"
         title="Basic"
@@ -220,7 +222,7 @@ function ImageEditorToolbarCategories({
         style={{
           padding: '8px 10px',
           borderRadius: 10,
-          background: selectedCategory === 'basic' ? 'transparent' : 'transparent',
+          background: category === 'basic' ? 'transparent' : 'transparent',
           color: 'var(--text)',
           transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
           position: 'relative',
@@ -230,17 +232,17 @@ function ImageEditorToolbarCategories({
           alignItems: 'center',
           gap: 6,
           border: 'none',
-          fontWeight: selectedCategory === 'basic' ? 700 : 500,
+          fontWeight: category === 'basic' ? 700 : 500,
           overflow: 'hidden'
         }}
       >
-        <Sliders size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'basic' ? CATEGORY_COLORS.basic : undefined }} />
+        <Sliders size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'basic' ? CATEGORY_COLORS.basic : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Basic</span>
       </button>
 
       <button
         data-cat="color"
-        data-active={selectedCategory === 'color'}
+        data-active={category === 'color'}
         type="button"
         aria-label="Filters"
         title="Filters"
@@ -252,7 +254,7 @@ function ImageEditorToolbarCategories({
         style={{
           padding: '8px 10px',
           borderRadius: 10,
-          background: selectedCategory === 'color' ? 'transparent' : 'transparent',
+          background: category === 'color' ? 'transparent' : 'transparent',
           color: 'var(--text)',
           transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
           position: 'relative',
@@ -262,17 +264,17 @@ function ImageEditorToolbarCategories({
           alignItems: 'center',
           gap: 6,
           border: 'none',
-          fontWeight: selectedCategory === 'color' ? 700 : 500,
+          fontWeight: category === 'color' ? 700 : 500,
           overflow: 'hidden'
         }}
       >
-        <Palette size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'color' ? CATEGORY_COLORS.color : undefined }} />
+        <Palette size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'color' ? CATEGORY_COLORS.color : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Filters</span>
       </button>
 
       <button
         data-cat="effects"
-        data-active={selectedCategory === 'effects'}
+        data-active={category === 'effects'}
         type="button"
         aria-label="Effects"
         title="Effects"
@@ -284,7 +286,7 @@ function ImageEditorToolbarCategories({
         style={{
           padding: '8px 10px',
           borderRadius: 10,
-          background: selectedCategory === 'effects' ? 'transparent' : 'transparent',
+          background: category === 'effects' ? 'transparent' : 'transparent',
           color: 'var(--text)',
           transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
           position: 'relative',
@@ -294,17 +296,17 @@ function ImageEditorToolbarCategories({
           alignItems: 'center',
           gap: 6,
           border: 'none',
-          fontWeight: selectedCategory === 'effects' ? 700 : 500,
+          fontWeight: category === 'effects' ? 700 : 500,
           overflow: 'hidden'
         }}
       >
-        <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'effects' ? CATEGORY_COLORS.effects : undefined }} />
+        <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'effects' ? CATEGORY_COLORS.effects : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Effects</span>
       </button>
 
       <button
         data-cat="crop"
-        data-active={selectedCategory === 'crop'}
+        data-active={false}
         type="button"
         aria-label="Crop"
         title="Crop"
@@ -316,7 +318,7 @@ function ImageEditorToolbarCategories({
         style={{
           padding: '8px 10px',
           borderRadius: 10,
-          background: selectedCategory === 'crop' ? 'transparent' : 'transparent',
+          background: 'transparent',
           color: 'var(--text)',
           transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
           position: 'relative',
@@ -326,17 +328,17 @@ function ImageEditorToolbarCategories({
           alignItems: 'center',
           gap: 6,
           border: 'none',
-          fontWeight: selectedCategory === 'crop' ? 700 : 500,
+          fontWeight: 500,
           overflow: 'hidden'
         }}
       >
-        <Scissors size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'crop' ? CATEGORY_COLORS.crop : undefined }} />
+        <Scissors size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Crop</span>
       </button>
 
       <button
         data-cat="frame"
-        data-active={selectedCategory === 'frame'}
+        data-active={category === 'frame'}
         type="button"
         aria-label="Frame"
         title="Frame"
@@ -348,7 +350,7 @@ function ImageEditorToolbarCategories({
         style={{
           padding: '8px 10px',
           borderRadius: 10,
-          background: selectedCategory === 'frame' ? 'transparent' : 'transparent',
+          background: category === 'frame' ? 'transparent' : 'transparent',
           color: 'var(--text)',
           transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
           position: 'relative',
@@ -358,11 +360,11 @@ function ImageEditorToolbarCategories({
           alignItems: 'center',
           gap: 6,
           border: 'none',
-          fontWeight: selectedCategory === 'frame' ? 700 : 500,
+          fontWeight: category === 'frame' ? 700 : 500,
           overflow: 'hidden'
         }}
       >
-        <ImageIcon size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: selectedCategory === 'frame' ? CATEGORY_COLORS.frame : undefined }} />
+        <ImageIcon size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'frame' ? CATEGORY_COLORS.frame : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Frame</span>
       </button>
     </div>

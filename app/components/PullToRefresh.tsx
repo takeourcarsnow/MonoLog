@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
 interface PullToRefreshIndicatorProps {
   isRefreshing: boolean;
@@ -7,63 +7,29 @@ interface PullToRefreshIndicatorProps {
   className?: string;
 }
 
-export function PullToRefreshIndicator({
+export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
   isRefreshing,
   pullDistance,
   threshold,
   className = ''
-}: PullToRefreshIndicatorProps) {
-  const progress = Math.min(pullDistance / threshold, 1);
-  const opacity = Math.min(progress * 2, 1); // Fade in faster
-
-  if (!isRefreshing && pullDistance === 0) return null;
+}) => {
+  const isVisible = isRefreshing || pullDistance >= threshold;
 
   return (
     <div
-      className={`absolute top-0 left-0 right-0 z-10 flex items-center justify-center py-4 bg-white border-b border-gray-200 ${className}`}
+      className={`absolute top-0 left-0 right-0 z-10 flex items-center justify-center py-4 ${className}`}
       style={{
-        opacity,
-        transform: `translateY(${isRefreshing ? 0 : -100}%)`,
-        transition: isRefreshing ? 'transform 0.2s ease-out' : 'none',
+        opacity: isVisible ? 1 : 0,
+        transform: `translateY(${isVisible ? 0 : -100}%)`,
+        transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
       }}
     >
       <div className="flex items-center space-x-2">
-        {isRefreshing ? (
-          <>
-            <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-            <span className="text-sm text-gray-600">Refreshing...</span>
-          </>
-        ) : (
-          <>
-            <div
-              className="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center transition-colors"
-              style={{
-                backgroundColor: progress >= 1 ? '#3b82f6' : 'transparent',
-              }}
-            >
-              <svg
-                className={`w-3 h-3 transition-transform ${progress >= 1 ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke={progress >= 1 ? 'white' : 'currentColor'}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                />
-              </svg>
-            </div>
-            <span className="text-sm text-gray-600">
-              {progress >= 1 ? 'Release to refresh' : 'Pull to refresh'}
-            </span>
-          </>
-        )}
+        <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
       </div>
     </div>
   );
-}
+});
 
 interface PullToRefreshWrapperProps {
   children: ReactNode;
@@ -75,7 +41,7 @@ interface PullToRefreshWrapperProps {
   className?: string;
 }
 
-export function PullToRefreshWrapper({
+export const PullToRefreshWrapper = React.memo<PullToRefreshWrapperProps>(({
   children,
   isRefreshing,
   pullDistance,
@@ -83,7 +49,9 @@ export function PullToRefreshWrapper({
   containerRef,
   getPullStyles,
   className = ''
-}: PullToRefreshWrapperProps) {
+}) => {
+  const effectivePull = React.useMemo(() => threshold * (1 - Math.exp(-pullDistance / threshold)), [pullDistance, threshold]);
+
   return (
     <div
       ref={containerRef}
@@ -97,20 +65,20 @@ export function PullToRefreshWrapper({
       />
       {/* When pulling or refreshing, push the content down so the header
           / avatar / follow button isn't obscured by the indicator. Use a
-          smooth margin transition for a nicer effect. */}
+          smooth transform transition for better performance. */}
       <div
         className={isRefreshing || pullDistance > 0 ? 'pointer-events-none' : ''}
         style={{
-          transition: isRefreshing ? 'margin-top 180ms ease' : 'none',
+          transition: 'transform 180ms ease',
           // While actively pulling, match the visual offset to the pull distance so
           // the header/content moves with the user's gesture. When refreshing, use
           // a fixed offset equal to the indicator's approximate height.
-          marginTop: isRefreshing ? 56 : pullDistance,
-          willChange: 'margin-top'
+          transform: `translateY(${isRefreshing ? 56 : effectivePull}px)`,
+          willChange: 'transform'
         }}
       >
         {children}
       </div>
     </div>
   );
-}
+});

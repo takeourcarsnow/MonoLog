@@ -220,7 +220,7 @@
   gap:12px;
   width:100%;
   max-width: var(--maxw);
-  margin: 6px auto 8px; /* slightly reduced space above and below the toggle */
+  margin: 6px auto 0px; /* reduced bottom margin to keep same distance while allowing shadow space */
   padding: 4px 12px; /* slightly reduced vertical padding */
   box-sizing: border-box;
   background: transparent;

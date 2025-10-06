@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 
 type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   maxScale?: number;
@@ -79,7 +79,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     }
   }, [src]);
 
-  const getBounds = (currentScale = scale) => {
+  const getBounds = useCallback((currentScale: number) => {
     const c = containerRef.current;
     const img = imgRef.current;
     if (!c || !img) return { maxTx: 0, maxTy: 0 };
@@ -103,7 +103,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const maxTy = Math.max(0, (scaledH - containerH) / 2);
 
     return { maxTx, maxTy };
-  };
+  }, []);
 
   const handleDoubleTap = (clientX: number, clientY: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -174,7 +174,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const newTx = panStartRef.current.tx + dx;
     const newTy = panStartRef.current.ty + dy;
 
-    const bounds = getBounds();
+  const bounds = getBounds(scale);
     const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
     const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 
@@ -218,7 +218,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const newTx = panStartRef.current.tx + dx;
     const newTy = panStartRef.current.ty + dy;
 
-    const bounds = getBounds();
+  const bounds = getBounds(scale);
     const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
     const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 
@@ -318,7 +318,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     return () => {
       imgElement.removeEventListener('wheel', handleWheelEvent);
     };
-  }, [scale, tx, ty, maxScale]);
+  }, [scale, tx, ty, maxScale, getBounds]);
 
   return (
     <div

@@ -82,3 +82,9 @@ export const PullToRefreshWrapper = React.memo<PullToRefreshWrapperProps>(({
     </div>
   );
 });
+
+// Set a displayName so ESLint/react-display-name is satisfied when using React.memo
+PullToRefreshIndicator.displayName = 'PullToRefreshIndicator';
+
+// Set a displayName so ESLint/react-display-name is satisfied when using React.memo
+PullToRefreshWrapper.displayName = 'PullToRefreshWrapper';

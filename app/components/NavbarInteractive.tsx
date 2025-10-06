@@ -17,7 +17,7 @@ export function NavbarInteractive() {
   };
 
   // Check if current path matches nav item (including username routes for profile)
-  const isActive = (itemPath: string) => {
+  const isActive = React.useCallback((itemPath: string) => {
     if (itemPath === '/profile') {
       // Profile tab should be active for any /profile/* route (e.g. /profile/following)
       if (pathname.startsWith('/profile')) return true;
@@ -33,7 +33,7 @@ export function NavbarInteractive() {
       ].includes(pathSegments[0]?.toLowerCase()));
     }
     return pathname === itemPath || (pathname === '/' && itemPath === '/feed');
-  };
+  }, [pathname]);
 
   // This component adds click handlers to the static nav items
   React.useEffect(() => {
@@ -78,7 +78,7 @@ export function NavbarInteractive() {
         tabItem.removeAttribute('aria-current');
       }
     });
-  }, [pathname]);
+  }, [pathname, isActive]);
 
   return null; // This component only adds behavior, no JSX
 }

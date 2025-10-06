@@ -54,7 +54,6 @@ export default function BasicPanel({
               announceDirection('exposure', exposureRef.current, v);
               exposureRef.current = v;
               setExposure(v);
-              draw({ exposure: v });
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('exposure')}
@@ -80,7 +79,6 @@ export default function BasicPanel({
               announceDirection('contrast', contrastRef.current, v);
               contrastRef.current = v;
               setContrast(v);
-              draw({ contrast: v });
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('contrast')}
@@ -106,7 +104,6 @@ export default function BasicPanel({
               announceDirection('saturation', saturationRef.current, v);
               saturationRef.current = v;
               setSaturation(v);
-              draw({ saturation: v });
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('saturation')}
@@ -132,7 +129,6 @@ export default function BasicPanel({
               announceDirection('temperature', temperatureRef.current, v);
               temperatureRef.current = v;
               setTemperature(v);
-              draw({ temperature: v });
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('temperature')}

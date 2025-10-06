@@ -68,7 +68,6 @@ export default function ColorPanel({
             const v = Number(e.target.value);
             filterStrengthRef.current = v;
             setFilterStrength(v);
-            draw();
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('filterStrength')}

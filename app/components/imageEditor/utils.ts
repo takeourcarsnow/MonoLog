@@ -1,15 +1,20 @@
 // helper: generate a small noise canvas scaled to requested size for grain effect
+const noiseCache = new Map<string, HTMLCanvasElement>();
 export function generateNoiseCanvas(w: number, h: number, intensity: number) {
-  const c = document.createElement('canvas');
   const width = isNaN(w) || w <= 0 ? 1 : Math.max(1, Math.round(w));
   const height = isNaN(h) || h <= 0 ? 1 : Math.max(1, Math.round(h));
+  const amp = Math.min(1, Math.max(0, intensity));
+  const key = `${width}x${height}x${amp.toFixed(2)}`;
+  if (noiseCache.has(key)) {
+    return noiseCache.get(key)!;
+  }
+  const c = document.createElement('canvas');
   c.width = width;
   c.height = height;
   const ctx = c.getContext('2d')!;
   const imgData = ctx.createImageData(c.width, c.height);
   const data = imgData.data;
   // intensity controls alpha-ish by choosing noise amplitude
-  const amp = Math.min(1, Math.max(0, intensity));
   for (let i = 0; i < data.length; i += 4) {
     const v = Math.round((Math.random() * 255) * amp);
     data[i] = v;
@@ -18,6 +23,7 @@ export function generateNoiseCanvas(w: number, h: number, intensity: number) {
     data[i + 3] = 255;
   }
   ctx.putImageData(imgData, 0, 0);
+  noiseCache.set(key, c);
   return c;
 }
 

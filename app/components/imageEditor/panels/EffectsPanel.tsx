@@ -58,7 +58,6 @@ export default function EffectsPanel({
             const v = Number(e.target.value);
             vignetteRef.current = v;
             setVignette(v);
-            draw({ vignette: v });
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('vignette')}
@@ -81,7 +80,6 @@ export default function EffectsPanel({
             const v = Number(e.target.value);
             grainRef.current = v;
             setGrain(v);
-            draw({ grain: v });
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('grain')}
@@ -105,7 +103,6 @@ export default function EffectsPanel({
             const v = Number(e.target.value);
             softFocusRef.current = v;
             setSoftFocus(v);
-            draw();
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('softFocus')}
@@ -129,7 +126,6 @@ export default function EffectsPanel({
             const v = Number(e.target.value);
             fadeRef.current = v;
             setFade(v);
-            draw();
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('fade')}
@@ -153,7 +149,6 @@ export default function EffectsPanel({
             const v = Number(e.target.value);
             matteRef.current = v;
             setMatte(v);
-            draw();
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('matte')}

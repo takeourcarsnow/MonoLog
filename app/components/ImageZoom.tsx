@@ -1,13 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useEffect } from "react";
-import { useImageZoomState } from "./ImageZoomState";
-import { getBoundsForScale } from "./ImageZoomUtils";
-import { useImageZoomTouch } from "./ImageZoomTouch";
-import { useImageZoomPointer } from "./ImageZoomPointer";
-import { useImageZoomDoubleTap } from "./ImageZoomDoubleTap";
-import { useImageZoomAnimation } from "./ImageZoomAnimation";
+import React, { useEffect, useRef, useState } from "react";
 
 type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   maxScale?: number;
@@ -15,40 +9,19 @@ type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   isFullscreen?: boolean;
 };
 
-export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive = true, isFullscreen = false, ...rest }: Props) {
-  const state = useImageZoomState();
-  const {
-    containerRef,
-    imgRef,
-    scale,
-    setScale,
-    tx,
-    ty,
-    setTxSafe,
-    setTySafe,
-    setIsPanning,
-    isPanning,
-    isTile,
-    setIsTile,
-    scaleRef,
-    txRef,
-    tyRef,
-    flingRaf,
-    pointerRaf,
-    doubleTapRef,
-    pointerActive,
-    lastPan,
-    startPan,
-    lastMoveTs,
-    lastMovePos,
-    velocity,
-    lastDoubleTapAt,
-    lastClickAt,
-    natural,
-  } = state;
+export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive = true, isFullscreen = false, ...rest }: Props) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [scale, setScale] = useState(1);
+  const [tx, setTx] = useState(0);
+  const [ty, setTy] = useState(0);
+  const [isTile, setIsTile] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const lastDoubleTapRef = useRef<number | null>(null);
+  const panStartRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
+  const naturalRef = useRef({ w: 0, h: 0 });
 
-  // Detect if this ImageZoom is rendered inside a grid tile so we can
-  // use cover/fill styles (center & crop) to make images align nicely.
+  // Detect if this ImageZoom is rendered inside a grid tile
   useEffect(() => {
     try {
       const el = containerRef.current;
@@ -58,156 +31,246 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
     } catch (e) {
       // ignore
     }
-  }, [containerRef, setIsTile]);
+  }, []);
 
-  // Reset zoom state when src changes (e.g., when carousel switches images)
+  // Reset zoom state when src changes
   useEffect(() => {
     setScale(1);
-    setTxSafe(0);
-    setTySafe(0);
-  }, [src, setScale, setTxSafe, setTySafe]);
+    setTx(0);
+    setTy(0);
+    // Dispatch zoom end event
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
+      } catch (_) {}
+    }
+  }, [src]);
 
-  // Reset zoom when the image becomes inactive (not visible in carousel)
+  // Reset zoom when the image becomes inactive
   useEffect(() => {
     if (!isActive) {
       setScale(1);
-      setTxSafe(0);
-      setTySafe(0);
+      setTx(0);
+      setTy(0);
+      // Dispatch zoom end event
+      if (typeof window !== 'undefined') {
+        try {
+          window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
+        } catch (_) {}
+      }
     }
-  }, [isActive, setScale, setTxSafe, setTySafe]);
+  }, [isActive]);
 
   // Set natural dimensions when image loads
   useEffect(() => {
     const img = imgRef.current;
     if (img) {
       if (img.complete) {
-        natural.current.w = img.naturalWidth;
-        natural.current.h = img.naturalHeight;
+        naturalRef.current.w = img.naturalWidth;
+        naturalRef.current.h = img.naturalHeight;
       } else {
         const onLoad = () => {
-          natural.current.w = img.naturalWidth;
-          natural.current.h = img.naturalHeight;
+          naturalRef.current.w = img.naturalWidth;
+          naturalRef.current.h = img.naturalHeight;
         };
         img.addEventListener('load', onLoad);
         return () => img.removeEventListener('load', onLoad);
       }
     }
-  }, [src, imgRef, natural]);
+  }, [src]);
 
-  const { onTouchStart, onTouchMove, onTouchEnd, reset } = useImageZoomTouch(
-    containerRef,
-    scale,
-    setScale,
-    tx,
-    ty,
-    setTxSafe,
-    setTySafe,
-    maxScale,
-    imgRef,
-    natural
-  );
+  const getBounds = () => {
+    const c = containerRef.current;
+    const img = imgRef.current;
+    if (!c || !img) return { maxTx: 0, maxTy: 0 };
 
-  const { onPointerDown, onPointerMove, onPointerUp, springBack, startFling } = useImageZoomPointer(
-    scale,
-    scaleRef,
-    txRef,
-    tyRef,
-    setTxSafe,
-    setTySafe,
-    setIsPanning,
-    lastPan,
-    startPan,
-    lastMoveTs,
-    lastMovePos,
-    velocity,
-    pointerActive,
-    pointerRaf,
-    containerRef,
-    imgRef,
-    natural
-  );
+    const rect = c.getBoundingClientRect();
+    const containerW = rect.width;
+    const containerH = rect.height;
+    const natW = img.naturalWidth || naturalRef.current.w || containerW;
+    const natH = img.naturalHeight || naturalRef.current.h || containerH;
 
-  const { handleDoubleTap, handleTouchEndDoubleTap } = useImageZoomDoubleTap(
-    scale,
-    setScale,
-    tx,
-    ty,
-    setTxSafe,
-    setTySafe,
-    maxScale,
-    doubleTapRef,
-    containerRef,
-    imgRef,
-    natural,
-    lastDoubleTapAt
-  );
+    // Calculate the scale factor to fit the image within the container
+    const fitScale = Math.min(containerW / natW, containerH / natH);
+    const renderedW = natW * fitScale;
+    const renderedH = natH * fitScale;
 
-  const { springBack: animationSpringBack, startFling: animationStartFling, reset: animationReset } = useImageZoomAnimation(
-    scale,
-    scaleRef,
-    txRef,
-    tyRef,
-    setTxSafe,
-    setTySafe,
-    setScale,
-    containerRef,
-    imgRef,
-    natural,
-    flingRaf
-  );
+    // When zoomed with transform: scale(scale), the effective size
+    const scaledW = renderedW * scale;
+    const scaledH = renderedH * scale;
 
-  // Enhanced touch end handler that combines touch and double tap logic
-  const onTouchEndCombined: React.TouchEventHandler = (e) => {
-    onTouchEnd(e);
-    handleTouchEndDoubleTap(e);
+    const maxTx = Math.max(0, (scaledW - containerW) / 2);
+    const maxTy = Math.max(0, (scaledH - containerH) / 2);
+
+    return { maxTx, maxTy };
+  };
+
+  const handleDoubleTap = (clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    if (scale > 1) {
+      // Zoom out to center
+      setScale(1);
+      setTx(0);
+      setTy(0);
+      // Dispatch zoom end event
+      if (typeof window !== 'undefined') {
+        try {
+          window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
+        } catch (_) {}
+      }
+    } else {
+      // Zoom in to double tap location
+      setScale(maxScale);
+
+      // Calculate translation to center the tap point
+      const localX = clientX - rect.left;
+      const localY = clientY - rect.top;
+      const containerWidth = rect.width;
+      const containerHeight = rect.height;
+
+      const newTx = -(localX * maxScale - containerWidth / 2);
+      const newTy = -(localY * maxScale - containerHeight / 2);
+
+      // Clamp to bounds
+      const bounds = getBounds();
+      const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+      const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+
+      setTx(clampedTx);
+      setTy(clampedTy);
+
+      // Dispatch zoom start event
+      if (typeof window !== 'undefined') {
+        try {
+          window.dispatchEvent(new CustomEvent('monolog:zoom_start'));
+        } catch (_) {}
+      }
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (scale <= 1) return;
+
+    setIsPanning(true);
+    panStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      tx: tx,
+      ty: ty
+    };
+
+    e.preventDefault();
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isPanning || !panStartRef.current) return;
+
+    const dx = e.clientX - panStartRef.current.x;
+    const dy = e.clientY - panStartRef.current.y;
+
+    const newTx = panStartRef.current.tx + dx;
+    const newTy = panStartRef.current.ty + dy;
+
+    const bounds = getBounds();
+    const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+    const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+
+    setTx(clampedTx);
+    setTy(clampedTy);
+
+    // Prevent parent components from receiving swipe gestures when panning
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
+  const handlePointerUp = () => {
+    setIsPanning(false);
+    panStartRef.current = null;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (scale <= 1) return;
+
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      setIsPanning(true);
+      panStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        tx: tx,
+        ty: ty
+      };
+      // Prevent parent components from receiving touch start when starting to pan
+      e.stopPropagation();
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isPanning || !panStartRef.current || e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    const dx = touch.clientX - panStartRef.current.x;
+    const dy = touch.clientY - panStartRef.current.y;
+
+    const newTx = panStartRef.current.tx + dx;
+    const newTy = panStartRef.current.ty + dy;
+
+    const bounds = getBounds();
+    const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+    const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+
+    setTx(clampedTx);
+    setTy(clampedTy);
+
+    // Prevent parent components from receiving swipe gestures when panning
+    e.stopPropagation();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.changedTouches.length === 1) {
+      const touch = e.changedTouches[0];
+      const now = Date.now();
+
+      if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
+        lastDoubleTapRef.current = null;
+        handleDoubleTap(touch.clientX, touch.clientY);
+      } else {
+        lastDoubleTapRef.current = now;
+        setTimeout(() => {
+          if (lastDoubleTapRef.current === now) {
+            lastDoubleTapRef.current = null;
+          }
+        }, 310);
+      }
+    }
+
+    setIsPanning(false);
+    panStartRef.current = null;
   };
 
   return (
     <div
       ref={containerRef}
-      // block clicks that occur immediately after a pinch so parent Links
-      // don't interpret the gesture as a tap/click which would navigate or
-      // reset the carousel. We use a short time window to allow normal clicks.
-      onClick={(e) => {
-        const dt = lastDoubleTapAt.current;
-        const now = Date.now();
-        if (lastClickAt.current && now - lastClickAt.current < 400) {
-          // double click
-          e.preventDefault();
-          e.stopPropagation();
-          handleDoubleTap(e.clientX, e.clientY);
-          lastDoubleTapAt.current = now;
-          lastClickAt.current = null;
-        } else if (dt && Date.now() - dt < 700) {
-          e.preventDefault();
-          e.stopPropagation();
-        } else {
-          lastClickAt.current = now;
-        }
-      }}
       className={className}
       style={{
         overflow: "hidden",
-        // When zoomed, disable touch action to prevent scrolling
         touchAction: scale > 1 ? "none" : "auto",
-        // make the container fill the card width so images can center
         display: "block",
         width: "100%",
-        // In profile/grid tiles we want the image to fully fill the square tile area.
-        // The tile itself enforces aspect-ratio; giving the wrapper 100% height
-        // allows the inner <img> (with object-fit:cover) to crop instead of letterboxing.
         height: isFullscreen ? "100%" : (isTile ? "100%" : undefined),
         boxSizing: "border-box",
         ...style,
       }}
       onDragStart={(e) => e.preventDefault()}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEndCombined}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <img
         {...rest}
@@ -217,12 +280,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
         style={{
           transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
           transformOrigin: "center center",
-          transition: isPanning ? "none" : "transform 120ms ease-out",
+          transition: isPanning ? "none" : "transform 0.2s ease-out",
           display: "block",
-          // When rendered inside a square grid tile, fill the tile and
-          // crop (object-fit: cover) so images are centered consistently.
-          // Otherwise render responsive width with preserved aspect ratio
-          // and center the image within the card.
           width: isTile ? "100%" : "auto",
           maxWidth: isTile ? undefined : "100%",
           height: isFullscreen ? "100%" : (isTile ? "100%" : "auto"),
@@ -230,9 +289,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 4, isActive =
           objectFit: isFullscreen ? "contain" : (isTile ? "cover" : "contain"),
           objectPosition: "center center",
           userSelect: "none",
-          // When zoomed, disable touch action to prevent scrolling
           touchAction: scale > 1 ? "none" : "auto",
-          // In fullscreen, allow pointer events to pass through to close button
           pointerEvents: isFullscreen ? "none" : "auto",
         }}
         onDragStart={(e) => e.preventDefault()}

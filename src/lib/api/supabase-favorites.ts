@@ -30,7 +30,7 @@ export async function getFavoritePosts() {
   if (profErr || !profile) return [];
   const ids: string[] = profile.favorites || [];
   if (!ids.length) return [];
-const { data, error } = await sb.from("posts").select("*, users:users(*), comments:comments(id)").in("id", ids);
+const { data, error } = await sb.from("posts").select("*, users!left(*), comments!left(id)").in("id", ids);
   if (error) throw error;
   return (data || []).map((row: any) => mapRowToHydratedPost(row));
 }

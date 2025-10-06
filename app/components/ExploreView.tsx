@@ -144,6 +144,27 @@ export function ExploreView() {
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_deleted', onPostDeleted as any); };
   }, []);
 
+  // Refresh explore when a new post is created (user returns to explore after upload)
+  useEffect(() => {
+    const onPostCreated = () => {
+      // For explore, we can refetch the initial page to include new public posts
+      setLoading(true);
+      (async () => {
+        try {
+          const page = await api.getExploreFeedPage({ limit: PAGE_SIZE });
+          setPosts(page);
+          setHasMore(page.length === PAGE_SIZE);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    };
+    if (typeof window !== 'undefined') window.addEventListener('monolog:post_created', onPostCreated as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_created', onPostCreated as any); };
+  }, []);
+
   const render = () => {
   if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
   if (!posts.length) return <div className="empty">No posts yet. Be the first to post your daily photo!</div>;

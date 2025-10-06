@@ -8,12 +8,12 @@ export async function getComments(postId: string) {
   let data: any = null;
   let error: any = null;
   try {
-    const res = await sb.from("comments").select("*, users:users(*)").eq("post_id", postId).order("created_at", { ascending: true });
+    const res = await sb.from("comments").select("*, users!left(*)").eq("post_id", postId).order("created_at", { ascending: true });
     data = res.data; error = res.error;
   } catch (e) { error = e; }
   if (error) {
     try {
-      const res2 = await sb.from("comments").select("*, users:users(*)").eq("postid", postId).order("createdat", { ascending: true });
+      const res2 = await sb.from("comments").select("*, users!left(*)").eq("postid", postId).order("createdat", { ascending: true });
       data = res2.data; error = res2.error;
     } catch (e) { error = e; }
   }

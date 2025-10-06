@@ -6,6 +6,7 @@ import React from "react";
 import dynamic from "next/dynamic";
 import InertPolyfillClient from '@/app/components/InertPolyfillClient';
 import { Navbar } from '@/app/components/NavBar';
+import { CONFIG } from '@/src/lib/config';
 
 // Self-host the previously imported Google Font for better performance & privacy.
 const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
@@ -111,8 +112,26 @@ function WebVitalsScript() {
         initWebVitals({ sampleRate: 1 });
 
         // Register service worker for caching
-        if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-          navigator.serviceWorker.register('/sw.js').catch((error) => {
+        if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production') {
+          navigator.serviceWorker.register('/sw.js').then((registration) => {
+            // Check for updates when the page becomes visible
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') {
+                registration.update();
+              }
+            });
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // New update available, reload to apply automatically
+                    window.location.reload();
+                  }
+                });
+              }
+            });
+          }).catch((error) => {
             console.warn('Service worker registration failed:', error);
           });
         }

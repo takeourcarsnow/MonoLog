@@ -16,7 +16,7 @@ export const CONFIG = {
   dailyPostingLimit: 1,
   imageMaxSizeMB: 8,
   imageMaxEdge: 1600,
-  enableServiceWorker: false,
+  enableServiceWorker: true,
 };
 
 // Supabase configuration read from NEXT_PUBLIC_* env vars so they're available client-side

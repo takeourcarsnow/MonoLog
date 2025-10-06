@@ -52,6 +52,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               // Basic touch support
               simulateTouch={true}
               allowTouchMove={true}
+              touchRatio={0.5}
+              touchAngle={30}
+              longSwipesRatio={0.3}
+              shortSwipes={false}
             >
               {views.map((view, index) => (
                 <SwiperSlide key={view.path} className={view.path === '/feed' ? 'slide-feed' : undefined}>

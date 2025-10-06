@@ -1,5 +1,6 @@
 // Basic service worker for caching static assets
-const CACHE_NAME = 'monolog-v1';
+// Bump this value when releasing a new service worker to force cache refreshes
+const CACHE_NAME = 'monolog-v2';
 const STATIC_CACHE_URLS = [
   '/',
   '/manifest.webmanifest',
@@ -33,37 +34,72 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache when possible
-self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
-  if (event.request.method !== 'GET') return;
+// Allow the page to trigger skipWaiting (so the new SW can take control immediately)
+self.addEventListener('message', (event) => {
+  try {
+    if (!event.data) return;
+    if (event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+  } catch (e) {
+    // ignore
+  }
+});
 
-  // Skip API calls and external requests
-  if (event.request.url.includes('/api/') ||
-      !event.request.url.startsWith(self.location.origin)) {
+// Helper: same-origin check
+function isSameOrigin(request) {
+  try {
+    const url = new URL(request.url);
+    return url.origin === self.location.origin;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Fetch event - use network-first for navigations, stale-while-revalidate for other assets
+self.addEventListener('fetch', (event) => {
+  // Only handle GET and same-origin requests
+  if (event.request.method !== 'GET') return;
+  if (!isSameOrigin(event.request)) return;
+
+  // Skip API calls
+  if (event.request.url.includes('/api/')) return;
+
+  const acceptHeader = event.request.headers.get('accept') || '';
+  const isNavigation = event.request.mode === 'navigate' || acceptHeader.includes('text/html');
+
+  if (isNavigation) {
+    // Network-first for navigation (HTML) requests so users get the freshest page
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          // Cache successful navigations for offline fallback
+          if (networkResponse && networkResponse.ok) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match('/')) // fallback to cached root
+    );
     return;
   }
 
+  // For other requests use stale-while-revalidate: return cached if present, and update cache in background
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // Return cached response if available
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+      const networkFetch = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => undefined);
 
-      // Otherwise fetch from network
-      return fetch(event.request).then((response) => {
-        // Don't cache non-successful responses
-        if (!response.ok) return response;
-
-        // Cache successful responses
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
-
-        return response;
-      });
+      // Prefer cached response if available, otherwise wait for network
+      return cachedResponse || networkFetch;
     })
   );
 });

@@ -120,15 +120,32 @@ function WebVitalsScript() {
                 registration.update();
               }
             });
+
+            // When an update is found, ask the new worker to skipWaiting and then reload
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing;
               if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New update available, reload to apply automatically
-                    window.location.reload();
+                    try {
+                      // Tell the worker to activate immediately
+                      newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    } catch (e) {
+                      // fallback: reload which should pick up the new content
+                      window.location.reload();
+                    }
                   }
                 });
+              }
+            });
+
+            // When the active controller changes (new SW has taken control), reload the page
+            // so the user sees the fresh content immediately.
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              try {
+                window.location.reload();
+              } catch (e) {
+                // ignore
               }
             });
           }).catch((error) => {

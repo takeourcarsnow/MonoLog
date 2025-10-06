@@ -116,7 +116,7 @@ export function InstallPrompt() {
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed" id="install-desc">
           Quick access from your home screen, offline support, and a cleaner app-like experience.
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Tap "Add" to install. If you prefer, we can remind you later.</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Tap &#34;Add&#34; to install. If you prefer, we can remind you later.</p>
         <div className="flex gap-3">
           <button
             onClick={handleInstall}
@@ -139,7 +139,7 @@ export function InstallPrompt() {
         </div>
         <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
           <span>Not sure? You can always install later from the browser menu.</span>
-          <button onClick={handlePermanentDismiss} className="underline hover:text-gray-700 ml-2">Don't show again</button>
+          <button onClick={handlePermanentDismiss} className="underline hover:text-gray-700 ml-2">Don&#39;t show again</button>
         </div>
       </div>
 

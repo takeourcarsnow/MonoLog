@@ -1,0 +1,108 @@
+import { useState, useEffect } from 'react';
+
+interface LoadingIndicatorProps {
+  size?: 'small' | 'medium' | 'large';
+  type?: 'spinner' | 'dots' | 'pulse';
+  className?: string;
+}
+
+export function LoadingIndicator({
+  size = 'medium',
+  type = 'spinner',
+  className = ''
+}: LoadingIndicatorProps) {
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    if (type !== 'dots') return;
+
+    const interval = setInterval(() => {
+      setDots(prev => prev.length >= 3 ? '' : prev + '.');
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [type]);
+
+  const sizeClasses = {
+    small: 'w-4 h-4',
+    medium: 'w-6 h-6',
+    large: 'w-8 h-8'
+  };
+
+  if (type === 'spinner') {
+    return (
+      <div className={`inline-block ${sizeClasses[size]} ${className}`}>
+        <div className="w-full h-full border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (type === 'dots') {
+    return (
+      <div className={`inline-flex items-center ${className}`}>
+        <span className="text-gray-500">Loading{dots}</span>
+      </div>
+    );
+  }
+
+  if (type === 'pulse') {
+    return (
+      <div className={`inline-block ${sizeClasses[size]} ${className}`}>
+        <div className="w-full h-full bg-gray-300 rounded-full animate-pulse"></div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+interface InfiniteScrollLoaderProps {
+  loading: boolean;
+  hasMore: boolean;
+  error?: Error | null;
+  onRetry?: () => void;
+  className?: string;
+}
+
+export function InfiniteScrollLoader({
+  loading,
+  hasMore,
+  error,
+  onRetry,
+  className = ''
+}: InfiniteScrollLoaderProps) {
+  if (error) {
+    return (
+      <div className={`flex flex-col items-center justify-center py-8 px-4 ${className}`}>
+        <div className="text-red-500 text-sm mb-2">Failed to load more posts</div>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+          >
+            Try Again
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
+        <LoadingIndicator size="medium" type="spinner" />
+        <div className="text-gray-500 text-sm mt-2">Loading more posts...</div>
+      </div>
+    );
+  }
+
+  if (!hasMore) {
+    return (
+      <div className={`text-center py-8 text-gray-500 text-sm ${className}`}>
+        You&apos;ve reached the end!
+      </div>
+    );
+  }
+
+  return null;
+}

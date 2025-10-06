@@ -14,6 +14,7 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const postsRef = useRef<HydratedPost[]>([]);
   const hasMoreRef = useRef(true);
@@ -31,14 +32,31 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
 
   const loadInitialPosts = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const page = await fetchFunction({ limit: pageSize });
       setPosts(page);
       setHasMore(page.length === pageSize);
     } catch (e) {
+      const error = e instanceof Error ? e : new Error('Failed to load posts');
+      setError(error);
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  }, [fetchFunction, pageSize]);
+
+  const refresh = useCallback(async () => {
+    setError(null);
+    try {
+      const page = await fetchFunction({ limit: pageSize });
+      setPosts(page);
+      setHasMore(page.length === pageSize);
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error('Failed to refresh posts');
+      setError(error);
+      console.error(e);
+      throw e; // Re-throw to allow pull-to-refresh to handle errors
     }
   }, [fetchFunction, pageSize]);
 
@@ -47,6 +65,7 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
 
     loadingMoreRef.current = true;
     setLoadingMore(true);
+    setError(null);
 
     try {
       if (observerRef.current) {
@@ -64,6 +83,8 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
         observerRef.current?.observe(sentinelRef.current);
       }
     } catch (e) {
+      const error = e instanceof Error ? e : new Error('Failed to load more posts');
+      setError(error);
       console.error(e);
     } finally {
       setLoadingMore(false);
@@ -125,7 +146,9 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
     loading,
     loadingMore,
     hasMore,
+    error,
     loadInitialPosts,
+    refresh,
     setSentinel,
     setPosts
   };

@@ -5,14 +5,18 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ImageZoom from "./ImageZoom";
 import type { HydratedPost } from "@/src/lib/types";
+import { InfiniteScrollLoader } from "./LoadingIndicator";
 
 interface GridViewProps {
   posts: HydratedPost[];
   hasMore: boolean;
   setSentinel: (el: HTMLDivElement | null) => void;
+  loadingMore?: boolean;
+  onRetry?: () => void;
+  error?: Error | null;
 }
 
-export function GridView({ posts, hasMore, setSentinel }: GridViewProps) {
+export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onRetry, error }: GridViewProps) {
   const toast = useToast();
   const router = useRouter();
   const [overlayStates, setOverlayStates] = useState<Record<string, 'adding' | 'removing' | null>>({});
@@ -54,7 +58,13 @@ export function GridView({ posts, hasMore, setSentinel }: GridViewProps) {
           </Link>
         </div>
       ))}
-      {hasMore ? <div ref={setSentinel} className="tile sentinel" aria-hidden /> : null}
+      <InfiniteScrollLoader
+        loading={loadingMore}
+        hasMore={hasMore}
+        error={error}
+        onRetry={onRetry}
+        className="col-span-full"
+      />
     </div>
   );
 }

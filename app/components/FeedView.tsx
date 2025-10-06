@@ -10,7 +10,10 @@ import { ViewToggle } from "./ViewToggle";
 import { useRouter } from "next/navigation";
 import { Home } from "lucide-react";
 import { useFeed } from "@/src/lib/hooks/useFeed";
+import { usePullToRefresh } from "@/src/lib/hooks/usePullToRefresh";
 import { GridView } from "./GridView";
+import { PullToRefreshWrapper } from "./PullToRefresh";
+import { InfiniteScrollLoader } from "./LoadingIndicator";
 
 // Custom hook to handle grid view double-click logic with proper cleanup
 function useGridDoubleClick(toast: any, router: any) {
@@ -112,10 +115,15 @@ export function FeedView() {
 
   const fetchFollowingFeed = useCallback((opts: { limit: number; before?: string }) => api.getFollowingFeedPage(opts), []);
 
-  const { posts, loading, loadingMore, hasMore, loadInitialPosts, setSentinel, setPosts } = useFeed(
+  const { posts, loading, loadingMore, hasMore, error, loadInitialPosts, refresh, setSentinel, setPosts } = useFeed(
     fetchFollowingFeed,
     { pageSize: 3 }
   );
+
+  const { isRefreshing, pullDistance, isPulling, containerRef, getPullStyles } = usePullToRefresh({
+    threshold: 80,
+    onRefresh: refresh,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -173,21 +181,45 @@ export function FeedView() {
     if (loading) return <div className="card skeleton" style={{ height: 240 }} />;
     if (!posts.length) return <div className="empty">Your feed is quiet. Follow people in Explore to see their daily photo.</div>;
     if (view === "grid") {
-      return <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} />;
+      return <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
+        const sentinel = document.querySelector('.tile.sentinel');
+        if (sentinel) {
+          setSentinel(sentinel as HTMLDivElement);
+        }
+      }} error={error} />;
     }
     return (
       <>
         {posts.map(p => <PostCard key={p.id} post={p} />)}
-        {hasMore ? <div ref={setSentinel} className="feed-sentinel" /> : null}
-        {loadingMore ? <div className="card skeleton" style={{ height: 120 }} /> : null}
+        <InfiniteScrollLoader
+          loading={loadingMore}
+          hasMore={hasMore}
+          error={error}
+          onRetry={() => {
+            // Retry loading more posts
+            const sentinel = document.querySelector('.feed-sentinel');
+            if (sentinel) {
+              setSentinel(sentinel as HTMLDivElement);
+            }
+          }}
+        />
       </>
     );
-  }, [loading, posts, view, hasMore, loadingMore, setSentinel]);
+  }, [loading, posts, view, hasMore, loadingMore, setSentinel, error]);
 
   return (
     <div className="view-fade">
       <ViewToggle title={<Home size={20} strokeWidth={2} />} subtitle="MonoLogs from you & people that you follow" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("feedView", v); }} />
-      <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>{render}</div>
+      <PullToRefreshWrapper
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+        threshold={80}
+        containerRef={containerRef}
+        getPullStyles={getPullStyles}
+        className={`feed ${view === 'grid' ? 'grid-view' : ''}`}
+      >
+        {render}
+      </PullToRefreshWrapper>
     </div>
   );
 }

@@ -8,7 +8,7 @@
 
 /* Controlled transform-based carousel for posts (better UX than free horizontal scroll) */
 .carousel-wrapper { position: relative; overflow: hidden; }
-.carousel-wrapper { touch-action: pan-y; }
+.carousel-wrapper { /* allow browser to decide; JS will lock to horizontal when appropriate */ touch-action: auto; }
 .carousel-wrapper .carousel-track {
   /* allow the wrapper to control visible height; track shouldn't force larger height */
   align-items: flex-start;

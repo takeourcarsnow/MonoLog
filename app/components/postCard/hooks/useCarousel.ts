@@ -14,8 +14,13 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   const [isZooming, setIsZooming] = useState(false);
   const isZoomingRef = useRef(false);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const touchDeltaX = useRef<number>(0);
+  const touchDeltaY = useRef<number>(0);
   const draggingRef = useRef(false);
+  // When true we have decided the gesture is horizontal and should be
+  // handled by the carousel (we'll then preventDefault to lock scrolling).
+  const gestureLockedRef = useRef(false);
   const activeTouchPointers = useRef<Set<number>>(new Set());
   const pointerSupported = typeof window !== 'undefined' && (window as any).PointerEvent !== undefined;
   const lastMouseDownAt = useRef<number | null>(null);
@@ -58,15 +63,46 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     }
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
     touchDeltaX.current = 0;
+    touchDeltaY.current = 0;
+    gestureLockedRef.current = false;
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
     if (isZoomingRef.current) return;
-    e.stopPropagation();
+    // Determine gesture direction: if horizontal movement dominates we
+    // lock the gesture to the carousel and preventDefault to stop the
+    // browser from scrolling/pull-to-refresh. If vertical movement
+    // dominates, allow the browser to handle it.
     try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
-    if (touchStartX.current == null) return;
-    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+    if (touchStartX.current == null || touchStartY.current == null) return;
+    const cx = e.touches[0].clientX;
+    const cy = e.touches[0].clientY;
+    touchDeltaX.current = cx - touchStartX.current;
+    touchDeltaY.current = cy - touchStartY.current;
+
+    if (!gestureLockedRef.current) {
+      const absX = Math.abs(touchDeltaX.current);
+      const absY = Math.abs(touchDeltaY.current);
+      const lockThreshold = 8; // px before we decide
+      if (absX > absY && absX > lockThreshold) {
+        gestureLockedRef.current = true;
+        // Now that we've locked to horizontal, stop propagation and
+        // prevent default so we can control the swipe without the
+        // browser stealing the gesture.
+        try { e.preventDefault(); } catch (_) {}
+        try { e.stopPropagation(); } catch (_) {}
+      } else if (absY > absX && absY > lockThreshold) {
+        // Vertical gesture: don't lock, let browser handle (e.g., pull-to-refresh)
+        return;
+      }
+    } else {
+      // already locked to horizontal
+      try { e.preventDefault(); } catch (_) {}
+      try { e.stopPropagation(); } catch (_) {}
+    }
+
     if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
   };
 
@@ -111,9 +147,12 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
       return;
     }
     if ((e as any).pointerType === 'mouse') lastMouseDownAt.current = now;
-    touchStartX.current = e.clientX;
+  touchStartX.current = e.clientX;
+  touchStartY.current = e.clientY;
     touchDeltaX.current = 0;
+  touchDeltaY.current = 0;
     draggingRef.current = true;
+  gestureLockedRef.current = false;
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
     try { document.body.style.userSelect = 'none'; document.body.style.cursor = 'grabbing'; } catch (_) {}
     const el = trackRef.current as any;
@@ -123,20 +162,46 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   const onPointerMove = (e: React.PointerEvent) => {
     if ((e as any).pointerType === 'touch' && activeTouchPointers.current.size >= 2) return;
     if (!draggingRef.current || touchStartX.current == null) return;
-    e.preventDefault();
-    touchDeltaX.current = e.clientX - touchStartX.current;
+    const px = e.clientX;
+    const py = (e as any).clientY as number | undefined;
+    touchDeltaX.current = px - touchStartX.current;
+    if (typeof py === 'number' && touchStartY.current != null) touchDeltaY.current = py - touchStartY.current;
+
+    // Decide whether to lock to horizontal gesture similar to touch
+    if (!gestureLockedRef.current) {
+      const absX = Math.abs(touchDeltaX.current);
+      const absY = Math.abs(touchDeltaY.current);
+      const lockThreshold = 8;
+      if (absX > absY && absX > lockThreshold) {
+        gestureLockedRef.current = true;
+        // preventDefault for pointer types that allow it (mouse/pointer)
+        try { if ((e as any).pointerType !== 'touch') e.preventDefault(); } catch (_) {}
+        try { e.stopPropagation(); } catch (_) {}
+      } else if (absY > absX && absY > lockThreshold) {
+        // vertical gesture -> do not lock
+        return;
+      }
+    } else {
+      // locked to horizontal
+      try { if ((e as any).pointerType !== 'touch') e.preventDefault(); } catch (_) {}
+      try { e.stopPropagation(); } catch (_) {}
+    }
+
     if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
   };
 
   const finishPointerDrag = (clientX?: number) => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
+    gestureLockedRef.current = false;
     if (isZoomingRef.current) {
       try {
         if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
       } catch (_) {}
       touchStartX.current = null;
       touchDeltaX.current = 0;
+      touchStartY.current = null;
+      touchDeltaY.current = 0;
       try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
       return;

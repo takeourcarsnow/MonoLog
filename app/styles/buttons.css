@@ -68,21 +68,21 @@
 .btn.cancel-btn:hover { background: color-mix(in srgb, var(--bg-elev), var(--danger) 6%); transform: translateY(-2px); }
 .btn.cancel-btn:active { transform: translateY(0); }
 .btn.cancel-btn.confirm {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 6%), color-mix(in srgb, var(--danger), transparent 2%));
+  background: linear-gradient(135deg, var(--danger-bg-start), var(--danger-bg-end));
   color: #fff;
-  border-color: color-mix(in srgb, var(--danger), transparent 12%);
-  box-shadow: 0 6px 22px color-mix(in srgb, var(--danger), transparent 72%), 0 0 0 1px color-mix(in srgb, var(--danger), transparent 40%) inset;
+  border-color: var(--danger-border);
+  box-shadow: 0 6px 22px var(--danger-shadow), 0 0 0 1px var(--danger-shadow-inset) inset;
   text-shadow: 0 1px 2px rgba(0,0,0,0.35);
 }
-.btn.cancel-btn.confirm:hover { background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 4%), color-mix(in srgb, var(--danger), transparent 0%)); }
+.btn.cancel-btn.confirm:hover { background: linear-gradient(135deg, var(--danger-bg-hover-start), var(--danger-bg-hover-end)); }
 .btn.cancel-btn.confirm:active { 
-  background: linear-gradient(135deg, color-mix(in srgb, var(--danger), transparent 6%), color-mix(in srgb, var(--danger), transparent 2%));
+  background: linear-gradient(135deg, var(--danger-bg-start), var(--danger-bg-end));
   color: #fff;
-  border-color: color-mix(in srgb, var(--danger), transparent 12%);
+  border-color: var(--danger-border);
   transform: translateY(0);
 }
-.btn.cancel-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 70%), 0 4px 16px rgba(0,0,0,0.18); }
-.btn.cancel-btn.confirm:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 55%), 0 6px 20px rgba(0,0,0,0.30); }
+.btn.cancel-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--danger-focus-base), 0 4px 16px rgba(0,0,0,0.18); }
+.btn.cancel-btn.confirm:focus-visible { box-shadow: 0 0 0 3px var(--danger-focus), 0 6px 20px rgba(0,0,0,0.30); }
 .btn.cancel-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 .btn.cancel-btn .cancel-inner { position: relative; z-index: 1; }
 

@@ -169,7 +169,7 @@ export function PreviewSection({
         onCapture={onCameraCapture}
       />
 
-      {dataUrls.length > 1 && (
+      {dataUrls.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8, gap: 2 }}>
           {Array.from({ length: 5 }, (_, i) => (
             <svg key={i} viewBox="0 0 24 24" width="12" height="12">

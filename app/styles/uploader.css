@@ -487,6 +487,20 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   opacity: 1;
 }
 
+/* Dark theme adjustments for drop-zone-loader */
+:root[data-theme="dark"] .drop-zone-loader {
+  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.4));
+  backdrop-filter: blur(4px) saturate(110%);
+  -webkit-backdrop-filter: blur(4px) saturate(110%);
+}
+
+:root[data-theme="dark"] .drop-zone-loader::before {
+  background: color-mix(in srgb, var(--bg), rgba(0,0,0,0.3));
+  backdrop-filter: blur(4px) saturate(110%);
+  -webkit-backdrop-filter: blur(4px) saturate(110%);
+  opacity: 1;
+}
+
 :root[data-theme="light"] .camera-btn {
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(0, 0, 0, 0.1);

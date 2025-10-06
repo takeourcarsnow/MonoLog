@@ -19,6 +19,15 @@ html, body {
   --primary-weak: #dbeafe;
   --accent: #22c55e;
   --danger: #ef4444;
+  --danger-bg-start: rgba(239, 68, 68, 0.06);
+  --danger-bg-end: rgba(239, 68, 68, 0.02);
+  --danger-border: rgba(239, 68, 68, 0.12);
+  --danger-shadow: rgba(239, 68, 68, 0.72);
+  --danger-shadow-inset: rgba(239, 68, 68, 0.4);
+  --danger-bg-hover-start: rgba(239, 68, 68, 0.04);
+  --danger-bg-hover-end: rgba(239, 68, 68, 0.0);
+  --danger-focus: rgba(239, 68, 68, 0.55);
+  --danger-focus-base: rgba(239, 68, 68, 0.7);
   --border: #e5e7eb;
   --shadow: 0 8px 28px rgba(0,0,0,.08);
 
@@ -104,6 +113,15 @@ html, body {
   --primary-weak: #0b2547;
   --accent: #34d399;
   --danger: #f87171;
+  --danger-bg-start: rgba(248, 113, 113, 0.06);
+  --danger-bg-end: rgba(248, 113, 113, 0.02);
+  --danger-border: rgba(248, 113, 113, 0.12);
+  --danger-shadow: rgba(248, 113, 113, 0.72);
+  --danger-shadow-inset: rgba(248, 113, 113, 0.4);
+  --danger-bg-hover-start: rgba(248, 113, 113, 0.04);
+  --danger-bg-hover-end: rgba(248, 113, 113, 0.0);
+  --danger-focus: rgba(248, 113, 113, 0.55);
+  --danger-focus-base: rgba(248, 113, 113, 0.7);
   --border: #2a2a2a;
   --shadow: 0 8px 30px rgba(0,0,0,.35);
   /* darker theme toggle indicator */

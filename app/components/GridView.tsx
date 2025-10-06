@@ -62,6 +62,7 @@ export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onR
         loading={loadingMore}
         hasMore={hasMore}
         error={error}
+        setSentinel={setSentinel}
         onRetry={onRetry}
         className="col-span-full"
       />

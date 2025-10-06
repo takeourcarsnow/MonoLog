@@ -73,6 +73,7 @@ export function ExploreView() {
           loading={loadingMore}
           hasMore={hasMore}
           error={error}
+          setSentinel={setSentinel}
           onRetry={() => {
             const sentinel = document.querySelector('.feed-sentinel');
             if (sentinel) {

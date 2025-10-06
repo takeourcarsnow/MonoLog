@@ -117,7 +117,7 @@ export function FeedView() {
 
   const { posts, loading, loadingMore, hasMore, error, loadInitialPosts, refresh, setSentinel, setPosts } = useFeed(
     fetchFollowingFeed,
-    { pageSize: 3 }
+    { pageSize: 5 }
   );
 
   const { isRefreshing, pullDistance, isPulling, containerRef, getPullStyles } = usePullToRefresh({
@@ -195,6 +195,7 @@ export function FeedView() {
           loading={loadingMore}
           hasMore={hasMore}
           error={error}
+          setSentinel={setSentinel}
           onRetry={() => {
             // Retry loading more posts
             const sentinel = document.querySelector('.feed-sentinel');

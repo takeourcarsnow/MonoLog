@@ -47,7 +47,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               initialSlide={currentIndex}
               onSlideChange={handleSlideChange}
               touchStartPreventDefault={false}
-              passiveListeners={false}
+              passiveListeners={true}
               // only allow touch/swipe interactions on touch-capable devices
               simulateTouch={true}
               allowTouchMove={true}
@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               // Slightly increase touchRatio to make touch movements feel a bit
               // more responsive on devices with higher pixel density.
               touchRatio={1.1}
-              speed={250}
+              speed={200}
               effect="slide"
               watchSlidesProgress={true}
             >

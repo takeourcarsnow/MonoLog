@@ -5,11 +5,17 @@
     /* don't force a fixed height here; let individual slides size themselves */
     /* Ensure touch events can be detected for horizontal swipes */
     touch-action: pan-x;
+    /* Enable hardware acceleration for smoother animations */
+    transform: translateZ(0);
+    will-change: transform;
   }
   .swipe-views .swiper-wrapper {
     width: 100% !important;
     /* don't force a fixed height here; let the active slide determine wrapper height */
     touch-action: pan-x;
+    /* Hardware acceleration */
+    transform: translateZ(0);
+    will-change: transform;
   }
 /* Make each slide flexible: ensure slides fill the viewport minus header/tabbar
    but allow taller content to grow. Use min-height rather than forcing a
@@ -17,13 +23,15 @@
    padding to protect content from the fixed tabbar. */
 .swipe-views .swiper-slide {
   width: 100% !important;
-  /* Size each slide to fill the full viewport since navbar is fixed positioned.
-     Use CSS variables for header height so content starts below the header. */
-  height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
+  /* Use min-height instead of fixed height to prevent layout thrashing on mobile */
+  min-height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
   display: block;
   /* Allow vertical panning and pinch zoom, but let Swiper intercept horizontal swipes */
   touch-action: pan-y;
   overflow-y: auto; /* allow vertical scrolling if content is taller */
+  /* Hardware acceleration for smooth transitions */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
   /* Small internal bottom buffer so content doesn't sit flush against the tabbar */
@@ -60,7 +68,7 @@
     each slide fills the parent's height. This avoids differences between the
     parent's computed height and viewport-based calc() values. */
 .content > .swipe-views .swiper-slide {
-   height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
+   min-height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
 }
 
 /* Ensure full-bleed swipe views account for the sticky header height.
@@ -76,6 +84,9 @@
      and don't produce a horizontal shift when the vertical scrollbar
      appears/disappears. */
   width: 100% !important;
+  /* Hardware acceleration for smooth transitions */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Also ensure each slide's internal content begins below the header. We
@@ -88,6 +99,9 @@
 .swipe-views .swiper-slide {
   display: block !important;
   overflow-y: auto;
+  /* Additional hardware acceleration */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Removed: autoHeight-specific rules no longer needed */

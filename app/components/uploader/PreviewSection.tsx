@@ -2,7 +2,6 @@ import { usePathname } from "next/navigation";
 import { PreviewSectionProps } from "./types";
 import { useCameraCaptureHandler } from "./useCameraCaptureHandler";
 import { LoadingBadge } from "./LoadingBadge";
-import { ImageEditorSection } from "./ImageEditorSection";
 import { CarouselView } from "./CarouselView";
 import { SingleImageView } from "./SingleImageView";
 import { CameraModal } from "./CameraModal";
@@ -113,26 +112,7 @@ export function PreviewSection({
       onDrop={dataUrls.length <= 1 ? onDropPreview : undefined}
     >
       <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
-        {/* Render either the ImageEditor inline (replacing the visible photo) or the preview content. */}
-        <ImageEditorSection
-          editing={editing}
-          editingIndex={editingIndex}
-          dataUrls={dataUrls}
-          dataUrl={dataUrl}
-          originalDataUrls={originalDataUrls}
-          editorSettings={editorSettings}
-          editingAlt={editingAlt}
-          setAlt={setAlt}
-          setEditorSettings={setEditorSettings}
-          setDataUrls={setDataUrls}
-          setDataUrl={setDataUrl}
-          setPreviewLoaded={setPreviewLoaded}
-          setCompressedSize={setCompressedSize}
-          setOriginalSize={setOriginalSize}
-          setProcessing={setProcessing}
-          setEditing={setEditing}
-        />
-
+        {/* When editing, the ImageEditor is rendered at the top level, replacing all content */}
         {!editing && (
           <>
             {dataUrls.length > 1 ? (

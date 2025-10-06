@@ -1,4 +1,3 @@
-import React from 'react';
 import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon } from "lucide-react";
 import { CATEGORY_COLORS } from './constants';
 
@@ -23,24 +22,24 @@ function ImageEditorToolbarHeader({
   isEdited
 }: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited'>) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 6, gap: 8, flexWrap: 'wrap', padding: '2px 0' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 1, gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
       <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
         <span className="sr-only">Edit Photo</span>
       </div>
-      <div className="image-editor-buttons" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="image-editor-buttons" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
         <button type="button" className="btn icon ghost" onClick={onCancel} aria-label="Cancel edits">
-          <X size={16} aria-hidden />
+          <X size={14} aria-hidden />
           <span className="sr-only">Cancel edits</span>
         </button>
 
-        <button type="button" className="btn icon ghost" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">
-          <RefreshCw size={16} aria-hidden />
-          <span className="sr-only">Reset adjustments</span>
+        <button type="button" className={`btn icon ghost`} onClick={applyEdit} aria-pressed={isEdited} aria-label="Confirm edits" title="Confirm edits">
+          <Check size={14} aria-hidden />
+          <span className="sr-only">Confirm edits</span>
         </button>
 
-        <button type="button" className={`btn icon ghost`} onClick={applyEdit} aria-pressed={isEdited} aria-label="Confirm edits" title="Confirm edits">
-          <Check size={16} aria-hidden />
-          <span className="sr-only">Confirm edits</span>
+        <button type="button" className="btn icon ghost" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">
+          <RefreshCw size={14} aria-hidden />
+          <span className="sr-only">Reset adjustments</span>
         </button>
       </div>
     </div>
@@ -86,7 +85,7 @@ function ImageEditorToolbarCategories({
             applyCropOnly();
           }}
           style={{
-            padding: '10px 16px',
+            padding: '8px 12px',
             borderRadius: 10,
             background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
             color: 'var(--text)',
@@ -96,7 +95,7 @@ function ImageEditorToolbarCategories({
             flex: '0 0 auto',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
+            gap: 6,
             border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)',
             fontWeight: 600,
             overflow: 'hidden',
@@ -116,7 +115,7 @@ function ImageEditorToolbarCategories({
             resetCrop();
           }}
           style={{
-            padding: '10px 16px',
+            padding: '8px 12px',
             borderRadius: 10,
             background: 'transparent',
             color: 'var(--text)',
@@ -126,7 +125,7 @@ function ImageEditorToolbarCategories({
             flex: '0 0 auto',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
+            gap: 6,
             border: '1px solid color-mix(in srgb, var(--text) 4%, transparent)',
             fontWeight: 500,
             overflow: 'hidden',
@@ -145,15 +144,14 @@ function ImageEditorToolbarCategories({
     <div ref={categoriesContainerRef} className="categories-scroll" style={{
       position: 'relative',
       display: 'flex',
-      gap: 10,
+      gap: 5,
       marginTop: 16,
       justifyContent: 'center',
-      flexWrap: 'nowrap',
-      overflowX: 'auto',
-      WebkitOverflowScrolling: 'touch',
-      maxWidth: 820,
+      flexWrap: 'wrap',
+      overflowX: 'visible',
+      maxWidth: 'none',
       margin: '16px auto 0',
-      padding: '8px 10px',
+      padding: '4px 5px',
       alignItems: 'center',
       whiteSpace: 'nowrap',
       background: 'color-mix(in srgb, var(--bg-elev) 70%, transparent)',
@@ -188,7 +186,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('basic');
         }}
         style={{
-          padding: '10px 12px',
+          padding: '8px 10px',
           borderRadius: 10,
           background: selectedCategory === 'basic' ? 'transparent' : 'transparent',
           color: 'var(--text)',
@@ -198,7 +196,7 @@ function ImageEditorToolbarCategories({
           flex: '0 0 auto',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 6,
           border: 'none',
           fontWeight: selectedCategory === 'basic' ? 700 : 500,
           overflow: 'hidden'
@@ -220,7 +218,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('color');
         }}
         style={{
-          padding: '10px 12px',
+          padding: '8px 10px',
           borderRadius: 10,
           background: selectedCategory === 'color' ? 'transparent' : 'transparent',
           color: 'var(--text)',
@@ -230,7 +228,7 @@ function ImageEditorToolbarCategories({
           flex: '0 0 auto',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 6,
           border: 'none',
           fontWeight: selectedCategory === 'color' ? 700 : 500,
           overflow: 'hidden'
@@ -252,7 +250,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('effects');
         }}
         style={{
-          padding: '10px 12px',
+          padding: '8px 10px',
           borderRadius: 10,
           background: selectedCategory === 'effects' ? 'transparent' : 'transparent',
           color: 'var(--text)',
@@ -262,7 +260,7 @@ function ImageEditorToolbarCategories({
           flex: '0 0 auto',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 6,
           border: 'none',
           fontWeight: selectedCategory === 'effects' ? 700 : 500,
           overflow: 'hidden'
@@ -284,7 +282,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('crop');
         }}
         style={{
-          padding: '10px 12px',
+          padding: '8px 10px',
           borderRadius: 10,
           background: selectedCategory === 'crop' ? 'transparent' : 'transparent',
           color: 'var(--text)',
@@ -294,7 +292,7 @@ function ImageEditorToolbarCategories({
           flex: '0 0 auto',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 6,
           border: 'none',
           fontWeight: selectedCategory === 'crop' ? 700 : 500,
           overflow: 'hidden'
@@ -316,7 +314,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('frame');
         }}
         style={{
-          padding: '10px 12px',
+          padding: '8px 10px',
           borderRadius: 10,
           background: selectedCategory === 'frame' ? 'transparent' : 'transparent',
           color: 'var(--text)',
@@ -326,7 +324,7 @@ function ImageEditorToolbarCategories({
           flex: '0 0 auto',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 6,
           border: 'none',
           fontWeight: selectedCategory === 'frame' ? 700 : 500,
           overflow: 'hidden'

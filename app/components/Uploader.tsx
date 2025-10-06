@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { api } from "@/src/lib/api";
 import { AuthForm } from "./AuthForm";
 import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
@@ -14,6 +15,9 @@ import { PreviewSection } from "./uploader/PreviewSection";
 import { CaptionInput } from "./uploader/CaptionInput";
 import { PublishControls } from "./uploader/PublishControls";
 import { useUploader } from "./uploader/useUploader";
+
+// Lazy load the heavy ImageEditor component
+const ImageEditor = lazy(() => import("./ImageEditor"));
 
 export function Uploader() {
   // Light wrapper handling auth gating so inner uploader hooks remain stable
@@ -106,6 +110,73 @@ function UploaderCore() {
     publish,
     handleFileInputChange,
   } = useUploader();
+
+  // If editing, show full-screen editor replacing all content
+  if (editing && (dataUrls[editingIndex] || dataUrl)) {
+    return (
+      <div className="upload-editor-fullscreen no-swipe">
+        <Suspense fallback={
+          <div className="upload-editor-loading">
+            <div className="card skeleton" style={{ height: 400, width: '100%', maxWidth: 600 }} />
+          </div>
+        }>
+          <ImageEditor
+            initialDataUrl={(originalDataUrls[editingIndex] || dataUrls[editingIndex] || originalDataUrls[0] || dataUrl) as string}
+            initialSettings={editorSettings[editingIndex] || {}}
+            onCancel={() => {
+              setEditing(false);
+              sessionStorage.removeItem('monolog:upload_editor_open');
+            }}
+            onApply={async (newUrl, settings) => {
+              setAlt(prev => {
+                if (Array.isArray(prev)) {
+                  const copy = [...prev];
+                  copy[editingIndex] = editingAlt || "";
+                  return copy;
+                }
+                if (dataUrls.length > 1) {
+                  const arr = dataUrls.map((_, i) => i === editingIndex ? (editingAlt || "") : (i === 0 ? (prev as string) || "" : ""));
+                  return arr;
+                }
+                return editingAlt || "";
+              });
+              setEditorSettings(prev => {
+                const copy = [...prev];
+                while (copy.length <= editingIndex) copy.push({});
+                copy[editingIndex] = settings;
+                return copy;
+              });
+              setProcessing(true);
+              try {
+                const compressed = await compressImage(newUrl as any);
+                setDataUrls(d => {
+                  const copy = [...d];
+                  copy[editingIndex] = compressed;
+                  return copy;
+                });
+                if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
+                setCompressedSize(approxDataUrlBytes(compressed));
+                setOriginalSize(approxDataUrlBytes(newUrl));
+              } catch (e) {
+                console.error(e);
+                setDataUrls(d => {
+                  const copy = [...d];
+                  copy[editingIndex] = newUrl as string;
+                  return copy;
+                });
+                if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
+                setCompressedSize(approxDataUrlBytes(newUrl as string));
+              } finally {
+                setProcessing(false);
+                setEditing(false);
+                sessionStorage.removeItem('monolog:upload_editor_open');
+              }
+            }}
+          />
+        </Suspense>
+      </div>
+    );
+  }
 
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''}`}>

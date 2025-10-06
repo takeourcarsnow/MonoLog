@@ -301,71 +301,75 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       {/* Toolbar header (buttons) above the canvas */}
       <ImageEditorToolbarHeader onCancel={onCancel} resetAdjustments={resetAdjustments} applyEdit={applyEdit} isEdited={isEdited} />
 
-      <ImageEditorCanvas canvasRef={canvasRef} mounted={mounted} />
+      <div className="image-editor-canvas-container">
+        <ImageEditorCanvas canvasRef={canvasRef} mounted={mounted} />
+      </div>
 
       {/* Category selector (Filters / Basic / Effects / Crop / Frame) below the canvas */}
       <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} categoryHighlight={categoryHighlight} sel={sel} applyCropOnly={applyCropOnly} resetCrop={resetCrop} />
 
-      <ImageEditorPanels
-        selectedCategory={selectedCategory}
-        exposure={exposure}
-        setExposure={setExposure}
-        exposureRef={exposureRef}
-        contrast={contrast}
-        setContrast={setContrast}
-        contrastRef={contrastRef}
-        saturation={saturation}
-        setSaturation={setSaturation}
-        saturationRef={saturationRef}
-        temperature={temperature}
-        setTemperature={setTemperature}
-        temperatureRef={temperatureRef}
-        draw={draw}
-        resetControlToDefault={resetControlToDefault}
-        selectedFilter={selectedFilter}
-        setSelectedFilter={setSelectedFilter}
-        selectedFilterRef={selectedFilterRef}
-        filterStrength={filterStrength}
-        setFilterStrength={setFilterStrength}
-        filterStrengthRef={filterStrengthRef}
-        filtersContainerRef={filtersContainerRef}
-        filterHighlight={filterHighlight}
-        vignette={vignette}
-        setVignette={setVignette}
-        vignetteRef={vignetteRef}
-        grain={grain}
-        setGrain={setGrain}
-        grainRef={grainRef}
-        softFocus={softFocus}
-        setSoftFocus={setSoftFocus}
-        softFocusRef={softFocusRef}
-        fade={fade}
-        setFade={setFade}
-        fadeRef={fadeRef}
-        matte={matte}
-        setMatte={setMatte}
-        matteRef={matteRef}
-        sel={sel}
-        setSel={setSel}
-        cropRatio={cropRatio}
-        presetIndex={presetIndex}
-        setPresetIndex={setPresetIndex}
-        rotation={rotation}
-        setRotation={setRotation}
-        rotationRef={rotationRef}
-        computeImageLayout={computeImageLayout}
-        canvasRef={canvasRef}
-        imageSrc={imageSrc}
-        originalRef={originalRef}
-        bakeRotate90={bakeRotate90}
-        bakeRotateMinus90={bakeRotateMinus90}
-        frameThickness={frameThickness}
-        setFrameThickness={setFrameThickness}
-        frameThicknessRef={frameThicknessRef}
-        frameColor={frameColor}
-        setFrameColor={setFrameColor}
-        frameColorRef={frameColorRef}
-      />
+      <div className="image-editor-panels-container">
+        <ImageEditorPanels
+          selectedCategory={selectedCategory}
+          exposure={exposure}
+          setExposure={setExposure}
+          exposureRef={exposureRef}
+          contrast={contrast}
+          setContrast={setContrast}
+          contrastRef={contrastRef}
+          saturation={saturation}
+          setSaturation={setSaturation}
+          saturationRef={saturationRef}
+          temperature={temperature}
+          setTemperature={setTemperature}
+          temperatureRef={temperatureRef}
+          draw={draw}
+          resetControlToDefault={resetControlToDefault}
+          selectedFilter={selectedFilter}
+          setSelectedFilter={setSelectedFilter}
+          selectedFilterRef={selectedFilterRef}
+          filterStrength={filterStrength}
+          setFilterStrength={setFilterStrength}
+          filterStrengthRef={filterStrengthRef}
+          filtersContainerRef={filtersContainerRef}
+          filterHighlight={filterHighlight}
+          vignette={vignette}
+          setVignette={setVignette}
+          vignetteRef={vignetteRef}
+          grain={grain}
+          setGrain={setGrain}
+          grainRef={grainRef}
+          softFocus={softFocus}
+          setSoftFocus={setSoftFocus}
+          softFocusRef={softFocusRef}
+          fade={fade}
+          setFade={setFade}
+          fadeRef={fadeRef}
+          matte={matte}
+          setMatte={setMatte}
+          matteRef={matteRef}
+          sel={sel}
+          setSel={setSel}
+          cropRatio={cropRatio}
+          presetIndex={presetIndex}
+          setPresetIndex={setPresetIndex}
+          rotation={rotation}
+          setRotation={setRotation}
+          rotationRef={rotationRef}
+          computeImageLayout={computeImageLayout}
+          canvasRef={canvasRef}
+          imageSrc={imageSrc}
+          originalRef={originalRef}
+          bakeRotate90={bakeRotate90}
+          bakeRotateMinus90={bakeRotateMinus90}
+          frameThickness={frameThickness}
+          setFrameThickness={setFrameThickness}
+          frameThicknessRef={frameThicknessRef}
+          frameColor={frameColor}
+          setFrameColor={setFrameColor}
+          frameColorRef={frameColorRef}
+        />
+      </div>
     </div>
   );
 }

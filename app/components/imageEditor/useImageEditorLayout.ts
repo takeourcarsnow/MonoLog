@@ -63,19 +63,11 @@ export function useImageEditorLayout(
           const contW = Math.max(100, Math.round(cont.clientWidth));
           // Prefer a canvas height that fits comfortably in the viewport.
           // Use a fraction of the viewport height but clamp to sensible min/max.
-          const viewportH = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 800;
-          const VIEWPORT_BASE = Math.max(140, Math.round(viewportH * 0.5));
-          const MAX_HEIGHT = Math.min(520, VIEWPORT_BASE);
-          const MIN_HEIGHT = 140;
-          let targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(contW * 0.8)));
-          if (img && img.naturalWidth && img.naturalHeight) {
-            const imgHeight = Math.round((img.naturalHeight / img.naturalWidth) * contW);
-            targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, imgHeight));
-          }
+          const contH = Math.max(100, Math.round(cont.clientHeight - 380));
           canvas.width = Math.max(100, Math.round(contW * dpr));
-          canvas.height = Math.max(100, Math.round(targetHeight * dpr));
-          canvas.style.width = `${contW}px`;
-          canvas.style.height = `${targetHeight}px`;
+          canvas.height = Math.max(100, Math.round(contH * dpr));
+          canvas.style.width = '100%';
+          canvas.style.height = '100%';
         }
       } catch (e) {
         // ignore sizing errors and fall back to computeImageLayout
@@ -119,24 +111,12 @@ export function useImageEditorLayout(
       const dpr = window.devicePixelRatio || 1;
       // use clientWidth to derive canvas size (avoid transform/scale issues from parent modals)
       const contW = Math.max(100, Math.round(cont.clientWidth));
-      // Prefer canvas height derived from the viewport so the editor never grows larger than the screen.
-      const viewportH = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 800;
-      const VIEWPORT_BASE = Math.max(140, Math.round(viewportH * 0.5));
-      const MAX_HEIGHT = Math.min(520, VIEWPORT_BASE);
-      const MIN_HEIGHT = 140;
-      let targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(contW * 0.8)));
-      const img = imgRef.current;
-      if (img && img.naturalWidth && img.naturalHeight) {
-        // Compute height that matches the image aspect ratio at the current container width
-        const imgHeight = Math.round((img.naturalHeight / img.naturalWidth) * contW);
-        // Clamp to sensible bounds so the editor never becomes too tall or too small
-        targetHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, imgHeight));
-      }
-
+      // Prefer canvas height derived from the container so the editor fits.
+      const contH = Math.max(100, Math.round(cont.clientHeight - 380));
+      c.style.width = '100%';
+      c.style.height = '100%';
       c.width = Math.max(100, Math.round(contW * dpr));
-      c.height = Math.max(100, Math.round(targetHeight * dpr));
-      c.style.width = `${contW}px`;
-      c.style.height = `${targetHeight}px`;
+      c.height = Math.max(100, Math.round(contH * dpr));
       // recompute image layout after resize so image stays centered
       const info = computeImageLayout();
       if (info) {

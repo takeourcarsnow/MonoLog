@@ -102,17 +102,19 @@ export function useUploader() {
     try {
       if (editing) {
         sessionStorage.setItem(EDITING_SESSION_KEY, JSON.stringify({ open: true, index: editingIndex, alt: editingAlt }));
-      } else {
-        if (pathname === '/upload') sessionStorage.removeItem(EDITING_SESSION_KEY);
       }
+      // Don't remove here, only when explicitly closed
     } catch {}
   }, [editing, editingIndex, editingAlt, pathname]);
 
   // One-time restoration of editor state after returning to /upload
   const attemptedEditorRestoreRef = useRef(false);
   useEffect(() => {
+    if (pathname !== '/upload') {
+      attemptedEditorRestoreRef.current = false;
+      return;
+    }
     if (attemptedEditorRestoreRef.current) return;
-    if (pathname !== '/upload') return;
     if (editing) { attemptedEditorRestoreRef.current = true; return; }
     if (!(dataUrls.length > 0 || dataUrl)) return;
     try {
@@ -174,6 +176,7 @@ export function useUploader() {
 
   function resetDraft() {
     try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    sessionStorage.removeItem(EDITING_SESSION_KEY);
     setDataUrls([]);
     setOriginalDataUrls([]);
     setEditorSettings([]);

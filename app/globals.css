@@ -37,7 +37,7 @@ html, body {
     this value at runtime with the actual measured header height. Providing
     a sensible default prevents page content from appearing under the
     sticky header before JS runs or when JS is disabled. */
-  --header-height: calc(48px + var(--safe-top, 0px));
+  --header-height: calc(48px + var(--safe-top, 0px) + 12px + 8px);
   /* Default bottom navigation (tabbar) height. JS/CSS can overwrite
     this if the runtime tabbar size differs. Using a variable lets
     other layout rules reserve the correct bottom space. */

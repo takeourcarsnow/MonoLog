@@ -7,7 +7,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   /* Reserve top space for fixed header */
-  padding: var(--header-height, calc(48px + var(--safe-top, 0px))) 12px calc(var(--tabbar-height, 64px) + 12px);
+  padding: var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) 12px calc(var(--tabbar-height, 64px) + 12px);
 }
 .upload-empty .content { padding-bottom: calc(28px + var(--safe-bottom)); }
 .content { position: relative; /* allow certain header elements to overflow (e.g. avatar shadows) */ overflow: visible; }
@@ -20,7 +20,7 @@
   /* Let the main content area fill the viewport minus the fixed header.
      The tabbar is a fixed overlay; give slides 100% height of .content and
      apply bottom padding to slide children so content isn't hidden. */
-  min-height: calc(100dvh - var(--header-height, 48px) - var(--tabbar-height, 56px));
+  min-height: calc(100dvh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) - var(--tabbar-height, 56px));
 }
 *** End Patch
 

@@ -4,9 +4,10 @@ interface UseCarouselProps {
   imageUrls: string[];
   allowCarouselTouch?: boolean;
   pathname: string;
+  onIndexChange?: (index: number) => void;
 }
 
-export function useCarousel({ imageUrls, allowCarouselTouch, pathname }: UseCarouselProps) {
+export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexChange }: UseCarouselProps) {
   const [index, setIndex] = useState(0);
   const indexRef = useRef(0);
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -24,6 +25,10 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname }: UseCaro
   }, [imageUrls.length, index]);
 
   useEffect(() => { indexRef.current = index; }, [index]);
+
+  useEffect(() => {
+    onIndexChange?.(index);
+  }, [index, onIndexChange]);
 
   useEffect(() => {
     if (!trackRef.current) return;

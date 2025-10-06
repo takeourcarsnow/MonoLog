@@ -11,6 +11,7 @@ interface MediaSectionProps {
   favoriteOverlayState: 'adding' | 'removing' | null;
   pathname: string;
   allowCarouselTouch?: boolean;
+  onImageIndexChange?: (index: number) => void;
 }
 
 export const MediaSection = memo(function MediaSection({
@@ -21,6 +22,7 @@ export const MediaSection = memo(function MediaSection({
   favoriteOverlayState,
   pathname,
   allowCarouselTouch,
+  onImageIndexChange,
 }: MediaSectionProps) {
   const imageUrls: string[] = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
   const alts: string[] = Array.isArray(post.alt) ? post.alt : [post.alt || ""];
@@ -44,6 +46,7 @@ export const MediaSection = memo(function MediaSection({
           showFavoriteFeedback={showFavoriteFeedback}
           pathname={pathname}
           allowCarouselTouch={allowCarouselTouch}
+          onImageIndexChange={onImageIndexChange}
         />
       ) : (
         <SingleMedia

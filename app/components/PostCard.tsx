@@ -87,10 +87,13 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   const toast = useToast();
   const [fsOpen, setFsOpen] = useState(false);
   const [fsSrc, setFsSrc] = useState<string | null>(null);
+  const [fsAlt, setFsAlt] = useState<string>('Photo');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const handleOpenFullscreen = (src?: string) => {
+  const handleOpenFullscreen = (src?: string, alt?: string) => {
     if (!src) return;
     setFsSrc(src);
+    setFsAlt(alt || 'Photo');
     setFsOpen(true);
   };
   const handleCloseFullscreen = () => { setFsOpen(false); setFsSrc(null); };
@@ -228,6 +231,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
         favoriteOverlayState={favoriteOverlayState}
         pathname={pathname}
         allowCarouselTouch={allowCarouselTouch}
+        onImageIndexChange={setCurrentImageIndex}
       />
 
       <div className="card-body">
@@ -253,9 +257,11 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
             toast={toast}
             showFavoriteFeedback={showFavoriteFeedback}
             openFullscreen={() => {
-              // default to first image URL
-              const u = (post as any).imageUrls ? (post as any).imageUrls[0] : (post as any).imageUrl;
-              if (u) handleOpenFullscreen(Array.isArray(u) ? u[0] : u);
+              const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+              const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
+              const src = imageUrls[currentImageIndex] || imageUrls[0];
+              const alt = alts[currentImageIndex] || alts[0] || 'Photo';
+              if (src) handleOpenFullscreen(src, alt);
             }}
           />
           <CommentsSection
@@ -299,7 +305,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
         )}
         </div>
       {fsOpen && fsSrc && (
-        <FullscreenViewer src={Array.isArray(fsSrc) ? fsSrc[0] : fsSrc} alt={(post.alt && typeof post.alt === 'string') ? post.alt : 'Photo'} onClose={handleCloseFullscreen} />
+        <FullscreenViewer src={fsSrc} alt={fsAlt} onClose={handleCloseFullscreen} />
       )}
     </article>
   );

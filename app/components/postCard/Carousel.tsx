@@ -13,6 +13,7 @@ interface CarouselProps {
   pathname: string;
   allowCarouselTouch?: boolean;
   openFullscreen?: (src: string) => void;
+  onImageIndexChange?: (index: number) => void;
 }
 
 export const Carousel = memo(function Carousel({
@@ -25,11 +26,13 @@ export const Carousel = memo(function Carousel({
   pathname,
   allowCarouselTouch,
   openFullscreen,
+  onImageIndexChange,
 }: CarouselProps) {
   const { index, setIndex, trackRef, prev, next, carouselTouchProps } = useCarousel({
     imageUrls,
     allowCarouselTouch,
     pathname,
+    onIndexChange: onImageIndexChange,
   });
 
   const { handleMediaClick } = useMediaClick({

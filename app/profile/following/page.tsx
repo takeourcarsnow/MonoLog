@@ -51,7 +51,17 @@ export default function FollowingPage() {
   return (
     <div className="view-fade">
       <div style={{ padding: '24px', maxWidth: 800, margin: '0 auto' }}>
-        <h1 style={{ marginBottom: 24, textAlign: 'center' }}>Following</h1>
+        <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link href="/profile" className="btn" aria-label="Back to Profile">
+            <span className="icon" aria-hidden>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <span>Back</span>
+          </Link>
+          <h1 style={{ margin: 0 }}>Following</h1>
+        </div>
         {following.length === 0 ? (
           <div className="empty" style={{ textAlign: 'center' }}>
             <p>You are not following anyone yet.</p>

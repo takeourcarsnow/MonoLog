@@ -18,18 +18,31 @@ export function InstallPrompt() {
       return; // Already installed, don't show prompt
     }
 
-    // Check if user previously dismissed
+    // Respect prior choices:
+    // - permanent dismissal (no longer show)
+    // - snooze until a future timestamp (remind later)
     const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (dismissed) {
-      return;
+    if (dismissed) return;
+    const snooze = localStorage.getItem('pwa-install-snooze');
+    if (snooze) {
+      const until = Number(snooze) || 0;
+      if (Date.now() < until) return; // still snoozed
+      // expired snooze -> remove and allow showing again
+      localStorage.removeItem('pwa-install-snooze');
     }
+
+    // Prefer showing only to mobile users (Chrome on Android is the primary target).
+    // This prevents a desktop infobar from feeling intrusive.
+    const isMobileLike = /Android|Mobile|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!isMobileLike) return;
 
     const handler = (e: Event) => {
       // Prevent the default mini-infobar from appearing
       e.preventDefault();
       // Save the event so it can be triggered later
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Show our custom install prompt after a short delay
+      // Show our custom install prompt after a short delay so it doesn't
+      // interrupt the user's immediate task.
       setTimeout(() => setShowPrompt(true), 3000);
     };
 
@@ -54,9 +67,17 @@ export function InstallPrompt() {
     setShowPrompt(false);
   };
 
-  const handleDismiss = () => {
+  // Snooze the prompt for a number of days (default 3 days)
+  const handleSnooze = (days = 3) => {
+    const until = Date.now() + days * 24 * 60 * 60 * 1000;
+    localStorage.setItem('pwa-install-snooze', String(until));
     setShowPrompt(false);
+  };
+
+  // Permanently dismiss the install prompt
+  const handlePermanentDismiss = () => {
     localStorage.setItem('pwa-install-dismissed', 'true');
+    setShowPrompt(false);
   };
 
   if (!showPrompt || !deferredPrompt) {
@@ -66,17 +87,19 @@ export function InstallPrompt() {
   return (
     <div
       className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md
-                 bg-white dark:bg-gray-900 border-2 border-blue-500 dark:border-blue-400
-                 rounded-xl shadow-2xl p-5 z-[9999] animate-slide-down"
+                 bg-white dark:bg-gray-900 border border-transparent dark:border-transparent
+                 rounded-xl shadow-lg p-4 z-[9999] animate-slide-down"
       role="dialog"
       aria-labelledby="install-title"
+      aria-describedby="install-desc"
     >
       <button
-        onClick={handleDismiss}
+        onClick={handlePermanentDismiss}
         className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 
                    dark:hover:text-gray-300 rounded-full hover:bg-gray-100 
                    dark:hover:bg-gray-800 transition-colors"
-        aria-label="Dismiss"
+        aria-label="Don't show again"
+        title="Don't show this again"
       >
         <X size={18} />
       </button>
@@ -86,13 +109,14 @@ export function InstallPrompt() {
           <div className="w-10 h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center">
             <div className="w-5 h-5 bg-white dark:bg-black rounded-full"></div>
           </div>
-          <h3 id="install-title" className="text-lg font-bold text-gray-900 dark:text-white">
-            Install MonoLog
+          <h3 id="install-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+            Add MonoLog to your phone
           </h3>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-          Get the app experience! Add to your home screen for faster access and a native feel.
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed" id="install-desc">
+          Quick access from your home screen, offline support, and a cleaner app-like experience.
         </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Tap "Add" to install. If you prefer, we can remind you later.</p>
         <div className="flex gap-3">
           <button
             onClick={handleInstall}
@@ -101,17 +125,21 @@ export function InstallPrompt() {
                      shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02]
                      active:scale-[0.98]"
           >
-            Install Now
+            Add to Home Screen
           </button>
           <button
-            onClick={handleDismiss}
-            className="px-5 py-3 rounded-lg font-medium text-base
+            onClick={() => handleSnooze(3)}
+            className="px-4 py-2 rounded-lg font-medium text-sm
                      text-gray-700 dark:text-gray-300
                      hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors
-                     border border-gray-300 dark:border-gray-600"
+                     border border-gray-200 dark:border-gray-700"
           >
-            Later
+            Remind me in 3 days
           </button>
+        </div>
+        <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
+          <span>Not sure? You can always install later from the browser menu.</span>
+          <button onClick={handlePermanentDismiss} className="underline hover:text-gray-700 ml-2">Don't show again</button>
         </div>
       </div>
 

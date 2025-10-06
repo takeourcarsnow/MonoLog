@@ -267,12 +267,33 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setPreviewOriginal
   );
 
-  // redraw whenever any adjustment state changes to avoid stale-draw races
+  // Instantly show crop overlay when navigating to crop category
   useEffect(() => {
-    // small RAF to batch with potential layout changes
-    requestAnimationFrame(() => draw());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, softFocus, fade, matte, sel, offset]);
+    if (selectedCategory === 'crop' && mounted) {
+      const info = computeImageLayout();
+      if (info) {
+        const pad = 0.08;
+        let w = info.dispW * (1 - pad * 2);
+        let h = info.dispH * (1 - pad * 2);
+        if (cropRatio.current) {
+          h = w / cropRatio.current;
+          if (h > info.dispH * (1 - pad * 2)) {
+            h = info.dispH * (1 - pad * 2);
+            w = h * cropRatio.current;
+          }
+        }
+        const x = info.left + (info.dispW - w) / 2;
+        const y = info.top + (info.dispH - h) / 2;
+        setSel({ x, y, w, h });
+        draw();
+      }
+    }
+  }, [selectedCategory, mounted, computeImageLayout, setSel, cropRatio]);
+
+  const cancelCrop = () => {
+    setSel(null);
+    setSelectedCategory('basic');
+  };
 
 
 
@@ -306,7 +327,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       </div>
 
       {/* Category selector (Filters / Basic / Effects / Crop / Frame) below the canvas */}
-      <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} categoryHighlight={categoryHighlight} sel={sel} applyCropOnly={applyCropOnly} resetCrop={resetCrop} />
+      <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} categoryHighlight={categoryHighlight} sel={sel} applyCropOnly={applyCropOnly} resetCrop={resetCrop} cancelCrop={cancelCrop} />
 
       <div className="image-editor-panels-container">
         <ImageEditorPanels

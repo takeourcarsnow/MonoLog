@@ -40,6 +40,7 @@ export function usePointerEvents(
       // Check for resize handles first
       if (sel) {
         const handleSize = 8;
+        const touchExtra = 6; // Make touch area 20x20 while visual is 8x8
         const handles = [
           { x: sel.x - handleSize/2, y: sel.y - handleSize/2 },
           { x: sel.x + sel.w - handleSize/2, y: sel.y - handleSize/2 },
@@ -52,7 +53,7 @@ export function usePointerEvents(
         ];
         for (let i = 0; i < handles.length; i++) {
           const h = handles[i];
-          if (p.x >= h.x && p.x <= h.x + handleSize && p.y >= h.y && p.y <= h.y + handleSize) {
+          if (p.x >= h.x - touchExtra && p.x <= h.x + handleSize + touchExtra && p.y >= h.y - touchExtra && p.y <= h.y + handleSize + touchExtra) {
             dragging.current = { startX: p.x, startY: p.y, mode: 'crop', action: 'resize', handleIndex: i, origSel: { ...sel } };
             return;
           }
@@ -65,23 +66,19 @@ export function usePointerEvents(
         return;
       }
 
-      // Only start drawing a new crop if Crop category is active AND an aspect preset is selected.
-      // If no aspect ratio is selected (free mode), treat the click as a pan so the user still gets the
-      // A/B preview on press instead of immediately creating a selection.
-      if (selectedCategory === 'crop' && cropRatio.current != null) {
-        dragging.current = { startX: p.x, startY: p.y, mode: 'crop', action: 'draw', moved: false };
-        setSel({ x: p.x, y: p.y, w: 0, h: 0 });
-        return;
-      }
+      // Only start drawing a new crop if Crop category is active and no selection exists.
+      // Removed: drawing new crop by dragging, initial crop is set by useEffect when entering crop mode
 
-      // Default: start panning (click on image should not create a new crop when not in crop mode)
+      // Default: start panning
       dragging.current = { startX: p.x, startY: p.y, mode: 'pan' };
-      // Enable A/B preview for pan interactions only
-      previewPointerIdRef.current = ev.pointerId ?? null;
-      previewOriginalRef.current = true;
-      setPreviewOriginal(true);
-      // Ensure the canvas repaints to show the unedited original immediately
-      requestAnimationFrame(() => draw());
+      // Enable A/B preview for pan interactions only when not in crop mode
+      if (selectedCategory !== 'crop') {
+        previewPointerIdRef.current = ev.pointerId ?? null;
+        previewOriginalRef.current = true;
+        setPreviewOriginal(true);
+        // Ensure the canvas repaints to show the unedited original immediately
+        requestAnimationFrame(() => draw());
+      }
     };
 
     const onPointerMove = (ev: PointerEvent) => {
@@ -255,35 +252,43 @@ export function usePointerEvents(
           setSel(newSel);
         } else {
           // drawing new selection
-          if (!dragging.current.moved && (p.x !== dragging.current.startX || p.y !== dragging.current.startY)) {
-            dragging.current.moved = true;
-          }
-          const sx = dragging.current.startX; const sy = dragging.current.startY;
-          let nx = Math.min(sx, p.x); let ny = Math.min(sy, p.y);
-          let nw = Math.abs(p.x - sx); let nh = Math.abs(p.y - sy);
-          if (cropRatio.current) {
-            const fromW = Math.max(1, Math.abs(p.x - sx));
-            const fromH = Math.max(1, Math.abs(p.y - sy));
-            const hFromW = fromW / cropRatio.current;
-            const wFromH = fromH * cropRatio.current;
-            if (hFromW <= fromH) {
-              nh = Math.round(hFromW);
-              nw = fromW;
-            } else {
-              nw = Math.round(wFromH);
-              nh = fromH;
+          if (!dragging.current.moved) {
+            const dx = p.x - dragging.current.startX;
+            const dy = p.y - dragging.current.startY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance > 5) { // threshold to avoid small jitters
+              dragging.current.moved = true;
+              setSel({ x: dragging.current.startX, y: dragging.current.startY, w: 0, h: 0 });
             }
-            if (p.x < sx) nx = sx - nw;
-            if (p.y < sy) ny = sy - nh;
           }
-          // clamp selection to image rect
-          const selLeft = Math.max(nx, imgRect.x);
-          const selTop = Math.max(ny, imgRect.y);
-          const selRight = Math.min(nx + nw, imgRect.x + imgRect.w);
-          const selBottom = Math.min(ny + nh, imgRect.y + imgRect.h);
-          const finalW = Math.max(1, selRight - selLeft);
-          const finalH = Math.max(1, selBottom - selTop);
-          setSel({ x: selLeft, y: selTop, w: finalW, h: finalH });
+          if (dragging.current.moved) {
+            const sx = dragging.current.startX; const sy = dragging.current.startY;
+            let nx = Math.min(sx, p.x); let ny = Math.min(sy, p.y);
+            let nw = Math.abs(p.x - sx); let nh = Math.abs(p.y - sy);
+            if (cropRatio.current) {
+              const fromW = Math.max(1, Math.abs(p.x - sx));
+              const fromH = Math.max(1, Math.abs(p.y - sy));
+              const hFromW = fromW / cropRatio.current;
+              const wFromH = fromH * cropRatio.current;
+              if (hFromW <= fromH) {
+                nh = Math.round(hFromW);
+                nw = fromW;
+              } else {
+                nw = Math.round(wFromH);
+                nh = fromH;
+              }
+              if (p.x < sx) nx = sx - nw;
+              if (p.y < sy) ny = sy - nh;
+            }
+            // clamp selection to image rect
+            const selLeft = Math.max(nx, imgRect.x);
+            const selTop = Math.max(ny, imgRect.y);
+            const selRight = Math.min(nx + nw, imgRect.x + imgRect.w);
+            const selBottom = Math.min(ny + nh, imgRect.y + imgRect.h);
+            const finalW = Math.max(1, selRight - selLeft);
+            const finalH = Math.max(1, selBottom - selTop);
+            setSel({ x: selLeft, y: selTop, w: finalW, h: finalH });
+          }
         }
       }
       draw();
@@ -293,31 +298,6 @@ export function usePointerEvents(
       // prevent parent handlers from interpreting this as a swipe/drag
       ev.stopPropagation?.();
       try { (ev.target as Element).releasePointerCapture(ev.pointerId); } catch {}
-      // If it was a single click for drawing crop and no move, set to full image
-      if (dragging.current && dragging.current.action === 'draw' && !dragging.current.moved) {
-        const info = computeImageLayout();
-        if (info) {
-          const { left, top, dispW, dispH } = info;
-          let fullSel = { x: left, y: top, w: dispW, h: dispH };
-          if (cropRatio.current) {
-            // Adjust to fit aspect ratio within the image
-            const ratio = cropRatio.current;
-            let adjW = dispW;
-            let adjH = dispH;
-            if (dispW / dispH > ratio) {
-              // Image is wider, fit height
-              adjH = dispH;
-              adjW = adjH * ratio;
-            } else {
-              // Image is taller, fit width
-              adjW = dispW;
-              adjH = adjW / ratio;
-            }
-            fullSel = { x: left + (dispW - adjW) / 2, y: top + (dispH - adjH) / 2, w: adjW, h: adjH };
-          }
-          setSel(fullSel);
-        }
-      }
       dragging.current = null;
       // Only clear the preview if this pointer matches the one that started it
       if (previewPointerIdRef.current == null || previewPointerIdRef.current === ev.pointerId) {

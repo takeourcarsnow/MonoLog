@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 export function useImageEditorLayout(
   imageSrc: string,
@@ -12,7 +12,7 @@ export function useImageEditorLayout(
   draw: (info?: any) => void
 ) {
   // Compute image layout within canvas
-  function computeImageLayout() {
+  const computeImageLayout = useCallback(() => {
     const canvas = canvasRef.current; const img = imgRef.current;
     if (!canvas || !img) return null as any;
     // Use clientWidth/clientHeight (CSS pixels) rather than getBoundingClientRect which can be affected
@@ -38,7 +38,7 @@ export function useImageEditorLayout(
     const rect = { width: cssW, height: cssH, left: 0, top: 0 } as DOMRect;
     // return layout info; do NOT set state here (caller should set state and draw with info)
     return { rect, baseScale, dispW, dispH, left, top };
-  }
+  }, [canvasRef, imgRef]);
 
   // Handle image loading and initial layout
   useEffect(() => {

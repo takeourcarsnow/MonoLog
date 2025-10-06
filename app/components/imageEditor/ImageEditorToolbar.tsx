@@ -13,6 +13,7 @@ interface ImageEditorToolbarProps {
   sel: { x: number; y: number; w: number; h: number } | null;
   applyCropOnly: () => void;
   resetCrop: () => void;
+  cancelCrop: () => void;
 }
 
 function ImageEditorToolbarHeader({
@@ -53,10 +54,11 @@ function ImageEditorToolbarCategories({
   categoryHighlight,
   sel,
   applyCropOnly,
-  resetCrop
-}: Pick<ImageEditorToolbarProps, 'categoriesContainerRef' | 'selectedCategory' | 'setSelectedCategory' | 'categoryHighlight' | 'sel' | 'applyCropOnly' | 'resetCrop'>) {
-  // When in crop mode with a selection, show Confirm/Reset buttons instead of categories
-  if (selectedCategory === 'crop' && sel) {
+  resetCrop,
+  cancelCrop
+}: Pick<ImageEditorToolbarProps, 'categoriesContainerRef' | 'selectedCategory' | 'setSelectedCategory' | 'categoryHighlight' | 'sel' | 'applyCropOnly' | 'resetCrop' | 'cancelCrop'>) {
+  // When in crop mode, show Confirm/Reset/Cancel buttons
+  if (selectedCategory === 'crop') {
     return (
       <div ref={categoriesContainerRef} className="categories-scroll" style={{
         position: 'relative',
@@ -132,8 +134,38 @@ function ImageEditorToolbarCategories({
             cursor: 'pointer'
           }}
         >
-          <X size={20} strokeWidth={2} aria-hidden />
+          <RefreshCw size={20} strokeWidth={2} aria-hidden />
           <span style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Reset</span>
+        </button>
+
+        <button
+          type="button"
+          aria-label="Cancel Crop"
+          title="Cancel Crop"
+          onClick={(e: any) => {
+            try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+            cancelCrop();
+          }}
+          style={{
+            padding: '8px 12px',
+            borderRadius: 10,
+            background: 'transparent',
+            color: 'var(--text)',
+            transition: 'transform 140ms ease, box-shadow 220ms ease, background 140ms ease',
+            position: 'relative',
+            zIndex: 1,
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            border: '1px solid color-mix(in srgb, var(--text) 4%, transparent)',
+            fontWeight: 500,
+            overflow: 'hidden',
+            cursor: 'pointer'
+          }}
+        >
+          <X size={20} strokeWidth={2} aria-hidden />
+          <span style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Cancel</span>
         </button>
       </div>
     );
@@ -342,7 +374,7 @@ export default function ImageEditorToolbar(props: ImageEditorToolbarProps) {
   return (
     <>
       <ImageEditorToolbarHeader onCancel={props.onCancel} resetAdjustments={props.resetAdjustments} applyEdit={props.applyEdit} isEdited={props.isEdited} />
-      <ImageEditorToolbarCategories categoriesContainerRef={props.categoriesContainerRef} selectedCategory={props.selectedCategory} setSelectedCategory={props.setSelectedCategory} categoryHighlight={props.categoryHighlight} sel={props.sel} applyCropOnly={props.applyCropOnly} resetCrop={props.resetCrop} />
+      <ImageEditorToolbarCategories categoriesContainerRef={props.categoriesContainerRef} selectedCategory={props.selectedCategory} setSelectedCategory={props.setSelectedCategory} categoryHighlight={props.categoryHighlight} sel={props.sel} applyCropOnly={props.applyCropOnly} resetCrop={props.resetCrop} cancelCrop={props.cancelCrop} />
     </>
   );
 }

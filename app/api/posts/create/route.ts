@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { uid } from '@/src/lib/id';
 import { logger } from '@/src/lib/logger';
+import { parseMentions } from '@/src/lib/mentions';
 
 export async function POST(req: Request) {
   try {
@@ -150,6 +151,55 @@ export async function POST(req: Request) {
     }
 
     try { logger.debug('[posts.create] inserted', { id: insertData?.id, imageCount: normalizedImageUrls.length }); } catch (e) {}
+
+    // Handle mentions
+    if (caption) {
+      const mentions = parseMentions(caption);
+      if (mentions.length > 0) {
+        (async () => {
+          try {
+            // Get user IDs for mentioned usernames
+            const { data: mentionedUsers, error: usersErr } = await sb
+              .from('users')
+              .select('id, username')
+              .in('username', mentions);
+            if (!usersErr && mentionedUsers) {
+              const mentionedUserIds = mentionedUsers.map(u => u.id);
+              // Insert into post_mentions (best-effort, table may not exist)
+              try {
+                const mentionInserts = mentionedUserIds.map(mentionedId => ({
+                  id: uid(),
+                  post_id: id,
+                  mentioned_user_id: mentionedId,
+                  created_at: created_at,
+                }));
+                await sb.from('post_mentions').insert(mentionInserts);
+              } catch (e) {
+                // Ignore if table doesn't exist
+              }
+              // Create notifications for mentions
+              try {
+                const notifInserts = mentionedUserIds.map(mentionedId => ({
+                  id: uid(),
+                  user_id: mentionedId,
+                  actor_id: userId,
+                  post_id: id,
+                  type: 'mention',
+                  text: `You were mentioned in a post`,
+                  created_at: created_at,
+                  read: false,
+                }));
+                await sb.from('notifications').insert(notifInserts);
+              } catch (e) {
+                // Ignore notification errors
+              }
+            }
+          } catch (e) {
+            // Ignore mention processing errors
+          }
+        })();
+      }
+    }
 
     return NextResponse.json({ ok: true, post: insertData, normalizedImageUrls });
   } catch (e: any) {

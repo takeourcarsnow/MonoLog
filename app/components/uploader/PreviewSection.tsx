@@ -113,7 +113,7 @@ export function PreviewSection({
     >
       <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
         {/* When editing, the ImageEditor is rendered at the top level, replacing all content */}
-        {dataUrls.length > 1 ? (
+        {dataUrls.length > 1 && !editing ? (
           <CarouselView
             dataUrls={dataUrls}
             alt={alt}

@@ -19,6 +19,7 @@ import { useIsMe } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
 import { usePathname } from "next/navigation";
 import { api } from "@/src/lib/api";
+import { renderMentions } from "@/src/lib/mentions";
 
 // Lazy load heavy components
 const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
@@ -243,7 +244,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
             This allows the caption/actions to fade/collapse smoothly while the editor
             expands, avoiding a sudden jump on open. */}
   <div className="caption-wrap" aria-hidden={editorAnim === 'enter'}>
-          {post.caption ? <div className="caption">{post.caption}</div> : null}
+          {post.caption ? <div className="caption">{renderMentions(post.caption)}</div> : null}
           <ActionsSection
             postId={post.id}
             count={count}

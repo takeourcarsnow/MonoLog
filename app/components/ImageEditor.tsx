@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import BasicPanel from './imageEditor/panels/BasicPanel';
 import ColorPanel from './imageEditor/panels/ColorPanel';
 import EffectsPanel from './imageEditor/panels/EffectsPanel';
@@ -70,6 +70,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setControlsOpen,
     selectedCategory,
     setSelectedCategory,
+    previousCategory,
+    setPreviousCategory,
     ASPECT_PRESETS,
     presetIndex,
     setPresetIndex,
@@ -204,6 +206,13 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   useEffect(() => { fadeRef.current = fade; }, [fade]);
   useEffect(() => { matteRef.current = matte; }, [matte]);
 
+  const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
+    if (category === 'crop' && selectedCategory !== 'crop') {
+      setPreviousCategory(selectedCategory);
+    }
+    setSelectedCategory(category);
+  }, [selectedCategory, setSelectedCategory, setPreviousCategory]);
+
   const { isEdited, applyEdit, resetAdjustments, resetControlToDefault, bakeRotate90, bakeRotateMinus90, applyCropOnly, resetCrop } = useImageEditorActions(
     imgRef,
     canvasRef,
@@ -264,31 +273,10 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     dragging,
     previewPointerIdRef,
     previewOriginalRef,
-    setPreviewOriginal
+    setPreviewOriginal,
+    setSelectedCategoryWithHistory,
+    previousCategory
   );
-
-  // Instantly show crop overlay when navigating to crop category
-  useEffect(() => {
-    if (selectedCategory === 'crop' && mounted) {
-      const info = computeImageLayout();
-      if (info) {
-        const pad = 0.08;
-        let w = info.dispW * (1 - pad * 2);
-        let h = info.dispH * (1 - pad * 2);
-        if (cropRatio.current) {
-          h = w / cropRatio.current;
-          if (h > info.dispH * (1 - pad * 2)) {
-            h = info.dispH * (1 - pad * 2);
-            w = h * cropRatio.current;
-          }
-        }
-        const x = info.left + (info.dispW - w) / 2;
-        const y = info.top + (info.dispH - h) / 2;
-        setSel({ x, y, w, h });
-        draw();
-      }
-    }
-  }, [selectedCategory, mounted, computeImageLayout, setSel, cropRatio]);
 
   const cancelCrop = () => {
     setSel(null);
@@ -327,7 +315,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       </div>
 
       {/* Category selector (Filters / Basic / Effects / Crop / Frame) below the canvas */}
-      <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} categoryHighlight={categoryHighlight} sel={sel} applyCropOnly={applyCropOnly} resetCrop={resetCrop} cancelCrop={cancelCrop} />
+      <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategoryWithHistory} categoryHighlight={categoryHighlight} sel={sel} applyCropOnly={applyCropOnly} resetCrop={resetCrop} cancelCrop={cancelCrop} />
 
       <div className="image-editor-panels-container">
         <ImageEditorPanels

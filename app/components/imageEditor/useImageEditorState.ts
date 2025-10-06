@@ -33,6 +33,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [frameThickness, setFrameThickness] = useState<number>(initialSettings?.frameThickness ?? 0); // fraction of min(image dim) — default disabled
   const [controlsOpen, setControlsOpen] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects' | 'crop' | 'frame'>('basic');
+  const [previousCategory, setPreviousCategory] = useState<'basic' | 'color' | 'effects' | 'crop' | 'frame'>('basic');
   const ASPECT_PRESETS = [
     { label: 'Free', v: null },
     { label: '16:9', v: 16 / 9 },
@@ -113,6 +114,8 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
     setControlsOpen,
     selectedCategory,
     setSelectedCategory,
+    previousCategory,
+    setPreviousCategory,
     ASPECT_PRESETS,
     presetIndex,
     setPresetIndex,

@@ -61,7 +61,9 @@ export function useImageEditorActions(
   dragging: React.MutableRefObject<null | any>,
   previewPointerIdRef: React.MutableRefObject<number | null>,
   previewOriginalRef: React.MutableRefObject<boolean>,
-  setPreviewOriginal: (value: boolean) => void
+  setPreviewOriginal: (value: boolean) => void,
+  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame') => void,
+  previousCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame'
 ) {
   // quick derived flag: has the user made any edits (image replaced, selection or adjustments)
   const isEdited = useMemo(() => {
@@ -198,6 +200,7 @@ export function useImageEditorActions(
       setRotation,
       computeImageLayout
     );
+    setSelectedCategory(previousCategory);
   }
 
   function resetCrop() {

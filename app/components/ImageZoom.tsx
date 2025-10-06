@@ -79,7 +79,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     }
   }, [src]);
 
-  const getBounds = () => {
+  const getBounds = (currentScale = scale) => {
     const c = containerRef.current;
     const img = imgRef.current;
     if (!c || !img) return { maxTx: 0, maxTy: 0 };
@@ -96,8 +96,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const renderedH = natH * fitScale;
 
     // When zoomed with transform: scale(scale), the effective size
-    const scaledW = renderedW * scale;
-    const scaledH = renderedH * scale;
+    const scaledW = renderedW * currentScale;
+    const scaledH = renderedH * currentScale;
 
     const maxTx = Math.max(0, (scaledW - containerW) / 2);
     const maxTy = Math.max(0, (scaledH - containerH) / 2);
@@ -121,8 +121,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         } catch (_) {}
       }
     } else {
-      // Zoom in to double tap location
-      setScale(maxScale);
+      // Zoom in to double tap location - use smaller scale for fullscreen
+      const zoomScale = isFullscreen ? 1.5 : maxScale;
+      setScale(zoomScale);
 
       // Calculate translation to center the tap point
       const localX = clientX - rect.left;
@@ -130,11 +131,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       const containerWidth = rect.width;
       const containerHeight = rect.height;
 
-      const newTx = -(localX * maxScale - containerWidth / 2);
-      const newTy = -(localY * maxScale - containerHeight / 2);
+      const newTx = -(localX * zoomScale - containerWidth / 2);
+      const newTy = -(localY * zoomScale - containerHeight / 2);
 
       // Clamp to bounds
-      const bounds = getBounds();
+      const bounds = getBounds(zoomScale);
       const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
       const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 
@@ -250,13 +251,82 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     panStartRef.current = null;
   };
 
+  // Add wheel event listener with passive: false to prevent default scrolling
+  useEffect(() => {
+    const imgElement = imgRef.current;
+    if (!imgElement) return;
+
+    const handleWheelEvent = (e: WheelEvent) => {
+      // Only allow mouse wheel zoom if already zoomed in
+      if (scale <= 1) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      // Determine zoom direction and amount
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out on scroll down, zoom in on scroll up
+      const newScale = Math.max(1, Math.min(maxScale, scale * zoomFactor));
+
+      // If scale didn't change, don't do anything
+      if (newScale === scale) return;
+
+      // Calculate the point under the mouse cursor
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Calculate new translation to keep the mouse point fixed
+      const scaleRatio = newScale / scale;
+      const newTx = mouseX - (mouseX - tx) * scaleRatio;
+      const newTy = mouseY - (mouseY - ty) * scaleRatio;
+
+      // If zooming out to scale 1, reset to center
+      if (newScale === 1) {
+        setScale(1);
+        setTx(0);
+        setTy(0);
+        if (typeof window !== 'undefined') {
+          try {
+            window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
+          } catch (_) {}
+        }
+      } else {
+        // Clamp to bounds
+        const bounds = getBounds(newScale);
+        const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+        const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+
+        setScale(newScale);
+        setTx(clampedTx);
+        setTy(clampedTy);
+
+        // Dispatch zoom events
+        if (scale === 1 && newScale > 1) {
+          if (typeof window !== 'undefined') {
+            try {
+              window.dispatchEvent(new CustomEvent('monolog:zoom_start'));
+            } catch (_) {}
+          }
+        }
+      }
+    };
+
+    imgElement.addEventListener('wheel', handleWheelEvent, { passive: false });
+
+    return () => {
+      imgElement.removeEventListener('wheel', handleWheelEvent);
+    };
+  }, [scale, tx, ty, maxScale]);
+
   return (
     <div
       ref={containerRef}
       className={className}
       style={{
         overflow: "hidden",
-        touchAction: scale > 1 ? "none" : "auto",
+        touchAction: "none",
         display: "block",
         width: "100%",
         height: isFullscreen ? "100%" : (isTile ? "100%" : undefined),
@@ -289,8 +359,12 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           objectFit: isFullscreen ? "contain" : (isTile ? "cover" : "contain"),
           objectPosition: "center center",
           userSelect: "none",
-          touchAction: scale > 1 ? "none" : "auto",
-          pointerEvents: isFullscreen ? "none" : "auto",
+          touchAction: "none",
+          pointerEvents: "auto",
+        }}
+        onDoubleClick={(e) => {
+          e.preventDefault();
+          handleDoubleTap(e.clientX, e.clientY);
         }}
         onDragStart={(e) => e.preventDefault()}
         draggable={false}

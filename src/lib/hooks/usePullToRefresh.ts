@@ -13,7 +13,7 @@ interface PullToRefreshState {
 }
 
 export function usePullToRefresh(options: PullToRefreshOptions) {
-  const { threshold = 80, onRefresh, disabled = false } = options;
+  const { threshold = 60, onRefresh, disabled = false } = options;
 
   const [state, setState] = useState<PullToRefreshState>({
     isRefreshing: false,
@@ -26,6 +26,9 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastWheelTime = useRef<number>(0);
+  const isTriggeringRefresh = useRef<boolean>(false);
+  const lastWheelProcessTime = useRef<number>(0);
+  const lastRefreshEndTime = useRef<number>(0);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (disabled || state.isRefreshing) return;
@@ -40,7 +43,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
 
     const touch = e.touches[0];
     const currentY = touch.clientY;
-    const pullDistance = Math.max(0, currentY - startY.current);
+    const pullDistance = Math.max(0, Math.min(currentY - startY.current, threshold * 1.5));
 
     // Only allow pull-to-refresh when at the top of the scrollable area
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -62,23 +65,33 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     if (scrollTop > 0) return;
 
-    lastWheelTime.current = Date.now();
+    const now = Date.now();
+    if (now - lastWheelProcessTime.current < 12) return; // Throttle to prevent too frequent updates
+    if (now - lastRefreshEndTime.current < 2000) return; // Cooldown after refresh
+    lastWheelProcessTime.current = now;
 
-    if (e.deltaY > 0) {  // Only trigger on scroll down (pull down gesture)
+    lastWheelTime.current = now;
+
+    if (e.deltaY < 0) {  // Scrolling up (pull down gesture)
       e.preventDefault();
 
+      if (isTriggeringRefresh.current) return;
+
       setState(prev => {
-        const increment = Math.min(Math.abs(e.deltaY), 20); // Cap the increment
-        const newDistance = prev.pullDistance + increment;
+        const increment = Math.min(Math.abs(e.deltaY), 12); // Cap the increment
+        const newDistance = Math.min(prev.pullDistance + increment, threshold * 1.5);
         if (newDistance >= threshold && !prev.isRefreshing) {
+          isTriggeringRefresh.current = true;
           Promise.resolve(onRefresh()).then(() => {
             setState(prev => ({ ...prev, isRefreshing: false, pullDistance: 0, isPulling: false }));
+            isTriggeringRefresh.current = false;
+            lastRefreshEndTime.current = Date.now();
           });
           return { ...prev, isRefreshing: true, isPulling: false };
         }
         return { ...prev, pullDistance: newDistance, isPulling: true };
       });
-    } else if (e.deltaY < 0 && state.pullDistance > 0) {  // Only reset if there's existing pull distance
+    } else if (e.deltaY > 0 && state.pullDistance > 0) {  // Scrolling down, reset pull distance
       setState(prev => ({ ...prev, pullDistance: 0, isPulling: false }));
     }
   }, [disabled, state.isRefreshing, threshold, onRefresh]);
@@ -88,7 +101,8 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
 
     isDragging.current = false;
 
-    if (state.pullDistance >= threshold) {
+    if (state.pullDistance >= threshold && !isTriggeringRefresh.current) {
+      isTriggeringRefresh.current = true;
       setState(prev => ({
         ...prev,
         isRefreshing: true,
@@ -103,6 +117,8 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
           isRefreshing: false,
           pullDistance: 0,
         }));
+        isTriggeringRefresh.current = false;
+        lastRefreshEndTime.current = Date.now();
       }
     } else {
       setState(prev => ({
@@ -155,7 +171,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
     if (!state.isPulling && !state.isRefreshing) return {};
 
     const progress = Math.min(state.pullDistance / threshold, 1);
-    const translateY = state.isRefreshing ? threshold : state.pullDistance * 0.5;
+    const translateY = state.isRefreshing ? threshold : state.pullDistance * 0.4;
 
     return {
       transform: `translateY(${translateY}px)`,

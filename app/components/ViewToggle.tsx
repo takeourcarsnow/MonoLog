@@ -7,7 +7,7 @@ function ViewToggle({ title, subtitle, selected, onSelect }: { title: React.Reac
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button
-          className="btn"
+          className="btn btn-no-bg"
           onClick={() => onSelect(selected === "list" ? "grid" : "list")}
           title={selected === "list" ? "Switch to grid view" : "Switch to list view"}
           aria-pressed={selected === "list"}

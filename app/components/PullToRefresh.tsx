@@ -14,23 +14,34 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
   className = ''
 }) => {
   const progress = Math.min(pullDistance / threshold, 1);
-  const isVisible = isRefreshing || progress > 0;
+  const isVisible = progress > 0;
 
   return (
-    <div
-      className={`flex items-center justify-center py-4 bg-white border-b border-gray-200 ${className}`}
-      style={{
-        opacity: isVisible ? 1 : 0,
-        height: isVisible ? 'auto' : 0,
-        overflow: 'hidden',
-        transition: isRefreshing ? 'opacity 0.3s ease-out, height 0.3s ease-out' : 'none',
-      }}
-    >
-      <div className="flex items-center space-x-2">
-        <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-        {isRefreshing && <span className="text-sm text-gray-600">Refreshing...</span>}
+    <>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+      <div
+        className={`flex items-center justify-center py-4 ${className}`}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: -1,
+          opacity: isVisible ? 1 : 0,
+          transition: 'opacity 0.3s ease-out',
+          pointerEvents: 'none',
+        }}
+      >
+        <div className="flex items-center space-x-2">
+          <img src="/icon.svg" alt="logo" className="w-5 h-5" style={{ animation: 'fadeIn 50ms forwards' }} />
+        </div>
       </div>
-    </div>
+    </>
   );
 });
 
@@ -62,7 +73,7 @@ export const PullToRefreshWrapper = React.memo<PullToRefreshWrapperProps>(({
       />
       <div
         ref={containerRef}
-        style={getPullStyles()}
+        style={{ zIndex: 2, ...getPullStyles() }}
       >
         {children}
       </div>

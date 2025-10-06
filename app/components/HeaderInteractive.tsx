@@ -19,8 +19,8 @@ export function HeaderInteractive() {
     e.preventDefault();
     const current = pathname || "/";
 
-    // If we're not on /favorites, store the current path and go to /favorites
     if (current !== "/favorites") {
+      // Store current path and go to favorites
       try {
         sessionStorage.setItem(PREV_FAV_KEY, current);
       } catch (err) {
@@ -30,26 +30,11 @@ export function HeaderInteractive() {
       return;
     }
 
-    // If we're already on /favorites, try to return to the previous page.
-    // Prefer using the browser history (router.back()) when it looks safe,
-    // otherwise fall back to the stored previous path in sessionStorage.
-    try {
-      const histLen = typeof window !== 'undefined' ? window.history.length : 0;
-      if (histLen > 1) {
-        // navigate back in history — this preserves user's original navigation
-        // context (e.g. scroll position). Remove stored key as it's no longer needed.
-        try { sessionStorage.removeItem(PREV_FAV_KEY); } catch (_) {}
-        router.back();
-        return;
-      }
-    } catch (_) {
-      // ignore
-    }
-
+    // Return to previous path
     let prev = "/";
     try {
-      const v = sessionStorage.getItem(PREV_FAV_KEY);
-      if (v) prev = v;
+      const stored = sessionStorage.getItem(PREV_FAV_KEY);
+      if (stored) prev = stored;
     } catch (err) {
       // ignore
     }

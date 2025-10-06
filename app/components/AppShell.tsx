@@ -14,6 +14,7 @@ import { useAppShellInit } from "./AppShellInit";
 import { useAppShellViews, views } from "./AppShellViews";
 import { useHeaderHeightMeasurement, useTabbarHeightMeasurement } from "./AppShellLayout";
 import { useAppShellNavigation } from "./AppShellNavigation";
+import { RESERVED_ROUTES } from "@/src/lib/types";
 import { SlideWrapper } from "./SlideWrapper";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -66,12 +67,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           const pathSegments = pathname.split('/').filter(Boolean);
                           if (pathSegments.length === 1) {
                             const segment = pathSegments[0];
-                            const RESERVED_ROUTES = [
-                              'about', 'api', 'calendar', 'explore', 'favorites',
-                              'feed', 'post', 'profile', 'upload', 'admin',
-                              'settings', 'help', 'terms', 'privacy', 'login',
-                              'register', 'signup', 'signin', 'logout', 'auth'
-                            ];
                             if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
                               return <view.component userId={segment} />;
                             }

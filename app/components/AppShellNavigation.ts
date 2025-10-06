@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { views } from "./AppShellViews";
+import { RESERVED_ROUTES } from "@/src/lib/types";
 
 export function useAppShellNavigation(
   currentIndex: number,
@@ -87,12 +88,6 @@ export function useAppShellNavigation(
         const pathSegments = pathname.split('/').filter(Boolean);
           if (pathSegments.length === 1) {
           const segment = pathSegments[0];
-          const RESERVED_ROUTES = [
-            'about', 'api', 'calendar', 'explore', 'favorites',
-            'feed', 'post', 'profile', 'upload', 'admin',
-            'settings', 'help', 'terms', 'privacy', 'login',
-            'register', 'signup', 'signin', 'logout', 'auth'
-          ];
           if (!RESERVED_ROUTES.includes(segment.toLowerCase())) return;
         }
       }

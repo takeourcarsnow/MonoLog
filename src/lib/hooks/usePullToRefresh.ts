@@ -76,7 +76,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   const getPullStyles = useCallback(() => {
     if (!isPulling && !isRefreshing) return {};
 
-    const translateY = isRefreshing ? 80 : pullDistance * 0.5;
+    const translateY = isPulling ? pullDistance * 0.5 : 0;
     return {
       transform: `translateY(${translateY}px)`,
       transition: isRefreshing ? 'transform 0.3s ease-out' : 'none',

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { lazy } from "react";
+import { RESERVED_ROUTES } from "@/src/lib/types";
 
 // Lazy load view components to reduce initial bundle size
 const FeedView = lazy(() => import("./FeedView").then(mod => ({ default: mod.FeedView })));
@@ -31,12 +32,6 @@ export function useAppShellViews() {
     const pathSegments = pathname.split('/').filter(Boolean);
     if (pathSegments.length === 1) {
       const segment = pathSegments[0];
-      const RESERVED_ROUTES = [
-        'about', 'api', 'calendar', 'explore', 'favorites',
-        'feed', 'post', 'profile', 'upload', 'admin',
-        'settings', 'help', 'terms', 'privacy', 'login',
-        'register', 'signup', 'signin', 'logout', 'auth'
-      ];
       if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
         return 4; // profile view index
       }
@@ -63,12 +58,6 @@ export function useAppShellViews() {
     const pathSegments = pathname.split('/').filter(Boolean);
     if (pathSegments.length === 1) {
       const segment = pathSegments[0];
-      const RESERVED_ROUTES = [
-        'about', 'api', 'calendar', 'explore', 'favorites',
-        'feed', 'post', 'profile', 'upload', 'admin',
-        'settings', 'help', 'terms', 'privacy', 'login',
-        'register', 'signup', 'signin', 'logout', 'auth'
-      ];
       return !RESERVED_ROUTES.includes(segment.toLowerCase());
     }
     return false;

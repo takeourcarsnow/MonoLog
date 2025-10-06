@@ -8,6 +8,7 @@ interface UseToggleOptions<T> {
   toggleApi: (id: string, current: boolean) => Promise<void>;
   eventName: string;
   eventDetailKey: string;
+  eventValueKey?: string; // optional, defaults to 'favorited' or 'following' based on eventDetailKey
   onSuccess?: (newState: boolean) => void;
   onError?: (error: any) => void;
 }
@@ -19,6 +20,7 @@ export function useToggle<T = any>({
   toggleApi,
   eventName,
   eventDetailKey,
+  eventValueKey,
   onSuccess,
   onError
 }: UseToggleOptions<T>) {
@@ -37,9 +39,10 @@ export function useToggle<T = any>({
 
   // Listen for external changes
   useEffect(() => {
+    const valueKey = eventValueKey || (eventDetailKey.includes('follow') ? 'following' : 'favorited');
     const onChanged = (e: any) => {
       const changedId = e?.detail?.[eventDetailKey];
-      const newState = e?.detail?.[typeof eventDetailKey === 'string' && eventDetailKey.includes('follow') ? 'following' : 'favorited'];
+      const newState = e?.detail?.[valueKey];
       if (!changedId || changedId !== id) return;
       if (inFlightRef.current) return; // ignore if we initiated it
 
@@ -53,7 +56,7 @@ export function useToggle<T = any>({
         window.removeEventListener(eventName, onChanged as any);
       }
     };
-  }, [id, eventName, eventDetailKey]);
+  }, [id, eventName, eventDetailKey, eventValueKey]);
 
   const toggleWithAuth = async () => {
     const cur = await api.getCurrentUser();
@@ -71,7 +74,8 @@ export function useToggle<T = any>({
     try {
       await toggleApi(id, prev);
       // Dispatch event
-      const eventDetail = { [eventDetailKey]: id, [typeof eventDetailKey === 'string' && eventDetailKey.includes('follow') ? 'following' : 'favorited']: !prev };
+      const valueKey = eventValueKey || (eventDetailKey.includes('follow') ? 'following' : 'favorited');
+      const eventDetail = { [eventDetailKey]: id, [valueKey]: !prev };
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(eventName, { detail: eventDetail }));
       }

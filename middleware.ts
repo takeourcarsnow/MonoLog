@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-// Reserved route names that should not be treated as usernames
-const RESERVED_ROUTES = [
-  'about', 'api', 'calendar', 'explore', 'favorites',
-  'feed', 'post', 'profile', 'upload', 'admin',
-  'settings', 'help', 'terms', 'privacy', 'login',
-  'register', 'signup', 'signin', 'logout', 'auth',
-  '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
-];
+import { RESERVED_ROUTES } from './src/lib/types';
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;

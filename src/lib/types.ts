@@ -91,3 +91,12 @@ export interface Api {
 
   calendarStats(opts: { year: number; monthIdx: number }): Promise<CalendarStats>;
 }
+
+// Reserved route names that should not be treated as usernames
+export const RESERVED_ROUTES = [
+  'about', 'api', 'calendar', 'explore', 'favorites',
+  'feed', 'post', 'profile', 'upload', 'admin',
+  'settings', 'help', 'terms', 'privacy', 'login',
+  'register', 'signup', 'signin', 'logout', 'auth',
+  '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
+];

@@ -67,18 +67,20 @@ export function useImageEditorActions(
 ) {
   // quick derived flag: has the user made any edits (image replaced, selection or adjustments)
   const isEdited = useMemo(() => {
-    if (imageSrc !== originalRef.current) return true;
-    if (sel) return true;
-    if (Math.abs(exposure - 1) > 0.001) return true;
-    if (Math.abs(contrast - 1) > 0.001) return true;
-    if (Math.abs(saturation - 1) > 0.001) return true;
-    if (Math.abs(temperature) > 0.001) return true;
-    if (Math.abs(vignette) > 0.001) return true;
-    if (Math.abs(rotation) > 0.001) return true;
-    if (selectedFilter !== 'none') return true;
-    if (Math.abs(grain) > 0.001) return true;
-    if (frameThickness > 0) return true;
-    return false;
+    const checks = [
+      imageSrc !== originalRef.current,
+      !!sel,
+      Math.abs(exposure - 1) > 0.001,
+      Math.abs(contrast - 1) > 0.001,
+      Math.abs(saturation - 1) > 0.001,
+      Math.abs(temperature) > 0.001,
+      Math.abs(vignette) > 0.001,
+      Math.abs(rotation) > 0.001,
+      selectedFilter !== 'none',
+      Math.abs(grain) > 0.001,
+      frameThickness > 0,
+    ];
+    return checks.some(Boolean);
   }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, frameThickness, originalRef, rotation]);
 
   // Action wrappers that delegate to the standalone action helpers

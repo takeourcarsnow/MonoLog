@@ -15,6 +15,7 @@ import { PreviewSection } from "./uploader/PreviewSection";
 import { CaptionInput } from "./uploader/CaptionInput";
 import { PublishControls } from "./uploader/PublishControls";
 import { useUploader } from "./uploader/useUploader";
+import { initFocusDebug } from "./uploader/focusDebug";
 
 // Lazy load the heavy ImageEditor component
 const ImageEditor = lazy(() => import("./ImageEditor"));
@@ -41,9 +42,10 @@ export function Uploader() {
 }
 
 function UploaderCore() {
+  // Dev helper to trace focus events; no-op in production
+  initFocusDebug();
   const {
     // State
-    dataUrl,
     dataUrls,
     originalDataUrls,
     editorSettings,
@@ -59,11 +61,10 @@ function UploaderCore() {
     index,
     processing,
     compressedSize,
-    canPost,
-    remaining,
-    remainingMs,
-    countdownTotalMs,
-    typed,
+  canPost,
+  remaining,
+  remainingMs,
+  countdownTotalMs,
     cameraOpen,
     setCameraOpen,
     videoRef,
@@ -98,7 +99,6 @@ function UploaderCore() {
     setDataUrls,
     setOriginalDataUrls,
     setEditorSettings,
-    setDataUrl,
     setCompressedSize,
     setOriginalSize,
     setProcessing,
@@ -115,7 +115,7 @@ function UploaderCore() {
 
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''}`}>
-      {editing && (dataUrls[editingIndex] || dataUrl) && (
+  {editing && (dataUrls[editingIndex] || dataUrls[0]) && (
         <div>
           <Suspense fallback={
             <div className="upload-editor-loading">
@@ -123,7 +123,7 @@ function UploaderCore() {
             </div>
           }>
             <ImageEditor
-              initialDataUrl={(originalDataUrls[editingIndex] || dataUrls[editingIndex] || originalDataUrls[0] || dataUrl) as string}
+              initialDataUrl={(originalDataUrls[editingIndex] || dataUrls[editingIndex] || originalDataUrls[0] || dataUrls[0]) as string}
               initialSettings={editorSettings[editingIndex] || {}}
               onCancel={() => {
                 setEditing(false);
@@ -156,7 +156,7 @@ function UploaderCore() {
                     copy[editingIndex] = compressed;
                     return copy;
                   });
-                  if (editingIndex === 0) { setDataUrl(compressed); setPreviewLoaded(false); }
+                  if (editingIndex === 0) { setPreviewLoaded(false); }
                   setCompressedSize(approxDataUrlBytes(compressed));
                   setOriginalSize(approxDataUrlBytes(newUrl));
                 } catch (e) {
@@ -166,7 +166,7 @@ function UploaderCore() {
                     copy[editingIndex] = newUrl as string;
                     return copy;
                   });
-                  if (editingIndex === 0) { setDataUrl(newUrl as string); setPreviewLoaded(false); }
+                  if (editingIndex === 0) { setPreviewLoaded(false); }
                   setCompressedSize(approxDataUrlBytes(newUrl as string));
                 } finally {
                   setProcessing(false);
@@ -179,7 +179,7 @@ function UploaderCore() {
         </div>
       )}
 
-      {!dataUrl && !dataUrls.length && (
+  {!dataUrls.length && (
         <DropZone
           processing={processing}
           onFileSelect={() => {
@@ -222,7 +222,6 @@ function UploaderCore() {
 
       {!editing && (
         <PreviewSection
-          dataUrl={dataUrl}
           dataUrls={dataUrls}
           originalDataUrls={originalDataUrls}
           editorSettings={editorSettings}
@@ -234,7 +233,6 @@ function UploaderCore() {
           setEditorSettings={setEditorSettings}
           setDataUrls={setDataUrls}
           setOriginalDataUrls={setOriginalDataUrls}
-          setDataUrl={setDataUrl}
           setPreviewLoaded={setPreviewLoaded}
           setCompressedSize={setCompressedSize}
           setOriginalSize={setOriginalSize}
@@ -322,9 +320,8 @@ function UploaderCore() {
         <CaptionInput
           caption={caption}
           setCaption={setCaption}
-        spotifyLink={spotifyLink}
-        setSpotifyLink={setSpotifyLink}
-          typed={typed}
+          spotifyLink={spotifyLink}
+          setSpotifyLink={setSpotifyLink}
           captionFocused={captionFocused}
           setCaptionFocused={setCaptionFocused}
           hasPreview={hasPreview}

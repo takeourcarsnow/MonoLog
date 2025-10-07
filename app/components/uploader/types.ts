@@ -1,7 +1,6 @@
 import { EditorSettings } from "../imageEditor/types";
 
 export interface PreviewSectionProps {
-  dataUrl: string | null;
   dataUrls: string[];
   originalDataUrls: string[];
   editorSettings: EditorSettings[];
@@ -14,7 +13,6 @@ export interface PreviewSectionProps {
   setEditorSettings: React.Dispatch<React.SetStateAction<EditorSettings[]>>;
   setDataUrls: React.Dispatch<React.SetStateAction<string[]>>;
   setOriginalDataUrls: React.Dispatch<React.SetStateAction<string[]>>;
-  setDataUrl: React.Dispatch<React.SetStateAction<string | null>>;
   setPreviewLoaded: React.Dispatch<React.SetStateAction<boolean>>;
   setCompressedSize: React.Dispatch<React.SetStateAction<number | null>>;
   setOriginalSize: React.Dispatch<React.SetStateAction<number | null>>;
@@ -40,19 +38,3 @@ export interface PreviewSectionProps {
   openCamera: () => Promise<void>;
 }
 
-export interface SingleImageViewProps {
-  dataUrl: string | null;
-  dataUrls: string[];
-  alt: string | string[];
-  setEditingIndex: React.Dispatch<React.SetStateAction<number>>;
-  setEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  processing: boolean;
-  fileActionRef: React.MutableRefObject<'append' | 'replace'>;
-  replaceIndexRef: React.MutableRefObject<number | null>;
-  index: number;
-  setDataUrl: React.Dispatch<React.SetStateAction<string | null>>;
-  setPreviewLoaded: React.Dispatch<React.SetStateAction<boolean>>;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  cameraInputRef: React.RefObject<HTMLInputElement>;
-  openCamera: () => Promise<void>;
-}

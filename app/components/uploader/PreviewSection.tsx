@@ -10,7 +10,6 @@ import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
 
 
 export function PreviewSection({
-  dataUrl,
   dataUrls,
   originalDataUrls,
   editorSettings,
@@ -23,7 +22,6 @@ export function PreviewSection({
   setEditorSettings,
   setDataUrls,
   setOriginalDataUrls,
-  setDataUrl,
   setPreviewLoaded,
   setCompressedSize,
   setOriginalSize,
@@ -53,7 +51,7 @@ export function PreviewSection({
   // Ensure we always have an array to render in the carousel. If the
   // `dataUrls` array is empty but `dataUrl` is set (single-image case),
   // treat it as a one-element array so the CarouselView is used.
-  const previewUrls = dataUrls.length ? dataUrls : (dataUrl ? [dataUrl] : []);
+  const previewUrls = dataUrls.length ? dataUrls : [];
 
   // Clamp the index to the available previewUrls length so the carousel
   // doesn't try to render an out-of-range slide.
@@ -70,7 +68,6 @@ export function PreviewSection({
     setDataUrls,
     setOriginalDataUrls,
     setEditorSettings,
-    setDataUrl,
     setPreviewLoaded,
     setCompressedSize,
     setOriginalSize,
@@ -99,7 +96,7 @@ export function PreviewSection({
           newUrls.push(url);
         } catch (e) { console.error('Failed to process dropped file', e); }
       }
-      if (newUrls.length) {
+        if (newUrls.length) {
         setDataUrls(d => {
           const next = [...d, ...newUrls].slice(0, 5);
           return next;
@@ -112,7 +109,7 @@ export function PreviewSection({
           const next = [...s, ...newUrls.map(() => ({}))].slice(0, 5);
           return next;
         });
-        if (!dataUrl) { setDataUrl(newUrls[0]); setPreviewLoaded(false); }
+        setPreviewLoaded(false);
       }
     } finally {
       setProcessing(false);
@@ -121,7 +118,7 @@ export function PreviewSection({
 
   return (
     <div
-      className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${(processing || !previewLoaded) ? 'processing' : ''}`}
+      className={`preview ${(dataUrls.length) ? "" : "hidden"} ${(processing || !previewLoaded) ? 'processing' : ''}`}
       onDragOver={dataUrls.length <= 1 ? (e) => { e.preventDefault(); } : undefined}
       onDrop={dataUrls.length <= 1 ? onDropPreview : undefined}
     >

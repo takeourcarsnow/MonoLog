@@ -54,17 +54,35 @@ export function useDelete(postId: string) {
       } catch (_) { }
     };
 
-    const onDocPointerUp = () => { setTimeout(tryBlur, 0); };
-    const onDocTouchEnd = () => { setTimeout(tryBlur, 0); };
+    const onDocPointerUp = (ev: PointerEvent) => {
+      try {
+        const tgt = ev.target as Node | null;
+        // Only run tryBlur when the pointerup happened on the delete button
+        // or within it (e.g., composedPath for shadow DOM)
+        const path = (ev.composedPath && ev.composedPath()) || [];
+        if (tgt === el || path.indexOf(el as any) >= 0) {
+          setTimeout(tryBlur, 0);
+        }
+      } catch (_) {}
+    };
+    const onDocTouchEnd = (ev: TouchEvent) => {
+      try {
+        const tgt = ev.target as Node | null;
+        const path = (ev.composedPath && ev.composedPath()) || [];
+        if (tgt === el || path.indexOf(el as any) >= 0) {
+          setTimeout(tryBlur, 0);
+        }
+      } catch (_) {}
+    };
 
-    document.addEventListener('focusin', onFocusIn as any, true);
-    document.addEventListener('pointerup', onDocPointerUp);
-    document.addEventListener('touchend', onDocTouchEnd);
+  document.addEventListener('focusin', onFocusIn as any, true);
+  document.addEventListener('pointerup', onDocPointerUp);
+  document.addEventListener('touchend', onDocTouchEnd);
 
     return () => {
-      try { document.removeEventListener('focusin', onFocusIn as any, true); } catch (_) {}
-      try { document.removeEventListener('pointerup', onDocPointerUp); } catch (_) {}
-      try { document.removeEventListener('touchend', onDocTouchEnd); } catch (_) {}
+  try { document.removeEventListener('focusin', onFocusIn as any, true); } catch (_) {}
+  try { document.removeEventListener('pointerup', onDocPointerUp); } catch (_) {}
+  try { document.removeEventListener('touchend', onDocTouchEnd); } catch (_) {}
     };
   }, []);
 

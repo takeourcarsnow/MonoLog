@@ -6,7 +6,6 @@ interface UseCameraCaptureHandlerProps {
   setDataUrls: React.Dispatch<React.SetStateAction<string[]>>;
   setOriginalDataUrls: React.Dispatch<React.SetStateAction<string[]>>;
   setEditorSettings: React.Dispatch<React.SetStateAction<any[]>>;
-  setDataUrl: React.Dispatch<React.SetStateAction<string | null>>;
   setPreviewLoaded: React.Dispatch<React.SetStateAction<boolean>>;
   setCompressedSize: React.Dispatch<React.SetStateAction<number | null>>;
   setOriginalSize: React.Dispatch<React.SetStateAction<number | null>>;
@@ -26,7 +25,6 @@ export function useCameraCaptureHandler({
   setDataUrls,
   setOriginalDataUrls,
   setEditorSettings,
-  setDataUrl,
   setPreviewLoaded,
   setCompressedSize,
   setOriginalSize,
@@ -81,13 +79,12 @@ export function useCameraCaptureHandler({
                 copy[replaceAt] = {};
                 return copy;
               });
-              if (replaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
+              if (replaceAt === 0) { setPreviewLoaded(false); }
             } else {
-              setDataUrl(url);
-              setPreviewLoaded(false);
               setDataUrls([url]);
               setOriginalDataUrls([url]);
               setEditorSettings([{}]);
+              setPreviewLoaded(false);
             }
             setOriginalSize(approxDataUrlBytes(file as any));
             fileActionRef.current = 'append';

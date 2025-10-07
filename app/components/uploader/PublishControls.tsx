@@ -101,7 +101,7 @@ export function PublishControls({
               disabled={processing}
               aria-label={confirmCancel ? 'Click again to discard draft' : 'Discard draft'}
             >
-              {confirmCancel ? 'Confirm' : 'Discard draft'}
+              {confirmCancel ? 'Confirm' : 'Discard'}
             </button>
           </div>
         </div>

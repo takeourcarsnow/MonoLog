@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
@@ -8,7 +8,9 @@ import { CONFIG } from "@/src/lib/config";
 import { useAuth } from "./useAuth";
 import { useDraftPersistence } from "./useDraftPersistence";
 import { useCountdown } from "./useCountdown";
-import { useTypingAnimation } from "./useTypingAnimation";
+// typing animation intentionally handled locally in CaptionInput to avoid
+// high-frequency state updates re-rendering the uploader tree and stealing
+// focus from unrelated inputs.
 import { useCameraCapture } from "./useCameraCapture";
 import { useFileHandling } from "./useFileHandling";
 import { useToast } from "../Toast";
@@ -17,7 +19,6 @@ import { EditorSettings } from "../imageEditor/types";
 
 export function useUploader() {
   const CAPTION_MAX = 1000;
-  const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [dataUrls, setDataUrls] = useState<string[]>([]);
   const [originalDataUrls, setOriginalDataUrls] = useState<string[]>([]);
@@ -37,7 +38,7 @@ export function useUploader() {
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
 
   const { canPost, nextAllowedAt, remaining, remainingMs, countdownTotalMs } = useCountdown();
-  const { placeholder, typed } = useTypingAnimation(caption, !editing);
+  // typing animation removed from this hook (kept local to CaptionInput)
   const { cameraOpen, setCameraOpen, videoRef, streamRef, openCamera, closeCamera } = useCameraCapture();
   const { handleFile: handleFileProcessing } = useFileHandling();
 
@@ -54,14 +55,19 @@ export function useUploader() {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const confirmCancelTimerRef = useRef<number | null>(null);
 
-  // Use draft persistence hook
+  // Provide a stable wrapper for setAlt so draft persistence doesn't get a
+  // new function on every render (which would retrigger its effects).
+  const setAltForDraft = useCallback((v: string | string[] | undefined) => {
+    setAlt(v ?? "");
+  }, [setAlt]);
+
+  // Use draft persistence hook (modern draft uses dataUrls array only)
   useDraftPersistence(
     dataUrls, setDataUrls,
     originalDataUrls, setOriginalDataUrls,
     editorSettings, setEditorSettings,
-    dataUrl, setDataUrl,
     caption, setCaption,
-    alt, setAlt,
+    alt, setAltForDraft,
     visibility, setVisibility,
     compressedSize, setCompressedSize,
     originalSize, setOriginalSize,
@@ -118,14 +124,14 @@ export function useUploader() {
     }
     if (attemptedEditorRestoreRef.current) return;
     if (editing) { attemptedEditorRestoreRef.current = true; return; }
-    if (!(dataUrls.length > 0 || dataUrl)) return;
+    if (!(dataUrls.length > 0)) return;
     try {
       const raw = sessionStorage.getItem(EDITING_SESSION_KEY);
       if (!raw) { attemptedEditorRestoreRef.current = true; return; }
       const parsed = JSON.parse(raw);
       if (!parsed?.open) { attemptedEditorRestoreRef.current = true; return; }
-      const idx = Math.min(parsed.index ?? 0, (dataUrls.length ? dataUrls.length - 1 : 0));
-      if (!(dataUrls[idx] || dataUrl)) { attemptedEditorRestoreRef.current = true; return; }
+    const idx = Math.min(parsed.index ?? 0, (dataUrls.length ? dataUrls.length - 1 : 0));
+    if (!dataUrls[idx]) { attemptedEditorRestoreRef.current = true; return; }
       setEditingIndex(idx);
       if (typeof parsed.alt === 'string') setEditingAlt(parsed.alt);
       requestAnimationFrame(() => setEditing(true));
@@ -133,7 +139,7 @@ export function useUploader() {
     } finally {
       attemptedEditorRestoreRef.current = true;
     }
-  }, [pathname, dataUrls.length, dataUrl, editing, dataUrls]);
+  }, [pathname, dataUrls.length, editing, dataUrls]);
 
   // keep index within bounds when number of images changes
   useEffect(() => {
@@ -182,7 +188,6 @@ export function useUploader() {
     setDataUrls([]);
     setOriginalDataUrls([]);
     setEditorSettings([]);
-    setDataUrl(null);
     setCaption("");
   setSpotifyLink("");
     setAlt("");
@@ -210,11 +215,10 @@ export function useUploader() {
       setAlt(alt.filter((_, i) => i !== safeIndex));
     }
     if (newDataUrls.length === 0) {
-      setDataUrl(null);
       setIndex(0);
     } else {
       if (safeIndex === 0) {
-        setDataUrl(newDataUrls[0]);
+        // first image changed, ensure preview shows the first element
       }
       if (index >= newDataUrls.length) {
         setIndex(Math.max(0, newDataUrls.length - 1));
@@ -248,14 +252,12 @@ export function useUploader() {
         const next = [...s, {}].slice(0, 5);
         return next;
       });
-      if (!dataUrl) { setDataUrl(url); }
       setEditing(false);
       try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
       if (!alt && caption) setAlt(caption);
     } catch (e) {
       console.error(e);
       toast.show("Failed to process image");
-      setDataUrl(null);
       try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
     } finally {
       setProcessing(false);
@@ -263,7 +265,7 @@ export function useUploader() {
   }
 
   async function publish(replace: boolean) {
-    const images = dataUrls.length ? dataUrls : dataUrl ? [dataUrl] : [];
+    const images = dataUrls.length ? dataUrls : [];
     if (!images.length) return toast.show("Please select at least one image");
     const maxBytes = CONFIG.imageMaxSizeMB * 1024 * 1024;
     if (compressedSize && compressedSize > maxBytes) {
@@ -324,7 +326,6 @@ export function useUploader() {
             setDataUrls(next);
             setOriginalDataUrls(next.slice());
             setEditorSettings(next.map(() => ({})));
-            setDataUrl(next[0]);
             try { setCompressedSize(approxDataUrlBytes(next[0])); } catch (_) {}
             try { setOriginalSize(files[0].size); } catch (_) {}
           }
@@ -340,7 +341,7 @@ export function useUploader() {
             const bytes = approxDataUrlBytes(url);
             setCompressedSize(bytes);
             const replaceAt = replaceIndexRef.current ?? (dataUrls.length ? index : 0);
-            if (dataUrls.length) {
+              if (dataUrls.length) {
               const safeReplaceAt = Math.min(replaceAt, dataUrls.length - 1);
               setDataUrls(d => {
                 const copy = [...d];
@@ -357,13 +358,12 @@ export function useUploader() {
                 copy[safeReplaceAt] = {};
                 return copy;
               });
-              if (safeReplaceAt === 0) { setDataUrl(url); setPreviewLoaded(false); }
+              if (safeReplaceAt === 0) { setPreviewLoaded(false); }
             } else {
-              setDataUrl(url);
-              setPreviewLoaded(false);
               setDataUrls([url]);
               setOriginalDataUrls([url]);
               setEditorSettings([{}]);
+              setPreviewLoaded(false);
             }
             setOriginalSize(approxDataUrlBytes(f as any));
           } catch (e) {
@@ -403,10 +403,7 @@ export function useUploader() {
           const next = [...s, ...newUrls.map(() => ({}))].slice(0, 5);
           return next;
         });
-        if (!dataUrl) {
-          setDataUrl(newUrls[0]);
-          setPreviewLoaded(false);
-        }
+        setPreviewLoaded(false);
         try { setCompressedSize(approxDataUrlBytes(newUrls[0])); } catch (_) {}
         try { setOriginalSize(files[0].size); } catch (_) {}
       } finally {
@@ -415,7 +412,7 @@ export function useUploader() {
     }
   }
 
-  const hasPreview = Boolean(dataUrl || dataUrls.length);
+  const hasPreview = Boolean(dataUrls.length);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -434,9 +431,8 @@ export function useUploader() {
   const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
 
   return {
-    // State
-    dataUrl,
-    originalSize,
+  // State
+  originalSize,
     dataUrls,
     originalDataUrls,
     editorSettings,
@@ -457,8 +453,7 @@ export function useUploader() {
     remaining,
     remainingMs,
     countdownTotalMs,
-    placeholder,
-    typed,
+  // placeholder, typed removed - handled inside CaptionInput
     cameraOpen,
     setCameraOpen,
     videoRef,
@@ -482,9 +477,8 @@ export function useUploader() {
     captionRemaining,
     CAPTION_MAX,
 
-    // Setters
-    setDataUrl,
-    setOriginalSize,
+  // Setters
+  setOriginalSize,
     setDataUrls,
     setOriginalDataUrls,
     setEditorSettings,

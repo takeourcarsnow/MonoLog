@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useTypingAnimation } from "./useTypingAnimation";
 
 interface CaptionInputProps {
   caption: string;
   setCaption: (caption: string) => void;
   spotifyLink?: string;
   setSpotifyLink?: (link: string) => void;
-  typed: string;
+  // typed removed - this component now owns the typing animation internally
   captionFocused: boolean;
   setCaptionFocused: (focused: boolean) => void;
   hasPreview: boolean;
@@ -17,7 +18,6 @@ interface CaptionInputProps {
 export function CaptionInput({
   caption,
   setCaption,
-  typed,
   captionFocused,
   setCaptionFocused,
   spotifyLink,
@@ -27,7 +27,58 @@ export function CaptionInput({
   CAPTION_MAX,
   toast
 }: CaptionInputProps) {
+  // keep typing animation local so its frequent updates don't re-render parent
+  // Only run the animation when there's no preview and the caption input
+  // itself is not focused. This prevents the typewriter from running while
+  // the user is interacting with inputs elsewhere in the app.
+  const { placeholder, typed } = useTypingAnimation(caption, !hasPreview && !captionFocused);
   const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const spotifyRef = useRef<HTMLInputElement | null>(null);
+
+  // Override programmatic focus to only work when allowed. This prevents
+  // other code calling `.focus()` from stealing focus when the input
+  // shouldn't be active.
+  useEffect(() => {
+    const restore: Array<() => void> = [];
+    try {
+      const inp = inputRef.current;
+      if (inp) {
+        const orig = (inp as any).focus;
+        (inp as any).focus = function (...args: any[]) {
+          if (hasPreview && !processing) return orig.apply(this, args);
+          return undefined;
+        };
+        restore.push(() => { try { (inp as any).focus = orig; } catch (_) {} });
+      }
+    } catch (_) {}
+    try {
+      const sp = spotifyRef.current;
+      if (sp) {
+        const origSp = (sp as any).focus;
+        (sp as any).focus = function (...args: any[]) {
+          if (hasPreview && !processing) return origSp.apply(this, args);
+          return undefined;
+        };
+        restore.push(() => { try { (sp as any).focus = origSp; } catch (_) {} });
+      }
+    } catch (_) {}
+    // Also capture phase focusin to immediately blur if focus sneaks in
+    const onFocusIn = (e: FocusEvent) => {
+      try {
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+        if ((target === inputRef.current || target === spotifyRef.current) && (!hasPreview || processing)) {
+          try { (target as HTMLElement).blur(); } catch (_) {}
+        }
+      } catch (_) {}
+    };
+    document.addEventListener('focusin', onFocusIn, true);
+    return () => {
+      try { document.removeEventListener('focusin', onFocusIn, true); } catch (_) {}
+      for (const r of restore) r();
+    };
+  }, [hasPreview, processing]);
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexDirection: 'column' }}>
@@ -58,6 +109,7 @@ export function CaptionInput({
           placeholder={caption ? undefined : ''}
           value={caption}
           maxLength={CAPTION_MAX}
+          ref={inputRef}
           onChange={e => {
             const v = e.target.value;
             if (v.length <= CAPTION_MAX) setCaption(v);
@@ -69,7 +121,7 @@ export function CaptionInput({
             // Block mouse interaction when no image is selected so clicks don't focus the input
             if (!hasPreview || processing) e.preventDefault();
           }}
-          onFocus={() => setCaptionFocused(true)}
+          onFocus={(e) => { setCaptionFocused(true); }}
           onBlur={() => setCaptionFocused(false)}
           style={{ width: '100%', cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', paddingRight: 72 }}
         />
@@ -112,6 +164,7 @@ export function CaptionInput({
           onChange={e => setSpotifyLink?.(e.target.value)}
           readOnly={!hasPreview || processing}
           tabIndex={hasPreview ? 0 : -1}
+          ref={spotifyRef}
           onMouseDown={(e) => { if (!hasPreview || processing) e.preventDefault(); }}
           style={{ width: '100%', paddingRight: 72 }}
         />

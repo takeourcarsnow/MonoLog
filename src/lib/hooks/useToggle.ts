@@ -26,9 +26,12 @@ export function useToggle<T = any>({
 }: UseToggleOptions<T>) {
   const [state, setState] = useState(initialState);
   const inFlightRef = useRef(false);
+  const checkedRef = useRef(false);
 
   // Check initial state on mount
   useEffect(() => {
+    if (checkedRef.current) return;
+    checkedRef.current = true;
     (async () => {
       const cur = await api.getCurrentUser();
       if (cur) {

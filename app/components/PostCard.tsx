@@ -247,9 +247,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
         isFavorite={isFavorite}
         toggleFavoriteWithAuth={async () => {
           const success = await toggleFavoriteWithAuth();
-          if (success) {
-            showFavoriteFeedback(isFavorite ? 'removing' : 'adding');
-          } else {
+          if (!success) {
             setShowAuth(true);
           }
         }}

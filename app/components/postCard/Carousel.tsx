@@ -157,8 +157,16 @@ export const Carousel = memo(function Carousel({
           </div>
         ))}
       </div>
-      <button className="carousel-arrow left" onClick={prev} aria-label="Previous image">‹</button>
-      <button className="carousel-arrow right" onClick={next} aria-label="Next image">›</button>
+      <button className="carousel-arrow left" onClick={prev} aria-label="Previous image">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      <button className="carousel-arrow right" onClick={next} aria-label="Next image">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </button>
       <div className="carousel-dots" aria-hidden="false">
         {imageUrls.map((_, i) => (
           <button

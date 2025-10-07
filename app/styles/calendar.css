@@ -11,6 +11,7 @@
 .calendar .header {
   display: flex; justify-content: space-between; align-items: center;
   border: none; background: transparent;
+  padding-left: 8px; padding-right: 8px;
 }
 .calendar-weekdays {
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;

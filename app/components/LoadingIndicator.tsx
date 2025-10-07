@@ -91,10 +91,25 @@ export function InfiniteScrollLoader({
 
   if (loading) {
     return (
-      <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
-        <LoadingIndicator size="medium" type="spinner" />
-        <div className="text-gray-500 text-sm mt-2">Loading more posts...</div>
-      </div>
+      <>
+        <style>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes subtleSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+          }
+        `}</style>
+        <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
+          <div className="flex items-center space-x-2">
+            <img src="/icon.svg" alt="logo" className="w-5 h-5 pull-to-refresh-logo" style={{ animation: 'fadeIn 50ms forwards, subtleSpin 1.5s infinite' }} />
+          </div>
+          <div className="text-gray-500 text-sm mt-2">Loading more posts...</div>
+        </div>
+      </>
     );
   }
 

@@ -28,14 +28,39 @@
 /* arrows */
 .carousel-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
-  background: color-mix(in srgb, var(--bg), transparent 60%); border: 1px solid var(--border);
-  width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center; cursor: pointer;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.08); color: var(--text); font-size: 22px; line-height: 1;
-  opacity: 0; pointer-events: none; transition: opacity 180ms var(--transition-fast), transform 180ms var(--transition-fast);
+  /* slightly more opaque background for better readability against photos */
+  background: color-mix(in srgb, var(--bg), transparent 46%);
+  border: 1px solid var(--border);
+  /* larger, touch-friendly hit target while keeping the icon compact */
+  width: 44px; height: 44px; border-radius: 999px; display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.10);
+  color: var(--text); font-size: 22px; line-height: 1;
+  /* keep arrows hidden until the user intents to reveal them on pointer devices */
+  opacity: 0; pointer-events: none;
+  transition: opacity 180ms var(--transition-fast), transform 180ms var(--transition-fast), box-shadow 180ms var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 .carousel-arrow.left { left: 8px; }
 .carousel-arrow.right { right: 8px; }
-.carousel-arrow:hover { transform: translateY(-50%) scale(1.03); }
+.carousel-arrow:hover { transform: translateY(-50%) scale(1.06); opacity: 1; box-shadow: 0 14px 34px rgba(0,0,0,0.14); }
+
+/* SVG icon micro-interactions */
+.carousel-arrow svg { width: 20px; height: 20px; display: block; transition: transform 160ms var(--transition-fast), stroke 160ms; }
+.carousel-arrow.left svg { transform-origin: center; }
+.carousel-arrow.right svg { transform-origin: center; }
+.carousel-arrow.left:hover svg,
+.carousel-arrow.left:focus-visible svg { transform: translateX(-3px) scale(1.06); }
+.carousel-arrow.right:hover svg,
+.carousel-arrow.right:focus-visible svg { transform: translateX(3px) scale(1.06); }
+
+/* Visible focus for keyboard users */
+.carousel-arrow:focus-visible {
+  outline: none;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(-50%) scale(1.02);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary), transparent 88%), 0 10px 30px rgba(0,0,0,0.12);
+}
 
 /* Edge hover areas: reveal arrows when user is hovering near the left/right edges */
 .carousel-wrapper { position: relative; }
@@ -51,17 +76,24 @@
 /* When hovering the left/right edge, reveal the corresponding arrow */
 .edge-area.left:hover ~ .carousel-track + .carousel-arrow.left,
 .carousel-wrapper:hover .edge-area.left:hover ~ .carousel-track + .carousel-arrow.left {
-  opacity: 1; pointer-events: auto;
+  opacity: 0.92; pointer-events: auto;
 }
 .edge-area.right:hover ~ .carousel-track + .carousel-arrow.right,
 .carousel-wrapper:hover .edge-area.right:hover ~ .carousel-track + .carousel-arrow.right {
-  opacity: 1; pointer-events: auto;
+  opacity: 0.92; pointer-events: auto;
 }
 
 /* Also reveal arrows when wrapper is focused (keyboard users) or hovered overall */
 .carousel-wrapper:focus .carousel-arrow,
 .carousel-wrapper:hover .carousel-arrow {
-  opacity: 0.9; pointer-events: auto;
+  opacity: 0.92; pointer-events: auto;
+}
+
+/* Touch devices: make arrows always visible and interactive (no hover) */
+@media (hover: none) and (pointer: coarse) {
+  .carousel-arrow { opacity: 0.92; pointer-events: auto; }
+  /* edge areas shouldn't intercept touch — keep them passive */
+  .edge-area { pointer-events: none; }
 }
 
 /* dots */

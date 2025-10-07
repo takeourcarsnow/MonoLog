@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useTypingAnimation } from "./useTypingAnimation";
+import { PHRASES } from "./constants";
 
 interface CaptionInputProps {
   caption: string;
@@ -27,11 +28,30 @@ export function CaptionInput({
   CAPTION_MAX,
   toast
 }: CaptionInputProps) {
-  // keep typing animation local so its frequent updates don't re-render parent
-  // Only run the animation when there's no preview and the caption input
-  // itself is not focused. This prevents the typewriter from running while
-  // the user is interacting with inputs elsewhere in the app.
-  const { placeholder, typed } = useTypingAnimation(caption, !hasPreview && !captionFocused);
+  // keep typing animation local (placeholder only). Render a CSS-only
+  // typewriter animation using the placeholder string to avoid JS-driven
+  // high-frequency updates which can affect focus.
+  const { placeholder, startIndex, setPlaceholder } = useTypingAnimation(caption, !hasPreview && !captionFocused);
+  const [localIndex, setLocalIndex] = useState<number>(startIndex >= 0 ? startIndex : 0);
+
+  // Rotate the placeholder in-page while caption is empty and unfocused.
+  // Schedule the next rotation after the CSS animation completes so the
+  // text types, holds, and backspaces before the next one appears.
+  useEffect(() => {
+    // continue rotating placeholders while the caption is empty and the
+    // input is not focused (preview presence shouldn't stop the ghost).
+    if (caption || captionFocused || processing) return;
+    // mirror the duration calculation used in the style (ms)
+    const duration = Math.max(800, (placeholder?.length || 0) * 80 + 1200);
+    const timer = setTimeout(() => {
+      setLocalIndex((s) => {
+        const next = (s + 1) % PHRASES.length;
+        try { setPlaceholder(PHRASES[next]); } catch (_) {}
+        return next;
+      });
+    }, duration + 200); // small buffer to ensure animation finished
+    return () => clearTimeout(timer);
+  }, [caption, captionFocused, processing, placeholder, setPlaceholder]);
   const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
   const inputRef = useRef<HTMLInputElement | null>(null);
   const spotifyRef = useRef<HTMLInputElement | null>(null);
@@ -91,13 +111,17 @@ export function CaptionInput({
       <div className="input-wrapper" style={{ flex: 1, position: 'relative', width: '100%' }}>
         {/** keep the ghost/typewriter visible even before a photo is selected,
          *  but prevent the input from being focused/edited until an image exists */}
-        {(!caption && typed) ? (
+        {/* CSS-driven typewriter ghost. Only show when caption is empty and
+            the input is not focused (so it won't run while user types). */}
+        {(!caption && placeholder && !captionFocused) ? (
           <span
             className="input-ghost-placeholder"
             aria-hidden="true"
-            style={{ ['--len' as any]: String(typed.length), ['--steps' as any]: String(typed.length) }}
+            style={{ ['--len' as any]: String(placeholder.length), ['--duration' as any]: `${Math.max(800, placeholder.length * 80 + 1200)}ms` }}
           >
-            <span className="typewriter">{typed}</span>
+            {/* give the inner span a key tied to localIndex so React remounts it when
+                the placeholder rotates — this restarts the CSS animation reliably */}
+            <span key={localIndex} className="typewriter">{placeholder}</span>
             {/* caret removed per UX preference */}
           </span>
         ) : null}

@@ -23,6 +23,39 @@
   display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
   color: color-mix(in srgb, var(--muted), transparent 8%);
 }
+.input-ghost-placeholder .typewriter {
+  /* CSS-only typewriter: reveal by animating width in ch units.
+     We run the animation once per mount (no infinite loop). The parent
+     remounts the span when the placeholder changes so the animation
+     will restart on rotation. */
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+  box-sizing: content-box;
+  width: 0ch; /* start closed */
+  max-width: none;
+  animation-name: typeReveal;
+  animation-duration: var(--duration, 3000ms);
+  animation-timing-function: steps(var(--len, 20), end);
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes typeReveal {
+  /*
+    0%   -> start closed
+    60%  -> fully typed
+    80%  -> hold fully typed (pause)
+    100% -> erased (shrink back to 0)
+    The steps() timing function gives a per-character jump for both
+    the typing and backspacing phases.
+  */
+  0% { width: 0ch; }
+  60% { width: calc(var(--len, 20) * 1ch); }
+  80% { width: calc(var(--len, 20) * 1ch); }
+  100% { width: 0ch; }
+}
 .input-ghost-placeholder .caret {
   color: color-mix(in srgb, var(--muted), transparent 12%);
   opacity: 0.95;

@@ -30,10 +30,12 @@ export function useCameraCapture() {
         setCameraOpen(true);
       } catch (e) {
         console.error(e);
-        toast.show('Camera access denied or unavailable');
-        // Ensure we don't leave the modal open
+        // Don't show a toast here — callers will fallback to the hidden
+        // camera-capable file input, which typically opens the native camera
+        // chooser on mobile. Showing a toast here can be misleading if the
+        // fallback succeeds, so keep the error silent and rethrow for the
+        // caller to handle.
         setCameraOpen(false);
-        // Re-throw so higher-level code can try the file-input fallback.
         throw e;
       }
     };

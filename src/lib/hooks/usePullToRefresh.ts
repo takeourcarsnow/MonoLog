@@ -14,7 +14,9 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   const [isPulling, setIsPulling] = useState(false);
 
   const startY = useRef(0);
+  const startX = useRef(0);
   const isDragging = useRef(false);
+  const isHorizontalSwipe = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -24,13 +26,30 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
     if (scrollTop > 0) return;
 
     startY.current = e.touches[0].clientY;
+    startX.current = e.touches[0].clientX;
+    isHorizontalSwipe.current = false;
     isDragging.current = true;
   }, [disabled, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (disabled || isRefreshing || !isDragging.current) return;
 
-    const deltaY = e.touches[0].clientY - startY.current;
+    const touch = e.touches[0];
+    const deltaY = touch.clientY - startY.current;
+    const deltaX = touch.clientX - startX.current;
+
+    // If the user is swiping horizontally (e.g. to change sections), disable pull-to-refresh
+    if (!isHorizontalSwipe.current) {
+      const HORIZONTAL_SWIPE_THRESHOLD = 10; // px
+      if (Math.abs(deltaX) > HORIZONTAL_SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
+        isHorizontalSwipe.current = true;
+        isDragging.current = false;
+        setIsPulling(false);
+        setPullDistance(0);
+        return;
+      }
+    }
+
     if (deltaY > 0) {
       if (e.cancelable) e.preventDefault();
       setPullDistance(Math.min(deltaY, threshold * 2));
@@ -39,8 +58,9 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   }, [disabled, isRefreshing, threshold]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!isDragging.current) return;
+    if (!isDragging.current && !isHorizontalSwipe.current) return;
     isDragging.current = false;
+    isHorizontalSwipe.current = false;
 
     const shouldRefresh = pullDistance >= threshold;
     setIsPulling(false);

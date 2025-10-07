@@ -29,43 +29,72 @@ export function useAppShellNavigation(
   // Listen for carousel drag events from inner components and temporarily
   // disable the outer Swiper's touch interactions so inner carousels can
   // handle horizontal swipes without the whole view changing.
+  // Temporarily disabled to debug swipe issues
   useEffect(() => {
+    let touchDisabledTimeout: NodeJS.Timeout;
+
     function onDragStart() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        if (inst) inst.allowTouchMove = false;
+        if (inst) {
+          inst.allowTouchMove = false;
+          console.log('Swiper touch disabled for carousel drag');
+          // Failsafe: re-enable touch after 5 seconds if end event is missed
+          if (touchDisabledTimeout) clearTimeout(touchDisabledTimeout);
+          touchDisabledTimeout = setTimeout(() => {
+            try {
+              const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
+              if (inst && !inst.allowTouchMove) {
+                inst.allowTouchMove = Boolean(isTouchDevice);
+                console.log('Swiper touch re-enabled by failsafe timeout');
+              }
+            } catch (_) { /* ignore */ }
+          }, 5000);
+        }
       } catch (_) { /* ignore */ }
     }
     function onDragEnd() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
+        if (inst) {
+          inst.allowTouchMove = Boolean(isTouchDevice);
+          console.log('Swiper touch re-enabled after carousel drag');
+          if (touchDisabledTimeout) {
+            clearTimeout(touchDisabledTimeout);
+          }
+        }
       } catch (_) { /* ignore */ }
     }
-    function onZoomStart() {
+    function onPanStart() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        if (inst) inst.allowTouchMove = false;
+        if (inst) {
+          inst.allowTouchMove = false;
+          console.log('Swiper touch disabled for pan');
+        }
       } catch (_) { /* ignore */ }
     }
-    function onZoomEnd() {
+    function onPanEnd() {
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        if (inst) inst.allowTouchMove = Boolean(isTouchDevice);
+        if (inst) {
+          inst.allowTouchMove = Boolean(isTouchDevice);
+          console.log('Swiper touch re-enabled after pan');
+        }
       } catch (_) { /* ignore */ }
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:carousel_drag_start', onDragStart as any);
       window.addEventListener('monolog:carousel_drag_end', onDragEnd as any);
-      window.addEventListener('monolog:zoom_start', onZoomStart as any);
-      window.addEventListener('monolog:zoom_end', onZoomEnd as any);
+      window.addEventListener('monolog:pan_start', onPanStart as any);
+      window.addEventListener('monolog:pan_end', onPanEnd as any);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('monolog:carousel_drag_start', onDragStart as any);
         window.removeEventListener('monolog:carousel_drag_end', onDragEnd as any);
-        window.removeEventListener('monolog:zoom_start', onZoomStart as any);
-        window.removeEventListener('monolog:zoom_end', onZoomEnd as any);
+        window.removeEventListener('monolog:pan_start', onPanStart as any);
+        window.removeEventListener('monolog:pan_end', onPanEnd as any);
       }
     };
   }, [isTouchDevice]);

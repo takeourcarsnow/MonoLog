@@ -162,6 +162,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       ty: ty
     };
 
+    // Dispatch pan start event
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('monolog:pan_start'));
+      } catch (_) {}
+    }
+
     e.preventDefault();
   };
 
@@ -189,6 +196,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   const handlePointerUp = () => {
     setIsPanning(false);
     panStartRef.current = null;
+
+    // Dispatch pan end event
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('monolog:pan_end'));
+      } catch (_) {}
+    }
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -203,6 +217,12 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         tx: tx,
         ty: ty
       };
+      // Dispatch pan start event
+      if (typeof window !== 'undefined') {
+        try {
+          window.dispatchEvent(new CustomEvent('monolog:pan_start'));
+        } catch (_) {}
+      }
       // Prevent parent components from receiving touch start when starting to pan
       e.stopPropagation();
     }
@@ -249,6 +269,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
     setIsPanning(false);
     panStartRef.current = null;
+
+    // Dispatch pan end event
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('monolog:pan_end'));
+      } catch (_) {}
+    }
   };
 
   // Add wheel event listener with passive: false to prevent default scrolling

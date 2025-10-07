@@ -20,6 +20,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   const lastDoubleTapRef = useRef<number | null>(null);
   const panStartRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
   const naturalRef = useRef({ w: 0, h: 0 });
+  // Refs to mirror state for use in passive event handlers
+  const scaleRef = useRef<number>(scale);
+  const txRef = useRef<number>(tx);
+  const tyRef = useRef<number>(ty);
+  const pinchRef = useRef<null | { initialDistance: number; initialScale: number; midX: number; midY: number }>(null);
 
   // Detect if this ImageZoom is rendered inside a grid tile
   useEffect(() => {
@@ -45,6 +50,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       } catch (_) {}
     }
   }, [src]);
+
+  // keep refs in sync with state
+  useEffect(() => { scaleRef.current = scale; }, [scale]);
+  useEffect(() => { txRef.current = tx; }, [tx]);
+  useEffect(() => { tyRef.current = ty; }, [ty]);
 
   // Reset zoom when the image becomes inactive
   useEffect(() => {
@@ -193,7 +203,31 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     e.preventDefault();
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e?: React.PointerEvent) => {
+    // Pointer-based double-tap detection for platforms that use Pointer Events
+    // (modern browsers replace touch events with pointer events). Mirror the
+    // touch double-tap behaviour so quick taps on touch devices also trigger
+    // zoom.
+    try {
+      if (e && (e as any).pointerType === 'touch') {
+        const now = Date.now();
+        // Only consider it a tap (and potential double-tap) when not panning
+        if (!isPanning) {
+          if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
+            lastDoubleTapRef.current = null;
+            handleDoubleTap(e.clientX, e.clientY);
+          } else {
+            lastDoubleTapRef.current = now;
+            setTimeout(() => {
+              if (lastDoubleTapRef.current === now) lastDoubleTapRef.current = null;
+            }, 310);
+          }
+        }
+      }
+    } catch (_) {
+      // ignore
+    }
+
     setIsPanning(false);
     panStartRef.current = null;
 
@@ -206,7 +240,31 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (scale <= 1) return;
+    // If two fingers, start a pinch gesture
+    if (e.touches.length === 2) {
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
+      const dx = t1.clientX - t0.clientX;
+      const dy = t1.clientY - t0.clientY;
+      const dist = Math.hypot(dx, dy) || 1;
+      const midX = (t0.clientX + t1.clientX) / 2;
+      const midY = (t0.clientY + t1.clientY) / 2;
+      pinchRef.current = { initialDistance: dist, initialScale: scaleRef.current, midX, midY };
+      // Make sure we aren't in pan mode
+      setIsPanning(false);
+      panStartRef.current = null;
+      // Dispatch zoom start if we're starting from unzoomed
+      if (scaleRef.current <= 1) {
+        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch(_) {}
+      }
+      // Prevent parent components from receiving touch start when pinching
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+
+    // Single-finger pan start only when already zoomed in
+    if (scaleRef.current <= 1) return;
 
     if (e.touches.length === 1) {
       const touch = e.touches[0];
@@ -214,8 +272,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       panStartRef.current = {
         x: touch.clientX,
         y: touch.clientY,
-        tx: tx,
-        ty: ty
+        tx: txRef.current,
+        ty: tyRef.current
       };
       // Dispatch pan start event
       if (typeof window !== 'undefined') {
@@ -229,6 +287,41 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    // If pinch in progress (two touches), handle pinch-to-zoom
+    if (e.touches.length === 2 && pinchRef.current) {
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
+      const dx = t1.clientX - t0.clientX;
+      const dy = t1.clientY - t0.clientY;
+      const dist = Math.hypot(dx, dy) || 1;
+      const { initialDistance, initialScale, midX, midY } = pinchRef.current;
+      const ratio = dist / initialDistance;
+      let newScale = Math.max(1, Math.min(maxScale, initialScale * ratio));
+
+      // Compute new translation so the midpoint stays anchored
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const midLocalX = midX - rect.left;
+      const midLocalY = midY - rect.top;
+
+      const scaleRatio = newScale / scaleRef.current;
+      const newTx = midLocalX - (midLocalX - txRef.current) * scaleRatio;
+      const newTy = midLocalY - (midLocalY - tyRef.current) * scaleRatio;
+
+      const bounds = getBounds(newScale);
+      const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+      const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+
+      setScale(newScale);
+      setTx(clampedTx);
+      setTy(clampedTy);
+
+      // Prevent parent components from receiving swipe gestures when pinching
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+
     if (!isPanning || !panStartRef.current || e.touches.length !== 1) return;
 
     const touch = e.touches[0];
@@ -238,7 +331,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const newTx = panStartRef.current.tx + dx;
     const newTy = panStartRef.current.ty + dy;
 
-  const bounds = getBounds(scale);
+    const bounds = getBounds(scaleRef.current);
     const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
     const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 
@@ -250,6 +343,16 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    // If pinch was active and now fewer than 2 touches remain, end pinch
+    if (pinchRef.current && e.touches.length < 2) {
+      pinchRef.current = null;
+      // If we scaled back to 1, dispatch zoom end
+      if (scaleRef.current <= 1) {
+        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch(_) {}
+      }
+      // fallthrough to clear panning/double-tap handlers when appropriate
+    }
+
     if (e.changedTouches.length === 1) {
       const touch = e.changedTouches[0];
       const now = Date.now();
@@ -284,9 +387,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     if (!imgElement) return;
 
     const handleWheelEvent = (e: WheelEvent) => {
-      // Only allow mouse wheel zoom if already zoomed in
-      if (scale <= 1) return;
-
+      // Allow wheel zoom (in/out) — if zooming out to scale 1 we reset to center
       e.preventDefault();
       e.stopPropagation();
 
@@ -295,19 +396,19 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
       // Determine zoom direction and amount
       const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out on scroll down, zoom in on scroll up
-      const newScale = Math.max(1, Math.min(maxScale, scale * zoomFactor));
+  const newScale = Math.max(1, Math.min(maxScale, scaleRef.current * zoomFactor));
 
       // If scale didn't change, don't do anything
-      if (newScale === scale) return;
+  if (newScale === scaleRef.current) return;
 
       // Calculate the point under the mouse cursor
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
       // Calculate new translation to keep the mouse point fixed
-      const scaleRatio = newScale / scale;
-      const newTx = mouseX - (mouseX - tx) * scaleRatio;
-      const newTy = mouseY - (mouseY - ty) * scaleRatio;
+  const scaleRatio = newScale / scaleRef.current;
+  const newTx = mouseX - (mouseX - txRef.current) * scaleRatio;
+  const newTy = mouseY - (mouseY - tyRef.current) * scaleRatio;
 
       // If zooming out to scale 1, reset to center
       if (newScale === 1) {
@@ -321,13 +422,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         }
       } else {
         // Clamp to bounds
-        const bounds = getBounds(newScale);
-        const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
-        const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+  const bounds = getBounds(newScale);
+  const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+  const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 
-        setScale(newScale);
-        setTx(clampedTx);
-        setTy(clampedTy);
+  setScale(newScale);
+  setTx(clampedTx);
+  setTy(clampedTy);
 
         // Dispatch zoom events
         if (scale === 1 && newScale > 1) {

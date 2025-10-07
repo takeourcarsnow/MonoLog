@@ -204,7 +204,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   }, [editing, showEditor]);
 
   return (
-    <article className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
+    <article id={`post-${post.id}`} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
       <UserHeader
         post={post}
         isMe={isMe}
@@ -362,7 +362,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
         )}
         </div>
       {fsOpen && fsSrc && (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={null}>
           <FullscreenViewer src={fsSrc} alt={fsAlt} onClose={handleCloseFullscreen} />
         </Suspense>
       )}

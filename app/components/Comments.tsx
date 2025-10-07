@@ -261,22 +261,24 @@ export function Comments({ postId, onCountChange }: Props) {
             style={{ width: '100%', paddingRight: 72 }}
           />
           {/* character counter overlaid inside the input on the right */}
-          <div
-            style={{
-              position: 'absolute',
-              right: 8,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              fontSize: 12,
-              color: commentRemaining <= 20 ? '#d9534f' : 'var(--dim)',
-              pointerEvents: 'none',
-              fontVariantNumeric: 'tabular-nums'
-            }}
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {text.length}/{COMMENT_MAX}
-          </div>
+          {text.length > 0 ? (
+            <div
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: 12,
+                color: commentRemaining <= 20 ? '#d9534f' : 'var(--dim)',
+                pointerEvents: 'none',
+                fontVariantNumeric: 'tabular-nums'
+              }}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {text.length}/{COMMENT_MAX}
+            </div>
+          ) : null}
         </div>
 
         <button

@@ -22,8 +22,31 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (disabled || isRefreshing) return;
 
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    if (scrollTop > 0) return;
+    // Don't start pull-to-refresh if the user is not at the top of the nearest scrollable container
+    const getScrollableAncestor = (node: EventTarget | null): Element | null => {
+      let el = node instanceof Element ? node : (node && (node as any).parentElement) || null;
+      while (el && el !== document.documentElement && el !== document.body) {
+        try {
+          const style = getComputedStyle(el);
+          const overflowY = style.overflowY;
+          const isScrollable = (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') && el.scrollHeight > el.clientHeight;
+          if (isScrollable) return el;
+        } catch (err) {
+          // ignore cross-origin or other errors
+        }
+        el = el.parentElement;
+      }
+      // fallback to the scrolling element (document) when no inner scrollable ancestor
+      return document.scrollingElement || document.documentElement;
+    };
+
+    const startTarget = e.target;
+    const scrollable = getScrollableAncestor(startTarget);
+    if (scrollable) {
+      // If the scrollable ancestor isn't at the very top, don't enable pull-to-refresh
+      const ancestorScrollTop = (scrollable as Element & { scrollTop?: number }).scrollTop || 0;
+      if (ancestorScrollTop > 0) return;
+    }
 
     startY.current = e.touches[0].clientY;
     startX.current = e.touches[0].clientX;

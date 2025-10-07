@@ -50,8 +50,10 @@ export function useComments(postId: string, initialCount: number) {
     if (typeof window === 'undefined') return;
     let obs: IntersectionObserver | null = null;
     const el = document.getElementById(`post-${postId}`);
-    // Only prefetch if there might be comments (count > 0) and not already cached
-    if (!el || !(count > 0) || hasCachedComments(postId)) return;
+    // Only prefetch when we have an element and comments aren't already cached.
+    // Previously we required count > 0; change that so we can proactively
+    // prefetch when a post appears in the feed even if the initial count is 0.
+    if (!el || hasCachedComments(postId)) return;
     try {
       obs = new IntersectionObserver((entries) => {
         entries.forEach(e => {

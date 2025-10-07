@@ -94,6 +94,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   const [fsSrc, setFsSrc] = useState<string | null>(null);
   const [fsAlt, setFsAlt] = useState<string>('Photo');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [spotifyMeta, setSpotifyMeta] = useState<{ title?: string; author_name?: string } | null>(null);
 
   const handleOpenFullscreen = (src?: string, alt?: string) => {
     if (!src) return;
@@ -111,6 +112,26 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
   const exitTimerRef = useRef<number | null>(null);
   const lastOpenAtRef = useRef<number | null>(null);
   const pendingCloseTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    // fetch Spotify oEmbed metadata for nice display & embed
+    let mounted = true;
+    async function fetchOEmbed() {
+      try {
+        if (!post.spotifyLink) return;
+        const url = `https://open.spotify.com/oembed?url=${encodeURIComponent(post.spotifyLink)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('oembed failed');
+        const json = await res.json();
+        // we only use title/author for display; ignore html/embed
+        if (mounted) setSpotifyMeta({ title: json.title, author_name: json.author_name } as any);
+      } catch (e) {
+        // ignore failures - we'll fall back to a simple link
+      }
+    }
+    fetchOEmbed();
+    return () => { mounted = false; };
+  }, [post.spotifyLink]);
 
   useEffect(() => {
     // Use RAF to coordinate DOM reads/writes so the wrapper mounts collapsed
@@ -245,6 +266,25 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
             expands, avoiding a sudden jump on open. */}
   <div className="caption-wrap" aria-hidden={editorAnim === 'enter'}>
           {post.caption ? <div className="caption">{renderMentions(post.caption)}</div> : null}
+          {post.spotifyLink ? (
+            <div className="spotify-link" style={{ marginTop: 8 }}>
+              <a
+                href={post.spotifyLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="spotify-preview-link"
+                style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}
+              >
+                {/* small Spotify icon */}
+                <svg viewBox="0 0 168 168" width="18" height="18" aria-hidden style={{ display: 'block' }}>
+                  <path fill="#1DB954" d="M84 0a84 84 0 1 0 0 168A84 84 0 0 0 84 0z" />
+                  <path fill="#fff" d="M120.6 115.6c-1.9 2.9-5.9 3.8-8.8 1.9-21.8-14.3-49.3-17.6-81.5-9.9-3.3.8-6.5-1.3-7.4-4.6-.9-3.3 1.3-6.5 4.6-7.4 35.3-8.6 66.4-5 90.3 11.7 2.9 1.9 3.8 5.9 1.8 8.3zM126.6 92c-2.4 3.6-7.7 4.6-11.4 2.2-25.1-16.2-63.4-20.9-93.2-11.8-4 .1-7.3-2.6-7.7-6.6-.4-3.9 2.6-7.3 6.6-7.7 33.5-8.6 75.1-3.6 103.8 13.4 3.6 2.4 4.6 7.7 2.2 11.9zM129.6 68.6c-28.3-17.1-79.5-18.6-109.2-10.5-4.6 1.1-9.3-1.7-10.4-6.3-1.1-4.6 1.7-9.3 6.3-10.4 33.9-7.9 90.6-6 126 13.1 5.1 3 6.8 9.7 3.8 14.8-3 5.1-9.7 6.8-14.5 3.4z" />
+                </svg>
+                <span style={{ fontSize: 13, color: 'var(--text)' }}>{spotifyMeta?.title ? spotifyMeta.title : 'Open on Spotify'}</span>
+                {spotifyMeta?.author_name ? <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 6 }}>{spotifyMeta.author_name}</span> : null}
+              </a>
+            </div>
+          ) : null}
           <ActionsSection
             postId={post.id}
             count={count}
@@ -327,5 +367,6 @@ export const PostCard = memo(PostCardComponent, (prev, next) => {
          prev.allowCarouselTouch === next.allowCarouselTouch &&
          prev.post.caption === next.post.caption &&
          prev.post.public === next.post.public &&
-         prev.post.commentsCount === next.post.commentsCount;
+         prev.post.commentsCount === next.post.commentsCount &&
+         (prev.post as any).spotifyLink === (next.post as any).spotifyLink;
 });

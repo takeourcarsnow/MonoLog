@@ -52,6 +52,7 @@ function hydratePost(post: Post): HydratedPost {
   // normalize: ensure imageUrls exists for consumers
   const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
   const alt = (post as any).alt;
+  const spotifyLink = (post as any).spotifyLink || (post as any).spotify_link || undefined;
   return { ...post, imageUrls, alt, user, commentsCount: comments.length } as any;
 }
 
@@ -230,7 +231,7 @@ export const localApi: Api = {
     return { allowed: true };
   },
 
-  async createOrReplaceToday({ imageUrl, imageUrls, caption, alt, replace = false, public: isPublic = true }) {
+  async createOrReplaceToday({ imageUrl, imageUrls, caption, alt, spotifyLink, replace = false, public: isPublic = true }: any) {
     const me = getUserById(cache.currentUserId);
     if (!me) throw new Error("Not logged in");
     const now = new Date();
@@ -254,6 +255,7 @@ export const localApi: Api = {
       imageUrls: imageUrls && imageUrls.length ? imageUrls.slice(0, 5) : imageUrl ? [imageUrl] : [],
       alt: alt || "",
       caption: caption || "",
+      spotifyLink: (arguments[0] as any)?.spotifyLink || undefined,
       createdAt: now.toISOString(),
       public: !!isPublic,
     };

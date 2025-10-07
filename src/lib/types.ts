@@ -20,6 +20,7 @@ export type Post = {
   // For accessibility: either a single alt for the primary image or an array matching imageUrls
   alt?: string | string[];
   caption: string;
+  spotifyLink?: string;
   createdAt: string;
   public: boolean;
 };
@@ -78,7 +79,7 @@ export interface Api {
   // from the last post until when the next calendar day begins.
   canPostToday(): Promise<{ allowed: boolean; reason?: string; nextAllowedAt?: number; lastPostedAt?: number }>;
   // Accept either a single `imageUrl` (legacy) or `imageUrls` (array up to 5 urls).
-  createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; replace?: boolean; public?: boolean }): Promise<HydratedPost>;
+  createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; spotifyLink?: string; replace?: boolean; public?: boolean }): Promise<HydratedPost>;
 
   updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }): Promise<HydratedPost>;
   deletePost(id: string): Promise<boolean>;

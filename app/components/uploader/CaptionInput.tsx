@@ -3,6 +3,8 @@ import { useState } from "react";
 interface CaptionInputProps {
   caption: string;
   setCaption: (caption: string) => void;
+  spotifyLink?: string;
+  setSpotifyLink?: (link: string) => void;
   typed: string;
   captionFocused: boolean;
   setCaptionFocused: (focused: boolean) => void;
@@ -18,6 +20,8 @@ export function CaptionInput({
   typed,
   captionFocused,
   setCaptionFocused,
+  spotifyLink,
+  setSpotifyLink,
   hasPreview,
   processing,
   CAPTION_MAX,
@@ -26,7 +30,7 @@ export function CaptionInput({
   const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
 
   return (
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexDirection: 'column' }}>
       <style>{`
         .caption-counter { opacity: 0; transform: translateY(-50%) scale(0.98); }
         .caption-counter.visible { opacity: 1; transform: translateY(-50%) scale(1); }
@@ -96,6 +100,21 @@ export function CaptionInput({
             return showRemaining ? String(remaining) : `${len}/${CAPTION_MAX}`;
           })()}
         </div>
+      </div>
+      {/* Spotify link input - optional */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
+        <input
+          className="input"
+          type="url"
+          aria-label="Spotify link (optional)"
+          placeholder="Optional Spotify link (paste a URL)"
+          value={spotifyLink || ''}
+          onChange={e => setSpotifyLink?.(e.target.value)}
+          readOnly={!hasPreview || processing}
+          tabIndex={hasPreview ? 0 : -1}
+          onMouseDown={(e) => { if (!hasPreview || processing) e.preventDefault(); }}
+          style={{ width: '100%' }}
+        />
       </div>
     </div>
   );

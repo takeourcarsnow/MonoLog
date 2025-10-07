@@ -49,6 +49,7 @@ function UploaderCore() {
     editorSettings,
     alt,
     caption,
+  spotifyLink,
     captionFocused,
     visibility,
     previewLoaded,
@@ -88,6 +89,7 @@ function UploaderCore() {
     // Setters
     setAlt,
     setCaption,
+  setSpotifyLink,
     setCaptionFocused,
     setVisibility,
     setPreviewLoaded,
@@ -320,6 +322,8 @@ function UploaderCore() {
         <CaptionInput
           caption={caption}
           setCaption={setCaption}
+        spotifyLink={spotifyLink}
+        setSpotifyLink={setSpotifyLink}
           typed={typed}
           captionFocused={captionFocused}
           setCaptionFocused={setCaptionFocused}

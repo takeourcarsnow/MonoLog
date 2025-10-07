@@ -265,7 +265,7 @@ export async function canPostToday() {
   return { allowed: true };
 }
 
-export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, replace = false, public: isPublic = true }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; replace?: boolean; public?: boolean }) {
+export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; replace?: boolean; public?: boolean; spotifyLink?: string }) {
   const cur = await getCurrentUser();
   if (!cur) throw new Error('Not logged in');
 
@@ -287,7 +287,7 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
   }
 
   // call server create endpoint
-  const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: cur.id, imageUrls: finalUrls, caption, alt, replace, public: isPublic }) });
+  const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: cur.id, imageUrls: finalUrls, caption, alt, replace, public: isPublic, spotifyLink }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to create post');
   return json.post as any;

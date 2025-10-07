@@ -67,6 +67,7 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
     imageUrls,
     alt: row.alt || "",
     caption: row.caption || "",
+    spotifyLink: row.spotify_link || row.spotifyLink || undefined,
     createdAt: row.created_at || row.createdAt,
     public: !!row.public,
     user: {

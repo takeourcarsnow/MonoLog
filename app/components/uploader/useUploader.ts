@@ -24,6 +24,7 @@ export function useUploader() {
   const [editorSettings, setEditorSettings] = useState<EditorSettings[]>([]);
   const [alt, setAlt] = useState<string | string[]>("");
   const [caption, setCaption] = useState("");
+  const [spotifyLink, setSpotifyLink] = useState("");
   const [captionFocused, setCaptionFocused] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [previewLoaded, setPreviewLoaded] = useState(false);
@@ -64,7 +65,8 @@ export function useUploader() {
     visibility, setVisibility,
     compressedSize, setCompressedSize,
     originalSize, setOriginalSize,
-    index, setIndex
+    index, setIndex,
+    spotifyLink, setSpotifyLink
   );
 
   // Ensure we don't show a stale "processing" loader when navigating back
@@ -182,6 +184,7 @@ export function useUploader() {
     setEditorSettings([]);
     setDataUrl(null);
     setCaption("");
+  setSpotifyLink("");
     setAlt("");
     setVisibility("public");
     setCompressedSize(null);
@@ -271,6 +274,7 @@ export function useUploader() {
       await api.createOrReplaceToday({
         imageUrls: images.slice(0, 5),
         caption,
+        spotifyLink: spotifyLink || undefined,
         alt: alt || caption || "Daily photo",
         replace,
         public: visibility === "public",
@@ -438,6 +442,7 @@ export function useUploader() {
     editorSettings,
     alt,
     caption,
+  spotifyLink,
     captionFocused,
     visibility,
     previewLoaded,
@@ -485,6 +490,7 @@ export function useUploader() {
     setEditorSettings,
     setAlt,
     setCaption,
+  setSpotifyLink,
     setCaptionFocused,
     setVisibility,
     setPreviewLoaded,

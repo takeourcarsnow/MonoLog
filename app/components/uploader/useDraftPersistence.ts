@@ -21,7 +21,9 @@ export function useDraftPersistence(
   originalSize: number | null,
   setOriginalSize: (size: number | null) => void,
   index: number,
-  setIndex: (index: number) => void
+  setIndex: (index: number) => void,
+  spotifyLink: string,
+  setSpotifyLink: (link: string) => void
 ) {
   // restore draft on mount
   useEffect(() => {
@@ -43,12 +45,13 @@ export function useDraftPersistence(
           if (parsed.compressedSize !== undefined) setCompressedSize(parsed.compressedSize);
           if (parsed.originalSize !== undefined) setOriginalSize(parsed.originalSize);
           if (parsed.index !== undefined) setIndex(parsed.index);
+          if (parsed.spotifyLink !== undefined) setSpotifyLink(parsed.spotifyLink);
         }
       }
     } catch (e) {
       // ignore parse errors
     }
-  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setDataUrl, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex]);
+  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setDataUrl, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink]);
 
   // Persist draft whenever key pieces of state change
   useEffect(() => {
@@ -63,6 +66,7 @@ export function useDraftPersistence(
         visibility,
         compressedSize: compressedSize ?? undefined,
         originalSize: originalSize ?? undefined,
+        spotifyLink: spotifyLink || undefined,
         index,
         // timestamp could be useful for future TTL
         savedAt: Date.now(),
@@ -80,6 +84,7 @@ export function useDraftPersistence(
             else if (existing.dataUrl) payload.dataUrl = existing.dataUrl;
             if (existing.originalDataUrls) payload.originalDataUrls = existing.originalDataUrls;
             if (existing.editorSettings) payload.editorSettings = existing.editorSettings;
+            if (existing.spotifyLink) payload.spotifyLink = existing.spotifyLink;
           }
         }
       } catch (e) {
@@ -90,5 +95,5 @@ export function useDraftPersistence(
     } catch (e) {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [dataUrls, originalDataUrls, editorSettings, dataUrl, caption, alt, visibility, compressedSize, originalSize, index]);
+  }, [dataUrls, originalDataUrls, editorSettings, dataUrl, caption, alt, visibility, compressedSize, originalSize, index, spotifyLink]);
 }

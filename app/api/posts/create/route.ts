@@ -7,7 +7,7 @@ import { parseMentions } from '@/src/lib/mentions';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { userId, imageUrls, caption, alt, replace = false, public: isPublic = true } = body;
+    const { userId, imageUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink } = body;
     // Debug: log incoming payload so we can verify client is sending multiple images
   try { logger.debug('[posts.create] incoming', { userId, imageUrlsLen: Array.isArray(imageUrls) ? imageUrls.length : (imageUrls ? 1 : 0) }); } catch (e) {}
   if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
@@ -98,7 +98,8 @@ export async function POST(req: Request) {
     // Insert new post
     const id = uid();
     const created_at = new Date().toISOString();
-    const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: !!isPublic };
+  const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: !!isPublic };
+  if (spotifyLink) insertObj.spotify_link = spotifyLink;
     
     // Handle image URLs - prefer array format when multiple images
     if (imageUrls && imageUrls.length > 0) {
@@ -117,6 +118,8 @@ export async function POST(req: Request) {
         if (res.error.message?.toLowerCase().includes('image_urls') || res.error.message?.toLowerCase().includes('column')) {
           const fallbackObj = { ...insertObj };
           delete fallbackObj.image_urls; // Remove the problematic column
+          // Also remove spotify_link if that's the problematic column
+          if (fallbackObj.spotify_link) delete fallbackObj.spotify_link;
           const fallbackRes = await sb.from('posts').insert(fallbackObj).select('*').limit(1).single();
           if (fallbackRes.error) {
             return NextResponse.json({ error: `Database schema error: ${fallbackRes.error.message}` }, { status: 500 });
@@ -149,6 +152,13 @@ export async function POST(req: Request) {
       // If normalization fails, at least return the primary image
       normalizedImageUrls = insertData?.image_url ? [insertData.image_url] : [];
     }
+
+    // Attach spotifyLink from the inserted row if available
+    try {
+      if (insertData && (insertData.spotify_link || insertData.spotifyLink)) {
+        insertData.spotify_link = insertData.spotify_link || insertData.spotifyLink;
+      }
+    } catch (e) {}
 
     try { logger.debug('[posts.create] inserted', { id: insertData?.id, imageCount: normalizedImageUrls.length }); } catch (e) {}
 

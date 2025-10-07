@@ -18,8 +18,16 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   const [isTile, setIsTile] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const lastDoubleTapRef = useRef<number | null>(null);
+  const lastTapTimeoutRef = useRef<number | null>(null);
+  const doubleTapInProgressRef = useRef(false);
+  const lastEventTimeRef = useRef<number | null>(null);
   const panStartRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
   const naturalRef = useRef({ w: 0, h: 0 });
+  // Track small movements so we can distinguish taps from scroll/drags
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const movedRef = useRef<boolean>(false);
+  const TAP_MOVE_THRESHOLD = 10; // pixels
   // Refs to mirror state for use in passive event handlers
   const scaleRef = useRef<number>(scale);
   const txRef = useRef<number>(tx);
@@ -171,6 +179,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    // record pointer start to distinguish tap vs drag
+    pointerStartRef.current = { x: e.clientX, y: e.clientY };
+    movedRef.current = false;
+
     if (scale <= 1) return;
 
     setIsPanning(true);
@@ -192,6 +204,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    // mark moved if movement exceeds threshold
+    if (pointerStartRef.current) {
+      const dxStart = e.clientX - pointerStartRef.current.x;
+      const dyStart = e.clientY - pointerStartRef.current.y;
+      if (!movedRef.current && Math.hypot(dxStart, dyStart) > TAP_MOVE_THRESHOLD) movedRef.current = true;
+    }
+
     if (!isPanning || !panStartRef.current) return;
 
     const dx = e.clientX - panStartRef.current.x;
@@ -219,18 +238,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     // zoom.
     try {
       if (e && (e as any).pointerType === 'touch') {
-        const now = Date.now();
         // Only consider it a tap (and potential double-tap) when not panning
-        if (!isPanning) {
-          if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
-            lastDoubleTapRef.current = null;
-            handleDoubleTap(e.clientX, e.clientY);
-          } else {
-            lastDoubleTapRef.current = now;
-            setTimeout(() => {
-              if (lastDoubleTapRef.current === now) lastDoubleTapRef.current = null;
-            }, 310);
-          }
+        // and the pointer didn't move beyond the tap threshold
+        if (!isPanning && !movedRef.current) {
+          registerTap(e.clientX, e.clientY);
         }
       }
     } catch (_) {
@@ -239,6 +250,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
     setIsPanning(false);
     panStartRef.current = null;
+  pointerStartRef.current = null;
+  movedRef.current = false;
 
     // Dispatch pan end event
     if (typeof window !== 'undefined') {
@@ -278,6 +291,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
     if (e.touches.length === 1) {
       const touch = e.touches[0];
+      // record touch start to distinguish tap vs drag
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+      movedRef.current = false;
+
       setIsPanning(true);
       panStartRef.current = {
         x: touch.clientX,
@@ -333,9 +350,18 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       return;
     }
 
-    if (!isPanning || !panStartRef.current || e.touches.length !== 1) return;
+    if (e.touches.length !== 1) return;
 
     const touch = e.touches[0];
+    // mark moved if movement exceeds threshold
+    if (touchStartRef.current) {
+      const dxStart = touch.clientX - touchStartRef.current.x;
+      const dyStart = touch.clientY - touchStartRef.current.y;
+      if (!movedRef.current && Math.hypot(dxStart, dyStart) > TAP_MOVE_THRESHOLD) movedRef.current = true;
+    }
+
+    if (!isPanning || !panStartRef.current) return;
+
     const dx = touch.clientX - panStartRef.current.x;
     const dy = touch.clientY - panStartRef.current.y;
 
@@ -364,14 +390,60 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       // fallthrough to clear panning/double-tap handlers when appropriate
     }
 
-    setIsPanning(false);
+  setIsPanning(false);
     panStartRef.current = null;
+    // Clear touch start/moved tracking and only register tap if movement small
+    const t = (e.changedTouches && e.changedTouches[0]);
+    if (t && !movedRef.current) {
+      // This will be a tap; register it
+      registerTap(t.clientX, t.clientY);
+    }
+    touchStartRef.current = null;
+    movedRef.current = false;
 
     // Dispatch pan end event
     if (typeof window !== 'undefined') {
       try {
         window.dispatchEvent(new CustomEvent('monolog:pan_end'));
       } catch (_) {}
+    }
+  };
+
+  // Unified tap/double-tap registration helper to avoid races between
+  // pointer and native touch handlers. Uses a timeout ref so we can
+  // reliably clear pending timers on unmount and prevent duplicate
+  // double-tap invocations.
+  const registerTap = (clientX: number, clientY: number) => {
+    if (doubleTapInProgressRef.current) return;
+    const now = Date.now();
+    // Ignore duplicate events from different event systems (pointer + touch)
+    // fired almost simultaneously for a single physical tap.
+    if (lastEventTimeRef.current && now - lastEventTimeRef.current < 40) return;
+    lastEventTimeRef.current = now;
+
+    if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
+      // Detected double-tap
+      lastDoubleTapRef.current = null;
+      if (lastTapTimeoutRef.current) {
+        clearTimeout(lastTapTimeoutRef.current as any);
+        lastTapTimeoutRef.current = null;
+      }
+      doubleTapInProgressRef.current = true;
+      try {
+        handleDoubleTap(clientX, clientY);
+      } finally {
+        // release lock shortly after to allow subsequent double-taps
+        window.setTimeout(() => { doubleTapInProgressRef.current = false; }, 50);
+      }
+    } else {
+      lastDoubleTapRef.current = now;
+      if (lastTapTimeoutRef.current) {
+        clearTimeout(lastTapTimeoutRef.current as any);
+      }
+      lastTapTimeoutRef.current = window.setTimeout(() => {
+        if (lastDoubleTapRef.current === now) lastDoubleTapRef.current = null;
+        lastTapTimeoutRef.current = null;
+      }, 310) as any;
     }
   };
 
@@ -389,27 +461,15 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
     const onTouchMove = (ev: TouchEvent) => {
       try {
+        // Prevent browser scrolling only when pinch/panning/zoom is active.
+        // Do NOT prevent simply because we've detected movement (movedRef) —
+        // that would block normal page scrolls when the image is unzoomed.
         if (pinchRef.current || isPanning || scaleRef.current > 1) ev.preventDefault();
       } catch (_) {}
       try { handleTouchMove((ev as unknown) as React.TouchEvent); } catch (_) {}
     };
 
     const onTouchEnd = (ev: TouchEvent) => {
-      try {
-        const now = Date.now();
-        if (!isPanning) {
-          if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
-            lastDoubleTapRef.current = null;
-            const t = ev.changedTouches && ev.changedTouches[0];
-            if (t) handleDoubleTap(t.clientX, t.clientY);
-          } else {
-            lastDoubleTapRef.current = now;
-            setTimeout(() => {
-              if (lastDoubleTapRef.current === now) lastDoubleTapRef.current = null;
-            }, 310);
-          }
-        }
-      } catch (_) {}
       try { handleTouchEnd((ev as unknown) as React.TouchEvent); } catch (_) {}
     };
 
@@ -421,6 +481,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       el.removeEventListener('touchstart', onTouchStart as any);
       el.removeEventListener('touchmove', onTouchMove as any);
       el.removeEventListener('touchend', onTouchEnd as any);
+      // Clear any pending tap timeout to avoid stale timers after unmount
+      if (lastTapTimeoutRef.current) {
+        clearTimeout(lastTapTimeoutRef.current as any);
+        lastTapTimeoutRef.current = null;
+      }
     };
   }, [isPanning]);
 

@@ -323,19 +323,22 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       const dx = t1.clientX - t0.clientX;
       const dy = t1.clientY - t0.clientY;
       const dist = Math.hypot(dx, dy) || 1;
-      const { initialDistance, initialScale, midX, midY } = pinchRef.current;
-      const ratio = dist / initialDistance;
-      let newScale = Math.max(1, Math.min(maxScale, initialScale * ratio));
+  const { initialDistance, initialScale } = pinchRef.current;
+  const ratio = dist / initialDistance;
+  let newScale = Math.max(1, Math.min(maxScale, initialScale * ratio));
 
-      // Compute new translation so the midpoint stays anchored
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const midLocalX = midX - rect.left;
-      const midLocalY = midY - rect.top;
+  // Compute new translation so the current midpoint (not the initial one)
+  // stays anchored under the fingers as they move.
+  const rect = containerRef.current?.getBoundingClientRect();
+  if (!rect) return;
+  const currentMidX = (t0.clientX + t1.clientX) / 2;
+  const currentMidY = (t0.clientY + t1.clientY) / 2;
+  const midLocalX = currentMidX - rect.left;
+  const midLocalY = currentMidY - rect.top;
 
-      const scaleRatio = newScale / scaleRef.current;
-      const newTx = midLocalX - (midLocalX - txRef.current) * scaleRatio;
-      const newTy = midLocalY - (midLocalY - tyRef.current) * scaleRatio;
+  const scaleRatio = newScale / scaleRef.current;
+  const newTx = midLocalX - (midLocalX - txRef.current) * scaleRatio;
+  const newTy = midLocalY - (midLocalY - tyRef.current) * scaleRatio;
 
       const bounds = getBounds(newScale);
       const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));

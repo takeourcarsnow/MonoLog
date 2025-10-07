@@ -238,6 +238,21 @@
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* Touch-target and feedback for fullscreen close on touch devices */
+@media (pointer: coarse) {
+  .fullscreen-viewer .fv-close {
+    padding: 10px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+  }
+
+  .fullscreen-viewer .fv-close:active {
+    background: rgba(255,255,255,0.06) !important;
+  }
+}
 .fullscreen-viewer .fv-inner {
   max-width: 100%;
   max-height: 100%;

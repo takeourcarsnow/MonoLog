@@ -189,6 +189,25 @@ button.delete-btn,
   .edit-btn, .delete-btn { transition: none !important; animation: none !important; }
 }
 
+/* Touch targets for edit/delete icon-only buttons */
+@media (pointer: coarse) {
+  .edit-btn.icon-reveal, .delete-btn.icon-reveal {
+    /* Comfortable tap target while preserving visual icon size */
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 10px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* Keep the inner icon size the same but ensure it is centered */
+  .edit-btn.icon-reveal .icon, .delete-btn.icon-reveal .icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Ensure our small state animations are suppressed for reduced-motion users */
   .edit-btn.active, .delete-btn.confirming { animation: none !important; }

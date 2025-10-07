@@ -15,29 +15,18 @@ export function useImageEditorLayout(
   const computeImageLayout = useCallback(() => {
     const canvas = canvasRef.current; const img = imgRef.current;
     if (!canvas || !img) return null as any;
-    // Use clientWidth/clientHeight (CSS pixels) rather than getBoundingClientRect which can be affected
-    // by transforms (scale/translate) in the surrounding UI. Using client sizes gives a stable layout
-    // for the canvas drawing coordinates.
+    // Since canvas is now sized to the image, use the canvas CSS dimensions
     const cssW = canvas.clientWidth || Math.max(100, canvas.width / (window.devicePixelRatio || 1));
     const cssH = canvas.clientHeight || Math.max(100, canvas.height / (window.devicePixelRatio || 1));
-    // Minimal padding so image fills most of the editor canvas
-    // Use zero padding so the image tightly fills the canvas and avoids visible empty space
-    const padRatio = 0.0;
-    const availW = Math.max(1, cssW * (1 - padRatio * 2));
-    const availH = Math.max(1, cssH * (1 - padRatio * 2));
-    // Use contain-style scaling so the whole image is visible inside the editor canvas.
-    // This prevents tall (or very wide) images from being cropped in the preview.
-    // It will letterbox (show empty space) when the image aspect doesn't match the canvas,
-    // but that's preferable for editing so users can reach all image pixels.
-    const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
-    const dispW = img.naturalWidth * baseScale;
-    const dispH = img.naturalHeight * baseScale;
-    const left = (cssW - dispW) / 2;
-    const top = (cssH - dispH) / 2;
+    // Image fills the entire canvas since canvas is sized to image dimensions
+    const dispW = cssW;
+    const dispH = cssH;
+    const left = 0;
+    const top = 0;
     // create a small rect-like object (width/height) so callers can use info.rect.width/height
     const rect = { width: cssW, height: cssH, left: 0, top: 0 } as DOMRect;
     // return layout info; do NOT set state here (caller should set state and draw with info)
-    return { rect, baseScale, dispW, dispH, left, top };
+    return { rect, baseScale: 1, dispW, dispH, left, top };
   }, [canvasRef, imgRef]);
 
   // Handle image loading and initial layout
@@ -61,13 +50,19 @@ export function useImageEditorLayout(
         if (canvas && cont) {
           const dpr = window.devicePixelRatio || 1;
           const contW = Math.max(100, Math.round(cont.clientWidth));
-          // Prefer a canvas height that fits comfortably in the viewport.
-          // Use a fraction of the viewport height but clamp to sensible min/max.
           const contH = Math.max(100, Math.round(cont.clientHeight - 380));
-          canvas.width = Math.max(100, Math.round(contW * dpr));
-          canvas.height = Math.max(100, Math.round(contH * dpr));
-          canvas.style.width = '100%';
-          canvas.style.height = '100%';
+          const padRatio = 0.0;
+          const availW = Math.max(1, contW * (1 - padRatio * 2));
+          const availH = Math.max(1, contH * (1 - padRatio * 2));
+          // Calculate displayed image dimensions (contain-style scaling)
+          const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
+          const dispW = img.naturalWidth * baseScale;
+          const dispH = img.naturalHeight * baseScale;
+          // Size canvas to match the displayed image dimensions
+          canvas.width = Math.max(100, Math.round(dispW * dpr));
+          canvas.height = Math.max(100, Math.round(dispH * dpr));
+          canvas.style.width = `${dispW}px`;
+          canvas.style.height = `${dispH}px`;
         }
       } catch (e) {
         // ignore sizing errors and fall back to computeImageLayout
@@ -106,17 +101,24 @@ export function useImageEditorLayout(
   // Handle canvas resizing
   useEffect(() => {
     const resize = () => {
-      const c = canvasRef.current; const cont = containerRef.current;
-      if (!c || !cont) return;
+      const c = canvasRef.current; const cont = containerRef.current; const img = imgRef.current;
+      if (!c || !cont || !img) return;
       const dpr = window.devicePixelRatio || 1;
-      // use clientWidth to derive canvas size (avoid transform/scale issues from parent modals)
+      // Calculate the available space for the image
       const contW = Math.max(100, Math.round(cont.clientWidth));
-      // Prefer canvas height derived from the container so the editor fits.
       const contH = Math.max(100, Math.round(cont.clientHeight - 380));
-      c.style.width = '100%';
-      c.style.height = '100%';
-      c.width = Math.max(100, Math.round(contW * dpr));
-      c.height = Math.max(100, Math.round(contH * dpr));
+      const padRatio = 0.0;
+      const availW = Math.max(1, contW * (1 - padRatio * 2));
+      const availH = Math.max(1, contH * (1 - padRatio * 2));
+      // Calculate displayed image dimensions (contain-style scaling)
+      const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
+      const dispW = img.naturalWidth * baseScale;
+      const dispH = img.naturalHeight * baseScale;
+      // Size canvas to match the displayed image dimensions
+      c.width = Math.max(100, Math.round(dispW * dpr));
+      c.height = Math.max(100, Math.round(dispH * dpr));
+      c.style.width = `${dispW}px`;
+      c.style.height = `${dispH}px`;
       // recompute image layout after resize so image stays centered
       const info = computeImageLayout();
       if (info) {

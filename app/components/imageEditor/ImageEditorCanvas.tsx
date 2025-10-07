@@ -24,12 +24,10 @@ export default function ImageEditorCanvas({ canvasRef, mounted }: ImageEditorCan
   }, []);
   
   return (
-    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
       <canvas
         ref={canvasRef}
         style={{
-          width: '100%',
-          height: '100%',
           touchAction: 'none',
           display: 'block',
           transition: 'box-shadow 240ms ease',

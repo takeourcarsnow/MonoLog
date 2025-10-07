@@ -45,12 +45,13 @@
 }
 
 .image-editor-canvas-container {
-  flex: 1;
+  flex: 0 0 auto;
   overflow: hidden;
 }
 
 .image-editor-panels-container {
-  flex: 0 0 300px;
+  flex: 0 0 auto;
+  max-height: 200px;
   overflow-y: auto;
 }
 

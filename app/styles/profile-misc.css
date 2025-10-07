@@ -232,6 +232,9 @@
 .feed.grid-view .grid { gap: 2px; grid-template-columns: repeat(2, 1fr); }
 @media (min-width: 900px) { .feed.grid-view .grid { grid-template-columns: repeat(3, 1fr); } }
 
+/* small-screen horizontal spacing so the posts grid doesn't touch viewport edges */
+.feed.grid-view .grid { margin-left: 12px; margin-right: 12px; box-sizing: border-box; }
+
 /* Ensure feed grid view always uses square tiles and consistent row sizing.
   This override is intentionally placed here so it takes precedence over
   more general profile grid rules and prevents tall/portrait tiles from

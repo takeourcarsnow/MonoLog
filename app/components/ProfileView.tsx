@@ -33,7 +33,6 @@ export function ProfileView({ userId }: { userId?: string }) {
               </div>
             </div>
           </div>
-          <div style={{ height: 8 }} />
           <div className="grid" aria-label="Loading posts">
             {Array.from({ length: 6 }, (_, i) => (
               <SkeletonTile key={i} height={200} />
@@ -96,7 +95,6 @@ export function ProfileView({ userId }: { userId?: string }) {
           // The ProfileHeader handles avatar changes internally
         }}
       />
-      <div style={{ height: 8 }} />
       <div className={`feed grid-view`}>
         <PostsGrid posts={posts} />
       </div>

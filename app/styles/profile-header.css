@@ -8,13 +8,15 @@
   /* allow the avatar to overflow slightly (shadow, transform) without being clipped */
   overflow: visible;
   z-index: 60; /* sit above nearby cards but below modals/overlays */
-  width: 100%;
+  /* keep a small gutter on mobile and center the panel */
+  width: calc(100% - 24px);
   box-sizing: border-box;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  margin-bottom: 16px;
+  /* small-screen spacing from viewport edges: top, left/right, bottom; centered via auto */
+  margin: 12px auto 16px;
 }
 
 /* On wider screens keep the profile header constrained and centered so
@@ -31,6 +33,12 @@
 
 /* Ensure the posts grid that appears after the profile header is aligned
    to the same centered max width so images line up with the header panel. */
+/* On small screens keep a little horizontal gap so content doesn't touch the viewport edges */
+.profile-header ~ .grid {
+  margin-left: 12px;
+  margin-right: 12px;
+  box-sizing: border-box;
+}
 @media (min-width: 900px) {
   .profile-header ~ .grid {
     max-width: var(--maxw);
@@ -288,3 +296,29 @@
 @media (prefers-reduced-motion: reduce) {
   .avatar-spinner svg { animation: none; }
 }
+
+/* Make profile action buttons icon-only (visual) while keeping text for accessibility */
+.profile-actions .btn {
+  padding: 8px; /* square icon size */
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 12px;
+}
+.profile-actions .btn .icon { display: inline-block; }
+.profile-actions .btn span:not(.icon) {
+  /* visually hide text but leave it available to screen readers */
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Slightly larger primary action (upload) for emphasis */
+.profile-actions .btn.primary { width: 52px; height: 52px; border-radius: 14px; }

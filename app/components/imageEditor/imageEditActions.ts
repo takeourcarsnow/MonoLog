@@ -1,5 +1,6 @@
 import { generateNoiseCanvas } from './imageEditorHelpers';
 import { FILTER_PRESETS } from './constants';
+import { mapBasicAdjustments } from './filterUtils';
 import type { EditorSettings } from './types';
 
 export async function applyEdit(
@@ -55,17 +56,9 @@ export async function applyEdit(
   out.width = rotatedW + padPx * 2; out.height = rotatedH + padPx * 2;
   const octx = out.getContext('2d')!;
   octx.imageSmoothingQuality = 'high';
-  // Apply color adjustments to exported image
-  const hue = Math.round((temperature / 100) * 30);
-  const filterMap: Record<string, string> = {
-    none: '',
-    sepia: 'sepia(0.45)',
-    mono: 'grayscale(0.95)',
-    cinema: 'contrast(1.15) saturate(1.05) hue-rotate(-5deg)',
-    bleach: 'saturate(1.3) contrast(0.95) brightness(1.02)'
-  };
+  // Apply color adjustments to exported image using the shared mapping helper
   const preset = FILTER_PRESETS[selectedFilter] || '';
-  const baseFilterExport = `brightness(${exposure}) contrast(${contrast}) saturate(${saturation}) hue-rotate(${hue}deg)`;
+  const { baseFilter: baseFilterExport } = mapBasicAdjustments({ exposure, contrast, saturation, temperature });
   // draw with rotation: translate to center of out canvas, rotate, then draw image centered
   const centerX = out.width / 2;
   const centerY = out.height / 2;

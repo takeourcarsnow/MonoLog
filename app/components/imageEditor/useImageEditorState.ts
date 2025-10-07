@@ -24,9 +24,9 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
     handleIndex?: number;
   }>(null);
   const [sel, setSel] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  const [exposure, setExposure] = useState<number>(initialSettings?.exposure ?? 1);
-  const [contrast, setContrast] = useState<number>(initialSettings?.contrast ?? 1);
-  const [saturation, setSaturation] = useState<number>(initialSettings?.saturation ?? 1);
+  const [exposure, setExposure] = useState<number>(initialSettings?.exposure ?? 0);
+  const [contrast, setContrast] = useState<number>(initialSettings?.contrast ?? 0);
+  const [saturation, setSaturation] = useState<number>(initialSettings?.saturation ?? 0);
   const [temperature, setTemperature] = useState<number>(initialSettings?.temperature ?? 0); // -100..100 mapped to hue-rotate
   const [vignette, setVignette] = useState<number>(initialSettings?.vignette ?? 0); // 0..1
   const [frameColor, setFrameColor] = useState<'white' | 'black'>(initialSettings?.frameColor ?? 'white');

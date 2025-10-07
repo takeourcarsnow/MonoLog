@@ -43,9 +43,9 @@ export function resetAdjustments(
   setPresetIndex: (v: number) => void
 ) {
   // Default values
-  const defExposure = 1;
-  const defContrast = 1;
-  const defSaturation = 1;
+  const defExposure = 0;
+  const defContrast = 0;
+  const defSaturation = 0;
   const defTemperature = 0;
   const defVignette = 0;
   const defFrameColor: 'white' | 'black' = 'white';
@@ -110,17 +110,17 @@ export function resetControlToDefault(
 ) {
   switch (control) {
     case 'exposure': {
-      const v = 1;
+      const v = 0;
       exposureRef.current = v; setExposure(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'contrast': {
-      const v = 1;
+      const v = 0;
       contrastRef.current = v; setContrast(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'saturation': {
-      const v = 1;
+      const v = 0;
       saturationRef.current = v; setSaturation(v); draw(); requestAnimationFrame(() => draw());
       break;
     }

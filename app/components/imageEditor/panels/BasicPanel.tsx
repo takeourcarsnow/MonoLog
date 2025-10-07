@@ -45,9 +45,9 @@ export default function BasicPanel({
           <input
             className="imgedit-range"
             type="range"
-            min={0.2}
-            max={1.8}
-            step={0.01}
+            min={-2}
+            max={2}
+            step={0.1}
             value={exposure}
             onInput={(e: any) => {
               const v = Number(e.target.value);
@@ -57,7 +57,7 @@ export default function BasicPanel({
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('exposure')}
-            style={{ flex: 1, background: rangeBg(exposure, 0.2, 1.8, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
+            style={{ flex: 1, background: rangeBg(exposure, -2, 2, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
           />
         </span>
       </label>
@@ -70,8 +70,8 @@ export default function BasicPanel({
           <input
             className="imgedit-range"
             type="range"
-            min={0.2}
-            max={1.8}
+            min={-1}
+            max={1}
             step={0.01}
             value={contrast}
             onInput={(e: any) => {
@@ -82,7 +82,7 @@ export default function BasicPanel({
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('contrast')}
-            style={{ flex: 1, background: rangeBg(contrast, 0.2, 1.8, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
+            style={{ flex: 1, background: rangeBg(contrast, -1, 1, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
           />
         </span>
       </label>
@@ -95,8 +95,8 @@ export default function BasicPanel({
           <input
             className="imgedit-range"
             type="range"
-            min={0}
-            max={2}
+            min={-1}
+            max={1}
             step={0.01}
             value={saturation}
             onInput={(e: any) => {
@@ -107,7 +107,7 @@ export default function BasicPanel({
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('saturation')}
-            style={{ flex: 1, background: rangeBg(saturation, 0, 2, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
+            style={{ flex: 1, background: rangeBg(saturation, -1, 1, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
           />
         </span>
       </label>

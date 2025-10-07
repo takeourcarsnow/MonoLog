@@ -1,5 +1,6 @@
 import { FILTER_PRESETS } from "./constants";
 import { DrawParams, DrawOverrides } from "./CanvasRendererCore";
+import { mapBasicAdjustments } from './filterUtils';
 
 export function computeFilterValues(params: DrawParams, overrides?: DrawOverrides) {
   const {
@@ -25,10 +26,9 @@ export function computeFilterValues(params: DrawParams, overrides?: DrawOverride
   // If previewOriginal is true we skip all adjustments/filters and draw the raw original image
   const isPreviewOrig = previewOriginalRef.current && originalImgRef.current;
 
-  // temperature mapped to hue-rotate degrees (-30..30 deg)
-  const curExposure = isPreviewOrig ? 1 : (overrides?.exposure ?? exposureRef.current ?? 1);
-  const curContrast = overrides?.contrast ?? contrastRef.current ?? 1;
-  const curSaturation = overrides?.saturation ?? saturationRef.current ?? 1;
+  const curExposure = isPreviewOrig ? 0 : (overrides?.exposure ?? exposureRef.current ?? 0);
+  const curContrast = overrides?.contrast ?? contrastRef.current ?? 0;
+  const curSaturation = overrides?.saturation ?? saturationRef.current ?? 0;
   const curTemperature = overrides?.temperature ?? temperatureRef.current ?? 0;
   const curVignette = overrides?.vignette ?? vignetteRef.current ?? 0;
   const curSelectedFilter = overrides?.selectedFilter ?? selectedFilterRef.current ?? 'none';
@@ -48,8 +48,8 @@ export function computeFilterValues(params: DrawParams, overrides?: DrawOverride
   const angle = (overrides?.rotation ?? rotationRef.current ?? 0) || 0;
   const angleRad = (angle * Math.PI) / 180;
 
-  // base color adjustments (exposure/contrast/saturation) + hue
-  const baseFilter = `brightness(${curExposure}) contrast(${curContrast}) saturate(${curSaturation}) hue-rotate(${hue}deg)`;
+  // Use shared mapping helper for consistent/safe mapping of controls -> CSS filter values
+  const { baseFilter } = mapBasicAdjustments({ exposure: curExposure, contrast: curContrast, saturation: curSaturation, temperature: curTemperature });
   const filter = `${baseFilter} ${preset}`;
 
   return {

@@ -110,6 +110,9 @@
   cursor: pointer;
   max-width: 100%;
   box-sizing: border-box;
+  /* allow horizontal dragging on the slider itself and prevent parent swipers
+     from intercepting those horizontal gestures */
+  touch-action: pan-x;
 }
 .imgedit-range:hover { transform: scaleY(1.1); }
 .imgedit-range:active { box-shadow: 0 8px 24px rgba(0,0,0,0.16); }

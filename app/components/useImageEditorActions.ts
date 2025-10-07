@@ -70,9 +70,9 @@ export function useImageEditorActions(
     const checks = [
       imageSrc !== originalRef.current,
       !!sel,
-      Math.abs(exposure - 1) > 0.001,
-      Math.abs(contrast - 1) > 0.001,
-      Math.abs(saturation - 1) > 0.001,
+      Math.abs(exposure) > 0.001,
+      Math.abs(contrast) > 0.001,
+      Math.abs(saturation) > 0.001,
       Math.abs(temperature) > 0.001,
       Math.abs(vignette) > 0.001,
       Math.abs(rotation) > 0.001,

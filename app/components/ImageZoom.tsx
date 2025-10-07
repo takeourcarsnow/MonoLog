@@ -25,7 +25,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   const txRef = useRef<number>(tx);
   const tyRef = useRef<number>(ty);
   const pinchRef = useRef<null | { initialDistance: number; initialScale: number; midX: number; midY: number }>(null);
+  // Whether wheel-driven zoom is allowed. It becomes true when the user
+  // explicitly starts a zoom (double-click or pinch). This prevents the
+  // mouse wheel from initiating zoom on accidental scrolls.
+  const wheelEnabledRef = useRef<boolean>(false);
 
+  // Detect if this ImageZoom is rendered inside a grid tile
+  
   // Detect if this ImageZoom is rendered inside a grid tile
   useEffect(() => {
     try {
@@ -124,6 +130,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       setScale(1);
       setTx(0);
       setTy(0);
+      wheelEnabledRef.current = false;
       // Dispatch zoom end event
       if (typeof window !== 'undefined') {
         try {
@@ -151,6 +158,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
       setTx(clampedTx);
       setTy(clampedTy);
+      // Allow wheel zoom now that the user explicitly triggered zoom
+      wheelEnabledRef.current = true;
 
       // Dispatch zoom start event
       if (typeof window !== 'undefined') {
@@ -256,10 +265,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       // Dispatch zoom start if we're starting from unzoomed
       if (scaleRef.current <= 1) {
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch(_) {}
+        // Pinch explicitly activated zoom — allow wheel zoom too
+        wheelEnabledRef.current = true;
       }
       // Prevent parent components from receiving touch start when pinching
       e.stopPropagation();
-      e.preventDefault();
       return;
     }
 
@@ -281,7 +291,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           window.dispatchEvent(new CustomEvent('monolog:pan_start'));
         } catch (_) {}
       }
-      // Prevent parent components from receiving touch start when starting to pan
+      // Prevent parent components from receiving touch start when starting to pan.
+      // We do not call preventDefault here because native listeners (attached
+      // with passive: false) handle calling preventDefault when necessary.
       e.stopPropagation();
     }
   };
@@ -318,7 +330,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
       // Prevent parent components from receiving swipe gestures when pinching
       e.stopPropagation();
-      e.preventDefault();
       return;
     }
 
@@ -353,23 +364,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       // fallthrough to clear panning/double-tap handlers when appropriate
     }
 
-    if (e.changedTouches.length === 1) {
-      const touch = e.changedTouches[0];
-      const now = Date.now();
-
-      if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
-        lastDoubleTapRef.current = null;
-        handleDoubleTap(touch.clientX, touch.clientY);
-      } else {
-        lastDoubleTapRef.current = now;
-        setTimeout(() => {
-          if (lastDoubleTapRef.current === now) {
-            lastDoubleTapRef.current = null;
-          }
-        }, 310);
-      }
-    }
-
     setIsPanning(false);
     panStartRef.current = null;
 
@@ -381,12 +375,66 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     }
   };
 
+  // Attach native touch listeners to allow preventDefault (passive: false)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onTouchStart = (ev: TouchEvent) => {
+      try {
+        if (ev.touches && ev.touches.length === 2) ev.preventDefault();
+      } catch (_) {}
+      try { handleTouchStart((ev as unknown) as React.TouchEvent); } catch (_) {}
+    };
+
+    const onTouchMove = (ev: TouchEvent) => {
+      try {
+        if (pinchRef.current || isPanning || scaleRef.current > 1) ev.preventDefault();
+      } catch (_) {}
+      try { handleTouchMove((ev as unknown) as React.TouchEvent); } catch (_) {}
+    };
+
+    const onTouchEnd = (ev: TouchEvent) => {
+      try {
+        const now = Date.now();
+        if (!isPanning) {
+          if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
+            lastDoubleTapRef.current = null;
+            const t = ev.changedTouches && ev.changedTouches[0];
+            if (t) handleDoubleTap(t.clientX, t.clientY);
+          } else {
+            lastDoubleTapRef.current = now;
+            setTimeout(() => {
+              if (lastDoubleTapRef.current === now) lastDoubleTapRef.current = null;
+            }, 310);
+          }
+        }
+      } catch (_) {}
+      try { handleTouchEnd((ev as unknown) as React.TouchEvent); } catch (_) {}
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: false });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart as any);
+      el.removeEventListener('touchmove', onTouchMove as any);
+      el.removeEventListener('touchend', onTouchEnd as any);
+    };
+  }, [isPanning]);
+
   // Add wheel event listener with passive: false to prevent default scrolling
   useEffect(() => {
     const imgElement = imgRef.current;
     if (!imgElement) return;
 
     const handleWheelEvent = (e: WheelEvent) => {
+      // Only allow wheel to initiate zoom if the image is already zoomed or
+      // the user explicitly activated zoom (double-click or pinch). This
+      // prevents accidental zoom when simply scrolling the page over images.
+      if (!wheelEnabledRef.current && scaleRef.current <= 1) return;
+
       // Allow wheel zoom (in/out) — if zooming out to scale 1 we reset to center
       e.preventDefault();
       e.stopPropagation();
@@ -415,6 +463,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         setScale(1);
         setTx(0);
         setTy(0);
+        wheelEnabledRef.current = false;
         if (typeof window !== 'undefined') {
           try {
             window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
@@ -454,21 +503,22 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       className={className}
       style={{
         overflow: "hidden",
-        touchAction: "none",
+          // Allow vertical page scrolling when image is not zoomed. When zoomed or
+          // panning/pinching, disable touch scrolling so gestures control the image.
+          touchAction: scale > 1 || isPanning || pinchRef.current ? "none" : "pan-y",
         display: "block",
         width: "100%",
         height: isFullscreen ? "100%" : (isTile ? "100%" : undefined),
         boxSizing: "border-box",
         ...style,
       }}
-      onDragStart={(e) => e.preventDefault()}
+    onDragStart={(e) => e.preventDefault()}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+    /* Native touch listeners are attached in an effect with passive: false so
+      we can call preventDefault only when needed (pinch or panning). */
     >
       <img
         {...rest}
@@ -487,7 +537,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           objectFit: isFullscreen ? "contain" : (isTile ? "cover" : "contain"),
           objectPosition: "center center",
           userSelect: "none",
-          touchAction: "none",
           pointerEvents: "auto",
         }}
         onDoubleClick={(e) => {

@@ -457,7 +457,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
     const onTouchStart = (ev: TouchEvent) => {
       try {
-        if (ev.touches && ev.touches.length === 2) ev.preventDefault();
+        // If we're showing the image fullscreen, block the browser's native
+        // double-tap-to-zoom by preventing the default on touchstart. Some
+        // older mobile browsers ignore touch-action so this guard ensures our
+        // double-tap handler runs. Also prevent when two-finger gestures begin.
+        if (isFullscreen || (ev.touches && ev.touches.length === 2)) ev.preventDefault();
       } catch (_) {}
       try { handleTouchStart((ev as unknown) as React.TouchEvent); } catch (_) {}
     };
@@ -490,7 +494,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         lastTapTimeoutRef.current = null;
       }
     };
-  }, [isPanning]);
+  }, [isPanning, isFullscreen]);
 
   // Add wheel event listener with passive: false to prevent default scrolling
   useEffect(() => {
@@ -571,9 +575,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       className={className}
       style={{
         overflow: "hidden",
-          // Allow vertical page scrolling when image is not zoomed. When zoomed or
-          // panning/pinching, disable touch scrolling so gestures control the image.
-          touchAction: scale > 1 || isPanning || pinchRef.current ? "none" : "pan-y",
+          // When rendered fullscreen we must prevent the browser's native
+          // double-tap-to-zoom behavior so our double-tap handler runs on
+          // real mobile devices. Otherwise the browser may intercept the
+          // second tap and zoom the page instead of sending events to us.
+          // For non-fullscreen mode, allow pan-y when unzoomed so the page
+          // can still scroll vertically.
+          touchAction: isFullscreen ? "none" : (scale > 1 || isPanning || pinchRef.current ? "none" : "pan-y"),
         display: "block",
         width: "100%",
         height: isFullscreen ? "100%" : (isTile ? "100%" : undefined),

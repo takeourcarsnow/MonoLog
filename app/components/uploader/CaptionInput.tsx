@@ -37,7 +37,7 @@ export function CaptionInput({
         .caption-counter.near { color: #c47700; }
         .caption-counter.limit { color: #b91c1c; }
       `}</style>
-      <div className="input-wrapper" style={{ flex: 1, position: 'relative' }}>
+      <div className="input-wrapper" style={{ flex: 1, position: 'relative', width: '100%' }}>
         {/** keep the ghost/typewriter visible even before a photo is selected,
          *  but prevent the input from being focused/edited until an image exists */}
         {(!caption && typed) ? (
@@ -113,7 +113,7 @@ export function CaptionInput({
           readOnly={!hasPreview || processing}
           tabIndex={hasPreview ? 0 : -1}
           onMouseDown={(e) => { if (!hasPreview || processing) e.preventDefault(); }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', paddingRight: 72 }}
         />
       </div>
     </div>

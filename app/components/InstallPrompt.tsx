@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -11,6 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const handlerRef = useRef<((e: Event) => void) | null>(null);
 
   useEffect(() => {
     // Check if already installed
@@ -36,7 +37,19 @@ export function InstallPrompt() {
     const isMobileLike = /Android|Mobile|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (!isMobileLike) return;
 
+    // Keep a reference to the handler so other callbacks can remove it
     const handler = (e: Event) => {
+      // Respect prior choices at the moment the event fires as well.
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      if (dismissed) return;
+      const snooze = localStorage.getItem('pwa-install-snooze');
+      if (snooze) {
+        const until = Number(snooze) || 0;
+        if (Date.now() < until) return; // still snoozed
+        // expired snooze -> remove and continue
+        localStorage.removeItem('pwa-install-snooze');
+      }
+
       // Prevent the default mini-infobar from appearing
       e.preventDefault();
       // Save the event so it can be triggered later
@@ -46,9 +59,14 @@ export function InstallPrompt() {
       setTimeout(() => setShowPrompt(true), 3000);
     };
 
+    // Store the handler on a ref so other handlers can remove the listener
+    handlerRef.current = handler;
     window.addEventListener('beforeinstallprompt', handler);
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      handlerRef.current = null;
+    };
   }, []);
 
   const handleInstall = async () => {
@@ -72,12 +90,27 @@ export function InstallPrompt() {
     const until = Date.now() + days * 24 * 60 * 60 * 1000;
     localStorage.setItem('pwa-install-snooze', String(until));
     setShowPrompt(false);
+    setDeferredPrompt(null);
+    // If the browser fires the event again we don't want to show it until
+    // the snooze expires — remove the listener for now.
+    try {
+      if (handlerRef.current) window.removeEventListener('beforeinstallprompt', handlerRef.current);
+    } catch (err) {
+      /* ignore */
+    }
   };
 
   // Permanently dismiss the install prompt
   const handlePermanentDismiss = () => {
     localStorage.setItem('pwa-install-dismissed', 'true');
     setShowPrompt(false);
+    setDeferredPrompt(null);
+    // Stop listening for future install prompts so the choice is respected
+    try {
+      if (handlerRef.current) window.removeEventListener('beforeinstallprompt', handlerRef.current);
+    } catch (err) {
+      /* ignore */
+    }
   };
 
   if (!showPrompt || !deferredPrompt) {

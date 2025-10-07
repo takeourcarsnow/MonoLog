@@ -30,13 +30,13 @@ export function computeFilterValues(params: DrawParams, overrides?: DrawOverride
   const curContrast = overrides?.contrast ?? contrastRef.current ?? 0;
   const curSaturation = overrides?.saturation ?? saturationRef.current ?? 0;
   const curTemperature = overrides?.temperature ?? temperatureRef.current ?? 0;
-  const curVignette = overrides?.vignette ?? vignetteRef.current ?? 0;
-  const curSelectedFilter = overrides?.selectedFilter ?? selectedFilterRef.current ?? 'none';
-  const curFilterStrength = filterStrengthRef.current ?? 1;
-  const curGrain = overrides?.grain ?? grainRef.current ?? 0;
-  const curSoftFocus = overrides?.softFocus ?? softFocusRef.current ?? 0;
-  const curFade = overrides?.fade ?? fadeRef.current ?? 0;
-  const curMatte = overrides?.matte ?? matteRef.current ?? 0;
+  const curVignette = isPreviewOrig ? 0 : (overrides?.vignette ?? vignetteRef.current ?? 0);
+  const curSelectedFilter = isPreviewOrig && !overrides?.selectedFilter ? 'none' : (overrides?.selectedFilter ?? selectedFilterRef.current ?? 'none');
+  const curFilterStrength = isPreviewOrig ? 1 : (filterStrengthRef.current ?? 1);
+  const curGrain = isPreviewOrig ? 0 : (overrides?.grain ?? grainRef.current ?? 0);
+  const curSoftFocus = isPreviewOrig ? 0 : (overrides?.softFocus ?? softFocusRef.current ?? 0);
+  const curFade = isPreviewOrig ? 0 : (overrides?.fade ?? fadeRef.current ?? 0);
+  const curMatte = isPreviewOrig ? 0 : (overrides?.matte ?? matteRef.current ?? 0);
   // frame is considered "on" when thickness > 0. Allow overrides to pass a thickness.
   const curFrameThickness = overrides?.frameThickness ?? frameThicknessRef.current ?? 0;
   const curFrameEnabled = curFrameThickness > 0;

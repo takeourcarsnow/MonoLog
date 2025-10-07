@@ -6,6 +6,8 @@ import { drawFrame } from "./CanvasRendererFrame";
 import { drawSelection } from "./CanvasRendererSelection";
 import { drawRotated } from "./CanvasRendererUtils";
 import { generateNoiseCanvas } from "./utils";
+import { applyWebGLAdjustments } from './webglFilters';
+import { mapBasicAdjustments } from './filterUtils';
 
 export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOverrides) {
   const canvas = params.canvasRef.current;
@@ -32,6 +34,7 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
     angleRad,
     baseFilter,
     filter,
+    preset,
   } = filterValues;
 
   // Calculate frame-adjusted layout
@@ -47,23 +50,49 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   if (isPreviewOrig) {
     // Draw raw original with no filters/effects
     drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-  } else if (curFilterStrength >= 0.999) {
-    ctx.filter = filter;
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-    ctx.filter = 'none';
-  } else if (curFilterStrength <= 0.001) {
-    ctx.filter = baseFilter;
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-    ctx.filter = 'none';
   } else {
-    // draw base with baseFilter, then composite filtered version on top with globalAlpha = strength
-    ctx.filter = baseFilter;
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-    ctx.filter = filter;
-    ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
-    drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-    ctx.globalAlpha = 1;
-    ctx.filter = 'none';
+    // Try using GPU shader path for per-pixel accurate and fast adjustments when available.
+    // We use WebGL to apply the base adjustments (brightness/contrast/saturation/temperature)
+    // and then composite presets/overlays on top if strength < 1.
+    let usedGpu = false;
+    try {
+      // use the computed filter values from computeFilterValues
+      const fv: any = filterValues;
+      const m = mapBasicAdjustments({ exposure: fv.curExposure, contrast: fv.curContrast, saturation: fv.curSaturation, temperature: fv.curTemperature });
+      const brightness = m.brightness || 1;
+      const contrast = m.finalContrast || 1;
+      const saturation = m.cssSaturation || 1;
+      const hueDeg = m.hue || 0;
+
+      const tmpCanvas = applyWebGLAdjustments(img, imgW, imgH, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength });
+      // draw the processed GPU canvas (snapshot) onto our main canvas, taking rotation into account
+      drawRotated(tmpCanvas, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+      usedGpu = true;
+    } catch (e) {
+      usedGpu = false;
+    }
+
+    if (!usedGpu) {
+      // fallback to existing CSS filter path and preset blending
+      if (curFilterStrength >= 0.999) {
+        ctx.filter = filter;
+        drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+        ctx.filter = 'none';
+      } else if (curFilterStrength <= 0.001) {
+        ctx.filter = baseFilter;
+        drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+        ctx.filter = 'none';
+      } else {
+        // draw base with baseFilter, then composite filtered version on top with globalAlpha = strength
+        ctx.filter = baseFilter;
+        drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+        ctx.filter = filter;
+        ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
+        drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+        ctx.globalAlpha = 1;
+        ctx.filter = 'none';
+      }
+    }
   }
 
   // Apply special effects

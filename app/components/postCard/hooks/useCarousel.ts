@@ -7,315 +7,198 @@ interface UseCarouselProps {
   onIndexChange?: (index: number) => void;
 }
 
+// Minimal, rAF-throttled carousel swipe handler to reduce jitter.
 export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexChange }: UseCarouselProps) {
   const [index, setIndex] = useState(0);
   const indexRef = useRef(0);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [isZooming, setIsZooming] = useState(false);
   const isZoomingRef = useRef(false);
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-  const touchDeltaX = useRef<number>(0);
-  const touchDeltaY = useRef<number>(0);
-  const draggingRef = useRef(false);
-  // When true we have decided the gesture is horizontal and should be
-  // handled by the carousel (we'll then preventDefault to lock scrolling).
-  const gestureLockedRef = useRef(false);
-  const activeTouchPointers = useRef<Set<number>>(new Set());
-  const pointerSupported = typeof window !== 'undefined' && (window as any).PointerEvent !== undefined;
-  const lastMouseDownAt = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1));
-  }, [imageUrls.length, index]);
+  // Gesture state
+  const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  const deltaX = useRef(0);
+  const dragging = useRef(false);
+  const locked = useRef(false); // locked to horizontal
+  const rafRef = useRef<number | null>(null);
 
+  useEffect(() => { if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1)); }, [imageUrls.length, index]);
   useEffect(() => { indexRef.current = index; }, [index]);
+  useEffect(() => { onIndexChange?.(index); }, [index, onIndexChange]);
 
+  // set initial transform when index changes (or on mount)
   useEffect(() => {
-    onIndexChange?.(index);
-  }, [index, onIndexChange]);
-
-  useEffect(() => {
-    if (!trackRef.current) return;
-    trackRef.current.style.transform = `translateX(-${index * 100}%)`;
+    const el = trackRef.current;
+    if (!el) return;
+    // use a smooth transition for programmatic changes
+    el.style.transition = 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)';
+    el.style.transform = `translate3d(-${index * 100}%, 0, 0)`;
+    // clean up transition after it finishes
+    const t = setTimeout(() => { if (el) el.style.transition = ''; }, 300);
+    return () => clearTimeout(t);
   }, [index]);
 
-  const prev = () => setIndex(i => (i <= 0 ? 0 : i - 1));
-  const next = () => setIndex(i => (i >= imageUrls.length - 1 ? imageUrls.length - 1 : i + 1));
+  const applyTransform = (x: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    // translate relative to current index
+    el.style.transform = `translate3d(calc(-${indexRef.current * 100}% + ${x}px), 0, 0)`;
+  };
 
+  const scheduleTransform = (x: number) => {
+    deltaX.current = x;
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      applyTransform(deltaX.current);
+    });
+  };
+
+  const startDrag = (x: number, y: number, multi = false) => {
+    if (isZoomingRef.current || multi) return;
+    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
+    startX.current = x;
+    startY.current = y;
+    deltaX.current = 0;
+    dragging.current = true;
+    locked.current = false;
+    // hint to the browser
+    const el = trackRef.current;
+    if (el) el.style.willChange = 'transform';
+    try { document.body.style.userSelect = 'none'; document.body.style.cursor = 'grabbing'; } catch (_) {}
+  };
+
+  const moveDrag = (x: number, y?: number) => {
+    if (!dragging.current || startX.current == null || isZoomingRef.current) return;
+    const dx = x - startX.current;
+    const dy = (typeof y === 'number' && startY.current != null) ? y - startY.current : 0;
+    if (!locked.current) {
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      const lockThreshold = 8;
+      if (absX > absY && absX > lockThreshold) locked.current = true;
+      else if (absY > absX && absY > lockThreshold) {
+        // vertical gesture: cancel carousel drag so browser handles scroll
+        dragging.current = false;
+        startX.current = null;
+        locked.current = false;
+        try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
+        return;
+      }
+    }
+    if (locked.current) {
+      // prevent page scroll when locked to horizontal from touch handlers
+      scheduleTransform(dx);
+    }
+  };
+
+  const endDrag = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    locked.current = false;
+    // determine target based on delta and container width
+    const dx = deltaX.current || 0;
+    const el = trackRef.current;
+    const containerWidth = el ? el.getBoundingClientRect().width : 0;
+    const ratio = containerWidth ? Math.abs(dx) / containerWidth : 0;
+    const pxThreshold = 40;
+    const ratioThreshold = 0.18; // swipe fraction
+    let target = indexRef.current;
+    if ((Math.abs(dx) > pxThreshold) && (ratio > ratioThreshold || Math.abs(dx) > containerWidth * 0.35)) {
+      if (dx > 0) target = Math.max(0, indexRef.current - 1);
+      else target = Math.min(imageUrls.length - 1, indexRef.current + 1);
+    }
+    // snap to target with transition
+    if (el) {
+      el.style.transition = 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)';
+      el.style.transform = `translate3d(-${target * 100}%, 0, 0)`;
+      // cleanup transition after animation
+      setTimeout(() => { if (el) el.style.transition = ''; if (el) el.style.willChange = ''; }, 300);
+    }
+    deltaX.current = 0;
+    startX.current = null;
+    try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
+    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
+    setIndex(target);
+  };
+
+  // Pointer / touch / mouse handlers (kept minimal)
   const onTouchStart = (e: React.TouchEvent) => {
-    if (isZoomingRef.current) return;
-    // Only stop propagation for single touch to allow carousel swipe.
-    // For multi-touch (pinch), let it propagate to ImageZoom.
-    if (e.touches.length === 1) {
-      e.stopPropagation();
-      try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
-    }
-    for (let i = 0; i < e.touches.length; i++) {
-      activeTouchPointers.current.add(e.touches[i].identifier as any as number);
-    }
-    if (activeTouchPointers.current.size >= 2) {
-      finishPointerDrag();
+    if (e.touches.length >= 2) {
+      // multi-touch -> let zoom handlers take over
+      startDrag(0, 0, true);
       setIsZooming(true);
       isZoomingRef.current = true;
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
       return;
     }
-    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    touchDeltaX.current = 0;
-    touchDeltaY.current = 0;
-    gestureLockedRef.current = false;
+    const t = e.touches[0];
+    startDrag(t.clientX, t.clientY, false);
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (isZoomingRef.current) return;
-    // Determine gesture direction: if horizontal movement dominates we
-    // lock the gesture to the carousel and preventDefault to stop the
-    // browser from scrolling/pull-to-refresh. If vertical movement
-    // dominates, allow the browser to handle it.
-    try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
-    if (touchStartX.current == null || touchStartY.current == null) return;
-    const cx = e.touches[0].clientX;
-    const cy = e.touches[0].clientY;
-    touchDeltaX.current = cx - touchStartX.current;
-    touchDeltaY.current = cy - touchStartY.current;
-
-    if (!gestureLockedRef.current) {
-      const absX = Math.abs(touchDeltaX.current);
-      const absY = Math.abs(touchDeltaY.current);
-      const lockThreshold = 8; // px before we decide
-      if (absX > absY && absX > lockThreshold) {
-        gestureLockedRef.current = true;
-        // Now that we've locked to horizontal, stop propagation and
-        // prevent default so we can control the swipe without the
-        // browser stealing the gesture.
-        try { e.preventDefault(); } catch (_) {}
-        try { e.stopPropagation(); } catch (_) {}
-      } else if (absY > absX && absY > lockThreshold) {
-        // Vertical gesture: don't lock, let browser handle (e.g., pull-to-refresh)
-        return;
-      }
-    } else {
-      // already locked to horizontal
-      try { e.preventDefault(); } catch (_) {}
-      try { e.stopPropagation(); } catch (_) {}
+    if (e.touches.length >= 2) return; // ignore
+    const t = e.touches[0];
+    moveDrag(t.clientX, t.clientY);
+    if (locked.current) {
+      try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
     }
-
-    if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
   };
 
   const onTouchEnd = () => {
-    try { activeTouchPointers.current.clear(); } catch (_) {}
-    if (touchStartX.current == null) return;
-    const delta = touchDeltaX.current;
-    const threshold = 40;
-    let target = index;
-    if (delta > threshold) target = Math.max(0, index - 1);
-    else if (delta < -threshold) target = Math.min(imageUrls.length - 1, index + 1);
-    setIndex(target);
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
-    touchStartX.current = null;
-    touchDeltaX.current = 0;
-    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
+    if (isZoomingRef.current) {
+      // end zooming state
+      setIsZooming(false);
+      isZoomingRef.current = false;
+      // reset transform to current index
+      const el = trackRef.current;
+      if (el) el.style.transform = `translate3d(-${indexRef.current * 100}%, 0, 0)`;
+      return;
+    }
+    endDrag();
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (isZoomingRef.current) return;
-    // Only stop propagation for single touch to allow carousel swipe.
-    // For multi-touch (pinch), let it propagate to ImageZoom.
-    if ((e as any).pointerType === 'touch' && activeTouchPointers.current.size < 2) {
-      e.stopPropagation();
-      try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
-    }
-    if (e.button !== 0) return;
-    if ((e as any).pointerType === 'touch') {
-      try { activeTouchPointers.current.add((e as any).pointerId); } catch (_) {}
-      if (activeTouchPointers.current.size >= 2) {
-        finishPointerDrag();
-        setIsZooming(true);
-        isZoomingRef.current = true;
-        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
-        return;
-      }
-    }
-    const now = Date.now();
-    if (lastMouseDownAt.current && now - lastMouseDownAt.current < 400 && (e as any).pointerType === 'mouse') {
-      // likely double-click, don't start dragging
-      lastMouseDownAt.current = now;
-      return;
-    }
-    if ((e as any).pointerType === 'mouse') lastMouseDownAt.current = now;
-  touchStartX.current = e.clientX;
-  touchStartY.current = e.clientY;
-    touchDeltaX.current = 0;
-  touchDeltaY.current = 0;
-    draggingRef.current = true;
-  gestureLockedRef.current = false;
-    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
-    try { document.body.style.userSelect = 'none'; document.body.style.cursor = 'grabbing'; } catch (_) {}
+    // ignore non-primary button
+    if ((e as any).button && (e as any).button !== 0) return;
+    // pointerType touch handled here too
+    startDrag(e.clientX, e.clientY, false);
     const el = trackRef.current as any;
     try { if (el && el.setPointerCapture) el.setPointerCapture(e.pointerId); } catch (_) {}
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if ((e as any).pointerType === 'touch' && activeTouchPointers.current.size >= 2) return;
-    if (!draggingRef.current || touchStartX.current == null) return;
-    const px = e.clientX;
-    const py = (e as any).clientY as number | undefined;
-    touchDeltaX.current = px - touchStartX.current;
-    if (typeof py === 'number' && touchStartY.current != null) touchDeltaY.current = py - touchStartY.current;
-
-    // Decide whether to lock to horizontal gesture similar to touch
-    if (!gestureLockedRef.current) {
-      const absX = Math.abs(touchDeltaX.current);
-      const absY = Math.abs(touchDeltaY.current);
-      const lockThreshold = 8;
-      if (absX > absY && absX > lockThreshold) {
-        gestureLockedRef.current = true;
-        // preventDefault for pointer types that allow it (mouse/pointer)
-        try { if ((e as any).pointerType !== 'touch') e.preventDefault(); } catch (_) {}
-        try { e.stopPropagation(); } catch (_) {}
-      } else if (absY > absX && absY > lockThreshold) {
-        // vertical gesture -> do not lock
-        return;
-      }
-    } else {
-      // locked to horizontal
-      try { if ((e as any).pointerType !== 'touch') e.preventDefault(); } catch (_) {}
-      try { e.stopPropagation(); } catch (_) {}
+    moveDrag(e.clientX, e.clientY);
+    if (locked.current) {
+      try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
     }
-
-    if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
   };
-
-  const finishPointerDrag = useCallback((clientX?: number) => {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    gestureLockedRef.current = false;
-    if (isZoomingRef.current) {
-      try {
-        if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
-      } catch (_) {}
-      touchStartX.current = null;
-      touchDeltaX.current = 0;
-      touchStartY.current = null;
-      touchDeltaY.current = 0;
-      try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
-      return;
-    }
-    const delta = touchDeltaX.current;
-    const threshold = 40;
-    let target = index;
-    if (delta > threshold) target = Math.max(0, index - 1);
-    else if (delta < -threshold) target = Math.min(imageUrls.length - 1, index + 1);
-    setIndex(target);
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
-    touchStartX.current = null;
-    touchDeltaX.current = 0;
-    try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
-    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
-  }, [index, setIndex, imageUrls.length, trackRef, touchStartX, touchDeltaX, isZoomingRef]);
 
   const onPointerUp = (e: React.PointerEvent) => {
     const el = trackRef.current as any;
     try { if (el && el.releasePointerCapture) el.releasePointerCapture(e.pointerId); } catch (_) {}
-    if ((e as any).pointerType === 'touch') {
-      try { activeTouchPointers.current.delete((e as any).pointerId); } catch (_) {}
-    }
-    finishPointerDrag();
+    endDrag();
   };
-
-  const onPointerCancel = (e: React.PointerEvent) => {
-    const el = trackRef.current as any;
-    try { if (el && el.releasePointerCapture) el.releasePointerCapture(e.pointerId); } catch (_) {}
-    if ((e as any).pointerType === 'touch') {
-      try { activeTouchPointers.current.delete((e as any).pointerId); } catch (_) {}
-    }
-    finishPointerDrag();
-  };
-
-  const handleDocMouseMove = useCallback((e: MouseEvent) => {
-    if (!draggingRef.current || touchStartX.current == null) return;
-    e.preventDefault();
-    touchDeltaX.current = e.clientX - touchStartX.current;
-    if (trackRef.current) trackRef.current.style.transform = `translateX(calc(-${index * 100}% + ${touchDeltaX.current}px))`;
-  }, [index, touchStartX, touchDeltaX, trackRef]);
-
-  const handleDocMouseUp = useCallback((e: MouseEvent) => {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    if (isZoomingRef.current) {
-      try {
-        if (trackRef.current) trackRef.current.style.transform = `translateX(-${index * 100}%)`;
-      } catch (_) {}
-      touchStartX.current = null;
-      touchDeltaX.current = 0;
-      try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
-      document.removeEventListener('mousemove', handleDocMouseMove);
-      document.removeEventListener('mouseup', handleDocMouseUp);
-      return;
-    }
-    const delta = touchDeltaX.current;
-    const threshold = 40;
-    let target = index;
-    if (delta > threshold) target = Math.max(0, index - 1);
-    else if (delta < -threshold) target = Math.min(imageUrls.length - 1, index + 1);
-    setIndex(target);
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${target * 100}%)`;
-    touchStartX.current = null;
-    touchDeltaX.current = 0;
-    try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
-    document.removeEventListener('mousemove', handleDocMouseMove);
-    document.removeEventListener('mouseup', handleDocMouseUp);
-  }, [index, setIndex, imageUrls.length, trackRef, touchStartX, touchDeltaX, isZoomingRef, handleDocMouseMove]);
 
   const onMouseDown = (e: React.MouseEvent) => {
-    if (isZoomingRef.current) return;
-    e.stopPropagation();
-    try { e.nativeEvent?.stopImmediatePropagation?.(); } catch (_) {}
     if (e.button !== 0) return;
-    const now = Date.now();
-    if (lastMouseDownAt.current && now - lastMouseDownAt.current < 400) {
-      // likely double-click, don't start dragging
-      lastMouseDownAt.current = now;
-      return;
-    }
-    lastMouseDownAt.current = now;
-    touchStartX.current = e.clientX;
-    touchDeltaX.current = 0;
-    draggingRef.current = true;
-    try { document.body.style.userSelect = 'none'; document.body.style.cursor = 'grabbing'; } catch (_) {}
-    document.addEventListener('mousemove', handleDocMouseMove);
-    document.addEventListener('mouseup', handleDocMouseUp);
+    startDrag(e.clientX, e.clientY, false);
+    // attach doc move/up to support dragging outside element
+    const move = (ev: MouseEvent) => moveDrag(ev.clientX, ev.clientY);
+    const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); endDrag(); };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
   };
 
   useEffect(() => {
-    return () => {
-      if (draggingRef.current) {
-        draggingRef.current = false;
-        try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
-        document.removeEventListener('mousemove', handleDocMouseMove);
-        document.removeEventListener('mouseup', handleDocMouseUp);
-      }
-    };
-  }, [index, handleDocMouseMove, handleDocMouseUp]);
+    // cleanup rAF on unmount
+    return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current); };
+  }, []);
 
   useEffect(() => {
-    function onZoomStart() {
-      finishPointerDrag();
-      setIsZooming(true);
-      isZoomingRef.current = true;
-    }
-    function onZoomEnd() {
-      setIsZooming(false);
-      isZoomingRef.current = false;
-      try {
-        if (trackRef.current) trackRef.current.style.transform = `translateX(-${indexRef.current * 100}%)`;
-      } catch (_) {}
-    }
+    function onZoomStart() { endDrag(); setIsZooming(true); isZoomingRef.current = true; }
+    function onZoomEnd() { setIsZooming(false); isZoomingRef.current = false; const el = trackRef.current; if (el) el.style.transform = `translate3d(-${indexRef.current * 100}%,0,0)`; }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:zoom_start', onZoomStart as EventListener);
       window.addEventListener('monolog:zoom_end', onZoomEnd as EventListener);
@@ -326,11 +209,13 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
         window.removeEventListener('monolog:zoom_end', onZoomEnd as EventListener);
       }
     };
-  }, [finishPointerDrag]);
+  }, []);
+
+  const pointerSupported = typeof window !== 'undefined' && (window as any).PointerEvent !== undefined;
 
   const carouselTouchProps = (pathname?.startsWith('/post/') && !allowCarouselTouch) ? {} : (
     pointerSupported
-      ? { onPointerDown, onPointerMove, onPointerUp, onPointerCancel }
+      ? { onPointerDown, onPointerMove, onPointerUp }
       : { onTouchStart, onTouchMove, onTouchEnd, onMouseDown }
   );
 
@@ -338,8 +223,8 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     index,
     setIndex,
     trackRef,
-    prev,
-    next,
+    prev: () => setIndex(i => (i <= 0 ? 0 : i - 1)),
+    next: () => setIndex(i => (i >= imageUrls.length - 1 ? imageUrls.length - 1 : i + 1)),
     carouselTouchProps,
   };
 }

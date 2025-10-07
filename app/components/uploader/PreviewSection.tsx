@@ -3,7 +3,6 @@ import { PreviewSectionProps } from "./types";
 import { useCameraCaptureHandler } from "./useCameraCaptureHandler";
 import { LoadingBadge } from "./LoadingBadge";
 import { CarouselView } from "./CarouselView";
-import { SingleImageView } from "./SingleImageView";
 import { CameraModal } from "./CameraModal";
 import { ThumbnailStrip } from "./ThumbnailStrip";
 import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
@@ -113,7 +112,7 @@ export function PreviewSection({
     >
       <div className="preview-inner" style={{ position: 'relative' }}>
         {/* When editing, the ImageEditor is rendered at the top level, replacing all content */}
-        {dataUrls.length > 1 && !editing ? (
+        {dataUrls.length > 0 && !editing && (
           <CarouselView
             dataUrls={dataUrls}
             alt={alt}
@@ -130,29 +129,11 @@ export function PreviewSection({
             videoRef={videoRef}
             streamRef={streamRef}
             cameraInputRef={cameraInputRef}
-              toast={toast}
-              setPreviewLoaded={setPreviewLoaded}
-              processing={processing}
-              previewLoaded={previewLoaded}
-              editing={editing}
-          />
-        ) : !editing && (
-          <SingleImageView
-            dataUrl={dataUrl}
-            dataUrls={dataUrls}
-            alt={alt}
-            setEditingIndex={setEditingIndex}
-            setEditing={setEditing}
-            processing={processing}
-            fileActionRef={fileActionRef}
-            replaceIndexRef={replaceIndexRef}
-            index={index}
-            setDataUrl={setDataUrl}
+            toast={toast}
             setPreviewLoaded={setPreviewLoaded}
-            fileInputRef={fileInputRef}
-            cameraInputRef={cameraInputRef}
-            openCamera={openCamera}
+            processing={processing}
             previewLoaded={previewLoaded}
+            editing={editing}
           />
         )}
       </div>

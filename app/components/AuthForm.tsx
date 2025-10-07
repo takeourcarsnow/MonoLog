@@ -184,7 +184,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   return (
     <form
       onSubmit={submit}
-  className="auth-form enhanced auth-form-tight"
+  className={`auth-form enhanced auth-form-tight mode-${mode}`}
       aria-label="Sign in or sign up"
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -314,7 +314,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-  <div className="auth-actions flex gap-1 justify-center w-full" style={{ maxWidth: 400, marginTop: 4 }}>
+  <div className="auth-actions flex gap-1 justify-center w-full" style={{ maxWidth: 400 }}>
         <button
           className={`auth-confirm-btn ${loading ? 'loading' : ''} ${signupSent ? 'sent' : ''} ${hasError ? 'error' : ''} ${hasSuccess ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : 'mode-signin'}`}
           disabled={loading}

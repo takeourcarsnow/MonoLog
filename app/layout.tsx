@@ -14,13 +14,17 @@ const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '-
 // AppShell is a client component that uses next/navigation hooks. Dynamically
 // load it on the client only to avoid calling client-only hooks during server
 // rendering which can cause `useContext` to be null in dev/hydration.
-const AppShell = dynamic(() => import("@/app/components/AppShell").then(mod => mod.AppShell), { 
+const AppShell = dynamic(() => import("@/app/components/AppShell").then(mod => mod.AppShell), {
   ssr: false,
   // Avoid rendering an extra ad-hoc spinner while AppShell hydrates. The
-  // app already provides a full-page Preloader inside AppShell, so render
+  // the root layout will render the full-page preloader, so render
   // nothing here to prevent duplicate loading UIs.
   loading: () => null,
 });
+
+// Root-level preloader: dynamic client-only component so it mounts once
+// and can listen for a global readiness event from the app init.
+const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ssr: false, loading: () => null });
 
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 
@@ -91,6 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <a href="#view" className="skip-link">Skip to content</a>
         <div id="app-root">
+          <AppPreloader />
           <AppShell>{children}</AppShell>
         </div>
         <Navbar />

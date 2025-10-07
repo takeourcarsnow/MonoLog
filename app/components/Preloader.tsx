@@ -34,6 +34,9 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
         const overlayTimer = setTimeout(() => {
           // overlay has finished its exit animation visually (opacity 0)
           // keep component mounted so we can preserve the blur for blurHold
+          try {
+            if (typeof window !== 'undefined') (window as any).__MONOLOG_PRELOADER_HAS_RUN__ = true;
+          } catch (e) {}
           onFinish?.();
         }, overlayExit);
 
@@ -58,6 +61,21 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
   }, [ready, mounted, onFinish]);
 
   useEffect(() => {
+    // If the preloader already completed earlier in this page lifetime
+    // (for example: initial load already ran), avoid showing it again
+    // when AppShell or this component remounts during client-side
+    // navigations (common on mobile when layouts get reattached).
+    try {
+      const ran = typeof window !== 'undefined' && (window as any).__MONOLOG_PRELOADER_HAS_RUN__;
+      if (ran) {
+        // don't show the overlay again
+        setMounted(false);
+        return;
+      }
+    } catch (e) {
+      // ignore
+    }
+
     // mark page as having an active preloader so underlying content can be
     // blurred. This will be removed when the component unmounts.
     try {

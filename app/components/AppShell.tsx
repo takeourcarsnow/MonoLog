@@ -3,7 +3,6 @@
 import { useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Header } from "./Header";
-import Preloader from "./Preloader";
 import { ToastHost, ToastProvider } from "./Toast";
 import { NotificationListener } from "./NotificationListener";
 import { InstallPrompt } from "./InstallPrompt";
@@ -30,7 +29,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      <Preloader ready={ready} />
       <div className="app-content">
         <Header />
         <main

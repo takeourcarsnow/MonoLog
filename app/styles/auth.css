@@ -356,8 +356,11 @@
 
   /* Make the inputs block breathe more from the actions on mobile */
   .auth-form .inputs-wrap {
-    margin-bottom: 8px; /* previously -6px, pull-up removed on mobile */
-    padding: 0 6px;
+    /* Keep a small bottom padding instead of margin so opening/closing the
+       username field doesn't change the document flow and shift the button
+       unexpectedly. This helps keep a consistent gap between the last
+       visible input and the actions whether in signin or signup mode. */
+    padding: 0 6px 6px 6px;
   }
 
   /* Larger touch targets for inputs on phones */
@@ -370,7 +373,9 @@
 
   .auth-toggle { padding: 8px 10px; margin-bottom: 6px; }
 
-  .auth-form .auth-actions { margin-top: 8px; gap: 12px; }
+  /* Remove the top margin so spacing is controlled by inputs-wrap's
+     padding-bottom. This keeps signin and signup distances identical. */
+  .auth-form .auth-actions { margin-top: 0; gap: 12px; }
 }
 
 /* Very small screens: make dialog take more space but keep margins */
@@ -405,4 +410,13 @@
     margin-top: 15vh !important;
     margin-bottom: 0 !important;
   }
+}
+
+/* Extra-tight spacing for signup mode on small screens so the button sits
+   closer to the username field (but only on phones). */
+@media (max-width: 640px) {
+  .auth-form.mode-signup .inputs-wrap { padding-bottom: 0; }
+  /* pull the actions up slightly so the button sits closer to the username
+     field; tiny negative margin avoids overlap but makes the gap feel tighter */
+  .auth-form.mode-signup .auth-actions { margin-top: -2px; gap: 6px; }
 }

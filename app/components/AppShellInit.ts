@@ -34,6 +34,12 @@ export function useAppShellInit() {
         console.error(e);
       } finally {
         setReady(true);
+        try {
+          if (typeof window !== 'undefined') {
+            (window as any).__MONOLOG_APP_READY__ = true;
+            try { window.dispatchEvent(new Event('monolog-ready')); } catch (e) {}
+          }
+        } catch (e) {}
       }
     })();
 

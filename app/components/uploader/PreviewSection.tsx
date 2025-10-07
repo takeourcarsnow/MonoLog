@@ -5,7 +5,6 @@ import { useCameraCaptureHandler } from "./useCameraCaptureHandler";
 import { LoadingBadge } from "./LoadingBadge";
 import { CarouselView } from "./CarouselView";
 import { CameraModal } from "./CameraModal";
-import { ThumbnailStrip } from "./ThumbnailStrip";
 import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
 
 
@@ -161,21 +160,33 @@ export function PreviewSection({
 
       {dataUrls.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8, gap: 2 }}>
-          {Array.from({ length: 5 }, (_, i) => (
-            <svg key={i} viewBox="0 0 24 24" width="12" height="12">
-              <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" fill="none" stroke={i < dataUrls.length ? "#3b82f6" : "#9ca3af"} strokeWidth="1.5" />
-              <circle cx="12" cy="13" r="3" fill="none" stroke={i < dataUrls.length ? "#3b82f6" : "#9ca3af"} strokeWidth="1.5" />
-            </svg>
-          ))}
+          <div className="camera-indicators" role="tablist" aria-label="Photo slots">
+            {Array.from({ length: 5 }, (_, i) => {
+              const occupied = i < dataUrls.length;
+              const isActive = index === i;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  className={`camera-indicator-btn ${isActive ? 'active' : ''}`}
+                  onClick={() => occupied && setIndex(i)}
+                  aria-pressed={isActive}
+                  aria-label={occupied ? `Select photo ${i + 1}` : `Empty slot ${i + 1}`}
+                  title={occupied ? `Select photo ${i + 1}` : `Empty slot`}
+                  disabled={!occupied}
+                >
+                  <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+                    <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                    <circle cx="12" cy="13" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      <ThumbnailStrip
-        dataUrls={dataUrls}
-        alt={alt}
-        index={index}
-        setIndex={setIndex}
-      />
+      {/* Thumbnails removed per request */}
     </div>
   );
 }

@@ -1065,3 +1065,50 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   font-size: 14px;
   font-weight: 500;
 }
+
+/* Camera indicators (small camera icons showing occupied slots) */
+.camera-indicators {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.camera-indicator-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: transform 160ms ease, color 160ms ease, background 160ms ease, border-color 160ms ease;
+  border: 1px solid transparent;
+}
+
+.camera-indicator-btn svg { width: 16px; height: 16px; }
+
+.camera-indicator-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary-weak), transparent 94%);
+  border-color: color-mix(in srgb, var(--primary), transparent 60%);
+}
+
+.camera-indicator-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
+}
+
+.camera-indicator-btn.active {
+  background: color-mix(in srgb, var(--primary-weak), transparent 88%);
+  color: var(--primary);
+  transform: scale(1.03);
+  border-color: var(--primary);
+}
+
+.camera-indicator-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}

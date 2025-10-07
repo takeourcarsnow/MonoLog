@@ -999,27 +999,29 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
 
 
-/* Mobile refinement: make stacked action pills (visibility / publish / cancel) align and breathe */
+/* Mobile refinement: keep action pills on one horizontal line for easier access
+   on small screens while keeping compact sizing. */
 @media (max-width: 640px) {
-  /* Slightly reduce pill height on small screens for a tighter stack */
+  /* Slightly reduce pill height on small screens for a tighter row */
   :root { --action-pill-height: 38px; }
 
-  .uploader .form-row { gap: 10px; align-items: center; flex-direction: column; }
-  .uploader .form-row .btn-group { width: 100%; gap: 10px; align-items: center; }
+  /* Keep the action row horizontal instead of stacking vertically */
+  .uploader .form-row { gap: 10px; align-items: center; flex-direction: row; }
+  .uploader .form-row .btn-group { width: auto; gap: 10px; align-items: center; flex-direction: row; }
 
-  /* Give all three pills a consistent width, centered. Clamp to avoid overly wide on large phones */
+  /* Keep pills compact but allow them to size naturally in a row */
   .uploader .form-row .vis-toggle,
   .uploader .form-row .publish-button,
-  .uploader .form-row .discard-btn { 
+  .uploader .form-row .discard-btn {
     width: auto;
-    max-width: 240px; 
-    margin: 0 auto; 
+    max-width: none;
+    margin: 0;
   }
 
   /* Ensure internal padding adapts with smaller height */
-  .uploader .form-row .vis-toggle { padding: 8px 16px; }
-  .uploader .form-row .publish-button { padding: 8px 18px; }
-  .uploader .form-row .discard-btn { padding: 8px 18px; }
+  .uploader .form-row .vis-toggle { padding: 8px 12px; }
+  .uploader .form-row .publish-button { padding: 8px 14px; }
+  .uploader .form-row .discard-btn { padding: 8px 14px; }
 }
 
 

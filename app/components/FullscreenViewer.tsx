@@ -16,11 +16,20 @@ type Props = {
 export default function FullscreenViewer({ src, alt, onClose }: Props) {
   const [isActive, setIsActive] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const ignorePopRef = useRef(false);
   const scrollY = useRef<number>(0);
 
   // Start close sequence: fade out then call onClose
   const startClose = useCallback(() => {
     if (!isActive) return;
+    // If we programmatically navigate back to remove the pushed history entry
+    // make sure the popstate handler ignores that event.
+    if (window.history && window.history.state && (window.history.state as any).fullscreenViewer) {
+      ignorePopRef.current = true;
+      // go back so the history entry we pushed when opening is removed
+      window.history.back();
+    }
+
     document.body.classList.remove('fs-blur');
     setIsActive(false);
     setTimeout(() => {
@@ -46,6 +55,16 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       setIsActive(true);
     });
 
+    // Push a history entry so the browser "back" action closes fullscreen
+    // instead of navigating away from the current page.
+    try {
+      if (window.history && window.history.pushState) {
+        window.history.pushState({ fullscreenViewer: true }, '');
+      }
+    } catch (e) {
+      // ignore possible security exceptions (e.g. in some embedded contexts)
+    }
+
     return () => {
       cancelAnimationFrame(raf);
       document.body.classList.remove('fs-blur');
@@ -68,6 +87,37 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [startClose]);
+
+  // Intercept browser back (popstate) while fullscreen is open and close the
+  // viewer instead of allowing the navigation.
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      // Ignore popstate events we triggered ourselves via history.back()
+      if (ignorePopRef.current) {
+        ignorePopRef.current = false;
+        return;
+      }
+
+      // If viewer is active, close it. The browser already moved the history
+      // pointer back (to the state before our pushed one), so we just close UI.
+      if (isActive) startClose();
+    };
+
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      // If component unmounts while the pushed history entry still exists,
+      // remove it so we don't leave a stale history entry.
+      try {
+        if (window.history && (window.history.state as any)?.fullscreenViewer) {
+          ignorePopRef.current = true;
+          window.history.back();
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+  }, [isActive, startClose]);
 
   // Ensure the viewer root can be focused for accessibility when opened
   useEffect(() => {

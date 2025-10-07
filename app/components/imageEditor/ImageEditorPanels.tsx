@@ -75,10 +75,10 @@ export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
   return (
     <div className="imgedit-panels" style={{
       maxWidth: 820,
-      margin: '16px auto 0',
+      margin: '8px auto 0',
       position: 'relative',
       borderRadius: 12,
-      minHeight: 200
+      minHeight: 140
     }}>
       {props.selectedCategory === 'basic' && (
         <BasicPanel

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { PHRASES } from "./constants";
 
-export function useTypingAnimation(caption: string) {
+export function useTypingAnimation(caption: string, isActive: boolean = true) {
   // rotating caption placeholder (persisted across reloads so users see a different prompt each time)
   // Initialize from localStorage so the rotated prompt appears immediately on first render.
   const [placeholder, setPlaceholder] = useState<string>(() => {
@@ -32,8 +32,8 @@ export function useTypingAnimation(caption: string) {
     const pauseAfterType = 900;
     const pauseBetween = 420;
 
-    // stop immediately if user started typing
-    if (caption && caption.length > 0) {
+    // stop immediately if user started typing or not active
+    if (caption && caption.length > 0 || !isActive) {
       setTyped("");
       return;
     }
@@ -45,22 +45,22 @@ export function useTypingAnimation(caption: string) {
         idx = Number.isFinite(Number(raw)) ? Number(raw) : 0;
       } catch (e) {}
 
-      while (mounted && (!caption || caption.length === 0)) {
+      while (mounted && (!caption || caption.length === 0) && isActive) {
         const msg = PHRASES[idx % PHRASES.length] || PHRASES[0];
 
         // type forward
         for (let i = 1; i <= msg.length; i++) {
-          if (!mounted || (caption && caption.length > 0)) return;
+          if (!mounted || (caption && caption.length > 0) || !isActive) return;
           setTyped(msg.slice(0, i));
           await sleep(typeSpeed + (i % 3 === 0 ? 8 : 0));
         }
 
-        if (!mounted || (caption && caption.length > 0)) break;
+        if (!mounted || (caption && caption.length > 0) || !isActive) break;
         await sleep(pauseAfterType);
 
         // delete
         for (let i = msg.length; i >= 0; i--) {
-          if (!mounted || (caption && caption.length > 0)) return;
+          if (!mounted || (caption && caption.length > 0) || !isActive) return;
           setTyped(msg.slice(0, i));
           await sleep(deleteSpeed + (i % 2 === 0 ? 4 : 0));
         }

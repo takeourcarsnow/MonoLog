@@ -3,7 +3,10 @@
 .image-editor {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* let the editor size to its content instead of forcing a full viewport height
+     (this avoids creating extra empty space below the panels on smaller content). */
+  height: auto;
+  max-height: 100vh;
   overflow: hidden;
   /* other styles */
   width: 100%;
@@ -11,8 +14,8 @@
   margin: 0 auto;
   background: var(--bg-elev);
   color: var(--text);
-  padding: 12px;
-  padding-bottom: 16px;
+  padding: 8px;
+  padding-bottom: 12px;
   border-radius: 8px;
   /* subtle mount animation: only translate and fade (no scaling) to
      avoid a size jump when the canvas finishes sizing. */
@@ -45,13 +48,13 @@
 }
 
 .image-editor-canvas-container {
-  flex: 0 0 auto;
+  flex: 1;
   overflow: hidden;
 }
 
 .image-editor-panels-container {
   flex: 0 0 auto;
-  max-height: 200px;
+  max-height: 160px;
   overflow-y: auto;
 }
 
@@ -165,19 +168,19 @@
   background: color-mix(in srgb, var(--bg-elev) 95%, var(--primary) 5%);
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
 }
-.imgedit-panels > div { height: 100%; }
+.imgedit-panels > div { height: auto; }
 
 .imgedit-panel-inner {
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden; /* avoid transient horizontal scroll */
   -webkit-overflow-scrolling: touch;
-  padding: 16px;
-  gap: 14px;
+  padding: 12px;
+  gap: 10px;
   display: grid;
   background: var(--bg-color);
   border-radius: 8px;
-  min-height: 200px;
+  min-height: 140px;
 }
 
 /* Reduce header icon button size to make the top bar less tall */
@@ -189,8 +192,8 @@
   font-size: 13px;
 }
 
-@media (min-width: 720px) { .imgedit-panels { max-height: 200px; } }
-@media (max-width: 720px) { .imgedit-panels { max-height: 200px; } }
+@media (min-width: 720px) { .imgedit-panels { max-height: 160px; } }
+@media (max-width: 720px) { .imgedit-panels { max-height: 160px; } }
 
 /* slider color variables (theme-aware) */
 .image-editor {

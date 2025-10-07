@@ -139,11 +139,6 @@ export function useDelete(postId: string) {
         const delays = [0, 8, 40, 120, 400, 900];
         for (const d of delays) {
           setTimeout(() => {
-            try {
-              // debug what element is active right now (helps remote debugging)
-              // eslint-disable-next-line no-console
-              console.debug('[PostCard] delete blur pass - activeElement', document.activeElement?.tagName, document.activeElement?.id, document.activeElement?.className);
-            } catch (_) {}
             try { sink.focus(); sink.blur(); } catch (_) {}
             try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
           }, d);
@@ -182,8 +177,8 @@ export function useDelete(postId: string) {
       window.setTimeout(() => setShowConfirmText(false), 220);
       deleteExpandTimerRef.current = null; 
     }, 3500);
-    // final debug snapshot a little later
-    setTimeout(() => { try { console.debug('[PostCard] final activeElement', document.activeElement?.tagName, document.activeElement?.id, document.activeElement?.className); } catch (_) {} }, 1200);
+  // final snapshot a little later (no debug log)
+  setTimeout(() => { try { /* noop */ } catch (_) {} }, 1200);
   };
 
   // keep a live reference so native listeners can call the latest handler

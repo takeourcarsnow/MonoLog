@@ -107,11 +107,11 @@ export function PreviewSection({
 
   return (
     <div
-      className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${editing ? 'editing' : ''} ${(processing || !previewLoaded) ? 'processing' : ''}`}
+      className={`preview ${(dataUrl || dataUrls.length) ? "" : "hidden"} ${(processing || !previewLoaded) ? 'processing' : ''}`}
       onDragOver={dataUrls.length <= 1 ? (e) => { e.preventDefault(); } : undefined}
       onDrop={dataUrls.length <= 1 ? onDropPreview : undefined}
     >
-      <div className={`preview-inner ${editing ? 'editing' : ''}`} style={{ position: 'relative' }}>
+      <div className="preview-inner" style={{ position: 'relative' }}>
         {/* When editing, the ImageEditor is rendered at the top level, replacing all content */}
         {dataUrls.length > 1 && !editing ? (
           <CarouselView

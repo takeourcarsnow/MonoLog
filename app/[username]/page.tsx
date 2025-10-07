@@ -26,7 +26,7 @@ export default function UsernamePage({ params }: { params: { username: string } 
     
     async function resolve() {
       const username = params.username;
-      try { console.debug('[UsernamePage] params.username ->', username); } catch (_) {}
+  // params resolved
       
       // Check if this is a reserved route name
       if (RESERVED_ROUTES.includes(username.toLowerCase())) {
@@ -38,7 +38,6 @@ export default function UsernamePage({ params }: { params: { username: string } 
       try {
         // If it looks like a UUID, try to use it directly
         if (looksLikeUuid(username)) {
-          try { console.debug('[UsernamePage] param looks like UUID, using directly ->', username); } catch (_) {}
           if (!mounted) return;
           setResolvedId(username);
           setLoading(false);
@@ -47,8 +46,7 @@ export default function UsernamePage({ params }: { params: { username: string } 
 
         // Try to resolve username to user id
 
-        const user = await supabaseApi.getUserByUsername?.(username);
-        try { console.debug('[UsernamePage] getUserByUsername ->', user ? { id: user.id, username: user.username } : null); } catch (_) {}
+  const user = await supabaseApi.getUserByUsername?.(username);
         if (!mounted) return;
 
         if (user && user.id) {

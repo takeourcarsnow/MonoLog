@@ -24,7 +24,7 @@ export default function ImageEditorCanvas({ canvasRef, mounted }: ImageEditorCan
   }, []);
   
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexDirection: 'column', width: '100%', height: '100%' }}>
       <canvas
         ref={canvasRef}
         style={{
@@ -34,7 +34,9 @@ export default function ImageEditorCanvas({ canvasRef, mounted }: ImageEditorCan
           borderRadius: 12,
           boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05)',
           border: 'none',
-          background: isFullscreen ? 'var(--bg)' : 'var(--bg-elev)'
+          background: isFullscreen ? 'var(--bg)' : 'var(--bg-elev)',
+          maxWidth: '100%',
+          maxHeight: '100%'
         }}
       />
     </div>

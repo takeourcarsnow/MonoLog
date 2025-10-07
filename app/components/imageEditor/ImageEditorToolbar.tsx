@@ -23,7 +23,7 @@ function ImageEditorToolbarHeader({
   isEdited
 }: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited'>) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 1, gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 0, gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
       <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
         <span className="sr-only">Edit Photo</span>
       </div>
@@ -65,14 +65,14 @@ function ImageEditorToolbarCategories({
       <div ref={categoriesContainerRef} className="categories-scroll" style={{
         position: 'relative',
         display: 'flex',
-        gap: 10,
-        marginTop: 16,
+        gap: 6,
+        marginTop: 8,
         justifyContent: 'center',
         flexWrap: 'nowrap',
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch',
         maxWidth: 820,
-        margin: '16px auto 0',
+        margin: '8px auto 0',
         padding: '8px 10px',
         alignItems: 'center',
         whiteSpace: 'nowrap',
@@ -89,7 +89,7 @@ function ImageEditorToolbarCategories({
             applyCropOnly();
           }}
           style={{
-            padding: '8px 12px',
+            padding: '6px 10px',
             borderRadius: 10,
             background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
             color: 'var(--text)',
@@ -119,7 +119,7 @@ function ImageEditorToolbarCategories({
             resetCrop();
           }}
           style={{
-            padding: '8px 12px',
+            padding: '6px 10px',
             borderRadius: 10,
             background: 'transparent',
             color: 'var(--text)',
@@ -149,7 +149,7 @@ function ImageEditorToolbarCategories({
             cancelCrop();
           }}
           style={{
-            padding: '8px 12px',
+            padding: '6px 10px',
             borderRadius: 10,
             background: 'transparent',
             color: 'var(--text)',
@@ -178,8 +178,8 @@ function ImageEditorToolbarCategories({
     <div ref={categoriesContainerRef} className="categories-scroll" style={{
       position: 'relative',
       display: 'flex',
-      gap: 5,
-      marginTop: 16,
+      gap: 3,
+      marginTop: 8,
       justifyContent: 'center',
       flexWrap: 'wrap',
       overflowX: 'visible',
@@ -220,7 +220,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('basic');
         }}
         style={{
-          padding: '8px 10px',
+          padding: '6px 8px',
           borderRadius: 10,
           background: category === 'basic' ? 'transparent' : 'transparent',
           color: 'var(--text)',
@@ -252,7 +252,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('color');
         }}
         style={{
-          padding: '8px 10px',
+          padding: '6px 8px',
           borderRadius: 10,
           background: category === 'color' ? 'transparent' : 'transparent',
           color: 'var(--text)',
@@ -284,7 +284,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('effects');
         }}
         style={{
-          padding: '8px 10px',
+          padding: '6px 8px',
           borderRadius: 10,
           background: category === 'effects' ? 'transparent' : 'transparent',
           color: 'var(--text)',
@@ -316,7 +316,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('crop');
         }}
         style={{
-          padding: '8px 10px',
+          padding: '6px 8px',
           borderRadius: 10,
           background: 'transparent',
           color: 'var(--text)',
@@ -348,7 +348,7 @@ function ImageEditorToolbarCategories({
           setSelectedCategory('frame');
         }}
         style={{
-          padding: '8px 10px',
+          padding: '6px 8px',
           borderRadius: 10,
           background: category === 'frame' ? 'transparent' : 'transparent',
           color: 'var(--text)',

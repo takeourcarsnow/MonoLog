@@ -36,7 +36,7 @@ export function useUploader() {
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
 
   const { canPost, nextAllowedAt, remaining, remainingMs, countdownTotalMs } = useCountdown();
-  const { placeholder, typed } = useTypingAnimation(caption);
+  const { placeholder, typed } = useTypingAnimation(caption, !editing);
   const { cameraOpen, setCameraOpen, videoRef, streamRef, openCamera, closeCamera } = useCameraCapture();
   const { handleFile: handleFileProcessing } = useFileHandling();
 

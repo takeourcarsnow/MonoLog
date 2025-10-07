@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useRef, useCallback } from "react";
 import BasicPanel from './imageEditor/panels/BasicPanel';
 import ColorPanel from './imageEditor/panels/ColorPanel';
 import EffectsPanel from './imageEditor/panels/EffectsPanel';
@@ -128,6 +128,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setMounted,
     draw
   );
+
 
   // Local draw wrapper binds all refs/state to the lower-level drawImage helper so
   // callers can simply call draw() or draw(info).
@@ -379,6 +380,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           frameColorRef={frameColorRef}
         />
       </div>
+      {/* debug overlay removed */}
     </div>
   );
 }

@@ -38,7 +38,6 @@ export function useAppShellNavigation(
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) {
           inst.allowTouchMove = false;
-          console.log('Swiper touch disabled for carousel drag');
           // Failsafe: re-enable touch after 5 seconds if end event is missed
           if (touchDisabledTimeout) clearTimeout(touchDisabledTimeout);
           touchDisabledTimeout = setTimeout(() => {
@@ -46,7 +45,6 @@ export function useAppShellNavigation(
               const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
               if (inst && !inst.allowTouchMove) {
                 inst.allowTouchMove = Boolean(isTouchDevice);
-                console.log('Swiper touch re-enabled by failsafe timeout');
               }
             } catch (_) { /* ignore */ }
           }, 5000);
@@ -58,7 +56,6 @@ export function useAppShellNavigation(
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) {
           inst.allowTouchMove = Boolean(isTouchDevice);
-          console.log('Swiper touch re-enabled after carousel drag');
           if (touchDisabledTimeout) {
             clearTimeout(touchDisabledTimeout);
           }
@@ -70,7 +67,6 @@ export function useAppShellNavigation(
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) {
           inst.allowTouchMove = false;
-          console.log('Swiper touch disabled for pan');
         }
       } catch (_) { /* ignore */ }
     }
@@ -79,7 +75,6 @@ export function useAppShellNavigation(
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) {
           inst.allowTouchMove = Boolean(isTouchDevice);
-          console.log('Swiper touch re-enabled after pan');
         }
       } catch (_) { /* ignore */ }
     }
@@ -99,8 +94,7 @@ export function useAppShellNavigation(
     };
   }, [isTouchDevice]);
 
-  const handleSlideChange = (swiper: any) => {
-    console.log('Slide changed to:', swiper.activeIndex);
+    const handleSlideChange = (swiper: any) => {
     const newPath = views[swiper.activeIndex]?.path;
     // keep local state for which slide is active so we can mark others inert
     try { setActiveIndex(typeof swiper.activeIndex === 'number' ? swiper.activeIndex : currentIndex); } catch (_) {}

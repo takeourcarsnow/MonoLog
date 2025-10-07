@@ -39,12 +39,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           id="view"
         >
           {!ready ? <div className="card skeleton" style={{ height: 240 }} /> : isMainView ? (
-            <Swiper
+              <Swiper
               className="swipe-views"
               ref={swiperRef}
               onSwiper={(s) => { 
                 swiperRef.current = s; 
-                console.log('Swiper initialized:', s);
               }}
               spaceBetween={0}
               slidesPerView={1}

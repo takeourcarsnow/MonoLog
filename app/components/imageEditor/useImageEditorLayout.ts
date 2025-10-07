@@ -15,18 +15,23 @@ export function useImageEditorLayout(
   const computeImageLayout = useCallback(() => {
     const canvas = canvasRef.current; const img = imgRef.current;
     if (!canvas || !img) return null as any;
-    // Since canvas is now sized to the image, use the canvas CSS dimensions
+    // Canvas is now sized to fill the container, so use its dimensions
     const cssW = canvas.clientWidth || Math.max(100, canvas.width / (window.devicePixelRatio || 1));
     const cssH = canvas.clientHeight || Math.max(100, canvas.height / (window.devicePixelRatio || 1));
-    // Image fills the entire canvas since canvas is sized to image dimensions
-    const dispW = cssW;
-    const dispH = cssH;
-    const left = 0;
-    const top = 0;
+    // Calculate displayed image dimensions (contain-style scaling within the canvas)
+    const baseScale = Math.min(cssW / img.naturalWidth, cssH / img.naturalHeight);
+    const dispW = img.naturalWidth * baseScale;
+    const dispH = img.naturalHeight * baseScale;
+  const left = (cssW - dispW) / 2;
+  // Center image vertically within the canvas to avoid large empty
+  // space below the image when the image is shorter than the canvas.
+  const top = (cssH - dispH) / 2;
     // create a small rect-like object (width/height) so callers can use info.rect.width/height
     const rect = { width: cssW, height: cssH, left: 0, top: 0 } as DOMRect;
+    // no debug output
+
     // return layout info; do NOT set state here (caller should set state and draw with info)
-    return { rect, baseScale: 1, dispW, dispH, left, top };
+    return { rect, baseScale, dispW, dispH, left, top };
   }, [canvasRef, imgRef]);
 
   // Handle image loading and initial layout
@@ -49,20 +54,23 @@ export function useImageEditorLayout(
         const cont = containerRef.current;
         if (canvas && cont) {
           const dpr = window.devicePixelRatio || 1;
-          const contW = Math.max(100, Math.round(cont.clientWidth));
-          const contH = Math.max(100, Math.round(cont.clientHeight - 380));
+          const contW = Math.round(cont.clientWidth);
+          const isFullscreen = cont.classList.contains('upload-editor-fullscreen');
+          const subtractHeight = 0;
+          const contH = Math.round(cont.clientHeight - subtractHeight);
           const padRatio = 0.0;
           const availW = Math.max(1, contW * (1 - padRatio * 2));
           const availH = Math.max(1, contH * (1 - padRatio * 2));
-          // Calculate displayed image dimensions (contain-style scaling)
+          // Compute scale so image fits within available space, then size
+          // the canvas to the displayed image dimensions (no extra vertical space).
           const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
-          const dispW = img.naturalWidth * baseScale;
-          const dispH = img.naturalHeight * baseScale;
-          // Size canvas to match the displayed image dimensions
-          canvas.width = Math.max(100, Math.round(dispW * dpr));
-          canvas.height = Math.max(100, Math.round(dispH * dpr));
+          const dispW = Math.max(1, img.naturalWidth * baseScale);
+          const dispH = Math.max(1, img.naturalHeight * baseScale);
+          canvas.width = Math.round(dpr * dispW);
+          canvas.height = Math.round(dpr * dispH);
           canvas.style.width = `${dispW}px`;
           canvas.style.height = `${dispH}px`;
+          // sizing applied
         }
       } catch (e) {
         // ignore sizing errors and fall back to computeImageLayout
@@ -78,6 +86,7 @@ export function useImageEditorLayout(
           } else {
             draw();
           }
+          // initial draw completed
           // Trigger the mount animation / visibility only after the
           // initial draw has completed.
           setMounted(true);
@@ -105,20 +114,21 @@ export function useImageEditorLayout(
       if (!c || !cont || !img) return;
       const dpr = window.devicePixelRatio || 1;
       // Calculate the available space for the image
-      const contW = Math.max(100, Math.round(cont.clientWidth));
-      const contH = Math.max(100, Math.round(cont.clientHeight - 380));
+      const contW = Math.round(cont.clientWidth);
+      const isFullscreen = cont.classList.contains('upload-editor-fullscreen');
+      const subtractHeight = isFullscreen ? 0 : 0;
+      const contH = Math.round(cont.clientHeight - subtractHeight);
       const padRatio = 0.0;
       const availW = Math.max(1, contW * (1 - padRatio * 2));
       const availH = Math.max(1, contH * (1 - padRatio * 2));
-      // Calculate displayed image dimensions (contain-style scaling)
+      // Compute displayed image size (contain scaling) and size canvas to match
       const baseScale = Math.min(availW / img.naturalWidth, availH / img.naturalHeight);
-      const dispW = img.naturalWidth * baseScale;
-      const dispH = img.naturalHeight * baseScale;
-      // Size canvas to match the displayed image dimensions
-      c.width = Math.max(100, Math.round(dispW * dpr));
-      c.height = Math.max(100, Math.round(dispH * dpr));
-      c.style.width = `${dispW}px`;
-      c.style.height = `${dispH}px`;
+      const dispW = Math.max(1, img.naturalWidth * baseScale);
+      const dispH = Math.max(1, img.naturalHeight * baseScale);
+      c.width = Math.round(dpr * dispW);
+      c.height = Math.round(dpr * dispH);
+  c.style.width = `${dispW}px`;
+  c.style.height = `${dispH}px`;
       // recompute image layout after resize so image stays centered
       const info = computeImageLayout();
       if (info) {

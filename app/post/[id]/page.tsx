@@ -30,12 +30,7 @@ function mapRowToHydratedPost(row: any): HydratedPost {
 // using the server service-role client so direct refreshes work reliably.
 export default async function PostIdPage({ params }: { params: { id: string } }) {
   const raw = params.id;
-  // Debugging: log incoming route param on server
-  try {
-    // server console
-    // eslint-disable-next-line no-console
-    console.log(`[post-page] incoming param raw=${String(raw)}`);
-  } catch (e) {}
+  // incoming route param
   const sb = getServiceSupabase();
 
   // Extract trailing token from slug like `username-abcdef12` or use raw
@@ -49,10 +44,9 @@ export default async function PostIdPage({ params }: { params: { id: string } })
   // Try exact id, then prefix match for short tokens
   // Fetch full post data including user and comments count
   try {
-    // Debug: log candidate used for lookup
-    try { console.log(`[post-page] candidate=${candidate}`); } catch (e) {}
+  // candidate used for lookup
     const exact = await sb.from('posts').select('*, users:users(*), comments:comments(id)').eq('id', candidate).limit(1).maybeSingle();
-    try { console.log('[post-page] exact lookup result', { error: exact?.error, data: !!exact?.data }); } catch (e) {}
+  // exact lookup result checked
     if (exact && !exact.error && exact.data) {
       const post = mapRowToHydratedPost(exact.data);
       return (

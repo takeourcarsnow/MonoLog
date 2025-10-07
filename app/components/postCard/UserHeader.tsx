@@ -167,8 +167,6 @@ export const UserHeader = memo(function UserHeader({
                     const now = Date.now();
                     const LOCK_MS = 400;
                     if (editClickLockRef.current && (now - editClickLockRef.current) < LOCK_MS) {
-                      // eslint-disable-next-line no-console
-                      console.debug('[UserHeader] Ignoring rapid duplicate edit click');
                       try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
                       return;
                     }
@@ -181,8 +179,7 @@ export const UserHeader = memo(function UserHeader({
                       setEditExpanded(true);
                       if (editTimerRef.current) { window.clearTimeout(editTimerRef.current); editTimerRef.current = null; }
                       editTimerRef.current = window.setTimeout(() => { setEditExpanded(false); editTimerRef.current = null; }, 3500);
-                      // eslint-disable-next-line no-console
-                      console.debug('[UserHeader] setEditing(true) via Edit button');
+                      // set editing
                       setEditing(true);
                       return;
                     }
@@ -192,13 +189,11 @@ export const UserHeader = memo(function UserHeader({
                       // If the editor is still opening, ignore the save click to avoid
                       // triggering an immediate close via the save path.
                       if (editorOpeningRef && editorOpeningRef.current) {
-                        // eslint-disable-next-line no-console
-                        console.debug('[UserHeader] Save requested while editor is opening; ignoring');
+                        // save ignored while opening
                         return;
                       }
                       if (editorRef && editorRef.current && typeof editorRef.current.save === 'function') {
-                        // eslint-disable-next-line no-console
-                        console.debug('[UserHeader] invoking editorRef.save()');
+                        // invoking editorRef.save()
                         await editorRef.current.save();
                       }
                     } catch (e) {

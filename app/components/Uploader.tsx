@@ -114,7 +114,7 @@ function UploaderCore() {
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''}`}>
       {editing && (dataUrls[editingIndex] || dataUrl) && (
-        <div className="upload-editor-fullscreen no-swipe">
+        <div>
           <Suspense fallback={
             <div className="upload-editor-loading">
               <div className="card skeleton" style={{ height: 400, width: '100%', maxWidth: 600 }} />
@@ -204,57 +204,61 @@ function UploaderCore() {
         />
       )}
 
-      <FileInputs
-        fileInputRef={fileInputRef}
-        cameraInputRef={cameraInputRef}
-        onFileChange={handleFileInputChange}
-        onCameraChange={async () => {
-          const f = cameraInputRef.current?.files?.[0];
-          if (!f) return;
-          await handleFile(f);
-          try { cameraInputRef.current!.value = ""; } catch (_) {}
-        }}
-      />
+      {!editing && (
+        <FileInputs
+          fileInputRef={fileInputRef}
+          cameraInputRef={cameraInputRef}
+          onFileChange={handleFileInputChange}
+          onCameraChange={async () => {
+            const f = cameraInputRef.current?.files?.[0];
+            if (!f) return;
+            await handleFile(f);
+            try { cameraInputRef.current!.value = ""; } catch (_) {}
+          }}
+        />
+      )}
 
-      <PreviewSection
-        dataUrl={dataUrl}
-        dataUrls={dataUrls}
-        originalDataUrls={originalDataUrls}
-        editorSettings={editorSettings}
-        alt={alt}
-        editing={editing}
-        editingIndex={editingIndex}
-        editingAlt={editingAlt}
-        setAlt={setAlt}
-        setEditorSettings={setEditorSettings}
-        setDataUrls={setDataUrls}
-        setOriginalDataUrls={setOriginalDataUrls}
-        setDataUrl={setDataUrl}
-        setPreviewLoaded={setPreviewLoaded}
-        setCompressedSize={setCompressedSize}
-        setOriginalSize={setOriginalSize}
-        setProcessing={setProcessing}
-        setEditing={setEditing}
-        setEditingIndex={setEditingIndex}
-        processing={processing}
-        previewLoaded={previewLoaded}
-        index={index}
-        setIndex={setIndex}
-        trackRef={trackRef}
-        touchStartX={touchStartX}
-        touchDeltaX={touchDeltaX}
-        cameraOpen={cameraOpen}
-        setCameraOpen={setCameraOpen}
-        videoRef={videoRef}
-        streamRef={streamRef}
-        fileActionRef={fileActionRef}
-        replaceIndexRef={replaceIndexRef}
-        fileInputRef={fileInputRef}
-        cameraInputRef={cameraInputRef}
-        toast={toast}
-        handleFile={handleFile}
-        openCamera={openCamera}
-      />
+      {!editing && (
+        <PreviewSection
+          dataUrl={dataUrl}
+          dataUrls={dataUrls}
+          originalDataUrls={originalDataUrls}
+          editorSettings={editorSettings}
+          alt={alt}
+          editing={editing}
+          editingIndex={editingIndex}
+          editingAlt={editingAlt}
+          setAlt={setAlt}
+          setEditorSettings={setEditorSettings}
+          setDataUrls={setDataUrls}
+          setOriginalDataUrls={setOriginalDataUrls}
+          setDataUrl={setDataUrl}
+          setPreviewLoaded={setPreviewLoaded}
+          setCompressedSize={setCompressedSize}
+          setOriginalSize={setOriginalSize}
+          setProcessing={setProcessing}
+          setEditing={setEditing}
+          setEditingIndex={setEditingIndex}
+          processing={processing}
+          previewLoaded={previewLoaded}
+          index={index}
+          setIndex={setIndex}
+          trackRef={trackRef}
+          touchStartX={touchStartX}
+          touchDeltaX={touchDeltaX}
+          cameraOpen={cameraOpen}
+          setCameraOpen={setCameraOpen}
+          videoRef={videoRef}
+          streamRef={streamRef}
+          fileActionRef={fileActionRef}
+          replaceIndexRef={replaceIndexRef}
+          fileInputRef={fileInputRef}
+          cameraInputRef={cameraInputRef}
+          toast={toast}
+          handleFile={handleFile}
+          openCamera={openCamera}
+        />
+      )}
 
       {hasPreview && !editing ? (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6, gap: 8 }}>

@@ -53,6 +53,13 @@ body {
   position: relative;
 }
 
+/* Allow body scrolling on desktop so mousewheel works on sides of screen */
+@media (min-width: 900px) {
+  body {
+    overflow-y: auto;
+  }
+}
+
 #app-root {
   min-height: 100dvh;
   position: relative;

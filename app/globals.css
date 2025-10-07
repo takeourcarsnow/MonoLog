@@ -6,8 +6,6 @@
 html, body {
   overflow: hidden;
 }
-
-/* --- MonoLog original CSS + variables (kept) --- */
 :root {
   color-scheme: light dark;
 

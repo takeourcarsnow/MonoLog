@@ -11,17 +11,6 @@
   padding: var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) 12px calc(var(--tabbar-height, 64px) + 12px);
 }
 .upload-empty .content { padding-bottom: calc(28px + var(--safe-bottom)); }
-
-/* Ensure the main content area expands to fill the viewport when there's
-   little content. Use a min-height that subtracts the header and tabbar if
-   the JS sets --header-height and --tabbar-height. Fallback to 100% so
-   behavior remains unchanged when variables are not set. */
-.content {
-  /* Let the main content area fill the viewport minus the fixed header.
-     The tabbar is a fixed overlay; give slides 100% height of .content and
-     apply bottom padding to slide children so content isn't hidden. */
-  min-height: calc(100dvh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) - var(--tabbar-height, 56px));
-}
 *** End Patch
 
 /* Strong page-level override when uploader has an active preview (JS toggles
@@ -56,4 +45,13 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
 
 @media (prefers-reduced-motion: reduce) {
   .content > .page-slide { transition: opacity 120ms linear; transform: none !important; }
+}
+
+/* On desktop, allow content to scroll naturally since body can scroll */
+@media (min-width: 900px) {
+  .content {
+    height: auto;
+    overflow: visible;
+    min-height: calc(100dvh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) - var(--tabbar-height, 56px));
+  }
 }

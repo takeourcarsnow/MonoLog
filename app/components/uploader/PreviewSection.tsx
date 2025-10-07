@@ -1,3 +1,4 @@
+import React from "react";
 import { usePathname } from "next/navigation";
 import { PreviewSectionProps } from "./types";
 import { useCameraCaptureHandler } from "./useCameraCaptureHandler";
@@ -48,6 +49,20 @@ export function PreviewSection({
   openCamera
 }: PreviewSectionProps) {
   const pathname = usePathname();
+
+  // Ensure we always have an array to render in the carousel. If the
+  // `dataUrls` array is empty but `dataUrl` is set (single-image case),
+  // treat it as a one-element array so the CarouselView is used.
+  const previewUrls = dataUrls.length ? dataUrls : (dataUrl ? [dataUrl] : []);
+
+  // Clamp the index to the available previewUrls length so the carousel
+  // doesn't try to render an out-of-range slide.
+  React.useEffect(() => {
+    if (previewUrls.length === 0) return;
+    if (index >= previewUrls.length) {
+      setIndex(previewUrls.length - 1);
+    }
+  }, [previewUrls.length, index, setIndex]);
 
   const { onCameraCapture } = useCameraCaptureHandler({
     dataUrls,
@@ -112,9 +127,9 @@ export function PreviewSection({
     >
       <div className="preview-inner" style={{ position: 'relative' }}>
         {/* When editing, the ImageEditor is rendered at the top level, replacing all content */}
-        {dataUrls.length > 0 && !editing && (
+        {previewUrls.length > 0 && !editing && (
           <CarouselView
-            dataUrls={dataUrls}
+            dataUrls={previewUrls}
             alt={alt}
             index={index}
             setIndex={setIndex}

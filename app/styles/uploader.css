@@ -17,7 +17,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 2px; /* tightened spacing between preview, indicators and actions */
   width: 100%;
 }
 
@@ -270,7 +270,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   }
 }
 
-.uploader { display: grid; gap: 12px; margin-top: 24px; padding: 16px 16px 0; }
+.uploader { display: grid; gap: 6px; margin-top: 24px; padding: 16px 16px 0; }
 /* Subtle Minimalistic Drop Zone Styles */
 .drop-zone {
   position: relative;
@@ -1079,11 +1079,11 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   display: inline-grid;
   place-items: center;
   border-radius: 8px;
-  background: transparent;
+  background: transparent !important; /* no background in any state */
   color: var(--muted);
   cursor: pointer;
-  transition: transform 160ms ease, color 160ms ease, background 160ms ease, border-color 160ms ease;
-  border: 1px solid transparent;
+  transition: transform 160ms ease, color 160ms ease; /* don't transition background */
+  border: none; /* disable border effect entirely */
 }
 
 .camera-indicator-btn svg { width: 16px; height: 16px; }
@@ -1091,24 +1091,26 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .camera-indicator-btn:hover {
   transform: translateY(-1px) scale(1.02);
   color: var(--primary);
-  background: color-mix(in srgb, var(--primary-weak), transparent 94%);
-  border-color: color-mix(in srgb, var(--primary), transparent 60%);
+  background: transparent !important; /* force no background on hover */
+  /* no border change on hover */
 }
 
-.camera-indicator-btn:focus {
+.camera-indicator-btn:focus,
+.camera-indicator-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
+  box-shadow: none; /* remove halo/focus ring */
 }
 
 .camera-indicator-btn.active {
-  background: color-mix(in srgb, var(--primary-weak), transparent 88%);
+  background: transparent !important; /* no background when active */
   color: var(--primary);
   transform: scale(1.03);
-  border-color: var(--primary);
+  /* no border change when active */
 }
 
 .camera-indicator-btn:disabled {
   opacity: 0.45;
   cursor: default;
   transform: none;
+  background: transparent !important; /* ensure disabled state has no background */
 }

@@ -41,6 +41,21 @@
 .btn.icon svg { transition: transform 0.2s ease; }
 .btn.icon:hover svg { transform: scale(1.1); }
 
+/* Very small, minimal icon style for in-line controls (add/edit/delete) */
+.btn.small-min {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 0 !important;
+  padding: 4px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 50%) !important;
+  color: var(--muted) !important;
+  box-shadow: none !important;
+}
+.btn.small-min:hover { background: color-mix(in srgb, var(--bg-elev), transparent 6%) !important; transform: none !important; }
+.btn.small-min svg { width: 16px !important; height: 16px !important; }
+
 /* Touch-specific: enlarge icon buttons for comfortable tap targets and
    provide a subtle tap feedback. Kept under pointer:coarse so desktop
    layout isn't affected. */

@@ -261,10 +261,10 @@ function UploaderCore() {
       )}
 
       {hasPreview && !editing ? (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6, gap: 8 }}>
+        <div className="photo-action-row">
           <button
             type="button"
-            className="btn ghost"
+            className="btn icon ghost small-min"
             aria-label="Add photos"
             onClick={() => {
               // ensure we're in append mode then open the file selector
@@ -280,7 +280,7 @@ function UploaderCore() {
             </svg>
           </button>
           <button
-            className="btn ghost"
+            className="btn icon ghost small-min"
             aria-label="Edit photo"
             onClick={() => { setEditingIndex(index); setEditing(true); }}
             disabled={processing}
@@ -292,7 +292,7 @@ function UploaderCore() {
           </button>
           <button
             type="button"
-            className="btn ghost"
+            className="btn icon ghost small-min"
             aria-label="Remove photo"
             onClick={() => {
               if (processing) return;

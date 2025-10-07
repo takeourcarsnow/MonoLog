@@ -159,7 +159,7 @@ export function PreviewSection({
       />
 
       {dataUrls.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8, gap: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 2, gap: 2 }}>
           <div className="camera-indicators" role="tablist" aria-label="Photo slots">
             {Array.from({ length: 5 }, (_, i) => {
               const occupied = i < dataUrls.length;

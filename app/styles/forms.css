@@ -12,6 +12,17 @@
   overflow: auto;
 }
 .input-wrapper { position: relative; }
+
+/* Compact row for photo action icons (add/edit/delete) with minimal vertical gaps */
+.photo-action-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+  align-items: center;
+}
+.photo-action-row .btn.small-min { margin: 0; }
 .input-ghost-placeholder {
   position: absolute;
   left: 12px; right: 12px; top: 50%; transform: translateY(-50%);
@@ -20,7 +31,7 @@
 }
 .input-ghost-placeholder { display: flex; align-items: center; gap: 6px; }
 .input-ghost-placeholder .typewriter {
-  display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  display: inline-block; max-width: 100%; overflow: hidden; text-overflow: clip;
   color: color-mix(in srgb, var(--muted), transparent 8%);
 }
 .input-ghost-placeholder .typewriter {
@@ -73,6 +84,65 @@
 }
 
 .form-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 6px; }
+
+/* Center publish controls row on desktop to align buttons under the preview */
+.publish-controls-row {
+  justify-content: center; /* center the label and button group as a unit */
+}
+.publish-controls-row .vis-label {
+  margin-right: 12px; /* small spacing between visibility pill and buttons */
+}
+.publish-controls-row .btn-group {
+  display: inline-flex; align-items: center; gap: 12px; /* larger gap for clarity */
+}
+
+/* Ensure controls inside the publish-controls-row share the same height and visual rhythm */
+.publish-controls-row {
+  --publish-control-height: var(--publish-two-line-height, 48px);
+  --publish-control-padding-vertical: 7px;
+  --publish-control-padding-horizontal: 16px;
+  display: flex !important;
+  width: max-content !important;
+  margin: 0 auto !important; /* center the whole group in its container */
+  justify-content: center !important;
+  align-items: center !important;
+}
+.publish-controls-row .vis-toggle,
+.publish-controls-row .vis-toggle.btn,
+.publish-controls-row .vis-label .btn,
+.publish-controls-row .discard-btn,
+.publish-controls-row .publish-button {
+  min-height: var(--publish-control-height);
+  height: var(--publish-control-height);
+  padding: var(--publish-control-padding-vertical) var(--publish-control-padding-horizontal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+.publish-controls-row .vis-toggle span { line-height: 1; }
+.publish-controls-row { align-items: center; gap: 16px; }
+
+/* Ensure all direct children are inline-flex and aligned to center so their
+   baselines match exactly and gaps are consistent */
+.publish-controls-row > * {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+.publish-controls-row .publish-button,
+.publish-controls-row .discard-btn,
+.publish-controls-row .vis-toggle,
+.publish-controls-row .form-row .vis-label .btn{
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+/* Slightly increase gap inside btn-group to visually separate the three controls */
+.publish-controls-row .btn-group { gap: 16px; }
 .form-row .vis-label { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .visibility-select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
 
@@ -100,6 +170,35 @@
 .form-row .vis-label .btn:focus {
   outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%);
   outline-offset: 4px;
+}
+
+/* Overrides for the publish-controls-row: make the vis-label horizontal and
+   ensure the pill button uses the same height/padding as other controls. */
+.publish-controls-row .vis-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.publish-controls-row .vis-label .btn,
+.publish-controls-row .btn.vis-toggle {
+  padding: var(--publish-control-padding-vertical) var(--publish-control-padding-horizontal) !important;
+  min-height: var(--publish-control-height) !important;
+  height: var(--publish-control-height) !important;
+  box-sizing: border-box !important;
+}
+
+/* Neutralize the active/private translate lifts inside the centered publish controls
+   so the visibility pill doesn't shift vertically relative to the Publish/Discard buttons. */
+.publish-controls-row .vis-label .btn.active,
+.publish-controls-row .vis-toggle.private,
+.publish-controls-row .vis-toggle {
+  transform: none !important;
+}
+
+/* Also ensure any translateY adjustments applied elsewhere don't affect items here */
+.publish-controls-row .vis-label .btn.active::after {
+  transform: none !important;
 }
 
 /* Visibility icon and subtle animation */
@@ -291,3 +390,37 @@
     width: 100%;
   }
 }
+
+/* Strong overrides scoped to the uploader publish controls to ensure nothing
+   else (including component-local CSS) can shift their vertical alignment. */
+.uploader .publish-controls-row .publish-button,
+.uploader .publish-controls-row .discard-btn,
+.uploader .publish-controls-row .vis-toggle,
+.uploader .publish-controls-row .vis-label .btn {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: var(--publish-two-line-height, 48px) !important;
+  min-height: var(--publish-two-line-height, 48px) !important;
+  padding: 7px 16px !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  vertical-align: middle !important;
+  transform: none !important; /* cancel lifts/translates */
+}
+
+/* Cancel any ::after pseudo-element positioning that could nudge layout */
+.uploader .publish-controls-row .vis-label .btn::after {
+  transform: none !important;
+}
+
+/* Ensure the publish button and discard button use the same font-size/weight */
+.uploader .publish-controls-row .publish-button,
+.uploader .publish-controls-row .discard-btn {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+
+/* Slightly tighten gaps so the three controls read as a single group */
+.uploader .publish-controls-row { gap: 14px !important; }

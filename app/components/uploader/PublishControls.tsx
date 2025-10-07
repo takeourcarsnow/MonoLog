@@ -40,7 +40,7 @@ export function PublishControls({
   return (
     <>
       {(hasPreview) && !editing ? (
-        <div className="form-row">
+  <div className="form-row publish-controls-row">
           <label className="vis-label">
               <button
                 type="button"

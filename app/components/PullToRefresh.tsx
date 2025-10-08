@@ -58,8 +58,6 @@ interface PullToRefreshWrapperProps {
   containerRef: React.RefObject<HTMLDivElement>;
   getPullStyles: () => React.CSSProperties;
   className?: string;
-  // optional: if true the wrapper renders a simple passthrough (no indicator / transforms)
-  disabled?: boolean;
 }
 
 export const PullToRefreshWrapper = React.memo<PullToRefreshWrapperProps>(({
@@ -70,19 +68,7 @@ export const PullToRefreshWrapper = React.memo<PullToRefreshWrapperProps>(({
   containerRef,
   getPullStyles,
   className = ''
-  , disabled = false
 }) => {
-  // If the wrapper is disabled, render a simple passthrough container to avoid
-  // applying transforms or rendering the indicator (which can cause layout issues
-  // like duplicate vertical scrollbars on some devices).
-  if (disabled) {
-    return (
-      <div className={className}>
-        <div ref={containerRef}>{children}</div>
-      </div>
-    );
-  }
-
   return (
     <div className={`relative ${className}`}>
       <PullToRefreshIndicator

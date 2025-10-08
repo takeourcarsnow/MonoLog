@@ -44,10 +44,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 swiperRef.current = s; 
               }}
               spaceBetween={0}
-                autoHeight={true}
-                observer={true}
-                observeParents={true}
-                updateOnWindowResize={true}
               slidesPerView={1}
               initialSlide={currentIndex}
               onSlideChange={handleSlideChange}
@@ -64,26 +60,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {views.map((view, index) => (
                 <SwiperSlide key={view.path} className={view.path === '/feed' ? 'slide-feed' : undefined}>
-                  <SlideWrapper active={index === activeIndex}>
-                    <div>
-                      <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
-                        {view.path === '/profile' ? (
-                          (() => {
-                            const pathSegments = pathname.split('/').filter(Boolean);
-                            if (pathSegments.length === 1) {
-                              const segment = pathSegments[0];
-                              if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-                                return <view.component userId={segment} />;
-                              }
+                  <div>
+                    <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
+                      {view.path === '/profile' ? (
+                        (() => {
+                          const pathSegments = pathname.split('/').filter(Boolean);
+                          if (pathSegments.length === 1) {
+                            const segment = pathSegments[0];
+                            if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+                              return <view.component userId={segment} />;
                             }
-                            return <view.component />;
-                          })()
-                        ) : (
-                          <view.component />
-                        )}
-                      </Suspense>
-                    </div>
-                  </SlideWrapper>
+                          }
+                          return <view.component />;
+                        })()
+                      ) : (
+                        <view.component />
+                      )}
+                    </Suspense>
+                  </div>
                 </SwiperSlide>
               ))}
             </Swiper>

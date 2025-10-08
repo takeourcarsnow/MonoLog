@@ -9,8 +9,8 @@ html {
   -webkit-overflow-scrolling: touch;
 }
 body {
-  margin: 0;
-  background: var(--bg);
+  margin: 0; 
+  background: var(--bg); 
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   line-height: 1.45;
@@ -48,10 +48,7 @@ img { max-width: 100%; height: auto; display: block; image-orientation: from-ima
 }
 
 body {
-  /* Allow the page to scroll by default. Individual components may opt
-     into their own scrolling if required, but the body should normally
-     be scrollable so pages can grow naturally. */
-  overflow-y: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   position: relative;
 }

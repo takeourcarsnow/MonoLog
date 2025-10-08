@@ -2,40 +2,29 @@
    and avoid rendering as a narrow centered column in small viewports. */
   .swipe-views {
     width: 100% !important;
-         /* Prefer sizing by content to avoid creating a nested scroll container.
-             For true full-bleed, fixed-height behavior revert this to a viewport
-             height calc. */
-         height: auto !important;
+    /* Restore fixed height for swiper functionality */
+    height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
     /* Ensure proper positioning */
     position: relative !important;
     /* Enable hardware acceleration for smoother animations */
     transform: translateZ(0);
   }
-   .swipe-views .swiper-wrapper {
-      width: 100% !important;
-      height: auto !important;
+  .swipe-views .swiper-wrapper {
+    width: 100% !important;
+    height: 100% !important;
     /* Ensure proper positioning */
     position: relative !important;
-         /* Prevent slides from stretching to match the tallest slide. Swiper
-             uses a flex container for the wrapper; default align-items: stretch
-             makes every slide match the tallest. Use flex-start so each slide
-             sizes to its own content height. */
-         align-items: flex-start !important;
-      /* Hardware acceleration */
-      transform: translateZ(0);
-      /* Smoothly animate height changes when autoHeight adjusts the wrapper */
-      transition: height 220ms ease;
+    /* Hardware acceleration */
+    transform: translateZ(0);
   }
 /* Make each slide flexible: ensure slides fill the viewport minus header/tabbar
    but allow taller content to grow. Use min-height rather than forcing a
    fixed height to avoid clipping inner components. Also reserve bottom
    padding to protect content from the fixed tabbar. */
 
-  /* Small internal bottom buffer so content doesn't sit flush against the tabbar.
-     Use the device safe-area inset and a modest extra gap instead of the full
-     tabbar height to avoid creating large blank areas under the content. */
+  /* Small internal bottom buffer so content doesn't sit flush against the tabbar */
   .swipe-views .swiper-slide > * {
-     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
+     padding-bottom: calc(var(--tabbar-height, 72px) + 12px) !important;
   }
 
 /* Uniform slide sizing handled via min-height above; no separate fixed-height
@@ -61,10 +50,8 @@
   overflow: hidden;
   box-sizing: border-box;
   position: relative;
-   /* Prefer letting slides size by content to avoid nested scrolling. If you
-       need true full-bleed, fixed-height slides (one-screen-per-view) then
-       revert this to a viewport-height calc. */
-   height: auto !important;
+  /* Restore fixed height */
+  height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
 }
 
 /* Ensure full-bleed swipe views account for the sticky header height.
@@ -80,27 +67,15 @@
      and don't produce a horizontal shift when the vertical scrollbar
      appears/disappears. */
   width: 100% !important;
-   /* Allow slides to size by content rather than forcing a fixed viewport-height.
-       This prevents the slide from becoming a separate scroll container which
-       can create nested/duplicate vertical scrollbars on some devices. If you
-       rely on per-slide scrolling (independent scroll areas per view) revert
-       this change. */
-   height: auto !important;
+  height: 100% !important;
   display: block !important;
   /* Ensure proper positioning */
   position: relative !important;
-   overflow-y: visible !important;
+  overflow-y: auto;
   /* Hardware acceleration for smooth transitions */
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-}
-
-/* Ensure the swipe-views container/wrapper don't create nested scrolling */
-.swipe-views,
-.swipe-views .swiper-wrapper {
-   overflow: visible !important;
-   height: auto !important;
 }
 
 /* Removed: autoHeight-specific rules no longer needed */

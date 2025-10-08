@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { User as UserIcon } from "lucide-react";
 import { api } from "@/src/lib/api";
 import type { User } from "@/src/lib/types";
 import Link from "next/link";
@@ -53,29 +52,21 @@ export default function FollowingPage() {
   return (
     <div className="view-fade">
       <div style={{ padding: '24px', maxWidth: 800, margin: '0 auto' }}>
-  {following.length > 0 && <div style={{ marginBottom: 24 }} />}
+        <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link href="/profile" className="btn" aria-label="Back to Profile">
+            <span className="icon" aria-hidden>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <span>Back</span>
+          </Link>
+          <h1 style={{ margin: 0 }}>Following</h1>
+        </div>
         {following.length === 0 ? (
-          <div className="empty following-empty" style={{ textAlign: 'center' }}>
-            <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-              {/* friendly illustration */}
-              <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
-                <UserIcon size={56} strokeWidth={1.5} />
-              </div>
-
-              <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>You haven't followed anyone yet</h2>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>
-                Follow people to see their posts in your feed. Start by exploring creators, friends, and topics you like.
-              </p>
-
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <Link href="/explore" className="btn" aria-label="Explore users to follow">Explore users</Link>
-                <Link href="/profile" className="btn" style={{ background: 'transparent', border: '1px solid var(--muted-border)', color: 'var(--text-secondary)', padding: '8px 12px', borderRadius: 8 }}>Back to profile</Link>
-              </div>
-
-              <div style={{ marginTop: 6, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Tip: try the <Link href="/explore">Explore</Link> page to discover interesting accounts.
-              </div>
-            </div>
+          <div className="empty" style={{ textAlign: 'center' }}>
+            <p>You are not following anyone yet.</p>
+            <p><Link href="/explore" className="btn">Explore users</Link></p>
           </div>
         ) : (
           <div className="grid" style={{ gap: 16 }}>

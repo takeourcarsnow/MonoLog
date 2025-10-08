@@ -169,3 +169,13 @@
 .empty {
   padding: 32px 16px; text-align: center; color: var(--muted);
 }
+
+/* When no posts are present the empty state can feel too low on desktop screens.
+   Reduce the top padding on wider viewports so content sits closer to the header
+   while keeping the mobile spacing intact. This rule targets general empty
+   states used across components (safe for this page). */
+@media (min-width: 900px) {
+  /* Only tighten spacing for the following page's empty state so comment
+     panels and other empty states remain unchanged. */
+  .following-empty { padding-top: 0px; padding-bottom: 32px; }
+}

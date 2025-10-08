@@ -8,6 +8,10 @@ interface PullToRefreshOptions {
 
 export function usePullToRefresh(options: PullToRefreshOptions) {
   const { threshold = 60, onRefresh, disabled = false } = options;
+  // Force-disable pull-to-refresh globally. Set to `true` to disable site-wide.
+  // You can flip this to true for debugging, but keep it false for normal operation.
+  const FORCE_DISABLE_PULL_TO_REFRESH = false;
+  const effectiveDisabled = disabled || FORCE_DISABLE_PULL_TO_REFRESH;
 
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -20,7 +24,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (disabled || isRefreshing) return;
+    if (effectiveDisabled || isRefreshing) return;
 
     // Don't start pull-to-refresh if the user is not at the top of the nearest scrollable container
     const getScrollableAncestor = (node: EventTarget | null): Element | null => {
@@ -52,10 +56,10 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
     startX.current = e.touches[0].clientX;
     isHorizontalSwipe.current = false;
     isDragging.current = true;
-  }, [disabled, isRefreshing]);
+  }, [effectiveDisabled, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (disabled || isRefreshing || !isDragging.current) return;
+    if (effectiveDisabled || isRefreshing || !isDragging.current) return;
 
     const touch = e.touches[0];
     const deltaY = touch.clientY - startY.current;
@@ -78,7 +82,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
       setPullDistance(Math.min(deltaY, threshold * 2));
       setIsPulling(true);
     }
-  }, [disabled, isRefreshing, threshold]);
+  }, [effectiveDisabled, isRefreshing, threshold]);
 
   const handleTouchEnd = useCallback(async () => {
     if (!isDragging.current && !isHorizontalSwipe.current) return;
@@ -102,7 +106,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   }, [pullDistance, threshold, onRefresh]);
 
   useEffect(() => {
-    if (disabled) return;
+    if (effectiveDisabled) return;
 
     const options = { passive: false };
     window.addEventListener('touchstart', handleTouchStart, options);
@@ -114,7 +118,7 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [disabled, handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [effectiveDisabled, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   const getPullStyles = useCallback(() => {
     if (!isPulling && !isRefreshing) return {};

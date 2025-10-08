@@ -1,169 +1,186 @@
 # MonoLog
 
-MonoLog is a minimal, privacy-minded daily photo journal built with Next.js (App Router), TypeScript and Tailwind CSS.
+A modern, performant daily photo journal web application built with Next.js. Share one post per day with multiple images, follow friends, and build your visual story.
 
-This project has received several updates since the original README: it uses Next 14 + React 18.3, TypeScript 5, and includes a small server-side API surface (App Router `app/api/*`) alongside a local in-browser adapter so the app can run fully offline/private.
+![MonoLog](public/logo.svg)
 
-Highlights
+## ✨ Features
 
-- One-post-per-calendar-day workflow (create or replace today's entry)
-- Multi-image posts (client supports multiple images per post)
-- Local browser storage mode (default) for zero-config, private use
-- Optional Supabase persistence with client & server adapters
-- Client-side image resizing + WebP/JPEG encoding to keep uploads small
-- Small set of UI features: Feed, Explore, Favorites, Calendar view, Profile, Upload, Notifications
+- **Daily Posting**: One post per day limit encourages mindful sharing
+- **Multiple Images**: Attach up to multiple images to each post
+- **Social Features**: Follow users, favorite posts, leave comments
+- **Progressive Web App**: Installable, works offline with service worker
+- **Performance Optimized**: Fast loading with advanced optimizations
+- **Responsive Design**: Beautiful on all devices
+- **Dark/Light Theme**: Automatic theme switching
+- **Spotify Integration**: Link songs to your posts
+- **Accessibility**: WCAG compliant with proper ARIA labels
 
-What changed since last README
+## 🚀 Tech Stack
 
-- Upgraded dependencies: Next 14, React 18.3, TypeScript 5.x
-- New/updated API routes under `app/api/` for posts, comments, storage uploads and small debug helpers
-- Runtime config moved to `src/lib/config.ts` and now auto-detects `supabase` mode if `NEXT_PUBLIC_SUPABASE_URL` is present
-- A `scripts/check-env.js` helper now loads `.env.local`/`.env` when available and performs a lightweight check for required NEXT_PUBLIC_* keys
-- Security headers (including a CSP) are configured in `next.config.mjs`
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Backend**: Supabase (PostgreSQL + Storage)
+- **State Management**: SWR for server state
+- **Icons**: Lucide React
+- **Image Processing**: Sharp for optimization
+- **PWA**: Service Worker with offline support
 
-Quick start (Windows PowerShell)
+## 📦 Installation
 
-Open PowerShell in the repository root and run:
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/takeourcarsnow/MonoLog.git
+   cd MonoLog
+   ```
 
-```powershell
-npm install
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+
+   Copy `.env.example` to `.env.local`:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   For local development (default):
+   ```env
+   NEXT_PUBLIC_MODE=local
+   ```
+
+   For Supabase deployment:
+   ```env
+   NEXT_PUBLIC_MODE=supabase
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   ```
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🏗️ Build & Deployment
+
+### Development
+```bash
+# Start dev server
 npm run dev
-# then open http://localhost:3000
+
+# Start dev server with Turbo (faster builds)
+npm run dev:turbo
 ```
 
-Development scripts
+### Production Build
+```bash
+# Build for production
+npm run build
 
-- npm run dev      — start Next.js dev server (uses `next dev --turbo`)
-- npm run build    — build for production
-- npm start        — run production build
-- npm run lint     — run ESLint (Next.js config)
-- npm run analyze  — build with ANALYZE=true
-- npm run check-env — run `scripts/check-env.js` to validate env vars
-- npm run check-perf — verify performance optimizations are in place
+# Start production server
+npm start
 
-## 🚀 Performance
-
-MonoLog has been comprehensively optimized for maximum performance:
-
-### Performance Improvements (v0.3.0)
-
-- **60% faster** profile loading (800ms → 300ms)
-- **16% smaller** initial bundle size through code splitting
-- **100% elimination** of comment flickering issues
-- **Zero** redundant API calls via intelligent deduplication
-- **Smooth loading** states with animated skeletons
-
-### Key Optimizations
-
-✅ **Request Deduplication** - Prevents concurrent identical API calls
-✅ **API Response Caching** - Configurable TTL caching layer (30s default)
-✅ **Lazy Image Loading** - Intersection Observer-based loading
-✅ **Performance Monitoring** - Built-in metrics tracking
-✅ **React Optimization** - Memoization and optimistic updates
-✅ **Bundle Optimization** - Dynamic imports and tree shaking
-✅ **Next.js Build Optimizations** - SWC minification, compression
-
-### Performance Utilities
-
-```javascript
-// Check performance in browser console
-window.__PERF_MONITOR__.getSummary()
-
-// View cache statistics
-window.__API_CACHE__.getStats()
+# Analyze bundle size
+npm run analyze
 ```
 
-### Documentation
-
-- **[PERFORMANCE.md](./PERFORMANCE.md)** - Complete performance guide
-- **[OPTIMIZATION_SUMMARY.md](./OPTIMIZATION_SUMMARY.md)** - Quick reference
-
-### Monitor Performance
-
-```powershell
+### Performance Checks
+```bash
+# Run performance verification
 npm run check-perf
 ```
 
-Modes & environment variables
+## 📱 Progressive Web App
 
-MonoLog supports two runtime modes. The runtime mode is driven by `NEXT_PUBLIC_MODE` but `src/lib/config.ts` will prefer `supabase` automatically when `NEXT_PUBLIC_SUPABASE_URL` is present.
+MonoLog is a fully-featured PWA that can be installed on mobile devices and desktops. Key PWA features:
 
-- local (default): stores data in LocalStorage. No external services required.
-- supabase: uses Supabase for persistence and multi-user behavior.
+- **Service Worker**: Caches assets for offline use
+- **Web App Manifest**: Proper app metadata and icons
+- **Install Prompt**: Automatic installation prompts
+- **Background Sync**: Posts sync when connection is restored
 
-Important environment variables (client-side, required for Supabase mode)
+## 🎨 Design System
 
-- NEXT_PUBLIC_MODE — `local` or `supabase` (if omitted, the app will choose `supabase` when `NEXT_PUBLIC_SUPABASE_URL` exists)
-- NEXT_PUBLIC_SUPABASE_URL — your Supabase project URL
-- NEXT_PUBLIC_SUPABASE_ANON_KEY — Supabase anon/public key
+- **Typography**: Patrick Hand font for a personal touch
+- **Color Scheme**: Adaptive light/dark themes
+- **Components**: Modular, reusable component architecture
+- **Animations**: Smooth transitions and micro-interactions
 
-Validate env vars locally with:
+## 🔧 Configuration
 
-```powershell
-npm run check-env
+### Image Settings
+- **Max file size**: 8MB per image
+- **Max dimension**: 1600px (auto-resized)
+- **Formats**: WebP, AVIF, JPEG, PNG support
+
+### Posting Limits
+- **Daily limit**: 1 post per user per day
+- **Images per post**: Multiple images supported
+
+### Performance Optimizations
+- SWC minification
+- Image optimization with Next.js
+- Package import optimization
+- CSS containment
+- React.memo for components
+- Web Vitals monitoring
+
+## 🗂️ Project Structure
+
+```
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   ├── components/        # React components
+│   ├── styles/           # CSS stylesheets
+│   └── globals.css       # Global styles
+├── public/               # Static assets
+├── scripts/              # Build and utility scripts
+└── src/
+    └── lib/              # Core utilities and types
 ```
 
-- Configuration
--
-- Runtime configuration is in `src/lib/config.ts` (exported `CONFIG` and `SUPABASE`). Notable options:
--
-- CONFIG.seedDemoData — when true (local mode) the app seeds sample users/posts for development (default: false)
-- CONFIG.dailyPostingLimit — posts allowed per calendar day (default: 1)
-- CONFIG.imageMaxSizeMB / CONFIG.imageMaxEdge — client image constraints (defaults: 8 MB, 1600px)
-- CONFIG.enableServiceWorker — currently `false` by default
+## 🧪 Testing
 
-Toggle `seedDemoData` in `src/lib/config.ts` or modify the file during local development to get demo content on first load.
+```bash
+npm test
+```
 
-Image handling
+## 📊 Performance Monitoring
 
-Client image resizing and encoding lives in `src/lib/image.ts`. The uploader prefers WebP and will resize images to meet `CONFIG.imageMaxEdge` and `imageMaxSizeMB` before uploading. When using Supabase mode the client may POST data-URLs to `app/api/storage/upload` which stores files and returns public URLs.
+The app includes comprehensive performance monitoring:
 
-Server API routes
+- **Web Vitals**: Core Web Vitals tracking
+- **Bundle Analysis**: Bundle size monitoring
+- **Performance Score**: Automated performance checks
+- **Image Optimization**: Automatic image compression
 
-Server routes are under `app/api/` and include endpoints for posts, comments, storage uploads and a few debug helpers. Notable paths:
+## 🤝 Contributing
 
-- `app/api/posts/create/route.ts` — create posts (used by Supabase/server flows)
-- `app/api/storage/upload/route.ts` — receives client data-URLs and stores files (returns public URL)
-- `app/api/comments/add/route.ts`, `app/api/posts/delete/route.ts`, `app/api/posts/update/route.ts` — small server helpers used by the Supabase adapter
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run performance checks: `npm run check-perf`
+5. Test your changes: `npm test`
+6. Submit a pull request
 
-If you run in `local` mode, none of these remote calls are required — the app will use the in-browser adapter in `src/lib/api/local.ts`.
+## 📄 License
 
-Security
+This project is private and proprietary.
 
-Default security headers (HSTS, X-Frame-Options, CSP, etc.) are set up in `next.config.mjs`. The Content Security Policy allows images from `data:`/`blob:` and `https:` and permits connections to same-origin and `https` by default; adjust if you point storage to other domains.
+## 🙏 Acknowledgments
 
-Project structure (high level)
+- Built with [Next.js](https://nextjs.org/)
+- Styled with [Tailwind CSS](https://tailwindcss.com/)
+- Icons by [Lucide](https://lucide.dev/)
+- Backend powered by [Supabase](https://supabase.com/)
 
-- `app/` — Next App Router pages and server routes
-- `src/components/` — all React components (UI pieces like Header, NavBar, PostCard, Uploaders, Editor)
-- `src/lib/` — helpers and adapters (api, image, storage, config, types)
-- `public/` — static assets (logo, icons)
-- `scripts/` — small developer helpers (`check-env.js`, `inspect-feed.js`)
+---
 
-Developer tips
-
-- To exercise the Supabase flow locally, create a `.env.local` with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. `src/lib/config.ts` will then choose `supabase` mode automatically unless `NEXT_PUBLIC_MODE` is explicitly set.
-- Use `CONFIG.seedDemoData = true` during local development to populate the UI with sample posts.
-- Run `npx tsc --noEmit` to run a TypeScript-only check.
-
-Contributing
-
-Contributions welcome. Good starter tasks:
-
-- add unit / integration tests for `src/lib/*` logic
-- provide example SQL / migration for Supabase schema and storage bucket setup
-- add a seed script or an option to enable seeded content via an env var at runtime
-
-Quality gates (quick)
-
-- Build: `npm run build` (Next 14)
-- Lint: `npm run lint`
-- Env check: `npm run check-env`
-
-License
-
-MIT
-
-Contact
-
-Open an issue in this repository if you need help running the project or wiring a Supabase schema.
+**MonoLog** — Capture your story, one day at a time.</content>
+<parameter name="filePath">c:\Users\i\Desktop\webdev\MonoLog\README.md

@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "./Button";
 import { api } from "@/src/lib/api";
 import type { HydratedPost, User } from "@/src/lib/types";
 import Link from "next/link";
@@ -61,7 +62,7 @@ export function ProfileView({ userId }: { userId?: string }) {
       <div className="empty" style={{ position: "relative" }}>
         <div>User not found. Pick an account from the Account menu to get started.</div>
         <div style={{ marginTop: 12 }}>
-          <button className="btn" onClick={() => { try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {} setShowAuth(true); }}>Sign in / Sign up</button>
+          <Button onClick={() => { try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {} setShowAuth(true); }}>Sign in / Sign up</Button>
         </div>
 
         {showAuth ? (

@@ -46,6 +46,9 @@ html.about-page-scroll {
   --transition-mid: 260ms cubic-bezier(.2,.7,.2,1);
   --maxw: 800px;
 
+  /* color used for active tab / navbar indicators */
+  --tab-color: var(--primary);
+
   /* Default header height (includes safe-area top inset). JS will overwrite
     this value at runtime with the actual measured header height. Providing
     a sensible default prevents page content from appearing under the
@@ -113,6 +116,8 @@ html.about-page-scroll {
   --text: #f7f7f7;
   --muted: #9ca3af;
   --primary: #60a5fa;
+  /* tab color in dark mode (use primary) */
+  --tab-color: var(--primary);
   --primary-weak: #0b2547;
   --accent: #34d399;
   --danger: #f87171;
@@ -136,6 +141,8 @@ html.about-page-scroll {
   --text: #0f0f10;
   --muted: #6b7280;
   --primary: #2563eb;
+  /* tab color in light mode (use primary) */
+  --tab-color: var(--primary);
   --primary-weak: #dbeafe;
   --accent: #22c55e;
   --danger: #ef4444;

@@ -1,6 +1,7 @@
 "use client";
 
 import Portal from "./Portal";
+import { Button } from "./Button";
 import { useEffect, useRef } from "react";
 
 type Props = {
@@ -42,19 +43,19 @@ export default function ConfirmModal({ open, title, message, confirmLabel = "OK"
           {title ? <h3 style={{ margin: 0 }}>{title}</h3> : null}
           <div className="confirm-message">{message}</div>
           <div className="confirm-actions">
-            <button className="btn" onClick={onCancel} aria-label={cancelLabel}>
+            <Button onClick={onCancel} aria-label={cancelLabel}>
               {cancelLabel}
-            </button>
-            <button
-              ref={confirmRef}
-              className="btn danger"
+            </Button>
+            <Button
+              ref={confirmRef as any}
+              variant="danger"
               onClick={() => {
                 onConfirm();
               }}
               aria-label={confirmLabel}
             >
               {confirmLabel}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

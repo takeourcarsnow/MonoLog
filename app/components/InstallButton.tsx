@@ -7,6 +7,8 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+import { Button } from "./Button";
+
 export function InstallButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -56,9 +58,10 @@ export function InstallButton() {
   }
 
   return (
-    <button
+    <Button
+      as="button"
       onClick={handleInstall}
-      className="btn icon-reveal"
+      className="icon-reveal"
       aria-label="Install App"
       disabled={!deferredPrompt}
     >
@@ -71,6 +74,6 @@ export function InstallButton() {
         </svg>
       </span>
       <span className="reveal">Install App</span>
-    </button>
+    </Button>
   );
 }

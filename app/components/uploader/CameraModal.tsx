@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "../Button";
 import Portal from "../Portal";
 import LogoLoader from "./LogoLoader";
 
@@ -50,19 +51,19 @@ export function CameraModal({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', borderRadius: 6, background: '#000' }} />
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                <button className="btn" onClick={onCapture} disabled={processing}>
+                <Button onClick={onCapture} loading={processing}>
                   {processing ? (
                     <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                       <LogoLoader size={20} />
-                      <span>Processing…</span>
+                      <span>Processing</span>
                     </span>
                   ) : 'Capture'}
-                </button>
-                <button className="btn ghost" onClick={() => {
+                </Button>
+                <Button variant="ghost" onClick={() => {
                   try { streamRef.current?.getTracks().forEach(t => t.stop()); } catch (_) {}
                   streamRef.current = null;
                   setCameraOpen(false);
-                }}>Close</button>
+                }}>Close</Button>
               </div>
             </div>
           </div>

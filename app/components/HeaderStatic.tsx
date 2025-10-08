@@ -1,15 +1,15 @@
 import { CONFIG } from "@/src/lib/config";
 
+import { StaticContainer } from "./StaticContainer";
+
 interface HeaderStaticProps {
   children: React.ReactNode;
 }
 
 export function HeaderStatic({ children }: HeaderStaticProps) {
   return (
-    <header className="header">
-      <div className="header-inner">
-        {children}
-      </div>
-    </header>
+    <StaticContainer as="header" wrapperClass="header" innerClass="header-inner">
+      {children}
+    </StaticContainer>
   );
 }

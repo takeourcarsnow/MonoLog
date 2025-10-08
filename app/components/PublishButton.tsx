@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Hourglass, Clock, RefreshCw, Zap, Sparkles, Star, Camera, Check, MessageCircle, Compass, Calendar, Lock, Home } from 'lucide-react';
 import './PublishButton.css';
+import { MESSAGES, getWaitIcons, selectTimeIcon } from './publish/publishHelpers';
 
 interface PublishButtonProps {
   canPost: boolean;
@@ -22,70 +22,30 @@ export function PublishButton({
   disabled = false,
   onPublish
 }: PublishButtonProps) {
-  const [flash, setFlash] = useState(false); // visual feedback when clicking during cooldown
+  const [flash, setFlash] = useState(false);
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [waitMsgVisible, setWaitMsgVisible] = useState(false);
   const waitTimerRef = useRef<number | null>(null);
-  // Short messages to cycle through when the user clicks while on cooldown
-  const MESSAGES = [
-    'Almost there',
-    'Give it a moment',
-    'Hold on — nearly ready',
-    'One moment please',
-    'Not yet — thanks for waiting',
-    'Hang tight',
-    'A sec...',
-    'Try exploring meanwhile',
-    'Soon — almost done',
-    'Patience pays off',
-    'Just a little longer',
-    'Almost ready',
-    'Thanks for waiting',
-    'Back shortly',
-    'Nearly there — hold on',
-    'Give it a beat',
-    'Sit tight',
-    'Coming up soon',
-    'We’ll be ready shortly',
-    'Hold tight — good things take time',
-  ];
+
   const messageIndexRef = useRef(0);
-  // Use lucide-react icons to match existing project's icon style
-  const ICONS: JSX.Element[] = [
-    <Hourglass key="hg" size={18} strokeWidth={1.6} aria-hidden />,
-    <Clock key="clk" size={18} strokeWidth={1.6} aria-hidden />,
-    <RefreshCw key="ref" size={18} strokeWidth={1.6} aria-hidden />,
-    <Zap key="zap" size={18} strokeWidth={1.6} aria-hidden />,
-    <Sparkles key="spr" size={18} strokeWidth={1.6} aria-hidden />,
-    <Star key="star" size={18} strokeWidth={1.6} aria-hidden />,
-    <Camera key="cam" size={18} strokeWidth={1.6} aria-hidden />,
-    <Check key="check" size={18} strokeWidth={1.6} aria-hidden />,
-    <MessageCircle key="msg" size={18} strokeWidth={1.6} aria-hidden />,
-    <Compass key="cmp" size={18} strokeWidth={1.6} aria-hidden />,
-    <Calendar key="cal" size={18} strokeWidth={1.6} aria-hidden />,
-    <Lock key="lock" size={18} strokeWidth={1.6} aria-hidden />,
-    <Home key="home" size={18} strokeWidth={1.6} aria-hidden />,
-  ];
+  const ICONS = getWaitIcons();
   const [currentWaitMessage, setCurrentWaitMessage] = useState(MESSAGES[0]);
   const [currentWaitIconIndex, setCurrentWaitIconIndex] = useState(0);
 
-  // Enable pulse animation when ready to post
   useEffect(() => {
-    // Pulse only depends on readiness to post, not unrelated upload processing
     setPulseAnimation(Boolean(canPost));
   }, [canPost]);
 
   const handleClick = () => {
     if (!canPost) {
-      // trigger a brief flash animation on the bar & digits
       setFlash(true);
       setTimeout(() => setFlash(false), 900);
-      // show an inline wait message inside the button (not a toast)
-      // rotate to the next message on every press
-  const idx = messageIndexRef.current % MESSAGES.length;
-  setCurrentWaitMessage(MESSAGES[idx]);
-  setCurrentWaitIconIndex(idx % ICONS.length);
-  messageIndexRef.current = (messageIndexRef.current + 1) % MESSAGES.length;
+
+      const idx = messageIndexRef.current % MESSAGES.length;
+      setCurrentWaitMessage(MESSAGES[idx]);
+      setCurrentWaitIconIndex(idx % ICONS.length);
+      messageIndexRef.current = (messageIndexRef.current + 1) % MESSAGES.length;
+
       setWaitMsgVisible(true);
       if (waitTimerRef.current) window.clearTimeout(waitTimerRef.current);
       waitTimerRef.current = window.setTimeout(() => {
@@ -94,10 +54,10 @@ export function PublishButton({
       }, 3000);
       return;
     }
+
     onPublish();
   };
 
-  // Clean up timer on unmount
   useEffect(() => {
     return () => {
       if (waitTimerRef.current) {
@@ -107,22 +67,12 @@ export function PublishButton({
     };
   }, []);
 
-  // Calculate progress percentage (0 = done, 100 = just posted)
   const progressPercent = remainingMs != null && countdownTotalMs != null && countdownTotalMs > 0
     ? Math.max(0, Math.min(100, (remainingMs / countdownTotalMs) * 100))
     : 0;
 
-  // Display string: plain HH:MM:SS (remove h m s labels)
   const displayTime = remaining && /\d{1,2}:\d{2}:\d{2}/.test(remaining) ? remaining : '00:00:00';
-
-  // Choose an inline SVG icon to show alongside the countdown time depending on how much remains
-  const timeIcon = (() => {
-    if (remainingMs == null) return ICONS[0];
-    if (remainingMs <= 60_000) return ICONS[1]; // < 1 minute -> small clock
-    if (remainingMs <= 5 * 60_000) return ICONS[2]; // < 5 minutes -> stopwatch
-    if (remainingMs <= 30 * 60_000) return ICONS[1]; // < 30 minutes -> clock
-    return ICONS[3]; // longer -> lightning / readiness
-  })();
+  const timeIcon = selectTimeIcon(remainingMs);
 
   return (
     <button
@@ -137,7 +87,6 @@ export function PublishButton({
             : 'On cooldown'
       }
     >
-      {/* Mini fading bar showing remaining time (shrinks toward 0) */}
       {!canPost && countdownTotalMs != null && remainingMs != null && (
         <span className="cooldown-bar" aria-hidden>
           <span
@@ -157,7 +106,6 @@ export function PublishButton({
           </span>
         ) : (
           <span className="countdown-display">
-            {/* both elements are present so we can cross-fade/slide between them */}
             <span className={`wait-message ${waitMsgVisible ? 'visible' : ''}`}>
               <span className="wait-icon" aria-hidden style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }}>
                 {ICONS[currentWaitIconIndex]}

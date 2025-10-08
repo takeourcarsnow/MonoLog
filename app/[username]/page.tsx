@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ProfileView } from "@/app/components/ProfileView";
 import { supabaseApi } from "@/src/lib/api/supabase";
 import { notFound } from "next/navigation";
+import { SkeletonCard, SkeletonTile } from "@/app/components/Skeleton";
 
 function looksLikeUuid(s: string) {
   // loose check: UUIDs usually contain hyphens and are long
@@ -72,11 +73,9 @@ export default function UsernamePage({ params }: { params: { username: string } 
   if (loading) {
     return (
       <div className="view-fade">
-        <div className="card skeleton" style={{ height: 120, maxWidth: 800, margin: '24px auto' }} />
+        <SkeletonCard height={120} maxWidth={800} margin="24px auto" />
         <div className="grid" aria-label="Loading posts">
-          <div className="tile skeleton" style={{ height: 160 }} />
-          <div className="tile skeleton" style={{ height: 160 }} />
-          <div className="tile skeleton" style={{ height: 160 }} />
+          <SkeletonTile height={160} count={3} />
         </div>
       </div>
     );

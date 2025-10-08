@@ -1,39 +1,28 @@
-import { Home, Search, Plus, Calendar, User } from "lucide-react";
+"use client";
 
-const navItems = [
-  { path: "/feed", icon: Home, label: "Feed", color: "hsl(220, 70%, 50%)" },
-  { path: "/explore", icon: Search, label: "Explore", color: "hsl(160, 70%, 45%)" },
-  { path: "/upload", icon: Plus, label: "Upload", color: "hsl(280, 70%, 55%)" },
-  { path: "/calendar", icon: Calendar, label: "Calendar", color: "hsl(40, 85%, 55%)" },
-  { path: "/profile", icon: User, label: "Profile", color: "hsl(320, 70%, 50%)" },
-];
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import "../styles/navbar.css";
+import { navItems, isNavItemActive } from "./nav/navHelpers";
 
 interface NavbarStaticProps {
   children?: React.ReactNode;
 }
 
 export function NavbarStatic({ children }: NavbarStaticProps) {
+  const pathname = usePathname() || "/";
+
   return (
     <nav className="tabbar">
-      <div className="tabbar-inner">
+      <div className="tabbar-inner" aria-label="Main navigation">
         {navItems.map((item, index) => {
+          const active = isNavItemActive(pathname, item.path);
           const Icon = item.icon;
-
           return (
-            <div
-              key={item.path}
-              className="tab-item-static"
-              style={{
-                '--tab-color': item.color,
-              } as React.CSSProperties}
-              data-path={item.path}
-              data-index={index}
-            >
-              <div className="tab-icon">
-                <Icon size={20} strokeWidth={2} />
-              </div>
+            <Link key={item.path} href={item.path} className={`tab-item-static${active ? ' active' : ''}`} aria-current={active ? 'page' : undefined} data-path={item.path} data-index={index}>
+              <div className="tab-icon"><Icon size={20} strokeWidth={2} /></div>
               <span className="tab-label">{item.label}</span>
-            </div>
+            </Link>
           );
         })}
         {children}

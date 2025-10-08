@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { navItems, isNavItemActive } from "./nav/navHelpers";
 
 export function NavbarInteractive() {
   const router = useRouter();
@@ -16,24 +17,8 @@ export function NavbarInteractive() {
     }
   };
 
-  // Check if current path matches nav item (including username routes for profile)
-  const isActive = React.useCallback((itemPath: string) => {
-    if (itemPath === '/profile') {
-      // Profile tab should be active for any /profile/* route (e.g. /profile/following)
-      if (pathname.startsWith('/profile')) return true;
-
-      // Also keep existing username-route behavior: when the path is a single
-      // segment that isn't one of the reserved routes, treat it as a profile
-      // username page (e.g. /alice)
-      const pathSegments = pathname.split('/').filter(Boolean);
-      return pathname === '/profile' || (pathSegments.length === 1 && ![
-        'about', 'api', 'calendar', 'explore', 'favorites',
-        'feed', 'post', 'upload', 'admin', 'settings', 'help',
-        'terms', 'privacy', 'login', 'register', 'signup', 'signin', 'logout', 'auth'
-      ].includes(pathSegments[0]?.toLowerCase()));
-    }
-    return pathname === itemPath || (pathname === '/' && itemPath === '/feed');
-  }, [pathname]);
+  // Use centralized active logic
+  const isActive = React.useCallback((itemPath: string) => isNavItemActive(pathname || '/', itemPath), [pathname]);
 
   // This component adds click handlers to the static nav items
   React.useEffect(() => {

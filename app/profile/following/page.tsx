@@ -5,6 +5,8 @@ import { api } from "@/src/lib/api";
 import type { User } from "@/src/lib/types";
 import Link from "next/link";
 import { AuthForm } from "@/app/components/AuthForm";
+import { SkeletonCard } from "@/app/components/Skeleton";
+import { AuthRequired } from "@/app/components/AuthRequired";
 
 export default function FollowingPage() {
   const [following, setFollowing] = useState<User[]>([]);
@@ -12,40 +14,35 @@ export default function FollowingPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAuth, setShowAuth] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      const user = await api.getCurrentUser();
-      setCurrentUser(user);
-      if (user) {
-        const followingUsers = await api.getFollowingUsers();
-        setFollowing(followingUsers);
-      }
-      setLoading(false);
+  const loadData = async () => {
+    const user = await api.getCurrentUser();
+    setCurrentUser(user);
+    if (user) {
+      const followingUsers = await api.getFollowingUsers();
+      setFollowing(followingUsers);
     }
-    load();
+  };
+
+  useEffect(() => {
+    loadData().finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
       <div className="view-fade">
-        <div className="card skeleton" style={{ height: 120, maxWidth: 800, margin: '24px auto' }} />
+        <SkeletonCard height={120} maxWidth={800} margin="24px auto" />
       </div>
     );
   }
 
   if (!currentUser) {
     return (
-      <div className="view-fade auth-host" style={{ maxWidth: 520, margin: "28px auto 32px", textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+      <AuthRequired>
         <AuthForm onClose={async () => {
           // refresh authenticated user state after sign-in
-          const me = await api.getCurrentUser();
-          setCurrentUser(me);
-          if (me) {
-            const followingUsers = await api.getFollowingUsers();
-            setFollowing(followingUsers);
-          }
+          await loadData();
         }} />
-      </div>
+      </AuthRequired>
     );
   }
 

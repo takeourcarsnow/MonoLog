@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { AccountSwitcher } from "./AccountSwitcher";
+import { usePrevPathToggle } from "./usePrevPathToggle";
 import { Info, Star } from "lucide-react";
 
 export function HeaderInteractive() {
@@ -11,36 +12,7 @@ export function HeaderInteractive() {
   const [isLogoAnimating, setIsLogoAnimating] = useState(false);
   const pathname = usePathname();
 
-  const PREV_FAV_KEY = "monolog:prev-path-before-favorites";
-  const PREV_ABOUT_KEY = "monolog:prev-path-before-about";
-
-  const handleFavoritesToggle = (e: any) => {
-    e.preventDefault();
-    const current = pathname || "/";
-
-    if (current !== "/favorites") {
-      // Store current path and go to favorites
-      try {
-        sessionStorage.setItem(PREV_FAV_KEY, current);
-      } catch (err) {
-        // ignore storage errors
-      }
-      router.push("/favorites");
-      return;
-    }
-
-    // Return to previous path
-    let prev = "/";
-    try {
-      const stored = sessionStorage.getItem(PREV_FAV_KEY);
-      if (stored) prev = stored;
-    } catch (err) {
-      // ignore
-    }
-    if (prev === "/favorites") prev = "/";
-    try { sessionStorage.removeItem(PREV_FAV_KEY); } catch (_) {}
-    router.push(prev);
-  };
+  const { toggle: toggleFavorites, isActive: favIsActive } = usePrevPathToggle('/favorites', 'monolog:prev-path-before-favorites');
 
   const handleLogoClick = () => {
     // Use the Web Animations API so the animation is driven by the browser
@@ -125,37 +97,17 @@ export function HeaderInteractive() {
               title="About MonoLog"
               aria-label="About MonoLog"
               aria-current={pathname === '/about' ? 'page' : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                const current = pathname || "/";
-
-                if (current !== "/about") {
-                  // Store current path and go to about
-                  try { sessionStorage.setItem(PREV_ABOUT_KEY, current); } catch (_) {}
-                  router.push("/about");
-                  return;
-                }
-
-                // Return to previous path
-                let prev = "/";
-                try {
-                  const stored = sessionStorage.getItem(PREV_ABOUT_KEY);
-                  if (stored) prev = stored;
-                } catch (_) {}
-                if (prev === "/about") prev = "/";
-                try { sessionStorage.removeItem(PREV_ABOUT_KEY); } catch (_) {}
-                router.push(prev);
-              }}
+              onClick={usePrevPathToggle('/about', 'monolog:prev-path-before-about').toggle}
             >
               <Info size={20} strokeWidth={2} />
             </button>
         <ThemeToggle />
         <button
-          className={`btn icon favorites-btn ${pathname === '/favorites' ? 'active' : ''}`}
+          className={`btn icon favorites-btn ${favIsActive ? 'active' : ''}`}
           title="Favorites"
           aria-label="Favorites"
-          aria-current={pathname === '/favorites' ? 'page' : undefined}
-          onClick={handleFavoritesToggle}
+          aria-current={favIsActive ? 'page' : undefined}
+          onClick={toggleFavorites}
         >
           <Star size={20} strokeWidth={2} />
         </button>

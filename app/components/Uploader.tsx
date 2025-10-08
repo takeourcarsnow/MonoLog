@@ -9,6 +9,7 @@ import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
 import { CONFIG } from "@/src/lib/config";
 import { useAuth } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
+import { AuthRequired } from "./AuthRequired";
 import { DropZone } from "./uploader/DropZone";
 import { FileInputs } from "./uploader/FileInputs";
 import { PreviewSection } from "./uploader/PreviewSection";
@@ -33,9 +34,9 @@ export function Uploader() {
   }
   if (!me) {
     return (
-      <div className="view-fade auth-host" style={{ maxWidth: 520, margin: '28px auto 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+      <AuthRequired>
         <AuthForm onClose={async () => setMe(await api.getCurrentUser())} />
-      </div>
+      </AuthRequired>
     );
   }
   return <UploaderCore />;

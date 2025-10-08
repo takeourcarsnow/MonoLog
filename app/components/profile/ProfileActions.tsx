@@ -86,13 +86,13 @@ export function ProfileActions({
           matches the current user. */}
       {currentUserId && user?.id === currentUserId ? (
         <>
-          <Link className="following-link" href="/profile/following" aria-label="Following">
+          <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following">
             <span className="icon" aria-hidden>
               <User size={16} strokeWidth={1.2} />
             </span>
           </Link>
           <button
-            className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 hover:bg-green-100' : 'edit-profile-btn'}`}
+            className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 no-effects' : 'btn edit-profile-btn no-effects'}`}
             onClick={(e) => { onEditToggle(); (e.target as HTMLButtonElement).blur(); }}
             aria-expanded={isEditingProfile}
             aria-label={isEditingProfile ? 'Close edit profile' : 'Edit profile'}

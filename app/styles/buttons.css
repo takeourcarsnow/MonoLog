@@ -198,3 +198,49 @@
 .btn:disabled::before {
   display: none !important;
 }
+
+/* SignOut: plain, no hover/scale/shadow effects but still supports armed confirm color */
+.signout-btn.no-effects {
+  /* keep it visually simple: no background ripple or movement
+     but animate border-color when entering/exiting the confirm state */
+  transition: border-color 260ms ease, background 260ms ease, color 260ms ease !important;
+  box-shadow: none !important;
+  /* visually remove the border while keeping layout stable */
+  border: 1px solid transparent !important;
+}
+.signout-btn.no-effects::before { display: none !important; }
+.signout-btn.no-effects:hover { transform: none !important; box-shadow: none !important; }
+.signout-btn.no-effects:active { transform: none !important; }
+.signout-btn.no-effects:focus { box-shadow: none !important; }
+
+/* show a 1px danger border when armed and pulse subtly */
+.signout-btn.no-effects.confirm {
+  background: var(--danger) !important;
+  color: #fff !important;
+  border: 1px solid var(--danger) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  animation: signout-border-pulse 720ms ease-out 1;
+}
+
+@keyframes signout-border-pulse {
+  0% { border-color: transparent; box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  40% { border-color: color-mix(in srgb, var(--danger), transparent 60%); box-shadow: 0 6px 18px rgba(239,68,68,0.06); }
+  100% { border-color: var(--danger); box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+
+/* Prevent icon SVG from scaling on hover for this button (overrides .btn.icon svg rules) */
+.signout-btn.no-effects svg { transform: none !important; transition: none !important; }
+.signout-btn.no-effects:hover svg { transform: none !important; }
+
+/* Generic opt-out for buttons that want no motion/hover effects */
+.no-effects {
+  transition: border-color 260ms ease, background 260ms ease, color 260ms ease !important;
+  box-shadow: none !important;
+}
+.no-effects::before { display: none !important; }
+.no-effects:hover { transform: none !important; box-shadow: none !important; }
+.no-effects:active { transform: none !important; }
+.no-effects:focus { box-shadow: none !important; }
+.no-effects svg { transform: none !important; transition: none !important; }
+.no-effects:hover svg { transform: none !important; }

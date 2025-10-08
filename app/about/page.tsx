@@ -1,56 +1,60 @@
 "use client";
 import Link from "next/link";
+import { InstallButton } from "../components/InstallButton";
 import styles from './about.module.css';
 
 export default function AboutPage() {
   return (
   <div className={`card view-fade about-card ${styles.aboutCard}`} style={{ padding: 18, textAlign: 'center' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
-        <h2>About MonoLog</h2>
+        <h2>Welcome to MonoLog</h2>
 
-        <p className="dim" style={{ margin: '1em auto 1.5em' }}>
-          MonoLog is a daily photo journal that respects your time and attention. No infinite scrolling, no public like counts, and no algorithm deciding what you see — just a simple, intentional way to document your life and connect with people you actually care about.
+        <p className="dim" style={{ margin: '1em auto 1.5em', fontSize: '1.1em' }}>
+          MonoLog is your personal daily photo journal designed to help you capture and share life's moments without the distractions of traditional social media. It's simple, intentional, and focused on what truly matters — your memories and connections.
         </p>
 
         <section style={{ marginBottom: '1.5em' }}>
-          <h3>Why MonoLog exists</h3>
+          <h3>What Makes MonoLog Special</h3>
           <p className="dim" style={{ margin: '0.5em auto' }}>
-            Many social platforms are optimized to maximize attention and engagement. MonoLog takes a different path: one post per calendar day (create or replace today&apos;s entry), no pressure to perform, and a chronological feed so your memories remain yours — not content for an algorithm.
-          </p>
-
-          <p className="dim" style={{ margin: '0.8em auto', fontStyle: 'italic' }}>
-            Community driven — MonoLog is built and sustained by the community. There is no venture funding, no commercial backers, and no advertising partnerships. The project is guided by users and volunteers.
+            Unlike platforms that compete for your attention, MonoLog respects your time with one meaningful post per day, no endless scrolling, and no public likes to chase. It's a calm space to document your life and connect with the people who matter most.
           </p>
         </section>
 
         <section style={{ marginBottom: '1.5em' }}>
-          <h3>How it&apos;s different from Instagram</h3>
+          <h3>Key Features</h3>
           <ul className={styles.aboutList}>
-            <li><strong>One post per calendar day</strong> — No spam, no overthinking. Create (or replace) a single entry per local calendar day with up to five images. If you posted late in the evening you may post again the next morning once the local date rolls over.</li>
-            <li><strong>Favorites instead of public likes</strong> — You can favorite posts you love; there are no public like counts to chase.</li>
-            <li><strong>Chronological feed</strong> — See posts from people you follow in the order they were posted. No algorithmic ranking.</li>
-            <li><strong>Privacy control</strong> — Choose whether a post is public or private. You control your sharing.</li>
-            <li><strong>No ads, no tracking</strong> — Your data isn&apos;t sold and your attention isn&apos;t monetized.</li>
-            <li><strong>Calm by design</strong> — Minimal notifications and no engagement metrics to distract you.</li>
+            <li><strong>One Post Per Day</strong> — Share up to five photos with a caption each calendar day. Replace your entry anytime before midnight to perfect it.</li>
+            <li><strong>Private Favorites</strong> — Show appreciation with favorites that stay between you and the creator — no public counts or pressure.</li>
+            <li><strong>Chronological Feed</strong> — See posts from friends in the order they were shared, preserving the natural flow of time.</li>
+            <li><strong>Privacy First</strong> — Choose to make posts public for the community or keep them private for personal reflection.</li>
+            <li><strong>Ad-Free Experience</strong> — No ads, no tracking, no algorithms — your data and attention remain yours.</li>
+            <li><strong>Minimal Distractions</strong> — Focused design with gentle notifications and no engagement metrics to disrupt your peace.</li>
           </ul>
         </section>
 
         <section style={{ marginBottom: '1.5em' }}>
-          <h3>What you can do</h3>
+          <h3>Get Started</h3>
           <ul className={styles.aboutList}>
-            <li><strong>Post</strong> — Create one entry per calendar day with up to five images and a caption. You can replace today&apos;s entry if you want to revise it.</li>
-            <li><strong>Feed</strong> — Follow friends and see their daily posts in a clean, chronological timeline.</li>
-            <li><strong>Explore</strong> — Discover public posts from the community at your own pace.</li>
-            <li><strong>Calendar</strong> — View your entire photo journal in calendar form and jump to any date.</li>
-            <li><strong>Engage</strong> — Leave comments and favorite posts you love, without the pressure of public metrics.</li>
+            <li><strong>Post Daily</strong> — Upload your photos and write a caption to create today's entry.</li>
+            <li><strong>Follow & Connect</strong> — Build your feed by following friends and seeing their daily shares.</li>
+            <li><strong>Explore the Community</strong> — Discover inspiring posts from other users at your own pace.</li>
+            <li><strong>View Your Journal</strong> — Browse your photo history in calendar view and revisit any day.</li>
+            <li><strong>Engage Meaningfully</strong> — Leave thoughtful comments and favorite posts that resonate with you.</li>
           </ul>
+        </section>
+
+        <section style={{ marginBottom: '1.5em' }}>
+          <h3>Community Driven</h3>
+          <p className="dim" style={{ margin: '0.5em auto', fontStyle: 'italic' }}>
+            MonoLog is built by and for its users. No corporate backing or venture capital — just a passionate community creating a better way to share life's moments.
+          </p>
         </section>
 
         <p className="dim" style={{ margin: '1em auto' }}>
-          MonoLog is for people who want to document their lives without being consumed by social media. It&apos;s a tool for memory, not a platform for performance. Simple, intentional, and driven by the community that uses it.
+          Ready to start your photo journal? Join thousands of users who have rediscovered the joy of intentional sharing.
         </p>
 
-        <div style={{ marginTop: 14, display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <div style={{ marginTop: 14, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link className="btn icon-reveal" href="/explore" aria-label="Explore">
             <span className="icon" aria-hidden>
               {/* magnifier */}
@@ -66,6 +70,8 @@ export default function AboutPage() {
             </span>
             <span className="reveal">Post</span>
           </Link>
+
+          <InstallButton />
 
           <a className="btn icon-reveal" href="https://nefas.tv" target="_blank" rel="noopener noreferrer" aria-label="Author">
             <span className="icon" aria-hidden>

@@ -194,7 +194,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         const chosen = normalizeUsername(username);
         if (!validUsername(chosen)) {
           setLoading(false);
-          showHeaderNotice({ title: 'Invalid username', subtitle: "Username must be 3-32 characters and only contain letters, numbers, '-' or '_'.", variant: 'warn' }, 4500);
+          showHeaderNotice({ title: 'Username too short', subtitle: "3–32 chars; letters, numbers, '-' or '_'.", variant: 'warn' }, 4500);
           return;
         }
 
@@ -485,7 +485,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
               </div>
             </div>
             <div id="username-help" className="dim help" aria-live="polite">
-              Lowercase letters, numbers, &apos;-&apos; and &apos;_&apos; (3-32 chars).
+              3–32 chars: lowercase letters, numbers, '-' or '_'.
             </div>
           </div>
         </div>

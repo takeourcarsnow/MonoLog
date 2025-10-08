@@ -10,6 +10,12 @@
   padding: calc(4px + var(--safe-top, 0px)) 12px 12px 12px; /* much smaller top padding */
   flex: 1;
 }
+
+/* Add extra top space when viewing the Favorites page so posts don't butt up
+   against the top header. Using .page.favorites keeps this change scoped */
+.page.favorites .feed {
+  padding-top: calc(24px + var(--safe-top, 0px));
+}
 .card {
   background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: var(--shadow);

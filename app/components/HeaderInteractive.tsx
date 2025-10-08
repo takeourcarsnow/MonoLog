@@ -2,7 +2,6 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import { AccountSwitcher } from "./AccountSwitcher";
 import { Info, Star } from "lucide-react";
@@ -13,6 +12,7 @@ export function HeaderInteractive() {
   const pathname = usePathname();
 
   const PREV_FAV_KEY = "monolog:prev-path-before-favorites";
+  const PREV_ABOUT_KEY = "monolog:prev-path-before-about";
 
   const handleFavoritesToggle = (e: any) => {
     e.preventDefault();
@@ -117,14 +117,35 @@ export function HeaderInteractive() {
         <h1>MonoLog</h1>
       </button>
       <div className="header-actions" id="header-actions">
-        <Link
-          href="/about"
-          className="btn icon about-btn"
-          title="About MonoLog"
-          aria-label="About MonoLog"
-        >
-          <Info size={20} strokeWidth={2} />
-        </Link>
+            <button
+              className={`btn icon about-btn ${pathname === '/about' ? 'active' : ''}`}
+              title="About MonoLog"
+              aria-label="About MonoLog"
+              aria-current={pathname === '/about' ? 'page' : undefined}
+              onClick={(e) => {
+                e.preventDefault();
+                const current = pathname || "/";
+
+                if (current !== "/about") {
+                  // Store current path and go to about
+                  try { sessionStorage.setItem(PREV_ABOUT_KEY, current); } catch (_) {}
+                  router.push("/about");
+                  return;
+                }
+
+                // Return to previous path
+                let prev = "/";
+                try {
+                  const stored = sessionStorage.getItem(PREV_ABOUT_KEY);
+                  if (stored) prev = stored;
+                } catch (_) {}
+                if (prev === "/about") prev = "/";
+                try { sessionStorage.removeItem(PREV_ABOUT_KEY); } catch (_) {}
+                router.push(prev);
+              }}
+            >
+              <Info size={20} strokeWidth={2} />
+            </button>
         <ThemeToggle />
         <button
           className={`btn icon favorites-btn ${pathname === '/favorites' ? 'active' : ''}`}

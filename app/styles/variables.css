@@ -42,38 +42,9 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Header favorites button: when the Favorites page is active, fill the header star */
-.header .favorites-btn.active svg {
-  fill: #FFD700;
-  stroke: rgba(0,0,0,0.48);
-  stroke-width: 1.8px;
-}
-/* Dark theme header star outline */
-:root[data-theme="dark"] .header .favorites-btn.active svg {
-  stroke: rgba(255,255,255,0.22);
-}
+/* Header favorites button: disabled - no special coloring when active */
 
-/* About header button active styling: match favorites look so it becomes colored when active */
-.header .about-btn.active svg {
-  /* subtle pastel blue (softer than the favorites gold) */
-  /* pastel background for the svg area */
-  fill: #A7D1FF;
-  /* Make the icon strokes more visible: use primary color with reduced opacity
-     so the lines read clearly against the pastel background */
-  stroke: color-mix(in srgb, var(--primary), rgba(0,0,0,0.18));
-  stroke-width: 1.8px;
-}
-
-/* Also raise the effective icon color (for icons using currentColor) */
-.header .about-btn.active {
-  color: color-mix(in srgb, var(--primary), rgba(0,0,0,0.06));
-}
-/* Dark theme about button outline */
-:root[data-theme="dark"] .header .about-btn.active svg {
-  /* stronger light stroke in dark theme for readability */
-  stroke: rgba(255,255,255,0.9);
-  stroke-width: 1.6px;
-}
+/* About header button active styling: disabled - no special coloring when active */
 
 /* Prefer the user's OS preference only when no explicit saved preference exists - handled in JS init */
 :root[data-theme="dark"] {

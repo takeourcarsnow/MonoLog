@@ -1,34 +1,196 @@
 .aboutCard {
-  /* small responsive tweak scoped to the About card */
+  /* Clean background display without card styling */
   width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
   box-sizing: border-box;
+  /* Allow content to flow naturally from top to bottom */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  /* Remove card background and border */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 60px 20px 40px 20px; /* Add padding for breathing room */
 }
 
-.aboutCard :global(.dim) {
-  /* Allow multi-line paragraphs on the About page (overrides global .dim narrow rule) */
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: unset !important;
+/* Enhanced typography and spacing */
+.aboutTitle {
+  margin: 20px 0 8px 0;
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: '-0.02em';
+  background: linear-gradient(135deg, var(--text), var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInUp 0.8s ease-out;
 }
 
-.aboutList {
-  display: inline-block;
-  text-align: left;
-  padding: 0 1em;
+.aboutSubtitle {
+  margin: 0 0 32px 0;
+  font-size: 1.1rem;
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 480px;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.aboutSection {
+  margin-bottom: 40px;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.aboutSection h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.aboutSection p {
+  font-size: 1rem;
+  color: var(--muted);
   line-height: 1.6;
-  margin-top: 0.5em;
-  max-width: 100%;
-  box-sizing: border-box;
+  margin: 0 0 12px 0;
 }
 
-@media (max-width: 640px) {
-  .aboutList {
-    display: block;
-    padding: 0;
-    margin: 0 0 0.75em 0;
-  }
+.featureList {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 8px;
+}
 
-  .aboutCard {
-    padding: 12px; /* slightly reduce padding on small screens */
+.featureItem {
+  font-size: 1rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-elev);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.featureItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: var(--primary);
+}
+
+.ritualGrid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-top: 16px;
+}
+
+.ritualItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: var(--bg-elev);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.ritualItem:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  border-color: var(--primary);
+}
+
+.ritualIcon {
+  font-size: 2rem;
+  animation: bounceIn 0.6s ease-out;
+}
+
+.ritualTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.ritualDesc {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+}
+
+.footerText {
+  margin: 32px 0 16px 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-style: italic;
+  animation: fadeInUp 0.8s ease-out 0.8s both;
+}
+
+.authorLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  animation: fadeInUp 0.8s ease-out 1s both;
+}
+
+.authorLink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Force content area to allow scrolling on about page */
+.content {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 100dvh !important;
 }

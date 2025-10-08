@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable react/no-unescaped-entities */
 
 import { useState, useRef, useEffect } from "react";
 import { getSupabaseClient } from "@/src/lib/api/supabase";
@@ -486,7 +485,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
               </div>
             </div>
             <div id="username-help" className="dim help" aria-live="polite">
-              3–32 chars: lowercase letters, numbers, '-' or '_'.
+              3–32 chars: lowercase letters, numbers, &apos;-&apos; or &apos;_&apos;.
             </div>
           </div>
         </div>

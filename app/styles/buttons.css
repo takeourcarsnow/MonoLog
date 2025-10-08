@@ -175,6 +175,14 @@
   display: none !important;
 }
 
+/* For the small view toggle button we don't want the touch/press background
+   ripple or active transform — keep it visually stable on press while
+   preserving keyboard focus styles. */
+.view-btn::after { display: none !important; }
+.view-btn:active { transform: none !important; }
+.view-btn:hover { transform: none !important; box-shadow: none !important; }
+
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

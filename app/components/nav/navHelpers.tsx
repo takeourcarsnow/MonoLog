@@ -1,8 +1,15 @@
 "use client";
 
-import { Home, Search, Plus, Calendar, User } from "lucide-react";
+import { Home, Search, Plus, Calendar, User, type LucideIcon } from "lucide-react";
 
-export const navItems = [
+export interface NavItem {
+  path: string;
+  icon: LucideIcon;
+  label: string;
+  color: string;
+}
+
+export const navItems: NavItem[] = [
   { path: "/feed", icon: Home, label: "Feed", color: "hsl(220, 70%, 50%)" },
   { path: "/explore", icon: Search, label: "Explore", color: "hsl(160, 70%, 45%)" },
   { path: "/upload", icon: Plus, label: "Upload", color: "hsl(280, 70%, 55%)" },

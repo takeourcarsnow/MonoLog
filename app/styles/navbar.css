@@ -14,6 +14,9 @@
   -webkit-tap-highlight-color: transparent;
   color: var(--muted);
   overflow: hidden;
+  /* Optimize for performance */
+  will-change: transform, color;
+  contain: layout style paint;
 }
 
 .tab-item-static.active {
@@ -181,6 +184,8 @@
   .tab-item-static {
     padding: 8px 6px;
     min-width: 50px;
+    /* Ensure minimum touch target size */
+    min-height: 44px;
   }
 
   .tab-item.active,
@@ -218,8 +223,11 @@
   opacity: 0;
   pointer-events: none;
   z-index: 0;
-  transition: transform 240ms cubic-bezier(.2,1.1,.25,1), width 240ms cubic-bezier(.2,1.1,.25,1), opacity 220ms ease, background-color 220ms cubic-bezier(.2,.9,.2,1);
+  transition: transform 300ms cubic-bezier(.2,1.1,.25,1), width 300ms cubic-bezier(.2,1.1,.25,1), opacity 220ms ease, background-color 200ms ease;
   box-shadow: 0 4px 14px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.02) inset;
+  /* Performance optimizations */
+  will-change: transform, width, background-color, opacity;
+  contain: layout style paint;
 }
 
 @media (prefers-reduced-motion: reduce) {

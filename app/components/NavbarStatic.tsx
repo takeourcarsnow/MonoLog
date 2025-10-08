@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "../styles/navbar.css";
-import { navItems, isNavItemActive } from "./nav/navHelpers";
+import { navItems, isNavItemActive, type NavItem } from "./nav/navHelpers";
 import { StaticContainer } from "./StaticContainer";
 
 interface NavbarStaticProps {
@@ -28,6 +28,9 @@ export function NavbarStatic({ children }: NavbarStaticProps) {
               data-path={item.path}
               data-index={index}
               style={{ ['--tab-color' as any]: item.color }}
+              tabIndex={0}
+              role="tab"
+              aria-label={`Navigate to ${item.label}`}
             >
               <div className="tab-icon"><Icon size={20} strokeWidth={2} /></div>
               <span className="tab-label">{item.label}</span>

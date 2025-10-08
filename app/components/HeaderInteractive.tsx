@@ -2,15 +2,14 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import { AccountSwitcher } from "./AccountSwitcher";
-import { AboutModal } from "./AboutModal";
 import { Info, Star } from "lucide-react";
 
 export function HeaderInteractive() {
   const router = useRouter();
   const [isLogoAnimating, setIsLogoAnimating] = useState(false);
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const pathname = usePathname();
 
   const PREV_FAV_KEY = "monolog:prev-path-before-favorites";
@@ -118,14 +117,14 @@ export function HeaderInteractive() {
         <h1>MonoLog</h1>
       </button>
       <div className="header-actions" id="header-actions">
-        <button
+        <Link
+          href="/about"
           className="btn icon about-btn"
           title="About MonoLog"
           aria-label="About MonoLog"
-          onClick={() => setIsAboutModalOpen(true)}
         >
           <Info size={20} strokeWidth={2} />
-        </button>
+        </Link>
         <ThemeToggle />
         <button
           className={`btn icon favorites-btn ${pathname === '/favorites' ? 'active' : ''}`}
@@ -138,7 +137,6 @@ export function HeaderInteractive() {
         </button>
         <AccountSwitcher />
       </div>
-      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </>
   );
 }

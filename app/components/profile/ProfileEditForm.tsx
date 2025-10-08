@@ -70,7 +70,11 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         if (editLinkedin.trim()) socialLinks.linkedin = editLinkedin.trim();
         if (editWebsite.trim()) socialLinks.website = editWebsite.trim();
 
-        await api.updateCurrentUser({ username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks });
+  // Normalize social links: send null when the user cleared all social fields
+  const socialLinksNormalized = Object.keys(socialLinks).length ? socialLinks : null;
+  const payload = { username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized } as any;
+  console.log('socialLinks', socialLinks, 'normalized', socialLinksNormalized, 'payload', payload);
+  await api.updateCurrentUser(payload as Partial<User>);
         // Notify any listeners and revalidate app-router data so the UI updates
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (_) {}
         try { router.refresh?.(); } catch (_) {}

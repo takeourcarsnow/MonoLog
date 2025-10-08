@@ -114,11 +114,16 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
 
         const { data, error } = await sb.auth.signUp({ email, password });
         if (error) throw error;
-        // when signing up, create a users profile row with chosen username
+        // when signing up, only create a users profile row client-side if the
+        // signup returned an active session (some flows require email
+        // confirmation and don't provide a session; in that case the client
+        // is still anon and RLS will block INSERTs). If no session is present
+        // skip creation here and rely on the sign-in flow to create the row.
         const userId = (data as any)?.user?.id;
-        if (userId) {
+        const sessionPresent = (data as any)?.session ?? false;
+        if (userId && sessionPresent) {
           try {
-            await sb.from("users").upsert({ id: userId, username: chosen, display_name: chosen, avatar_url: "/logo.svg" });
+            await sb.from('users').upsert({ id: userId, username: chosen, display_name: chosen, avatar_url: "/logo.svg" });
           } catch (e) { /* ignore upsert errors for now */ }
         }
         // indicate that a confirmation email (or magic link) was sent

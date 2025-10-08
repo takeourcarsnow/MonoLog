@@ -1,5 +1,5 @@
 import type { User } from "../types";
-import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError } from "./supabase-client";
+import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, getAccessToken } from "./supabase-client";
 import { mapProfileToUser, DEFAULT_AVATAR } from "./supabase-utils";
 import { logger } from "../logger";
 
@@ -133,7 +133,7 @@ export async function updateUser(id: string, patch: Partial<User>) {
   if (patch.displayName !== undefined) upd.display_name = patch.displayName;
   if (patch.avatarUrl !== undefined) upd.avatar_url = patch.avatarUrl;
   if (patch.bio !== undefined) upd.bio = patch.bio;
-  if (patch.socialLinks !== undefined) upd.social_links = patch.socialLinks;
+  if (patch.socialLinks !== undefined) upd.socialLinks = patch.socialLinks ? JSON.stringify(patch.socialLinks) : null;
   const { error, data } = await sb.from("users").update(upd).eq("id", id).select("*").limit(1).single();
   if (error) throw error;
   const profile = data as any;
@@ -143,7 +143,7 @@ export async function updateUser(id: string, patch: Partial<User>) {
     displayName: profile.displayName || profile.display_name,
 avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
-    socialLinks: profile.social_links || profile.socialLinks || undefined,
+    socialLinks: profile.socialLinks ? JSON.parse(profile.socialLinks) : undefined,
     joinedAt: profile.joinedAt || profile.joined_at,
   } as any;
 }
@@ -186,24 +186,38 @@ export async function updateCurrentUser(patch: Partial<User>) {
   if (patch.displayName !== undefined) upsertObj.display_name = patch.displayName;
   if (patch.avatarUrl !== undefined) upsertObj.avatar_url = patch.avatarUrl;
   if (patch.bio !== undefined) upsertObj.bio = patch.bio;
-  if (patch.socialLinks !== undefined) upsertObj.social_links = patch.socialLinks;
+  if (patch.socialLinks !== undefined) upsertObj.socialLinks = patch.socialLinks;
   const safe = (v: any) => { try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } } };
 logger.debug("users.upsert payload", safe(upsertObj));
-  const res = await sb.from("users").upsert(upsertObj).select("*").limit(1).single();
-logger.debug("users.upsert result (stringified)", safe(safe(res)));
-  const { error, data } = res as any;
-  if (error) {
-    console.error("users.upsert error", { message: error.message || error, code: error.code || error?.status || null, details: error.details || error?.error || null, full: error });
-    throw error;
+  // Try to perform the update via the server-side endpoint which verifies the
+  // bearer token and uses the service-role client. This avoids client-side
+  // upserts which can hit RLS INSERT/UPSERT policies. If the server call fails
+  // for any reason (no token, network, auth), fall back to the previous
+  // upsert/update behavior.
+  // Always require a server-side update path. Attempt to get the current
+  // access token and call the server PATCH endpoint. Do NOT fall back to a
+  // client-side upsert/update because that can hit RLS INSERT/UPSERT policies.
+  const token = await getAccessToken(sb);
+  if (!token) {
+    throw new Error('Update failed: no access token available. Ensure the user is signed in and the client can read the session token before calling updateCurrentUser.');
   }
-  const profile = data as any;
+  const resp = await fetch('/api/users/me', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(upsertObj),
+  });
+  if (!resp.ok) {
+    const bodyText = await resp.text().catch(() => null);
+    throw new Error(`Server update failed: ${resp.status} ${resp.statusText} ${bodyText || ''}`);
+  }
+  const profile = await resp.json();
   return {
     id: profile.id,
     username: profile.username || profile.user_name,
     displayName: profile.displayName || profile.display_name,
-avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
+    avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
-    socialLinks: profile.social_links || profile.socialLinks || undefined,
+    socialLinks: profile.socialLinks ? JSON.parse(profile.socialLinks) : undefined,
     joinedAt: profile.joinedAt || profile.joined_at,
     usernameChangedAt: profile.username_changed_at || profile.usernameChangedAt,
   } as any;

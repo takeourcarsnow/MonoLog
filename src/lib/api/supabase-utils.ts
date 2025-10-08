@@ -14,13 +14,35 @@ export function safeStringify(v: any) {
 
 export function mapProfileToUser(profile: any) {
   if (!profile) return null;
+  let socialLinks: any = undefined;
+  if (profile.socialLinks) {
+    if (typeof profile.socialLinks === 'string') {
+      try {
+        socialLinks = JSON.parse(profile.socialLinks);
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      socialLinks = profile.socialLinks;
+    }
+  } else if (profile.social_links) {
+    if (typeof profile.social_links === 'string') {
+      try {
+        socialLinks = JSON.parse(profile.social_links);
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      socialLinks = profile.social_links;
+    }
+  }
   return {
     id: profile.id,
     username: profile.username || profile.user_name || "",
     displayName: profile.displayName || profile.display_name || "",
     avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
-    socialLinks: profile.social_links || profile.socialLinks || undefined,
+    socialLinks,
     joinedAt: profile.joinedAt || profile.joined_at,
     following: profile.following,
     favorites: profile.favorites,

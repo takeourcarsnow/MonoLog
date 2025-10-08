@@ -29,7 +29,7 @@ export async function seedIfNeeded(api: Api) {
     username: ["lina","kai","mara","jo","tess"][i],
     displayName: ["Lina Park","Kai Ito","Mara Quinn","Jordan Lee","Tess Rivera"][i],
     avatarUrl: avatars[i],
-    bio: ["photolog","daily sky","coffee + code","urban notes","plants & places"][i],
+  bio: ["photo log","daily sky","coffee + code","urban notes","plants & places"][i],
     joinedAt: new Date(Date.now() - (50 - i) * 86400000).toISOString(),
     following: i === 0 ? ["u2","u3"] : i === 1 ? ["u1"] : [],
   }));
@@ -47,7 +47,7 @@ export async function seedIfNeeded(api: Api) {
         id: `p_${dayOffset}_${j}`,
         userId: u[j].id,
         imageUrls: imgs,
-        alt: imgs.map((_, idx) => `Daily photo ${idx+1}`),
+  alt: imgs.map((_, idx) => `Photo from today's entry ${idx+1}`),
         caption: ["mood","on the way","tiny moment","quiet light","city hum","morning breeze","notes from today"][ (dayOffset+j) % 7 ],
         createdAt: d.toISOString(),
         public: true,

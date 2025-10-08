@@ -278,7 +278,7 @@ export function useUploader() {
         imageUrls: images.slice(0, 5),
         caption,
         spotifyLink: spotifyLink || undefined,
-        alt: alt || caption || "Daily photo",
+  alt: alt || caption || "Photo from today's entry",
         replace,
         public: visibility === "public",
       });

@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'MonoLog — one post per day',
+    name: 'MonoLog — Your day in pictures.',
     short_name: 'MonoLog',
-    description: 'Daily photo journal. Attach multiple images to a single post.',
+  description: 'MonoLog — Your day in pictures. A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
     start_url: '/',
     display: 'standalone',
     background_color: '#0f0f10',

@@ -29,8 +29,8 @@ const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ss
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 
 export const metadata: Metadata = {
-  title: "MonoLog — one post per day",
-  description: "Daily photo journal. Attach multiple images to a single post.",
+  title: "MonoLog — Your day in pictures.",
+  description: "MonoLog — Your day in pictures. A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.",
   // themeColor must be placed in the `viewport` export in Next.js 14+
   manifest: '/manifest.webmanifest',
   icons: '/logo.svg',

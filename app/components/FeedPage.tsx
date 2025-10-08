@@ -30,7 +30,7 @@ export function FeedPage({
   subtitle,
   viewStorageKey,
   scrollStateKey = 'feed',
-  emptyMessage = "Your feed is quiet. Follow people in Explore to see their daily photo."
+  emptyMessage = "Your feed is quiet. Follow people in Explore to see their daily posts."
 }: FeedPageProps) {
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
 

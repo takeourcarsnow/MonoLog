@@ -16,7 +16,7 @@ export function ExploreView() {
       subtitle="MonoLogs from people you aren't following yet"
       viewStorageKey="exploreView"
       scrollStateKey="explore"
-      emptyMessage="No posts yet. Be the first to post your daily photo!"
+  emptyMessage="No posts yet. Be the first to create today's entry — add one post with as many photos as you like!"
     />
   );
 }

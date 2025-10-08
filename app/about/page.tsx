@@ -23,7 +23,7 @@ export default function AboutPage() {
   <div ref={cardRef} className={`${styles.aboutCard}`}>
       <h1 className={styles.aboutTitle}>MonoLog</h1>
       <p className={styles.aboutSubtitle}>
-        A private, chronological journal — one short post per day. No algorithms, no public likes.
+        MonoLog is a private, chronological photo journal — one thoughtful post per day. No chasing likes, no algorithmic feeds.
       </p>
 
       <div className={styles.aboutSection}>
@@ -35,7 +35,7 @@ export default function AboutPage() {
 
       <div className={styles.aboutSection}>
         <div className={styles.featureList}>
-          <div className={styles.featureItem}><strong>Daily</strong> — one short post to capture a moment.</div>
+          <div className={styles.featureItem}><strong>Daily</strong> — one post per day to collect the moments that matter.</div>
           <div className={styles.featureItem}><strong>Chronological</strong> — your story in order.</div>
           <div className={styles.featureItem}><strong>Private</strong> — share on your terms.</div>
         </div>
@@ -48,7 +48,7 @@ export default function AboutPage() {
             <span className={styles.ritualIcon}>📸</span>
             <div>
               <div className={styles.ritualTitle}>Capture</div>
-              <div className={styles.ritualDesc}>Photo + note</div>
+              <div className={styles.ritualDesc}>Multiple photos + a short note</div>
             </div>
           </div>
 

@@ -1,12 +1,14 @@
 # MonoLog
 
-A modern, performant daily photo journal web application built with Next.js. Share one post per day with multiple images, follow friends, and build your visual story.
+MonoLog — Your day in pictures.
+
+A modern, performant daily photo journal built with Next.js. Create a single post each day, attach multiple images to show sequence and detail, follow friends, and slowly build a thoughtful visual archive.
 
 ![MonoLog](public/logo.svg)
 
 ## ✨ Features
 
-- **Daily Posting**: One post per day limit encourages mindful sharing
+- **Daily habit**: One post per day helps you focus on what matters and build a consistent archive.
 - **Multiple Images**: Attach up to multiple images to each post
 - **Social Features**: Follow users, favorite posts, leave comments
 - **Progressive Web App**: Installable, works offline with service worker
@@ -120,7 +122,7 @@ MonoLog is a fully-featured PWA that can be installed on mobile devices and desk
 - **Formats**: WebP, AVIF, JPEG, PNG support
 
 ### Posting Limits
-- **Daily limit**: 1 post per user per day
+- **Daily limit**: 1 post per user per day (keep it intentional — add as many photos as you need)
 - **Images per post**: Multiple images supported
 
 ### Performance Optimizations

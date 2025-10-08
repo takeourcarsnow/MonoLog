@@ -131,7 +131,7 @@ export function PublishButton({
       disabled={disabled}
       aria-label={
         canPost
-          ? 'Publish your daily post'
+          ? 'Publish today\u2019s post'
           : remaining
             ? `Next in ${displayTime}`
             : 'On cooldown'

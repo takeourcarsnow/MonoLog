@@ -16,7 +16,7 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   /* small-screen spacing from viewport edges: top, left/right, bottom; centered via auto */
-  margin: 12px auto 16px;
+  margin: 12px auto 12px;
 }
 
 /* On wider screens keep the profile header constrained and centered so
@@ -25,7 +25,8 @@
 @media (min-width: 900px) {
   .profile-header {
     max-width: var(--maxw);
-    margin: 0 auto;
+    /* keep a vertical gutter so header and profile content are visually separated */
+    margin: 12px auto 12px;
     padding-left: 12px;
     padding-right: 12px;
   }

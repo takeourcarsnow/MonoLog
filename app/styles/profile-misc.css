@@ -154,6 +154,24 @@
 .btn.danger:hover { transform: translateY(-2px) scale(1.01); }
 .btn.danger:active { transform: translateY(0) scale(.998); }
 
+/* Armed confirm state for buttons that require double-press to confirm */
+.btn.confirm {
+  /* Use the danger visual language so armed state is clearly destructive */
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 12%), var(--danger));
+  color: white;
+  border: 1px solid transparent;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--danger), transparent 70%);
+  transform: translateY(-1px);
+  animation: confirmPulse 900ms ease-out 1;
+}
+.btn.confirm:hover { transform: translateY(-2px); }
+
+@keyframes confirmPulse {
+  0% { box-shadow: 0 6px 18px rgba(239,68,68,0.06), 0 0 0 0 rgba(239,68,68,0.0); }
+  50% { box-shadow: 0 14px 36px rgba(239,68,68,0.12), 0 0 0 6px rgba(239,68,68,0.06); }
+  100% { box-shadow: 0 10px 26px rgba(239,68,68,0.08), 0 0 0 0 rgba(239,68,68,0.0); }
+}
+
 /* subtle red pulse when header delete is pressing */
 .pressing-delete {
   animation: pressDanger 400ms ease-in-out;

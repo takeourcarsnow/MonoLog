@@ -169,3 +169,8 @@
 .empty {
   padding: 32px 16px; text-align: center; color: var(--muted);
 }
+
+/* Tighten empty state spacing for feed/explore on wide viewports to sit closer to header */
+@media (min-width: 900px) {
+  .feed-empty { padding-top: 0px; padding-bottom: 32px; }
+}

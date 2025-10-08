@@ -59,7 +59,7 @@ export default function FollowingPage() {
                 <UserIcon size={56} strokeWidth={1.5} />
               </div>
 
-              <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>You haven't followed anyone yet</h2>
+              <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>You haven&apos;t followed anyone yet</h2>
               <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>
                 Follow people to see their posts in your feed. Start by exploring creators, friends, and topics you like.
               </p>

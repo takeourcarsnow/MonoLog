@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, lazy, Suspense, cloneElement, isValidElement } from "react";
 import { getSlideState, setSlideState } from '@/src/lib/slideStateCache';
 import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
@@ -9,6 +9,8 @@ import { ViewToggle } from "./ViewToggle";
 import { useFeed } from "@/src/lib/hooks/useFeed";
 import { usePullToRefresh } from "@/src/lib/hooks/usePullToRefresh";
 import { PullToRefreshWrapper } from "./PullToRefresh";
+import Link from "next/link";
+import { User as UserIcon } from "lucide-react";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
 import { SkeletonCard } from "./Skeleton";
 
@@ -75,7 +77,49 @@ export function FeedPage({
   // Memoize the render function to prevent unnecessary recalculations
   const render = useMemo(() => {
     if (loading) return <SkeletonCard height={240} />;
-    if (!posts.length) return <div className="empty">{emptyMessage}</div>;
+    if (!posts.length) {
+      // Enhanced empty state: reuse the title icon if available (Feed/Explore pass icons)
+      let iconNode: React.ReactNode = null;
+      if (isValidElement(title)) {
+        try {
+          iconNode = cloneElement(title as any, { size: 56, strokeWidth: 1.5 });
+        } catch (_) {
+          iconNode = null;
+        }
+      }
+      if (!iconNode) iconNode = <UserIcon size={56} strokeWidth={1.5} />;
+
+      // Determine which view this is by viewStorageKey to tune CTAs
+      const isExplore = viewStorageKey === 'exploreView';
+
+      return (
+        <div className="empty feed-empty" style={{ textAlign: 'center' }}>
+          <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
+              {iconNode}
+            </div>
+
+            <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>{isExplore ? 'No posts yet' : 'Your feed is quiet'}</h2>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>{emptyMessage}</p>
+
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
+              {isExplore ? (
+                <Link href="/upload" className="btn">Create a post</Link>
+              ) : (
+                <>
+                  <Link href="/explore" className="btn">Explore users</Link>
+                  <Link href="/upload" className="btn" style={{ background: 'transparent', border: '1px solid var(--muted-border)', color: 'var(--text-secondary)', padding: '8px 12px', borderRadius: 8 }}>Upload</Link>
+                </>
+              )}
+            </div>
+
+            <div style={{ marginTop: 6, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              {isExplore ? 'Be the first to create today — add a post to show up here.' : 'Follow people in Explore to see their daily posts in your feed.'}
+            </div>
+          </div>
+        </div>
+      );
+    }
     if (view === "grid") {
       return (
         <Suspense fallback={<div>Loading grid...</div>}>
@@ -106,7 +150,7 @@ export function FeedPage({
         />
       </>
     );
-  }, [loading, posts, view, hasMore, loadingMore, setSentinel, error, emptyMessage]);
+  }, [loading, posts, view, hasMore, loadingMore, setSentinel, error, emptyMessage, title, viewStorageKey]);
 
   return (
     <div className="view-fade">

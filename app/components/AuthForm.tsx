@@ -14,6 +14,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [hasSuccess, setHasSuccess] = useState(false);
+  const [justSignedIn, setJustSignedIn] = useState(false);
+  // Inline rate-limit notice removed; use toasts only for rate-limit feedback
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const router = useRouter();
   const toast = useToast();
@@ -72,24 +74,30 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
     try {
       const sb = getSupabaseClient();
       if (mode === "signin") {
-        // allow signing in with username or email. If the provided identifier
-        // doesn't look like an email (no '@'), try to resolve it to an email
-        // via the server-side lookup endpoint.
-        let signInEmail = email;
-        if (email && !email.includes('@')) {
-          try {
-            const resp = await fetch('/api/auth/resolve-username', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: email }) });
-            if (resp.ok) {
-              const body = await resp.json();
-              if (body?.email) signInEmail = body.email;
-            }
-          } catch (e) {
-            // ignore lookup errors and continue; Supabase will return auth error
+        // Use server-side sign-in proxy which accepts identifier (username or email)
+        // and password, resolves the email server-side, and returns a session
+        // object. This keeps emails private and avoids client-side lookups.
+        try {
+          const resp = await fetch('/api/auth/signin-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier: email, password }) });
+          if (!resp.ok) {
+            const body = await resp.json().catch(() => ({}));
+            throw new Error(body?.error || `Sign-in failed (${resp.status})`);
           }
+          const body = await resp.json();
+          const session = body?.data?.session ?? body?.data ?? null;
+          if (!session || !session.access_token) {
+            throw new Error('Sign-in failed: no session returned');
+          }
+          // Set the supabase client session on the browser so SB client knows user is signed in
+          try {
+            await sb.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
+          } catch (e) {
+            // If setting session fails, still treat as auth failure
+            throw new Error('Failed to establish client session after sign-in');
+          }
+        } catch (e) {
+          throw e;
         }
-
-        const { error } = await sb.auth.signInWithPassword({ email: signInEmail, password });
-        if (error) throw error;
 
         // Ensure the user's profile row exists in the users table (fire-and-forget)
         (async () => {
@@ -109,9 +117,11 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
           } catch (e) { /* ignore background errors */ }
         })();
 
-        // mark that we should close/refresh after ensuring the minimum animation time
-        shouldCloseAndRefresh = true;
-        setHasSuccess(true);
+  // mark that we should close/refresh after ensuring the minimum animation time
+  shouldCloseAndRefresh = true;
+  setHasSuccess(true);
+  // briefly show a 'Signed in' state before closing/refreshing
+  setJustSignedIn(true);
       } else {
         // require username for signup
         const chosen = normalizeUsername(username || email.split("@")[0]);
@@ -156,35 +166,66 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         } catch (_) {
           /* ignore timing errors */
         }
-        toast.show("Check your email to confirm your account. After confirming, sign in.");
+  toast.showFriendly("Check your email to confirm your account. After confirming, sign in.", { context: 'signup' });
         // Do not close/refresh for signup flow — let the user handle confirmation
         return;
       }
     } catch (err: any) {
-      setLoading(false);
+      // Do NOT clear loading here; ensure the loader is visible for a
+      // minimum time so the UI doesn't flash. The finally block will
+      // wait the remaining MIN_MS then clear loading.
       setHasError(true);
-      toast.show(err?.message || String(err));
+      const raw = err?.message || String(err || 'An error occurred');
+      const lower = String(raw).toLowerCase();
+
+      // Preserve explicit server rate-limit messages so the user sees them
+      if (lower.includes('too many attempts') || lower.includes('rate limit') || lower.includes('temporarily blocked')) {
+  toast.showFriendly(raw, { context: 'signup' });
+      } else if (mode === 'signin') {
+        // Avoid leaking whether an account exists. Map common verbose
+        // auth errors to a generic message for signin attempts.
+        const signinLeakPatterns = [/user not found/i, /no user/i, /not found/i, /invalid login/i, /invalid credentials/i, /wrong password/i, /password.*incorrect/i, /cannot find user/i, /email not found/i];
+        const matchesLeak = signinLeakPatterns.some((rx) => rx.test(raw));
+        if (matchesLeak) {
+          toast.showFriendly('Invalid login credentials', { context: 'signin' });
+        } else {
+          // For other signin errors, show a generic invalid message to avoid revealing details
+          toast.showFriendly('Invalid login credentials', { context: 'signin' });
+        }
+      } else {
+  // For signup or other flows, surface a friendly message
+  toast.showFriendly(raw, { context: 'signup' });
+      }
     } finally {
       const elapsed = Date.now() - start;
       const remaining = Math.max(0, MIN_MS - elapsed);
-      if (remaining > 0 && !hasError) {
+      if (remaining > 0) {
         await new Promise((res) => setTimeout(res, remaining));
       }
-      if (!hasError) {
-        setLoading(false);
-      }
+      // Clear loading after the minimum display time has elapsed (regardless of success/failure)
+      setLoading(false);
       setTimeout(() => setHasError(false), 2000);
 
       if (shouldCloseAndRefresh) {
+        try {
+          // Give the user a brief confirmation that they're signed in
+          // before the app refreshes / modal closes.
+          if (justSignedIn) {
+            await new Promise((r) => setTimeout(r, 700));
+          }
+        } catch (_) { /* ignore timing errors */ }
         try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
         if (onClose) {
           try { await onClose(); } catch (_) { /* ignore */ }
         }
         try { router.refresh(); } catch (_) { /* ignore */ }
         setHasSuccess(false);
+        setJustSignedIn(false);
       }
     }
   }
+
+  // (No inline rate-limit notice; toasts handle feedback)
 
   const getMessage = () => {
     if (mode === "signin") {
@@ -201,6 +242,14 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   };
 
   const message = getMessage();
+
+  // Derive a single button state to simplify rendering and avoid mixed flags
+  const buttonState: 'idle' | 'loading' | 'success' | 'error' | 'signup-sent' = (
+    signupSent ? 'signup-sent' : (justSignedIn ? 'success' : (loading ? 'loading' : (hasError ? 'error' : 'idle')))
+  );
+  // Do not add a visual "error" class to the button on failure; keep error
+  // state for inline messages/toasts but avoid turning the button red.
+  const btnClass = `auth-confirm-btn ${loading ? 'loading' : ''} ${buttonState === 'signup-sent' || buttonState === 'success' ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : 'mode-signin'}`;
 
   return (
     <form
@@ -335,9 +384,11 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-  <div className="auth-actions flex gap-1 justify-center w-full" style={{ maxWidth: 400 }}>
+        {/* Rate-limit inline notice removed — toasts are used instead */}
+
+    <div className="auth-actions flex gap-1 justify-center w-full" style={{ maxWidth: 400 }}>
         <button
-          className={`auth-confirm-btn ${loading ? 'loading' : ''} ${signupSent ? 'sent' : ''} ${hasError ? 'error' : ''} ${hasSuccess ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : 'mode-signin'}`}
+          className={btnClass}
           disabled={loading}
           type="submit"
           aria-busy={loading}
@@ -345,20 +396,39 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
           aria-label={mode === 'signup' ? (loading ? 'Creating account' : 'Create account') : (loading ? 'Signing in' : 'Sign in')}
         >
           <span className="btn-inner">
-            {signupSent ? (
+            {buttonState === 'signup-sent' && (
               <span className="btn-icon" aria-hidden>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
               </span>
-            ) : loading ? (
+            )}
+
+            {buttonState === 'success' && (
               <span className="btn-icon" aria-hidden>
-                <span className="btn-spinner" aria-hidden>
-                  <span />
-                </span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
               </span>
-            ) : null}
-            <span className="btn-label">{mode === 'signin' ? 'Sign in' : 'Create account'}</span>
+            )}
+
+              {/* absolute-centered loader so button width doesn't change */}
+              <span className="btn-loader-wrapper" aria-hidden>
+                {buttonState === 'loading' && (
+                  <span className="btn-loading-dots" aria-hidden>
+                    <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
+                  </span>
+                )}
+              </span>
+
+            <span
+              className="btn-label"
+              data-text={buttonState === 'success' ? 'Signed in' : (mode === 'signup' ? 'Create account' : 'Sign in')}
+            >
+              {buttonState === 'success' ? 'Signed in' : (mode === 'signup' ? 'Create account' : 'Sign in')}
+            </span>
           </span>
           {/* visible hint for screen readers during loading */}
           {loading && <span className="sr-only">{mode === 'signup' ? 'Creating account' : 'Signing in'}</span>}

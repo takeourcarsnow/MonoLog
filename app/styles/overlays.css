@@ -6,13 +6,13 @@
   left: 50%;
   bottom: calc(var(--tabbar-height) + 12px); /* sits above bottom tabbar */
   transform: translateX(-50%);
-  background: color-mix(in srgb, var(--bg-elev), transparent 8%);
+  background: color-mix(in srgb, var(--bg-elev), transparent 10%);
   color: var(--text);
   border: 1px solid var(--border);
-  padding: 10px 16px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
-  z-index: 99999; /* ensure above most UI */
+  padding: 12px 18px;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+  z-index: 1000000; /* ensure above most UI */
   font-weight: 600;
   animation: toastIn 260ms var(--transition-mid) both;
   max-width: min(92vw, 720px); /* keep toasts readable on desktop */
@@ -21,6 +21,61 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.toast .toast-inner{ display:flex; gap:10px; align-items:center; }
+.toast .toast-icon{ display:inline-flex; width:20px; height:20px; align-items:center; justify-content:center; color:var(--text); }
+.toast .toast-message{ text-align:left; font-weight:600; }
+
+.toast--success{ background: linear-gradient(90deg, color-mix(in srgb, #ecfdf5, transparent 40%), color-mix(in srgb, var(--success), transparent 92%)); border-color: color-mix(in srgb, var(--success), transparent 82%); color: var(--success); }
+.toast--error{ background: linear-gradient(90deg, color-mix(in srgb, #fff5f5, transparent 40%), color-mix(in srgb, #ef4444, transparent 92%)); border-color: rgba(239,68,68,0.15); color: #ef4444; }
+.toast--warn{ background: linear-gradient(90deg, color-mix(in srgb, #fff7ed, transparent 40%), color-mix(in srgb, #f59e0b, transparent 92%)); border-color: rgba(245,158,11,0.12); color: #b45309; }
+.toast--info{ background: color-mix(in srgb, var(--bg-elev), transparent 10%); border-color: var(--border); color: var(--text); }
+
+/* Dark mode overrides: use more muted tones and light text for better contrast */
+:root[data-theme="dark"] .toast{
+  /* Use a solid, light panel in dark mode so toast stands out (match light mode) */
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.06);
+  color: #0f172a; /* dark text */
+}
+
+:root[data-theme="dark"] .toast--error{
+  background: #fff5f5; /* light red */
+  border-color: rgba(239,68,68,0.08);
+  color: #1f2937; /* dark text */
+}
+:root[data-theme="dark"] .toast--error .toast-icon{ color: #b91c1c; }
+
+:root[data-theme="dark"] .toast--warn{
+  background: #fffbeb; /* light amber */
+  border-color: rgba(245,158,11,0.08);
+  color: #1f2937;
+}
+:root[data-theme="dark"] .toast--warn .toast-icon{ color: #92400e; }
+
+:root[data-theme="dark"] .toast--success{
+  background: #f0fdf4; /* light green */
+  border-color: rgba(5,150,105,0.08);
+  color: #052e22;
+}
+:root[data-theme="dark"] .toast--success .toast-icon{ color: #047857; }
+
+:root[data-theme="dark"] .toast--info{
+  background: #f8fafc; /* very light gray */
+  border-color: rgba(2,6,23,0.06);
+  color: #0f172a;
+}
+
+/* On larger screens prefer showing toasts at the top so they aren't
+   obscured by fixed header/nav bars that might overlap the bottom area. */
+@media (min-width: 720px) {
+  .toast {
+    bottom: auto;
+    top: calc(var(--header-height, 64px) + 12px);
+    transform: translateX(-50%);
+    max-width: min(80vw, 900px);
+  }
 }
 
 .toast-message {
@@ -45,6 +100,21 @@
 .toast-fadeout {
   animation: toastOut 300ms var(--transition-mid) both;
 }
+
+/* Rate-limit notice animation */
+.rate-limit-notice {
+  opacity: 0;
+  transform: translateY(6px) scale(.996);
+  animation: rateLimitIn 360ms cubic-bezier(.2,.9,.3,1) both;
+}
+
+@keyframes rateLimitIn {
+  from { opacity: 0; transform: translateY(6px) scale(.996); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.008); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* (Loader styles moved to AuthConfirmButton.css to avoid duplication) */
 
 /* Preloader splash overlay */
 .preloader-overlay {

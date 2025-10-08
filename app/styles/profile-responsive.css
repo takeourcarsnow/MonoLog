@@ -28,17 +28,17 @@
     margin-top: 8px;
   }
 
-  /* slightly smaller avatar on phones */
+  /* slightly smaller avatar on phones (but larger than before) */
   .profile-avatar { 
-    width: 80px; 
-    height: 80px; 
-    border-radius: 20px; 
+    width: 96px; 
+    height: 96px; 
+    border-radius: 24px; 
   }
 
   /* reduce button padding and font-size so more buttons fit per row */
-  .profile-actions .btn { padding: 10px 14px; font-size: 14px; }
+  .profile-actions .btn { padding: 8px 12px; font-size: 13px; }
   
-  .profile-left .username { font-size: 20px; }
+  .profile-left .username { font-size: 18px; }
 
   /* ensure username wraps and doesn't push layout */
   .profile-left > div { min-width: 0; }

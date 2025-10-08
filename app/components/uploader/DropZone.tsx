@@ -36,11 +36,10 @@ export function DropZone({
       {processing && (
         <div className="drop-zone-loader" role="status" aria-live="polite">
           <LogoLoader size={86} />
-          <span className="processing-text">Processing image…</span>
         </div>
       )}
 
-      <div className="drop-zone-content" style={{ opacity: processing ? 0.3 : 1, pointerEvents: processing ? 'none' : 'auto' }}>
+      <div className="drop-zone-content" style={{ opacity: processing ? 1 : 1, pointerEvents: processing ? 'none' : 'auto', filter: processing ? 'blur(1px)' : 'none' }}>
         <div className="drop-zone-icon">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor" opacity="0.8"/>

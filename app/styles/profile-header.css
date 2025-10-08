@@ -93,37 +93,33 @@
   width: 100%;
 }
 .profile-left .username {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 4px;
 }
 
 /* Ensure bio inside header doesn't push/clip avatar. Keep it readable but constrained. */
-.profile-bio {
-  margin-top: 12px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 16px;
-  background: color-mix(in srgb, var(--bg), transparent 50%);
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border), transparent 50%);
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--text);
-  max-width: 600px;
-  width: fit-content;
-  text-align: center;
-  /* clamp to ~4 lines and show ellipsis; include both vendor and newer property for compatibility */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  /* standard property for newer toolchains / linter compatibility */
-  line-clamp: 4;
-  white-space: normal;
+.profile-avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 28px;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  box-shadow: none;
+  transition: none;
 }
+.profile-avatar:hover { transform: none; box-shadow: none; }
+.profile-header .username { font-size: 20px; }
+.profile-header .dim {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
 
 /* keep the left column from touching container edges and ensure avatar is not clipped */
 .profile-left { overflow: visible !important; padding-left: 6px; }
@@ -148,102 +144,31 @@
   border: none;
   background: transparent;
   padding: 0;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 0;
-  cursor: pointer;
-  position: relative; /* required for tooltip positioning */
-  transition: transform 160ms var(--transition-fast), box-shadow 160ms var(--transition-fast);
+  cursor: default;
+  position: relative;
 }
-.avatar-button:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%); outline-offset: 4px; border-radius: 10px; }
+.avatar-button:focus { outline: none; }
 
 /* actionable avatar hover highlight and subtle lift */
-.avatar-button .profile-avatar {
-  transition: transform 180ms var(--transition-fast), box-shadow 180ms var(--transition-fast);
-  will-change: transform, box-shadow;
-}
 .avatar-button:hover .profile-avatar,
-.avatar-button:focus .profile-avatar {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 26px rgba(0,0,0,0.28);
-}
+.avatar-button:focus .profile-avatar { transform: none !important; box-shadow: none !important; }
 
 /* gentle idle pulse to indicate the avatar is actionable (not on touch devices) */
 @media (hover: hover) {
-  .avatar-button[data-tooltip] .profile-avatar { animation: idlePulse 4.2s ease-in-out infinite 1s; }
-  @keyframes idlePulse {
-    0% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-2px) scale(1.01); }
-    100% { transform: translateY(0) scale(1); }
-  }
+  /* idle pulse removed */
 }
 
 /* Tooltip: only show on devices that support hover to avoid interfering with touch */
 @media (hover: hover) {
-  .avatar-button[data-tooltip]::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    top: -36px;
-    right: 0;
-    background: var(--bg-elev);
-    color: var(--muted);
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-size: 12px;
-    border: 1px solid var(--border);
-    box-shadow: 0 8px 22px rgba(0,0,0,0.12);
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 160ms var(--transition-fast), transform 160ms var(--transition-fast);
-    pointer-events: none;
-    white-space: nowrap;
-    z-index: 80;
-  }
-  .avatar-button[data-tooltip]::before {
-    content: "";
-    position: absolute;
-    top: -22px;
-    right: 12px;
-    width: 10px; height: 10px; background: var(--bg-elev);
-    border-left: 1px solid var(--border); border-top: 1px solid var(--border);
-    transform: rotate(45deg);
-    opacity: 0;
-    transition: opacity 120ms var(--transition-fast);
-    z-index: 79;
-  }
-  .avatar-button:hover[data-tooltip]::after,
-  .avatar-button:focus[data-tooltip]::after {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .avatar-button:hover[data-tooltip]::before,
-  .avatar-button:focus[data-tooltip]::before {
-    opacity: 1;
-  }
+  /* Tooltip appears below the avatar and slides down into place */
+  /* Tooltip markup removed; keep idle pulse animation only */
 }
 
-/* profile header specific */
-.profile-avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 24px;
-  object-fit: cover;
-  border: 2px solid var(--border);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-  transition: transform 220ms var(--transition-mid), box-shadow 220ms var(--transition-mid);
-}
-.profile-avatar:hover {
-  transform: none;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-}
-.profile-header .username { font-size: 22px; }
-.profile-header .dim {
-  font-size: 14px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-}
+/* profile header specific: (handled above) */
 
 /* Profile stats section */
 .profile-stats {
@@ -284,9 +209,9 @@
 }
 
 /* Avatar uploading subtle blur/fade */
-.avatar-wrap { position: relative; display: inline-block; border-radius: 24px; overflow: visible; }
-.avatar-wrap .profile-avatar { transition: filter 260ms ease, opacity 260ms ease, transform 260ms ease; }
-.avatar-wrap.avatar-uploading .profile-avatar { filter: blur(3px); opacity: 0.65; transform: scale(0.995); }
+.avatar-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; border-radius: 24px; overflow: hidden; }
+.avatar-wrap .profile-avatar { transition: none; filter: none; opacity: 1; transform: none; width: 100% !important; height: 100% !important; display: block; object-fit: cover; border-radius: inherit; box-sizing: border-box; margin: 0; }
+.avatar-wrap.avatar-uploading .profile-avatar { filter: blur(2px); opacity: 0.92; transform: none; transition: filter 180ms ease, opacity 180ms ease; }
 
 /* Spinner centered over avatar */
 .avatar-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
@@ -299,12 +224,12 @@
 
 /* Make profile action buttons icon-only (visual) while keeping text for accessibility */
 .profile-actions .btn {
-  padding: 8px; /* square icon size */
-  width: 44px;
-  height: 44px;
+  padding: 6px; /* slightly smaller icon size */
+  width: 40px;
+  height: 40px;
   display: inline-grid;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 .profile-actions .btn .icon { display: inline-block; }
 .profile-actions .btn span:not(.icon) {
@@ -321,4 +246,4 @@
 }
 
 /* Slightly larger primary action (upload) for emphasis */
-.profile-actions .btn.primary { width: 52px; height: 52px; border-radius: 14px; }
+.profile-actions .btn.primary { width: 48px; height: 48px; border-radius: 12px; }

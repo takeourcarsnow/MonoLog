@@ -5,8 +5,8 @@
   will-change: filter, transform, opacity;
 }
 .preview.processing img {
-  /* slightly stronger blur while processing and a gentle scale/opacity change */
-  filter: blur(10px) saturate(0.92) opacity(0.88);
+  /* subtle blur while processing */
+  filter: blur(2px);
   transform: scale(1.01);
 }
 .preview-badge {

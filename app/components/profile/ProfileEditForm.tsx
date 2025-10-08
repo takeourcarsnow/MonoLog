@@ -102,10 +102,11 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     if (!isEditingProfile) {
       return (
         <>
-          <div className="username">{user.displayName}</div>
-          <div className="dim">@{user.username} • joined {new Date(user.joinedAt).toLocaleDateString()}</div>
-          {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
-        </>
+            <div className="username">{user.displayName}</div>
+            <div className="dim">@{user.username}</div>
+            <div className="dim">joined {new Date(user.joinedAt).toLocaleDateString()}</div>
+            {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
+          </>
       );
     }
 

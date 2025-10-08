@@ -175,6 +175,18 @@
   display: none !important;
 }
 
-.btn-no-bg:hover::before {
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  pointer-events: none;
+}
+
+.btn:disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn:disabled::before {
   display: none !important;
 }

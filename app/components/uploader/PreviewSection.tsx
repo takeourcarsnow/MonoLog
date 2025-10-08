@@ -118,8 +118,8 @@ export function PreviewSection({
   return (
     <div
       className={`preview ${(dataUrls.length) ? "" : "hidden"} ${(processing || !previewLoaded) ? 'processing' : ''}`}
-      onDragOver={dataUrls.length <= 1 ? (e) => { e.preventDefault(); } : undefined}
-      onDrop={dataUrls.length <= 1 ? onDropPreview : undefined}
+      onDragOver={dataUrls.length < 5 ? (e) => { e.preventDefault(); } : undefined}
+      onDrop={dataUrls.length < 5 ? onDropPreview : undefined}
     >
       <div className="preview-inner" style={{ position: 'relative' }}>
         {/* When editing, the ImageEditor is rendered at the top level, replacing all content */}

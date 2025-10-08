@@ -104,14 +104,7 @@ export function ProfileActions({
             </span>
             <span>{isEditingProfile ? 'Close' : 'Edit Profile'}</span>
           </button>
-          {/* Save will occur when closing the inline card; no separate Save/Cancel buttons */}
-          <Link className="btn primary" href="/upload" aria-label="New Post">
-            <span className="icon" aria-hidden>
-              {/* camera icon */}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
-            <span>New Post</span>
-          </Link>
+          {/* New Post button removed from profile actions */}
           {/* show sign out only when the viewed profile belongs to the signed-in user */}
           {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
         </>

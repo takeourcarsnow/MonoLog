@@ -252,6 +252,7 @@ export function useUploader() {
         const next = [...s, {}].slice(0, 5);
         return next;
       });
+      setIndex(dataUrls.length); // Auto-select the newly added photo
       setEditing(false);
       try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
       if (!alt && caption) setAlt(caption);
@@ -403,6 +404,7 @@ export function useUploader() {
           const next = [...s, ...newUrls.map(() => ({}))].slice(0, 5);
           return next;
         });
+        setIndex(Math.min(dataUrls.length + newUrls.length - 1, 4)); // Auto-select the last added photo
         setPreviewLoaded(false);
         try { setCompressedSize(approxDataUrlBytes(newUrls[0])); } catch (_) {}
         try { setOriginalSize(files[0].size); } catch (_) {}

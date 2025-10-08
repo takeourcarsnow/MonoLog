@@ -267,12 +267,17 @@ function UploaderCore() {
             className="btn icon ghost small-min"
             aria-label="Add photos"
             onClick={() => {
+              if (dataUrls.length >= 5) {
+                // Do nothing - button is already disabled
+                return;
+              }
               // ensure we're in append mode then open the file selector
               fileActionRef.current = 'append';
               try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
               try { fileInputRef.current?.click(); } catch (_) {}
             }}
-            disabled={processing}
+            disabled={processing || dataUrls.length >= 5}
+            title={dataUrls.length >= 5 ? "Maximum 5 photos allowed" : "Add photos"}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
               <path d="M12 5v14"/>

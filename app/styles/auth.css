@@ -293,7 +293,7 @@
   .auth-form-tight .field-group { gap: 12px !important; }
   .auth-form-tight .auth-actions { gap: 12px; }
   .auth-form-tight .auth-message strong { font-size: 19px; }
-  .auth-form-tight .auth-message { margin-top: -4px; }
+  .auth-form-tight .auth-message { margin-top: 10px; }
   .auth-form-tight .username-wrap.open { margin-top: 2px; }
 }
 
@@ -369,7 +369,7 @@
     border-radius: 12px;
   }
 
-  .auth-form .auth-message { margin-bottom: 8px; }
+  .auth-form .auth-message { margin-top: 10px; margin-bottom: 8px; }
 
   .auth-toggle { padding: 8px 10px; margin-bottom: 6px; }
 

@@ -171,19 +171,45 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   // briefly show a 'Signed in' state before closing/refreshing
   setJustSignedIn(true);
       } else {
-        // require username for signup
-        const chosen = normalizeUsername(username || email.split("@")[0]);
+        // Client-side validation before contacting server
+        const emailOk = typeof email === 'string' && /\S+@\S+\.\S+/.test(email);
+        if (!emailOk) {
+          // keep message generic but actionable for user-correctable problems
+          setLoading(false);
+          showHeaderNotice({ title: 'Invalid email', subtitle: 'Please enter a valid email address.', variant: 'warn' }, 4000);
+          return;
+        }
+        if (!password || password.length < 8) {
+          setLoading(false);
+          showHeaderNotice({ title: 'Password too short', subtitle: 'Password must be at least 8 characters.', variant: 'warn' }, 4500);
+          return;
+        }
+
+        // require explicit username for signup (do NOT auto-derive from email)
+        if (!username || !username.trim()) {
+          setLoading(false);
+          showHeaderNotice({ title: 'Enter a username', subtitle: 'Please choose a username to continue.', variant: 'warn' }, 4500);
+          return;
+        }
+        const chosen = normalizeUsername(username);
         if (!validUsername(chosen)) {
-          throw new Error("Username must be 3-32 characters and only contain letters, numbers, '-' or '_'.");
+          setLoading(false);
+          showHeaderNotice({ title: 'Invalid username', subtitle: "Username must be 3-32 characters and only contain letters, numbers, '-' or '_'.", variant: 'warn' }, 4500);
+          return;
         }
 
         // check username availability
-        const { data: existing, error: exErr } = await sb.from("users").select("id").eq("username", chosen).limit(1).single();
-        if (exErr && (exErr as any).code !== "PGRST116") {
-          // ignore not found (single returns error when no row), but propagate other errors
+        const { data: existing, error: exErr } = await sb.from("users").select("id").eq("username", chosen).limit(1).maybeSingle();
+        if (exErr) {
+          // If checking availability failed for other reasons, surface a generic inability message
+          setLoading(false);
+          showHeaderNotice({ title: 'Unable to check username', subtitle: 'Try again in a moment.', variant: 'warn' }, 4000);
+          return;
         }
         if (existing) {
-          throw new Error("That username is already taken. Please choose another.");
+          setLoading(false);
+          showHeaderNotice({ title: 'That username is taken', subtitle: 'Please choose another username.', variant: 'warn' }, 4500);
+          return;
         }
 
         const { data, error } = await sb.auth.signUp({ email, password });
@@ -214,8 +240,10 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         } catch (_) {
           /* ignore timing errors */
         }
-  // show confirmation in the auth header instead of a toast
-  showHeaderNotice({ title: 'Check your email', subtitle: 'A confirmation link was sent. After confirming, sign in.', variant: 'info' }, 4500);
+  // show an abstract confirmation in the auth header (do NOT mention the email address
+  // or specific workflow so we avoid leaking account state). Keep message generic
+  // to cover both new signups and cases where details were already registered.
+  showHeaderNotice({ title: 'Next steps', subtitle: 'If the chosen details were accepted, we will email instructions to complete account setup.', variant: 'info' }, 4500);
         // Do not close/refresh for signup flow — let the user handle confirmation
         return;
       }
@@ -241,10 +269,15 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
           // For other signin errors, show a generic invalid message in header
           showHeaderNotice({ title: 'Invalid login credentials', variant: 'error' }, 3500);
         }
-      } else {
-  // For signup or other flows, surface a friendly message in header
-  showHeaderNotice({ title: raw, variant: 'info' }, 4000);
-      }
+    } else {
+  // For signup or other flows, DO NOT surface raw server errors that may
+  // reveal account state (for example "Email address ... is invalid").
+  // Instead show a generic, abstract next-steps message so the UX is
+  // consistent whether the details were accepted or already registered.
+  // Also switch the UI to the sign-in mode so the user can attempt to sign in.
+  try { setMode('signin'); } catch (_) {}
+  showHeaderNotice({ title: 'Next steps', subtitle: 'If the chosen details were accepted, we will email instructions to complete account setup.', variant: 'info' }, 4000);
+    }
     } finally {
       const elapsed = Date.now() - start;
       const remaining = Math.max(0, MIN_MS - elapsed);
@@ -339,7 +372,6 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
             key={mode}
             className="auth-message"
             style={{
-              marginBottom: '0.35rem',
               animation: 'fadeInSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
@@ -510,14 +542,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         </button>
       </div>
 
-      <div className={`signup-hint transition-opacity duration-300 ${signupSent ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">
-        {signupSent && (
-          <div className="card minimal" style={{ padding: 14, background: 'transparent', border: '1px dashed var(--border)', marginTop: 4 }}>
-            <strong style={{ display: 'block', marginBottom: 4 }}>Check your email</strong>
-            <div className="dim" style={{ fontSize: 12 }}>A confirmation link was sent to <em>{email}</em>. After confirming you can sign in.</div>
-          </div>
-        )}
-      </div>
+      {/* signup hint removed: headerNotice displays signup/confirmation messages to avoid duplication */}
     </form>
   );
 }

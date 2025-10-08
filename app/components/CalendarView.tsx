@@ -173,7 +173,7 @@ export function CalendarView() {
   {loadingDay ? (
     <InlinePreloader />
   ) : (
-    dayPosts ? (dayPosts.length ? dayPosts.map(p => <PostCard key={p.id} post={p} />)
+    dayPosts ? (dayPosts.length ? dayPosts.map(p => <PostCard key={p.id} post={p} disableMediaNavigation={true} />)
       : <div className="empty">No public posts for that day.</div>)
       : null
   )}

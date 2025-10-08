@@ -12,6 +12,7 @@ interface MediaSectionProps {
   pathname: string;
   allowCarouselTouch?: boolean;
   onImageIndexChange?: (index: number) => void;
+  disableMediaNavigation?: boolean;
 }
 
 export const MediaSection = memo(function MediaSection({
@@ -23,6 +24,7 @@ export const MediaSection = memo(function MediaSection({
   pathname,
   allowCarouselTouch,
   onImageIndexChange,
+  disableMediaNavigation,
 }: MediaSectionProps) {
   const imageUrls: string[] = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
   const alts: string[] = Array.isArray(post.alt) ? post.alt : [post.alt || ""];
@@ -45,6 +47,7 @@ export const MediaSection = memo(function MediaSection({
           toggleFavoriteWithAuth={toggleFavoriteWithAuth}
           showFavoriteFeedback={showFavoriteFeedback}
           pathname={pathname}
+          disableMediaNavigation={disableMediaNavigation}
           allowCarouselTouch={allowCarouselTouch}
           onImageIndexChange={onImageIndexChange}
         />
@@ -57,6 +60,7 @@ export const MediaSection = memo(function MediaSection({
           toggleFavoriteWithAuth={toggleFavoriteWithAuth}
           showFavoriteFeedback={showFavoriteFeedback}
           pathname={pathname}
+          disableMediaNavigation={disableMediaNavigation}
         />
       )}
     </div>

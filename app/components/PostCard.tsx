@@ -26,7 +26,7 @@ const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
 const Editor = lazy(() => import("./postCard/Editor").then(mod => ({ default: mod.Editor })));
 
 // Memoize PostCard to prevent unnecessary re-renders when parent updates
-const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: HydratedPost; allowCarouselTouch?: boolean }) => {
+const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavigation }: { post: HydratedPost; allowCarouselTouch?: boolean; disableMediaNavigation?: boolean }) => {
   const { post, setPost } = usePostState(initial);
   const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
   const isMultipost = imageUrls.length > 1;
@@ -254,6 +254,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch }: { post: Hydrat
         showFavoriteFeedback={showFavoriteFeedback}
         favoriteOverlayState={favoriteOverlayState}
         pathname={pathname}
+        disableMediaNavigation={disableMediaNavigation}
         allowCarouselTouch={allowCarouselTouch}
         onImageIndexChange={setCurrentImageIndex}
       />

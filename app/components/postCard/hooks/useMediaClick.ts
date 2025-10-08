@@ -6,6 +6,7 @@ interface UseMediaClickProps {
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
   pathname: string;
   postHref: string;
+  disableMediaNavigation?: boolean;
 }
 
 export function useMediaClick({
@@ -14,6 +15,7 @@ export function useMediaClick({
   showFavoriteFeedback,
   pathname,
   postHref,
+  disableMediaNavigation,
 }: UseMediaClickProps) {
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<any>(null);
@@ -29,7 +31,10 @@ export function useMediaClick({
     if (clickCountRef.current === 1) {
       clickTimerRef.current = setTimeout(() => {
         if (!dblClickDetectedRef.current) {
-          try { window.history.pushState(null, '', postHref); } catch (_) {}
+          // If media navigation is disabled (eg. rendered inside calendar), don't push a new URL
+          if (!disableMediaNavigation) {
+            try { window.history.pushState(null, '', postHref); } catch (_) {}
+          }
         }
         clickCountRef.current = 0;
         dblClickDetectedRef.current = false;

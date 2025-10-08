@@ -14,6 +14,7 @@ interface CarouselProps {
   allowCarouselTouch?: boolean;
   openFullscreen?: (src: string) => void;
   onImageIndexChange?: (index: number) => void;
+  disableMediaNavigation?: boolean;
 }
 
 export const Carousel = memo(function Carousel({
@@ -27,6 +28,7 @@ export const Carousel = memo(function Carousel({
   allowCarouselTouch,
   openFullscreen,
   onImageIndexChange,
+  disableMediaNavigation,
 }: CarouselProps) {
   const { index, setIndex, trackRef, prev, next, carouselTouchProps } = useCarousel({
     imageUrls,
@@ -186,6 +188,7 @@ export const Carousel = memo(function Carousel({
     showFavoriteFeedback,
     pathname,
     postHref,
+    disableMediaNavigation,
   });
 
   return (

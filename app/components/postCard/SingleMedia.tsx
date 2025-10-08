@@ -11,6 +11,7 @@ interface SingleMediaProps {
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
   pathname: string;
   openFullscreen?: (src: string) => void;
+  disableMediaNavigation?: boolean;
 }
 
 export const SingleMedia = memo(function SingleMedia({
@@ -22,6 +23,7 @@ export const SingleMedia = memo(function SingleMedia({
   showFavoriteFeedback,
   pathname,
   openFullscreen,
+  disableMediaNavigation,
 }: SingleMediaProps) {
   const { handleMediaClick } = useMediaClick({
     isFavorite,
@@ -29,6 +31,7 @@ export const SingleMedia = memo(function SingleMedia({
     showFavoriteFeedback,
     pathname,
     postHref,
+    disableMediaNavigation,
   });
 
   return (

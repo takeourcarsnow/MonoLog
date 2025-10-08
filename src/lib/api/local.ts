@@ -183,7 +183,13 @@ export const localApi: Api = {
   async updateUser(id, patch) {
     const u = getUserById(id);
     if (!u) throw new Error("User not found");
-    Object.assign(u, patch || {});
+    // Merge socialLinks specially to avoid overwriting the whole map with undefined
+    if (patch.socialLinks !== undefined) {
+      u.socialLinks = Object.assign({}, u.socialLinks || {}, patch.socialLinks || {});
+    }
+    const clone = Object.assign({}, patch || {});
+    delete (clone as any).socialLinks;
+    Object.assign(u, clone);
     persist();
     return u;
   },

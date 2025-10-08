@@ -23,6 +23,11 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     const [editDisplayName, setEditDisplayName] = useState("");
     const [editUsername, setEditUsername] = useState("");
     const [editBio, setEditBio] = useState("");
+  const [editTwitter, setEditTwitter] = useState("");
+  const [editInstagram, setEditInstagram] = useState("");
+  const [editGithub, setEditGithub] = useState("");
+  const [editLinkedin, setEditLinkedin] = useState("");
+  const [editWebsite, setEditWebsite] = useState("");
     const [editProcessing, setEditProcessing] = useState(false);
 
     const saveEdits = async () => {
@@ -58,7 +63,14 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
 
       setEditProcessing(true);
       try {
-        await api.updateCurrentUser({ username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200) });
+        const socialLinks: Record<string, string | undefined> = {};
+        if (editTwitter.trim()) socialLinks.twitter = editTwitter.trim();
+        if (editInstagram.trim()) socialLinks.instagram = editInstagram.trim();
+        if (editGithub.trim()) socialLinks.github = editGithub.trim();
+        if (editLinkedin.trim()) socialLinks.linkedin = editLinkedin.trim();
+        if (editWebsite.trim()) socialLinks.website = editWebsite.trim();
+
+        await api.updateCurrentUser({ username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks });
         // Notify any listeners and revalidate app-router data so the UI updates
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (_) {}
         try { router.refresh?.(); } catch (_) {}
@@ -86,6 +98,11 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         setEditDisplayName(user.displayName || "");
         setEditUsername(user.username || "");
         setEditBio((user.bio || "").slice(0,200));
+        setEditTwitter(user.socialLinks?.twitter || "");
+        setEditInstagram(user.socialLinks?.instagram || "");
+        setEditGithub(user.socialLinks?.github || "");
+        setEditLinkedin(user.socialLinks?.linkedin || "");
+        setEditWebsite(user.socialLinks?.website || "");
         setIsEditingProfile(true);
         // focus after next paint so input exists
         requestAnimationFrame(() => { displayNameRef.current?.focus?.(); });
@@ -158,6 +175,28 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
           </div>
           <textarea className="bio-editor" value={editBio} maxLength={200} onChange={e => setEditBio(e.target.value.slice(0,200))} />
         </label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6 }}>
+          <label style={{ display: 'block' }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Twitter (@ or full url)</div>
+            <input className="input" value={editTwitter} onChange={e => setEditTwitter(e.target.value)} />
+          </label>
+          <label style={{ display: 'block' }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Instagram (@ or full url)</div>
+            <input className="input" value={editInstagram} onChange={e => setEditInstagram(e.target.value)} />
+          </label>
+          <label style={{ display: 'block' }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>GitHub (username or url)</div>
+            <input className="input" value={editGithub} onChange={e => setEditGithub(e.target.value)} />
+          </label>
+          <label style={{ display: 'block' }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>LinkedIn (handle or url)</div>
+            <input className="input" value={editLinkedin} onChange={e => setEditLinkedin(e.target.value)} />
+          </label>
+          <label style={{ display: 'block', gridColumn: '1 / -1' }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Website (full url or domain)</div>
+            <input className="input" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} />
+          </label>
+        </div>
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { api, getSupabaseClient } from "@/src/lib/api";
 import { compressImage } from "@/src/lib/image";
 import { uid } from "@/src/lib/id";
@@ -16,6 +16,17 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const toast = useToast();
   const [avatarUploading, setAvatarUploading] = useState(false);
+  // expanded controls in-place scale animation of avatar
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setExpanded(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded]);
 
   const handleAvatarChange = async () => {
     if (avatarUploading) return;
@@ -180,7 +191,47 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
           <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} disabled={avatarUploading} />
         </>
       ) : (
-  <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName} width={112} height={112} />
+        <>
+          <button
+            type="button"
+            aria-label={`Toggle ${user.displayName}'s avatar`}
+            className="profile-avatar-button"
+            onClick={() => setExpanded((s) => !s)}
+            aria-expanded={expanded}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: expanded ? 'zoom-out' : 'zoom-in' }}
+          >
+            <div
+              className={`avatar-wrap ${expanded ? 'avatar-expanded' : ''}`}
+              style={{
+                width: 112,
+                height: 112,
+                // simple scale animation with a tiny opacity fade
+                transform: expanded ? 'scale(2.8)' : 'scale(1)',
+                opacity: expanded ? 1 : 0.96,
+                transition: 'transform 220ms cubic-bezier(.22,.9,.3,1), opacity 200ms ease, box-shadow 220ms ease',
+                // expand downward: grow from top center
+                transformOrigin: 'top center',
+                position: 'relative',
+                zIndex: expanded ? 50 : 1,
+                overflow: 'visible',
+                boxShadow: expanded ? '0 18px 46px rgba(0,0,0,0.42)' : '0 6px 18px rgba(0,0,0,0.12)',
+                borderRadius: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Image
+                className="profile-avatar"
+                src={user.avatarUrl || "/logo.svg"}
+                alt={user.displayName}
+                width={112}
+                height={112}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px', filter: expanded ? 'none' : 'none' }}
+              />
+            </div>
+          </button>
+        </>
       )}
     </>
   );

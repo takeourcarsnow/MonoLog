@@ -20,6 +20,7 @@ export function mapProfileToUser(profile: any) {
     displayName: profile.displayName || profile.display_name || "",
     avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
+    socialLinks: profile.social_links || profile.socialLinks || undefined,
     joinedAt: profile.joinedAt || profile.joined_at,
     following: profile.following,
     favorites: profile.favorites,

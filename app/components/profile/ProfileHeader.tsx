@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { ProfileEditForm, ProfileEditFormRef } from "./ProfileEditForm";
+import ProfileSocialLinks from "./ProfileSocialLinks";
 import { ProfileActions } from "./ProfileActions";
 import type { User } from "@/src/lib/types";
 
@@ -35,6 +36,8 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
             isEditingProfile={isEditingProfile}
             setIsEditingProfile={setIsEditingProfile}
           />
+          {/* show social links when not editing */}
+          {!isEditingProfile ? <ProfileSocialLinks user={user} /> : null}
         </div>
       </div>
       <ProfileActions

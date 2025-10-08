@@ -120,6 +120,23 @@
   justify-content: center;
 }
 
+/* Ensure the bio text wraps and doesn't stay on a single flex row or get clipped.
+   The bio often reuses the .dim utility which is a flex row; override that
+   behavior for .profile-bio so long bios will wrap, preserve newlines, and
+   break long words if necessary. */
+.profile-header .profile-bio {
+  display: block; /* override .dim's display:flex */
+  white-space: pre-wrap; /* preserve newlines and allow wrapping */
+  overflow-wrap: anywhere; /* break long words/URLs when needed */
+  word-break: break-word;
+  text-align: center;
+  margin-top: 8px;
+  /* Override global .dim single-line rules so bio can span multiple lines */
+  overflow: visible;
+  text-overflow: clip;
+  max-width: 100%;
+}
+
 
 /* keep the left column from touching container edges and ensure avatar is not clipped */
 .profile-left { overflow: visible !important; padding-left: 6px; }

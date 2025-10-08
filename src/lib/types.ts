@@ -4,6 +4,15 @@ export type User = {
   displayName: string;
   avatarUrl: string;
   bio?: string;
+  // Social links stored as a small map of platform->value (either full url or handle)
+  socialLinks?: {
+    twitter?: string;
+    instagram?: string;
+    github?: string;
+    linkedin?: string;
+    website?: string;
+    [key: string]: string | undefined;
+  };
   joinedAt: string;
   following?: string[];
   favorites?: string[];

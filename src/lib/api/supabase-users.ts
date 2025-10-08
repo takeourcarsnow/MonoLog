@@ -133,6 +133,7 @@ export async function updateUser(id: string, patch: Partial<User>) {
   if (patch.displayName !== undefined) upd.display_name = patch.displayName;
   if (patch.avatarUrl !== undefined) upd.avatar_url = patch.avatarUrl;
   if (patch.bio !== undefined) upd.bio = patch.bio;
+  if (patch.socialLinks !== undefined) upd.social_links = patch.socialLinks;
   const { error, data } = await sb.from("users").update(upd).eq("id", id).select("*").limit(1).single();
   if (error) throw error;
   const profile = data as any;
@@ -142,6 +143,7 @@ export async function updateUser(id: string, patch: Partial<User>) {
     displayName: profile.displayName || profile.display_name,
 avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
+    socialLinks: profile.social_links || profile.socialLinks || undefined,
     joinedAt: profile.joinedAt || profile.joined_at,
   } as any;
 }
@@ -184,6 +186,7 @@ export async function updateCurrentUser(patch: Partial<User>) {
   if (patch.displayName !== undefined) upsertObj.display_name = patch.displayName;
   if (patch.avatarUrl !== undefined) upsertObj.avatar_url = patch.avatarUrl;
   if (patch.bio !== undefined) upsertObj.bio = patch.bio;
+  if (patch.socialLinks !== undefined) upsertObj.social_links = patch.socialLinks;
   const safe = (v: any) => { try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } } };
 logger.debug("users.upsert payload", safe(upsertObj));
   const res = await sb.from("users").upsert(upsertObj).select("*").limit(1).single();
@@ -200,6 +203,7 @@ logger.debug("users.upsert result (stringified)", safe(safe(res)));
     displayName: profile.displayName || profile.display_name,
 avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
+    socialLinks: profile.social_links || profile.socialLinks || undefined,
     joinedAt: profile.joinedAt || profile.joined_at,
     usernameChangedAt: profile.username_changed_at || profile.usernameChangedAt,
   } as any;

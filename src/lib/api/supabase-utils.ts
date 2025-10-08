@@ -94,10 +94,10 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
     createdAt: row.created_at || row.createdAt,
     public: !!row.public,
     user: {
-      id: row.users?.id || row.user_id,
-      username: row.users?.username || row.users?.user_name || "",
-      displayName: row.users?.displayName || row.users?.display_name || "",
-        avatarUrl: row.users?.avatarUrl || row.users?.avatar_url || DEFAULT_AVATAR,
+      id: (row.users || row.public_profiles)?.id || row.user_id,
+      username: (row.users || row.public_profiles)?.username || "",
+      displayName: (row.users || row.public_profiles)?.display_name || (row.users || row.public_profiles)?.displayName || "",
+      avatarUrl: (row.users || row.public_profiles)?.avatar_url || (row.users || row.public_profiles)?.avatarUrl || DEFAULT_AVATAR,
     },
     // If the server query included a `comments` array, use its length. Otherwise
     // fall back to common count columns or 0.

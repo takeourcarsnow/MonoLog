@@ -1,4 +1,4 @@
-/* Edit profile overlay panel to avoid pushing layout when toggling edit mode */
+/* Simplified edit profile overlay panel */
 .edit-panel {
   position: absolute;
   left: 50%;
@@ -9,12 +9,16 @@
   padding: 12px;
   border-radius: 10px;
   box-shadow: var(--shadow);
-  /* ensure the panel floats above fixed nav and other overlays */
   z-index: 100002;
   width: 360px;
   opacity: 0;
   transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast);
   animation: popIn 220ms var(--transition-mid) both;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* caret arrow pointing to the actions group */
@@ -32,34 +36,42 @@
   box-shadow: -2px -2px 6px rgba(0,0,0,0.04);
 }
 
-/* cap the panel height and allow scrolling for small screens or long content */
-.edit-panel { max-height: calc(100vh - 120px); overflow: auto; }
-
-/* On wider screens use a two-column layout for the edit panel so the bio can
-   sit in the right column and align vertically with the stacked inputs on the left. */
-@media (min-width: 720px) {
+/* Mobile: center in viewport */
+@media (max-width: 680px) {
   .edit-panel {
-    display: grid;
-    grid-template-columns: 1fr 340px; /* left column for display/username, right for bio */
-    gap: 12px;
-    align-items: start;
-    width: 560px; /* keep a comfortable width when anchored to actions */
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(94vw, 420px);
+    max-height: calc(100vh - 120px);
+    border-radius: 12px;
+    z-index: 99999;
   }
 
-  .edit-panel label { margin-bottom: 0; }
-
-  /* place the bio label/textarea in the right column and span the height of
-     the two inputs so the textarea lines up with them */
-  .edit-panel label:nth-child(3) {
-    grid-column: 2 / 3;
-    grid-row: 1 / span 2;
-    align-self: stretch;
+  .edit-panel::before {
+    display: none;
   }
 
+  .edit-panel .edit-actions {
+    position: sticky;
+    bottom: 8px;
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .edit-panel .input,
   .edit-panel .bio-editor {
-    height: 100%;
-    min-height: 64px;
-    box-sizing: border-box;
+    padding: 8px;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  .edit-panel .edit-actions .btn {
+    padding: 6px 10px;
+    font-size: 13px;
   }
 }
 
@@ -127,20 +139,29 @@
   .edit-panel .input,
   .edit-panel .bio-editor { padding: 8px; font-size: 14px; }
 
-  /* center display name / username inputs on small screens to match mobile layout */
-  .edit-panel .input,
-  .inline-edit-card .input {
-    text-align: center;
-  }
-  .edit-panel .input::placeholder,
-  .inline-edit-card .input::placeholder {
-    text-align: center;
-  }
-
   .edit-panel .edit-actions .btn { padding: 6px 10px; font-size: 13px; }
 }
 
-/* Inline edit card used in header for editing profile directly in place */
+/* Simplified social drawer - always visible */
+.social-backdrop { display: none; }
+
+.social-drawer {
+  position: relative;
+}
+
+/* Simplified grid layout - single column */
+.grid-cols {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.grid-cols .full-width {
+  width: 100%;
+}
+
+/* Simplified inline edit card - always single column */
 .inline-edit-card {
   position: relative;
   background: var(--bg-elev);
@@ -149,83 +170,125 @@
   border-radius: 12px;
   box-shadow: 0 12px 36px rgba(0,0,0,0.22);
   animation: cardPop 220ms var(--transition-mid) both;
-  display: grid;
-  gap: 10px;
-}
-.inline-edit-card .input, .inline-edit-card .bio-editor { width: 100%; }
-
-@keyframes cardPop {
-  from { opacity: 0; transform: translateY(-8px) scale(.994); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
 }
 
-/* Use two-column layout on wider screens so editor uses horizontal space efficiently */
-@media (min-width: 720px) {
-  .inline-edit-card {
-    grid-template-columns: 1fr 340px; /* left fields + right-side bio */
-    align-items: start;
-  }
-  .inline-edit-card label { margin-bottom: 0; }
-  .inline-edit-card label:nth-child(1) { grid-column: 1 / 2; }
-  .inline-edit-card label:nth-child(2) { grid-column: 1 / 2; }
-  /* place the bio panel in the right column and align it to the top so
-     it lines up with the Display name field. Span the rows so the textarea
-     has enough vertical space beside the stacked inputs. */
-  .inline-edit-card label:nth-child(3) {
-    grid-column: 2 / 3;
-    grid-row: 1 / span 2;
-    align-self: stretch;
-  }
-
-  /* Prefer class-based selector to avoid relying on exact DOM order */
-  .inline-edit-card .bio-col {
-    grid-column: 2 / 3;
-    grid-row: 1 / span 2;
-    align-self: stretch;
-  }
-
-  .inline-edit-card .bio-col .bio-editor {
-    height: 85%;
-    min-height: 64px; /* slightly reduced so the bio doesn't feel too tall */
-    box-sizing: border-box;
-  }
+.inline-edit-card .input,
+.inline-edit-card .bio-editor {
+  width: 100%;
+  text-align: left;
 }
 
-/* Make inline edit card more usable on small screens (match edit-panel behavior) */
+.inline-edit-card .input {
+  padding-right: 60px; /* Make room for the cooldown indicator */
+  padding-left: 32px; /* Make room for social media icons */
+}
+
+.inline-edit-card .bio-editor {
+  min-height: 64px;
+  box-sizing: border-box;
+}
+
+/* Bio editor container and character count positioning */
+.bio-editor-container {
+  position: relative;
+}
+
+.bio-char-count {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 2px 4px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Input container and indicator positioning */
+.input-container {
+  position: relative;
+}
+
+.input-indicator {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* Mobile adjustments */
 @media (max-width: 680px) {
   .inline-edit-card {
-    /* Keep inline positioning but ensure proper centering and sizing on mobile */
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 16px !important;
-    border-radius: 12px !important;
-    box-sizing: border-box !important;
-    margin: 0 auto !important;
-    /* Add some constraints for better mobile UX */
-    max-height: 70vh !important;
-    overflow: auto !important;
+    padding: 16px;
+    max-height: 70vh;
+    overflow: auto;
   }
+
   .inline-edit-card .input,
-  .inline-edit-card .bio-editor { 
-    padding: 10px; 
+  .inline-edit-card .bio-editor {
+    padding: 10px;
     font-size: 14px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  /* Center text inputs on mobile for better visual balance */
-  .inline-edit-card .input {
     text-align: center;
   }
-  
+
+  .inline-edit-card .input {
+    padding-right: 60px; /* Make room for the cooldown indicator */
+    padding-left: 32px; /* Make room for social media icons */
+  }
+
   .inline-edit-card .input::placeholder {
     text-align: center;
   }
 }
 
-/* Very small screens: ensure comfortable spacing */
-@media (max-width: 400px) {
-  .inline-edit-card {
-    padding: 12px !important;
-  }
+/* New helper classes for the edit form */
+.label-group { display: block; margin-bottom: 10px; }
+.muted-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.small-muted { font-size: 11px; color: var(--muted); }
+.field-helper { margin-top: 6px; font-size: 12px; color: var(--muted); }
+
+.warning-note { margin-top: 8px; padding: 8px 10px; background: rgba(255,165,0,0.08); border: 1px solid rgba(255,165,0,0.22); border-radius: 8px; display: flex; gap: 8px; align-items: flex-start; }
+.warning-emoji { font-size: 14px; line-height: 1; }
+
+.edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.btn { padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; }
+.btn.primary { background: var(--accent); color: white; border-color: rgba(0,0,0,0.06); }
+.btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn:disabled { opacity: 0.6; cursor: default; }
+
+/* Screen-reader only helper (visually hidden but accessible) */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@keyframes cardPop {
+  from { opacity: 0; transform: translateY(-8px) scale(.994); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }

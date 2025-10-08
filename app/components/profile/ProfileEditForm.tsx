@@ -1,5 +1,7 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
+import type { FormEvent } from 'react';
 import { useRouter } from "next/navigation";
+import { Twitter, Instagram, Github, Linkedin, Globe } from "lucide-react";
 import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import type { User } from "@/src/lib/types";
@@ -19,18 +21,20 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     const router = useRouter();
     const toast = useToast();
     const displayNameRef = useRef<HTMLInputElement | null>(null);
+  const twitterRef = useRef<HTMLInputElement | null>(null);
 
     const [editDisplayName, setEditDisplayName] = useState("");
     const [editUsername, setEditUsername] = useState("");
     const [editBio, setEditBio] = useState("");
-  const [editTwitter, setEditTwitter] = useState("");
-  const [editInstagram, setEditInstagram] = useState("");
-  const [editGithub, setEditGithub] = useState("");
-  const [editLinkedin, setEditLinkedin] = useState("");
-  const [editWebsite, setEditWebsite] = useState("");
+    const [editTwitter, setEditTwitter] = useState("");
+    const [editInstagram, setEditInstagram] = useState("");
+    const [editGithub, setEditGithub] = useState("");
+    const [editLinkedin, setEditLinkedin] = useState("");
+    const [editWebsite, setEditWebsite] = useState("");
     const [editProcessing, setEditProcessing] = useState(false);
 
-    const saveEdits = async () => {
+    const saveEdits = async (e?: React.FormEvent) => {
+      e?.preventDefault?.();
       const uname = (editUsername || '').trim();
       if (!uname) { toast.show('Username cannot be empty'); return; }
 
@@ -112,98 +116,117 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         requestAnimationFrame(() => { displayNameRef.current?.focus?.(); });
         return;
       }
-      // when closing via the Edit Profile button, auto-save the edits
-      await saveEdits();
+      // when already editing, cancel/close without saving
+      setIsEditingProfile(false);
     };
 
-    useImperativeHandle(ref, () => ({
-      toggleEdit,
-    }));
+    // close social collapsible on Escape for accessibility
+    useEffect(() => {
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          // No longer needed since social links are always visible
+        }
+      };
+      window.addEventListener('keydown', onKey);
+      return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
+    // focus the first social input when the drawer opens
+    useEffect(() => {
+      // No longer needed since social links are always visible
+    }, []);
+
+    useImperativeHandle(ref, () => ({ toggleEdit }));
 
     if (!isEditingProfile) {
       return (
         <>
-            <div className="username">{user.displayName}</div>
-            <div className="dim">@{user.username}</div>
-            <div className="dim">joined {new Date(user.joinedAt).toLocaleDateString()}</div>
-            {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
-          </>
+          <div className="username">{user.displayName}</div>
+          <div className="dim">@{user.username}</div>
+          <div className="dim">joined {new Date(user.joinedAt).toLocaleDateString()}</div>
+          {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
+        </>
       );
     }
 
     return (
-      <div className="inline-edit-card" style={{ width: '100%', maxWidth: 720 }}>
-        <label style={{ display: 'block', marginBottom: 8 }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Display name</div>
-          <input ref={displayNameRef} className="input" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
+      <form className="inline-edit-card" style={{ width: '100%', maxWidth: 720 }} onSubmit={(e: FormEvent) => saveEdits(e)}>
+        <label className="label-group">
+          <div className="muted-label sr-only">Display name</div>
+          <input ref={displayNameRef} className="input" placeholder="Display name" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
         </label>
-        <label style={{ display: 'block', marginBottom: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>Username (used in @handle)</div>
+
+        <label className="label-group">
+          <div className="muted-label sr-only">Username (used in @handle)</div>
+          <div className="input-container">
+            <input className="input" placeholder="Username (used in @handle)" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
             {user.usernameChangedAt && (() => {
               const lastChanged = new Date(user.usernameChangedAt).getTime();
               const hoursSince = (Date.now() - lastChanged) / (1000 * 60 * 60);
               if (hoursSince < 24) {
                 const hoursRemaining = Math.ceil(24 - hoursSince);
-                return <div style={{ fontSize: 11, color: 'var(--muted)' }} title="You can only change your username once every 24 hours">🔒 {hoursRemaining}h cooldown</div>;
+                return <div className="input-indicator" title="You can only change your username once every 24 hours">🔒 {hoursRemaining}h</div>;
               }
               return null;
             })()}
           </div>
-          <input className="input" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
-          {/* Warning about username change cooldown */}
-          {editUsername !== user.username && (
-            <div style={{
-              marginTop: 6,
-              padding: '8px 12px',
-              background: 'rgba(255, 165, 0, 0.1)',
-              border: '1px solid rgba(255, 165, 0, 0.3)',
-              borderRadius: 6,
-              fontSize: 12,
-              color: 'var(--text)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 8
-            }}>
-              <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
-              <div>
-                <strong>Note:</strong> You can only change your username once every 24 hours. Choose carefully!
-              </div>
-            </div>
-          )}
         </label>
-        <label className="bio-col" style={{ display: 'block', marginBottom: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>Bio</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }} aria-live="polite">{editBio.length}/200</div>
+
+        <label className="bio-col label-group">
+          <div className="muted-label sr-only">Bio</div>
+          <div className="bio-editor-container">
+            <textarea className="bio-editor" placeholder="Tell people about yourself (max 200 chars)" value={editBio} maxLength={200} onChange={e => setEditBio(e.target.value.slice(0,200))} aria-label="Profile bio" />
+            <div className="bio-char-count" aria-live="polite">{editBio.length}/200</div>
           </div>
-          <textarea className="bio-editor" value={editBio} maxLength={200} onChange={e => setEditBio(e.target.value.slice(0,200))} />
         </label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6 }}>
-          <label style={{ display: 'block' }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Twitter (@ or full url)</div>
-            <input className="input" value={editTwitter} onChange={e => setEditTwitter(e.target.value)} />
-          </label>
-          <label style={{ display: 'block' }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Instagram (@ or full url)</div>
-            <input className="input" value={editInstagram} onChange={e => setEditInstagram(e.target.value)} />
-          </label>
-          <label style={{ display: 'block' }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>GitHub (username or url)</div>
-            <input className="input" value={editGithub} onChange={e => setEditGithub(e.target.value)} />
-          </label>
-          <label style={{ display: 'block' }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>LinkedIn (handle or url)</div>
-            <input className="input" value={editLinkedin} onChange={e => setEditLinkedin(e.target.value)} />
-          </label>
-          <label style={{ display: 'block', gridColumn: '1 / -1' }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Website (full url or domain)</div>
-            <input className="input" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} />
-          </label>
+
+        {/* Social links section - always visible */}
+        <div className="social-drawer" role="region">
+          <div style={{ display: 'grid', gap: 8 }}>
+            <label className="label-group">
+              <div className="muted-label sr-only">Twitter (@ or full url)</div>
+              <div className="input-container">
+                <input className="input" placeholder="@username or full url" value={editTwitter} onChange={e => setEditTwitter(e.target.value)} />
+                <Twitter size={16} className="input-icon" />
+              </div>
+            </label>
+            <label className="label-group">
+              <div className="muted-label sr-only">Instagram (@ or full url)</div>
+              <div className="input-container">
+                <input className="input" placeholder="@username or full url" value={editInstagram} onChange={e => setEditInstagram(e.target.value)} />
+                <Instagram size={16} className="input-icon" />
+              </div>
+            </label>
+            <label className="label-group">
+              <div className="muted-label sr-only">GitHub (username or url)</div>
+              <div className="input-container">
+                <input className="input" placeholder="username or full url" value={editGithub} onChange={e => setEditGithub(e.target.value)} />
+                <Github size={16} className="input-icon" />
+              </div>
+            </label>
+            <label className="label-group">
+              <div className="muted-label sr-only">LinkedIn (handle or url)</div>
+              <div className="input-container">
+                <input className="input" placeholder="handle or full url" value={editLinkedin} onChange={e => setEditLinkedin(e.target.value)} />
+                <Linkedin size={16} className="input-icon" />
+              </div>
+            </label>
+            <label className="label-group">
+              <div className="muted-label sr-only">Website (full url or domain)</div>
+              <div className="input-container">
+                <input className="input" placeholder="full url or domain" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} />
+                <Globe size={16} className="input-icon" />
+              </div>
+            </label>
+          </div>
         </div>
-      </div>
+
+        <div className="edit-actions" role="group" aria-label="Edit profile actions">
+          <button type="button" className="btn secondary cancel-btn" onClick={() => setIsEditingProfile(false)} disabled={editProcessing}>Cancel</button>
+          <button type="submit" className="btn primary" disabled={editProcessing}>{editProcessing ? 'Saving…' : 'Save changes'}</button>
+        </div>
+      </form>
     );
   }
 );
-
 ProfileEditForm.displayName = 'ProfileEditForm';

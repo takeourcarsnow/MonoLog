@@ -27,7 +27,7 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
 
   return (
     <div className="profile-header toolbar">
-      <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", width: "100%" }}>
+      <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: isEditingProfile ? 12 : 16, alignItems: "center", width: "100%" }}>
         <ProfileAvatar user={user} currentUserId={currentUserId} onAvatarChange={onAvatarChange} />
         <div style={{ textAlign: "center", minWidth: 0, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <ProfileEditForm

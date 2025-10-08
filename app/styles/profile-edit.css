@@ -169,12 +169,24 @@
   padding: 14px;
   border-radius: 12px;
   box-shadow: 0 12px 36px rgba(0,0,0,0.22);
-  animation: cardPop 220ms var(--transition-mid) both;
+  transition: opacity 200ms ease, transform 200ms ease;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.995);
   display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;
   max-width: 720px;
+}
+
+.inline-edit-card.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.inline-edit-card.closing {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.995);
 }
 
 .inline-edit-card .input,
@@ -286,9 +298,4 @@
   clip: rect(0, 0, 0, 0) !important;
   white-space: nowrap !important;
   border: 0 !important;
-}
-
-@keyframes cardPop {
-  from { opacity: 0; transform: translateY(-8px) scale(.994); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
 }

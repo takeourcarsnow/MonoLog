@@ -4,10 +4,11 @@ import { useToast } from "../Toast";
 import { SignOutButton } from "@/app/components/SignOut";
 import Link from "next/link";
 import { ViewToggle } from "@/app/components/ViewToggle";
-import type { User } from "@/src/lib/types";
+import { User } from "lucide-react";
+import type { User as UserType } from "@/src/lib/types";
 
 interface ProfileActionsProps {
-  user: User;
+  user: UserType;
   currentUserId: string | null;
   following: boolean | null;
   setFollowing: (following: boolean | null) => void;
@@ -85,24 +86,22 @@ export function ProfileActions({
           matches the current user. */}
       {currentUserId && user?.id === currentUserId ? (
         <>
-          <Link className="btn" href="/profile/following" aria-label="Following">
+          <Link className="following-link" href="/profile/following" aria-label="Following">
             <span className="icon" aria-hidden>
-              {/* people icon */}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <User size={16} strokeWidth={1.2} />
             </span>
-            <span>Following</span>
           </Link>
           <button
-            className="btn edit-profile-btn"
-            onClick={onEditToggle}
+            className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 hover:bg-green-100' : 'edit-profile-btn'}`}
+            onClick={(e) => { onEditToggle(); (e.target as HTMLButtonElement).blur(); }}
             aria-expanded={isEditingProfile}
+            aria-label={isEditingProfile ? 'Close edit profile' : 'Edit profile'}
             type="button"
           >
             <span className="icon" aria-hidden>
               {/* edit/profile icon */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </span>
-            <span>{isEditingProfile ? 'Close' : 'Edit Profile'}</span>
           </button>
           {/* New Post button removed from profile actions */}
           {/* show sign out only when the viewed profile belongs to the signed-in user */}

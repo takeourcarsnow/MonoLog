@@ -18,7 +18,7 @@ export function SignOutButton() {
   return (
     <>
       <button
-        className={`btn ${confirmArm ? "confirm" : ""}`}
+        className={`signout-btn ${confirmArm ? "confirm" : ""}`}
         title={confirmArm ? "Click again to confirm sign out" : "Sign out"}
         aria-label={confirmArm ? "Click again to confirm sign out" : "Sign out"}
         onClick={async () => {
@@ -50,7 +50,6 @@ export function SignOutButton() {
           {/* logout icon */}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 17l5-5-5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12H9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M13 19H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </span>
-        <span>{confirmArm ? "Confirm" : "Sign out"}</span>
       </button>
     </>
   );

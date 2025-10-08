@@ -32,6 +32,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     const [editLinkedin, setEditLinkedin] = useState("");
     const [editWebsite, setEditWebsite] = useState("");
     const [editProcessing, setEditProcessing] = useState(false);
+    const [isClosing, setIsClosing] = useState(false);
+    const [animateIn, setAnimateIn] = useState(false);
 
     const saveEdits = async (e?: React.FormEvent) => {
       e?.preventDefault?.();
@@ -83,7 +85,11 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (_) {}
         try { router.refresh?.(); } catch (_) {}
 
-        setIsEditingProfile(false);
+        setIsClosing(true);
+        setTimeout(() => {
+          setIsEditingProfile(false);
+          setIsClosing(false);
+        }, 200);
 
         // If username changed and we're on a username route, redirect to new username
         if (usernameChanged && oldUsername && typeof window !== 'undefined') {
@@ -117,7 +123,11 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         return;
       }
       // when already editing, cancel/close without saving
-      setIsEditingProfile(false);
+      setIsClosing(true);
+      setTimeout(() => {
+        setIsEditingProfile(false);
+        setIsClosing(false);
+      }, 200); // match the transition duration
     };
 
     // close social collapsible on Escape for accessibility
@@ -136,21 +146,29 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
       // No longer needed since social links are always visible
     }, []);
 
+    useEffect(() => {
+      if (isEditingProfile && !isClosing) {
+        // Delay to allow the element to render with opacity 0, then animate in
+        requestAnimationFrame(() => setAnimateIn(true));
+      } else {
+        setAnimateIn(false);
+      }
+    }, [isEditingProfile, isClosing]);
+
     useImperativeHandle(ref, () => ({ toggleEdit }));
 
-    if (!isEditingProfile) {
-      return (
-        <>
-          <div className="username">{user.displayName}</div>
-          <div className="dim">@{user.username}</div>
-          <div className="dim">joined {new Date(user.joinedAt).toLocaleDateString()}</div>
-          {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
-        </>
-      );
-    }
-
     return (
-      <form className="inline-edit-card" style={{ width: '100%', maxWidth: 720 }} onSubmit={(e: FormEvent) => saveEdits(e)}>
+      <>
+        {!isEditingProfile && !isClosing && (
+          <div className="profile-static-info">
+            <div className="username">{user.displayName}</div>
+            <div className="dim">@{user.username}</div>
+            <div className="dim">joined {new Date(user.joinedAt).toLocaleDateString()}</div>
+            {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
+          </div>
+        )}
+        {(isEditingProfile || isClosing) && (
+          <form className={`inline-edit-card ${animateIn && !isClosing ? 'visible' : isClosing ? 'closing' : ''}`} style={{ width: '100%', maxWidth: 720 }} onSubmit={(e: FormEvent) => saveEdits(e)}>
         <label className="label-group">
           <div className="muted-label sr-only">Display name</div>
           <input ref={displayNameRef} className="input" placeholder="Display name" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
@@ -221,11 +239,9 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
           </div>
         </div>
 
-        <div className="edit-actions" role="group" aria-label="Edit profile actions">
-          <button type="button" className="btn secondary cancel-btn" onClick={() => setIsEditingProfile(false)} disabled={editProcessing}>Cancel</button>
-          <button type="submit" className="btn primary" disabled={editProcessing}>{editProcessing ? 'Saving…' : 'Save changes'}</button>
-        </div>
       </form>
+        )}
+      </>
     );
   }
 );

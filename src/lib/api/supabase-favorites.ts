@@ -1,14 +1,20 @@
-import { getClient, ensureAuthListener, getCachedAuthUser } from "./supabase-client";
+import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken } from "./supabase-client";
 import { mapRowToHydratedPost, selectUserFields } from "./supabase-utils";
 
 export async function favoritePost(postId: string) {
-  const res = await fetch('/api/posts/favorite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: (await getCurrentUser())?.id, postId }) });
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  const res = await fetch('/api/posts/favorite', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to favorite');
 }
 
 export async function unfavoritePost(postId: string) {
-  const res = await fetch('/api/posts/unfavorite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: (await getCurrentUser())?.id, postId }) });
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  const res = await fetch('/api/posts/unfavorite', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to unfavorite');
 }

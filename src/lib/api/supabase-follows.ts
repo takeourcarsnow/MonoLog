@@ -1,14 +1,20 @@
-import { getClient, ensureAuthListener, getCachedAuthUser } from "./supabase-client";
+import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken } from "./supabase-client";
 
 export async function follow(userId: string) {
   // Call server endpoint to perform the follow operation with service role privileges
-  const res = await fetch('/api/users/follow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: (await getCurrentUser())?.id, targetId: userId }) });
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  const res = await fetch('/api/users/follow', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ targetId: userId }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to follow');
 }
 
 export async function unfollow(userId: string) {
-  const res = await fetch('/api/users/unfollow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: (await getCurrentUser())?.id, targetId: userId }) });
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  const res = await fetch('/api/users/unfollow', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ targetId: userId }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to unfollow');
 }

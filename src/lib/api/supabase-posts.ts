@@ -1,4 +1,4 @@
-import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError } from "./supabase-client";
+import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, getAccessToken } from "./supabase-client";
 import { mapRowToHydratedPost, selectUserFields } from "./supabase-utils";
 import { logger } from "../logger";
 
@@ -206,14 +206,20 @@ export async function getPost(id: string) {
 }
 
 export async function updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }) {
-  const res = await fetch('/api/posts/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, patch }) });
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  const res = await fetch('/api/posts/update', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ id, patch }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to update post');
   return await getPost(id) as any;
 }
 
 export async function deletePost(id: string) {
-  const res = await fetch('/api/posts/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  const res = await fetch('/api/posts/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ id }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to delete post');
   return true;
@@ -274,8 +280,11 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
   const finalUrls: string[] = [];
   for (const img of inputs) {
     if (!img) continue;
-    if (typeof img === 'string' && img.startsWith('data:')) {
-      const uploadRes = await fetch('/api/storage/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: cur.id, dataUrl: img }) });
+  if (typeof img === 'string' && img.startsWith('data:')) {
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  const uploadRes = await fetch('/api/storage/upload', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ dataUrl: img }) });
       const up = await uploadRes.json();
       if (!uploadRes.ok) {
         console.warn('Server upload failed, falling back to data-url', up?.error);
@@ -287,7 +296,10 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
   }
 
   // call server create endpoint
-  const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: cur.id, imageUrls: finalUrls, caption, alt, replace, public: isPublic, spotifyLink }) });
+  const sb2 = getClient();
+  ensureAuthListener(sb2);
+  const token2 = await getAccessToken(sb2);
+  const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token2 ? { Authorization: `Bearer ${token2}` } : {}) }, body: JSON.stringify({ imageUrls: finalUrls, caption, alt, replace, public: isPublic, spotifyLink }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to create post');
   return json.post as any;

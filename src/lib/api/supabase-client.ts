@@ -71,6 +71,34 @@ export async function getCachedAuthUser(sb: SupabaseClient) {
   return await fetchAndCacheAuthUser(sb);
 }
 
+// Return a current access token string for Authorization header when calling
+// server endpoints. May return null when there's no active session.
+export async function getAccessToken(sb: SupabaseClient) {
+  try {
+    // supabase-js v2 exposes getSession/getUser; use getSession to read access_token
+    // without triggering a redirect. If not available, fall back to auth.getUser
+    if (!sb) return null;
+    try {
+      // @ts-ignore - runtime-safe call
+      const sessionRes = await sb.auth.getSession?.();
+      if (sessionRes && sessionRes.data && sessionRes.data.session && sessionRes.data.session.access_token) {
+        return sessionRes.data.session.access_token;
+      }
+    } catch (e) {
+      // ignore and fallback
+    }
+    try {
+      const userRes = await sb.auth.getUser();
+      // auth.getUser doesn't return token; last-resort return null
+      return null;
+    } catch (e) {
+      return null;
+    }
+  } catch (e) {
+    return null;
+  }
+}
+
 // Set up a client-side auth state change listener to keep the cache in sync.
 export function ensureAuthListener(sb: SupabaseClient) {
   if (typeof window === "undefined") return;

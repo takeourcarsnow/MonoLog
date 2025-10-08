@@ -24,6 +24,9 @@ function normalizeImageUrls(raw: any): string[] | undefined {
 
 export async function GET(req: Request) {
   try {
+    const secret = req.headers.get('x-debug-secret') || null;
+    const allowed = process.env.NODE_ENV !== 'production' || (process.env.DEBUG_SECRET && secret === process.env.DEBUG_SECRET);
+    if (!allowed) return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });

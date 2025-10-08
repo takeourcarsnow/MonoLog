@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 
 export async function POST(req: Request) {
   try {
@@ -7,10 +8,14 @@ export async function POST(req: Request) {
     const { id } = body;
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
+    const authUser = await getUserFromAuthHeader(req);
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const sb = getServiceSupabase();
     // fetch post to delete and its image urls
     const { data: post } = await sb.from('posts').select('*').eq('id', id).limit(1).single();
     if (post) {
+      // ensure the authenticated user owns the post or is an admin (service role users not allowed via this endpoint)
+      if (String(post.user_id) !== String(authUser.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       const imageUrls: string[] = [];
       if (post.image_urls && Array.isArray(post.image_urls)) imageUrls.push(...post.image_urls);
       else if (post.image_url) imageUrls.push(post.image_url);

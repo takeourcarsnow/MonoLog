@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 
 export async function POST(req: Request) {
   try {
-    const { actorId, commentId } = await req.json();
-    if (!actorId || !commentId) return NextResponse.json({ error: 'Missing actorId/commentId' }, { status: 400 });
+    const body = await req.json();
+    const commentId = body.commentId;
+    if (!commentId) return NextResponse.json({ error: 'Missing commentId' }, { status: 400 });
+    const authUser = await getUserFromAuthHeader(req);
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const actorId = authUser.id;
     const sb = getServiceSupabase();
 
     // Try deleting using common snake_case column names first, then fall back

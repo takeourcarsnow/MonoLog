@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 
 export async function POST(req: Request) {
   try {
-    const { actorId, postId } = await req.json();
-    if (!actorId || !postId) return NextResponse.json({ error: 'Missing actorId or postId' }, { status: 400 });
+    const body = await req.json();
+    const postId = body.postId;
+    if (!postId) return NextResponse.json({ error: 'Missing postId' }, { status: 400 });
+    const authUser = await getUserFromAuthHeader(req);
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const actorId = authUser.id;
     const sb = getServiceSupabase();
 
     const { data: profile } = await sb.from('users').select('favorites').eq('id', actorId).limit(1).single();

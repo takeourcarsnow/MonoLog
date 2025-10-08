@@ -3,14 +3,18 @@ import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { uid } from '@/src/lib/id';
 import { logger } from '@/src/lib/logger';
 import { parseMentions } from '@/src/lib/mentions';
+import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { userId, imageUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink } = body;
+  const body = await req.json();
+  const { imageUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink } = body;
+  const authUser = await getUserFromAuthHeader(req);
+  if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const userId = authUser.id;
     // Debug: log incoming payload so we can verify client is sending multiple images
   try { logger.debug('[posts.create] incoming', { userId, imageUrlsLen: Array.isArray(imageUrls) ? imageUrls.length : (imageUrls ? 1 : 0) }); } catch (e) {}
-  if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const CAPTION_MAX = 1000;
   if (caption && typeof caption === 'string' && caption.length > CAPTION_MAX) return NextResponse.json({ error: `Caption exceeds ${CAPTION_MAX} characters` }, { status: 400 });
     const sb = getServiceSupabase();

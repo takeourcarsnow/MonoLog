@@ -1,4 +1,4 @@
-import { getClient, logSupabaseError } from "./supabase-client";
+import { getClient, logSupabaseError, getAccessToken } from "./supabase-client";
 import { DEFAULT_AVATAR } from "./supabase-utils";
 
 export async function getComments(postId: string) {
@@ -59,7 +59,9 @@ export async function addComment(postId: string, text: string) {
   const cur = await getCurrentUser();
   if (!cur) throw new Error('Not logged in');
   if (!text?.trim()) throw new Error('Empty');
-  const res = await fetch('/api/comments/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: cur.id, postId, text }) });
+  const sb = getClient();
+  const token = await getAccessToken(sb);
+  const res = await fetch('/api/comments/add', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId, text }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to add comment');
   // refresh current user's profile from users table so we return the up-to-date displayName / avatarUrl

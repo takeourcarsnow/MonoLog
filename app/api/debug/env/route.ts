@@ -6,6 +6,10 @@ import { NextResponse } from 'next/server';
 // them when the bundle reported local mode (client will request in that case).
 export async function GET(req: Request) {
   try {
+    // Restrict this endpoint in production. In CI or local dev it's fine.
+    const secret = req.headers.get('x-debug-secret') || null;
+    const allowed = process.env.NODE_ENV !== 'production' || (process.env.DEBUG_SECRET && secret === process.env.DEBUG_SECRET);
+    if (!allowed) return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
     const url = new URL(req.url);
     const includePublic = url.searchParams.get('public') === '1';
     const base = {

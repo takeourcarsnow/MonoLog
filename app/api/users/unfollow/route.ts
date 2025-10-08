@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 
 export async function POST(req: Request) {
   try {
-    const { actorId, targetId } = await req.json();
-    if (!actorId || !targetId) return NextResponse.json({ error: 'Missing actorId or targetId' }, { status: 400 });
+    const body = await req.json();
+    const targetId = body.targetId;
+    if (!targetId) return NextResponse.json({ error: 'Missing targetId' }, { status: 400 });
+    const authUser = await getUserFromAuthHeader(req);
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const actorId = authUser.id;
     const sb = getServiceSupabase();
 
     // Try to delete from dedicated follows table first (if present)

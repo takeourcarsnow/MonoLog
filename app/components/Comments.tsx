@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
 import { api } from "@/src/lib/api";
+import { getClient, getAccessToken } from '@/src/lib/api/supabase-client';
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
 import { useToast } from "./Toast";
@@ -179,7 +180,9 @@ export function Comments({ postId, onCountChange }: Props) {
 
                           setTimeout(async () => {
                             try {
-                              const res = await fetch('/api/comments/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: currentUser.id, commentId: c.id }) });
+                              const sb = getClient();
+                              const token = await getAccessToken(sb);
+                              const res = await fetch('/api/comments/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ commentId: c.id }) });
                               const json = await res.json();
                               if (!res.ok) throw new Error(json?.error || 'Failed');
                               await load(true);

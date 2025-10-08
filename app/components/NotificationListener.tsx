@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { api } from "@/src/lib/api";
+import { getClient, getAccessToken } from '@/src/lib/api/supabase-client';
 import { useToast } from "./Toast";
 
 export function NotificationListener() {
@@ -16,8 +17,10 @@ export function NotificationListener() {
       try {
         const cur = await api.getCurrentUser();
         if (!cur) return;
-        // call server list endpoint (best-effort; server may return empty array)
-        const res = await fetch('/api/notifications/list', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: cur.id }) });
+  // call server list endpoint (best-effort; server may return empty array)
+  const sb = getClient();
+  const token = await getAccessToken(sb);
+  const res = await fetch('/api/notifications/list', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({}) });
         const json = await res.json();
         const notifs = json?.notifications || [];
         const newOnes: string[] = [];
@@ -36,7 +39,9 @@ export function NotificationListener() {
         if (newOnes.length) {
           // mark them read (best-effort)
           try {
-            const mres = await fetch('/api/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actorId: cur.id, ids: newOnes }) });
+            const sb2 = getClient();
+            const token2 = await getAccessToken(sb2);
+            const mres = await fetch('/api/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token2 ? { Authorization: `Bearer ${token2}` } : {}) }, body: JSON.stringify({ ids: newOnes }) });
             // if server didn't accept, clear seen to try again later
             if (!mres.ok) {
               for (const id of newOnes) delete seen.current[id];

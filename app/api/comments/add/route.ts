@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { uid } from '@/src/lib/id';
+import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 
 export async function POST(req: Request) {
   try {
-    const { actorId, postId, text } = await req.json();
-    if (!actorId || !postId || !text) return NextResponse.json({ error: 'Missing actorId/postId/text' }, { status: 400 });
+    const body = await req.json();
+    const postId = body.postId;
+    const text = body.text;
+    if (!postId || !text) return NextResponse.json({ error: 'Missing postId or text' }, { status: 400 });
+    const authUser = await getUserFromAuthHeader(req);
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const actorId = authUser.id;
     const COMMENT_MAX = 500;
     if (typeof text === 'string' && text.trim().length > COMMENT_MAX) return NextResponse.json({ error: `Comment exceeds ${COMMENT_MAX} characters` }, { status: 400 });
     const sb = getServiceSupabase();

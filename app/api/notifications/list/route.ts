@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 
 export async function POST(req: Request) {
   try {
-    const { actorId } = await req.json();
-    if (!actorId) return NextResponse.json({ error: 'Missing actorId' }, { status: 400 });
+    const authUser = await getUserFromAuthHeader(req);
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const actorId = authUser.id;
     const sb = getServiceSupabase();
     try {
       // Only return unread notifications so clients don't re-notify on each

@@ -23,8 +23,8 @@ export const FILTER_PRESETS: Record<string, string> = {
   bleach: 'saturate(1.3) contrast(0.95) brightness(1.02)',
   vintage: 'sepia(0.35) contrast(0.95) saturate(0.9) brightness(0.98)',
   lomo: 'contrast(1.25) saturate(1.35) brightness(1.02) sepia(0.08)',
-  warm: 'saturate(1.05) hue-rotate(6deg) brightness(1.01)',
-  cool: 'saturate(0.95) hue-rotate(-6deg) brightness(0.99)',
+  warm: 'saturate(1.05) hue-rotate(-6deg) brightness(1.01)',
+  cool: 'saturate(0.95) hue-rotate(6deg) brightness(0.99)',
   invert: 'invert(1)',
   film: 'contrast(1.08) saturate(0.92) brightness(0.98)'
 };

@@ -41,7 +41,8 @@ export function computeFilterValues(params: DrawParams, overrides?: DrawOverride
   const curFrameThickness = overrides?.frameThickness ?? frameThicknessRef.current ?? 0;
   const curFrameEnabled = curFrameThickness > 0;
   const curFrameColor = overrides?.frameColor ?? frameColorRef.current ?? 'white';
-  const hue = Math.round((curTemperature / 100) * 30);
+  // Invert temperature so slider direction matches warm/cool expectation
+  const hue = Math.round((-curTemperature / 100) * 30);
 
   // map selectedFilter to additional filter fragments
   const preset = FILTER_PRESETS[curSelectedFilter] || '';

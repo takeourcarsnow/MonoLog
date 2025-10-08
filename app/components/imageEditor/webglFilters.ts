@@ -127,10 +127,12 @@ void main() {
   }
   // warm / cool
   if (abs(id - 7.0) < 0.5) {
-    presetColor = hueRotate(color, 6.0);
+    // warm: rotate hue slightly towards warm tones
+    presetColor = hueRotate(color, -6.0);
   }
   if (abs(id - 8.0) < 0.5) {
-    presetColor = hueRotate(color, -6.0);
+    // cool: rotate hue slightly towards cool tones
+    presetColor = hueRotate(color, 6.0);
   }
   // invert
   if (abs(id - 9.0) < 0.5) {
@@ -284,8 +286,8 @@ export function applyWebGLAdjustments(
         case 'bleach': return 'saturate(1.3) contrast(0.95) brightness(1.02)';
         case 'vintage': return 'sepia(0.35) contrast(0.95) saturate(0.9) brightness(0.98)';
         case 'lomo': return 'contrast(1.25) saturate(1.35) brightness(1.02) sepia(0.08)';
-        case 'warm': return 'saturate(1.05) hue-rotate(6deg) brightness(1.01)';
-        case 'cool': return 'saturate(0.95) hue-rotate(-6deg) brightness(0.99)';
+  case 'warm': return 'saturate(1.05) hue-rotate(-6deg) brightness(1.01)';
+  case 'cool': return 'saturate(0.95) hue-rotate(6deg) brightness(0.99)';
         case 'invert': return 'invert(1)';
         case 'film': return 'contrast(1.08) saturate(0.92) brightness(0.98)';
         default: return '';

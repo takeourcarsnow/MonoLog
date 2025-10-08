@@ -10,13 +10,13 @@ export default function AboutPage() {
         <h2>Welcome to MonoLog</h2>
 
         <p className="dim" style={{ margin: '1em auto 1.5em', fontSize: '1.1em' }}>
-          MonoLog is your personal daily photo journal designed to help you capture and share life's moments without the distractions of traditional social media. It's simple, intentional, and focused on what truly matters — your memories and connections.
+          MonoLog is your personal daily photo journal designed to help you capture and share life&apos;s moments without the distractions of traditional social media. It&apos;s simple, intentional, and focused on what truly matters — your memories and connections.
         </p>
 
         <section style={{ marginBottom: '1.5em' }}>
           <h3>What Makes MonoLog Special</h3>
           <p className="dim" style={{ margin: '0.5em auto' }}>
-            Unlike platforms that compete for your attention, MonoLog respects your time with one meaningful post per day, no endless scrolling, and no public likes to chase. It's a calm space to document your life and connect with the people who matter most.
+            Unlike platforms that compete for your attention, MonoLog respects your time with one meaningful post per day, no endless scrolling, and no public likes to chase. It&apos;s a calm space to document your life and connect with the people who matter most.
           </p>
         </section>
 
@@ -35,7 +35,7 @@ export default function AboutPage() {
         <section style={{ marginBottom: '1.5em' }}>
           <h3>Get Started</h3>
           <ul className={styles.aboutList}>
-            <li><strong>Post Daily</strong> — Upload your photos and write a caption to create today's entry.</li>
+            <li><strong>Post Daily</strong> — Upload your photos and write a caption to create today&apos;s entry.</li>
             <li><strong>Follow & Connect</strong> — Build your feed by following friends and seeing their daily shares.</li>
             <li><strong>Explore the Community</strong> — Discover inspiring posts from other users at your own pace.</li>
             <li><strong>View Your Journal</strong> — Browse your photo history in calendar view and revisit any day.</li>
@@ -46,7 +46,7 @@ export default function AboutPage() {
         <section style={{ marginBottom: '1.5em' }}>
           <h3>Community Driven</h3>
           <p className="dim" style={{ margin: '0.5em auto', fontStyle: 'italic' }}>
-            MonoLog is built by and for its users. No corporate backing or venture capital — just a passionate community creating a better way to share life's moments.
+            MonoLog is built by and for its users. No corporate backing or venture capital — just a passionate community creating a better way to share life&apos;s moments.
           </p>
         </section>
 

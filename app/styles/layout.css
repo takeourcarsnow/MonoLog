@@ -47,11 +47,11 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
   .content > .page-slide { transition: opacity 120ms linear; transform: none !important; }
 }
 
-/* On desktop, allow content to scroll naturally since body can scroll */
+/* On desktop, allow content to scroll internally since body cannot scroll */
 @media (min-width: 900px) {
   .content {
     height: auto;
-    overflow: visible;
+    overflow: auto;
     min-height: calc(100dvh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) - var(--tabbar-height, 56px));
   }
 }
@@ -60,7 +60,7 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
 @media (max-width: 768px) {
   .content {
     height: 100dvh;
-    overflow: auto;
+    overflow: hidden;
     -webkit-overflow-scrolling: touch;
     padding-bottom: var(--about-bottom-gap, calc(var(--tabbar-height, 64px) + 28px));
   }

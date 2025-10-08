@@ -84,6 +84,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
         startX.current = null;
         locked.current = false;
         try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
+        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
         return;
       }
     }
@@ -198,7 +199,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
 
   useEffect(() => {
     function onZoomStart() { endDrag(); setIsZooming(true); isZoomingRef.current = true; }
-    function onZoomEnd() { setIsZooming(false); isZoomingRef.current = false; const el = trackRef.current; if (el) el.style.transform = `translate3d(-${indexRef.current * 100}%,0,0)`; }
+    function onZoomEnd() { setIsZooming(false); isZoomingRef.current = false; const el = trackRef.current; if (el) el.style.transform = `translate3d(-${indexRef.current * 100}%,0,0)`; try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {} }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:zoom_start', onZoomStart as EventListener);
       window.addEventListener('monolog:zoom_end', onZoomEnd as EventListener);

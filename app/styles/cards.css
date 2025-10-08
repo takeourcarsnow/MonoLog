@@ -9,6 +9,8 @@
   /* keep a small horizontal padding so full-bleed slides don't touch the edges */
   padding: calc(4px + var(--safe-top, 0px)) 12px 12px 12px; /* much smaller top padding */
   flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Add extra top space when viewing the Favorites page so posts don't butt up

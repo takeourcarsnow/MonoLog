@@ -29,7 +29,6 @@ export function useAppShellNavigation(
   // Listen for carousel drag events from inner components and temporarily
   // disable the outer Swiper's touch interactions so inner carousels can
   // handle horizontal swipes without the whole view changing.
-  // Temporarily disabled to debug swipe issues
   useEffect(() => {
     let touchDisabledTimeout: NodeJS.Timeout;
 
@@ -44,7 +43,7 @@ export function useAppShellNavigation(
             try {
               const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
               if (inst && !inst.allowTouchMove) {
-                inst.allowTouchMove = Boolean(isTouchDevice);
+                inst.allowTouchMove = true;
               }
             } catch (_) { /* ignore */ }
           }, 5000);
@@ -55,44 +54,24 @@ export function useAppShellNavigation(
       try {
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) {
-          inst.allowTouchMove = Boolean(isTouchDevice);
+          inst.allowTouchMove = true;
           if (touchDisabledTimeout) {
             clearTimeout(touchDisabledTimeout);
           }
         }
       } catch (_) { /* ignore */ }
     }
-    function onPanStart() {
-      try {
-        const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        if (inst) {
-          inst.allowTouchMove = false;
-        }
-      } catch (_) { /* ignore */ }
-    }
-    function onPanEnd() {
-      try {
-        const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
-        if (inst) {
-          inst.allowTouchMove = Boolean(isTouchDevice);
-        }
-      } catch (_) { /* ignore */ }
-    }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:carousel_drag_start', onDragStart as any);
       window.addEventListener('monolog:carousel_drag_end', onDragEnd as any);
-      window.addEventListener('monolog:pan_start', onPanStart as any);
-      window.addEventListener('monolog:pan_end', onPanEnd as any);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('monolog:carousel_drag_start', onDragStart as any);
         window.removeEventListener('monolog:carousel_drag_end', onDragEnd as any);
-        window.removeEventListener('monolog:pan_start', onPanStart as any);
-        window.removeEventListener('monolog:pan_end', onPanEnd as any);
       }
     };
-  }, [isTouchDevice]);
+  }, []);
 
     const handleSlideChange = (swiper: any) => {
     const newPath = views[swiper.activeIndex]?.path;

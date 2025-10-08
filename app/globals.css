@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent body scrolling to avoid unwanted scrollbars */
+html, body {
+  overflow: hidden;
+}
+
 /* Allow body scrolling on about page */
 body.about-page-scroll,
 html.about-page-scroll {

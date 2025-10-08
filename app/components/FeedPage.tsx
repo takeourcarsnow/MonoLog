@@ -113,9 +113,7 @@ export function FeedPage({
               )}
             </div>
 
-            <div style={{ marginTop: 6, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              {isExplore ? 'Be the first to create today — add a post to show up here.' : 'Follow people in Explore to see their daily posts in your feed.'}
-            </div>
+            {/* Removed duplicate bottom text — emptyMessage already contains the CTA/explanation */}
           </div>
         </div>
       );
@@ -154,7 +152,9 @@ export function FeedPage({
 
   return (
     <div className="view-fade">
-      <ViewToggle title={title} subtitle={subtitle} selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v); }} />
+      {posts.length > 0 && (
+        <ViewToggle title={title} subtitle={subtitle} selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v); }} />
+      )}
       <PullToRefreshWrapper
         isRefreshing={isRefreshing}
         pullDistance={pullDistance}

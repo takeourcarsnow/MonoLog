@@ -434,10 +434,27 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   transform: translateY(0);
 }
 
-.camera-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+.camera-btn.primary {
+  padding: 12px 20px;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+}
+
+.camera-btn.primary:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.4);
+}
+
+.camera-btn.primary:active {
+  transform: scale(1.02) translateY(0);
 }
 
 .camera-btn-text {
@@ -524,9 +541,16 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   border-color: rgba(0, 0, 0, 0.1);
 }
 
-:root[data-theme="light"] .camera-btn:hover {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(0, 0, 0, 0.15);
+:root[data-theme="light"] .camera-btn.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+:root[data-theme="light"] .camera-btn.primary:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
 }
 
 /* Mobile optimizations */
@@ -564,9 +588,14 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
     font-size: 12px;
   }
 
-  .camera-btn svg {
-    width: 16px;
-    height: 16px;
+  .camera-btn.primary {
+    padding: 10px 16px;
+    font-size: 13px;
+    transform: scale(1.02);
+  }
+
+  .camera-btn.primary:hover {
+    transform: scale(1.05) translateY(-1px);
   }
 }
 
@@ -584,8 +613,9 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .drop-zone.dragover,
   .drop-zone:hover .drop-zone-icon,
   .drop-zone.dragover .drop-zone-icon,
-  .camera-btn:hover,
-  .camera-btn:active {
+  .camera-btn.primary,
+  .camera-btn.primary:hover,
+  .camera-btn.primary:active {
     transform: none !important;
   }
 }

@@ -183,10 +183,6 @@ function UploaderCore() {
   {!dataUrls.length && (
         <DropZone
           processing={processing}
-          onFileSelect={() => {
-            try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-            fileInputRef.current?.click();
-          }}
           onCameraSelect={async () => {
             try {
               await openCamera();

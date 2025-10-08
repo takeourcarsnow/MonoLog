@@ -299,3 +299,10 @@
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+/* Colorized icons for social inputs when a valid-looking value is present */
+.input-icon.twitter-filled { color: #1DA1F2; } /* Twitter blue */
+.input-icon.instagram-filled { color: #E1306C; } /* Instagram gradient pink (single color variant) */
+.input-icon.github-filled { color: #000000; } /* GitHub black */
+.input-icon.facebook-filled { color: #1877F2; } /* Facebook blue */
+.input-icon.website-filled { color: var(--primary); } /* generic site color */

@@ -88,7 +88,12 @@ export default async function PostIdPage({ params }: { params: { id: string } })
   return (
     <div className="post-view-wrap view-fade">
       <div className="toolbar">
-        <a className="btn" href="/explore">← Back</a>
+        <a className="btn" href="/explore" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span>Back</span>
+        </a>
       </div>
       <div className="empty">Post not found.</div>
     </div>

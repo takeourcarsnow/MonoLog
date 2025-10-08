@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
 import type { FormEvent } from 'react';
 import { useRouter } from "next/navigation";
-import { Twitter, Instagram, Github, Linkedin, Globe } from "lucide-react";
+import { Twitter, Instagram, Github, Facebook, Globe } from "lucide-react";
 import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import type { User } from "@/src/lib/types";
@@ -28,8 +28,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     const [editBio, setEditBio] = useState("");
     const [editTwitter, setEditTwitter] = useState("");
     const [editInstagram, setEditInstagram] = useState("");
-    const [editGithub, setEditGithub] = useState("");
-    const [editLinkedin, setEditLinkedin] = useState("");
+  const [editGithub, setEditGithub] = useState("");
+  const [editFacebook, setEditFacebook] = useState("");
     const [editWebsite, setEditWebsite] = useState("");
     const [editProcessing, setEditProcessing] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
@@ -72,8 +72,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         const socialLinks: Record<string, string | undefined> = {};
         if (editTwitter.trim()) socialLinks.twitter = editTwitter.trim();
         if (editInstagram.trim()) socialLinks.instagram = editInstagram.trim();
-        if (editGithub.trim()) socialLinks.github = editGithub.trim();
-        if (editLinkedin.trim()) socialLinks.linkedin = editLinkedin.trim();
+  if (editGithub.trim()) socialLinks.github = editGithub.trim();
+  if (editFacebook.trim()) socialLinks.facebook = editFacebook.trim();
         if (editWebsite.trim()) socialLinks.website = editWebsite.trim();
 
   // Normalize social links: send null when the user cleared all social fields
@@ -114,8 +114,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         setEditBio((user.bio || "").slice(0,200));
         setEditTwitter(user.socialLinks?.twitter || "");
         setEditInstagram(user.socialLinks?.instagram || "");
-        setEditGithub(user.socialLinks?.github || "");
-        setEditLinkedin(user.socialLinks?.linkedin || "");
+  setEditGithub(user.socialLinks?.github || "");
+  setEditFacebook(user.socialLinks?.facebook || "");
         setEditWebsite(user.socialLinks?.website || "");
         setIsEditingProfile(true);
         // focus after next paint so input exists
@@ -157,6 +157,52 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
 
     useImperativeHandle(ref, () => ({ toggleEdit }));
 
+    // Simple heuristics to detect a valid-looking link/handle for each platform.
+    const looksLikeTwitter = (v?: string) => {
+      if (!v) return false;
+      const t = v.trim();
+      return t.startsWith('@') || t.includes('twitter.com') || t.includes('t.co');
+    };
+    const looksLikeInstagram = (v?: string) => {
+      if (!v) return false;
+      const t = v.trim();
+      return t.startsWith('@') || t.includes('instagram.com') || t.includes('instagr.am');
+    };
+    const looksLikeGithub = (v?: string) => {
+      if (!v) return false;
+      const t = v.trim();
+      if (t.includes('github.com')) return true;
+      // simple username pattern: alphanumeric, hyphens
+      return /^[a-zA-Z0-9-]+$/.test(t);
+    };
+    const looksLikeFacebook = (v?: string) => {
+      if (!v) return false;
+      const t = v.trim();
+      return t.startsWith('@') || t.includes('facebook.com') || t.includes('fb.me');
+    };
+    const looksLikeWebsite = (v?: string) => {
+      if (!v) return false;
+      const t = v.trim();
+      // basic: contains a dot and no spaces, or starts with http
+      return t.startsWith('http://') || t.startsWith('https://') || (/\./.test(t) && !/\s/.test(t));
+    };
+
+    // Auto-prefix helpers: add leading @ for handle inputs when appropriate.
+    const shouldPrefixAt = (v: string) => {
+      const t = (v || '').trim();
+      if (!t) return false;
+      // If it's already an @handle or a URL or contains a slash or domain, don't prefix
+      if (t.startsWith('@')) return false;
+      if (t.startsWith('http://') || t.startsWith('https://')) return false;
+      if (t.includes('/') || t.includes('.')) return false;
+      return true;
+    };
+    const ensureAt = (v: string) => {
+      const t = (v || '').trim();
+      if (!t) return '';
+      return shouldPrefixAt(t) ? `@${t}` : t;
+    };
+
     return (
       <>
         {!isEditingProfile && !isClosing && (
@@ -193,7 +239,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         <label className="bio-col label-group">
           <div className="muted-label sr-only">Bio</div>
           <div className="bio-editor-container">
-            <textarea className="bio-editor" placeholder="Tell people about yourself (max 200 chars)" value={editBio} maxLength={200} onChange={e => setEditBio(e.target.value.slice(0,200))} aria-label="Profile bio" />
+            <textarea className="bio-editor" placeholder="Tell people about yourself" value={editBio} maxLength={200} onChange={e => setEditBio(e.target.value.slice(0,200))} aria-label="Profile bio" />
             <div className="bio-char-count" aria-live="polite">{editBio.length}/200</div>
           </div>
         </label>
@@ -202,38 +248,38 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         <div className="social-drawer" role="region">
           <div style={{ display: 'grid', gap: 8 }}>
             <label className="label-group">
-              <div className="muted-label sr-only">Twitter (@ or full url)</div>
+              <div className="muted-label sr-only">Twitter</div>
               <div className="input-container">
-                <input className="input" placeholder="@username or full url" value={editTwitter} onChange={e => setEditTwitter(e.target.value)} />
-                <Twitter size={16} className="input-icon" />
+                <input className="input" placeholder="Twitter" value={editTwitter} onChange={e => setEditTwitter(e.target.value)} onBlur={() => setEditTwitter(ensureAt(editTwitter))} />
+                <Twitter size={16} className={`input-icon ${looksLikeTwitter(editTwitter) ? 'twitter-filled' : ''}`} />
               </div>
             </label>
             <label className="label-group">
-              <div className="muted-label sr-only">Instagram (@ or full url)</div>
+              <div className="muted-label sr-only">Instagram</div>
               <div className="input-container">
-                <input className="input" placeholder="@username or full url" value={editInstagram} onChange={e => setEditInstagram(e.target.value)} />
-                <Instagram size={16} className="input-icon" />
+                <input className="input" placeholder="Instagram" value={editInstagram} onChange={e => setEditInstagram(e.target.value)} onBlur={() => setEditInstagram(ensureAt(editInstagram))} />
+                <Instagram size={16} className={`input-icon ${looksLikeInstagram(editInstagram) ? 'instagram-filled' : ''}`} />
               </div>
             </label>
             <label className="label-group">
-              <div className="muted-label sr-only">GitHub (username or url)</div>
+              <div className="muted-label sr-only">GitHub</div>
               <div className="input-container">
-                <input className="input" placeholder="username or full url" value={editGithub} onChange={e => setEditGithub(e.target.value)} />
-                <Github size={16} className="input-icon" />
+                <input className="input" placeholder="GitHub" value={editGithub} onChange={e => setEditGithub(e.target.value)} />
+                <Github size={16} className={`input-icon ${looksLikeGithub(editGithub) ? 'github-filled' : ''}`} />
               </div>
             </label>
             <label className="label-group">
-              <div className="muted-label sr-only">LinkedIn (handle or url)</div>
+              <div className="muted-label sr-only">Facebook</div>
               <div className="input-container">
-                <input className="input" placeholder="handle or full url" value={editLinkedin} onChange={e => setEditLinkedin(e.target.value)} />
-                <Linkedin size={16} className="input-icon" />
+                <input className="input" placeholder="Facebook" value={editFacebook} onChange={e => setEditFacebook(e.target.value)} onBlur={() => setEditFacebook(ensureAt(editFacebook))} />
+                <Facebook size={16} className={`input-icon ${looksLikeFacebook(editFacebook) ? 'facebook-filled' : ''}`} />
               </div>
             </label>
             <label className="label-group">
-              <div className="muted-label sr-only">Website (full url or domain)</div>
+              <div className="muted-label sr-only">Website</div>
               <div className="input-container">
-                <input className="input" placeholder="full url or domain" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} />
-                <Globe size={16} className="input-icon" />
+                <input className="input" placeholder="Website" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} />
+                <Globe size={16} className={`input-icon ${looksLikeWebsite(editWebsite) ? 'website-filled' : ''}`} />
               </div>
             </label>
           </div>

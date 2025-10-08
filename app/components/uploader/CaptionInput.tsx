@@ -198,7 +198,7 @@ export function CaptionInput({
             className="input"
             type="url"
             aria-label="Spotify link (optional)"
-            placeholder="Optional Spotify link (paste a URL)"
+            placeholder="Optional Spotify link"
             value={spotifyLink || ''}
             onChange={e => setSpotifyLink?.(e.target.value)}
             readOnly={!hasPreview || processing}

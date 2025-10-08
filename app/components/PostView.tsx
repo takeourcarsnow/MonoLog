@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "./Button";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { PostCard } from "./PostCard";
@@ -42,7 +43,10 @@ export function PostView({ id, initialPost }: { id: string; initialPost?: Hydrat
   return (
     <div className="post-view-wrap view-fade">
       <div className="toolbar">
-        <Button onClick={goBack}> Back</Button>
+        <Button onClick={goBack} className="btn-ghost-icon" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <ArrowLeft size={16} strokeWidth={2} />
+          <span>Back</span>
+        </Button>
       </div>
       {loading ? (
         <div className="card skeleton" style={{ height: 400, maxWidth: 800, margin: '24px auto' }} />

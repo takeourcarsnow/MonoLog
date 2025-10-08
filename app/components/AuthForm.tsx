@@ -19,6 +19,54 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const router = useRouter();
   const toast = useToast();
+  const [headerNotice, setHeaderNotice] = useState<{ title: string; subtitle?: string; variant?: 'info'|'warn'|'error'|'success' } | null>(null);
+  const noticeTimerRef = useRef<number | null>(null);
+  const exitTimerRef = useRef<number | null>(null);
+  const [headerNoticePhase, setHeaderNoticePhase] = useState<'enter'|'exit'>('enter');
+
+  function showHeaderNotice(payload: { title: string; subtitle?: string; variant?: 'info'|'warn'|'error'|'success' }, ttl = 4000) {
+    // clear existing timers
+    try { if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current); } catch (_) {}
+    try { if (exitTimerRef.current) window.clearTimeout(exitTimerRef.current); } catch (_) {}
+
+    const exitDuration = 420; // match CSS exit animation duration
+
+    if (headerNotice) {
+      // If a notice is already visible, play its exit animation first,
+      // then set the new payload and play enter. This avoids instant swap.
+      setHeaderNoticePhase('exit');
+      exitTimerRef.current = window.setTimeout(() => {
+        // replace the notice and restart the lifecycle
+        setHeaderNotice(payload);
+        setHeaderNoticePhase('enter');
+        // schedule removal after ttl
+        noticeTimerRef.current = window.setTimeout(() => {
+          setHeaderNoticePhase('exit');
+          exitTimerRef.current = window.setTimeout(() => {
+            setHeaderNotice(null);
+            exitTimerRef.current = null;
+          }, exitDuration) as unknown as number;
+          noticeTimerRef.current = null;
+        }, ttl) as unknown as number;
+        exitTimerRef.current = null;
+      }, exitDuration) as unknown as number;
+      return;
+    }
+
+    // No existing notice: show immediately and schedule exit
+    setHeaderNotice(payload);
+    setHeaderNoticePhase('enter');
+    // schedule exit -> removal so we get the exit animation to run
+    noticeTimerRef.current = window.setTimeout(() => {
+      // trigger exit phase
+      setHeaderNoticePhase('exit');
+      exitTimerRef.current = window.setTimeout(() => {
+        setHeaderNotice(null);
+        exitTimerRef.current = null;
+      }, exitDuration) as unknown as number;
+      noticeTimerRef.current = null;
+    }, ttl) as unknown as number;
+  }
 
   const isUsernameValid = validUsername(username || "");
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -166,7 +214,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         } catch (_) {
           /* ignore timing errors */
         }
-  toast.showFriendly("Check your email to confirm your account. After confirming, sign in.", { context: 'signup' });
+  // show confirmation in the auth header instead of a toast
+  showHeaderNotice({ title: 'Check your email', subtitle: 'A confirmation link was sent. After confirming, sign in.', variant: 'info' }, 4500);
         // Do not close/refresh for signup flow — let the user handle confirmation
         return;
       }
@@ -178,23 +227,23 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
       const raw = err?.message || String(err || 'An error occurred');
       const lower = String(raw).toLowerCase();
 
-      // Preserve explicit server rate-limit messages so the user sees them
+      // Preserve explicit server rate-limit messages: show in header as an error
       if (lower.includes('too many attempts') || lower.includes('rate limit') || lower.includes('temporarily blocked')) {
-  toast.showFriendly(raw, { context: 'signup' });
+        showHeaderNotice({ title: 'Too many attempts', subtitle: raw, variant: 'error' }, 6000);
       } else if (mode === 'signin') {
         // Avoid leaking whether an account exists. Map common verbose
         // auth errors to a generic message for signin attempts.
         const signinLeakPatterns = [/user not found/i, /no user/i, /not found/i, /invalid login/i, /invalid credentials/i, /wrong password/i, /password.*incorrect/i, /cannot find user/i, /email not found/i];
         const matchesLeak = signinLeakPatterns.some((rx) => rx.test(raw));
         if (matchesLeak) {
-          toast.showFriendly('Invalid login credentials', { context: 'signin' });
+          showHeaderNotice({ title: 'Invalid login credentials', variant: 'error' }, 3500);
         } else {
-          // For other signin errors, show a generic invalid message to avoid revealing details
-          toast.showFriendly('Invalid login credentials', { context: 'signin' });
+          // For other signin errors, show a generic invalid message in header
+          showHeaderNotice({ title: 'Invalid login credentials', variant: 'error' }, 3500);
         }
       } else {
-  // For signup or other flows, surface a friendly message
-  toast.showFriendly(raw, { context: 'signup' });
+  // For signup or other flows, surface a friendly message in header
+  showHeaderNotice({ title: raw, variant: 'info' }, 4000);
       }
     } finally {
       const elapsed = Date.now() - start;
@@ -211,7 +260,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
           // Give the user a brief confirmation that they're signed in
           // before the app refreshes / modal closes.
           if (justSignedIn) {
-            await new Promise((r) => setTimeout(r, 700));
+            // Slightly longer linger so the flipped success message is perceived
+            await new Promise((r) => setTimeout(r, 900));
           }
         } catch (_) { /* ignore timing errors */ }
         try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
@@ -226,6 +276,20 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   }
 
   // (No inline rate-limit notice; toasts handle feedback)
+
+  // Clear header notice when user edits inputs
+  useEffect(() => {
+    if (headerNotice) setHeaderNotice(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, password]);
+
+  // cleanup timers on unmount to avoid setState after unmount
+  useEffect(() => {
+    return () => {
+      try { if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current); } catch (_) {}
+      try { if (exitTimerRef.current) window.clearTimeout(exitTimerRef.current); } catch (_) {}
+    };
+  }, []);
 
   const getMessage = () => {
     if (mode === "signin") {
@@ -261,34 +325,45 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         textAlign: 'center'
       }}
     >
-      {/* Dynamic message */}
-      <div
-        key={mode}
-        className="auth-message"
-        style={{
-          marginBottom: '0.35rem',
-          animation: 'fadeInSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-        }}
-      >
-        <strong
-          style={{
-            fontSize: 20,
-            display: 'block',
-            marginBottom: 4,
-            lineHeight: 1.15
-          }}
-        >
-          {message.title}
-        </strong>
-        <div
-          className="dim"
-          style={{
-            fontSize: 13,
-            lineHeight: 1.2
-          }}
-        >
-          {message.subtitle}
-        </div>
+      {/* Dynamic message or header notice (auth related) */}
+      <div className="auth-header-area" aria-hidden={false}>
+        {headerNotice ? (
+          <div className={`auth-header-notice ${headerNoticePhase} ${headerNotice.variant || 'info'}`} role="status" aria-live="polite">
+            <span className="notice-inner">
+              <strong className="notice-title" style={{ fontSize: 20, display: 'block', marginBottom: 4, lineHeight: 1.15 }}>{headerNotice.title}</strong>
+              {headerNotice.subtitle && <div className="notice-sub dim" style={{ fontSize: 13, lineHeight: 1.2 }}>{headerNotice.subtitle}</div>}
+            </span>
+          </div>
+        ) : (
+          <div
+            key={mode}
+            className="auth-message"
+            style={{
+              marginBottom: '0.35rem',
+              animation: 'fadeInSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
+            <strong
+              style={{
+                fontSize: 20,
+                display: 'block',
+                marginBottom: 4,
+                lineHeight: 1.15
+              }}
+            >
+              {message.title}
+            </strong>
+            <div
+              className="dim"
+              style={{
+                fontSize: 13,
+                lineHeight: 1.2
+              }}
+            >
+              {message.subtitle}
+            </div>
+          </div>
+        )}
       </div>
 
       <div

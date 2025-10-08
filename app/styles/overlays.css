@@ -114,6 +114,80 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* Auth header notice (replaces toast for auth messages) */
+.auth-header-notice {
+  max-width: 520px;
+  margin: 8px auto 0;
+  padding: 0; /* no panel padding - text integrates with header */
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  perspective: 900px;
+}
+
+/* Reserve space for the auth header/message block to avoid layout shifts
+   when a notice appears. Match the default message height (title + subtitle)
+   so toggling between the message and the notice doesn't push the form. */
+.auth-header-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px; /* conservative height to contain title (20px) + subtitle (13px) + gaps */
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-header-area, .auth-header-notice .notice-inner { animation: none !important; }
+}
+
+/* more refined 3D entrance with subtle blur and crossfade */
+.auth-header-notice .notice-inner{
+  display: inline-block;
+  transform-origin: top center;
+  will-change: transform, opacity, filter;
+  animation: noticeEnter 420ms cubic-bezier(.18,.9,.35,1) both;
+}
+
+.auth-header-notice.enter .notice-inner { animation-name: noticeEnter; }
+.auth-header-notice.exit .notice-inner { animation-name: noticeExit; }
+
+@keyframes noticeEnter {
+  0% { transform: translateZ(-8px) rotateX(-12deg) translateY(-6px); opacity: 0; filter: blur(6px) saturate(.96); }
+  60% { transform: translateZ(8px) rotateX(2deg) translateY(0); opacity: .98; filter: blur(1px) saturate(1.02); }
+  100% { transform: translateZ(0px) rotateX(0deg) translateY(0); opacity: 1; filter: blur(0px) saturate(1); }
+}
+
+@keyframes noticeExit {
+  0% { transform: translateZ(0px) rotateX(0deg) translateY(0); opacity: 1; filter: blur(0px) saturate(1); }
+  100% { transform: translateZ(0px) rotateX(8deg) translateY(6px); opacity: 0; filter: blur(5px) saturate(.9); }
+}
+
+.auth-header-notice.info .notice-title{ color: var(--text); }
+.auth-header-notice.info .notice-sub{ color: var(--muted, #94a3b8); }
+
+.auth-header-notice.error .notice-title{ color: var(--danger, #ef4444); }
+.auth-header-notice.error .notice-sub{ color: var(--muted, #94a3b8); }
+
+.auth-header-notice.success .notice-title{ color: var(--success, #059669); }
+.auth-header-notice.success .notice-sub{ color: var(--muted, #94a3b8); }
+
+@keyframes noticeFlip{
+  0% { opacity: 0; transform: rotateX(-60deg) translateY(-6px); }
+  60% { opacity: 1; transform: rotateX(8deg) translateY(2px); }
+  100% { opacity: 1; transform: rotateX(0deg) translateY(0); }
+}
+
+/* Icon badge next to the title (small check / warn / error) */
+/* no icons for header notice by design; keep message typographic only */
+.auth-header-notice .notice-title { font-size: 20px; display: block; margin-bottom: 4px; line-height: 1.15; font-weight: 700; }
+.auth-header-notice .notice-sub { font-size: 13px; line-height: 1.2; opacity: .95; }
+
+
 /* (Loader styles moved to AuthConfirmButton.css to avoid duplication) */
 
 /* Preloader splash overlay */

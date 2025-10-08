@@ -184,5 +184,5 @@ This project is private and proprietary.
 
 ---
 
-**MonoLog** — Capture your story, one day at a time.</content>
+**MonoLog** — Your day in pictures.
 <parameter name="filePath">c:\Users\i\Desktop\webdev\MonoLog\README.md

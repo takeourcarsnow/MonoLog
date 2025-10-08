@@ -114,7 +114,10 @@ export function HeaderInteractive() {
         disabled={isLogoAnimating}
       >
         <div ref={logoRef} className="logo" aria-hidden="true"></div>
-        <h1>MonoLog</h1>
+        <h1>
+          MonoLog
+          <span className="sr-only"> 14 Your day in pictures.</span>
+        </h1>
       </button>
       <div className="header-actions" id="header-actions">
             <button

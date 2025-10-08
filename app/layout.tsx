@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'MonoLog',
+    title: 'MonoLog — Your day in pictures.',
   },
   other: {
     "color-scheme": "light dark",
@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <Navbar />
         <InertPolyfillClient />
-        <noscript>MonoLog requires JavaScript. Please enable it to continue.</noscript>
+  <noscript>MonoLog — Your day in pictures. Requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}
         {process.env.NODE_ENV === 'production' ? <WebVitalsScript /> : null}
       </body>

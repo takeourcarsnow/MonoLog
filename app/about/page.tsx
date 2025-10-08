@@ -21,7 +21,7 @@ export default function AboutPage() {
 
   return (
   <div ref={cardRef} className={`${styles.aboutCard}`}>
-      <h1 className={styles.aboutTitle}>MonoLog</h1>
+  <h1 className={styles.aboutTitle}>MonoLog <span className="sr-only">— Your day in pictures.</span></h1>
       <p className={styles.aboutSubtitle}>
         MonoLog is a private, chronological photo journal — one thoughtful post per day. No chasing likes, no algorithmic feeds.
       </p>

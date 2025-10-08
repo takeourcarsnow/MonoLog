@@ -72,7 +72,23 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
     try {
       const sb = getSupabaseClient();
       if (mode === "signin") {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
+        // allow signing in with username or email. If the provided identifier
+        // doesn't look like an email (no '@'), try to resolve it to an email
+        // via the server-side lookup endpoint.
+        let signInEmail = email;
+        if (email && !email.includes('@')) {
+          try {
+            const resp = await fetch('/api/auth/resolve-username', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: email }) });
+            if (resp.ok) {
+              const body = await resp.json();
+              if (body?.email) signInEmail = body.email;
+            }
+          } catch (e) {
+            // ignore lookup errors and continue; Supabase will return auth error
+          }
+        }
+
+        const { error } = await sb.auth.signInWithPassword({ email: signInEmail, password });
         if (error) throw error;
 
         // Ensure the user's profile row exists in the users table (fire-and-forget)
@@ -266,13 +282,13 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         <div className="field-group flex flex-col gap-2 w-full">
           <input
             className="input fancy-input"
-            placeholder="Email"
+            placeholder="Email or username"
             value={email}
             name="email"
             autoComplete="email"
             inputMode="email"
             onChange={e => setEmail(e.target.value)}
-            aria-label="Email address"
+            aria-label="Email or username"
             autoCorrect="off"
             autoCapitalize="none"
           />

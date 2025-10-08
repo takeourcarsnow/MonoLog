@@ -415,8 +415,12 @@
 /* Extra-tight spacing for signup mode on small screens so the button sits
    closer to the username field (but only on phones). */
 @media (max-width: 640px) {
-  .auth-form.mode-signup .inputs-wrap { padding-bottom: 0; }
-  /* pull the actions up slightly so the button sits closer to the username
-     field; tiny negative margin avoids overlap but makes the gap feel tighter */
-  .auth-form.mode-signup .auth-actions { margin-top: -2px; gap: 6px; }
+  /* Make the final input and actions much tighter on mobile signup: remove
+    the inputs-wrap bottom padding, pull the actions up with a larger
+    negative margin and remove any extra username top margin. This keeps
+    inputs spacing intact while allowing the confirm button to sit close. */
+  .auth-form.mode-signup .inputs-wrap { padding-bottom: 0; margin-bottom: -10px; }
+  .auth-form.mode-signup .username-wrap.open { margin-top: 0; }
+  /* stronger pull-up for the actions so the button is noticeably closer */
+  .auth-form.mode-signup .auth-actions { margin-top: -12px; gap: 6px; }
 }

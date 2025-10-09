@@ -42,12 +42,7 @@ export function PostView({ id, initialPost }: { id: string; initialPost?: Hydrat
 
   return (
     <div className="post-view-wrap view-fade">
-      <div className="toolbar">
-        <Button onClick={goBack} className="btn-ghost-icon" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <ArrowLeft size={16} strokeWidth={2} />
-          <span>Back</span>
-        </Button>
-      </div>
+      {/* Back button removed to maximize media space in single-post view */}
       {loading ? (
         <div className="card skeleton" style={{ height: 400, maxWidth: 800, margin: '24px auto' }} />
       ) : (

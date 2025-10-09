@@ -210,14 +210,7 @@
 
 
 
-@media (min-width: 900px) {
-  .post-view-wrap .card-media img {
-    width: 100%;
-    max-height: 200px;
-    height: auto;
-    display: block;
-  }
-}
+
 
 /* Subtle frame for photos in feed / explore
    - uses an inset 1px ring to emulate a photo frame without changing layout

@@ -9,80 +9,30 @@
 
 /* Remove the extra panel background for the post view toolbar so the back
    button sits directly on the page content (no full-width rounded panel). */
-.post-view-wrap .toolbar {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 8px 0 !important;
-}
 
 /* Make the Back button in the post toolbar text-only (no pill/decoration).
    Preserve keyboard focus visibility while removing background, border,
    padding and shadows so the button appears as plain text. Targets both
    <button class="btn"> and <a class="btn"> use-cases. */
-.post-view-wrap .toolbar .btn,
-.post-view-wrap .toolbar a.btn,
-.post-view-wrap .toolbar button.btn {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  padding: 0 !important;
-  height: auto !important;
-  min-height: 0 !important;
-  border-radius: 0 !important;
-  line-height: 1 !important;
-  color: var(--text) !important;
-  background-clip: padding-box !important;
-  transform: none !important;
-}
 
 /* Increase the tap target on touch devices without changing the
    visual appearance on pointer: fine (desktop) devices. This keeps the
    button looking like plain text but gives it more padding so it's
    easier to press on phones and tablets. */
 @media (pointer: coarse) {
-  .post-view-wrap .toolbar .btn,
-  .post-view-wrap .toolbar a.btn,
-  .post-view-wrap .toolbar button.btn {
-    /* A larger padding gives a comfortable 44px+ touch target while
-       remaining visually subtle because background is transparent. */
-    padding: 10px 12px !important;
-    border-radius: 6px !important;
-    height: auto !important;
-  }
+
 }
 
 /* Desktop (pointer: fine) tweaks: keep the Back button looking like text
    but give it a larger clickable area so it's easier to click with a
    mouse. Also remove hover lift/background so it remains text-like. */
 @media (hover: hover) and (pointer: fine) {
-  .post-view-wrap .toolbar .btn,
-  .post-view-wrap .toolbar a.btn,
-  .post-view-wrap .toolbar button.btn {
-    /* Slightly larger hit area on desktop while preserving visual text-only style */
-    padding: 8px 10px !important;
-    border-radius: 6px !important;
-    height: auto !important;
-  }
 
-  .post-view-wrap .toolbar .btn:hover,
-  .post-view-wrap .toolbar a.btn:hover,
-  .post-view-wrap .toolbar button.btn:hover {
-    transform: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-  }
 }
 
 /* Keep an accessible keyboard focus ring for users who tab to the button */
-.post-view-wrap .toolbar .btn:focus-visible,
-.post-view-wrap .toolbar a.btn:focus-visible,
-.post-view-wrap .toolbar button.btn:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%);
-  outline-offset: 4px;
-  border-radius: 4px;
-}
+
+
 
 /* subtle entrance for toolbar title and subtitle */
 @keyframes toolbarIn {

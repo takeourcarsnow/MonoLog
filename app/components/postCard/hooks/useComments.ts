@@ -88,6 +88,8 @@ export function useComments(postId: string, initialCount: number) {
   const setCommentsVisible = (open: boolean) => {
     const el = commentsRef.current;
     if (!el) return;
+    // Notify listeners that layout change is starting
+    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: open ? 'opening' : 'closing' } })); } catch(_) {}
     if (open) {
       // measure and set explicit max-height so CSS can animate it
       const h = el.scrollHeight;
@@ -96,7 +98,11 @@ export function useComments(postId: string, initialCount: number) {
       // ensure the open class is present so opacity transitions
       el.classList.add('open');
       // remove any previous transitionend handlers
-      const onEnd = () => { el.style.maxHeight = ''; el.removeEventListener('transitionend', onEnd); };
+      const onEnd = () => { 
+        el.style.maxHeight = ''; 
+        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'opened' } })); } catch(_) {}
+        el.removeEventListener('transitionend', onEnd);
+      };
       el.addEventListener('transitionend', onEnd);
     } else {
       // closing: set maxHeight to current height then to 0 so transition runs
@@ -110,6 +116,7 @@ export function useComments(postId: string, initialCount: number) {
         if (ev.propertyName === 'max-height' || ev.propertyName === 'max-height') {
           el.classList.remove('open');
           el.style.maxHeight = '';
+          try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'closed' } })); } catch(_) {}
           el.removeEventListener('transitionend', onEnd as any);
         }
       };

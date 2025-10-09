@@ -18,7 +18,10 @@ export default function Portal({ children, wrapperId = 'modal-root', className }
       document.body.appendChild(root);
     }
     return () => {
-      // leave wrapper in DOM (cheap) — cleaning up can cause flashes when reused
+      const root = document.getElementById(wrapperId);
+      if (root && !root.hasChildNodes()) {
+        root.remove();
+      }
     };
   }, [wrapperId]);
 

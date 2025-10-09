@@ -207,23 +207,33 @@ if (typeof window !== 'undefined') {
     }
   });
 
-  // Track resource timing for images
-  const observer = new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
-      if (entry.entryType === 'resource') {
-        const resource = entry as PerformanceResourceTiming;
-        if (resource.initiatorType === 'img') {
-          perfMonitor.timing('resource.image', resource.duration, {
-            url: resource.name.split('/').pop() || 'unknown',
-          });
-        }
-      }
-    }
-  });
-
+  // Track resource timing for images. Store the observer on window so HMR
+  // won't create multiple observers.
   try {
-    observer.observe({ entryTypes: ['resource'] });
+    const key = '__MONOLOG_PERF_RESOURCE_OBSERVER__';
+    if (!(window as any)[key]) {
+      const obs = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.entryType === 'resource') {
+            const resource = entry as PerformanceResourceTiming;
+            if (resource.initiatorType === 'img') {
+              perfMonitor.timing('resource.image', resource.duration, {
+                url: resource.name.split('/').pop() || 'unknown',
+              });
+            }
+          }
+        }
+      });
+      obs.observe({ entryTypes: ['resource'] });
+      (window as any)[key] = obs;
+
+      // Cleanup when unloading the page
+      window.addEventListener('beforeunload', () => {
+        try { (window as any)[key].disconnect(); } catch (_) {}
+        try { (window as any)[key] = null; } catch (_) {}
+      });
+    }
   } catch (e) {
-    // Browser doesn't support this
+    // Browser doesn't support PerformanceObserver or access denied
   }
 }

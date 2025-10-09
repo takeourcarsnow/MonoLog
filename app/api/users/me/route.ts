@@ -56,7 +56,6 @@ export async function PATCH(req: Request) {
     // the service role to avoid RLS issues.
     let data: any = null;
     try {
-      console.log('[PATCH /api/users/me] updating user', actorId, 'with', upd);
       const { error } = await sb.from('users').update(upd).eq('id', actorId);
       if (error) {
         console.error('[PATCH /api/users/me] update error', error);
@@ -68,7 +67,6 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: selErr.message || selErr }, { status: 500 });
       }
       data = selData;
-      console.log('[PATCH /api/users/me] selected data', data);
     } catch (e) {
       console.error('[PATCH /api/users/me] unexpected update exception', e);
       return NextResponse.json({ error: String(e) }, { status: 500 });

@@ -24,6 +24,7 @@ export function useAppShellInit() {
 
   useEffect(() => {
     initTheme();
+    let removeListeners: (() => void) | null = null;
     (async () => {
       try {
         await api.init();
@@ -137,11 +138,28 @@ export function useAppShellInit() {
           // and a slightly longer retry for flaky webviews
           setTimeout(setViewportVar, 1500);
 
-          window.addEventListener('resize', () => { setViewportVar(); if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); } }, { passive: true });
-          window.addEventListener('orientationchange', () => { setViewportVar(); if (debugEnabled) { setTimeout(debugLog, 160); } });
+          const onResize = () => { setViewportVar(); if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); } };
+          const onOrientation = () => { setViewportVar(); if (debugEnabled) { setTimeout(debugLog, 160); } };
+          window.addEventListener('resize', onResize, { passive: true });
+          window.addEventListener('orientationchange', onOrientation);
           if ((window as any).visualViewport && (window as any).visualViewport.addEventListener) {
-            (window as any).visualViewport.addEventListener('resize', () => { setViewportVar(); if (debugEnabled) { setTimeout(debugLog, 80); } });
+            (window as any).visualViewport.addEventListener('resize', onResize);
           }
+
+          // Remove listeners on unmount to prevent leaks or duplicate handlers during HMR
+          removeListeners = () => {
+            try { window.removeEventListener('resize', onResize); } catch(_) {}
+            try { window.removeEventListener('orientationchange', onOrientation); } catch(_) {}
+            try { if ((window as any).visualViewport && (window as any).visualViewport.removeEventListener) (window as any).visualViewport.removeEventListener('resize', onResize); } catch(_) {}
+          };
+
+          // Ensure we remove listeners when the module is unloaded/reloaded
+          // using beforeunload as a best-effort cleanup. Register the
+          // listener after `removeListeners` is defined so we don't pass
+          // a null reference.
+          window.addEventListener('beforeunload', removeListeners as any);
+          // Also call removeListeners inside the effect cleanup by returning it
+          // from the outer try block below.
 
           if (debugEnabled) {
             // initial log after styling applied
@@ -149,6 +167,9 @@ export function useAppShellInit() {
           }
         }
       } catch (e) {}
+    return () => {
+      try { if (removeListeners) removeListeners(); } catch (_) {}
+    };
   }, []);
 
   return { ready, isTouchDevice, forceTouch };

@@ -153,6 +153,14 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       }
     };
 
+    // Track last-applied sizes and throttle frequent calls to avoid
+    // reacting to tiny visualViewport fluctuations (which can be noisy
+    // on mobile during scrolling/keyboard open/close).
+    let lastAppliedMaxW = 0;
+    let lastAppliedMaxH = 0;
+    let lastUpdateTime = 0;
+    const MIN_UPDATE_MS = 100; // minimum interval between full updates
+
     function updateSizing() {
       try {
         const vv = (window as any).visualViewport;
@@ -168,7 +176,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         // Respect horizontal page side padding so edges align with header content
         const sidePad = getCSSVar('--page-side-padding', 12);
 
-        const maxW = Math.max(0, viewportW - (sidePad * 2));
+  // Round measured values to integers to avoid tiny fractional
+  // differences retriggering style writes/observers repeatedly.
+  const maxW = Math.max(0, Math.round(viewportW - (sidePad * 2)));
 
         // Calculate height taken by other parts of the post card so the media
         // container can shrink to ensure the whole card fits in the viewport.
@@ -197,26 +207,74 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         // Available height for the media container so the entire card fits in viewport
         const availH = Math.max(0, viewportH - headerH - tabbarH - otherCardHeight - breathing);
 
-        const maxH = availH;
+        const maxH = Math.max(0, Math.round(availH));
+
+        // Throttle rapid changes: if we've updated recently and the
+        // rounded sizes didn't change, skip the expensive layout writes.
+        const now = Date.now();
+        if (now - lastUpdateTime < MIN_UPDATE_MS && maxW === lastAppliedMaxW && maxH === lastAppliedMaxH) {
+          return;
+        }
 
         if (container) {
           // Constrain container to measured viewport area. Use explicit height
           // so the image's max-height can correctly scale it without expanding.
-          container.style.maxWidth = `${maxW}px`;
-          container.style.maxHeight = `${maxH}px`;
-          container.style.width = 'auto';
-          container.style.height = `${maxH}px`;
-          container.style.margin = '0 auto';
-          try { console.debug('[ImageZoom] applied viewport fit', { maxW, maxH, headerH, tabbarH, sidePad, otherCardHeight }); } catch(_) {}
+          // Only apply style mutations when values actually change so we don't
+          // trigger MutationObservers / ResizeObservers unnecessarily.
+          const desiredMaxWidth = `${maxW}px`;
+          const desiredMaxHeight = `${maxH}px`;
+          const desiredWidth = 'auto';
+          const desiredHeight = `${maxH}px`;
+          const desiredMargin = '0 auto';
+
+          const curMaxWidth = container.style.maxWidth || '';
+          const curMaxHeight = container.style.maxHeight || '';
+          const curWidth = container.style.width || '';
+          const curHeight = container.style.height || '';
+          const curMargin = container.style.margin || '';
+
+          const containerChanged = (
+            curMaxWidth !== desiredMaxWidth ||
+            curMaxHeight !== desiredMaxHeight ||
+            curWidth !== desiredWidth ||
+            curHeight !== desiredHeight ||
+            curMargin !== desiredMargin
+          );
+
+          if (containerChanged) {
+            container.style.maxWidth = desiredMaxWidth;
+            container.style.maxHeight = desiredMaxHeight;
+            container.style.width = desiredWidth;
+            container.style.height = desiredHeight;
+            container.style.margin = desiredMargin;
+            try { console.debug('[ImageZoom] applied viewport fit', { maxW, maxH, headerH, tabbarH, sidePad, otherCardHeight }); } catch(_) {}
+          }
+          lastAppliedMaxW = maxW;
+          lastAppliedMaxH = maxH;
+          lastUpdateTime = now;
         }
         if (img) {
-          // Let the image fill the container height while preserving aspect ratio
-          // so it never exceeds the visible area.
-          img.style.maxWidth = '100%';
-          img.style.maxHeight = '100%';
-          img.style.objectFit = 'contain';
-          img.style.width = 'auto';
-          img.style.height = '100%';
+          const desiredImgMaxWidth = '100%';
+          const desiredImgMaxHeight = '100%';
+          const desiredImgObjectFit = 'contain';
+          const desiredImgWidth = 'auto';
+          const desiredImgHeight = '100%';
+
+          const imgChanged = (
+            img.style.maxWidth !== desiredImgMaxWidth ||
+            img.style.maxHeight !== desiredImgMaxHeight ||
+            img.style.objectFit !== desiredImgObjectFit ||
+            img.style.width !== desiredImgWidth ||
+            img.style.height !== desiredImgHeight
+          );
+
+          if (imgChanged) {
+            img.style.maxWidth = desiredImgMaxWidth;
+            img.style.maxHeight = desiredImgMaxHeight;
+            img.style.objectFit = desiredImgObjectFit;
+            img.style.width = desiredImgWidth;
+            img.style.height = desiredImgHeight;
+          }
         }
 
         // If the whole card still overflows the visible area (e.g. tabbar overlays
@@ -272,22 +330,24 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     let ro: ResizeObserver | null = null;
     let mo: MutationObserver | null = null;
     try {
-      if (container) {
-        const cardEl = (container.closest('article.card') as HTMLElement | null) || (container.closest('.card') as HTMLElement | null) || container;
-        ro = new ResizeObserver(() => {
-          if (raf) cancelAnimationFrame(raf);
-          raf = requestAnimationFrame(() => { updateSizing(); raf = null; });
-        });
-        ro.observe(container);
-        if (cardEl && cardEl !== container) ro.observe(cardEl);
+        if (container) {
+            const cardEl = (container.closest('article.card') as HTMLElement | null) || (container.closest('.card') as HTMLElement | null) || container;
+            ro = new ResizeObserver(() => {
+              if (raf) cancelAnimationFrame(raf);
+              raf = requestAnimationFrame(() => { updateSizing(); raf = null; });
+            });
+            ro.observe(container);
+            if (cardEl && cardEl !== container) ro.observe(cardEl);
 
-        // MutationObserver to catch class toggles / childList changes (comments open/close)
-        mo = new MutationObserver(() => {
-          if (raf) cancelAnimationFrame(raf);
-          raf = requestAnimationFrame(() => { updateSizing(); raf = null; });
-        });
-        mo.observe(cardEl, { attributes: true, childList: true, subtree: true });
-      }
+            // MutationObserver to catch structural changes (children added/removed)
+            // Avoid observing attribute changes (like inline style updates) which
+            // can create a feedback loop when updateSizing writes styles.
+            mo = new MutationObserver(() => {
+              if (raf) cancelAnimationFrame(raf);
+              raf = requestAnimationFrame(() => { updateSizing(); raf = null; });
+            });
+            mo.observe(cardEl, { childList: true, subtree: true });
+          }
     } catch (_) {
       // ignore observer failures
     }

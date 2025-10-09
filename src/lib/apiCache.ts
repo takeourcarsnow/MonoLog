@@ -114,9 +114,19 @@ class ApiCache {
 // Singleton instance
 export const apiCache = new ApiCache();
 
-// Clean up expired entries every 60 seconds
+// Clean up expired entries every 60 seconds.
+// Guard with a window-scoped symbol to avoid creating duplicate intervals
+// during HMR / module reloads.
 if (typeof window !== 'undefined') {
-  setInterval(() => apiCache.cleanup(), 60000);
+  const key = '__MONOLOG_API_CACHE_CLEANUP_INTERVAL__';
+  if (!(window as any)[key]) {
+    (window as any)[key] = setInterval(() => apiCache.cleanup(), 60000);
+    // Ensure the interval is cleared on page unload when possible
+    window.addEventListener('beforeunload', () => {
+      try { clearInterval((window as any)[key]); } catch (_) {}
+      try { (window as any)[key] = null; } catch (_) {}
+    });
+  }
 }
 
 /**

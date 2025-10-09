@@ -103,3 +103,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+@media (max-width: 480px) {
+  .brand h1 {
+    display: none;
+  }
+}

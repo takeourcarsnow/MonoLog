@@ -59,7 +59,10 @@
 
 .tabbar {
   position: fixed;
-  bottom: -1px;
+  /* Anchor flush to the viewport bottom. Some Android Chrome versions
+     show a tiny hairline when the element is nudged below 0; making the
+     tabbar sit at `bottom: 0` prevents that visual gap. */
+  bottom: 0;
   left: 0;
   right: 0;
   /* expose the effective tabbar height so other layout rules can
@@ -98,9 +101,9 @@
   position: absolute;
   left: 0;
   right: 0;
-  /* place just below the tabbar's bottom to cover tiny gaps and the
-     safe-area inset on devices with gesture bars */
-  bottom: calc(-1px);
+  /* Keep the decorative cover flush with the tabbar bottom so it hides
+     any hairline or the browser gesture bar area. */
+  bottom: 0;
   height: calc(1px + env(safe-area-inset-bottom, 0px));
   background: var(--bg-elev);
   pointer-events: none;

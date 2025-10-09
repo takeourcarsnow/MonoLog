@@ -96,11 +96,15 @@
   .day { padding: 10px; border-radius: 12px; }
   .calendar-grid { gap: 8px; }
   .day .d { font-size: 15px; }
+  .day .dot { top: 10px; right: 10px; }
 }
 
 /* small dot indicator for days with posts */
 .day .dot {
-  width: 10px; height: 10px; border-radius: 50%; background: var(--primary); justify-self: end; align-self: start; margin-top: -2px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 10px; height: 10px; border-radius: 50%; background: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 
 /* lighter visual cue for days with posts when not selected */
@@ -143,4 +147,5 @@
   .day .d { font-size: 12px; }
   .day .count { font-size: 10px; left: 6px; bottom: 6px; }
   .day.mine::after { top: 6px; right: 6px; }
+  .day .dot { top: 6px; right: 6px; }
 }

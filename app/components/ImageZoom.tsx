@@ -20,7 +20,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   const [isPanning, setIsPanning] = useState(false);
   const lastDoubleTapRef = useRef<number | null>(null);
   const lastTapTimeoutRef = useRef<number | null>(null);
-  const doubleTapInProgressRef = useRef(false);
   const lastEventTimeRef = useRef<number | null>(null);
   const panStartRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
   const naturalRef = useRef({ w: 0, h: 0 });
@@ -452,7 +451,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   // reliably clear pending timers on unmount and prevent duplicate
   // double-tap invocations.
   const registerTap = (clientX: number, clientY: number) => {
-    if (doubleTapInProgressRef.current) return;
     const now = Date.now();
     // Ignore duplicate events from different event systems (pointer + touch)
     // fired almost simultaneously for a single physical tap.
@@ -466,13 +464,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         clearTimeout(lastTapTimeoutRef.current as any);
         lastTapTimeoutRef.current = null;
       }
-      doubleTapInProgressRef.current = true;
       try {
         handleDoubleTap(clientX, clientY);
-      } finally {
-        // release lock shortly after to allow subsequent double-taps
-        window.setTimeout(() => { doubleTapInProgressRef.current = false; }, 50);
-      }
+      } catch (_) {}
     } else {
       lastDoubleTapRef.current = now;
       if (lastTapTimeoutRef.current) {

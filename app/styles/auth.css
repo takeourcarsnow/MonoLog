@@ -410,6 +410,36 @@
     margin-top: 15vh !important;
     margin-bottom: 0 !important;
   }
+
+  /* Utility class to force perfect centered layout for auth-host when used
+     inside pages (profile/upload) where we don't want additional vertical
+     scrolling. It respects header/tabbar CSS variables and uses exact
+     viewport-height calculations to avoid mobile 100vh issues. */
+  .auth-host.auth-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto !important;
+    /* Use the computed viewport height variable where available to avoid
+       mobile browser chrome resizing issues. Leave small padding so the
+       form doesn't butt against header/tabbar on very small screens. */
+    min-height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height) - var(--tabbar-height) - 40px);
+    /* Constrain total host height so oversized auth forms scroll internally
+       and don't push the document to produce extra vertical scrolling. */
+    max-height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height) - var(--tabbar-height) - 40px);
+    overflow: auto;
+    gap: 18px;
+    text-align: center;
+  }
+
+  /* If the auth form itself is taller than the area, allow internal scroll
+     but prevent document-level scrolling by keeping the host centered. */
+  .auth-host.auth-centered > * {
+    max-width: 520px;
+    width: 100%;
+  }
 }
 
 /* Extra-tight spacing for signup mode on small screens so the button sits

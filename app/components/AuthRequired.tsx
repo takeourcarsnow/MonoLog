@@ -6,7 +6,7 @@ interface AuthRequiredProps {
 
 export function AuthRequired({ children }: AuthRequiredProps) {
   return (
-    <div className="view-fade auth-host" style={{ maxWidth: 520, margin: "28px auto 32px", textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+    <div className="view-fade auth-host auth-centered" style={{ maxWidth: 520 }}>
       {children}
     </div>
   );

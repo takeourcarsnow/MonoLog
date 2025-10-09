@@ -249,6 +249,19 @@
   will-change: transform;
 }
 
+/* Ensure ImageZoom wrapper clips transformed images using the parent's radius.
+   The inner img must not carry its own border-radius because transforms can
+   cause visual mismatch when scaling. The container (usually .media-link or
+   .card-media) should provide the clipping via border-radius + overflow:hidden. */
+.monolog-image-zoom {
+  border-radius: inherit; /* inherit radius from parent (.tile or .card-media) */
+  overflow: hidden;
+}
+.monolog-image-zoom img {
+  border-radius: 0 !important;
+  background-clip: border-box; /* ensure no rounding artifacts */
+}
+
 /* Slightly emphasize the frame on hover/focus for affordance without being loud */
 .card:hover .card-media,
 .card-media:hover,

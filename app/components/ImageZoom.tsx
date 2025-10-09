@@ -607,9 +607,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   return (
     <div
       ref={containerRef}
-      className={className}
+      className={`${className ? className + ' ' : ''}monolog-image-zoom`}
       style={{
         overflow: "hidden",
+        // inherit parent's border radius so the outer wrapper controls clipping
+        borderRadius: 'inherit',
           // When rendered fullscreen we must prevent the browser's native
           // double-tap-to-zoom behavior so our double-tap handler runs on
           // real mobile devices. Otherwise the browser may intercept the
@@ -645,6 +647,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           objectPosition: "center center",
           userSelect: "none",
           pointerEvents: "auto",
+          // remove image rounding so the outer container's border-radius clips the image
+          borderRadius: 0,
         }}
         onDoubleClick={(e) => {
           e.preventDefault();

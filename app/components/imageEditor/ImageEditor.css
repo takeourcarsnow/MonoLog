@@ -10,7 +10,7 @@
   overflow: hidden;
   /* other styles */
   width: 100%;
-  max-width: min(92vw, 820px);
+  max-width: 100vw;
   margin: 0 auto;
   background: var(--bg-elev);
   color: var(--text);
@@ -31,34 +31,38 @@
 
 /* Full-screen mode for upload editor */
 .upload-editor-fullscreen .image-editor {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  /* centered modal layout: let the wrapper flexbox center the editor */
+  position: relative; /* keep in normal flow so parent flex centering works */
   width: auto;
-  max-width: min(85vw, 720px);
+  max-width: min(96vw, 1100px);
   height: auto;
-  max-height: 85vh;
+  max-height: min(92vh, 880px);
   margin: 0;
-  padding: 8px;
-  padding-bottom: 12px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 12px;
   background: var(--bg-elev);
-  z-index: 1000;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .image-editor-canvas-container {
-  flex: 1;
+  /* allow the canvas container to take all remaining space so the canvas
+     grows and the panels sit below */
+  flex: 1 1 auto;
+  min-height: 0; /* allow children to shrink correctly inside flex */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
 .image-editor-panels-container {
   flex: 0 0 auto;
-  max-height: 160px;
+  max-height: 36vh; /* let panels grow up to a portion of viewport */
   overflow-y: auto;
+  padding-top: 8px;
 }
 
 /* Responsive adjustments for full-screen mode */

@@ -39,14 +39,13 @@
 }
 
 .preview-inner.editing {
-  /* lift the editing preview out of normal flow so its toolbar is never
-     clipped by .content (which uses overflow:hidden). Using fixed keeps
-     it centered and stable at any zoom level. */
+  /* center the profile image editor as a modal */
   position: fixed;
-  top: calc(50% + 10px);
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(92vw, var(--maxw));
+  width: auto;
+  max-width: min(92vw, var(--maxw));
   max-height: calc(92vh - 40px);
   z-index: 99999; /* above header and other overlays */
   margin: 0;

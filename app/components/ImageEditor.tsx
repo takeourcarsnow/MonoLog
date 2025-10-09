@@ -34,6 +34,9 @@ type Props = {
 
 
 
+import { useState } from "react";
+import { Fullscreen } from "lucide-react";
+
 export default function ImageEditor({ initialDataUrl, initialSettings, onCancel, onApply }: Props) {
   const {
     canvasRef,
@@ -117,6 +120,22 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     cropRatio,
   } = useImageEditorState(initialDataUrl, initialSettings);
 
+  // Fullscreen logic
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleToggleFullscreen = useCallback(() => {
+    const el = editorContainerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.();
+      setIsFullscreen(false);
+    }
+  }, []);
+
   const { computeImageLayout } = useImageEditorLayout(
     imageSrc,
     canvasRef,
@@ -133,9 +152,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   // Local draw wrapper binds all refs/state to the lower-level drawImage helper so
   // callers can simply call draw() or draw(info).
   function draw(info?: any, overrides?: any) {
-    drawImage(
-      canvasRef,
-      imgRef,
       originalImgRef,
       previewOriginalRef,
       offset,
@@ -306,9 +322,17 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     <div
       tabIndex={0}
       className={`image-editor ${mounted ? '' : 'unmounted'}`}
+      ref={editorContainerRef}
     >
       {/* Toolbar header (buttons) above the canvas */}
-      <ImageEditorToolbarHeader onCancel={onCancel} resetAdjustments={resetAdjustments} applyEdit={applyEdit} isEdited={isEdited} />
+      <ImageEditorToolbarHeader
+        onCancel={onCancel}
+        resetAdjustments={resetAdjustments}
+        applyEdit={applyEdit}
+        isEdited={isEdited}
+        onToggleFullscreen={handleToggleFullscreen}
+        isFullscreen={isFullscreen}
+      />
 
       <div className="image-editor-canvas-container" ref={containerRef}>
         <ImageEditorCanvas canvasRef={canvasRef} mounted={mounted} />

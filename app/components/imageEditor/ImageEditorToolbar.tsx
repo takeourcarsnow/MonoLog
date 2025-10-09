@@ -1,4 +1,4 @@
-import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon } from "lucide-react";
+import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Fullscreen } from "lucide-react";
 import { CATEGORY_COLORS } from './constants';
 
 interface ImageEditorToolbarProps {
@@ -6,6 +6,8 @@ interface ImageEditorToolbarProps {
   resetAdjustments: () => void;
   applyEdit: () => void;
   isEdited: boolean;
+  onToggleFullscreen?: () => void;
+  isFullscreen?: boolean;
   categoriesContainerRef: React.RefObject<HTMLDivElement>;
   selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame';
   setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame') => void;
@@ -20,8 +22,10 @@ function ImageEditorToolbarHeader({
   onCancel,
   resetAdjustments,
   applyEdit,
-  isEdited
-}: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited'>) {
+  isEdited,
+  onToggleFullscreen,
+  isFullscreen
+}: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited' | 'onToggleFullscreen' | 'isFullscreen'>) {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 0, gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
       <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
@@ -41,6 +45,17 @@ function ImageEditorToolbarHeader({
         <button type="button" className="btn icon ghost" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">
           <RefreshCw size={14} aria-hidden />
           <span className="sr-only">Reset adjustments</span>
+        </button>
+
+        <button
+          type="button"
+          className={`btn icon ghost${isFullscreen ? " active" : ""}`}
+          title={isFullscreen ? "Exit Fullscreen" : "View in Fullscreen"}
+          aria-label={isFullscreen ? "Exit Fullscreen" : "View in Fullscreen"}
+          onClick={onToggleFullscreen}
+        >
+          <Fullscreen size={14} aria-hidden />
+          <span className="sr-only">{isFullscreen ? "Exit Fullscreen" : "View in Fullscreen"}</span>
         </button>
       </div>
     </div>

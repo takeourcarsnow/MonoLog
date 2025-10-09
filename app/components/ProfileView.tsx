@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "./Button";
 import { api } from "@/src/lib/api";
 import type { HydratedPost, User } from "@/src/lib/types";
@@ -16,8 +16,11 @@ import { AuthRequired } from "./AuthRequired";
 
 export function ProfileView({ userId }: { userId?: string }) {
   const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam } = useUserData(userId);
+  const router = useRouter();
 
-  const [showAuth, setShowAuth] = useState(false);
+  const handleAuthRequired = () => {
+    router.push('/profile');
+  };
 
   
 
@@ -62,25 +65,8 @@ export function ProfileView({ userId }: { userId?: string }) {
       <div className="empty" style={{ position: "relative" }}>
         <div>User not found. Pick an account from the Account menu to get started.</div>
         <div style={{ marginTop: 12 }}>
-          <Button onClick={() => { try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {} setShowAuth(true); }}>Sign in / Sign up</Button>
+          <Button onClick={() => { try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {} handleAuthRequired(); }}>Sign in / Sign up</Button>
         </div>
-
-        {showAuth ? (
-          <>
-            <div
-              className="auth-dialog-backdrop"
-              onClick={() => setShowAuth(false)}
-            />
-            <div 
-              role="dialog" 
-              aria-modal="true" 
-              aria-label="Sign in or sign up" 
-              className="auth-dialog"
-            >
-              <AuthForm onClose={() => setShowAuth(false)} />
-            </div>
-          </>
-        ) : null}
       </div>
     );
   }
@@ -96,6 +82,7 @@ export function ProfileView({ userId }: { userId?: string }) {
         onAvatarChange={() => {
           // The ProfileHeader handles avatar changes internally
         }}
+        onAuthRequired={handleAuthRequired}
       />
       <div className={`feed grid-view`}>
         <PostsGrid posts={posts} />

@@ -52,78 +52,32 @@ export async function getCurrentUser() {
 export async function loginAs() { return null; }
 
 export async function getUser(id: string) {
-  const sb = getClient();
-  const { data, error } = await sb.from("users").select("*").eq("id", id).limit(1).single();
-  if (error) return null;
-  const profile = data as any;
-  return mapProfileToUser(profile) as any;
+  try {
+    const resp = await fetch(`/api/users/${encodeURIComponent(id)}`);
+    if (!resp.ok) {
+      return null;
+    }
+    const data = await resp.json();
+    return data.user || null;
+  } catch (e) {
+    console.error('Error fetching user by id:', e);
+    return null;
+  }
 }
 
 // Resolve a username (or legacy user_name) to a profile. Returns null when not found.
 export async function getUserByUsername(username: string) {
-  // getClient() may throw synchronously if build-time NEXT_PUBLIC_* vars
-  // are missing and the runtime override hasn't yet injected window.__MONOLOG_RUNTIME_SUPABASE__.
-  // To avoid a hard failure during hydration/refresh, poll briefly for the
-  // runtime keys and retry getClient() before giving up.
-  let sb: any = null;
   try {
-    sb = getClient();
-  } catch (err) {
-    // If we're in a browser environment, wait up to 1s for the runtime
-    // override to populate keys and then try again. This handles the
-    // race where the bundle was built without NEXT_PUBLIC_ vars but the
-    // server provides them at runtime via /api/debug/env.
-    if (typeof window !== 'undefined') {
-      const waitForRuntime = async (timeout = 1000, interval = 100) => {
-        const start = Date.now();
-        while (Date.now() - start < timeout) {
-          if ((window as any).__MONOLOG_RUNTIME_SUPABASE__) {
-            try {
-              return getClient();
-            } catch (e) {
-              // continue waiting
-            }
-          }
-          // small delay
-          // eslint-disable-next-line no-await-in-loop
-          await new Promise((r) => setTimeout(r, interval));
-        }
-        // final attempt
-        return getClient();
-      };
-      try {
-        sb = await waitForRuntime();
-      } catch (e) {
-        // give up and return null so caller shows 'not found' instead of crashing
-        return null;
-      }
-    } else {
+    const resp = await fetch(`/api/users/${encodeURIComponent(username)}`);
+    if (!resp.ok) {
       return null;
     }
-  }
-
-  try {
-    // try common column name 'username'
-    let res: any = await sb.from("users").select("*").eq("username", username).limit(1).maybeSingle();
-    if (!res.error && res.data) return mapProfileToUser(res.data) as any;
+    const data = await resp.json();
+    return data.user || null;
   } catch (e) {
-    // ignore and try fallback
+    console.error('Error fetching user by username:', e);
+    return null;
   }
-  try {
-    // fallback to legacy 'user_name' column
-    let res2: any = await sb.from("users").select("*").eq("user_name", username).limit(1).maybeSingle();
-    if (!res2.error && res2.data) return mapProfileToUser(res2.data) as any;
-  } catch (e) {
-    // ignore
-  }
-  // final attempt: case-insensitive match on username
-  try {
-    const res3: any = await sb.from("users").select("*").ilike("username", username).limit(1).maybeSingle();
-    if (!res3.error && res3.data) return mapProfileToUser(res3.data) as any;
-  } catch (e) {
-    // ignore
-  }
-  return null;
 }
 
 export async function updateUser(id: string, patch: Partial<User>) {

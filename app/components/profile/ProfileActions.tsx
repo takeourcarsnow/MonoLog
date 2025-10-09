@@ -17,6 +17,8 @@ interface ProfileActionsProps {
   // optional view state for toggling grid/list in profile
   view?: "list" | "grid";
   setView?: (v: "list" | "grid") => void;
+  // callback when follow is clicked but user is not logged in
+  onAuthRequired?: () => void;
 }
 
 export function ProfileActions({
@@ -27,7 +29,8 @@ export function ProfileActions({
   isEditingProfile,
   onEditToggle,
   view,
-  setView
+  setView,
+  onAuthRequired
 }: ProfileActionsProps) {
   const toast = useToast();
   const followInFlightRef = useRef(false);
@@ -35,7 +38,8 @@ export function ProfileActions({
   const handleFollowToggle = async () => {
     const cur = await api.getCurrentUser();
     if (!cur) {
-      // This should be handled by the parent component
+      // User is not logged in, show auth form
+      onAuthRequired?.();
       return;
     }
     // Defensive: prevent following yourself even if route param matched unexpectedly
@@ -121,7 +125,7 @@ export function ProfileActions({
             {/* follow / person icon */}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </span>
-          <span>{following ? 'Followed' : 'Unfollowed'}</span>
+          <span>{following ? 'Following' : 'Follow'}</span>
         </button>
       )}
     </div>

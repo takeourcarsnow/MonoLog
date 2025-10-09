@@ -15,9 +15,11 @@ interface ProfileHeaderProps {
   // optional view state for toggling grid/list in profile
   view?: "list" | "grid";
   setView?: (v: "list" | "grid") => void;
+  // callback when follow is clicked but user is not logged in
+  onAuthRequired?: () => void;
 }
 
-export function ProfileHeader({ user, currentUserId, isOtherParam, following, setFollowing, onAvatarChange, view, setView }: ProfileHeaderProps) {
+export function ProfileHeader({ user, currentUserId, isOtherParam, following, setFollowing, onAvatarChange, view, setView, onAuthRequired }: ProfileHeaderProps) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const editFormRef = useRef<ProfileEditFormRef>(null);
 
@@ -49,6 +51,7 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
         onEditToggle={handleEditToggle}
         view={view}
         setView={setView}
+        onAuthRequired={onAuthRequired}
       />
     </div>
   );

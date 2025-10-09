@@ -18,6 +18,10 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const ignorePopRef = useRef(false);
   const scrollY = useRef<number>(0);
+  // A stable id for this fullscreen viewer instance so ImageZoom instances
+  // can include it in zoom events and other instances can reset when the
+  // fullscreen viewer opens.
+  const viewerIdRef = useRef<string>(Math.random().toString(36).slice(2));
 
   // Start close sequence: fade out then call onClose
   const startClose = useCallback(() => {
@@ -53,6 +57,9 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     const raf = requestAnimationFrame(() => {
       document.body.classList.add('fs-blur');
       setIsActive(true);
+      // Notify other ImageZoom instances that fullscreen viewer is active
+      // so they can reset (zoom out). Include our viewer id as origin.
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: viewerIdRef.current } })); } catch (_) {}
     });
 
     // Push a history entry so the browser "back" action closes fullscreen
@@ -76,6 +83,9 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       document.body.style.paddingRight = '';
       document.body.style.overflow = '';
       window.scrollTo(0, scrollY.current);
+      // When closing/unmounting, ensure any zoom state triggered by the
+      // fullscreen viewer is cleared.
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: viewerIdRef.current } })); } catch (_) {}
     };
   }, []);
 
@@ -135,7 +145,7 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       >
         <button className="fv-close" aria-label="Close" onClick={startClose}>✕</button>
         <div className="fv-inner">
-          <ImageZoom src={src} alt={alt || 'Photo'} maxScale={6} isFullscreen />
+          <ImageZoom src={src} alt={alt || 'Photo'} maxScale={6} isFullscreen instanceId={viewerIdRef.current} />
         </div>
       </div>
     </Portal>

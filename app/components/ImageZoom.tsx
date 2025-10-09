@@ -7,9 +7,10 @@ type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   maxScale?: number;
   isActive?: boolean;
   isFullscreen?: boolean;
+  instanceId?: string;
 };
 
-export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive = true, isFullscreen = false, ...rest }: Props) {
+export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive = true, isFullscreen = false, instanceId, ...rest }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -38,7 +39,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   // mouse wheel from initiating zoom on accidental scrolls.
   const wheelEnabledRef = useRef<boolean>(false);
   // Unique id for this instance so we can ignore our own global events
-  const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
+  const instanceIdRef = useRef<string>(instanceId ?? Math.random().toString(36).slice(2));
 
   // When another ImageZoom instance starts zooming, reset this one if it's
   // currently zoomed in. The originating instance will include its id in

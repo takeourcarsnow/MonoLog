@@ -258,6 +258,25 @@
   background-clip: border-box; /* ensure no rounding artifacts */
 }
 
+/* Defensive: ensure all images inside post cards (including carousel slides
+   and grid tiles) are clipped to rounded corners even if an inner element
+   or inline style tries to override rounding. This keeps post images
+   consistently rounded across renderers (next/image, native img, zoom). */
+.card-media, .card-media .media-link, .card-media .media-link > div, .grid .tile {
+  border-radius: var(--radius) !important;
+  overflow: hidden !important;
+}
+
+.card .card-media img,
+.card .card-media .media-link img,
+.card .card-media .carousel img,
+.carousel-slide img,
+.grid .tile img,
+.card-media img {
+  border-radius: var(--radius-sm) !important;
+  background-clip: padding-box;
+}
+
 /* Slightly emphasize the frame on hover/focus for affordance without being loud */
 .card:hover .card-media,
 .card-media:hover,

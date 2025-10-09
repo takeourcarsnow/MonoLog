@@ -52,6 +52,8 @@ export function ExploreView() {
         subtitle="MonoLogs from people you aren't following yet"
         viewStorageKey="exploreView"
         scrollStateKey="explore"
+        // Keep explore posts visible even if the user follows/unfollows while here
+        deferFollowChanges={true}
         emptyMessage={emptyMessage}
       />
     );

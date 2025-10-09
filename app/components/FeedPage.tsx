@@ -24,6 +24,8 @@ interface FeedPageProps {
   viewStorageKey: string;
   scrollStateKey?: string;
   emptyMessage?: string;
+  /** When true, follow changes won't remove posts from this view until it unmounts */
+  deferFollowChanges?: boolean;
 }
 
 export function FeedPage({
@@ -32,13 +34,14 @@ export function FeedPage({
   subtitle,
   viewStorageKey,
   scrollStateKey = 'feed',
-  emptyMessage = "Follow people in Explore to see their daily posts."
+  emptyMessage = "Follow people in Explore to see their daily posts.",
+  deferFollowChanges = false,
 }: FeedPageProps) {
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
 
   const { posts, loading, loadingMore, hasMore, error, loadInitialPosts, refresh, setSentinel, setPosts } = useFeed(
     fetchFunction,
-    { pageSize: 5 }
+    { pageSize: 5, applyFollowChangesOnUnmount: !!deferFollowChanges }
   );
 
   const { isRefreshing, pullDistance, isPulling, containerRef, getPullStyles } = usePullToRefresh({

@@ -16,6 +16,7 @@ export function FeedView() {
       subtitle="MonoLogs from you & people that you follow"
       viewStorageKey="feedView"
       scrollStateKey="feed"
+      deferFollowChanges={true}
     />
   );
 }

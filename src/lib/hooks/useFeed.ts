@@ -6,10 +6,14 @@ import { useEventListener } from "./useEventListener";
 interface UseFeedOptions {
   pageSize?: number;
   rootMargin?: string;
+  /** If true, do not apply follow/unfollow changes immediately while this view is mounted. */
+  applyFollowChangesOnUnmount?: boolean;
+  /** Optional ID/name for the view (for debugging or future use) */
+  viewId?: string;
 }
 
 export function useFeed(fetchFunction: (opts: { limit: number; before?: string }) => Promise<HydratedPost[]>, options: UseFeedOptions = {}) {
-  const { pageSize = 5, rootMargin = '200px' } = options;
+  const { pageSize = 5, rootMargin = '200px', applyFollowChangesOnUnmount = false } = options;
 
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,21 +127,27 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
     }
   });
 
-  // Handle follow changes optimistically
+  // Handle follow changes. If applyFollowChangesOnUnmount is true we intentionally
+  // defer applying the change so the user continues seeing the current feed
+  // until they navigate away (the parent view will reload on mount).
   useEventListener('monolog:follow_changed', (e: any) => {
     const changedUserId = e?.detail?.userId;
     const following = e?.detail?.following;
     if (!changedUserId) return;
 
+    if (applyFollowChangesOnUnmount) {
+      // Defer applying changes while view is mounted.
+      return;
+    }
+
     if (!following) {
       // Unfollowing: remove posts from this user optimistically
       setPosts(prev => prev.filter(p => p.userId !== changedUserId));
     } else {
-      // Following: for now, refetch to add new posts
-      // In future, could fetch user's posts and prepend, but refetch is simpler
+      // Following: refetch to add new posts
       loadInitialPosts();
     }
-  }, [loadInitialPosts]);
+  }, [loadInitialPosts, applyFollowChangesOnUnmount]);
 
   // Refresh feed when authentication state changes (sign in / sign out)
   useEffect(() => {

@@ -351,7 +351,7 @@
 #modal-root > * {
   pointer-events: auto;
   /* constrain immediate child so it never exceeds viewport and can scroll internally */
-  max-height: calc(100vh - 48px);
+  max-height: calc((var(--viewport-height, 1vh) * 100) - 48px);
   overflow: auto;
   width: 100%;
 }

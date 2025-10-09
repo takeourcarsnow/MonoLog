@@ -92,7 +92,7 @@
   :root { --chrome-offset: 220px; }
   .card-media {
     /* allow the card to size to the image but not exceed viewport height */
-    max-height: min(66vh, calc(100dvh - var(--chrome-offset)));
+  max-height: min(66vh, calc((var(--viewport-height, 1vh) * 100) - var(--chrome-offset)));
     display: block;
     /* avoid inadvertent vertical clipping; we still hide horizontal overflow for carousel drag */
     overflow-y: visible;
@@ -103,7 +103,7 @@
   .card-media .carousel img,
   .carousel-slide img {
     /* respect image aspect ratio while constraining height */
-    max-height: min(66vh, calc(100dvh - var(--chrome-offset)));
+  max-height: min(66vh, calc((var(--viewport-height, 1vh) * 100) - var(--chrome-offset)));
     max-width: 100%;
     width: auto;
     object-fit: contain;

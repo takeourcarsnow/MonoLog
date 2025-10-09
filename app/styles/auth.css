@@ -344,7 +344,7 @@
     top: 50%;
     max-width: 90vw;
     /* Ensure dialog doesn't get too close to top of screen on small devices */
-    height: calc(100vh - 120px);
+  height: calc((var(--viewport-height, 1vh) * 100) - 120px);
     overflow: auto;
   }
   .auth-form {
@@ -383,7 +383,7 @@
   .auth-dialog {
     max-width: 94vw;
     top: 50%;
-    height: calc(100vh - 140px);
+  height: calc((var(--viewport-height, 1vh) * 100) - 140px);
   }
   .auth-form {
     height: 100%;
@@ -399,7 +399,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: calc(100vh - var(--header-height) - var(--tabbar-height) - 60px);
+  min-height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height) - var(--tabbar-height) - 60px);
     margin: 0 auto;
   }
 }

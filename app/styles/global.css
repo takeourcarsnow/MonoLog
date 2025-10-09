@@ -61,7 +61,8 @@ body {
 }
 
 #app-root {
-  min-height: 100dvh;
+  /* Use runtime-updated viewport height to avoid mobile chrome gaps */
+  min-height: calc(var(--viewport-height, 1vh) * 100);
   position: relative;
   z-index: 1;
   contain: layout style;
@@ -77,7 +78,8 @@ body {
    can expand to occupy remaining space. Using min-height keeps behavior
    compatible with the existing #app-root which already uses 100dvh. */
 .app-content {
-  min-height: 100dvh;
+  /* Use runtime-updated viewport height to avoid mobile chrome gaps */
+  min-height: calc(var(--viewport-height, 1vh) * 100);
 }
 
 /* The header is fixed (position: fixed) and removed from document flow.

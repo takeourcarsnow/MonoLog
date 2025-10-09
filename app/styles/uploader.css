@@ -675,8 +675,8 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   /* Cap preview heights so the form controls remain visible without forcing
     excessive empty space below the preview on desktop. Reduced chrome offset
     prevents unnecessarily large gaps that create a vertical scrollbar. */
-  .uploader .preview-inner { max-height: min(40vh, calc(100dvh - 180px)); }
-  .uploader .preview img { max-height: min(40vh, calc(100dvh - 180px)); }
+  .uploader .preview-inner { max-height: min(40vh, calc((var(--viewport-height, 1vh) * 100) - 180px)); }
+  .uploader .preview img { max-height: min(40vh, calc((var(--viewport-height, 1vh) * 100) - 180px)); }
 
   /* On wide screens, keep the normal layout spacing, but when a preview
      exists show the uploader action row as a fixed, centered bar above
@@ -757,7 +757,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(var(--viewport-height, 1vh) * 100);
   z-index: 1000;
   background: var(--bg);
 }

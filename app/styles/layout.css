@@ -53,7 +53,9 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
   .content {
     height: auto;
     overflow: auto;
-    min-height: calc(100dvh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) - var(--tabbar-height, 56px));
+    /* Use the JS-driven --viewport-height so mobile browser chrome
+       changes don't leave gaps. Fallback to 1vh if the variable isn't set. */
+    min-height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) - var(--tabbar-height, 56px));
     padding-left: var(--page-side-padding);
     padding-right: var(--page-side-padding);
   }
@@ -62,7 +64,9 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
 /* Mobile-specific global adjustments */
 @media (max-width: 768px) {
   .content {
-    height: 100dvh;
+    /* Use the JS-updated viewport height so the visible area is used
+       (prevents gaps when mobile browser chrome collapses/expands). */
+    height: calc(var(--viewport-height, 1vh) * 100);
     overflow: hidden;
     -webkit-overflow-scrolling: touch;
     padding-left: var(--page-side-padding-mobile);

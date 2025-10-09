@@ -6,7 +6,7 @@
   /* let the editor size to its content instead of forcing a full viewport height
      (this avoids creating extra empty space below the panels on smaller content). */
   height: auto;
-  max-height: 100vh;
+  max-height: calc(var(--viewport-height, 1vh) * 100);
   overflow: hidden;
   /* other styles */
   width: 100%;
@@ -33,7 +33,7 @@
 .upload-editor-fullscreen .image-editor {
   width: 100vw;
   max-width: 100vw;
-  height: 100vh;
+  height: calc(var(--viewport-height, 1vh) * 100);
   margin: 0;
   padding: 0;
   border-radius: 0;

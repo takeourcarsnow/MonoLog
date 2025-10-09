@@ -14,7 +14,7 @@
   opacity: 0;
   transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast);
   animation: popIn 220ms var(--transition-mid) both;
-  max-height: calc(100vh - 120px);
+  max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
   overflow: auto;
   display: flex;
   flex-direction: column;
@@ -44,7 +44,7 @@
     top: 50%;
     transform: translate(-50%, -50%);
     width: min(94vw, 420px);
-    max-height: calc(100vh - 120px);
+  max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
     border-radius: 12px;
     z-index: 99999;
   }
@@ -101,7 +101,7 @@
      at a comfortable maximum so desktop/tablet layouts are unaffected. */
    width: min(94vw, 420px);
    /* Increase max-height so taller phones can show more content before scrolling */
-   max-height: calc(100vh - 120px);
+  max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
    overflow: auto;
    box-shadow: var(--shadow);
    border: 1px solid var(--border);

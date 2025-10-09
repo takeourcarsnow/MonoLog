@@ -3,7 +3,7 @@
   .swipe-views {
     width: 100% !important;
     /* Restore fixed height for swiper functionality */
-    height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
+   height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
     /* Ensure proper positioning */
     position: relative !important;
     /* Enable hardware acceleration for smoother animations */
@@ -51,7 +51,7 @@
   box-sizing: border-box;
   position: relative;
   /* Restore fixed height */
-  height: calc(100vh - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
+   height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
 }
 
 /* Ensure full-bleed swipe views account for the sticky header height.

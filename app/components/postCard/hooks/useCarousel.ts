@@ -131,7 +131,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
       startDrag(0, 0, true);
       setIsZooming(true);
       isZoomingRef.current = true;
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: Math.random().toString(36).slice(2) } })); } catch (_) {}
       return;
     }
     // Previously we avoided starting drag when touching the image so that

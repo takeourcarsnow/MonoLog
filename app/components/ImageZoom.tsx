@@ -37,6 +37,41 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   // explicitly starts a zoom (double-click or pinch). This prevents the
   // mouse wheel from initiating zoom on accidental scrolls.
   const wheelEnabledRef = useRef<boolean>(false);
+  // Unique id for this instance so we can ignore our own global events
+  const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
+
+  // When another ImageZoom instance starts zooming, reset this one if it's
+  // currently zoomed in. The originating instance will include its id in
+  // the event detail; ignore events that originate from this instance.
+  useEffect(() => {
+    const onOtherZoom = (ev: Event) => {
+      try {
+        const e = ev as CustomEvent;
+        const originId = e?.detail?.id as string | undefined;
+        // If originId exists and it's from this instance, ignore. Otherwise
+        // treat it as a request to close/reset this zoom instance.
+        if (originId && originId === instanceIdRef.current) return; // ignore our own
+        if (scaleRef.current > 1) {
+          setScale(1);
+          setTx(0);
+          setTy(0);
+          wheelEnabledRef.current = false;
+          try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: instanceIdRef.current } })); } catch(_) {}
+        }
+      } catch (_) {
+        // ignore
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:zoom_start', onOtherZoom as any);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:zoom_start', onOtherZoom as any);
+      }
+    };
+  }, []);
 
   // Detect if this ImageZoom is rendered inside a grid tile
   
@@ -60,7 +95,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     // Dispatch zoom end event
     if (typeof window !== 'undefined') {
       try {
-        window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
+        window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: instanceIdRef.current } }));
       } catch (_) {}
     }
   }, [src]);
@@ -142,7 +177,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       // Dispatch zoom end event
       if (typeof window !== 'undefined') {
         try {
-          window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
+          window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: instanceIdRef.current } }));
         } catch (_) {}
       }
     } else {
@@ -172,7 +207,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       // Dispatch zoom start event
       if (typeof window !== 'undefined') {
         try {
-          window.dispatchEvent(new CustomEvent('monolog:zoom_start'));
+          window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: instanceIdRef.current } }));
         } catch (_) {}
       }
     }

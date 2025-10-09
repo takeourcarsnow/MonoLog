@@ -579,6 +579,20 @@
   gap: 28px;
 }
 
+/* Single-post page wrapper: give a bit more breathing room so the
+   full-post view doesn't butt up against the header or the bottom
+   navbar/tabbar. Uses safe-area variables when available. */
+.post-view-wrap {
+  padding: calc(12px + var(--safe-top, 0px)) var(--page-side-padding) calc(20px + var(--safe-bottom, 0px)) var(--page-side-padding);
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .post-view-wrap {
+    padding: calc(12px + var(--safe-top, 0px)) var(--page-side-padding-mobile) var(--page-side-padding-mobile);
+  }
+}
+
 /* Center spotify preview link inside post card captions */
 .spotify-link {
   display: flex;

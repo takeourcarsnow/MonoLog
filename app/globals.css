@@ -8,6 +8,7 @@
 /* Prevent body scrolling to avoid unwanted scrollbars */
 html, body {
   overflow: hidden;
+  height: 100%;
 }
 
 /* Allow body scrolling on about page */

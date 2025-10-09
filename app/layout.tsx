@@ -77,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script
           id="set-vh"
-          dangerouslySetInnerHTML={{ __html: `(function(){try{function setVh(){document.documentElement.style.setProperty('--viewport-height', (window.innerHeight/100) + 'px');} setVh(); window.addEventListener('resize', setVh); window.addEventListener('orientationchange', setVh);}catch(e){} })();` }}
+          dangerouslySetInnerHTML={{ __html: `(function(){try{function setVh(){const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight; document.documentElement.style.setProperty('--viewport-height', (vh/100) + 'px');} setVh(); if(window.visualViewport){window.visualViewport.addEventListener('resize', setVh);} window.addEventListener('resize', setVh); window.addEventListener('orientationchange', setVh);}catch(e){} })();` }}
         />
         <script
           id="runtime-supabase-init"

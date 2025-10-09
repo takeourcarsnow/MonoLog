@@ -12,7 +12,7 @@ export function LoadingBadge({ processing, previewLoaded }: LoadingBadgeProps) {
   // identical to the dropzone loader so the visuals are consistent.
   return (
     <div className="drop-zone-loader" role="status" aria-live="polite">
-      <LogoLoader size={86} />
+      <LogoLoader size={86} variant="reverse" />
     </div>
   );
 }

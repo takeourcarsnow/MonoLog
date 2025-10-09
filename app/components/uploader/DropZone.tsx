@@ -33,7 +33,7 @@ export function DropZone({
     >
       {processing && (
         <div className="drop-zone-loader" role="status" aria-live="polite">
-          <LogoLoader size={86} />
+          <LogoLoader size={86} variant="theme" />
         </div>
       )}
 

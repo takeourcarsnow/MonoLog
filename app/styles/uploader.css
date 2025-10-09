@@ -629,12 +629,18 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   animation: none !important;
 }
 
-.logo-subtle {
+.logo-subtle-theme,
+.logo-subtle-reverse {
   animation: subtle-rotate 12s linear infinite;
 }
 
-/* Theme-aware logo colors - light logo in dark mode, dark logo in light mode */
-:root[data-theme="light"] .logo-subtle {
+/* Theme-aware logo colors for first upload - black in light mode, white in dark mode */
+:root[data-theme="dark"] .logo-subtle-theme {
+  filter: invert(1);
+}
+
+/* Reverse theme for subsequent photos - light in light mode, dark in dark mode */
+:root[data-theme="light"] .logo-subtle-reverse {
   filter: invert(1);
 }
 

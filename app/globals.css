@@ -12,6 +12,30 @@ body.about-page-scroll,
 html.about-page-scroll {
   overflow: auto !important;
 }
+
+/* If the app uses an internal scrolling container (.content) we must also
+   allow that container to scroll when on the About page. The .content
+   rules in layout.css set overflow: hidden for most routes; this selector
+   overrides that so the About page can scroll normally. */
+/* Prefer a strictly local selector using :has() — when the content area
+   contains the About wrapper, allow scrolling. This keeps the override
+   strictly scoped to the About subtree. */
+.content:has(.about-wrapper) {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fallback: older browsers that don't support :has can rely on the
+   body/html class added by the About page JS. */
+body.about-page-scroll .content,
+html.about-page-scroll .content {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
 :root {
   color-scheme: light dark;
 

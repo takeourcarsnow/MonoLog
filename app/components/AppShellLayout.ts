@@ -56,8 +56,10 @@ export function useTabbarHeightMeasurement(ready: boolean) {
         const el = document.querySelector<HTMLElement>('.tabbar');
         if (!el) return false;
         const rect = el.getBoundingClientRect();
-        if (!rect || rect.height < 1) return false;
-        document.documentElement.style.setProperty('--tabbar-height', `${Math.ceil(rect.height)}px`);
+  if (!rect || rect.height < 1) return false;
+  // Add a conservative 1px fudge to avoid subpixel rounding gaps on some browsers
+  const measured = Math.ceil(rect.height) + 1;
+  document.documentElement.style.setProperty('--tabbar-height', `${measured}px`);
         return true;
       } catch (e) {
         return false;

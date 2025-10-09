@@ -69,36 +69,84 @@ export function useAppShellInit() {
     } catch (_) {}
 
       // Keep a CSS variable in sync with the actual visual viewport height.
-      // Many mobile browsers calculate 1vh including browser chrome which
-      // causes layouts using 100vh to leave gaps when the chrome hides/shows.
-      // We set --viewport-height to 1% of window.innerHeight (px) so
-      // layout rules using calc(var(--viewport-height, 1vh) * 100) match
-      // the visible area. This is intentionally minimal and runs only
-      // on the client.
+      // Prefer visualViewport when available (reports the visible area on
+      // many mobile browsers). Also run a short delayed re-check after
+      // initial load to catch cases where the browser chrome changes size
+      // shortly after render.
       try {
         if (typeof window !== 'undefined') {
-          const setViewportVar = () => {
+          const getVisualHeight = () => {
             try {
-              const vh = window.innerHeight * 0.01;
-              document.documentElement.style.setProperty(
-                '--viewport-height',
-                `${vh}px`
-              );
+              // visualViewport may be undefined in some browsers.
+              // Use the best available measurement.
+              const vv = (window as any).visualViewport;
+              return (vv && vv.height) ? vv.height : window.innerHeight;
             } catch (e) {
-              // swallow - non-critical
+              return window.innerHeight;
             }
           };
 
+          const setViewportVar = () => {
+            try {
+              const height = getVisualHeight();
+              const vh = height * 0.01;
+              document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
+            } catch (e) {
+              // non-critical
+            }
+          };
+
+          // Debug logging (enabled by ?debugViewport=1 or localStorage 'monolog.debugViewport')
+          const debugEnabled = (() => {
+            try {
+              const params = new URL(window.location.href).searchParams;
+              if (params.get('debugViewport') === '1') return true;
+              if (window.localStorage && window.localStorage.getItem('monolog.debugViewport') === '1') return true;
+            } catch (e) {}
+            return false;
+          })();
+
+          let debugTimer: any = null;
+          const debugLog = () => {
+            if (!debugEnabled) return;
+            try {
+              const style = getComputedStyle(document.documentElement);
+              const viewportVar = style.getPropertyValue('--viewport-height');
+              const tabbarVar = style.getPropertyValue('--tabbar-height');
+              const innerH = window.innerHeight;
+              const clientH = document.documentElement.clientHeight;
+              const vv = (window as any).visualViewport;
+              const vvH = vv ? vv.height : undefined;
+              const tabbarEl = document.querySelector<HTMLElement>('.tabbar');
+              const contentEl = document.querySelector<HTMLElement>('.content');
+              const tabRect = tabbarEl ? tabbarEl.getBoundingClientRect() : null;
+              const contentRect = contentEl ? contentEl.getBoundingClientRect() : null;
+              console.info('[monolog-debug] viewport innerHeight=', innerH, 'clientHeight=', clientH, 'visualViewport=', vvH);
+              console.info('[monolog-debug] css --viewport-height=', viewportVar.trim(), ' --tabbar-height=', tabbarVar.trim());
+              console.info('[monolog-debug] .tabbar rect=', tabRect, '.content rect=', contentRect);
+              if (tabbarEl) {
+                const cs = getComputedStyle(tabbarEl);
+                console.info('[monolog-debug] .tabbar padding-bottom=', cs.paddingBottom, 'height=', tabbarEl.offsetHeight);
+              }
+            } catch (e) { console.warn('[monolog-debug] log failed', e); }
+          };
+
           setViewportVar();
-          window.addEventListener('resize', setViewportVar, { passive: true });
-          window.addEventListener('orientationchange', setViewportVar);
+          // run again after short delay to catch late chrome transitions
+          setTimeout(setViewportVar, 600);
+          // and a slightly longer retry for flaky webviews
+          setTimeout(setViewportVar, 1500);
+
+          window.addEventListener('resize', () => { setViewportVar(); if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); } }, { passive: true });
+          window.addEventListener('orientationchange', () => { setViewportVar(); if (debugEnabled) { setTimeout(debugLog, 160); } });
           if ((window as any).visualViewport && (window as any).visualViewport.addEventListener) {
-            (window as any).visualViewport.addEventListener('resize', setViewportVar);
+            (window as any).visualViewport.addEventListener('resize', () => { setViewportVar(); if (debugEnabled) { setTimeout(debugLog, 80); } });
           }
 
-          // keep cleanup minimal - listeners removed when the page unloads
-          // (we don't return a cleanup here because this effect is in a
-          // module-level init that shouldn't unmount during the app lifecycle)
+          if (debugEnabled) {
+            // initial log after styling applied
+            setTimeout(debugLog, 120);
+          }
         }
       } catch (e) {}
   }, []);

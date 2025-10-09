@@ -349,7 +349,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 100svh; /* fallback-friendly modern unit for visible viewport */
+  height: calc(var(--viewport-height, 1vh) * 100); /* use runtime-updated viewport height */
   z-index: 2147483647; /* put above all other UI */
   display: flex;
   align-items: center;

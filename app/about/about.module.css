@@ -192,5 +192,5 @@
 .content {
   overflow: visible !important;
   height: auto !important;
-  min-height: 100dvh !important;
+  min-height: calc(var(--viewport-height, 1vh) * 100) !important;
 }

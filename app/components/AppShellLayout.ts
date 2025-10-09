@@ -54,16 +54,32 @@ export function useTabbarHeightMeasurement(ready: boolean) {
     const updateTabbarHeight = () => {
       try {
         const el = document.querySelector<HTMLElement>('.tabbar');
-        if (!el) return;
+        if (!el) return false;
         const rect = el.getBoundingClientRect();
+        if (!rect || rect.height < 1) return false;
         document.documentElement.style.setProperty('--tabbar-height', `${Math.ceil(rect.height)}px`);
+        return true;
       } catch (e) {
-        /* ignore */
+        return false;
       }
     };
 
-    // Run once immediately to set initial value
-    updateTabbarHeight();
+    // Run once immediately to set initial value. If the tabbar isn't
+    // present or has zero height yet (some webviews render slightly later),
+    // retry a few times with short backoff.
+    let measured = updateTabbarHeight();
+    if (!measured) {
+      let attempts = 0;
+      const maxAttempts = 6;
+      const tryMeasure = () => {
+        attempts += 1;
+        measured = updateTabbarHeight();
+        if (!measured && attempts < maxAttempts) {
+          setTimeout(tryMeasure, attempts * 200);
+        }
+      };
+      setTimeout(tryMeasure, 120);
+    }
 
     // Use ResizeObserver when available to react to dynamic tabbar size changes
     let ro: ResizeObserver | null = null;

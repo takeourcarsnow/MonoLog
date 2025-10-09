@@ -65,7 +65,7 @@
   }
   
   .upload-editor-fullscreen .imgedit-panels {
-    max-height: calc(100vh - 120px);
+  max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
   }
   
   .upload-editor-fullscreen .image-editor-buttons .btn.icon {

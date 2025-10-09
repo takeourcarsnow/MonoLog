@@ -235,3 +235,10 @@ html.about-page-scroll .content {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--border), transparent 40%) transparent;
 }
+
+/* Debug helpers: add these classes in the console to visualize layout regions
+   e.g. document.body.classList.add('debug-layout-outline') */
+body.debug-layout-outline .content { outline: 2px dashed rgba(0,200,0,0.9); }
+body.debug-layout-outline .tabbar { outline: 3px dashed rgba(0,120,255,0.9); }
+body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
+

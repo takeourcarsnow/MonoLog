@@ -26,9 +26,23 @@ export function ExploreView() {
       return () => { mounted = false; };
     }, []);
 
+    // Refresh canPost when authentication state changes
+    useEffect(() => {
+      const handler = async () => {
+        try {
+          const resp = await api.canPostToday();
+          setCanPost(Boolean(resp?.allowed));
+        } catch (e) {
+          setCanPost(null);
+        }
+      };
+      if (typeof window !== 'undefined') window.addEventListener('auth:changed', handler);
+      return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handler); };
+    }, []);
+
     const emptyMessage =
       canPost === true
-        ? "Be the first to create today's entry — add one post with as many photos as you like!"
+        ? "Be the first to create today's entry — tell the story of your day in pictures!"
         : "MonoLogs from people you aren't following yet";
 
     return (

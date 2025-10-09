@@ -152,6 +152,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   // Local draw wrapper binds all refs/state to the lower-level drawImage helper so
   // callers can simply call draw() or draw(info).
   function draw(info?: any, overrides?: any) {
+    return drawImage(
+      canvasRef,
+      imgRef,
       originalImgRef,
       previewOriginalRef,
       offset,

@@ -17,7 +17,7 @@ import { useEdit } from "./postCard/hooks/useEdit";
 import { useShare } from "./postCard/hooks/useShare";
 import { useIsMe } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { renderMentions } from "@/src/lib/mentions";
 
@@ -28,6 +28,7 @@ const Editor = lazy(() => import("./postCard/Editor").then(mod => ({ default: mo
 // Memoize PostCard to prevent unnecessary re-renders when parent updates
 const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavigation }: { post: HydratedPost; allowCarouselTouch?: boolean; disableMediaNavigation?: boolean }) => {
   const { post, setPost } = usePostState(initial);
+  const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
   const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
   const isMultipost = imageUrls.length > 1;
   const {
@@ -87,6 +88,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
 
   const [showAuth, setShowAuth] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { isMe, isLoading: authLoading } = useIsMe(post.userId);
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
   const toast = useToast();
@@ -101,6 +103,35 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
     setFsSrc(src);
     setFsAlt(alt || 'Photo');
     setFsOpen(true);
+  };
+  
+  // Navigate to single-post view when clicking on non-media/canvas parts of the card
+  const handleCardClick = (e: React.MouseEvent<HTMLElement>) => {
+    try {
+      // Don't navigate if editor is open or editing is active
+      if (editing) return;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+  // Ignore clicks on interactive elements: links, buttons, inputs, labels, and images
+  // Note: we intentionally do NOT exclude [role="button"] here so clicks on the
+  // photo matte/canvas (which may be inside a role=button container) can still
+  // navigate to the single-post view. We still block actual images and form controls.
+  if (target.closest('a, button, input, textarea, select, label')) return;
+      if (target.closest('img')) return;
+
+      // If the click is inside the media area (but not on the photo), don't rely on image handlers
+      // We still want clicks outside the photo on the card canvas to navigate, so only block
+      // when inside elements that should be interactive (comments, actions, editor, etc.).
+      if (target.closest('.post-editor-wrap')) return;
+      if (target.closest('.caption') || target.closest('.actions') || target.closest('.comments')) return;
+
+      // Use Next router to navigate to the single post URL
+      router.push(postHref);
+    } catch (err) {
+      // Fallback: try history push
+      try { window.history.pushState(null, '', postHref); } catch (_) {}
+    }
   };
   const handleCloseFullscreen = () => { setFsOpen(false); setFsSrc(null); };
 
@@ -204,7 +235,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   }, [editing, showEditor]);
 
   return (
-    <article id={`post-${post.id}`} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
+  <article id={`post-${post.id}`} onClick={handleCardClick} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
       <UserHeader
         post={post}
         isMe={isMe}

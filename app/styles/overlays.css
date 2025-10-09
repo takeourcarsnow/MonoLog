@@ -199,14 +199,14 @@
   background: color-mix(in srgb, var(--bg), transparent 8%);
   z-index: 999999;
   pointer-events: auto; /* block interactions while shown */
-  /* make these transitions important so the initial server-side
-    `.no-transitions` rule (which uses `!important`) doesn't prevent
-    the preloader from animating once the client removes that class.
-    Use a longer, gentler duration so the overlay fade feels softer. */
-  transition: opacity 640ms var(--transition-mid), transform 640ms var(--transition-mid) !important;
+  /* Only animate opacity on the overlay itself. Avoid animating the
+     overlay's transform because that shifts the whole viewport and can
+     cause the splash to appear to 'jump' when scrollbars or layout
+     changes occur. Move motion to the inner element instead. */
+  transition: opacity 640ms var(--transition-mid);
   opacity: 1;
 }
-.preloader-exit { opacity: 0; transform: scale(0.996) translateY(-6px); pointer-events: none; }
+.preloader-exit { opacity: 0; pointer-events: none; }
 
 .preloader-inner {
   position: relative;
@@ -214,6 +214,10 @@
   background: transparent; color: var(--text);
   /* entrance: subtle lift + fade */
   animation: preloader-in 560ms var(--preloader-ease-quick) both;
+  /* Keep a smooth transform/opacity transition for coordinated exit
+     animation. By animating the inner element we avoid any center
+     displacement caused by transforming the full overlay. */
+  transition: transform 640ms var(--transition-mid), opacity 640ms var(--transition-mid);
 }
 .preloader-logo {
   display: block;
@@ -236,6 +240,14 @@
   z-index: 1;
   filter: blur(6px);
   animation: preloader-pulse 2000ms var(--preloader-ease-quick) infinite;
+}
+.preloader-exit .preloader-inner {
+  /* Exit animation lives on the inner element so the element stays
+     visually centered while it moves slightly and fades. This prevents
+     the whole overlay from shifting and eliminates the up/down jump. */
+  transform: scale(0.996) translateY(-6px);
+  opacity: 0;
+ 
 }
 .preloader-wordmark {
   font-weight: 800; letter-spacing: 0.6px; font-size: 16px; color: var(--text);

@@ -148,4 +148,12 @@
   .day .count { font-size: 10px; left: 6px; bottom: 6px; }
   .day.mine::after { top: 6px; right: 6px; }
   .day .dot { top: 6px; right: 6px; }
+  .calendar .header {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
 }

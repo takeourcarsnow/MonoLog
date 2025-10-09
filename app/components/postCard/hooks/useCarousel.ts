@@ -171,8 +171,12 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     if ((e as any).button && (e as any).button !== 0) return;
     // pointerType touch handled here too
     startDrag(e.clientX, e.clientY, false);
-    const el = trackRef.current as any;
-    try { if (el && el.setPointerCapture) el.setPointerCapture(e.pointerId); } catch (_) {}
+    // Do not call setPointerCapture here — capturing the pointer on the
+    // carousel track prevents child elements (like the image) from
+    // receiving native mouse dblclick events. We avoid capturing to let
+    // double-click handlers on inner images run. If pointer capture is
+    // necessary for other edge-cases it should be applied later when a
+    // drag is actually detected.
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -183,8 +187,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
-    const el = trackRef.current as any;
-    try { if (el && el.releasePointerCapture) el.releasePointerCapture(e.pointerId); } catch (_) {}
+    // No pointer capture was set above, so nothing to release here.
     endDrag();
   };
 

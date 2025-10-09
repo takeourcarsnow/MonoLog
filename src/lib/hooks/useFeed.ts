@@ -13,7 +13,7 @@ interface UseFeedOptions {
 }
 
 export function useFeed(fetchFunction: (opts: { limit: number; before?: string }) => Promise<HydratedPost[]>, options: UseFeedOptions = {}) {
-  const { pageSize = 5, rootMargin = '200px', applyFollowChangesOnUnmount = false } = options;
+  const { pageSize = 5, rootMargin = '20%', applyFollowChangesOnUnmount = false } = options;
 
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);

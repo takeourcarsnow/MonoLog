@@ -38,8 +38,11 @@ export const OptimizedImage = memo(function OptimizedImage({
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
 
+  // For small images (<=40px), don't use placeholder for performance
+  const shouldUsePlaceholder = placeholder !== 'empty' && (!width || !height || (width > 40 && height > 40));
+
   // Generate a simple blur placeholder if none provided and blur is requested
-  const defaultBlurDataURL = blurDataURL || (placeholder === 'blur' ?
+  const defaultBlurDataURL = blurDataURL || (shouldUsePlaceholder && placeholder === 'blur' ?
     "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+IRjWjBqO6O2mhP//Z" :
     undefined);
 
@@ -60,7 +63,7 @@ export const OptimizedImage = memo(function OptimizedImage({
       priority={priority}
       sizes={sizes}
       loading={loading}
-      placeholder={placeholder}
+      placeholder={shouldUsePlaceholder ? placeholder : 'empty'}
       blurDataURL={defaultBlurDataURL}
       onLoad={() => {
         setIsLoading(false);

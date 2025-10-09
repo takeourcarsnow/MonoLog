@@ -3,9 +3,9 @@
 import { useEffect, useState, ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-type Props = { children: ReactNode; wrapperId?: string };
+type Props = { children: ReactNode; wrapperId?: string; className?: string };
 
-export default function Portal({ children, wrapperId = 'modal-root' }: Props) {
+export default function Portal({ children, wrapperId = 'modal-root', className }: Props) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -14,6 +14,7 @@ export default function Portal({ children, wrapperId = 'modal-root' }: Props) {
     if (!root) {
       root = document.createElement('div');
       root.id = wrapperId;
+      if (className) root.className = className;
       document.body.appendChild(root);
     }
     return () => {

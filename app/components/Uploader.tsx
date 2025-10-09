@@ -11,6 +11,7 @@ import { useAuth } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
 import { AuthRequired } from "./AuthRequired";
 import { DropZone } from "./uploader/DropZone";
+import Portal from "./Portal";
 import { FileInputs } from "./uploader/FileInputs";
 import { PreviewSection } from "./uploader/PreviewSection";
 import { CaptionInput } from "./uploader/CaptionInput";
@@ -117,7 +118,7 @@ function UploaderCore() {
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''}`}>
   {editing && (dataUrls[editingIndex] || dataUrls[0]) && (
-        <div>
+        <Portal className="upload-editor-fullscreen">
           <Suspense fallback={
             <div className="upload-editor-loading">
               <div className="card skeleton" style={{ height: 400, width: '100%', maxWidth: 600 }} />
@@ -177,7 +178,7 @@ function UploaderCore() {
               }}
             />
           </Suspense>
-        </div>
+        </Portal>
       )}
 
   {!dataUrls.length && (

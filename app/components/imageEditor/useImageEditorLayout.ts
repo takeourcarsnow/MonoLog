@@ -55,7 +55,7 @@ export function useImageEditorLayout(
         if (canvas && cont) {
           const dpr = window.devicePixelRatio || 1;
           const contW = Math.round(cont.clientWidth);
-          const isFullscreen = cont.classList.contains('upload-editor-fullscreen');
+          const isFullscreen = cont.closest('.upload-editor-fullscreen') !== null;
           const subtractHeight = 0;
           const contH = Math.round(cont.clientHeight - subtractHeight);
           const padRatio = 0.0;
@@ -115,7 +115,7 @@ export function useImageEditorLayout(
       const dpr = window.devicePixelRatio || 1;
       // Calculate the available space for the image
       const contW = Math.round(cont.clientWidth);
-      const isFullscreen = cont.classList.contains('upload-editor-fullscreen');
+      const isFullscreen = cont.closest('.upload-editor-fullscreen') !== null;
       const subtractHeight = isFullscreen ? 0 : 0;
       const contH = Math.round(cont.clientHeight - subtractHeight);
       const padRatio = 0.0;

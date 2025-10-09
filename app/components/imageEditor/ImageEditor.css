@@ -31,16 +31,19 @@
 
 /* Full-screen mode for upload editor */
 .upload-editor-fullscreen .image-editor {
-  width: 100vw;
-  max-width: 100vw;
-  height: calc(var(--viewport-height, 1vh) * 100);
-  margin: 0;
-  padding: 0;
-  border-radius: 0;
-  background: var(--bg);
   position: fixed;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  max-width: min(85vw, 720px);
+  height: auto;
+  max-height: 85vh;
+  margin: 0;
+  padding: 8px;
+  padding-bottom: 12px;
+  border-radius: 8px;
+  background: var(--bg-elev);
   z-index: 1000;
   overflow: hidden;
   display: flex;
@@ -61,11 +64,13 @@
 /* Responsive adjustments for full-screen mode */
 @media (max-width: 640px) {
   .upload-editor-fullscreen .image-editor {
+    max-width: 95vw;
+    max-height: 95vh;
     padding: 8px;
   }
   
   .upload-editor-fullscreen .imgedit-panels {
-  max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
+  max-height: calc(95vh - 120px);
   }
   
   .upload-editor-fullscreen .image-editor-buttons .btn.icon {

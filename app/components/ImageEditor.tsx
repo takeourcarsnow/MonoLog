@@ -304,14 +304,13 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   return (
     <div
-      ref={containerRef}
       tabIndex={0}
       className={`image-editor ${mounted ? '' : 'unmounted'}`}
     >
       {/* Toolbar header (buttons) above the canvas */}
       <ImageEditorToolbarHeader onCancel={onCancel} resetAdjustments={resetAdjustments} applyEdit={applyEdit} isEdited={isEdited} />
 
-      <div className="image-editor-canvas-container">
+      <div className="image-editor-canvas-container" ref={containerRef}>
         <ImageEditorCanvas canvasRef={canvasRef} mounted={mounted} />
       </div>
 

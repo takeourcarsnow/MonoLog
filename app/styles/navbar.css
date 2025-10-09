@@ -32,7 +32,7 @@
 }
 
 .tab-item-static.active .tab-icon {
-  transform: scale(1.15) rotate(3deg);
+  transform: scale(1.15);
 }
 
 .tab-item-static .tab-label {
@@ -140,7 +140,7 @@
 }
 
 .tab-item.active .tab-icon {
-  transform: scale(1.15) rotate(3deg);
+  transform: scale(1.15);
 }
 
 .tab-label {
@@ -220,7 +220,7 @@
 
   .tab-item.active .tab-icon,
   .tab-item-static.active .tab-icon {
-    transform: scale(1.12) rotate(2deg);
+    transform: scale(1.12);
   }
 }
 

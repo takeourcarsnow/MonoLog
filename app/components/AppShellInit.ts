@@ -67,6 +67,40 @@ export function useAppShellInit() {
         if (val) setForceTouch(true);
       }
     } catch (_) {}
+
+      // Keep a CSS variable in sync with the actual visual viewport height.
+      // Many mobile browsers calculate 1vh including browser chrome which
+      // causes layouts using 100vh to leave gaps when the chrome hides/shows.
+      // We set --viewport-height to 1% of window.innerHeight (px) so
+      // layout rules using calc(var(--viewport-height, 1vh) * 100) match
+      // the visible area. This is intentionally minimal and runs only
+      // on the client.
+      try {
+        if (typeof window !== 'undefined') {
+          const setViewportVar = () => {
+            try {
+              const vh = window.innerHeight * 0.01;
+              document.documentElement.style.setProperty(
+                '--viewport-height',
+                `${vh}px`
+              );
+            } catch (e) {
+              // swallow - non-critical
+            }
+          };
+
+          setViewportVar();
+          window.addEventListener('resize', setViewportVar, { passive: true });
+          window.addEventListener('orientationchange', setViewportVar);
+          if ((window as any).visualViewport && (window as any).visualViewport.addEventListener) {
+            (window as any).visualViewport.addEventListener('resize', setViewportVar);
+          }
+
+          // keep cleanup minimal - listeners removed when the page unloads
+          // (we don't return a cleanup here because this effect is in a
+          // module-level init that shouldn't unmount during the app lifecycle)
+        }
+      } catch (e) {}
   }, []);
 
   return { ready, isTouchDevice, forceTouch };

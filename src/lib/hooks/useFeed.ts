@@ -139,6 +139,15 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
     }
   }, [loadInitialPosts]);
 
+  // Refresh feed when authentication state changes (sign in / sign out)
+  useEffect(() => {
+    const handler = () => {
+      try { loadInitialPosts(); } catch (_) {}
+    };
+    if (typeof window !== 'undefined') window.addEventListener('auth:changed', handler as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handler as any); };
+  }, [loadInitialPosts]);
+
   // Cleanup observer on unmount
   useEffect(() => {
     return () => {

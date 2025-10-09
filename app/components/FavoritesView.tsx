@@ -51,7 +51,7 @@ export function FavoritesView() {
       </div>
     );
   }
-  if (!posts.length) return <div className="empty">No favorites yet. Tap the star on any post to save it.</div>;
+  if (!posts.length) return <div className="view-fade"><div className="empty">No favorites yet. Tap the star on any post to save it.</div></div>;
 
   return (
     <div className="view-fade">

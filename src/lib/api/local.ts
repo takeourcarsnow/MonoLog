@@ -331,5 +331,12 @@ export const localApi: Api = {
   async signOut() {
     cache.currentUserId = null;
     persist();
+    try {
+      if (typeof window !== 'undefined') {
+        // mirror the supabase adapter which dispatches this event so
+        // UI components can react to auth state changes
+        window.dispatchEvent(new CustomEvent('auth:changed'));
+      }
+    } catch (_) { /* ignore */ }
   },
 };

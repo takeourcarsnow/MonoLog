@@ -74,6 +74,13 @@ export function FeedPage({
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:post_created', handler as any); };
   }, [loadInitialPosts]);
 
+  // Refresh feed when authentication changes (e.g., sign out)
+  useEffect(() => {
+    const handler = () => loadInitialPosts();
+    if (typeof window !== 'undefined') window.addEventListener('auth:changed', handler as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handler as any); };
+  }, [loadInitialPosts]);
+
   // Memoize the render function to prevent unnecessary recalculations
   const render = useMemo(() => {
     if (loading) return <SkeletonCard height={240} />;

@@ -1,47 +1,59 @@
-import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken } from "./supabase-client";
-import { mapRowToHydratedPost, selectUserFields } from "./supabase-utils";
+import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken } from "./client";
 
-export async function favoritePost(postId: string) {
+export async function follow(userId: string) {
+  // Call server endpoint to perform the follow operation with service role privileges
   const sb = getClient();
   ensureAuthListener(sb);
   const token = await getAccessToken(sb);
-  const res = await fetch('/api/posts/favorite', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId }) });
+  const res = await fetch('/api/users/follow', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ targetId: userId }) });
   const json = await res.json();
-  if (!res.ok) throw new Error(json?.error || 'Failed to favorite');
+  if (!res.ok) throw new Error(json?.error || 'Failed to follow');
 }
 
-export async function unfavoritePost(postId: string) {
+export async function unfollow(userId: string) {
   const sb = getClient();
   ensureAuthListener(sb);
   const token = await getAccessToken(sb);
-  const res = await fetch('/api/posts/unfavorite', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId }) });
+  const res = await fetch('/api/users/unfollow', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ targetId: userId }) });
   const json = await res.json();
-  if (!res.ok) throw new Error(json?.error || 'Failed to unfavorite');
+  if (!res.ok) throw new Error(json?.error || 'Failed to unfollow');
 }
 
-export async function isFavorite(postId: string) {
-  const cur = await getCurrentUser();
-  if (!cur) return false;
-  const posts = await getFavoritePosts();
-  return posts.some(p => p.id === postId);
+export async function isFollowing(userId: string) {
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const me = await getCachedAuthUser(sb);
+  if (!me) return false;
+  const { data: profile, error } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+  if (error || !profile) return false;
+  const current: string[] = profile.following || [];
+  return !!current.includes(userId);
 }
 
-export async function getFavoritePosts() {
-  // Keep this read operation client-side (reads are safe with anon key)
+export async function getFollowingUsers(userId?: string) {
   const sb = getClient();
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
   if (!me) return [];
-  const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
-  if (profErr || !profile) return [];
-  const ids: string[] = profile.favorites || [];
-  if (!ids.length) return [];
-const { data, error } = await sb.from("posts").select("*, users!left(*), comments!left(id)").in("id", ids);
-  if (error) throw error;
-  return (data || []).map((row: any) => mapRowToHydratedPost(row));
+  const targetUserId = userId || me.id;
+  // Only allow viewing own following for privacy
+  if (targetUserId !== me.id) return [];
+  const { data: profile, error } = await sb.from("users").select("following").eq("id", targetUserId).limit(1).single();
+  if (error || !profile) return [];
+  const followingIds: string[] = profile.following || [];
+  if (followingIds.length === 0) return [];
+  const { data: users, error: usersError } = await sb.from("users").select("id, username, display_name, avatar_url, joined_at").in("id", followingIds);
+  if (usersError || !users) return [];
+  return users.map(u => ({
+    id: u.id,
+    username: u.username || "",
+    displayName: u.display_name || "",
+    avatarUrl: u.avatar_url || "/logo.svg",
+    joinedAt: u.joined_at || "",
+  }));
 }
 
-// Helper function to get current user - needed for favorites
+// Helper function to get current user - needed for follow/unfollow
 async function getCurrentUser() {
   const sb = getClient();
   ensureAuthListener(sb);

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { api } from "@/src/lib/api";
-import { getClient, getAccessToken } from '@/src/lib/api/supabase-client';
+import { getClient, getAccessToken } from '@/src/lib/api/client';
 import { useToast } from "./Toast";
 
 export function NotificationListener() {

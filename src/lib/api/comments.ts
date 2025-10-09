@@ -1,5 +1,5 @@
-import { getClient, logSupabaseError, getAccessToken } from "./supabase-client";
-import { DEFAULT_AVATAR } from "./supabase-utils";
+import { getClient, logSupabaseError, getAccessToken } from "./client";
+import { DEFAULT_AVATAR } from "./utils";
 
 export async function getComments(postId: string) {
   const sb = getClient();
@@ -82,7 +82,7 @@ export async function addComment(postId: string, text: string) {
 // Helper function to get current user - needed for comments
 async function getCurrentUser() {
   const sb = getClient();
-  const user = await (await import("./supabase-client")).getCachedAuthUser(sb);
+  const user = await (await import("./client")).getCachedAuthUser(sb);
   if (!user) return null;
   // try to find a matching profile in users table
   const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).maybeSingle();

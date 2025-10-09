@@ -1,10 +1,10 @@
-import { getExploreFeed, getExploreFeedPage, getFollowingFeed, getFollowingFeedPage, getUserPosts, getPostsByDate, getPost, updatePost, deletePost, canPostToday, createOrReplaceToday } from "./supabase-posts";
-import { getSupabaseClient, getSupabaseClientRaw } from "./supabase-client";
-import { getUsers, getCurrentUser, loginAs, getUser, getUserByUsername, updateUser, updateCurrentUser, signOut } from "./supabase-users";
-import { follow, unfollow, isFollowing, getFollowingUsers } from "./supabase-follows";
-import { favoritePost, unfavoritePost, isFavorite, getFavoritePosts } from "./supabase-favorites";
-import { getComments, addComment } from "./supabase-comments";
-import { calendarStats } from "./supabase-calendar";
+import { getExploreFeed, getExploreFeedPage, getFollowingFeed, getFollowingFeedPage, getUserPosts, getPostsByDate, getPost, updatePost, deletePost, canPostToday, createOrReplaceToday } from "./posts";
+import { getSupabaseClient, getSupabaseClientRaw } from "./client";
+import { getUsers, getCurrentUser, loginAs, getUser, getUserByUsername, updateUser, updateCurrentUser, signOut } from "./users";
+import { follow, unfollow, isFollowing, getFollowingUsers } from "./follows";
+import { favoritePost, unfavoritePost, isFavorite, getFavoritePosts } from "./favorites";
+import { getComments, addComment } from "./comments";
+import { calendarStats } from "./calendar";
 import type { Api } from "../types";
 
 export const supabaseApi: Api = {

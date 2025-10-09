@@ -1,5 +1,5 @@
 import type { CalendarStats } from "../types";
-import { getClient } from "./supabase-client";
+import { getClient } from "./client";
 import { toUTCDateKey } from "../date";
 
 export async function calendarStats({ year, monthIdx }: { year: number; monthIdx: number }) {

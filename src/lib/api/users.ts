@@ -1,6 +1,6 @@
 import type { User } from "../types";
-import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, getAccessToken } from "./supabase-client";
-import { mapProfileToUser, DEFAULT_AVATAR } from "./supabase-utils";
+import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, getAccessToken } from "./client";
+import { mapProfileToUser, DEFAULT_AVATAR } from "./utils";
 import { logger } from "../logger";
 
 export async function getUsers() {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { mapProfileToUser } from '@/src/lib/api/supabase-utils';
+import { mapProfileToUser } from '@/src/lib/api/utils';
 
 function looksLikeUuid(s: string) {
   return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);

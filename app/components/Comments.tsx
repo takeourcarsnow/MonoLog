@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
 import { api } from "@/src/lib/api";
-import { getClient, getAccessToken } from '@/src/lib/api/supabase-client';
+import { getClient, getAccessToken } from '@/src/lib/api/client';
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
 import { useToast } from "./Toast";

@@ -1,5 +1,5 @@
-import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, getAccessToken } from "./supabase-client";
-import { mapRowToHydratedPost, selectUserFields } from "./supabase-utils";
+import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, getAccessToken } from "./client";
+import { mapRowToHydratedPost, selectUserFields } from "./utils";
 import { logger } from "../logger";
 
 export async function getExploreFeed() {

@@ -134,6 +134,12 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch (_) {}
       return;
     }
+    // Previously we avoided starting drag when touching the image so that
+    // inner ImageZoom could handle double-tap/zoom. That caused horizontal
+    // swipes on images to bubble to the outer app Swiper and change
+    // sections. Allow starting drag even when touching an IMG so the
+    // carousel captures horizontal swipes; ImageZoom still handles taps
+    // and pinch gestures via its own listeners.
     const t = e.touches[0];
     startDrag(t.clientX, t.clientY, false);
   };
@@ -184,6 +190,8 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
 
   const onMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
+    // Allow mouse drags starting on images as well so desktop horizontal
+    // dragging doesn't accidentally change the outer view.
     startDrag(e.clientX, e.clientY, false);
     // attach doc move/up to support dragging outside element
     const move = (ev: MouseEvent) => moveDrag(ev.clientX, ev.clientY);

@@ -31,19 +31,16 @@ export const SingleMedia = memo(function SingleMedia({
     showFavoriteFeedback,
     pathname,
     postHref,
-    disableMediaNavigation,
+    disableMediaNavigation: true,
   });
 
   return (
-    <a
-      href={postHref}
+    <div
       className="media-link"
       draggable={false}
-      onClick={handleMediaClick}
       onDragStart={(e: React.DragEvent) => e.preventDefault()}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter') handleMediaClick(e as any); }}
     >
       <ImageZoom
         loading="lazy"
@@ -51,6 +48,6 @@ export const SingleMedia = memo(function SingleMedia({
         alt={alt || "Photo"}
         onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => (e.currentTarget.classList.add("loaded"))}
       />
-    </a>
+    </div>
   );
 });

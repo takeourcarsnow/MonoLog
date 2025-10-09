@@ -29,6 +29,7 @@ export function useAppShellNavigation(
   // Listen for carousel drag events from inner components and temporarily
   // disable the outer Swiper's touch interactions so inner carousels can
   // handle horizontal swipes without the whole view changing.
+  // Also disable during zoom and pan to prevent accidental view changes.
   useEffect(() => {
     let touchDisabledTimeout: NodeJS.Timeout;
 
@@ -37,6 +38,7 @@ export function useAppShellNavigation(
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) {
           inst.allowTouchMove = false;
+          inst.enabled = false;
           // Failsafe: re-enable touch after 5 seconds if end event is missed
           if (touchDisabledTimeout) clearTimeout(touchDisabledTimeout);
           touchDisabledTimeout = setTimeout(() => {
@@ -44,6 +46,7 @@ export function useAppShellNavigation(
               const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
               if (inst && !inst.allowTouchMove) {
                 inst.allowTouchMove = true;
+                inst.enabled = true;
               }
             } catch (_) { /* ignore */ }
           }, 5000);
@@ -55,6 +58,7 @@ export function useAppShellNavigation(
         const inst = swiperRef.current && (swiperRef.current.swiper ? swiperRef.current.swiper : swiperRef.current);
         if (inst) {
           inst.allowTouchMove = true;
+          inst.enabled = true;
           if (touchDisabledTimeout) {
             clearTimeout(touchDisabledTimeout);
           }
@@ -64,11 +68,19 @@ export function useAppShellNavigation(
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:carousel_drag_start', onDragStart as any);
       window.addEventListener('monolog:carousel_drag_end', onDragEnd as any);
+      window.addEventListener('monolog:zoom_start', onDragStart as any);
+      window.addEventListener('monolog:zoom_end', onDragEnd as any);
+      window.addEventListener('monolog:pan_start', onDragStart as any);
+      window.addEventListener('monolog:pan_end', onDragEnd as any);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('monolog:carousel_drag_start', onDragStart as any);
         window.removeEventListener('monolog:carousel_drag_end', onDragEnd as any);
+        window.removeEventListener('monolog:zoom_start', onDragStart as any);
+        window.removeEventListener('monolog:zoom_end', onDragEnd as any);
+        window.removeEventListener('monolog:pan_start', onDragStart as any);
+        window.removeEventListener('monolog:pan_end', onDragEnd as any);
       }
     };
   }, []);

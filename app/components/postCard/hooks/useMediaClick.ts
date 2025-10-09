@@ -7,6 +7,7 @@ interface UseMediaClickProps {
   pathname: string;
   postHref: string;
   disableMediaNavigation?: boolean;
+  allowImageClickNavigation?: boolean;
 }
 
 export function useMediaClick({
@@ -16,6 +17,7 @@ export function useMediaClick({
   pathname,
   postHref,
   disableMediaNavigation,
+  allowImageClickNavigation = true,
 }: UseMediaClickProps) {
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<any>(null);
@@ -27,6 +29,8 @@ export function useMediaClick({
     if (dblClickDetectedRef.current) return;
     const onListing = pathname === '/' || (pathname || '').startsWith('/feed') || (pathname || '').startsWith('/explore');
     if (onListing) return;
+    // Don't navigate if clicking on image and not allowed
+    if (!allowImageClickNavigation && (e.target as HTMLElement)?.tagName === 'IMG') return;
     clickCountRef.current += 1;
     if (clickCountRef.current === 1) {
       clickTimerRef.current = setTimeout(() => {

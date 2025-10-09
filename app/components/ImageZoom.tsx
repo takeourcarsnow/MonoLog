@@ -156,8 +156,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       const containerWidth = rect.width;
       const containerHeight = rect.height;
 
-      const newTx = -(localX * zoomScale - containerWidth / 2);
-      const newTy = -(localY * zoomScale - containerHeight / 2);
+      const newTx = -(localX - containerWidth / 2) * zoomScale;
+      const newTy = -(localY - containerHeight / 2) * zoomScale;
 
       // Clamp to bounds
       const bounds = getBounds(zoomScale);
@@ -179,11 +179,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (scale <= 1) return;
     // record pointer start to distinguish tap vs drag
     pointerStartRef.current = { x: e.clientX, y: e.clientY };
     movedRef.current = false;
-
-    if (scale <= 1) return;
 
     setIsPanning(true);
     panStartRef.current = {
@@ -581,7 +580,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           // second tap and zoom the page instead of sending events to us.
           // For non-fullscreen mode, allow pan-y when unzoomed so the page
           // can still scroll vertically.
-          touchAction: isFullscreen ? "none" : (scale > 1 || isPanning || pinchRef.current ? "none" : "pan-y"),
+          touchAction: "auto",
         display: "block",
         width: "100%",
         height: isFullscreen ? "100%" : (isTile ? "100%" : undefined),
@@ -589,10 +588,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         ...style,
       }}
     onDragStart={(e) => e.preventDefault()}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
     /* Native touch listeners are attached in an effect with passive: false so
       we can call preventDefault only when needed (pinch or panning). */
     >

@@ -188,7 +188,8 @@ export const Carousel = memo(function Carousel({
     showFavoriteFeedback,
     pathname,
     postHref,
-    disableMediaNavigation,
+    disableMediaNavigation: true,
+    allowImageClickNavigation: false,
   });
 
   return (
@@ -209,6 +210,8 @@ export const Carousel = memo(function Carousel({
         ref={trackRef}
         {...carouselTouchProps}
         role="list"
+        // Allow vertical page scrolling but ensure horizontal drags are
+        // delivered to our JS handlers so the carousel can change slides.
         style={{ touchAction: 'pan-y' }}
       >
         {imageUrls.map((u: string, idx: number) => (
@@ -220,15 +223,12 @@ export const Carousel = memo(function Carousel({
             aria-label={`${idx + 1} of ${imageUrls.length}`}
             style={{ minHeight: 0 }}
           >
-            <a
-              href={postHref}
+            <div
               className="media-link"
               draggable={false}
-              onClick={handleMediaClick}
               onDragStart={(e: React.DragEvent) => e.preventDefault()}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleMediaClick(e as any); }}
             >
               <ImageZoom
                 loading="lazy"
@@ -250,7 +250,7 @@ export const Carousel = memo(function Carousel({
                 }}
                 onDragStart={(e: React.DragEvent) => e.preventDefault()}
               />
-            </a>
+            </div>
           </div>
         ))}
       </div>

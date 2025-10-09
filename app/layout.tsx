@@ -76,6 +76,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);}else{try{var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');document.documentElement.setAttribute('data-theme',(m&&m.matches)?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} }catch(e){} })();` }}
         />
         <script
+          id="set-vh"
+          dangerouslySetInnerHTML={{ __html: `(function(){try{function setVh(){document.documentElement.style.setProperty('--viewport-height', (window.innerHeight/100) + 'px');} setVh(); window.addEventListener('resize', setVh); window.addEventListener('orientationchange', setVh);}catch(e){} })();` }}
+        />
+        <script
           id="runtime-supabase-init"
           dangerouslySetInnerHTML={{ __html: (function(){
             try {

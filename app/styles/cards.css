@@ -7,7 +7,7 @@
   width: 100%;
   box-sizing: border-box;
   /* keep a small horizontal padding so full-bleed slides don't touch the edges */
-  padding: calc(4px + var(--safe-top, 0px)) 12px 12px 12px; /* much smaller top padding */
+  padding: calc(4px + var(--safe-top, 0px)) var(--page-side-padding) 12px var(--page-side-padding); /* much smaller top padding */
   flex: 1;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
@@ -513,7 +513,7 @@
 @media (max-width: 768px) {
   .feed {
     gap: 22px;
-    padding: calc(4px + var(--safe-top, 0px)) 16px 16px 16px;
+    padding: calc(4px + var(--safe-top, 0px)) var(--page-side-padding-mobile) var(--page-side-padding-mobile) var(--page-side-padding-mobile);
   }
   .feed.grid-view {
     padding: calc(6px + var(--safe-top, 0px)) 16px 4px 16px;

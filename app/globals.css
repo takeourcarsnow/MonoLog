@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Make sizing predictable across components */
+*, *::before, *::after { box-sizing: border-box; }
+
 /* Prevent body scrolling to avoid unwanted scrollbars */
 html, body {
   overflow: hidden;
@@ -68,7 +71,11 @@ html.about-page-scroll .content {
 
   --transition-fast: 160ms ease;
   --transition-mid: 260ms cubic-bezier(.2,.7,.2,1);
-  --maxw: 800px;
+  /* Responsive maximum content width: grows on larger screens but caps for readability */
+  --maxw: clamp(640px, 90vw, 1100px);
+  /* Page side padding (use for header, content, and feed) and mobile variant */
+  --page-side-padding: 12px;
+  --page-side-padding-mobile: 16px;
 
   /* color used for active tab / navbar indicators */
   --tab-color: var(--primary);

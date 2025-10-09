@@ -9,11 +9,10 @@
   background: color-mix(in srgb, var(--bg), transparent 10%);
   border-bottom: 1px solid var(--border);
   padding-top: calc(var(--safe-top) + 8px);
-  margin-bottom: 8px;
 }
 .header-inner {
   position: relative;
-  max-width: var(--maxw); margin: 0 auto; padding: 8px 12px;
+  max-width: var(--maxw); margin: 0 auto; padding: 8px var(--page-side-padding);
   display: flex; align-items: center; gap: 10px; justify-content: space-between;
   /* Ensure the header never expands beyond its container (prevents
      long inline labels from increasing the app width on small screens). */
@@ -49,7 +48,7 @@
   position: absolute;
   /* align with the inner container's right padding (keeps alignment with
      other controls inside the inner grid like the grid switcher) */
-  right: 12px;
+  right: var(--page-side-padding);
   top: 50%;
   transform: translateY(-50%);
 }

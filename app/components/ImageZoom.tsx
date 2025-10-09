@@ -32,7 +32,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   const scaleRef = useRef<number>(scale);
   const txRef = useRef<number>(tx);
   const tyRef = useRef<number>(ty);
-  const pinchRef = useRef<null | { initialDistance: number; initialScale: number; midX: number; midY: number }>(null);
+  const pinchRef = useRef<null | { initialDistance: number; initialScale: number; midX: number; midY: number; initialMidLocalX: number; initialMidLocalY: number }>(null);
   // Whether wheel-driven zoom is allowed. It becomes true when the user
   // explicitly starts a zoom (double-click or pinch). This prevents the
   // mouse wheel from initiating zoom on accidental scrolls.
@@ -305,7 +305,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       const dist = Math.hypot(dx, dy) || 1;
       const midX = (t0.clientX + t1.clientX) / 2;
       const midY = (t0.clientY + t1.clientY) / 2;
-      pinchRef.current = { initialDistance: dist, initialScale: scaleRef.current, midX, midY };
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const midLocalX = midX - rect.left;
+      const midLocalY = midY - rect.top;
+      pinchRef.current = { initialDistance: dist, initialScale: scaleRef.current, midX, midY, initialMidLocalX: midLocalX, initialMidLocalY: midLocalY };
       // Make sure we aren't in pan mode
       setIsPanning(false);
       panStartRef.current = null;
@@ -357,22 +361,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       const dx = t1.clientX - t0.clientX;
       const dy = t1.clientY - t0.clientY;
       const dist = Math.hypot(dx, dy) || 1;
-  const { initialDistance, initialScale } = pinchRef.current;
+  const { initialDistance, initialScale, initialMidLocalX, initialMidLocalY } = pinchRef.current;
   const ratio = dist / initialDistance;
   let newScale = Math.max(1, Math.min(maxScale, initialScale * ratio));
 
-  // Compute new translation so the current midpoint (not the initial one)
-  // stays anchored under the fingers as they move.
-  const rect = containerRef.current?.getBoundingClientRect();
-  if (!rect) return;
-  const currentMidX = (t0.clientX + t1.clientX) / 2;
-  const currentMidY = (t0.clientY + t1.clientY) / 2;
-  const midLocalX = currentMidX - rect.left;
-  const midLocalY = currentMidY - rect.top;
-
   const scaleRatio = newScale / scaleRef.current;
-  const newTx = midLocalX - (midLocalX - txRef.current) * scaleRatio;
-  const newTy = midLocalY - (midLocalY - tyRef.current) * scaleRatio;
+  const newTx = initialMidLocalX - (initialMidLocalX - txRef.current) * scaleRatio;
+  const newTy = initialMidLocalY - (initialMidLocalY - tyRef.current) * scaleRatio;
 
       const bounds = getBounds(newScale);
       const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
@@ -620,6 +615,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         ...style,
       }}
     onDragStart={(e) => e.preventDefault()}
+    onPointerDown={handlePointerDown}
+    onPointerMove={handlePointerMove}
+    onPointerUp={handlePointerUp}
     /* Native touch listeners are attached in an effect with passive: false so
       we can call preventDefault only when needed (pinch or panning). */
     >

@@ -21,7 +21,7 @@
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%;
 }
 .day {
-  border: 1px solid var(--border); border-radius: 10px; padding: 8px; min-height: 64px;
+  border: 1px solid var(--border); border-radius: 10px; padding: 8px; aspect-ratio: 1;
   display: grid; align-content: space-between; background: var(--bg-elev);
   transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
   min-width: 0;
@@ -93,7 +93,7 @@
 
 /* slightly larger touch targets and clearer spacing for mobile */
 @media (max-width: 640px) {
-  .day { padding: 10px; min-height: 76px; border-radius: 12px; }
+  .day { padding: 10px; border-radius: 12px; }
   .calendar-grid { gap: 8px; }
   .day .d { font-size: 15px; }
 }
@@ -130,7 +130,7 @@
 
 /* responsive tweaks: make days a bit taller on small screens for touch */
 @media (max-width: 420px) {
-  .day { min-height: 78px; padding: 10px; border-radius: 12px; }
+  .day { padding: 10px; border-radius: 12px; }
   .calendar-weekdays { font-size: 12px; }
 }
 
@@ -138,7 +138,7 @@
 @media (min-width: 900px) {
   .calendar { gap: 6px; }
   .calendar-grid { gap: 4px; }
-  .day { min-height: 56px; padding: 6px; }
+  .day { padding: 6px; }
   .calendar-weekdays { gap: 4px; }
   .day .d { font-size: 12px; }
   .day .count { font-size: 10px; left: 6px; bottom: 6px; }

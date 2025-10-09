@@ -95,6 +95,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })() }}
         />
+        <script
+          id="pwa-install-prevent"
+          dangerouslySetInnerHTML={{ __html: `(function(){try{window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); window.deferredPrompt = e; });}catch(e){} })();` }}
+        />
       </head>
       <body>
         <a href="#view" className="skip-link">Skip to content</a>

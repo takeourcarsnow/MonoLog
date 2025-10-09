@@ -11,7 +11,6 @@ interface BeforeInstallPromptEvent extends Event {
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const handlerRef = useRef<((e: Event) => void) | null>(null);
 
   useEffect(() => {
     // Check if already installed
@@ -37,36 +36,13 @@ export function InstallPrompt() {
     const isMobileLike = /Android|Mobile|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (!isMobileLike) return;
 
-    // Keep a reference to the handler so other callbacks can remove it
-    const handler = (e: Event) => {
-      // Respect prior choices at the moment the event fires as well.
-      const dismissed = localStorage.getItem('pwa-install-dismissed');
-      if (dismissed) return;
-      const snooze = localStorage.getItem('pwa-install-snooze');
-      if (snooze) {
-        const until = Number(snooze) || 0;
-        if (Date.now() < until) return; // still snoozed
-        // expired snooze -> remove and continue
-        localStorage.removeItem('pwa-install-snooze');
-      }
-
-      // Prevent the default mini-infobar from appearing
-      e.preventDefault();
-      // Save the event so it can be triggered later
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    // Check if the deferred prompt is available
+    if ((window as any).deferredPrompt) {
+      setDeferredPrompt((window as any).deferredPrompt);
       // Show our custom install prompt after a short delay so it doesn't
       // interrupt the user's immediate task.
       setTimeout(() => setShowPrompt(true), 3000);
-    };
-
-    // Store the handler on a ref so other handlers can remove the listener
-    handlerRef.current = handler;
-    window.addEventListener('beforeinstallprompt', handler);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      handlerRef.current = null;
-    };
+    }
   }, []);
 
   const handleInstall = async () => {
@@ -82,6 +58,7 @@ export function InstallPrompt() {
 
     // Clear the deferred prompt
     setDeferredPrompt(null);
+    (window as any).deferredPrompt = null;
     setShowPrompt(false);
   };
 
@@ -91,13 +68,7 @@ export function InstallPrompt() {
     localStorage.setItem('pwa-install-snooze', String(until));
     setShowPrompt(false);
     setDeferredPrompt(null);
-    // If the browser fires the event again we don't want to show it until
-    // the snooze expires — remove the listener for now.
-    try {
-      if (handlerRef.current) window.removeEventListener('beforeinstallprompt', handlerRef.current);
-    } catch (err) {
-      /* ignore */
-    }
+    (window as any).deferredPrompt = null;
   };
 
   // Permanently dismiss the install prompt
@@ -105,12 +76,7 @@ export function InstallPrompt() {
     localStorage.setItem('pwa-install-dismissed', 'true');
     setShowPrompt(false);
     setDeferredPrompt(null);
-    // Stop listening for future install prompts so the choice is respected
-    try {
-      if (handlerRef.current) window.removeEventListener('beforeinstallprompt', handlerRef.current);
-    } catch (err) {
-      /* ignore */
-    }
+    (window as any).deferredPrompt = null;
   };
 
   if (!showPrompt || !deferredPrompt) {

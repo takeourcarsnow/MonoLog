@@ -122,15 +122,10 @@ export function ProfileActions({
         // it because the viewed id matched the signed-in user — in that case
         // we won't render this branch because the owner branch executes above.
         <button
-          className={`btn profile-follow-btn${following ? ' following' : ''}`}
-          aria-pressed={!!following || false}
+          className="btn follow-text-btn"
           onClick={handleFollowToggle}
         >
-          <span className="icon" aria-hidden>
-            {/* follow / person icon */}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </span>
-          <span>{following ? 'Following' : 'Follow'}</span>
+          {following ? 'Unfollow' : 'Follow'}
         </button>
       )}
     </div>

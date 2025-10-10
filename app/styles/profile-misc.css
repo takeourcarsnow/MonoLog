@@ -67,7 +67,6 @@
   border: 1px solid var(--border);
   padding: 8px;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
   z-index: 60;
   width: min(320px, 86vw);
   transform-origin: top right;
@@ -99,7 +98,6 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 12%), var(--danger));
   color: white;
   border-color: transparent;
-  box-shadow: 0 10px 26px color-mix(in srgb, var(--danger), transparent 70%);
 }
 .btn.danger:hover { transform: translateY(-2px) scale(1.01); }
 .btn.danger:active { transform: translateY(0) scale(.998); }
@@ -110,7 +108,6 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 12%), var(--danger));
   color: white;
   border: 1px solid transparent;
-  box-shadow: 0 10px 26px color-mix(in srgb, var(--danger), transparent 70%);
   transform: translateY(-1px);
   animation: confirmPulse 900ms ease-out 1;
 }
@@ -149,7 +146,6 @@
   opacity: 0;
   transform: translateY(4px) scale(.985);
   animation: exploreHintIn 560ms var(--transition-mid) forwards;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
 }
 @keyframes exploreHintIn {
   to { opacity: 1; transform: translateY(0) scale(1); }

@@ -8,7 +8,6 @@
   border: 1px solid var(--border);
   padding: 12px;
   border-radius: 10px;
-  box-shadow: var(--shadow);
   z-index: 100002;
   width: 360px;
   opacity: 0;
@@ -103,7 +102,6 @@
    /* Increase max-height so taller phones can show more content before scrolling */
   max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
    overflow: auto;
-   box-shadow: var(--shadow);
    border: 1px solid var(--border);
    background: var(--bg);
    padding: 12px;
@@ -168,7 +166,6 @@
   border: 1px solid var(--border);
   padding: 14px;
   border-radius: 12px;
-  box-shadow: 0 12px 36px rgba(0,0,0,0.22);
   transition: opacity 200ms ease, transform 200ms ease;
   opacity: 0;
   transform: translateY(-4px) scale(0.995);

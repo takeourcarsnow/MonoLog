@@ -19,6 +19,7 @@ export function PublishButton({
   remaining,
   remainingMs,
   countdownTotalMs,
+  processing,
   disabled = false,
   onPublish
 }: PublishButtonProps) {
@@ -78,7 +79,7 @@ export function PublishButton({
     <button
       className={`publish-button ${canPost ? 'ready' : 'cooldown'} ${pulseAnimation ? 'pulse' : ''} ${flash ? 'flash' : ''}`}
       onClick={handleClick}
-      disabled={disabled}
+      disabled={disabled || processing}
       aria-label={
         canPost
           ? 'Publish today\u2019s post'

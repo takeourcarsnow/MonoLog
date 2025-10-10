@@ -14,7 +14,6 @@
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
   /* small-screen spacing from viewport edges: top, left/right, bottom; centered via auto */
   margin: 12px auto 12px;
 }
@@ -24,7 +23,7 @@
    the app's main content max width. */
 @media (min-width: 900px) {
   .profile-header {
-    max-width: var(--maxw);
+    max-width: 80vw;
     /* keep a vertical gutter so header and profile content are visually separated */
     margin: 12px auto 12px;
     padding-left: 12px;
@@ -35,14 +34,14 @@
 /* Ensure the posts grid that appears after the profile header is aligned
    to the same centered max width so images line up with the header panel. */
 /* On small screens keep a little horizontal gap so content doesn't touch the viewport edges */
-.profile-header ~ .grid {
+.profile-header ~ .feed.grid-view .grid {
   margin-left: 12px;
   margin-right: 12px;
   box-sizing: border-box;
 }
 @media (min-width: 900px) {
-  .profile-header ~ .grid {
-    max-width: var(--maxw);
+  .profile-header ~ .feed.grid-view .grid {
+    max-width: 80vw;
     margin: 0 auto;
     padding-left: 12px;
     padding-right: 12px;

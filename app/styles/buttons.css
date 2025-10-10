@@ -91,6 +91,18 @@
   .btn.icon svg { transform-origin: center; }
 }
 
+/* Remove tap effects from about and favorites buttons in header */
+.about-btn:active,
+.favorites-btn:active {
+  transform: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.about-btn:active::after,
+.favorites-btn:active::after {
+  display: none !important;
+}
+
 .btn { transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; }
 .btn:active { transform: translateY(1px) scale(.997); }
 
@@ -244,3 +256,41 @@
 .no-effects:focus { box-shadow: none !important; }
 .no-effects svg { transform: none !important; transition: none !important; }
 .no-effects:hover svg { transform: none !important; }
+
+/* Remove ALL animations and effects from buttons with no-tap-effects class */
+.no-tap-effects {
+  -webkit-tap-highlight-color: transparent !important;
+  transition: none !important;
+}
+.no-tap-effects,
+.no-tap-effects:active,
+.no-tap-effects:hover,
+.no-tap-effects:focus,
+.no-tap-effects:visited {
+  transform: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+.no-tap-effects::after,
+.no-tap-effects::before,
+.no-tap-effects:active::after,
+.no-tap-effects:hover::after,
+.no-tap-effects:focus::after,
+.no-tap-effects:active::before,
+.no-tap-effects:hover::before,
+.no-tap-effects:focus::before {
+  display: none !important;
+  content: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  transform: none !important;
+  animation: none !important;
+}
+.no-tap-effects svg {
+  transition: none !important;
+  transform: none !important;
+  animation: none !important;
+}

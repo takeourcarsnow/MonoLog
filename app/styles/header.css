@@ -79,21 +79,48 @@
   transform: none !important;
   outline: none !important;
 }
-/* Remove tap effects from about and favorites buttons */
-.header-actions .btn.about-btn:active,
-.header-actions .btn.favorites-btn:active {
-  transform: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-.header-actions .btn.about-btn:active::after,
-.header-actions .btn.favorites-btn:active::after {
-  background: transparent !important;
-  opacity: 0 !important;
-}
 /* Keep existing square sizing for icon variant; remove extra horizontal padding */
 .header-actions .btn.icon {
   padding: 0; /* .btn.icon already sets fixed size; zero padding ensures perfect circle */
+}
+
+/* Subtle active state for header icon buttons (About, Favorites). Uses --tab-color
+   and keeps contrast low so it's not visually heavy. We style both by adding an
+   inset underline and a faint tint so the icon appears selected when on that page. */
+.header-actions .btn.icon.active {
+  /* Slight background tint using color-mix for subtlety */
+  background: color-mix(in srgb, var(--tab-color) 8%, transparent);
+  border-radius: 10px;
+  box-shadow: inset 0 -2px 0 0 color-mix(in srgb, var(--tab-color) 45%, transparent);
+}
+
+.header-actions .btn.icon.active svg {
+  /* Tint the icon stroke slightly toward the tab color */
+  stroke: color-mix(in srgb, var(--tab-color) 65%, currentColor);
+}
+
+/* Favorites button: override to a warm yellow when active */
+.header-actions .favorites-btn.active {
+  background: color-mix(in srgb, #f6e05e 18%, transparent); /* yellow-300 tint */
+  box-shadow: inset 0 -2px 0 0 color-mix(in srgb, #f59e0b 50%, transparent); /* amber underline */
+}
+.header-actions .favorites-btn.active svg {
+  stroke: color-mix(in srgb, #f59e0b 80%, currentColor); /* amber stroke */
+}
+
+/* Stronger override: some SVGs set stroke/fill via attributes or other styles.
+   Use !important and target common attributes to ensure the star appears amber. */
+.header-actions .favorites-btn.active svg,
+.header-actions .favorites-btn.active svg * {
+  stroke: #f59e0b !important;
+  fill: none !important; /* keep it an outline icon unless a filled look is desired */
+}
+
+/* If the SVG is filled, tint the fill to a pale amber to match the active feel */
+.header-actions .favorites-btn.active svg.filled,
+.header-actions .favorites-btn.active svg.filled * {
+  fill: color-mix(in srgb, #f59e0b 70%, currentColor) !important;
+  stroke: #f59e0b !important;
 }
 
 /* Account switcher button: prevent long usernames from expanding the header.

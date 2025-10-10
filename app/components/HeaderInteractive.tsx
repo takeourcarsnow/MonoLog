@@ -93,7 +93,7 @@ export function HeaderInteractive() {
       </button>
       <div className="header-actions" id="header-actions">
             <button
-              className={`btn icon about-btn ${pathname === '/about' ? 'active' : ''}`}
+              className={`btn icon about-btn no-tap-effects ${pathname === '/about' ? 'active' : ''}`}
               title="About MonoLog"
               aria-label="About MonoLog"
               aria-current={pathname === '/about' ? 'page' : undefined}
@@ -103,7 +103,7 @@ export function HeaderInteractive() {
             </button>
         <ThemeToggle />
         <button
-          className={`btn icon favorites-btn ${favIsActive ? 'active' : ''}`}
+          className={`btn icon favorites-btn no-tap-effects ${favIsActive ? 'active' : ''}`}
           title="Favorites"
           aria-label="Favorites"
           aria-current={favIsActive ? 'page' : undefined}

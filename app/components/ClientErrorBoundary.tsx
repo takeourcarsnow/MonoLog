@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { isInAppBrowser } from '@/src/lib/detectWebview';
 
 type State = {
   error: Error | null;
@@ -69,9 +70,20 @@ function ClientErrorUI({ error, info, visibleStack, onToggle }: { error: Error; 
         <button onClick={() => {
           try { window.location.reload(); } catch (e) { }
         }} style={{padding: '8px 12px'}}>Reload</button>
-        <button onClick={() => {
-          try { window.open(window.location.href, '_blank'); } catch (e) { }
-        }} style={{padding: '8px 12px'}}>Open externally</button>
+        {isInAppBrowser() ? (
+          <>
+            <button onClick={() => {
+              try {
+                navigator.clipboard?.writeText(window.location.href);
+                alert('Link copied — open in your browser.');
+              } catch (e) { try { prompt('Copy link', window.location.href); } catch(_) {} }
+            }} style={{padding: '8px 12px'}}>Copy link</button>
+          </>
+        ) : (
+          <button onClick={() => {
+            try { window.open(window.location.href, '_blank'); } catch (e) { }
+          }} style={{padding: '8px 12px'}}>Open externally</button>
+        )}
       </div>
       {visibleStack ? (
         <pre style={{marginTop: 16, whiteSpace: 'pre-wrap', textAlign: 'left', maxWidth: '90%', overflowX: 'auto', background: '#f6f7f9', padding: 12, borderRadius: 6}}>

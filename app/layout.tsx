@@ -8,6 +8,7 @@ import InertPolyfillClient from '@/app/components/InertPolyfillClient';
 import { Navbar } from '@/app/components/NavBar';
 import { CONFIG } from '@/src/lib/config';
 import ClientErrorBoundary from '@/app/components/ClientErrorBoundary';
+import { isInAppBrowser } from '@/src/lib/detectWebview';
 
 // Self-host the previously imported Google Font for better performance & privacy.
 const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
@@ -128,7 +129,7 @@ function WebVitalsScript() {
         initWebVitals({ sampleRate: 1 });
 
         // Register service worker for caching
-        if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production') {
+  if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production' && !isInAppBrowser()) {
           navigator.serviceWorker.register('/sw.js').then((registration) => {
             // Check for updates when the page becomes visible
             document.addEventListener('visibilitychange', () => {

@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import InertPolyfillClient from '@/app/components/InertPolyfillClient';
 import { Navbar } from '@/app/components/NavBar';
 import { CONFIG } from '@/src/lib/config';
+import ClientErrorBoundary from '@/app/components/ClientErrorBoundary';
 
 // Self-host the previously imported Google Font for better performance & privacy.
 const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
@@ -104,7 +105,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#view" className="skip-link">Skip to content</a>
         <div id="app-root">
           <AppPreloader />
-          <AppShell>{children}</AppShell>
+          <ClientErrorBoundary>
+            <AppShell>{children}</AppShell>
+          </ClientErrorBoundary>
         </div>
         <Navbar />
         <InertPolyfillClient />

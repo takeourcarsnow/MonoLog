@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { memo, useState, useRef, useEffect, lazy, Suspense } from "react";
+import { memo, useState, useRef, lazy, Suspense } from "react";
 import type { HydratedPost } from "@/src/lib/types";
 import { AuthForm } from "./AuthForm";
 import { UserHeader } from "./postCard/UserHeader";
@@ -15,6 +15,10 @@ import { useFollow } from "./postCard/hooks/useFollow";
 import { useDelete } from "./postCard/hooks/useDelete";
 import { useEdit } from "./postCard/hooks/useEdit";
 import { useShare } from "./postCard/hooks/useShare";
+import { useSpotifyMeta } from "./postCard/hooks/useSpotifyMeta";
+import { useEditorAnimation } from "./postCard/hooks/useEditorAnimation";
+import { useFullscreen } from "./postCard/hooks/useFullscreen";
+import { useCardNavigation } from "./postCard/hooks/useCardNavigation";
 import { useIsMe } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
 import { usePathname, useRouter } from "next/navigation";
@@ -86,205 +90,17 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   } = useEdit(post, setPost);
   const { sharePost } = useShare(post);
 
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const spotifyMeta = useSpotifyMeta(post.spotifyLink);
+  const { fsOpen, fsSrc, fsAlt, handleOpenFullscreen, handleCloseFullscreen } = useFullscreen();
+  const handleCardClick = useCardNavigation(postHref, editing);
+  const { showEditor, editorAnim, opening, editorWrapRef, handleTransitionEnd } = useEditorAnimation(editing);
+
   const [showAuth, setShowAuth] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
   const { isMe, isLoading: authLoading } = useIsMe(post.userId);
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
   const toast = useToast();
-  const [fsOpen, setFsOpen] = useState(false);
-  const [fsSrc, setFsSrc] = useState<string | null>(null);
-  const [fsAlt, setFsAlt] = useState<string>('Photo');
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [spotifyMeta, setSpotifyMeta] = useState<{ title?: string; author_name?: string; thumbnail_url?: string } | null>(null);
-
-  const handleOpenFullscreen = (src?: string, alt?: string) => {
-    if (!src) return;
-    setFsSrc(src);
-    setFsAlt(alt || 'Photo');
-    setFsOpen(true);
-  };
-  
-  // Navigate to single-post view when clicking on non-media/canvas parts of the card
-  const handleCardClick = (e: React.MouseEvent<HTMLElement>) => {
-    try {
-      // Don't navigate if editor is open or editing is active
-      if (editing) return;
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-
-  // Ignore clicks on interactive elements: links, buttons, inputs, labels, and images
-  // Note: we intentionally do NOT exclude [role="button"] here so clicks on the
-  // photo matte/canvas (which may be inside a role=button container) can still
-  // navigate to the single-post view. We still block actual images and form controls.
-  if (target.closest('a, button, input, textarea, select, label')) return;
-      if (target.closest('img')) return;
-
-      // If the click is inside the media area (but not on the photo), don't rely on image handlers
-      // We still want clicks outside the photo on the card canvas to navigate, so only block
-      // when inside elements that should be interactive (comments, actions, editor, etc.).
-      if (target.closest('.post-editor-wrap')) return;
-      if (target.closest('.caption') || target.closest('.actions') || target.closest('.comments')) return;
-
-      // Use Next router to navigate to the single post URL
-      router.push(postHref);
-    } catch (err) {
-      // Fallback: try history push
-      try { window.history.pushState(null, '', postHref); } catch (_) {}
-    }
-  };
-  const handleCloseFullscreen = () => { setFsOpen(false); setFsSrc(null); };
-
-  // Keep the editor mounted briefly when closing so we can animate the exit.
-  const [showEditor, setShowEditor] = useState<boolean>(false);
-  const [editorAnim, setEditorAnim] = useState<'enter' | 'exit' | null>(null);
-  const [opening, setOpening] = useState<boolean>(false);
-  const editorWrapRef = useRef<HTMLDivElement | null>(null);
-  const exitTimerRef = useRef<number | null>(null);
-  const lastOpenAtRef = useRef<number | null>(null);
-  const pendingCloseTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    // fetch Spotify oEmbed metadata for nice display & embed
-    let mounted = true;
-    async function fetchOEmbed() {
-      try {
-        if (!post.spotifyLink) return;
-        const url = `https://open.spotify.com/oembed?url=${encodeURIComponent(post.spotifyLink)}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('oembed failed');
-        const json = await res.json();
-        console.log('Spotify oEmbed response:', json);
-  // we use title/author and thumbnail (album art) for display; ignore html/embed
-  if (mounted) {
-          let title = json.title || '';
-          let author_name = json.author_name;
-          let thumbnail_url = (json as any).thumbnail_url;
-          // Parse title to separate song title and artist if in "Title - Artist" or "Title – Artist" format
-          const separator = title.includes(' – ') ? ' – ' : title.includes(' - ') ? ' - ' : null;
-          if (separator) {
-            const parts = title.split(separator);
-            if (parts.length >= 2) {
-              title = parts[0].trim();
-              author_name = author_name || parts.slice(1).join(separator).trim();
-            }
-          }
-
-          // If still no author_name, try to fetch from Spotify API
-          if (!author_name) {
-            try {
-              const spotifyUrlMatch = post.spotifyLink.match(/https:\/\/open\.spotify\.com\/(track|album|playlist)\/([a-zA-Z0-9]+)/);
-              if (spotifyUrlMatch) {
-                const type = spotifyUrlMatch[1];
-                const id = spotifyUrlMatch[2];
-                // Get access token
-                const tokenRes = await fetch('/api/spotify-token');
-                if (tokenRes.ok) {
-                  const tokenData = await tokenRes.json();
-                  const accessToken = tokenData.access_token;
-                  // Fetch metadata
-                  const apiUrl = `https://api.spotify.com/v1/${type}s/${id}`;
-                  const apiRes = await fetch(apiUrl, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` },
-                  });
-                  if (apiRes.ok) {
-                    const apiData = await apiRes.json();
-                    if (type === 'track' || type === 'album') {
-                      author_name = apiData.artists?.map((a: any) => a.name).join(', ') || author_name;
-                    } else if (type === 'playlist') {
-                      author_name = apiData.owner?.display_name || author_name;
-                    }
-                    // Update thumbnail if not set
-                    if (!thumbnail_url && apiData.images?.[0]?.url) {
-                      thumbnail_url = apiData.images[0].url;
-                    }
-                  }
-                }
-              }
-            } catch (e) {
-              // Ignore API fetch failures
-            }
-          }
-
-          setSpotifyMeta({ title, author_name, thumbnail_url } as any);
-        }
-      } catch (e) {
-        // ignore failures - we'll fall back to a simple link
-      }
-    }
-    fetchOEmbed();
-    return () => { mounted = false; };
-  }, [post.spotifyLink]);
-
-  useEffect(() => {
-    // Use RAF to coordinate DOM reads/writes so the wrapper mounts collapsed
-    // and then we expand it to the measured height. For exit we set the
-    // starting height and then collapse to 0 to animate out smoothly.
-    let rafId: number | undefined;
-    function runExit() {
-      const el = editorWrapRef.current;
-      if (el) {
-        el.style.maxHeight = `${el.scrollHeight}px`;
-        rafId = requestAnimationFrame(() => {
-          setEditorAnim('exit');
-          if (el) el.style.maxHeight = '0px';
-          if (exitTimerRef.current) window.clearTimeout(exitTimerRef.current);
-          exitTimerRef.current = window.setTimeout(() => {
-            if (editorWrapRef.current) editorWrapRef.current.style.maxHeight = '';
-            setShowEditor(false);
-            setEditorAnim(null);
-            exitTimerRef.current = null;
-          }, 360);
-        }) as unknown as number;
-      } else {
-        setEditorAnim('exit');
-        if (exitTimerRef.current) window.clearTimeout(exitTimerRef.current);
-        exitTimerRef.current = window.setTimeout(() => { setShowEditor(false); setEditorAnim(null); exitTimerRef.current = null; }, 360);
-      }
-      setOpening(false);
-    }
-
-  // debug logging removed per user request
-
-  if (editing && !showEditor) {
-      setShowEditor(true);
-      setOpening(true);
-      lastOpenAtRef.current = Date.now();
-      rafId = requestAnimationFrame(() => {
-        const el = editorWrapRef.current;
-        if (el) {
-          // Ensure we start from 0 so the transition to the measured height animates
-          el.style.maxHeight = '0px';
-          // Force layout then set to scrollHeight
-          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-          el.offsetHeight;
-          el.style.maxHeight = `${el.scrollHeight}px`;
-        }
-        setEditorAnim('enter');
-      }) as unknown as number;
-    } else if (!editing && showEditor) {
-      const now = Date.now();
-      const last = lastOpenAtRef.current || 0;
-      const sinceOpen = now - last;
-      const MIN_OPEN_MS = 300;
-      if (sinceOpen < MIN_OPEN_MS) {
-        // Schedule the real exit after remaining time
-        // avoid accidental immediate closes (debounce short flaps).
-        if (pendingCloseTimerRef.current) window.clearTimeout(pendingCloseTimerRef.current);
-        pendingCloseTimerRef.current = window.setTimeout(() => {
-          pendingCloseTimerRef.current = null;
-          runExit();
-        }, MIN_OPEN_MS - sinceOpen);
-      } else {
-        runExit();
-      }
-    }
-    return () => {
-      if (typeof rafId !== 'undefined') cancelAnimationFrame(rafId as unknown as number);
-      if (pendingCloseTimerRef.current) { window.clearTimeout(pendingCloseTimerRef.current); pendingCloseTimerRef.current = null; }
-      if (exitTimerRef.current) { window.clearTimeout(exitTimerRef.current); exitTimerRef.current = null; }
-    };
-  }, [editing, showEditor]);
 
   return (
   <article id={`post-${post.id}`} onClick={handleCardClick} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
@@ -418,21 +234,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
           <div
             ref={editorWrapRef}
             className={`post-editor-wrap ${editorAnim === 'enter' ? 'enter' : editorAnim === 'exit' ? 'exit' : ''}`}
-            onTransitionEnd={(e) => {
-              // Only act when the max-height or opacity transition finishes on the wrapper
-              if (editorAnim === 'exit' && (e.propertyName === 'max-height' || e.propertyName === 'opacity')) {
-                // finished closing -> unmount
-                if (editorWrapRef.current) editorWrapRef.current.style.maxHeight = '';
-                setShowEditor(false);
-                setEditorAnim(null);
-                if (exitTimerRef.current) { window.clearTimeout(exitTimerRef.current); exitTimerRef.current = null; }
-              }
-              if (editorAnim === 'enter' && (e.propertyName === 'max-height' || e.propertyName === 'opacity')) {
-                // finished opening -> clear any inline maxHeight so layout can be natural
-                if (editorWrapRef.current) editorWrapRef.current.style.maxHeight = '';
-                setEditorAnim(null);
-              }
-            }}
+            onTransitionEnd={handleTransitionEnd}
           >
             <Suspense fallback={<div>Loading editor...</div>}>
               <Editor

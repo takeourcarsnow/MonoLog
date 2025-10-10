@@ -3,8 +3,25 @@
 
 .toolbar {
   display: flex; gap: 8px; align-items: center; justify-content: space-between;
-  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+  background: transparent; border: 1px solid var(--border); border-radius: var(--radius);
   padding: 8px 10px;
+}
+
+/* Toolbar buttons: make them text-only (no background) while keeping border and focus
+   styles. Keep the .btn.danger and .btn.confirm variants unchanged. */
+.toolbar .btn,
+.toolbar a.btn {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  padding: 6px 8px;
+}
+.toolbar .btn:hover,
+.toolbar a.btn:hover,
+.toolbar .btn:focus,
+.toolbar a.btn:focus {
+  background: transparent !important;
+  transform: none !important;
 }
 
 /* Remove the extra panel background for the post view toolbar so the back

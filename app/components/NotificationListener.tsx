@@ -12,7 +12,42 @@ export function NotificationListener() {
   useEffect(() => {
     let mounted = true;
 
-    async function poll() {
+    function isHardReload() {
+      try {
+        // Preferred modern API: check the most recent navigation entry
+        const navEntries = performance.getEntriesByType && performance.getEntriesByType('navigation');
+        if (navEntries && navEntries.length) {
+          const last = navEntries[navEntries.length - 1] as PerformanceNavigationTiming;
+          return last.type === 'reload';
+        }
+        // Fallback to deprecated API (0=navigate, 1=reload, 2=back_forward)
+        // @ts-ignore
+        if (performance && (performance as any).navigation && typeof (performance as any).navigation.type === 'number') {
+          // 1 => reload
+          return (performance as any).navigation.type === 1;
+        }
+      } catch (e) {
+        // ignore
+      }
+      return false;
+    }
+
+    // Run check if this is the first time this tab loaded the app OR if it's a hard reload.
+    // This prevents running on client-side (SPA) navigation.
+    try {
+      const key = 'monolog:notifications_checked';
+      const already = sessionStorage.getItem(key);
+      const shouldRun = !already || isHardReload();
+      if (!shouldRun) return;
+
+      // Mark as checked for this tab/session (will persist across SPA navs). If
+      // it's a hard reload, isHardReload() will be true and we'll still run.
+      sessionStorage.setItem(key, String(Date.now()));
+    } catch (e) {
+      // ignore sessionStorage errors and fall through to run once
+    }
+
+  async function poll() {
       try {
         const cur = await api.getCurrentUser();
         if (!cur) return;
@@ -55,7 +90,20 @@ export function NotificationListener() {
     }
     // Run a single check on mount (no polling)
     (async () => { await poll(); })();
-    return () => { mounted = false; };
+
+    // Also listen for auth changes (login/logout). When the user logs in we
+    // should run the notification check even if sessionStorage was previously
+    // marked, because login may have happened after the first check.
+    const handleAuth = () => {
+      // Run poll once when auth changes; don't alter sessionStorage here so we
+      // still avoid re-checks from SPA routes.
+      (async () => { try { await poll(); } catch (_) {} })();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:changed', handleAuth);
+    }
+
+    return () => { mounted = false; if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handleAuth); };
   }, [toast]);
 
   return null;

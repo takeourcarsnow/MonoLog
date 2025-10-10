@@ -19,7 +19,7 @@ export function DeleteAccountButton() {
     };
   }, []);
 
-  // manage global escape handling and body scroll when modal is open
+  // manage Escape handling when popover is open
   useEffect(() => {
     if (!confirmArm) return;
     const onKey = (e: KeyboardEvent) => {
@@ -33,11 +33,8 @@ export function DeleteAccountButton() {
         }
       }
     };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prevOverflow || "";
       document.removeEventListener("keydown", onKey);
     };
   }, [confirmArm]);
@@ -70,51 +67,30 @@ export function DeleteAccountButton() {
         </button>
 
         {confirmArm ? (
-          <div
-            className="modal-overlay"
-            role="presentation"
-            onMouseDown={() => {
-              // clicking backdrop cancels
-              setConfirmArm(false);
-              setConfirmText("");
-              setError(null);
-              if (timerRef.current) {
-                window.clearTimeout(timerRef.current);
-                timerRef.current = null;
-              }
-            }}
-          >
-            <div
-              className="modal delete-confirm-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="delete-account-title"
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              <h2 id="delete-account-title">Confirm account deletion</h2>
+          <div className="confirm-popover" role="dialog" aria-labelledby="delete-account-title" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="confirm-popover-arrow" aria-hidden />
+            <div className="confirm-popover-body">
+              <h3 id="delete-account-title">Confirm deletion</h3>
               <p className="muted">Type <strong>delete</strong> to permanently delete your account.</p>
 
-              <div className="delete-confirm-input">
-                <input
-                  ref={inputRef}
-                  className="input"
-                  aria-label="Type delete to confirm account deletion"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  onKeyDown={async (e) => {
-                    if (e.key === "Enter") {
-                      if (confirmText.trim().toLowerCase() === "delete") {
-                        // trigger deletion
-                        e.preventDefault();
-                        await performDelete();
-                      }
+              <input
+                ref={inputRef}
+                className="input"
+                aria-label="Type delete to confirm account deletion"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                onKeyDown={async (e) => {
+                  if (e.key === "Enter") {
+                    if (confirmText.trim().toLowerCase() === "delete") {
+                      e.preventDefault();
+                      await performDelete();
                     }
-                  }}
-                  placeholder="Type delete to confirm"
-                />
-              </div>
+                  }
+                }}
+                placeholder="Type delete to confirm"
+              />
 
-              <div className="delete-confirm-buttons">
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button
                   className="btn small danger"
                   onClick={async () => {
@@ -124,7 +100,7 @@ export function DeleteAccountButton() {
                   aria-disabled={loading || confirmText.trim().toLowerCase() !== "delete"}
                   title="Delete account"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 11v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 11v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Delete
                 </button>
 
                 <button
@@ -140,7 +116,7 @@ export function DeleteAccountButton() {
                   }}
                   title="Cancel"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 6l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Cancel
                 </button>
               </div>
 

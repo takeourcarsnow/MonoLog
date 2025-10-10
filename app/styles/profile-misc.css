@@ -7,6 +7,17 @@
   padding: 8px 10px;
 }
 
+/* Anchor popovers to the button wrapper so they position correctly */
+.delete-account-btn-wrapper {
+  position: relative;
+  display: inline-block; /* shrink to button width so popover aligns */
+  z-index: 40; /* sit above surrounding content */
+}
+.delete-account-btn-wrapper > .confirm-popover {
+  right: 0; /* align popover's right edge with wrapper's right edge */
+  top: calc(100% + 8px); /* place just below the button */
+}
+
 /* Toolbar buttons: make them text-only (no background) while keeping border and focus
    styles. Keep the .btn.danger and .btn.confirm variants unchanged. */
 .toolbar .btn,

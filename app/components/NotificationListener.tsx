@@ -11,7 +11,6 @@ export function NotificationListener() {
 
   useEffect(() => {
     let mounted = true;
-    let interval = 0 as any;
 
     async function poll() {
       try {
@@ -54,10 +53,9 @@ export function NotificationListener() {
         // ignore polling errors
       }
     }
-
-    // initial poll then interval
-    (async () => { await poll(); if (!mounted) return; interval = setInterval(poll, 6000); })();
-    return () => { mounted = false; clearInterval(interval); };
+    // Run a single check on mount (no polling)
+    (async () => { await poll(); })();
+    return () => { mounted = false; };
   }, [toast]);
 
   return null;

@@ -182,8 +182,18 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: userError.message || userError }, { status: 500 });
     }
 
-    // Note: Supabase auth user deletion would require admin privileges or a server-side function
-    // For now, we'll just delete the profile data. The auth user remains but can't access the app.
+    // Delete the auth user to prevent re-signin
+    try {
+      const { error: authError } = await sb.auth.admin.deleteUser(actorId);
+      if (authError) {
+        console.error('DELETE /api/users/me: error deleting auth user', authError);
+        // Don't fail the entire deletion if auth user deletion fails
+        // The profile is already deleted, which is the main goal
+      }
+    } catch (e) {
+      console.error('DELETE /api/users/me: exception deleting auth user', e);
+      // Continue even if auth deletion fails
+    }
 
     return NextResponse.json({ success: true });
   } catch (e: any) {

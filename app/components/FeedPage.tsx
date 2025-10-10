@@ -133,20 +133,17 @@ export function FeedPage({
       );
     }
     return (
-      <>
-        {/* Grid View */}
-        <div style={{ display: view === "grid" ? "block" : "none" }}>
-          <Suspense fallback={<div>Loading grid...</div>}>
-            <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
-              const sentinel = document.querySelector('.tile.sentinel');
-              if (sentinel) {
-                setSentinel(sentinel as HTMLDivElement);
-              }
-            }} error={error} />
-          </Suspense>
-        </div>
-        {/* List View */}
-        <div style={{ display: view === "list" ? "block" : "none" }}>
+      view === "grid" ? (
+        <Suspense fallback={<div>Loading grid...</div>}>
+          <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
+            const sentinel = document.querySelector('.tile.sentinel');
+            if (sentinel) {
+              setSentinel(sentinel as HTMLDivElement);
+            }
+          }} error={error} />
+        </Suspense>
+      ) : (
+        <>
           {posts.map(p => <PostCard key={p.id} post={p} />)}
           <InfiniteScrollLoader
             loading={loadingMore}
@@ -161,8 +158,8 @@ export function FeedPage({
               }
             }}
           />
-        </div>
-      </>
+        </>
+      )
     );
   }, [loading, posts, view, hasMore, loadingMore, setSentinel, error, emptyMessage, title, viewStorageKey]);
 

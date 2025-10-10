@@ -255,7 +255,9 @@
   box-sizing: border-box;
   background: transparent;
 }
-.view-toggle .btn { padding: 6px 10px; }
+.view-toggle.tight {
+  margin: 2px auto 0px;
+}
 
 /* View toggle icon: smooth fade+scale between list and grid layers. */
 .view-btn { display: inline-flex; align-items: center; justify-content: center; padding: 6px; border-radius: 8px; }

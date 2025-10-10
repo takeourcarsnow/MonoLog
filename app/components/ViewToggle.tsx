@@ -1,10 +1,11 @@
 "use client";
 
+import { memo } from "react";
 import { LayoutGrid, LayoutList } from "lucide-react";
 
-function ViewToggle({ title, subtitle, selected, onSelect }: { title: React.ReactNode; subtitle: string; selected: "list" | "grid"; onSelect: (v: "list" | "grid") => void }) {
+const ViewToggle = memo(function ViewToggle({ title, subtitle, selected, onSelect, className }: { title: React.ReactNode; subtitle: string; selected: "list" | "grid"; onSelect: (v: "list" | "grid") => void; className?: string }) {
   return (
-    <div className="view-toggle">
+    <div className={`view-toggle ${className || ''}`}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <strong>{title}</strong>
         <div className="dim">{subtitle}</div>
@@ -29,6 +30,6 @@ function ViewToggle({ title, subtitle, selected, onSelect }: { title: React.Reac
       </div>
     </div>
   );
-}
+});
 
 export { ViewToggle };

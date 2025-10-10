@@ -5,6 +5,9 @@ import { monthMatrix, toDateKey } from "@/src/lib/date";
 import { api } from "@/src/lib/api";
 import { PostCard } from "./PostCard";
 import InlinePreloader from "./InlinePreloader";
+import { ViewToggle } from "./ViewToggle";
+import { GridView } from "./GridView";
+import { Calendar } from "lucide-react";
 import type { HydratedPost } from "@/src/lib/types";
 
 const weekdays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -20,6 +23,7 @@ export function CalendarView() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const [shouldScroll, setShouldScroll] = useState(false);
+  const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("calendarView") as any)) || "list");
 
   // Load stats whenever the current month/year changes. Inline the async call
   // so we don't need to include the `loadStats` function in the dependency list.
@@ -55,6 +59,23 @@ export function CalendarView() {
     }
   }, [selectedDay]);
 
+  const goToPrevMonth = useCallback(() => {
+    const m = curMonth - 1;
+    if (m < 0) { setMonth(11); setYear(curYear - 1); } else setMonth(m);
+  }, [curMonth, curYear]);
+
+  const goToNextMonth = useCallback(() => {
+    const m = curMonth + 1;
+    if (m > 11) { setMonth(0); setYear(curYear + 1); } else setMonth(m);
+  }, [curMonth, curYear]);
+
+  const goToToday = useCallback(() => {
+    const n = new Date();
+    setYear(n.getFullYear());
+    setMonth(n.getMonth());
+    setSelectedDay(null);
+  }, []);
+
   // Auto-select today when the calendar initially shows the current month/year
   useEffect(() => {
     try {
@@ -85,25 +106,19 @@ export function CalendarView() {
       <div className="calendar-page">
       <div className="calendar">
         <div className="header">
-          <button className="btn" id="prev" aria-label="Previous month" onClick={() => {
-            const m = curMonth - 1;
-            if (m < 0) { setMonth(11); setYear(curYear - 1); } else setMonth(m);
-          }}>←</button>
+          <button className="btn" id="prev" aria-label="Previous month" onClick={goToPrevMonth}>←</button>
           <div>
             <strong
               id="title"
               role="button"
               tabIndex={0}
-              onClick={() => { const n = new Date(); setYear(n.getFullYear()); setMonth(n.getMonth()); setSelectedDay(null); }}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && ((): void => { const n = new Date(); setYear(n.getFullYear()); setMonth(n.getMonth()); setSelectedDay(null); })()}
+              onClick={goToToday}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && goToToday()}
             >
               {new Date(curYear, curMonth).toLocaleString(undefined, { month: "long", year: "numeric" })}
             </strong>
           </div>
-          <button className="btn" id="next" aria-label="Next month" onClick={() => {
-            const m = curMonth + 1;
-            if (m > 11) { setMonth(0); setYear(curYear + 1); } else setMonth(m);
-          }}>→</button>
+          <button className="btn" id="next" aria-label="Next month" onClick={goToNextMonth}>→</button>
         </div>
         <div className="calendar-weekdays">
           {weekdays.map(d => <div key={d} className="dim" style={{ textAlign: "center" }}>{d}</div>)}
@@ -138,8 +153,8 @@ export function CalendarView() {
                 onClick={() => showDay(dk)}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && showDay(dk)}
               >
-                {/* date number: animate in subtly with a per-item stagger using --date-delay */}
-                <div className="d date-anim" style={{ ['--date-delay' as any]: `${idx * 28}ms` } as React.CSSProperties}>{d.getDate()}</div>
+                {/* date number */}
+                <div className="d" style={{ ['--date-delay' as any]: `${idx * 28}ms` } as React.CSSProperties}>{d.getDate()}</div>
                 {/* Today badge removed per user request */}
                 {count > 0 ? <div className={loadingStats ? "dot skeleton" : "dot"} aria-hidden /> : null}
               </div>
@@ -159,21 +174,27 @@ export function CalendarView() {
           </div>
         </div>
       </div>
-  <div className="feed" id="day-feed" ref={feedRef}>
-        {selectedDay ? (
-          <div style={{ marginBottom: 8, textAlign: 'center' }}>
-            {/* keyed wrapper so changing selectedDay or counts will retrigger CSS animation */}
-            <div key={selectedDay + "-" + (stats.counts[selectedDay] || 0)} className="day-header-anim">
-              <strong style={{ display: 'block' }}>{new Date(selectedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
-              <div className="dim" style={{ marginTop: 4 }}>{(stats.counts[selectedDay] || 0)} public post{(stats.counts[selectedDay] || 0) === 1 ? '' : 's'}</div>
-            </div>
-          </div>
-        ) : null}
+  <div className="feed grid-view" id="day-feed" ref={feedRef}>
+        {dayPosts && dayPosts.length > 0 && (
+          <ViewToggle
+            title={<Calendar size={20} strokeWidth={2} />}
+            subtitle="Posts from selected day"
+            selected={view}
+            onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("calendarView", v); }}
+            className="tight"
+          />
+        )}
 
   {loadingDay ? (
     <InlinePreloader />
   ) : (
-    dayPosts ? (dayPosts.length ? dayPosts.map(p => <PostCard key={p.id} post={p} disableMediaNavigation={true} />)
+    dayPosts ? (dayPosts.length ? (
+      view === "grid" ? (
+        <GridView posts={dayPosts} hasMore={false} setSentinel={() => {}} loadingMore={false} />
+      ) : (
+        dayPosts.map(p => <PostCard key={p.id} post={p} disableMediaNavigation={true} />)
+      )
+    )
       : <div className="empty">No public posts for that day.</div>)
       : null
   )}

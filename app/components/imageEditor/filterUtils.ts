@@ -4,9 +4,13 @@ export function mapBasicAdjustments({ exposure = 0, contrast = 0, saturation = 0
   // NOTE: invert sign so that increasing the temperature slider -> warmer (positive hue)
   const hue = Math.round((-temperature / 100) * 30);
 
-  // Convert saturation from -1..1 range to CSS saturation value
-  // -1 = desaturated (0.5), 0 = neutral (1.0), 1 = saturated (1.5)
-  const cssSaturation = 1 + saturation * 0.5;
+  // Convert saturation from -1..1 range to CSS saturation value.
+  // Use a mildly non-linear mapping so small adjustments near 0 are subtle
+  // while larger adjustments become progressively stronger.
+  // -1 => ~0.6, 0 => 1.0, 1 => ~1.6
+  const satSign = Math.sign(saturation || 0);
+  const satMag = Math.abs(saturation);
+  const cssSaturation = 1 + satSign * (0.4 + 0.6 * Math.pow(satMag, 0.9)) * satMag;
 
   // Map exposure to a brightness multiplier with a smooth exponential curve.
   // This makes small slider movements in the + direction produce gentle increases
@@ -34,10 +38,19 @@ export function mapBasicAdjustments({ exposure = 0, contrast = 0, saturation = 0
     : 1.0;
 
   // Convert user contrast from -1..1 range to CSS contrast value
-  const cssContrast = 1 + contrast * 0.5;
+  // Map contrast more gently to avoid overly punchy results at small slider values.
+  // Use a mild exponential mapping so +contrast yields a pleasing ramp while
+  // -contrast darkens in a predictable way.
+  const cssContrastBase = 1 + contrast * 0.45;
+  const cssContrast = contrast >= 0 ? Math.pow(cssContrastBase, 1.06) : 1 / Math.pow(1 - contrast * 0.35, 1.02);
   const finalContrast = cssContrast * highlightProtectionContrast;
 
   const baseFilter = `brightness(${brightness}) contrast(${finalContrast}) saturate(${cssSaturation}) hue-rotate(${hue}deg)`;
+
+  // Temperature tint: provide a small normalized tint value (-1..1) which
+  // the renderer/shader can use to apply a warm/cool color cast. We keep the
+  // tint subtle by default so temperature behaves predictably.
+  const tempTint = Math.max(-1, Math.min(1, temperature / 100));
 
   return {
     brightness,

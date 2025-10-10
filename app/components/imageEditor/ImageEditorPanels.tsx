@@ -101,6 +101,9 @@ export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
           selectedFilter={props.selectedFilter}
           setSelectedFilter={props.setSelectedFilter}
           selectedFilterRef={props.selectedFilterRef}
+          filterStrength={props.filterStrength}
+          setFilterStrength={props.setFilterStrength}
+          filterStrengthRef={props.filterStrengthRef}
           draw={props.draw}
           resetControlToDefault={props.resetControlToDefault}
           filtersContainerRef={props.filtersContainerRef}

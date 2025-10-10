@@ -74,11 +74,12 @@ export function useImageEditorActions(
       Math.abs(vignette) > 0.001,
       Math.abs(rotation) > 0.001,
       selectedFilter !== 'none',
+      Math.abs(filterStrength - 1) > 0.001,
       Math.abs(grain) > 0.001,
       frameThickness > 0,
     ];
     return checks.some(Boolean);
-  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, grain, frameThickness, originalRef, rotation]);
+  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, filterStrength, grain, frameThickness, originalRef, rotation]);
 
   // Action wrappers that delegate to the standalone action helpers
   function applyEdit() {

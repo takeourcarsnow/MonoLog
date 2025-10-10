@@ -75,13 +75,14 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       try {
         // use the computed filter values from computeFilterValues
         const fv: any = filterValues;
-        const m = mapBasicAdjustments({ exposure: fv.curExposure, contrast: fv.curContrast, saturation: fv.curSaturation, temperature: fv.curTemperature });
-        const brightness = m.brightness || 1;
-        const contrast = m.finalContrast || 1;
-        const saturation = m.cssSaturation || 1;
-        const hueDeg = m.hue || 0;
+  const m = mapBasicAdjustments({ exposure: fv.curExposure, contrast: fv.curContrast, saturation: fv.curSaturation, temperature: fv.curTemperature });
+  const brightness = m.brightness || 1;
+  const contrast = m.finalContrast || 1;
+  const saturation = m.cssSaturation || 1;
+  const hueDeg = m.hue || 0;
+  const tempTint = (m as any).tempTint || 0;
 
-        const tmpCanvas = applyWebGLAdjustments(img, imgW, imgH, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength });
+  const tmpCanvas = applyWebGLAdjustments(img, imgW, imgH, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength, tempTint });
         // draw the processed GPU canvas (snapshot) onto our main canvas, taking rotation into account
         drawRotated(tmpCanvas, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
         usedGpu = true;

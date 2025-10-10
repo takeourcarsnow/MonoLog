@@ -48,6 +48,7 @@ uniform float u_brightness; // multiplier
 uniform float u_contrast; // 1 = neutral
 uniform float u_saturation; // 1 = neutral
 uniform float u_hue; // degrees
+uniform float u_tempTint; // -1..1 warm/cool tint
 uniform float u_presetId; // 0=none,1=sepia,2=mono,3=cinema,...
 uniform float u_presetStrength; // 0..1
 
@@ -158,6 +159,16 @@ void main() {
   }
 
   color = mix(color, clamp(presetColor, 0.0, 1.0), ps);
+
+  // Apply subtle temperature tinting: positive tint favors warmer tones (increase R, slightly reduce B),
+  // negative tint favors cooler tones. Keep tint mild and clamp final color.
+  float tt = clamp(u_tempTint, -1.0, 1.0);
+  if (abs(tt) > 0.001) {
+    // warm: boost red, slightly lower blue; cool: inverse
+    vec3 warmBias = vec3(0.03, 0.01, -0.02);
+    vec3 coolBias = vec3(-0.02, 0.01, 0.03);
+    color += mix(coolBias, warmBias, (tt + 1.0) * 0.5) * abs(tt);
+  }
 
   gl_FragColor = vec4(clamp(color, 0.0, 1.0), t.a);
 }
@@ -276,7 +287,7 @@ export function applyWebGLAdjustments(
   img: CanvasImageSource,
   w: number,
   h: number,
-  adjustments: { brightness: number; contrast: number; saturation: number; hue: number; preset?: string; presetStrength?: number }
+  adjustments: { brightness: number; contrast: number; saturation: number; hue: number; preset?: string; presetStrength?: number; tempTint?: number }
 ) {
   initShared(w, h);
 
@@ -287,7 +298,10 @@ export function applyWebGLAdjustments(
     out.height = Math.max(1, Math.round(h));
     const ctx = out.getContext('2d')!;
     // build CSS filter string matching numeric adjustments
-    const bf = `brightness(${adjustments.brightness}) contrast(${adjustments.contrast}) saturate(${adjustments.saturation}) hue-rotate(${adjustments.hue}deg)`;
+  // Apply a subtle color tint for temperature using a tiny hue-rotate fallback
+  const tempTint = adjustments.tempTint || 0;
+  const tintHue = tempTint * 6.0; // small hue offset (degrees)
+  const bf = `brightness(${adjustments.brightness}) contrast(${adjustments.contrast}) saturate(${adjustments.saturation}) hue-rotate(${adjustments.hue + tintHue}deg)`;
     const presetStr = (function(name?: string){
       if (!name) return '';
       // map names to same FILTER_PRESETS fragments used elsewhere
@@ -350,6 +364,9 @@ export function applyWebGLAdjustments(
   if (shared.u_contrast) gl.uniform1f(shared.u_contrast, adjustments.contrast);
   if (shared.u_saturation) gl.uniform1f(shared.u_saturation, adjustments.saturation);
   if (shared.u_hue) gl.uniform1f(shared.u_hue, adjustments.hue);
+  // tempTint: subtle warm/cool tint - shader will use this if available
+  // @ts-ignore (uniform may not exist in older builds)
+  if ((shared as any).u_tempTint) gl.uniform1f((shared as any).u_tempTint, adjustments.tempTint || 0);
   // preset mapping to numeric id
   const presetName = adjustments.preset || '';
   const presetId = (function(name: string){

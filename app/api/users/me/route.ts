@@ -152,23 +152,28 @@ export async function DELETE(req: Request) {
     }
 
     // Delete all follows (both following and followers)
-    const { error: followsError1 } = await sb.from('follows').delete().eq('follower_id', actorId);
-    if (followsError1) {
-      console.error('DELETE /api/users/me: error deleting follows (follower)', followsError1);
-      return NextResponse.json({ error: followsError1.message || followsError1 }, { status: 500 });
+    try {
+      const { error: followsError1 } = await sb.from('follows').delete().eq('follower', actorId);
+      if (followsError1) {
+        console.error('DELETE /api/users/me: error deleting follows (follower)', followsError1);
+        return NextResponse.json({ error: followsError1.message || followsError1 }, { status: 500 });
+      }
+    } catch (e) {
+      // ignore if follows table doesn't exist
+      console.log('DELETE /api/users/me: follows table may not exist, skipping');
     }
-    const { error: followsError2 } = await sb.from('follows').delete().eq('following_id', actorId);
-    if (followsError2) {
-      console.error('DELETE /api/users/me: error deleting follows (following)', followsError2);
-      return NextResponse.json({ error: followsError2.message || followsError2 }, { status: 500 });
+    try {
+      const { error: followsError2 } = await sb.from('follows').delete().eq('followee', actorId);
+      if (followsError2) {
+        console.error('DELETE /api/users/me: error deleting follows (followee)', followsError2);
+        return NextResponse.json({ error: followsError2.message || followsError2 }, { status: 500 });
+      }
+    } catch (e) {
+      // ignore if follows table doesn't exist
+      console.log('DELETE /api/users/me: follows table may not exist, skipping');
     }
 
-    // Delete all favorites
-    const { error: favoritesError } = await sb.from('favorites').delete().eq('user_id', actorId);
-    if (favoritesError) {
-      console.error('DELETE /api/users/me: error deleting favorites', favoritesError);
-      return NextResponse.json({ error: favoritesError.message || favoritesError }, { status: 500 });
-    }
+    // Note: Favorites are stored as an array in the users table, so they will be deleted with the user profile
 
     // Delete the user profile
     const { error: userError } = await sb.from('users').delete().eq('id', actorId);

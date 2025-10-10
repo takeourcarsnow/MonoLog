@@ -81,43 +81,6 @@ export function applyFadeEffect(
   }
 }
 
-export function applyMatteEffect(
-  ctx: CanvasRenderingContext2D,
-  imgLeft: number,
-  imgTop: number,
-  imgW: number,
-  imgH: number,
-  curMatte: number
-) {
-  if (curMatte <= 0.001) return;
-
-  try {
-    // Rich, cinematic matte look with crushed blacks and film-like tonality
-    ctx.save();
-
-    // Darken with multiply for crushed blacks
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = Math.min(0.25, curMatte * 0.3);
-    ctx.fillStyle = 'rgba(30, 25, 35, 0.8)';
-    ctx.fillRect(imgLeft, imgTop, imgW, imgH);
-
-    // Add warm film tone with color-dodge for highlights
-    ctx.globalCompositeOperation = 'soft-light';
-    ctx.globalAlpha = Math.min(0.2, curMatte * 0.25);
-    ctx.fillStyle = 'rgba(200, 180, 150, 0.5)';
-    ctx.fillRect(imgLeft, imgTop, imgW, imgH);
-
-    ctx.restore();
-  } catch (e) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = Math.min(0.35, curMatte * 0.4);
-    ctx.fillStyle = 'rgba(25,25,25,0.3)';
-    ctx.fillRect(imgLeft, imgTop, imgW, imgH);
-    ctx.restore();
-  }
-}
-
 export function applyVignetteEffect(
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,

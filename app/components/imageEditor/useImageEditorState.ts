@@ -49,8 +49,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [grain, setGrain] = useState<number>(initialSettings?.grain ?? 0); // 0..1
   const rotationRef = useRef<number>(rotation);
   const [softFocus, setSoftFocus] = useState<number>(initialSettings?.softFocus ?? 0); // gentle blur overlay
-  const [fade, setFade] = useState<number>(initialSettings?.fade ?? 0); // faded matte look
-  const [matte, setMatte] = useState<number>(initialSettings?.matte ?? 0); // matte tone curve
+  const [fade, setFade] = useState<number>(initialSettings?.fade ?? 0); // faded look
   // refs mirror state for immediate reads inside draw() to avoid stale-state draws
   const exposureRef = useRef<number>(exposure);
   const contrastRef = useRef<number>(contrast);
@@ -64,7 +63,6 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const grainRef = useRef<number>(grain);
   const softFocusRef = useRef<number>(softFocus);
   const fadeRef = useRef<number>(fade);
-  const matteRef = useRef<number>(matte);
   const filtersContainerRef = useRef<HTMLDivElement | null>(null);
   const [filterHighlight, setFilterHighlight] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const suppressFilterTransitionRef = useRef<boolean>(false);
@@ -132,8 +130,6 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
     setSoftFocus,
     fade,
     setFade,
-    matte,
-    setMatte,
     exposureRef,
     contrastRef,
     saturationRef,
@@ -146,7 +142,6 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
     grainRef,
     softFocusRef,
     fadeRef,
-    matteRef,
     filtersContainerRef,
     filterHighlight,
     setFilterHighlight,

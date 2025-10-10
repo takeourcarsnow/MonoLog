@@ -91,8 +91,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setSoftFocus,
     fade,
     setFade,
-    matte,
-    setMatte,
     exposureRef,
     contrastRef,
     saturationRef,
@@ -105,7 +103,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     grainRef,
     softFocusRef,
     fadeRef,
-    matteRef,
     filtersContainerRef,
     filterHighlight,
     setFilterHighlight,
@@ -203,7 +200,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       grainRef,
       softFocusRef,
       fadeRef,
-      matteRef,
       rotationRef,
       dashOffsetRef,
       computeImageLayout,
@@ -256,7 +252,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   useEffect(() => { grainRef.current = grain; }, [grain, grainRef]);
   useEffect(() => { softFocusRef.current = softFocus; }, [softFocus, softFocusRef]);
   useEffect(() => { fadeRef.current = fade; }, [fade, fadeRef]);
-  useEffect(() => { matteRef.current = matte; }, [matte, matteRef]);
 
   const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
     if (category === 'crop' && selectedCategory !== 'crop') {
@@ -282,7 +277,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     grain,
     softFocus,
     fade,
-    matte,
     rotation,
     rotationRef,
     onApply,
@@ -310,8 +304,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     softFocusRef,
     setFade,
     fadeRef,
-    setMatte,
-    matteRef,
     setRotation,
     setSel,
     cropRatio,
@@ -413,9 +405,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           fade={fade}
           setFade={setFade}
           fadeRef={fadeRef}
-          matte={matte}
-          setMatte={setMatte}
-          matteRef={matteRef}
           sel={sel}
           setSel={setSel}
           cropRatio={cropRatio}

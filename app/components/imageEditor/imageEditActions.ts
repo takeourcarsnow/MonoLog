@@ -20,7 +20,6 @@ export async function applyEdit(
   grain: number,
   softFocus: number,
   fade: number,
-  matte: number,
   rotation: number,
   rotationRef: React.MutableRefObject<number>,
   onApply: (dataUrl: string, settings: EditorSettings) => void
@@ -101,10 +100,9 @@ export async function applyEdit(
   // image content has been drawn above with filters applied where appropriate;
   // ensure filter state is cleared before applying additional effects
   octx.filter = 'none';
-  // --- Bake additional visual effects (Soft Focus / Fade / Matte) into export ---
+  // --- Bake additional visual effects (Soft Focus / Fade) into export ---
   const curSoft = Math.min(1, Math.max(0, softFocus));
   const curFade = Math.min(1, Math.max(0, fade));
-  const curMatte = Math.min(1, Math.max(0, matte));
   // Soft Focus: blurred overlay composited on top with lighten blend for dreamy glow
   if (curSoft > 0.001) {
     try {
@@ -148,28 +146,6 @@ export async function applyEdit(
       octx.restore();
     } catch (e) {
       octx.save(); octx.globalAlpha = Math.min(0.4, curFade * 0.45); octx.fillStyle = 'rgba(245,245,240,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
-    }
-  }
-  // Matte: rich, cinematic matte look with crushed blacks and film-like tonality
-  if (curMatte > 0.001) {
-    try {
-      octx.save();
-
-      // Darken with multiply for crushed blacks
-      octx.globalCompositeOperation = 'multiply';
-      octx.globalAlpha = Math.min(0.25, curMatte * 0.3);
-      octx.fillStyle = 'rgba(30, 25, 35, 0.8)';
-      octx.fillRect(padPx, padPx, srcW, srcH);
-
-      // Add warm film tone
-      octx.globalCompositeOperation = 'soft-light';
-      octx.globalAlpha = Math.min(0.2, curMatte * 0.25);
-      octx.fillStyle = 'rgba(200, 180, 150, 0.5)';
-      octx.fillRect(padPx, padPx, srcW, srcH);
-
-      octx.restore();
-    } catch (e) {
-      octx.save(); octx.globalCompositeOperation = 'multiply'; octx.globalAlpha = Math.min(0.35, curMatte * 0.4); octx.fillStyle = 'rgba(25,25,25,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
     }
   }
   // apply grain to exported image by compositing a noise canvas
@@ -233,7 +209,6 @@ export async function applyEdit(
     grain,
     softFocus,
     fade,
-    matte,
   };
   onApply(dataUrl, settings);
 }

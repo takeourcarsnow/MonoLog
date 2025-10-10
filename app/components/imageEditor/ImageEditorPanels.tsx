@@ -44,9 +44,6 @@ interface ImageEditorPanelsProps {
   fade: number;
   setFade: (v: number) => void;
   fadeRef: React.MutableRefObject<number>;
-  matte: number;
-  setMatte: (v: number) => void;
-  matteRef: React.MutableRefObject<number>;
   // Crop panel props
   sel: { x: number; y: number; w: number; h: number } | null;
   setSel: (sel: { x: number; y: number; w: number; h: number } | null) => void;
@@ -128,9 +125,6 @@ export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
           fade={props.fade}
           setFade={props.setFade}
           fadeRef={props.fadeRef}
-          matte={props.matte}
-          setMatte={props.setMatte}
-          matteRef={props.matteRef}
           draw={props.draw}
           resetControlToDefault={props.resetControlToDefault}
         />

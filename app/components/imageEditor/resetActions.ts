@@ -34,8 +34,6 @@ export function resetAdjustments(
   softFocusRef: React.MutableRefObject<number>,
   setFade: (v: number) => void,
   fadeRef: React.MutableRefObject<number>,
-  setMatte: (v: number) => void,
-  matteRef: React.MutableRefObject<number>,
   setRotation: (v: number) => void,
   rotationRef: React.MutableRefObject<number>,
   setSel: (sel: null) => void,
@@ -55,7 +53,6 @@ export function resetAdjustments(
   const defGrain = 0;
   const defSoftFocus = 0;
   const defFade = 0;
-  const defMatte = 0;
   const defRotation = 0;
 
   // Update state
@@ -71,7 +68,6 @@ export function resetAdjustments(
   setGrain(defGrain); grainRef.current = defGrain;
   setSoftFocus(defSoftFocus); softFocusRef.current = defSoftFocus;
   setFade(defFade); fadeRef.current = defFade;
-  setMatte(defMatte); matteRef.current = defMatte;
   setRotation(defRotation); rotationRef.current = defRotation;
 
   // Also clear any crop selection/preset
@@ -100,10 +96,8 @@ export function resetControlToDefault(
   setSoftFocus: (v: number) => void,
   fadeRef: React.MutableRefObject<number>,
   setFade: (v: number) => void,
-  matteRef: React.MutableRefObject<number>,
-  setMatte: (v: number) => void,
-  rotationRef: React.MutableRefObject<number>,
   setRotation: (v: number) => void,
+  rotationRef: React.MutableRefObject<number>,
   frameThicknessRef: React.MutableRefObject<number>,
   setFrameThickness: (v: number) => void,
   draw: () => void
@@ -152,11 +146,6 @@ export function resetControlToDefault(
     case 'fade': {
       const v = 0;
       fadeRef.current = v; setFade(v); draw(); requestAnimationFrame(() => draw());
-      break;
-    }
-    case 'matte': {
-      const v = 0;
-      matteRef.current = v; setMatte(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'rotation': {

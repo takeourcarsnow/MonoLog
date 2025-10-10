@@ -20,7 +20,6 @@ export function useImageEditorDraw(
   grainRef: React.MutableRefObject<number>,
   softFocusRef: React.MutableRefObject<number>,
   fadeRef: React.MutableRefObject<number>,
-  matteRef: React.MutableRefObject<number>,
   rotationRef: React.MutableRefObject<number>,
   dashOffsetRef: React.MutableRefObject<number>,
   computeImageLayout: () => void
@@ -45,7 +44,6 @@ export function useImageEditorDraw(
       grainRef,
       softFocusRef,
       fadeRef,
-      matteRef,
       rotationRef,
       dashOffsetRef,
       computeImageLayout,
@@ -71,7 +69,6 @@ export function useImageEditorDraw(
     grainRef,
     softFocusRef,
     fadeRef,
-    matteRef,
     rotationRef,
     dashOffsetRef,
     computeImageLayout

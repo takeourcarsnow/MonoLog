@@ -7,7 +7,7 @@ function maybeUrl(platform: string, val?: string): string | undefined {
   if (val.startsWith("http://") || val.startsWith("https://")) return val;
   const handle = val.replace(/^@/, "");
   switch (platform) {
-    case "twitter": return `https://twitter.com/${handle}`;
+    case "twitter": return `https://x.com/${handle}`;
     case "instagram": return `https://instagram.com/${handle}`;
     case "github": return `https://github.com/${handle}`;
     case "linkedin": return `https://www.linkedin.com/in/${handle}`;

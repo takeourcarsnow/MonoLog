@@ -12,7 +12,6 @@ export type EditorSettings = {
   grain?: number;
   softFocus?: number;
   fade?: number;
-  matte?: number;
 };
 
 export type ImageEditorProps = {

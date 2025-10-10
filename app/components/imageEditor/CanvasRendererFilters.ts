@@ -18,7 +18,6 @@ export function computeFilterValues(params: DrawParams, overrides?: DrawOverride
     grainRef,
     softFocusRef,
     fadeRef,
-    matteRef,
     rotationRef,
   } = params;
 
@@ -36,7 +35,6 @@ export function computeFilterValues(params: DrawParams, overrides?: DrawOverride
   const curGrain = isPreviewOrig ? 0 : (overrides?.grain ?? grainRef.current ?? 0);
   const curSoftFocus = isPreviewOrig ? 0 : (overrides?.softFocus ?? softFocusRef.current ?? 0);
   const curFade = isPreviewOrig ? 0 : (overrides?.fade ?? fadeRef.current ?? 0);
-  const curMatte = isPreviewOrig ? 0 : (overrides?.matte ?? matteRef.current ?? 0);
   // frame is considered "on" when thickness > 0. Allow overrides to pass a thickness.
   const curFrameThickness = overrides?.frameThickness ?? frameThicknessRef.current ?? 0;
   const curFrameEnabled = curFrameThickness > 0;
@@ -65,7 +63,6 @@ export function computeFilterValues(params: DrawParams, overrides?: DrawOverride
     curGrain,
     curSoftFocus,
     curFade,
-    curMatte,
     curFrameThickness,
     curFrameEnabled,
     curFrameColor,

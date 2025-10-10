@@ -1,7 +1,7 @@
 import { DrawParams, LayoutInfo, DrawOverrides } from "./CanvasRendererCore";
 import { computeImageLayout, computeFrameAdjustedLayout } from "./CanvasRendererLayout";
 import { computeFilterValues } from "./CanvasRendererFilters";
-import { applySoftFocusEffect, applyFadeEffect, applyMatteEffect, applyVignetteEffect, applyGrainEffect } from "./CanvasRendererEffects";
+import { applySoftFocusEffect, applyFadeEffect, applyVignetteEffect, applyGrainEffect } from "./CanvasRendererEffects";
 import { drawFrame } from "./CanvasRendererFrame";
 import { drawSelection } from "./CanvasRendererSelection";
 import { drawRotated } from "./CanvasRendererUtils";
@@ -98,7 +98,6 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   // Apply special effects
   applySoftFocusEffect(ctx, img, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curSoftFocus);
   applyFadeEffect(ctx, imgLeft, imgTop, imgW, imgH, filterValues.curFade);
-  applyMatteEffect(ctx, imgLeft, imgTop, imgW, imgH, filterValues.curMatte);
   applyVignetteEffect(ctx, canvas, imgLeft, imgTop, imgW, imgH, filterValues.curVignette, info);
   applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
 

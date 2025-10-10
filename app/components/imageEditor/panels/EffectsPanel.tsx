@@ -1,4 +1,4 @@
-import { Aperture, Layers, ZapOff, Film, Square } from "lucide-react";
+import { Aperture, Layers, ZapOff, Film } from "lucide-react";
 import { rangeBg } from "../utils";
 
 interface EffectsPanelProps {
@@ -14,9 +14,6 @@ interface EffectsPanelProps {
   fade: number;
   setFade: (v: number) => void;
   fadeRef: React.MutableRefObject<number>;
-  matte: number;
-  setMatte: (v: number) => void;
-  matteRef: React.MutableRefObject<number>;
   draw: (overrides?: any) => void;
   resetControlToDefault: (control: string) => void;
 }
@@ -34,9 +31,6 @@ export default function EffectsPanel({
   fade,
   setFade,
   fadeRef,
-  matte,
-  setMatte,
-  matteRef,
   draw,
   resetControlToDefault,
 }: EffectsPanelProps) {
@@ -130,29 +124,6 @@ export default function EffectsPanel({
           }}
           onDoubleClick={() => resetControlToDefault('fade')}
           style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }}
-        />
-      </label>
-
-      <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Square size={18} strokeWidth={2} aria-hidden />
-          <span>Matte</span>
-        </span>
-        <input
-          className="imgedit-range"
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={matte}
-          onInput={(e: any) => {
-            const v = Number(e.target.value);
-            matteRef.current = v;
-            setMatte(v);
-            requestAnimationFrame(() => draw());
-          }}
-          onDoubleClick={() => resetControlToDefault('matte')}
-          style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }}
         />
       </label>
     </section>

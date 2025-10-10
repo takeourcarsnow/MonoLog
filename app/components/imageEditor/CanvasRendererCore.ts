@@ -20,7 +20,6 @@ export interface DrawParams {
   grainRef: React.MutableRefObject<number>;
   softFocusRef: React.MutableRefObject<number>;
   fadeRef: React.MutableRefObject<number>;
-  matteRef: React.MutableRefObject<number>;
   rotationRef: React.MutableRefObject<number>;
   dashOffsetRef: React.MutableRefObject<number>;
   computeImageLayout: () => { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number } | null;
@@ -46,7 +45,6 @@ export interface DrawOverrides {
   grain?: number;
   softFocus?: number;
   fade?: number;
-  matte?: number;
   frameEnabled?: boolean;
   frameThickness?: number;
   frameColor?: string;

@@ -161,7 +161,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     const looksLikeTwitter = (v?: string) => {
       if (!v) return false;
       const t = v.trim();
-      return t.startsWith('@') || t.includes('twitter.com') || t.includes('t.co');
+      return t.startsWith('@') || t.includes('twitter.com') || t.includes('x.com') || t.includes('t.co');
     };
     const looksLikeInstagram = (v?: string) => {
       if (!v) return false;
@@ -283,18 +283,6 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
               </div>
             </label>
           </div>
-        </div>
-
-        {/* Save button */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <button
-            type="submit"
-            className="btn"
-            disabled={editProcessing}
-            style={{ minWidth: 100 }}
-          >
-            {editProcessing ? 'Saving...' : 'Save'}
-          </button>
         </div>
 
       </form>

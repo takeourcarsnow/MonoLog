@@ -124,6 +124,38 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   const [isFullscreen, setIsFullscreen] = useState(false);
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
+  // While the image editor is mounted we want to make the bottom navbar non-interactive.
+  // The app loads the `wicg-inert` polyfill via `InertPolyfillClient`, so toggling the
+  // `inert` attribute here will disable pointer/keyboard interaction with the tabbar
+  // area and stop hover behaviors from generating links under the portal.
+  useEffect(() => {
+    const bar = document.querySelector('.tabbar') as HTMLElement | null;
+    // Add a body class which CSS can target immediately to disable pointer-events
+    // on the tabbar and its children. This is more reliable than depending on
+    // runtime JS-style changes to every child and works even before the inert
+    // polyfill finishes loading.
+    const body = document.body;
+    body.classList.add('imgedit-open');
+
+    let hadInert = false;
+    let prevPointer = '';
+    if (bar) {
+      hadInert = bar.hasAttribute('inert');
+      prevPointer = bar.style.pointerEvents || '';
+      if (!hadInert) bar.setAttribute('inert', '');
+      // also attempt to set style on the bar itself as a fallback
+      bar.style.pointerEvents = 'none';
+    }
+
+    return () => {
+      body.classList.remove('imgedit-open');
+      if (bar) {
+        if (!hadInert) bar.removeAttribute('inert');
+        bar.style.pointerEvents = prevPointer;
+      }
+    };
+  }, []);
+
   const handleToggleFullscreen = useCallback(() => {
     const el = editorContainerRef.current;
     if (!el) return;

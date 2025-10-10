@@ -258,3 +258,15 @@
 @media (prefers-reduced-motion: reduce) {
   .tab-indicator { transition: none !important; }
 }
+
+/* When the image editor is open, ensure the tabbar and all its children
+   do not receive pointer events or focus. This complements the runtime
+   `inert` attribute and prevents hidden navbar elements from being clicked. */
+.imgedit-open .tabbar,
+.imgedit-open .tabbar * {
+  pointer-events: none !important;
+}
+.imgedit-open .tabbar {
+  /* keep it visually present if desired; use opacity instead if you want it hidden */
+  user-select: none;
+}

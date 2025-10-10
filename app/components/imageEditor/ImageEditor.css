@@ -48,6 +48,35 @@
   flex-direction: column;
 }
 
+/* When Portal creates an element with class `upload-editor-fullscreen`, we want
+   that root to cover the viewport and absorb clicks so elements underneath
+   (like the bottom tabbar) cannot be clicked. The portal root is usually
+   created with id `modal-root` by `Portal.tsx` and may carry the class
+   `upload-editor-fullscreen` when used for the editor. */
+#modal-root.upload-editor-fullscreen {
+  position: fixed !important;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* higher than .tabbar (9999) */
+  pointer-events: auto;
+}
+
+/* Transparent overlay layer that covers the full viewport and sits behind the editor
+   box but above the rest of the app. It absorbs clicks and can be used to close the
+   editor if desired (not hooked here). */
+#modal-root.upload-editor-fullscreen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  z-index: 9999; /* just under the editor box but above the app */
+  pointer-events: auto; /* capture clicks */
+}
+
 .image-editor-canvas-container {
   flex: 1;
   overflow: hidden;

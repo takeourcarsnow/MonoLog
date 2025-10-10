@@ -1,6 +1,6 @@
 import { getExploreFeed, getExploreFeedPage, getFollowingFeed, getFollowingFeedPage, getUserPosts, getPostsByDate, getPost, updatePost, deletePost, canPostToday, createOrReplaceToday } from "./posts";
 import { getSupabaseClient, getSupabaseClientRaw } from "./client";
-import { getUsers, getCurrentUser, loginAs, getUser, getUserByUsername, updateUser, updateCurrentUser, signOut } from "./users";
+import { getUsers, getCurrentUser, loginAs, getUser, getUserByUsername, updateUser, updateCurrentUser, signOut, deleteCurrentUser } from "./users";
 import { follow, unfollow, isFollowing, getFollowingUsers } from "./follows";
 import { favoritePost, unfavoritePost, isFavorite, getFavoritePosts } from "./favorites";
 import { getComments, addComment } from "./comments";
@@ -45,6 +45,7 @@ export const supabaseApi: Api = {
   getComments,
   addComment,
   signOut,
+  deleteCurrentUser,
   calendarStats,
 };
 

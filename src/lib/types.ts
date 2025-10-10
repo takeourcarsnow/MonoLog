@@ -83,6 +83,8 @@ export interface Api {
   updateUser(id: string, patch: Partial<User>): Promise<User>;
   updateCurrentUser(patch: Partial<User>): Promise<User>;
 
+  // delete the current user's account
+  deleteCurrentUser(): Promise<void>;
   getPostsByDate(dateKey: string): Promise<HydratedPost[]>;
   getPost(id: string): Promise<HydratedPost | null>;
 

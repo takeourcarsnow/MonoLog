@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import { SignOutButton } from "@/app/components/SignOut";
+import { DeleteAccountButton } from "@/app/components/DeleteAccount";
 import Link from "next/link";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
@@ -201,6 +202,8 @@ export function ProfileActions({
             {/* New Post button removed from profile actions */}
             {/* show sign out only when the viewed profile belongs to the signed-in user */}
             {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
+            {/* show delete account only when the viewed profile belongs to the signed-in user */}
+            {currentUserId && user?.id === currentUserId ? <DeleteAccountButton /> : null}
           </>
         ) : null}
       </div>

@@ -339,4 +339,44 @@ export const localApi: Api = {
       }
     } catch (_) { /* ignore */ }
   },
+
+  async deleteCurrentUser() {
+    const me = getUserById(cache.currentUserId);
+    if (!me) throw new Error("Not logged in");
+
+    // Delete all posts by this user
+    cache.posts = cache.posts.filter(p => p.userId !== me.id);
+
+    // Delete all comments by this user
+    cache.comments = cache.comments.filter(c => c.userId !== me.id);
+
+    // Remove this user from other users' following lists
+    for (const user of cache.users) {
+      if (user.following) {
+        user.following = user.following.filter(id => id !== me.id);
+      }
+    }
+
+    // Remove this user from favorites (though favorites are stored per user)
+    for (const user of cache.users) {
+      if (user.favorites) {
+        user.favorites = user.favorites.filter(id => !cache.posts.some(p => p.id === id && p.userId === me.id));
+      }
+    }
+
+    // Delete the user
+    cache.users = cache.users.filter(u => u.id !== me.id);
+
+    // Clear current user
+    cache.currentUserId = null;
+
+    persist();
+
+    // Dispatch auth changed event
+    try {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:changed'));
+      }
+    } catch (_) { /* ignore */ }
+  },
 };

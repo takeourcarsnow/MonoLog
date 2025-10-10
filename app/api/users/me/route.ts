@@ -126,3 +126,63 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const authUser = await getUserFromAuthHeader(req);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const sb = getServiceSupabase();
+    const actorId = authUser.id;
+
+    // Delete all user's posts
+    const { error: postsError } = await sb.from('posts').delete().eq('user_id', actorId);
+    if (postsError) {
+      console.error('DELETE /api/users/me: error deleting posts', postsError);
+      return NextResponse.json({ error: postsError.message || postsError }, { status: 500 });
+    }
+
+    // Delete all user's comments
+    const { error: commentsError } = await sb.from('comments').delete().eq('user_id', actorId);
+    if (commentsError) {
+      console.error('DELETE /api/users/me: error deleting comments', commentsError);
+      return NextResponse.json({ error: commentsError.message || commentsError }, { status: 500 });
+    }
+
+    // Delete all follows (both following and followers)
+    const { error: followsError1 } = await sb.from('follows').delete().eq('follower_id', actorId);
+    if (followsError1) {
+      console.error('DELETE /api/users/me: error deleting follows (follower)', followsError1);
+      return NextResponse.json({ error: followsError1.message || followsError1 }, { status: 500 });
+    }
+    const { error: followsError2 } = await sb.from('follows').delete().eq('following_id', actorId);
+    if (followsError2) {
+      console.error('DELETE /api/users/me: error deleting follows (following)', followsError2);
+      return NextResponse.json({ error: followsError2.message || followsError2 }, { status: 500 });
+    }
+
+    // Delete all favorites
+    const { error: favoritesError } = await sb.from('favorites').delete().eq('user_id', actorId);
+    if (favoritesError) {
+      console.error('DELETE /api/users/me: error deleting favorites', favoritesError);
+      return NextResponse.json({ error: favoritesError.message || favoritesError }, { status: 500 });
+    }
+
+    // Delete the user profile
+    const { error: userError } = await sb.from('users').delete().eq('id', actorId);
+    if (userError) {
+      console.error('DELETE /api/users/me: error deleting user', userError);
+      return NextResponse.json({ error: userError.message || userError }, { status: 500 });
+    }
+
+    // Note: Supabase auth user deletion would require admin privileges or a server-side function
+    // For now, we'll just delete the profile data. The auth user remains but can't access the app.
+
+    return NextResponse.json({ success: true });
+  } catch (e: any) {
+    console.error('DELETE /api/users/me: outer exception', e);
+    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+  }
+}

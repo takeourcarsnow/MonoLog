@@ -218,3 +218,28 @@ export async function signOut() {
     console.warn("supabase.signOut failed", e);
   }
 }
+
+export async function deleteCurrentUser() {
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const user = await getCachedAuthUser(sb);
+  if (!user) throw new Error("Not logged in");
+
+  const token = await getAccessToken(sb);
+  if (!token) {
+    throw new Error('Delete failed: no access token available. Ensure the user is signed in.');
+  }
+
+  const resp = await fetch('/api/users/me', {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+
+  if (!resp.ok) {
+    const bodyText = await resp.text().catch(() => null);
+    throw new Error(`Delete failed: ${resp.status} ${resp.statusText} ${bodyText || ''}`);
+  }
+
+  // After successful deletion, sign out
+  await signOut();
+}

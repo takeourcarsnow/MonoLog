@@ -5,6 +5,7 @@ import Image from 'next/image';
 
 export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () => void }) {
   const [exiting, setExiting] = useState(false);
+  const [initial, setInitial] = useState(true);
   const [mounted, setMounted] = useState(true);
   const mountTime = useRef<number | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -25,6 +26,7 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
   startTimerId = window.setTimeout(() => {
         // start exit animation for the overlay
         setExiting(true);
+        setInitial(false);
 
   // overlay exit duration (ms) — matches CSS transition (longer, softer)
   const overlayExit = 640;
@@ -36,8 +38,10 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
           // keep component mounted so we can preserve the blur for blurHold
           try {
             if (typeof window !== 'undefined') (window as any).__MONOLOG_PRELOADER_HAS_RUN__ = true;
+            window.dispatchEvent(new CustomEvent('preloader-finished'));
           } catch (e) {}
           onFinish?.();
+          try { document.body.classList.add('preloader-finished'); } catch (e) {}
         }, overlayExit);
 
         // schedule blur removal after overlay exit + hold, then unmount
@@ -93,7 +97,7 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
   return (
     <div
       aria-hidden={exiting}
-      className={`preloader-overlay ${exiting ? 'preloader-exit' : ''}`}
+      className={`preloader-overlay ${initial ? 'preloader-initial' : ''} ${exiting ? 'preloader-exit' : ''}`}
     >
       <div className="preloader-inner" role="img" aria-label="Loading MonoLog">
   <Image priority className="preloader-logo" src="/logo.svg" width={86} height={86} alt="MonoLog logo" />

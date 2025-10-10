@@ -104,8 +104,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <a href="#view" className="skip-link">Skip to content</a>
+        <AppPreloader />
         <div id="app-root">
-          <AppPreloader />
           <ClientErrorBoundary>
             <AppShell>{children}</AppShell>
           </ClientErrorBoundary>

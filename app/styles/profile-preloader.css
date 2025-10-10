@@ -28,6 +28,9 @@
   background: transparent; color: var(--text);
   /* entrance: subtle lift + fade */
   animation: preloader-in 560ms var(--preloader-ease-quick) both;
+  /* Set initial state to match animation 'from' to prevent layout jumps */
+  opacity: 0;
+  transform: translateY(10px) scale(.994);
 }
 .preloader-logo {
   display: block;

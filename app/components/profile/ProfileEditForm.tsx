@@ -69,18 +69,20 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
 
       setEditProcessing(true);
       try {
-        // Debug: log the payload we're about to send
-        try { console.log('[ProfileEditForm] outgoing payload', { username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized }); } catch (_) {}
         const socialLinks: Record<string, string | undefined> = {};
         if (editTwitter.trim()) socialLinks.twitter = editTwitter.trim();
         if (editInstagram.trim()) socialLinks.instagram = editInstagram.trim();
-  if (editGithub.trim()) socialLinks.github = editGithub.trim();
-  if (editFacebook.trim()) socialLinks.facebook = editFacebook.trim();
+        if (editGithub.trim()) socialLinks.github = editGithub.trim();
+        if (editFacebook.trim()) socialLinks.facebook = editFacebook.trim();
         if (editWebsite.trim()) socialLinks.website = editWebsite.trim();
 
-  // Normalize social links: send null when the user cleared all social fields
-  const socialLinksNormalized = Object.keys(socialLinks).length ? socialLinks : null;
-  const payload = { username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized } as any;
+        // Normalize social links: send null when the user cleared all social fields
+        const socialLinksNormalized = Object.keys(socialLinks).length ? socialLinks : null;
+
+        // Debug: log the payload we're about to send
+        try { console.log('[ProfileEditForm] outgoing payload', { username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized }); } catch (_) {}
+
+        const payload = { username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized } as any;
   await api.updateCurrentUser(payload as Partial<User>);
         // Notify any listeners and revalidate app-router data so the UI updates
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (_) {}

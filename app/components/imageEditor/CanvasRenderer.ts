@@ -51,55 +51,81 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
     // Draw raw original with no filters/effects
     drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
   } else {
-    // Try using GPU shader path for per-pixel accurate and fast adjustments when available.
-    // We use WebGL to apply the base adjustments (brightness/contrast/saturation/temperature)
-    // and then composite presets/overlays on top if strength < 1.
-    let usedGpu = false;
-    try {
-      // use the computed filter values from computeFilterValues
-      const fv: any = filterValues;
-      const m = mapBasicAdjustments({ exposure: fv.curExposure, contrast: fv.curContrast, saturation: fv.curSaturation, temperature: fv.curTemperature });
-      const brightness = m.brightness || 1;
-      const contrast = m.finalContrast || 1;
-      const saturation = m.cssSaturation || 1;
-      const hueDeg = m.hue || 0;
+    // Check if all adjustments are at neutral values - if so, draw raw image to avoid GPU processing artifacts
+    const hasNeutralAdjustments = 
+      Math.abs(filterValues.curExposure) < 0.001 &&
+      Math.abs(filterValues.curContrast) < 0.001 &&
+      Math.abs(filterValues.curSaturation) < 0.001 &&
+      Math.abs(filterValues.curTemperature) < 0.001 &&
+      filterValues.curSelectedFilter === 'none' &&
+      Math.abs(filterValues.curVignette) < 0.001 &&
+      Math.abs(filterValues.curGrain) < 0.001 &&
+      Math.abs(filterValues.curSoftFocus) < 0.001 &&
+      Math.abs(filterValues.curFade) < 0.001 &&
+      !curFrameEnabled;
 
-      const tmpCanvas = applyWebGLAdjustments(img, imgW, imgH, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength });
-      // draw the processed GPU canvas (snapshot) onto our main canvas, taking rotation into account
-      drawRotated(tmpCanvas, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-      usedGpu = true;
-    } catch (e) {
-      usedGpu = false;
-    }
+    if (hasNeutralAdjustments) {
+      // Draw raw image with no adjustments
+      drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+    } else {
+      // Try using GPU shader path for per-pixel accurate and fast adjustments when available.
+      // We use WebGL to apply the base adjustments (brightness/contrast/saturation/temperature)
+      // and then composite presets/overlays on top if strength < 1.
+      let usedGpu = false;
+      try {
+        // use the computed filter values from computeFilterValues
+        const fv: any = filterValues;
+        const m = mapBasicAdjustments({ exposure: fv.curExposure, contrast: fv.curContrast, saturation: fv.curSaturation, temperature: fv.curTemperature });
+        const brightness = m.brightness || 1;
+        const contrast = m.finalContrast || 1;
+        const saturation = m.cssSaturation || 1;
+        const hueDeg = m.hue || 0;
 
-    if (!usedGpu) {
-      // fallback to existing CSS filter path and preset blending
-      if (curFilterStrength >= 0.999) {
-        ctx.filter = filter;
-        drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-        ctx.filter = 'none';
-      } else if (curFilterStrength <= 0.001) {
-        ctx.filter = baseFilter;
-        drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-        ctx.filter = 'none';
-      } else {
-        // draw base with baseFilter, then composite filtered version on top with globalAlpha = strength
-        ctx.filter = baseFilter;
-        drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-        ctx.filter = filter;
-        ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
-        drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-        ctx.globalAlpha = 1;
-        ctx.filter = 'none';
+        const tmpCanvas = applyWebGLAdjustments(img, imgW, imgH, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength });
+        // draw the processed GPU canvas (snapshot) onto our main canvas, taking rotation into account
+        drawRotated(tmpCanvas, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+        usedGpu = true;
+      } catch (e) {
+        usedGpu = false;
+      }
+
+      if (!usedGpu) {
+        // fallback to existing CSS filter path and preset blending
+        if (curFilterStrength >= 0.999) {
+          ctx.filter = filter;
+          drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          ctx.filter = 'none';
+        } else if (curFilterStrength <= 0.001) {
+          ctx.filter = baseFilter;
+          drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          ctx.filter = 'none';
+        } else {
+          // draw base with baseFilter, then composite filtered version on top with globalAlpha = strength
+          ctx.filter = baseFilter;
+          drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          ctx.filter = filter;
+          ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
+          drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          ctx.globalAlpha = 1;
+          ctx.filter = 'none';
+        }
       }
     }
   }
 
-  // Apply special effects
-  applySoftFocusEffect(ctx, img, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curSoftFocus);
-  applyFadeEffect(ctx, imgLeft, imgTop, imgW, imgH, filterValues.curFade);
-  applyVignetteEffect(ctx, canvas, imgLeft, imgTop, imgW, imgH, filterValues.curVignette, info);
-  applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
+  // Apply special effects (only when not at neutral)
+  if (filterValues.curSoftFocus > 0.001) {
+    applySoftFocusEffect(ctx, img, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curSoftFocus);
+  }
+  if (filterValues.curFade > 0.001) {
+    applyFadeEffect(ctx, imgLeft, imgTop, imgW, imgH, filterValues.curFade);
+  }
+  if (filterValues.curVignette > 0.001) {
+    applyVignetteEffect(ctx, canvas, imgLeft, imgTop, imgW, imgH, filterValues.curVignette, info);
+  }
+  if (filterValues.curGrain > 0.001) {
+    applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
+  }
 
   // Draw frame if enabled
   if (curFrameEnabled) {

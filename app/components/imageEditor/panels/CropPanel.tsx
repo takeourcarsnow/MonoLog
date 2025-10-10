@@ -49,7 +49,7 @@ export default function CropPanel({
   return (
     <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
       <fieldset>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}><span className="sr-only">Crop Aspect Ratio</span></div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {/* header rotate buttons removed; use controls beside the Straighten slider */}
@@ -59,7 +59,7 @@ export default function CropPanel({
         {/* Responsive aspect switcher: grid on desktop, carousel on mobile */}
         <div className="aspect-presets-container">
           {/* Desktop: Show all presets in a grid */}
-          <div className="aspect-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(56px, 1fr))', gridAutoRows: 'minmax(44px, auto)', gap: 4, paddingBottom: 2, alignItems: 'start' }}>
+          <div className="aspect-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(56px, 1fr))', gridAutoRows: 'minmax(36px, auto)', gap: 4, paddingBottom: 0, alignItems: 'start' }}>
             {ASPECT_PRESETS.map((r, i) => {
               const selected = cropRatio.current === r.v;
               const base = 16 / 9;
@@ -108,7 +108,7 @@ export default function CropPanel({
                     setSel({ x, y, w, h });
                   }
                 }} aria-pressed={selected} style={{
-                  padding: '6px 4px',
+                  padding: '4px 4px',
                   borderRadius: 6,
                   background: selected ? 'color-mix(in srgb, var(--text) 6%, transparent)' : 'var(--bg-elev)',
                   color: selected ? 'var(--text)' : 'var(--text)',
@@ -116,14 +116,14 @@ export default function CropPanel({
                   boxShadow: 'none',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 6,
+                  gap: 4,
                   alignItems: 'center',
                   justifyContent: 'center',
                   transition: 'transform 100ms ease, box-shadow 140ms ease, background 140ms ease',
                   fontSize: 11,
                   fontWeight: selected ? 700 : 600,
                   cursor: 'pointer',
-                  minHeight: 44,
+                  minHeight: 36,
                   lineHeight: 1
                 }}
                 onMouseEnter={(e) => { if (!selected) e.currentTarget.style.boxShadow = '0 3px 8px rgba(0,0,0,0.06)'; }}
@@ -215,9 +215,9 @@ export default function CropPanel({
           `}</style>
         </div>
       </fieldset>
-      <fieldset style={{ marginTop: 12 }}>
-        <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+      <fieldset style={{ marginTop: 8 }}>
+        <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <button type="button" title="Rotate -90°" onClick={async () => { await bakeRotateMinus90(); /* after bake, keep slider controlled rotation at 0 so user can fine-tune */ rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate -90°" style={{ padding: 6, borderRadius: 8 }}>
                 <RotateCw size={14} aria-hidden />

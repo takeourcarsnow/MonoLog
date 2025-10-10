@@ -542,10 +542,10 @@
     padding: calc(6px + var(--safe-top, 0px)) 16px 4px 16px;
   }
   .feed.grid-view .grid {
-    gap: 12px;
+    gap: 4px; /* Reduced from 12px to make squares bigger */
   }
   .feed.grid-view .grid .tile {
-    padding: 8px;
+    padding: 2px; /* Reduced from 8px to make squares bigger */
   }
   .card-body {
     padding: 12px 16px;

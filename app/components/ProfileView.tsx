@@ -31,7 +31,7 @@ export function ProfileView({ userId }: { userId?: string }) {
         <div className="view-fade">
           <div className="profile-header toolbar">
             <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", width: "100%" }}>
-              <SkeletonAvatar size={96} />
+              <SkeletonAvatar size={160} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', width: '100%' }}>
                 <SkeletonText width={180} height={20} borderRadius={8} />
                 <SkeletonText width={220} height={16} borderRadius={6} />

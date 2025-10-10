@@ -196,8 +196,8 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
             aria-busy={avatarUploading}
             type="button"
           >
-            <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 112, height: 112 }}>
-              <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName} width={112} height={112} />
+            <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 160, height: 160 }}>
+              <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName} width={160} height={160} />
               {avatarUploading ? (
                 <div className="avatar-spinner" aria-hidden>
                   <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -223,8 +223,8 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
             <div
               className={`avatar-wrap ${expanded ? 'avatar-expanded' : ''}`}
               style={{
-                width: 112,
-                height: 112,
+                width: 160,
+                height: 160,
                 // simple scale animation with a tiny opacity fade
                 transform: expanded ? 'scale(2.8)' : 'scale(1)',
                 opacity: expanded ? 1 : 0.96,
@@ -245,8 +245,8 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
                 className="profile-avatar"
                 src={user.avatarUrl || "/logo.svg"}
                 alt={user.displayName}
-                width={112}
-                height={112}
+                width={160}
+                height={160}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px', filter: expanded ? 'none' : 'none' }}
               />
             </div>

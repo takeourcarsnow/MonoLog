@@ -86,17 +86,16 @@ export const UserHeader = memo(function UserHeader({
   const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
   const userLine = (
     <>
-      @{post.user.username} • {formatRelative(post.createdAt)} {lockIcon}
+      {formatRelative(post.createdAt)} {lockIcon}
     </>
   );
 
   return (
     <div className="card-head">
       <Link className="user-link" href={`/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
-  <OptimizedImage className="avatar" src={post.user.avatarUrl || "/logo.svg"} alt={post.user.displayName} width={30} height={30} loading="lazy" sizes="30px" />
+  <OptimizedImage className="avatar" src={post.user.avatarUrl || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
         <div className="user-line">
-          <span className="username">{post.user.displayName}</span>
-          <span className="dim">{userLine}</span>
+          <span className="username">@{post.user.username} <span className="dim">{userLine}</span></span>
         </div>
       </Link>
       <div style={{ marginLeft: "auto", position: "relative", display: "flex", gap: 8, flexShrink: 0 }}>

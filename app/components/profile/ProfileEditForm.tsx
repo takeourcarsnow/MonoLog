@@ -21,6 +21,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     const router = useRouter();
     const toast = useToast();
     const displayNameRef = useRef<HTMLInputElement | null>(null);
+    const usernameRef = useRef<HTMLInputElement | null>(null);
   const twitterRef = useRef<HTMLInputElement | null>(null);
 
     const [editDisplayName, setEditDisplayName] = useState("");
@@ -122,8 +123,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
   setEditFacebook(user.socialLinks?.facebook || "");
         setEditWebsite(user.socialLinks?.website || "");
         setIsEditingProfile(true);
-        // focus after next paint so input exists
-        requestAnimationFrame(() => { displayNameRef.current?.focus?.(); });
+        // focus after next paint so input exists - focus username first per request
+        requestAnimationFrame(() => { usernameRef.current?.focus?.(); });
         return;
       }
       // when already editing, save the changes
@@ -207,8 +208,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
       <>
         {!isEditingProfile && !isClosing && (
           <div className="profile-static-info">
-            <div className="username">{user.displayName}</div>
-            <div className="dim">@{user.username}</div>
+            <div className="username">@{user.username}</div>
+            <div className="dim">{user.displayName}</div>
             <div className="dim">joined {new Date(user.joinedAt).toLocaleDateString()}</div>
             {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
           </div>
@@ -216,14 +217,9 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         {(isEditingProfile || isClosing) && (
           <form className={`inline-edit-card ${animateIn && !isClosing ? 'visible' : isClosing ? 'closing' : ''}`} style={{ width: '100%', maxWidth: 720 }} onSubmit={(e: FormEvent) => saveEdits(e)}>
         <label className="label-group">
-          <div className="muted-label sr-only">Display name</div>
-          <input ref={displayNameRef} className="input" placeholder="Display name" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
-        </label>
-
-        <label className="label-group">
-          <div className="muted-label sr-only">Username (used in @handle)</div>
+          <div className="muted-label sr-only">@Username</div>
           <div className="input-container">
-            <input className="input" placeholder="Username (used in @handle)" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
+            <input ref={usernameRef} className="input" placeholder="@Username" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
             {user.usernameChangedAt && (() => {
               const lastChanged = new Date(user.usernameChangedAt).getTime();
               const hoursSince = (Date.now() - lastChanged) / (1000 * 60 * 60);
@@ -234,6 +230,11 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
               return null;
             })()}
           </div>
+        </label>
+
+        <label className="label-group">
+          <div className="muted-label sr-only">Display name</div>
+          <input ref={displayNameRef} className="input" placeholder="Display name" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
         </label>
 
         <label className="bio-col label-group">

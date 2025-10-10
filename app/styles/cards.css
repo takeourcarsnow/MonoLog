@@ -155,20 +155,24 @@
   gap: 2px;
   min-width: 0; /* Allow flex item to shrink below content size */
   flex: 1; /* Take available space */
-  overflow: hidden; /* Contain overflowing text */
+  /* allow lines to wrap so long usernames and times don't get clipped */
+  overflow: visible;
 }
 .username { 
   font-weight: 700; 
   font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* allow wrapping for long usernames (e.g. @verylongname123) */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
   max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .dim { 
   color: var(--muted); 
   font-size: 12px;
-  white-space: nowrap;
+  white-space: nowrap; /* keep the time on a single line */
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;

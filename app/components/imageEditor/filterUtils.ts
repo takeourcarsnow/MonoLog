@@ -8,18 +8,29 @@ export function mapBasicAdjustments({ exposure = 0, contrast = 0, saturation = 0
   // -1 = desaturated (0.5), 0 = neutral (1.0), 1 = saturated (1.5)
   const cssSaturation = 1 + saturation * 0.5;
 
-  // Calculate very conservative brightness adjustment to prevent highlight clipping
-  // Make exposure more responsive: increase brightening multiplier so the slider
-  // produces a stronger visible change, but keep some highlight protection.
-  // Also make darkening slightly stronger for negative values.
-  const brightness = exposure >= 0
-    ? 1 + exposure * 0.45 // stronger brightening (was 0.15)
-    : Math.pow(0.85, -exposure); // stronger darkening (was 0.9)
+  // Map exposure to a brightness multiplier with a smooth exponential curve.
+  // This makes small slider movements in the + direction produce gentle increases
+  // while still allowing stronger brightening near the end of the range without
+  // immediately clipping highlights.
+  // exposure is expected in roughly -1..1 range; we map that to a multiplier
+  // using an exponential-like function (softplus-ish). For positive exposure
+  // we use (1 + k*exposure) ^ p to provide a smooth ramp; for negative we
+  // use a reciprocal to darken smoothly.
+  const brightenK = 0.9; // scale for how strong brightening can be
+  const brightenPow = 1.6; // curvature for brightening
+  let brightness: number;
+  if (exposure >= 0) {
+    brightness = Math.pow(1 + brightenK * exposure, brightenPow);
+  } else {
+    // For darkening use a milder exponential so shadows preserve detail.
+    brightness = 1 / Math.pow(1 + 0.6 * Math.abs(exposure), 1.2);
+  }
 
-  // Adjust contrast to protect highlights when brightening but less aggressively
-  // so images retain punch when increased exposure.
+  // Highlight protection: when brightening, slightly reduce contrast in highlights
+  // to avoid immediate clipping. This uses a gentle curve so contrast isn't lost
+  // entirely for moderate exposure values.
   const highlightProtectionContrast = exposure > 0
-    ? Math.max(0.7, 1 - exposure * 0.08)
+    ? Math.max(0.78, 1 - Math.pow(exposure, 0.9) * 0.12)
     : 1.0;
 
   // Convert user contrast from -1..1 range to CSS contrast value

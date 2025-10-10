@@ -42,7 +42,8 @@
   padding: 8px;
   padding-bottom: 12px;
   border-radius: 8px;
-  z-index: 1000;
+  /* sit above the portal overlay so the editor itself can receive clicks */
+  z-index: 10001;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -73,7 +74,8 @@
   position: absolute;
   inset: 0;
   background: transparent;
-  z-index: 9999; /* just under the editor box but above the app */
+  /* Ensure this overlay sits under the editor box but above the app */
+  z-index: 10000;
   pointer-events: auto; /* capture clicks */
 }
 

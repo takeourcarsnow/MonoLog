@@ -570,7 +570,8 @@
 /* Ensure list (single-column) feed has extra breathing room so posts don't feel cramped.
    Using a list-specific selector placed after other rules helps avoid accidental overrides. */
 .feed:not(.grid-view) {
-  gap: 28px;
+  /* increased from 28px to provide more vertical spacing between posts */
+  gap: 40px;
 }
 
 /* The PullToRefreshWrapper renders an outer container and places the
@@ -578,7 +579,20 @@
    wrapper so grid layout/gap applies to the posts themselves. */
 .feed:not(.grid-view) > div:last-child {
   display: grid;
-  gap: 28px;
+  /* keep the inner wrapper gap consistent with the feed gap */
+  gap: 40px;
+}
+
+/* Fallback: some feed renderers wrap posts inside an extra inner <div> that
+   uses inline styles (display:block). Inline styles prevent us from switching
+   that wrapper to grid from external CSS. To ensure consistent spacing
+   regardless of markup, add a margin-based fallback on the post cards
+   themselves when in list view. */
+.feed:not(.grid-view) .card {
+  margin-bottom: 40px;
+}
+.feed:not(.grid-view) .card:last-child {
+  margin-bottom: 0;
 }
 
 /* Single-post page wrapper: give a bit more breathing room so the

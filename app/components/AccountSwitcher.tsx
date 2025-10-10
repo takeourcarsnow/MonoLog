@@ -119,7 +119,6 @@ export function AccountSwitcher() {
         ) : current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             <OptimizedImage src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" width={22} height={22} />
-            <span>@{current.username || current.id}</span>
           </span>
         ) : (
           // show a user icon instead of the text "Account" when unauthenticated

@@ -79,6 +79,18 @@
   transform: none !important;
   outline: none !important;
 }
+/* Remove tap effects from about and favorites buttons */
+.header-actions .btn.about-btn:active,
+.header-actions .btn.favorites-btn:active {
+  transform: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.header-actions .btn.about-btn:active::after,
+.header-actions .btn.favorites-btn:active::after {
+  background: transparent !important;
+  opacity: 0 !important;
+}
 /* Keep existing square sizing for icon variant; remove extra horizontal padding */
 .header-actions .btn.icon {
   padding: 0; /* .btn.icon already sets fixed size; zero padding ensures perfect circle */

@@ -56,6 +56,14 @@ export function DeleteAccountButton() {
               timerRef.current = window.setTimeout(() => setConfirmArm(false), 30000);
               // focus the input after a tick
               setTimeout(() => inputRef.current?.focus(), 50);
+            } else {
+              setConfirmArm(false);
+              setConfirmText("");
+              setError(null);
+              if (timerRef.current) {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = null;
+              }
             }
           }}
           aria-pressed={confirmArm}
@@ -70,8 +78,7 @@ export function DeleteAccountButton() {
           <div className="confirm-popover" role="dialog" aria-labelledby="delete-account-title" onMouseDown={(e) => e.stopPropagation()}>
             <div className="confirm-popover-arrow" aria-hidden />
             <div className="confirm-popover-body">
-              <h3 id="delete-account-title">Confirm deletion</h3>
-              <p className="muted">Type <strong>delete</strong> to permanently delete your account.</p>
+              <h3 id="delete-account-title">Permanently delete your account</h3>
 
               <input
                 ref={inputRef}
@@ -89,36 +96,6 @@ export function DeleteAccountButton() {
                 }}
                 placeholder="Type delete to confirm"
               />
-
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button
-                  className="btn small danger"
-                  onClick={async () => {
-                    await performDelete();
-                  }}
-                  disabled={loading || confirmText.trim().toLowerCase() !== "delete"}
-                  aria-disabled={loading || confirmText.trim().toLowerCase() !== "delete"}
-                  title="Delete account"
-                >
-                  Delete
-                </button>
-
-                <button
-                  className="btn small"
-                  onClick={() => {
-                    setConfirmArm(false);
-                    setConfirmText("");
-                    setError(null);
-                    if (timerRef.current) {
-                      window.clearTimeout(timerRef.current);
-                      timerRef.current = null;
-                    }
-                  }}
-                  title="Cancel"
-                >
-                  Cancel
-                </button>
-              </div>
 
               {error ? <p className="error">{error}</p> : null}
             </div>

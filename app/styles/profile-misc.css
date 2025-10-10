@@ -112,7 +112,8 @@
   transform: rotate(45deg);
   z-index: -1;
 }
-.confirm-popover-body { display: grid; gap: 8px; }
+.confirm-popover-body { display: grid; gap: 4px; text-align: center; }
+.confirm-popover .input { text-align: center; caret-color: transparent; }
 .confirm-message { color: var(--muted); font-size: 14px; }
 .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
@@ -129,6 +130,16 @@
 }
 .btn.danger:hover { transform: translateY(-2px) scale(1.01); }
 .btn.danger:active { transform: translateY(0) scale(.998); }
+
+/* Disable hover effects for delete account button */
+.btn.delete-account-btn { transition: none !important; }
+.btn.delete-account-btn:hover { 
+  transform: none !important; 
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger), transparent 12%), var(--danger)) !important; 
+  color: white !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
 
 /* Armed confirm state for buttons that require double-press to confirm */
 .btn.confirm {

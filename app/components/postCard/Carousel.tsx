@@ -49,11 +49,6 @@ export const Carousel = memo(function Carousel({
     if (!img) return;
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
-    // DEBUG: log measurements to help trace why wrapper height may be the same
-    try {
-      // eslint-disable-next-line no-console
-      console.debug('[Carousel] measureImage start', { idx, wrapperInlineHeight: wrapper.style.height });
-    } catch (_) {}
     // Allow the image to size naturally while we measure. We avoid restoring
     // any previous inline height here so the React-driven inline height
     // (from state) can be applied without being overwritten.
@@ -96,10 +91,6 @@ export const Carousel = memo(function Carousel({
       }
     }
     if (h == null) return;
-    try {
-      // eslint-disable-next-line no-console
-      console.debug('[Carousel] measureImage computed', { idx, displayedH, natW, natH, computedH: h });
-    } catch (_) {}
     setHeights(prev => {
       const copy = prev.slice();
       copy[idx] = h as number;

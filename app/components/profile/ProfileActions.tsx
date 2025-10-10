@@ -1,10 +1,11 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import { SignOutButton } from "@/app/components/SignOut";
 import Link from "next/link";
 import { ViewToggle } from "@/app/components/ViewToggle";
 import { User } from "lucide-react";
+import { UserPlus, UserCheck } from "lucide-react";
 import type { User as UserType } from "@/src/lib/types";
 
 interface ProfileActionsProps {
@@ -34,6 +35,85 @@ export function ProfileActions({
 }: ProfileActionsProps) {
   const toast = useToast();
   const followInFlightRef = useRef(false);
+  const followBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [followAnim, setFollowAnim] = useState<'following-anim' | 'unfollow-anim' | null>(null);
+  const [displayText, setDisplayText] = useState('Unfollowed');
+  const [isAnimating, setIsAnimating] = useState(false);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Typewriter animation effect
+  const animateTextChange = (fromText: string, toText: string) => {
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
+    let currentText = fromText;
+    let currentIndex = fromText.length;
+    const typeSpeed = 40; // ms per character - snappier timing
+    
+    const animate = () => {
+      if (currentIndex > 0) {
+        // Backspace phase
+        currentIndex--;
+        currentText = currentText.slice(0, currentIndex);
+        setDisplayText(currentText);
+        animationTimeoutRef.current = setTimeout(animate, typeSpeed);
+      } else {
+        // Find common prefix
+        let commonLength = 0;
+        while (commonLength < toText.length && commonLength < fromText.length && 
+               toText[commonLength] === fromText[commonLength]) {
+          commonLength++;
+        }
+        
+        // Type new text
+        const remainingText = toText.slice(commonLength);
+        if (remainingText.length > 0) {
+          currentText = toText.slice(0, commonLength + 1);
+          setDisplayText(currentText);
+          if (currentText.length < toText.length) {
+            animationTimeoutRef.current = setTimeout(() => {
+              animateTyping(toText, commonLength + 1);
+            }, typeSpeed);
+          } else {
+            setIsAnimating(false);
+          }
+        } else {
+          setIsAnimating(false);
+        }
+      }
+    };
+    
+    const animateTyping = (targetText: string, startIndex: number) => {
+      if (startIndex < targetText.length) {
+        const newText = targetText.slice(0, startIndex + 1);
+        setDisplayText(newText);
+        animationTimeoutRef.current = setTimeout(() => {
+          animateTyping(targetText, startIndex + 1);
+        }, typeSpeed);
+      } else {
+        setIsAnimating(false);
+      }
+    };
+    
+    animate();
+  };
+
+  // Trigger animation when following state changes
+  useEffect(() => {
+    const targetText = following ? 'Followed' : 'Unfollowed';
+    if (displayText !== targetText && !isAnimating) {
+      animateTextChange(displayText, targetText);
+    }
+  }, [following, displayText, isAnimating]);
+
+  // Cleanup animation timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleFollowToggle = async () => {
     const cur = await api.getCurrentUser();
@@ -53,6 +133,10 @@ export function ProfileActions({
     // Optimistic update: flip state immediately so local UI responds fast
     setFollowing(!prev);
 
+    // Add subtle animation
+    const willFollow = !prev;
+    setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
+
     followInFlightRef.current = true;
     try {
       if (!prev) {
@@ -71,63 +155,70 @@ export function ProfileActions({
     }
     finally {
       followInFlightRef.current = false;
+      // Clear animation after a short delay
+      setTimeout(() => setFollowAnim(null), 420);
     }
   };
 
   return (
-    <div className="profile-actions" style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 8 }}>
-      {/* Optional view toggle (grid / list) - parent can pass view & setView props */}
-      {setView ? (
-        <ViewToggle
-          title={<strong>Posts</strong>}
-          subtitle="Toggle posts layout"
-          selected={view || "grid"}
-          onSelect={(v) => setView(v)}
-        />
-      ) : null}
-      {/* Show owner actions when the signed-in user is viewing their own profile.
-          This handles both /profile (no param) and /profile/[id] when the id
-          matches the current user. */}
-      {currentUserId && user?.id === currentUserId ? (
-        <>
-          <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following">
-            <span className="icon" aria-hidden>
-              <User size={16} strokeWidth={1.2} />
-            </span>
-          </Link>
-          <button
-            className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 no-effects' : 'btn edit-profile-btn no-effects'}`}
-            onClick={(e) => { onEditToggle(); (e.target as HTMLButtonElement).blur(); }}
-            aria-expanded={isEditingProfile}
-            aria-label={isEditingProfile ? 'Save profile changes' : 'Edit profile'}
-            type="button"
-          >
-            <span className="icon" aria-hidden>
-              {isEditingProfile ? (
-                // save icon
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              ) : (
-                // edit/profile icon
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              )}
-            </span>
-          </button>
-          {/* New Post button removed from profile actions */}
-          {/* show sign out only when the viewed profile belongs to the signed-in user */}
-          {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
-        </>
-      ) : (
-        // If the viewer is looking at another user's profile, render follow/unfollow.
-        // Note: `following` may be null when we intentionally skipped computing
-        // it because the viewed id matched the signed-in user — in that case
-        // we won't render this branch because the owner branch executes above.
+    <>
+      {/* Follow button moved outside profile-actions div */}
+      {currentUserId && user?.id !== currentUserId ? (
         <button
-          className="btn follow-text-btn"
+          ref={followBtnRef}
+          className={`btn follow-btn ${following ? 'following' : 'not-following'} expanded ${followAnim || ''}`}
+          aria-pressed={!!following || false}
           onClick={handleFollowToggle}
         >
-          {following ? 'Unfollow' : 'Follow'}
+          <span className="icon" aria-hidden="true">
+            {following ? <UserCheck size={16} /> : <UserPlus size={16} />}
+          </span>
+          <span className="reveal label">{displayText}</span>
         </button>
-      )}
-    </div>
+      ) : null}
+      <div className="profile-actions" style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 8 }}>
+        {/* Optional view toggle (grid / list) - parent can pass view & setView props */}
+        {setView ? (
+          <ViewToggle
+            title={<strong>Posts</strong>}
+            subtitle="Toggle posts layout"
+            selected={view || "grid"}
+            onSelect={(v) => setView(v)}
+          />
+        ) : null}
+        {/* Show owner actions when the signed-in user is viewing their own profile.
+            This handles both /profile (no param) and /profile/[id] when the id
+            matches the current user. */}
+        {currentUserId && user?.id === currentUserId ? (
+          <>
+            <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following">
+              <span className="icon" aria-hidden>
+                <User size={16} strokeWidth={1.2} />
+              </span>
+            </Link>
+            <button
+              className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 no-effects' : 'btn edit-profile-btn no-effects'}`}
+              onClick={(e) => { onEditToggle(); (e.target as HTMLButtonElement).blur(); }}
+              aria-expanded={isEditingProfile}
+              aria-label={isEditingProfile ? 'Save profile changes' : 'Edit profile'}
+              type="button"
+            >
+              <span className="icon" aria-hidden>
+                {isEditingProfile ? (
+                  // save icon
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                ) : (
+                  // edit/profile icon
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                )}
+              </span>
+            </button>
+            {/* New Post button removed from profile actions */}
+            {/* show sign out only when the viewed profile belongs to the signed-in user */}
+            {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
+          </>
+        ) : null}
+      </div>
+    </>
   );
 }

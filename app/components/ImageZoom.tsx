@@ -134,12 +134,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const postViewAncestor = container.closest && (container.closest('.post-view-wrap') as Element | null);
     if (!postViewAncestor) {
       // Not in single-post view — nothing to do
-      // console for debugging during dev
-      try { console.debug('[ImageZoom] not inside .post-view-wrap; skipping viewport fit'); } catch(_) {}
       return;
     }
     if (isFullscreen) {
-      try { console.debug('[ImageZoom] fullscreen mode; skipping viewport fit'); } catch(_) {}
       return; // fullscreen viewer manages its own sizing
     }
 
@@ -247,7 +244,6 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
             container.style.width = desiredWidth;
             container.style.height = desiredHeight;
             container.style.margin = desiredMargin;
-            try { console.debug('[ImageZoom] applied viewport fit', { maxW, maxH, headerH, tabbarH, sidePad, otherCardHeight }); } catch(_) {}
           }
           lastAppliedMaxW = maxW;
           lastAppliedMaxH = maxH;

@@ -176,7 +176,7 @@
 
 .card-media img {
   width: 100%; height: auto; display: block;
-  background: #00000008; opacity: 0; transition: opacity 220ms ease;
+  background: var(--bg); opacity: 0; transition: opacity 220ms ease;
 }
 .card-media img.loaded { opacity: 1; }
 

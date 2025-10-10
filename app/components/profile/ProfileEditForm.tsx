@@ -69,6 +69,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
 
       setEditProcessing(true);
       try {
+        // Debug: log the payload we're about to send
+        try { console.log('[ProfileEditForm] outgoing payload', { username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized }); } catch (_) {}
         const socialLinks: Record<string, string | undefined> = {};
         if (editTwitter.trim()) socialLinks.twitter = editTwitter.trim();
         if (editInstagram.trim()) socialLinks.instagram = editInstagram.trim();
@@ -100,6 +102,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
           }
         }
       } catch (e: any) {
+        try { console.error('[ProfileEditForm] saveEdits error', e); } catch (_) {}
         toast.show(e?.message || 'Failed to update profile');
       } finally {
         setEditProcessing(false);
@@ -121,12 +124,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         requestAnimationFrame(() => { displayNameRef.current?.focus?.(); });
         return;
       }
-      // when already editing, cancel/close without saving
-      setIsClosing(true);
-      setTimeout(() => {
-        setIsEditingProfile(false);
-        setIsClosing(false);
-      }, 200); // match the transition duration
+      // when already editing, save the changes
+      await saveEdits();
     };
 
     // close social collapsible on Escape for accessibility
@@ -282,6 +281,18 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
               </div>
             </label>
           </div>
+        </div>
+
+        {/* Save button */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+          <button
+            type="submit"
+            className="btn"
+            disabled={editProcessing}
+            style={{ minWidth: 100 }}
+          >
+            {editProcessing ? 'Saving...' : 'Save'}
+          </button>
         </div>
 
       </form>

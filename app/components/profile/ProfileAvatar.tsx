@@ -52,10 +52,12 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
       while (n--) u8arr[n] = bstr.charCodeAt(n);
       const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
 
-      const sb = getSupabaseClient();
-      const userObj = await api.getCurrentUser();
-      if (!userObj) throw new Error("Not logged in");
-      const path = `avatars/${userObj.id}/${file.name}`;
+  const sb = getSupabaseClient();
+  const userObj = await api.getCurrentUser();
+  if (!userObj) throw new Error("Not logged in");
+  const uploaderId = userObj.id || currentUserId;
+  if (!uploaderId) throw new Error("Cannot determine user id for avatar upload");
+  const path = `avatars/${uploaderId}/${file.name}`;
       const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
       if (uploadErr) throw uploadErr;
       const urlRes = sb.storage.from("posts").getPublicUrl(path);

@@ -10,12 +10,26 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+  const body = await req.json();
+    // Debug: log incoming body (avoid printing tokens/secrets)
+    try {
+      const keys = Object.keys(body || {});
+      const sample = JSON.stringify(body ? Object.fromEntries(keys.slice(0,10).map(k => [k, body[k]])) : {});
+      console.log('[PATCH /api/users/me] incoming body keys', keys, 'sample', sample);
+    } catch (_) {}
     const sb = getServiceSupabase();
     const actorId = authUser.id;
 
+    // Normalize incoming body to accept camelCase or snake_case keys
+    const usernameIncoming = body.username ?? body.user_name;
+    const displayNameIncoming = body.displayName ?? body.display_name;
+    const avatarUrlIncoming = body.avatarUrl ?? body.avatar_url;
+    const bioIncoming = body.bio ?? body.bio;
+    const socialLinksIncoming = body.socialLinks ?? body.social_links;
+
     // If username is changing, enforce 24-hour cooldown server-side
-    if (body.username !== undefined) {
+    if (usernameIncoming !== undefined) {
+  try { console.log('[PATCH /api/users/me] actorId', actorId, 'usernameIncoming', usernameIncoming); } catch (_) {}
       const { data: cur, error: curErr } = await sb.from('users').select('username, username_changed_at').eq('id', actorId).limit(1).single();
       if (curErr) {
         console.error('PATCH /api/users/me: error reading current profile', curErr);
@@ -23,7 +37,7 @@ export async function PATCH(req: Request) {
       }
       const currentUsername = cur?.username;
       const lastChanged = cur?.username_changed_at;
-      if (currentUsername !== body.username) {
+      if (currentUsername !== usernameIncoming) {
         if (lastChanged) {
           const lastChangedTime = new Date(lastChanged).getTime();
           const now = Date.now();
@@ -37,17 +51,22 @@ export async function PATCH(req: Request) {
       }
     }
 
-    const upd: any = {};
-    if (body.username !== undefined) {
-      upd.username = body.username;
+  const upd: any = {};
+    if (usernameIncoming !== undefined) {
+      upd.username = usernameIncoming;
       upd.username_changed_at = new Date().toISOString();
     }
-    if (body.displayName !== undefined) upd.display_name = body.displayName;
-    if (body.avatarUrl !== undefined) upd.avatar_url = body.avatarUrl;
-    if (body.bio !== undefined) upd.bio = body.bio;
-    if (body.socialLinks !== undefined) upd.socialLinks = body.socialLinks ? JSON.stringify(body.socialLinks) : null;
+    if (displayNameIncoming !== undefined) upd.display_name = displayNameIncoming;
+    if (avatarUrlIncoming !== undefined) upd.avatar_url = avatarUrlIncoming;
+    if (bioIncoming !== undefined) upd.bio = bioIncoming;
+  if (socialLinksIncoming !== undefined) upd.social_links = socialLinksIncoming ? JSON.stringify(socialLinksIncoming) : null;
 
-    if (Object.keys(upd).length === 0) return NextResponse.json({ ok: true, user: null });
+  // Debug: what we're about to write to the DB
+  try { console.log('[PATCH /api/users/me] computed upd', upd); } catch (_) {}
+  if (Object.keys(upd).length === 0) {
+    try { console.log('[PATCH /api/users/me] no update fields, returning null'); } catch (_) {}
+    return NextResponse.json(null);
+  }
 
     // update payload prepared
 
@@ -67,12 +86,15 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: selErr.message || selErr }, { status: 500 });
       }
       data = selData;
+  try { console.log('[PATCH /api/users/me] update result selected', !!data, data?.id); } catch (_) {}
     } catch (e) {
       console.error('[PATCH /api/users/me] unexpected update exception', e);
       return NextResponse.json({ error: String(e) }, { status: 500 });
     }
     if (data) {
-      return NextResponse.json({ ok: true, user: data });
+      // Return the profile object directly so the client receives the
+      // updated profile (client expects the raw profile JSON, not a wrapper).
+      return NextResponse.json(data);
     }
 
     // No existing row found/updated. Create a minimal profile row.
@@ -82,7 +104,7 @@ export async function PATCH(req: Request) {
     if (upd.display_name !== undefined) insertObj.display_name = upd.display_name;
     if (upd.avatar_url !== undefined) insertObj.avatar_url = upd.avatar_url;
     if (upd.bio !== undefined) insertObj.bio = upd.bio;
-    if (upd.socialLinks !== undefined) insertObj.socialLinks = upd.socialLinks;
+  if (upd.social_links !== undefined) insertObj.social_links = upd.social_links;
 
     // Use upsert to create the row if it doesn't exist; conflict on primary key
     // ensures this is safe in concurrent scenarios.
@@ -93,7 +115,8 @@ export async function PATCH(req: Request) {
         console.error('PATCH /api/users/me: upsert error', insRes.error);
         return NextResponse.json({ error: insRes.error.message || insRes.error }, { status: 500 });
       }
-      return NextResponse.json({ ok: true, user: insRes.data || null });
+  try { console.log('[PATCH /api/users/me] upsert result', !!insRes.data, insRes.data?.id); } catch (_) {}
+      return NextResponse.json(insRes.data || null);
     } catch (e) {
       console.error('PATCH /api/users/me: unexpected upsert exception', e);
       return NextResponse.json({ error: String(e) }, { status: 500 });

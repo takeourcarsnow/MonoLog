@@ -160,11 +160,35 @@ logger.debug("users.upsert payload", safe(upsertObj));
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify(upsertObj),
   });
+  try {
+    console.log('[api.updateCurrentUser] outgoing payload', Object.keys(upsertObj).length ? upsertObj : '(empty)');
+    console.log('[api.updateCurrentUser] server status', resp.status, resp.statusText);
+  } catch (_) {}
   if (!resp.ok) {
     const bodyText = await resp.text().catch(() => null);
+    console.error('[api.updateCurrentUser] server error body', bodyText);
     throw new Error(`Server update failed: ${resp.status} ${resp.statusText} ${bodyText || ''}`);
   }
-  const profile = await resp.json();
+  let profile: any = await resp.json();
+  try { console.log('[api.updateCurrentUser] server returned profile keys', profile ? Object.keys(profile) : null); } catch (_) {}
+  // Some server endpoints historically returned { user: { ... } } wrappers.
+  // Be tolerant: if we received an envelope, unwrap it.
+  if (profile && profile.user && typeof profile.user === 'object') {
+    try { console.log('[api.updateCurrentUser] detected envelope, unwrapping profile.user'); } catch (_) {}
+    profile = profile.user;
+  }
+  if (!profile) {
+    const bodyText = await (async () => {
+      try { return JSON.stringify(profile); } catch { return String(profile); }
+    })();
+    throw new Error(`Server update failed: empty profile returned (${bodyText}).`);
+  }
+  if (!profile) {
+    const bodyText = await (async () => {
+      try { return JSON.stringify(profile); } catch { return String(profile); }
+    })();
+    throw new Error(`Server update failed: empty profile returned (${bodyText}).`);
+  }
   return {
     id: profile.id,
     username: profile.username || profile.user_name,

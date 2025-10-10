@@ -192,6 +192,11 @@ function UploaderCore() {
               try { cameraInputRef.current?.click(); } catch (_) {}
             }
           }}
+          onFileSelect={() => {
+            fileActionRef.current = 'append';
+            try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
+            try { fileInputRef.current?.click(); } catch (_) {}
+          }}
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
           onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
           onDrop={async (e) => {

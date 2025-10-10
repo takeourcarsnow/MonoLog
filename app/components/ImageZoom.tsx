@@ -716,7 +716,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const now = Date.now();
     // Ignore duplicate events from different event systems (pointer + touch)
     // fired almost simultaneously for a single physical tap.
-    if (lastEventTimeRef.current && now - lastEventTimeRef.current < 40) return;
+    if (lastEventTimeRef.current && now - lastEventTimeRef.current < 10) return;
     lastEventTimeRef.current = now;
 
     if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
@@ -909,9 +909,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           // remove image rounding so the outer container's border-radius clips the image
           borderRadius: 0,
         }}
+        onClick={(e) => {
+          e.preventDefault();
+          registerTap(e.clientX, e.clientY);
+        }}
         onDoubleClick={(e) => {
           e.preventDefault();
-          handleDoubleTap(e.clientX, e.clientY);
+          // Fallback for browsers that still fire double-click despite onClick
         }}
         onDragStart={(e) => e.preventDefault()}
         draggable={false}

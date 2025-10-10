@@ -259,17 +259,35 @@
 
 /* View toggle icon: smooth fade+scale between list and grid layers. */
 .view-btn { display: inline-flex; align-items: center; justify-content: center; padding: 6px; border-radius: 8px; }
-.view-icon { display: block; overflow: visible; }
-.view-icon .layer { transform-origin: center center; transition: opacity 220ms cubic-bezier(.2,.9,.25,1), transform 220ms cubic-bezier(.2,.9,.25,1); opacity: 0; transform: scale(.88) rotate(-10deg); }
-.view-icon .layer.visible { opacity: 1; transform: scale(1) rotate(0deg); animation: viewSpinIn 260ms cubic-bezier(.2,.9,.25,1); }
+.view-icon { 
+  display: block; 
+  overflow: visible; 
+  position: relative; 
+  width: 18px; 
+  height: 18px; 
+}
+.view-icon .layer { 
+  position: absolute; 
+  top: 0; left: 0; 
+  transform-origin: center center; 
+  transition: opacity 320ms cubic-bezier(.25,.46,.45,.94), transform 320ms cubic-bezier(.25,.46,.45,.94); 
+  opacity: 0; 
+  transform: scale(.9) rotate(-18deg); 
+}
+.view-icon .layer.visible { 
+  opacity: 1; 
+  transform: scale(1) rotate(0deg); 
+  animation: viewSpinIn 400ms cubic-bezier(.25,.46,.45,.94) 80ms both; 
+}
+
+.view-icon .layer.hidden { pointer-events: none; }
 
 /* Subtle rotate+scale entrance to give the icon a tiny spin when toggling */
 @keyframes viewSpinIn {
-  0% { opacity: 0; transform: scale(.88) rotate(-18deg); }
-  60% { transform: scale(1.04) rotate(6deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  0% { transform: scale(.9) rotate(-18deg); }
+  50% { transform: scale(1.08) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
-.view-icon .layer.hidden { pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .view-icon .layer { transition: none !important; transform: none !important; }

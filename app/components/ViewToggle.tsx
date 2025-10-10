@@ -16,7 +16,14 @@ function ViewToggle({ title, subtitle, selected, onSelect }: { title: React.Reac
           title={selected === "list" ? "Switch to grid view" : "Switch to list view"}
           aria-pressed={selected === "list"}
         >
-          {selected === "list" ? <LayoutList size={18} strokeWidth={1} /> : <LayoutGrid size={18} strokeWidth={1} />}
+          <span className="view-icon">
+            <span className={`layer ${selected === "list" ? "visible" : "hidden"}`}>
+              <LayoutList size={18} strokeWidth={1} />
+            </span>
+            <span className={`layer ${selected === "grid" ? "visible" : "hidden"}`}>
+              <LayoutGrid size={18} strokeWidth={1} />
+            </span>
+          </span>
           <span className="sr-only">{selected === "list" ? "List view" : "Grid view"}</span>
         </button>
       </div>

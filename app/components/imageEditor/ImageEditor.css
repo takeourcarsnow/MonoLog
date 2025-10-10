@@ -29,16 +29,16 @@
   opacity: 0;
 }
 
-/* Full-screen mode for upload editor */
+/* Full-screen mode for upload editor: fill from top to bottom but centered horizontally */
 .upload-editor-fullscreen .image-editor {
   position: fixed;
-  top: 50%;
+  top: 0;
+  bottom: 0;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   width: auto;
   max-width: min(85vw, 720px);
-  height: auto;
-  max-height: 85vh;
+  height: calc(var(--viewport-height, 1vh) * 100);
   margin: 0;
   padding: 8px;
   padding-bottom: 12px;
@@ -65,7 +65,7 @@
 @media (max-width: 640px) {
   .upload-editor-fullscreen .image-editor {
     max-width: 95vw;
-    max-height: 95vh;
+    height: 95vh;
     padding: 8px;
   }
   

@@ -52,7 +52,7 @@ export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onR
           <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents' }} onClick={(e)=> e.preventDefault()}>
             <ImageZoom
               loading="eager"
-              src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}
+              src={Array.isArray(p.thumbnailUrls) && p.thumbnailUrls[0] ? p.thumbnailUrls[0] : Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.thumbnailUrl || p.imageUrl}
               alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
             />
           </Link>

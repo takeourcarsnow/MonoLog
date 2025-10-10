@@ -76,18 +76,35 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
     }
   }
 
-  // DEV: emit concise mapping info to the browser console so you can paste it from F12
-  try {
-    if (typeof window !== 'undefined') {
-      const shouldLog = Array.isArray(imageUrls) && imageUrls.length > 1 || typeof row.image_urls === 'string' && row.image_urls.length > 0;
-      // logging removed per user request
+  // Normalize thumbnailUrls into a predictable array shape
+  const thumbRaw = row.thumbnail_urls ?? row.thumbnail_urls_json ?? row.thumbnail_urls_jsonb ?? row.thumbnail_url ?? row.thumbnailUrl ?? undefined;
+  let thumbnailUrls: string[] | undefined = undefined;
+  if (thumbRaw !== undefined && thumbRaw !== null) {
+    if (Array.isArray(thumbRaw)) thumbnailUrls = thumbRaw.map(String);
+    else if (typeof thumbRaw === 'string') {
+      try {
+        const parsed = JSON.parse(thumbRaw);
+        if (Array.isArray(parsed)) thumbnailUrls = parsed.map(String);
+        else thumbnailUrls = [thumbRaw];
+      } catch (e) {
+        thumbnailUrls = [thumbRaw];
+      }
+    } else {
+      try {
+        const maybe = Array.from(thumbRaw as any);
+        if (Array.isArray(maybe)) thumbnailUrls = maybe.map(String);
+        else thumbnailUrls = [String(thumbRaw)];
+      } catch (e) {
+        thumbnailUrls = [String(thumbRaw)];
+      }
     }
-  } catch (e) { /* ignore logging errors */ }
+  }
 
   return {
     id: row.id,
     userId: row.user_id || row.userId,
     imageUrls,
+    thumbnailUrls,
     alt: row.alt || "",
     caption: row.caption || "",
     spotifyLink: row.spotify_link || row.spotifyLink || undefined,

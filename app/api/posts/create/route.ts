@@ -8,7 +8,7 @@ import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 export async function POST(req: Request) {
   try {
   const body = await req.json();
-  const { imageUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink } = body;
+  const { imageUrls, thumbnailUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink } = body;
   const authUser = await getUserFromAuthHeader(req);
   if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const userId = authUser.id;
@@ -112,6 +112,14 @@ export async function POST(req: Request) {
         insertObj.image_urls = imageUrls; // Try array column
       }
     }
+    
+    // Handle thumbnail URLs
+    if (thumbnailUrls && thumbnailUrls.length > 0) {
+      insertObj.thumbnail_url = thumbnailUrls[0]; // Always set primary thumbnail for compatibility
+      if (thumbnailUrls.length > 1) {
+        insertObj.thumbnail_urls = thumbnailUrls; // Try array column
+      }
+    }
 
     // Attempt to insert the post
     let insertData: any = null;
@@ -144,6 +152,7 @@ export async function POST(req: Request) {
 
     // Normalize image URLs from the inserted data
     let normalizedImageUrls: string[] = [];
+    let normalizedThumbnailUrls: string[] = [];
     try {
       if (insertData) {
         if (Array.isArray(insertData.image_urls)) {
@@ -151,10 +160,16 @@ export async function POST(req: Request) {
         } else if (insertData.image_url) {
           normalizedImageUrls = [insertData.image_url];
         }
+        if (Array.isArray(insertData.thumbnail_urls)) {
+          normalizedThumbnailUrls = insertData.thumbnail_urls;
+        } else if (insertData.thumbnail_url) {
+          normalizedThumbnailUrls = [insertData.thumbnail_url];
+        }
       }
     } catch (e) {
       // If normalization fails, at least return the primary image
       normalizedImageUrls = insertData?.image_url ? [insertData.image_url] : [];
+      normalizedThumbnailUrls = insertData?.thumbnail_url ? [insertData.thumbnail_url] : [];
     }
 
     // Attach spotifyLink from the inserted row if available
@@ -215,7 +230,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true, post: insertData, normalizedImageUrls });
+    return NextResponse.json({ ok: true, post: insertData, normalizedImageUrls, normalizedThumbnailUrls });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

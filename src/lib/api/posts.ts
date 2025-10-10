@@ -278,6 +278,7 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
   // For uploads, convert any data URLs via the server storage endpoint so the server can store via service role
   const inputs: string[] = imageUrls && imageUrls.length ? imageUrls.slice(0, 5) : imageUrl ? [imageUrl] : [];
   const finalUrls: string[] = [];
+  const finalThumbUrls: string[] = [];
   for (const img of inputs) {
     if (!img) continue;
   if (typeof img === 'string' && img.startsWith('data:')) {
@@ -289,9 +290,14 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
       if (!uploadRes.ok) {
         console.warn('Server upload failed, falling back to data-url', up?.error);
         finalUrls.push(img as string);
-      } else finalUrls.push(up.publicUrl);
+        finalThumbUrls.push(img as string); // fallback to original for thumbnail too
+      } else {
+        finalUrls.push(up.publicUrl);
+        finalThumbUrls.push(up.thumbnailUrl);
+      }
     } else {
       finalUrls.push(img as string);
+      finalThumbUrls.push(img as string); // if not data URL, assume it's already uploaded with thumbnail
     }
   }
 
@@ -299,7 +305,7 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
   const sb2 = getClient();
   ensureAuthListener(sb2);
   const token2 = await getAccessToken(sb2);
-  const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token2 ? { Authorization: `Bearer ${token2}` } : {}) }, body: JSON.stringify({ imageUrls: finalUrls, caption, alt, replace, public: isPublic, spotifyLink }) });
+  const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token2 ? { Authorization: `Bearer ${token2}` } : {}) }, body: JSON.stringify({ imageUrls: finalUrls, thumbnailUrls: finalThumbUrls, caption, alt, replace, public: isPublic, spotifyLink }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to create post');
   return json.post as any;

@@ -26,6 +26,9 @@ export type Post = {
   imageUrls?: string[];
   // legacy single-image field (optional)
   imageUrl?: string;
+  // Thumbnails for grid view optimization
+  thumbnailUrls?: string[];
+  thumbnailUrl?: string;
   // For accessibility: either a single alt for the primary image or an array matching imageUrls
   alt?: string | string[];
   caption: string;

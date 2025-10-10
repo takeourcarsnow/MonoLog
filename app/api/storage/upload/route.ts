@@ -1,6 +1,26 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import sharp from 'sharp';
+
+async function generateThumbnail(imageBuffer: Buffer, mime: string): Promise<Buffer> {
+  try {
+    // Generate thumbnail with max 1000px edge (sweet spot for quality vs performance), maintaining aspect ratio
+    const thumbnail = await sharp(imageBuffer)
+      .resize(1000, 1000, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    
+    return thumbnail;
+  } catch (error) {
+    console.error('Thumbnail generation failed:', error);
+    // Fallback: return original buffer if thumbnail generation fails
+    return imageBuffer;
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -22,15 +42,38 @@ export async function POST(req: Request) {
   const name = filename || `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
   const path = `${userId}/${name}`;
     const sb = getServiceSupabase();
-    const { data, error } = await sb.storage.from('posts').upload(path, buf, { 
-      upsert: true, 
-      contentType: mime as any
-    });
-    if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
     
-    // Generate a public URL (works if bucket is public) or signed URL (if private)
-    const { data: urlData } = sb.storage.from('posts').getPublicUrl(path);
-    return NextResponse.json({ ok: true, publicUrl: urlData.publicUrl });
+    // Generate thumbnail
+    const thumbBuf = await generateThumbnail(buf, mime);
+    const thumbName = name.replace(/\.[^.]+$/, '_thumb.jpg');
+    const thumbPath = `${userId}/${thumbName}`;
+    
+    // Upload both full image and thumbnail
+    const uploadPromises = [
+      sb.storage.from('posts').upload(path, buf, { 
+        upsert: true, 
+        contentType: mime as any
+      }),
+      sb.storage.from('posts').upload(thumbPath, thumbBuf, {
+        upsert: true,
+        contentType: 'image/jpeg'
+      })
+    ];
+    
+    const [fullResult, thumbResult] = await Promise.all(uploadPromises);
+    
+    if (fullResult.error) return NextResponse.json({ error: fullResult.error.message || fullResult.error }, { status: 500 });
+    if (thumbResult.error) return NextResponse.json({ error: thumbResult.error.message || thumbResult.error }, { status: 500 });
+    
+    // Generate public URLs
+    const { data: fullUrlData } = sb.storage.from('posts').getPublicUrl(path);
+    const { data: thumbUrlData } = sb.storage.from('posts').getPublicUrl(thumbPath);
+    
+    return NextResponse.json({ 
+      ok: true, 
+      publicUrl: fullUrlData.publicUrl,
+      thumbnailUrl: thumbUrlData.publicUrl
+    });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

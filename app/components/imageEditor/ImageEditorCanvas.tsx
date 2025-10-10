@@ -24,7 +24,7 @@ export default function ImageEditorCanvas({ canvasRef, mounted }: ImageEditorCan
   }, []);
   
   return (
-    <figure style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexDirection: 'column', width: '100%', height: '100%' }}>
+    <figure style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', width: '100%', height: '100%' }}>
       <canvas
         ref={canvasRef}
         style={{

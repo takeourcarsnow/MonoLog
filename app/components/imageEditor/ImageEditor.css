@@ -12,7 +12,6 @@
   width: 100%;
   max-width: min(92vw, 820px);
   margin: 0 auto;
-  background: var(--bg-elev);
   color: var(--text);
   padding: 8px;
   padding-bottom: 12px;
@@ -43,7 +42,6 @@
   padding: 8px;
   padding-bottom: 12px;
   border-radius: 8px;
-  background: var(--bg-elev);
   z-index: 1000;
   overflow: hidden;
   display: flex;

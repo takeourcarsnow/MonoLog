@@ -32,7 +32,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
   const scaleRef = useRef<number>(scale);
   const txRef = useRef<number>(tx);
   const tyRef = useRef<number>(ty);
-  const pinchRef = useRef<null | { initialDistance: number; initialScale: number; midX: number; midY: number; initialMidLocalX: number; initialMidLocalY: number }>(null);
+  const pinchRef = useRef<null | { initialDistance: number; initialScale: number }>(null);
   // Whether wheel-driven zoom is allowed. It becomes true when the user
   // explicitly starts a zoom (double-click or pinch). This prevents the
   // mouse wheel from initiating zoom on accidental scrolls.
@@ -564,7 +564,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       if (!rect) return;
       const midLocalX = midX - rect.left;
       const midLocalY = midY - rect.top;
-      pinchRef.current = { initialDistance: dist, initialScale: scaleRef.current, midX, midY, initialMidLocalX: midLocalX, initialMidLocalY: midLocalY };
+      pinchRef.current = { initialDistance: dist, initialScale: scaleRef.current };
       // Make sure we aren't in pan mode
       setIsPanning(false);
       panStartRef.current = null;
@@ -616,21 +616,33 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
       const dx = t1.clientX - t0.clientX;
       const dy = t1.clientY - t0.clientY;
       const dist = Math.hypot(dx, dy) || 1;
-  const { initialDistance, initialScale, initialMidLocalX, initialMidLocalY } = pinchRef.current;
-  const ratio = dist / initialDistance;
-  let newScale = Math.max(1, Math.min(maxScale, initialScale * ratio));
+      const { initialDistance, initialScale } = pinchRef.current;
+      const ratio = dist / initialDistance;
+      let newScale = Math.max(1, Math.min(maxScale, initialScale * ratio));
 
-  const scaleRatio = newScale / scaleRef.current;
-  const newTx = initialMidLocalX - (initialMidLocalX - txRef.current) * scaleRatio;
-  const newTy = initialMidLocalY - (initialMidLocalY - tyRef.current) * scaleRatio;
+      // Calculate current midpoint
+      const midX = (t0.clientX + t1.clientX) / 2;
+      const midY = (t0.clientY + t1.clientY) / 2;
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const midLocalX = midX - rect.left;
+        const midLocalY = midY - rect.top;
+        const containerWidth = rect.width;
+        const containerHeight = rect.height;
 
-      const bounds = getBounds(newScale);
-      const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
-      const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+        // Center the zoom on the current midpoint
+        const newTx = -(midLocalX - containerWidth / 2) * newScale;
+        const newTy = -(midLocalY - containerHeight / 2) * newScale;
 
-      setScale(newScale);
-      setTx(clampedTx);
-      setTy(clampedTy);
+        // Clamp to bounds
+        const bounds = getBounds(newScale);
+        const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+        const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+
+        setScale(newScale);
+        setTx(clampedTx);
+        setTy(clampedTy);
+      }
 
       // Prevent parent components from receiving swipe gestures when pinching
       e.stopPropagation();

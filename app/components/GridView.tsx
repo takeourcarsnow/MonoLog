@@ -51,7 +51,7 @@ export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onR
           )}
           <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents' }} onClick={(e)=> e.preventDefault()}>
             <ImageZoom
-              loading="lazy"
+              loading="eager"
               src={Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.imageUrl}
               alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
             />

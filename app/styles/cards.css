@@ -384,7 +384,7 @@
 /* Also provide a tiny hover/press lift on pointer devices */
 /* Grid view: layout grid and square tiles */
 .feed.grid-view { padding: 4px 0; }
-.feed.grid-view .grid { display: grid; gap: 2px; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; align-items: start; }
+.feed.grid-view .grid { display: grid; gap: 2px; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; align-items: start; }
 .feed.grid-view .grid .tile {
   position: relative;
   width: 100%;
@@ -408,18 +408,20 @@
   animation: gridIn 420ms var(--transition-mid) forwards;
 }
 
-/* small stagger so tiles cascade visually across rows (2-column default) */
-  .feed.grid-view .grid .tile:nth-child(2n+1) { animation-delay: 8ms; }
-  .feed.grid-view .grid .tile:nth-child(2n) { animation-delay: 16ms; }
+/* small stagger so tiles cascade visually across rows (3-column default) */
+  .feed.grid-view .grid .tile:nth-child(3n+1) { animation-delay: 8ms; }
+  .feed.grid-view .grid .tile:nth-child(3n+2) { animation-delay: 16ms; }
+  .feed.grid-view .grid .tile:nth-child(3n) { animation-delay: 24ms; }
 
-/* on wider screens where grid is 4 columns, adjust the stagger rhythm */
-@media (min-width: 900px) {
-  /* On wider screens use 3 columns so tiles are still larger than before */
-  .feed.grid-view .grid { grid-template-columns: repeat(3, 1fr); }
+/* on wider screens where grid is 3 columns, adjust the stagger rhythm */
+@media (min-width: 768px) {
+  /* On wider screens use 4 columns so tiles are smaller */
+  .feed.grid-view .grid { grid-template-columns: repeat(4, 1fr); }
   .feed.grid-view .grid .tile { animation-duration: 420ms; }
-  .feed.grid-view .grid .tile:nth-child(3n+1) { animation-delay: 40ms; }
-  .feed.grid-view .grid .tile:nth-child(3n+2) { animation-delay: 80ms; }
-  .feed.grid-view .grid .tile:nth-child(3n)   { animation-delay: 120ms; }
+  .feed.grid-view .grid .tile:nth-child(4n+1) { animation-delay: 40ms; }
+  .feed.grid-view .grid .tile:nth-child(4n+2) { animation-delay: 80ms; }
+  .feed.grid-view .grid .tile:nth-child(4n+3) { animation-delay: 120ms; }
+  .feed.grid-view .grid .tile:nth-child(4n)   { animation-delay: 160ms; }
 }
 
 @media (prefers-reduced-motion: reduce) {

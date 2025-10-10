@@ -57,6 +57,8 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
   if (!userObj) throw new Error("Not logged in");
   const uploaderId = userObj.id || currentUserId;
   if (!uploaderId) throw new Error("Cannot determine user id for avatar upload");
+  // Capture the old avatar URL before updating
+  const oldAvatarUrl = userObj.avatarUrl;
   const path = `avatars/${uploaderId}/${file.name}`;
       const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
       if (uploadErr) throw uploadErr;
@@ -65,6 +67,22 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
       // Add a cache-busting query param so the browser requests the fresh image
       const cacheBusted = publicUrl + (publicUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
       await api.updateCurrentUser({ avatarUrl: cacheBusted });
+
+      // After successful update, delete the old avatar if it's not the default
+      if (oldAvatarUrl && oldAvatarUrl !== '/logo.svg' && oldAvatarUrl.includes('supabase.co')) {
+        try {
+          // Extract path from URL: https://xxx.supabase.co/storage/v1/object/public/posts/avatars/userId/filename.jpg
+          const url = new URL(oldAvatarUrl);
+          const pathParts = url.pathname.split('/storage/v1/object/public/posts/');
+          if (pathParts.length > 1) {
+            const oldPath = pathParts[1];
+            await sb.storage.from("posts").remove([oldPath]);
+          }
+        } catch (deleteError) {
+          console.warn('Failed to delete old avatar:', deleteError);
+          // Don't throw - old avatar deletion failure shouldn't block the upload
+        }
+      }
 
       // Wait for the browser to actually load the new image (covers CDN processing)
       const waitForImageLoad = (url: string, timeout = 10000) => new Promise<void>((resolve, reject) => {

@@ -24,23 +24,21 @@ export default function ImageEditorCanvas({ canvasRef, mounted }: ImageEditorCan
   }, []);
   
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', width: '100%', height: '100%' }}>
+    <figure style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexDirection: 'column', width: '100%', height: '100%' }}>
       <canvas
         ref={canvasRef}
         style={{
           touchAction: 'none',
           display: 'block',
           transition: 'box-shadow 240ms ease',
-          borderRadius: isFullscreen ? 0 : 12,
-          boxShadow: isFullscreen ? 'none' : 'inset 0 1px 2px rgba(255,255,255,0.05)',
+          borderRadius: 12,
+          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05)',
           border: 'none',
           background: isFullscreen ? 'var(--bg)' : 'var(--bg-elev)',
-          width: 'auto',
-          height: 'auto',
           maxWidth: '100%',
           maxHeight: '100%'
         }}
       />
-    </div>
+    </figure>
   );
 }

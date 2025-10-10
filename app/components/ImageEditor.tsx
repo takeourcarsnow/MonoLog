@@ -322,7 +322,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   useKeyboardEvents(applyEdit, onCancel);
 
   return (
-    <div
+    <main
       tabIndex={0}
       className={`image-editor ${mounted ? '' : 'unmounted'}`}
       ref={editorContainerRef}
@@ -337,14 +337,14 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         isFullscreen={isFullscreen}
       />
 
-      <div className="image-editor-canvas-container" ref={containerRef}>
+      <figure className="image-editor-canvas-container" ref={containerRef}>
         <ImageEditorCanvas canvasRef={canvasRef} mounted={mounted} />
-      </div>
+      </figure>
 
       {/* Category selector (Filters / Basic / Effects / Crop / Frame) below the canvas */}
       <ImageEditorToolbarCategories categoriesContainerRef={categoriesContainerRef} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategoryWithHistory} categoryHighlight={categoryHighlight} sel={sel} applyCropOnly={applyCropOnly} resetCrop={resetCrop} cancelCrop={cancelCrop} />
 
-      <div className="image-editor-panels-container">
+      <aside className="image-editor-panels-container">
         <ImageEditorPanels
           selectedCategory={selectedCategory}
           exposure={exposure}
@@ -405,8 +405,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           setFrameColor={setFrameColor}
           frameColorRef={frameColorRef}
         />
-      </div>
+      </aside>
       {/* debug overlay removed */}
-    </div>
+    </main>
   );
 }

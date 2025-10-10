@@ -23,8 +23,8 @@ export default function FramePanel({
   resetControlToDefault,
 }: FramePanelProps) {
   return (
-    <div className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
-      <div>
+    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
+      <fieldset>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}><span className="sr-only">Photo Frame</span></div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -36,7 +36,7 @@ export default function FramePanel({
             <input className="imgedit-range" type="range" min={0} max={0.2} step={0.005} value={frameThickness} onInput={(e:any) => { const v = Number(e.target.value); frameThicknessRef.current = v; setFrameThickness(v); draw(); }} onDoubleClick={() => resetControlToDefault('frameThickness')} style={{ flex: 1, background: rangeBg(frameThickness, 0, 0.2, '#d4c5b9', '#8b7355') }} />
           </label>
 
-          <div>
+          <fieldset>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}><span className="sr-only">Frame Color</span></div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
@@ -80,11 +80,11 @@ export default function FramePanel({
                 <span>Black</span>
               </button>
             </div>
-          </div>
+          </fieldset>
 
-          {/* hint removed as requested */}
+          {/* hint removed */}
         </div>
-      </div>
-    </div>
+      </fieldset>
+    </section>
   );
 }

@@ -766,12 +766,6 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   height: calc(var(--viewport-height, 1vh) * 100);
   z-index: 1000;
   background: var(--bg);
-  /* center modal children */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px; /* give breathing room on small viewports */
-  box-sizing: border-box;
 }
 
 .upload-editor-loading {

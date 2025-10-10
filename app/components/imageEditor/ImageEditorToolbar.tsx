@@ -27,11 +27,11 @@ function ImageEditorToolbarHeader({
   isFullscreen
 }: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited' | 'onToggleFullscreen' | 'isFullscreen'>) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 0, gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
+    <header style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 0, gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
       <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
         <span className="sr-only">Edit Photo</span>
       </div>
-      <div className="image-editor-buttons" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+      <nav className="image-editor-buttons" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
         <button type="button" className="btn icon ghost" onClick={onCancel} aria-label="Cancel edits">
           <X size={14} aria-hidden />
           <span className="sr-only">Cancel edits</span>
@@ -57,8 +57,8 @@ function ImageEditorToolbarHeader({
           <Fullscreen size={14} aria-hidden />
           <span className="sr-only">{isFullscreen ? "Exit Fullscreen" : "View in Fullscreen"}</span>
         </button>
-      </div>
-    </div>
+      </nav>
+    </header>
   );
 }
 
@@ -77,7 +77,7 @@ function ImageEditorToolbarCategories({
   // When in crop mode, show Confirm/Reset/Cancel buttons
   if (category === 'crop') {
     return (
-      <div ref={categoriesContainerRef} className="categories-scroll" style={{
+      <nav ref={categoriesContainerRef} className="categories-scroll" style={{
         position: 'relative',
         display: 'flex',
         gap: 6,
@@ -184,13 +184,13 @@ function ImageEditorToolbarCategories({
           <X size={20} strokeWidth={2} aria-hidden />
           <span style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Cancel</span>
         </button>
-      </div>
+      </nav>
     );
   }
 
   // Normal category buttons
   return (
-    <div ref={categoriesContainerRef} className="categories-scroll" style={{
+    <nav ref={categoriesContainerRef} className="categories-scroll" style={{
       position: 'relative',
       display: 'flex',
       gap: 3,
@@ -381,12 +381,10 @@ function ImageEditorToolbarCategories({
       >
         <ImageIcon size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'frame' ? CATEGORY_COLORS.frame : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Frame</span>
-      </button>
-    </div>
+        </button>
+    </nav>
   );
-}
-
-// Default export: compose header + categories (backwards-compatible)
+}// Default export: compose header + categories (backwards-compatible)
 export default function ImageEditorToolbar(props: ImageEditorToolbarProps) {
   return (
     <>

@@ -41,7 +41,7 @@ export default function EffectsPanel({
   resetControlToDefault,
 }: EffectsPanelProps) {
   return (
-    <div className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
+    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
       <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
         <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
           <Aperture size={18} strokeWidth={2} aria-hidden />
@@ -155,6 +155,6 @@ export default function EffectsPanel({
           style={{ flex: 1, background: rangeBg(matte, 0, 1, '#e6ddd5', '#8b6f5c') }}
         />
       </label>
-    </div>
+    </section>
   );
 }

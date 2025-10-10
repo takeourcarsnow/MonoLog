@@ -27,9 +27,9 @@ export default function ColorPanel({
   filterHighlight,
 }: ColorPanelProps) {
   return (
-    <div className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
+    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
       {/* panel heading removed (tab already shows Filters) */}
-      <div ref={filtersContainerRef} style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: '8px 0' }}>
+      <nav ref={filtersContainerRef} style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: '8px 0' }}>
         {/* animated highlight pill sits behind buttons and moves between them */}
         <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease', pointerEvents: 'none', opacity: filterHighlight ? 0.95 : 0, boxShadow: 'none', border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)' }} />
         {Object.keys(FILTER_PRESETS).map(f => {
@@ -53,9 +53,9 @@ export default function ColorPanel({
             </button>
           );
         })}
-      </div>
+      </nav>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
+      <fieldset style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
         <span style={{ width: 120, color: 'var(--text)', fontWeight: 600, fontSize: 14 }}>Strength</span>
         <input
           className="imgedit-range"
@@ -73,7 +73,7 @@ export default function ColorPanel({
           onDoubleClick={() => resetControlToDefault('filterStrength')}
           style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
         />
-      </div>
-    </div>
+      </fieldset>
+    </section>
   );
 }

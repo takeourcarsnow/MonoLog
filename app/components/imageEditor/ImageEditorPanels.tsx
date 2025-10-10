@@ -73,7 +73,7 @@ interface ImageEditorPanelsProps {
 
 export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
   return (
-    <div className="imgedit-panels" style={{
+    <section className="imgedit-panels" style={{
       maxWidth: 820,
       margin: '8px auto 0',
       position: 'relative',
@@ -169,6 +169,6 @@ export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
           resetControlToDefault={props.resetControlToDefault}
         />
       )}
-    </div>
+    </section>
   );
 }

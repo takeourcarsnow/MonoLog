@@ -47,8 +47,8 @@ export default function CropPanel({
   bakeRotateMinus90,
 }: CropPanelProps) {
   return (
-    <div className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
-      <div>
+    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
+      <fieldset>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}><span className="sr-only">Crop Aspect Ratio</span></div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -214,8 +214,8 @@ export default function CropPanel({
             .aspect-presets-grid button { white-space: nowrap; overflow: visible; }
           `}</style>
         </div>
-      </div>
-      <div style={{ marginTop: 12 }}>
+      </fieldset>
+      <fieldset style={{ marginTop: 12 }}>
         <label style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -232,7 +232,7 @@ export default function CropPanel({
             <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')} style={{ flex: 1, background: rangeBg(rotation, -30, 30, 'var(--slider-rotation-start)', 'var(--slider-rotation-end)') }} />
           </div>
         </label>
-      </div>
-    </div>
+      </fieldset>
+    </section>
   );
 }

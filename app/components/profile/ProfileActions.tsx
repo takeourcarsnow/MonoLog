@@ -3,7 +3,6 @@ import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import { SignOutButton } from "@/app/components/SignOut";
 import Link from "next/link";
-import { ViewToggle } from "@/app/components/ViewToggle";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
 import type { User as UserType } from "@/src/lib/types";
@@ -15,9 +14,6 @@ interface ProfileActionsProps {
   setFollowing: (following: boolean | null) => void;
   isEditingProfile: boolean;
   onEditToggle: () => void;
-  // optional view state for toggling grid/list in profile
-  view?: "list" | "grid";
-  setView?: (v: "list" | "grid") => void;
   // callback when follow is clicked but user is not logged in
   onAuthRequired?: () => void;
 }
@@ -29,8 +25,6 @@ export function ProfileActions({
   setFollowing,
   isEditingProfile,
   onEditToggle,
-  view,
-  setView,
   onAuthRequired
 }: ProfileActionsProps) {
   const toast = useToast();
@@ -177,15 +171,6 @@ export function ProfileActions({
         </button>
       ) : null}
       <div className="profile-actions" style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 8 }}>
-        {/* Optional view toggle (grid / list) - parent can pass view & setView props */}
-        {setView ? (
-          <ViewToggle
-            title={<strong>Posts</strong>}
-            subtitle="Toggle posts layout"
-            selected={view || "grid"}
-            onSelect={(v) => setView(v)}
-          />
-        ) : null}
         {/* Show owner actions when the signed-in user is viewing their own profile.
             This handles both /profile (no param) and /profile/[id] when the id
             matches the current user. */}

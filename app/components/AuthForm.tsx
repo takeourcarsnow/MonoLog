@@ -212,7 +212,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
           return;
         }
 
-        const { data, error } = await sb.auth.signUp({ email, password });
+        const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username: chosen, name: chosen } } });
         if (error) throw error;
         // when signing up, only create a users profile row client-side if the
         // signup returned an active session (some flows require email

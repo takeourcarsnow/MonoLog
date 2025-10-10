@@ -11,15 +11,12 @@ import { AuthForm } from "@/app/components/AuthForm";
 import { useUserData } from "./profile/useUserData";
 import { ProfileHeader } from "./profile/ProfileHeader";
 import { PostsGrid } from "./profile/PostsGrid";
-import { PostsList } from "./profile/PostsList";
 import { SkeletonAvatar, SkeletonText, SkeletonTile } from "./Skeleton";
 import { AuthRequired } from "./AuthRequired";
-import { useState } from "react";
 
 export function ProfileView({ userId }: { userId?: string }) {
   const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam } = useUserData(userId);
   const router = useRouter();
-  const [view, setView] = useState<"list" | "grid">("grid");
 
   const handleAuthRequired = () => {
     router.push('/profile');
@@ -85,12 +82,10 @@ export function ProfileView({ userId }: { userId?: string }) {
         onAvatarChange={() => {
           // The ProfileHeader handles avatar changes internally
         }}
-        view={view}
-        setView={setView}
         onAuthRequired={handleAuthRequired}
       />
-      <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
-        {view === 'grid' ? <PostsGrid posts={posts} /> : <PostsList posts={posts} />}
+      <div className="feed grid-view">
+        <PostsGrid posts={posts} />
       </div>
     </div>
   );

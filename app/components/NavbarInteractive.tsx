@@ -78,49 +78,66 @@ export function NavbarInteractive() {
     const container = indicatorRef.current?.parentElement;
     if (!container || navItemRefs.length === 0) return;
 
-    const indicator = indicatorRef.current;
+    const updateIndicator = () => {
+      const indicator = indicatorRef.current;
+      if (!indicator) return;
 
-    // Update active classes
-    navItemRefs.forEach((ref, index) => {
-      const isActive = index === activeIndex;
-      ref.element.classList.toggle('active', isActive);
-      ref.element.setAttribute('aria-current', isActive ? 'page' : 'false');
-    });
+      // Update active classes
+      navItemRefs.forEach((ref, index) => {
+        const isActive = index === activeIndex;
+        ref.element.classList.toggle('active', isActive);
+        ref.element.setAttribute('aria-current', isActive ? 'page' : 'false');
+      });
 
-    // Update indicator
-    if (indicator && activeIndex >= 0) {
-      const activeItem = navItemRefs[activeIndex];
-      if (activeItem) {
-        const containerRect = container.getBoundingClientRect();
-        const itemRect = activeItem.element.getBoundingClientRect();
-        const left = itemRect.left - containerRect.left;
-        const width = Math.max(28, itemRect.width);
+      // Update indicator
+      if (activeIndex >= 0) {
+        const activeItem = navItemRefs[activeIndex];
+        if (activeItem) {
+          const containerRect = container.getBoundingClientRect();
+          const itemRect = activeItem.element.getBoundingClientRect();
+          const left = itemRect.left - containerRect.left;
+          const itemCenter = left + itemRect.width / 2;
+          const width = 28; // Fixed width for consistent centering
+          const indicatorLeft = itemCenter - width / 2;
 
-        // Get color from CSS custom property or computed style
-        const computedStyle = getComputedStyle(activeItem.element);
-        const color = computedStyle.getPropertyValue('--tab-color').trim() ||
-                     getComputedStyle(activeItem.element.querySelector('.tab-icon') || activeItem.element).color;
+          // Get color from CSS custom property or computed style
+          const computedStyle = getComputedStyle(activeItem.element);
+          const color = computedStyle.getPropertyValue('--tab-color').trim() ||
+                       getComputedStyle(activeItem.element.querySelector('.tab-icon') || activeItem.element).color;
 
-        // Animate indicator
-        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          // Animate indicator
+          const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        if (prefersReduced) {
-          indicator.style.transition = 'none';
-          indicator.style.transform = `translateX(${left}px)`;
-          indicator.style.width = `${width}px`;
-          indicator.style.backgroundColor = color;
-          indicator.style.opacity = '1';
-        } else {
-          indicator.style.transition = 'transform 300ms cubic-bezier(.2,1.1,.25,1), width 300ms cubic-bezier(.2,1.1,.25,1), background-color 200ms ease';
-          indicator.style.transform = `translateX(${left}px)`;
-          indicator.style.width = `${width}px`;
-          indicator.style.backgroundColor = color;
-          indicator.style.opacity = '1';
+          if (prefersReduced) {
+            indicator.style.transition = 'none';
+            indicator.style.transform = `translateX(${indicatorLeft}px)`;
+            indicator.style.width = `${width}px`;
+            indicator.style.backgroundColor = color;
+            indicator.style.opacity = '1';
+          } else {
+            indicator.style.transition = 'transform 300ms cubic-bezier(.2,1.1,.25,1), width 300ms cubic-bezier(.2,1.1,.25,1), background-color 200ms ease';
+            indicator.style.transform = `translateX(${indicatorLeft}px)`;
+            indicator.style.width = `${width}px`;
+            indicator.style.backgroundColor = color;
+            indicator.style.opacity = '1';
+          }
         }
+      } else {
+        indicator.style.opacity = '0';
       }
-    } else if (indicator) {
-      indicator.style.opacity = '0';
-    }
+    };
+
+    updateIndicator();
+
+    // Update indicator on window resize
+    const handleResize = () => updateIndicator();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
   }, [activeIndex, navItemRefs]);
 
   // Handle keyboard navigation

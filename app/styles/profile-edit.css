@@ -66,7 +66,7 @@
   .edit-panel .bio-editor {
     padding: 8px;
     font-size: 14px;
-    text-align: left;
+    text-align: center;
   }
 
   .edit-panel .edit-actions .btn {
@@ -192,12 +192,15 @@
 .inline-edit-card .input,
 .inline-edit-card .bio-editor {
   width: 100%;
-  text-align: left;
+  /* center input text and placeholders so the edit card reads like the bio editor */
+  text-align: center;
 }
 
 .inline-edit-card .input {
+  /* make left/right padding symmetrical so centered text is visually centered
+     even when there are absolute-positioned icons/indicators on either side */
+  padding-left: 60px; /* match right padding */
   padding-right: 60px; /* Make room for the cooldown indicator */
-  padding-left: 32px; /* Make room for social media icons */
 }
 
 .inline-edit-card .bio-editor {
@@ -263,12 +266,73 @@
 
   .inline-edit-card .input {
     padding-right: 60px; /* Make room for the cooldown indicator */
-    padding-left: 32px; /* Make room for social media icons */
+    /* left padding overridden above for desktop; keep this here so mobile
+       fallbacks remain if the rule ordering changes */
   }
 
-  .inline-edit-card .input::placeholder {
-    text-align: center;
-  }
+/* Center placeholders for inputs and bio editor inside the inline edit card
+   and the floating edit panel so they visually match the centered bio.
+   Include vendor variants for broader browser support. */
+.inline-edit-card .input::placeholder,
+.inline-edit-card .bio-editor::placeholder,
+.edit-panel .input::placeholder,
+.edit-panel .bio-editor::placeholder {
+  text-align: center;
+}
+
+.inline-edit-card .input::-webkit-input-placeholder,
+.inline-edit-card .bio-editor::-webkit-input-placeholder,
+.edit-panel .input::-webkit-input-placeholder,
+.edit-panel .bio-editor::-webkit-input-placeholder {
+  text-align: center;
+}
+
+.inline-edit-card .input::-moz-placeholder,
+.inline-edit-card .bio-editor::-moz-placeholder,
+.edit-panel .input::-moz-placeholder,
+.edit-panel .bio-editor::-moz-placeholder {
+  text-align: center;
+  opacity: 1; /* ensure Firefox placeholder is fully visible */
+}
+
+.inline-edit-card .input:-ms-input-placeholder,
+.inline-edit-card .bio-editor:-ms-input-placeholder,
+.edit-panel .input:-ms-input-placeholder,
+.edit-panel .bio-editor:-ms-input-placeholder {
+  text-align: center;
+}
+
+/* Stronger overrides to ensure centered text and symmetric padding inside
+   the profile edit UI (these use higher specificity and !important to win
+   over more generic `.input` rules loaded elsewhere). */
+.inline-edit-card .input,
+.inline-edit-card .bio-editor,
+.edit-panel .input,
+.edit-panel .bio-editor {
+  text-align: center !important;
+  box-sizing: border-box;
+}
+
+.inline-edit-card .input,
+.edit-panel .input {
+  padding-left: 60px !important; /* account for left absolute icon */
+  padding-right: 60px !important; /* account for right indicator */
+}
+
+.inline-edit-card .input::placeholder,
+.inline-edit-card .bio-editor::placeholder,
+.edit-panel .input::placeholder,
+.edit-panel .bio-editor::placeholder {
+  text-align: center !important;
+}
+
+/* Keep centered alignment when the user focuses or types into the input */
+.inline-edit-card .input:focus,
+.inline-edit-card .input:not(:placeholder-shown),
+.edit-panel .input:focus,
+.edit-panel .input:not(:placeholder-shown) {
+  text-align: center !important;
+}
 }
 
 /* New helper classes for the edit form */

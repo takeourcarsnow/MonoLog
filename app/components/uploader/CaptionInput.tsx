@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTypingAnimation } from "./useTypingAnimation";
 import { PHRASES } from "./constants";
 import { Combobox } from "../Combobox";
-import { CAMERA_PRESETS, LENS_PRESETS, FILM_TYPE_PRESETS } from "@/src/lib/exifPresets";
+import { CAMERA_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
 
 // Custom Spotify icon component
 const SpotifyIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
@@ -29,6 +29,8 @@ interface CaptionInputProps {
   setLens?: (lens: string) => void;
   filmType?: string;
   setFilmType?: (filmType: string) => void;
+  filmIso?: string;
+  setFilmIso?: (filmIso: string) => void;
   // typed removed - this component now owns the typing animation internally
   captionFocused: boolean;
   setCaptionFocused: (focused: boolean) => void;
@@ -51,6 +53,8 @@ export function CaptionInput({
   setLens,
   filmType,
   setFilmType,
+  filmIso,
+  setFilmIso,
   hasPreview,
   processing,
   CAPTION_MAX,
@@ -242,11 +246,23 @@ export function CaptionInput({
         />
         <Combobox
           value={filmType || ''}
-          onChange={setFilmType || (() => {})}
-          options={FILM_TYPE_PRESETS}
-          placeholder="Film type"
+          onChange={(value) => {
+            setFilmType?.(value);
+            if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
+          }}
+          options={FILM_PRESETS}
+          placeholder="Film"
           disabled={!hasPreview || processing}
         />
+        {filmType && (
+          <Combobox
+            value={filmIso || ''}
+            onChange={setFilmIso || (() => {})}
+            options={ISO_PRESETS}
+            placeholder="ISO"
+            disabled={!hasPreview || processing}
+          />
+        )}
       </div>
     </div>
   );

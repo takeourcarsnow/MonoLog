@@ -25,6 +25,7 @@ export function useUploaderState() {
   const [camera, setCamera] = useState("");
   const [lens, setLens] = useState("");
   const [filmType, setFilmType] = useState("");
+  const [filmIso, setFilmIso] = useState("");
   const [captionFocused, setCaptionFocused] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [previewLoaded, setPreviewLoaded] = useState(false);
@@ -73,7 +74,8 @@ export function useUploaderState() {
     spotifyLink, setSpotifyLink,
     camera, setCamera,
     lens, setLens,
-    filmType, setFilmType
+    filmType, setFilmType,
+    filmIso, setFilmIso
   );
 
   // Ensure we don't show a stale "processing" loader when navigating back
@@ -187,6 +189,7 @@ export function useUploaderState() {
     setCamera("");
     setLens("");
     setFilmType("");
+    setFilmIso("");
     setAlt("");
     setVisibility("public");
     setCompressedSize(null);
@@ -264,7 +267,7 @@ export function useUploaderState() {
         spotifyLink: spotifyLink || undefined,
         camera: camera || undefined,
         lens: lens || undefined,
-        filmType: filmType || undefined,
+        filmType: (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || undefined,
         alt: alt || caption || "Photo from today's entry",
         replace,
         public: visibility === "public",
@@ -304,6 +307,7 @@ export function useUploaderState() {
     camera, setCamera,
     lens, setLens,
     filmType, setFilmType,
+    filmIso, setFilmIso,
     captionFocused, setCaptionFocused,
     visibility, setVisibility,
     previewLoaded, setPreviewLoaded,

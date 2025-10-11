@@ -137,3 +137,45 @@ export const FILM_TYPE_PRESETS = [
   'Adox CMS 20',
   'Lomography Earl Grey'
 ].sort();
+
+export const FILM_PRESETS = [
+  // Color negative
+  'Kodak Portra',
+  'Kodak Ektar',
+  'Fujifilm Provia',
+  'Fujifilm Velvia',
+  'Fujifilm Astia',
+  'Agfa Precisa',
+  'Ilford XP2 Super',
+  // Black and white
+  'Kodak Tri-X',
+  'Kodak T-Max',
+  'Ilford HP5 Plus',
+  'Ilford Delta',
+  'Ilford FP4 Plus',
+  'Fomapan',
+  'Bergger Pancro',
+  // Specialty
+  'Kodak Aerochrome',
+  'Polaroid 600',
+  'Instax Mini Film',
+  'Kodak Ektachrome',
+  'Agfa Scala',
+  'Ilford SFX 200',
+  'Kodak Infrared HIE',
+  'Fujifilm Neopan Acros',
+  'Adox CMS 20',
+  'Lomography Earl Grey'
+].sort();
+
+export const ISO_PRESETS = [
+  '50',
+  '100',
+  '200',
+  '400',
+  '800',
+  '1600',
+  '3200',
+  '100F',
+  'CT100'
+].sort();

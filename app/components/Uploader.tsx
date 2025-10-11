@@ -57,6 +57,7 @@ function UploaderCore() {
   camera,
   lens,
   filmType,
+  filmIso,
     captionFocused,
     visibility,
     previewLoaded,
@@ -99,6 +100,7 @@ function UploaderCore() {
   setCamera,
   setLens,
   setFilmType,
+  setFilmIso,
     setCaptionFocused,
     setVisibility,
     setPreviewLoaded,
@@ -342,6 +344,8 @@ function UploaderCore() {
           setLens={setLens}
           filmType={filmType}
           setFilmType={setFilmType}
+          filmIso={filmIso}
+          setFilmIso={setFilmIso}
           captionFocused={captionFocused}
           setCaptionFocused={setCaptionFocused}
           hasPreview={hasPreview}

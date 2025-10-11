@@ -27,7 +27,9 @@ export function useDraftPersistence(
   lens: string,
   setLens: (lens: string) => void,
   filmType: string,
-  setFilmType: (filmType: string) => void
+  setFilmType: (filmType: string) => void,
+  filmIso: string,
+  setFilmIso: (filmIso: string) => void
 ) {
   // restore draft on mount
   useEffect(() => {
@@ -57,6 +59,7 @@ export function useDraftPersistence(
       if (parsed.camera !== undefined) setCamera(parsed.camera);
       if (parsed.lens !== undefined) setLens(parsed.lens);
       if (parsed.filmType !== undefined) setFilmType(parsed.filmType);
+      if (parsed.filmIso !== undefined) setFilmIso(parsed.filmIso);
     } catch (e) {
       // ignore parse errors
     }
@@ -79,6 +82,7 @@ export function useDraftPersistence(
         camera: camera || undefined,
         lens: lens || undefined,
         filmType: filmType || undefined,
+        filmIso: filmIso || undefined,
         savedAt: Date.now(),
       };
 
@@ -102,6 +106,7 @@ export function useDraftPersistence(
           if (existing.camera && !payload.camera) payload.camera = existing.camera;
           if (existing.lens && !payload.lens) payload.lens = existing.lens;
           if (existing.filmType && !payload.filmType) payload.filmType = existing.filmType;
+          if (existing.filmIso && !payload.filmIso) payload.filmIso = existing.filmIso;
         }
       } catch (e) {
         // ignore parse errors and fall back to writing payload as-is
@@ -111,5 +116,5 @@ export function useDraftPersistence(
     } catch (e) {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [dataUrls, originalDataUrls, editorSettings, caption, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType]);
+  }, [dataUrls, originalDataUrls, editorSettings, caption, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType, filmIso]);
 }

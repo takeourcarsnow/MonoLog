@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import type { HydratedPost } from "@/src/lib/types";
 import { Check, X } from "lucide-react";
 import { Combobox } from "../Combobox";
-import { CAMERA_PRESETS, LENS_PRESETS, FILM_TYPE_PRESETS } from "@/src/lib/exifPresets";
+import { CAMERA_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
 
 export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   post: HydratedPost;
@@ -13,19 +13,40 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   const [visibility, setVisibility] = useState(post.public ? "public" : "private");
   const [camera, setCamera] = useState(post.camera || "");
   const [lens, setLens] = useState(post.lens || "");
-  const [filmType, setFilmType] = useState(post.filmType || "");
+  const [filmType, setFilmType] = useState("");
+  const [filmIso, setFilmIso] = useState("");
   const [saving, setSaving] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // Split existing filmType into film name and ISO
+  useEffect(() => {
+    if (post.filmType) {
+      const parts = post.filmType.split(' ');
+      if (parts.length > 1) {
+        const lastPart = parts[parts.length - 1];
+        // Check if last part is an ISO value
+        if (ISO_PRESETS.includes(lastPart)) {
+          setFilmType(parts.slice(0, -1).join(' '));
+          setFilmIso(lastPart);
+        } else {
+          setFilmType(post.filmType);
+        }
+      } else {
+        setFilmType(post.filmType);
+      }
+    }
+  }, [post.filmType]);
 
   const doSave = useCallback(async () => {
     if (saving) return;
     setSaving(true);
     try {
-      await onSave({ caption, public: visibility === 'public', camera, lens, filmType });
+      const combinedFilmType = (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || undefined;
+      await onSave({ caption, public: visibility === 'public', camera, lens, filmType: combinedFilmType });
     } finally {
       setSaving(false);
     }
-  }, [caption, visibility, camera, lens, filmType, onSave, saving]);
+  }, [caption, visibility, camera, lens, filmType, filmIso, onSave, saving]);
 
   useImperativeHandle(ref, () => ({
     save: doSave,
@@ -74,10 +95,21 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         />
         <Combobox
           value={filmType}
-          onChange={setFilmType}
-          options={FILM_TYPE_PRESETS}
-          placeholder="Film type"
+          onChange={(value) => {
+            setFilmType(value);
+            if (!value) setFilmIso(''); // Clear ISO when film is cleared
+          }}
+          options={FILM_PRESETS}
+          placeholder="Film"
         />
+        {filmType && (
+          <Combobox
+            value={filmIso}
+            onChange={setFilmIso}
+            options={ISO_PRESETS}
+            placeholder="ISO"
+          />
+        )}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 10 }}>
         <div>

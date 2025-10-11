@@ -66,13 +66,14 @@ export async function POST(req: Request) {
     if (thumbResult.error) return NextResponse.json({ error: thumbResult.error.message || thumbResult.error }, { status: 500 });
     
     // Generate public URLs
-    const { data: fullUrlData } = sb.storage.from('posts').getPublicUrl(path);
-    const { data: thumbUrlData } = sb.storage.from('posts').getPublicUrl(thumbPath);
+    const baseUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/posts/`;
+    const publicUrl = `${baseUrl}${path}`;
+    const thumbnailUrl = `${baseUrl}${thumbPath}`;
     
     return NextResponse.json({ 
       ok: true, 
-      publicUrl: fullUrlData.publicUrl,
-      thumbnailUrl: thumbUrlData.publicUrl
+      publicUrl,
+      thumbnailUrl
     });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });

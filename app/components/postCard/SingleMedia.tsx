@@ -43,7 +43,6 @@ export const SingleMedia = memo(function SingleMedia({
       tabIndex={0}
     >
       <ImageZoom
-        loading="lazy"
         src={imageUrl}
         alt={alt || "Photo"}
         onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => (e.currentTarget.classList.add("loaded"))}

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Props } from "./imageZoom/types";
 import { useZoomState } from "./imageZoom/hooks/useZoomState";
 import { useZoomEvents } from "./imageZoom/hooks/useZoomEvents";
@@ -17,6 +17,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     src,
   });
   useImageSizing(state.containerRef, state.imgRef, isFullscreen, src);
+
+  // Ensure loaded class is added even for cached images
+  useEffect(() => {
+    if (state.imgRef.current?.complete) {
+      state.imgRef.current.classList.add("loaded");
+    }
+  }, [src, state.imgRef]);
 
   return (
     <div
@@ -66,6 +73,12 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           pointerEvents: "auto",
           // remove image rounding so the outer container's border-radius clips the image
           borderRadius: 0,
+        }}
+        onLoad={(e) => {
+          e.currentTarget.classList.add("loaded");
+        }}
+        onError={(e) => {
+          e.currentTarget.classList.add("loaded");
         }}
         onClick={(e) => {
           e.preventDefault();

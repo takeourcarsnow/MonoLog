@@ -617,6 +617,31 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 44px; /* Reserve space for the Spotify link content */
+}
+
+.spotify-link .spotify-preview-link {
+  display: inline-flex; /* ensure anchor sizes to content when centered */
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+  animation: spotify-fade-in 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes spotify-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotify-link .spotify-preview-link {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .spotify-link .spotify-preview-link {

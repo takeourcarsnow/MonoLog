@@ -41,24 +41,31 @@ export const Carousel = memo(function Carousel({
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const imgRefs = useRef<Array<HTMLImageElement | null>>([]);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const isMultipostInFeedRef = useRef(false);
   const [heights, setHeights] = useState<number[]>([]);
   const [wrapperHeight, setWrapperHeight] = useState<string | number>('auto');
+
+  // Determine if this carousel is in a multipost card in the feed
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (wrapper) {
+      isMultipostInFeedRef.current = wrapper.closest('.feed .card.multipost') !== null;
+    }
+  }, []);
 
   const measureImage = useCallback((idx: number) => {
     const img = imgRefs.current[idx];
     if (!img) return;
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
+    // Only measure height for multipost in feed
+    if (!isMultipostInFeedRef.current) return;
     // Allow the image to size naturally while we measure. We avoid restoring
     // any previous inline height here so the React-driven inline height
     // (from state) can be applied without being overwritten.
-    // Check if this carousel is in a multipost card in the feed
-    const isMultipostInFeed = wrapper.closest('.feed .card.multipost') !== null;
     let maxHeight: number | null = null;
-    if (isMultipostInFeed) {
-      const vh = window.innerHeight * 0.56;
-      maxHeight = Math.min(vh, 720);
-    }
+    const vh = window.innerHeight * 0.56;
+    maxHeight = Math.min(vh, 720);
     // Prefer the currently rendered/displayed height when available. This
     // ensures the wrapper matches what the user actually sees (especially
     // when CSS like max-height/object-fit is applied). Fall back to
@@ -105,17 +112,22 @@ export const Carousel = memo(function Carousel({
 
   // Update wrapper height whenever the active index or measured heights change
   useEffect(() => {
-    const h = heights[index];
-    if (typeof h === 'number') setWrapperHeight(h);
-    else setWrapperHeight('auto');
-    // If the active slide hasn't been measured yet, attempt a re-measure
-    if (h == null) {
-      requestAnimationFrame(() => measureImage(index));
+    if (isMultipostInFeedRef.current) {
+      const h = heights[index];
+      if (typeof h === 'number') setWrapperHeight(h);
+      else setWrapperHeight('auto');
+      // If the active slide hasn't been measured yet, attempt a re-measure
+      if (h == null) {
+        requestAnimationFrame(() => measureImage(index));
+      }
+    } else {
+      setWrapperHeight('auto');
     }
   }, [index, heights, measureImage]);
 
   // Re-measure on window resize in case layout changes
   useEffect(() => {
+    if (!isMultipostInFeedRef.current) return;
     const onResize = () => {
       imgRefs.current.forEach((img, i) => { if (img) { measureImage(i); } });
     };
@@ -138,7 +150,7 @@ export const Carousel = memo(function Carousel({
 
   // ResizeObserver: observe image size changes (eg. CSS/layout changes) and re-measure
   useEffect(() => {
-    if (typeof ResizeObserver === 'undefined') return;
+    if (typeof ResizeObserver === 'undefined' || !isMultipostInFeedRef.current) return;
     const obs = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const target = entry.target as HTMLImageElement;
@@ -165,8 +177,10 @@ export const Carousel = memo(function Carousel({
     imgs.forEach((img, i) => {
       // Populate imgRefs in order so measureImage can find them
       imgRefs.current[i] = img;
-      try { if (resizeObserverRef.current) resizeObserverRef.current.observe(img); } catch (_) {}
-      if (img.complete) {
+      if (isMultipostInFeedRef.current) {
+        try { if (resizeObserverRef.current) resizeObserverRef.current.observe(img); } catch (_) {}
+      }
+      if (img.complete && isMultipostInFeedRef.current) {
         // measure on next frame
         requestAnimationFrame(() => measureImage(i));
       }
@@ -222,7 +236,6 @@ export const Carousel = memo(function Carousel({
               tabIndex={0}
             >
               <ImageZoom
-                loading="lazy"
                 src={u}
                 alt={alts[idx] || `Photo ${idx + 1}`}
                 isActive={idx === index}
@@ -233,11 +246,13 @@ export const Carousel = memo(function Carousel({
                   const imgEl = e.currentTarget as HTMLImageElement;
                   imgRefs.current[idx] = imgEl;
                   // If we have a ResizeObserver, observe this image so we re-measure on CSS/layout-driven size changes
-                  try {
-                    if (resizeObserverRef.current) resizeObserverRef.current.observe(imgEl);
-                  } catch (_) {}
-                  // measure on next frame to ensure layout applied
-                  requestAnimationFrame(() => measureImage(idx));
+                  if (isMultipostInFeedRef.current) {
+                    try {
+                      if (resizeObserverRef.current) resizeObserverRef.current.observe(imgEl);
+                    } catch (_) {}
+                    // measure on next frame to ensure layout applied
+                    requestAnimationFrame(() => measureImage(idx));
+                  }
                 }}
                 onDragStart={(e: React.DragEvent) => e.preventDefault()}
               />

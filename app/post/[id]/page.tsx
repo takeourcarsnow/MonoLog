@@ -8,7 +8,7 @@ const PostView = lazy(() => import("@/app/components/PostView").then(mod => ({ d
 // Helper to map database row to HydratedPost
 function mapRowToHydratedPost(row: any): HydratedPost {
   // Normalize imageUrls into a predictable array shape
-  const raw = row.image_urls ?? row.image_urls_json ?? row.image_urls_jsonb ?? undefined;
+  const raw = row.image_urls ?? row.image_urls_json ?? row.image_urls_jsonb ?? row.image_url ?? row.imageUrl ?? undefined;
   let imageUrls: string[] | undefined = undefined;
   if (raw !== undefined && raw !== null) {
     if (Array.isArray(raw)) imageUrls = raw.map(String);
@@ -37,6 +37,7 @@ function mapRowToHydratedPost(row: any): HydratedPost {
     imageUrls,
     alt: row.alt,
     caption: row.caption || '',
+    spotifyLink: row.spotify_link || row.spotifyLink || undefined,
     createdAt: row.created_at || row.createdAt,
     public: row.public ?? true,
     user: {

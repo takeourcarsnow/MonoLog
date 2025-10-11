@@ -298,7 +298,7 @@
 
 /* feed/explore grid variations */
 .feed.grid-view { padding: 6px 0; }
-.feed.grid-view .grid { gap: 2px; grid-template-columns: repeat(2, 1fr); }
+.feed.grid-view .grid { gap: 8px; grid-template-columns: repeat(2, 1fr); }
 
 /* small-screen horizontal spacing so the posts grid doesn't touch viewport edges */
 .feed.grid-view .grid { margin-left: 12px; margin-right: 12px; box-sizing: border-box; }
@@ -308,7 +308,7 @@
   more general profile grid rules and prevents tall/portrait tiles from
   breaking the Instagram-style square layout. */
 .feed.grid-view { padding: 4px 0; }
-.feed.grid-view .grid { display: grid !important; gap: 2px !important; grid-template-columns: repeat(3, 1fr) !important; grid-auto-rows: 1fr !important; }
+.feed.grid-view .grid { display: grid !important; gap: 8px !important; grid-template-columns: repeat(3, 1fr) !important; grid-auto-rows: 1fr !important; }
 @media (min-width: 768px) {
   .feed.grid-view .grid { grid-template-columns: repeat(4, 1fr) !important; }
 }

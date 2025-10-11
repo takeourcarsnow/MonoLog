@@ -3,6 +3,8 @@ import Link from "next/link";
 import { InstallButton } from "../components/InstallButton";
 import styles from './about.module.css';
 import { useEffect, useRef } from 'react';
+import { Brain, Lock, Archive, Sparkles } from "lucide-react";
+import { LogoIcon } from "../components/nav/LogoIcon";
 
 export default function AboutPage() {
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -21,64 +23,50 @@ export default function AboutPage() {
 
   return (
   <div ref={cardRef} className={`${styles.aboutCard}`}>
-  <h1 className={styles.aboutTitle}>MonoLog <span className="sr-only">— Your day in pictures.</span></h1>
+  <div className={styles.topLogo}>
+    <LogoIcon size={48} />
+  </div>
+      <h1 className={styles.aboutTitle}>MonoLog <span className="sr-only">— Your day in pictures.</span></h1>
       <p className={styles.aboutSubtitle}>
         MonoLog is a private, chronological photo journal — one thoughtful post per day. No chasing likes, no algorithmic feeds.
       </p>
 
       <div className={styles.aboutSection}>
-        <h2>Why it matters</h2>
+        <h2>The Idea</h2>
         <p>
-          Keep a simple, personal archive of moments and thoughts that&#39;s yours.
+          In a world of viral moments and endless scrolling, MonoLog offers a quiet alternative.
+          Capture meaningful moments daily through photos and notes, building a coherent narrative
+          of your life — intentional, private, and yours alone.
+        </p>
+        <p>
+          While social platforms chase engagement, MonoLog preserves what matters.
+          Your posts build a personal legacy, creating space for genuine expression.
         </p>
       </div>
 
-      <div className={styles.aboutSection}>
-        <div className={styles.featureList}>
-          <div className={styles.featureItem}><strong>Daily</strong> — one post per day to collect the moments that matter.</div>
-          <div className={styles.featureItem}><strong>Chronological</strong> — your story in order.</div>
-          <div className={styles.featureItem}><strong>Private</strong> — share on your terms.</div>
-        </div>
-      </div>
-
-      <div className={styles.aboutSection}>
-        <h2>Quick ritual</h2>
-        <div className={styles.ritualGrid}>
-          <div className={styles.ritualItem}>
-            <span className={styles.ritualIcon}>📸</span>
-            <div>
-              <div className={styles.ritualTitle}>Capture</div>
-              <div className={styles.ritualDesc}>Multiple photos + a short note</div>
-            </div>
+      <div className={styles.highlightsSection}>
+        <h2>Why It Matters</h2>
+        <div className={styles.highlightsGrid}>
+          <div className={styles.highlightItem}>
+            <Brain className={styles.highlightIcon} size={24} />
+            <h3>Mindful Daily Ritual</h3>
+            <p>Intentional reflection through consistent photo journaling</p>
           </div>
-
-          <div className={styles.ritualItem}>
-            <span className={styles.ritualIcon}>👥</span>
-            <div>
-              <div className={styles.ritualTitle}>Follow</div>
-              <div className={styles.ritualDesc}>See friends&#39; moments</div>
-            </div>
+          <div className={styles.highlightItem}>
+            <Lock className={styles.highlightIcon} size={24} />
+            <h3>True Privacy</h3>
+            <p>Your moments stay yours — no algorithms, no ads, no data collection</p>
           </div>
-
-          <div className={styles.ritualItem}>
-            <span className={styles.ritualIcon}>📅</span>
-            <div>
-              <div className={styles.ritualTitle}>Relive</div>
-              <div className={styles.ritualDesc}>Browse by date</div>
-            </div>
+          <div className={styles.highlightItem}>
+            <Archive className={styles.highlightIcon} size={24} />
+            <h3>Personal Archive</h3>
+            <p>Build a chronological story of your life that you can revisit anytime</p>
           </div>
         </div>
       </div>
-
-      <p className={styles.footerText}>
-        Built for memory, not attention.
-      </p>
 
       <a className={styles.authorLink} href="https://nefas.tv" target="_blank" rel="noopener noreferrer" aria-label="Author">
-        <span className="icon" aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {/* author / link */}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-1c0-2.2 3.58-4 6-4s6 1.8 6 4v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </span>
+        <Sparkles size={14} />
       </a>
     </div>
   );

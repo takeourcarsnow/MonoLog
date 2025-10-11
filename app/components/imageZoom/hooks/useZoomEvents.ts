@@ -430,6 +430,7 @@ export const useZoomEvents = (state: ZoomState) => {
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     // If pinch was active and now fewer than 2 touches remain, end pinch
+    const wasPinch = pinchRef.current !== null;
     if (pinchRef.current && e.touches.length < 2) {
       pinchRef.current = null;
       // If we scaled back to 1, dispatch zoom end
@@ -443,7 +444,7 @@ export const useZoomEvents = (state: ZoomState) => {
     panStartRef.current = null;
     // Clear touch start/moved tracking and only register tap if movement small
     const t = (e.changedTouches && e.changedTouches[0]);
-    if (t && !movedRef.current) {
+    if (t && !movedRef.current && !wasPinch) {
       // This will be a tap; register it
       registerTap(t.clientX, t.clientY);
     }

@@ -29,6 +29,7 @@ export function monthMatrix(year: number, monthIdx: number) {
 export function formatRelative(date: string | number | Date) {
   const now = Date.now();
   const diff = (now - new Date(date).getTime()) / 1000;
+  
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;

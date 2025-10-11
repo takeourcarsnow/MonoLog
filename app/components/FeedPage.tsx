@@ -68,17 +68,6 @@ export function FeedPage({
     };
   }, [scrollStateKey]);
 
-  // Update sentinel when view changes
-  useEffect(() => {
-    if (view === 'grid') {
-      const sentinel = document.querySelector('.tile.sentinel');
-      if (sentinel) setSentinel(sentinel as HTMLDivElement);
-    } else {
-      const sentinel = document.querySelector('.feed-sentinel');
-      if (sentinel) setSentinel(sentinel as HTMLDivElement);
-    }
-  }, [view, setSentinel]);
-
   // Refresh feed when authentication changes (e.g., sign out)
   useEffect(() => {
     const handler = () => loadInitialPosts();
@@ -133,7 +122,7 @@ export function FeedPage({
 
     const gridView = (
       <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
-        const sentinel = document.querySelector('.tile.sentinel');
+        const sentinel = document.querySelector('.feed-sentinel');
         if (sentinel) {
           setSentinel(sentinel as HTMLDivElement);
         }

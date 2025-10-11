@@ -4,8 +4,6 @@ import type { Metadata } from "next";
 import { Patrick_Hand } from "next/font/google";
 import React from "react";
 import dynamic from "next/dynamic";
-import InertPolyfillClient from '@/app/components/InertPolyfillClient';
-import { Navbar } from '@/app/components/NavBar';
 import { CONFIG } from '@/src/lib/config';
 import ClientErrorBoundary from '@/app/components/ClientErrorBoundary';
 import { isInAppBrowser } from '@/src/lib/detectWebview';
@@ -27,6 +25,12 @@ const AppShell = dynamic(() => import("@/app/components/AppShell").then(mod => m
 // Root-level preloader: dynamic client-only component so it mounts once
 // and can listen for a global readiness event from the app init.
 const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ssr: false, loading: () => null });
+
+// Navbar is not critical for initial render, load it dynamically
+const Navbar = dynamic(() => import('@/app/components/NavBar').then(mod => mod.Navbar), { ssr: false });
+
+// Inert polyfill is loaded via the client component `InertPolyfillClient`
+const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfillClient'), { ssr: false });
 
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 

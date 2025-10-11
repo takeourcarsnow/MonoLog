@@ -2,10 +2,13 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ThemeToggle } from "./ThemeToggle";
-import { AccountSwitcher } from "./AccountSwitcher";
+import dynamic from "next/dynamic";
 import { usePrevPathToggle } from "./usePrevPathToggle";
 import { Info, Star } from "lucide-react";
+
+// Non-critical header components loaded dynamically
+const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { ssr: false });
+const AccountSwitcher = dynamic(() => import("./AccountSwitcher").then(mod => mod.AccountSwitcher), { ssr: false });
 
 export function HeaderInteractive() {
   const router = useRouter();

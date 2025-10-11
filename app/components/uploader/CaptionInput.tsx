@@ -223,7 +223,7 @@ export function CaptionInput({
             tabIndex={hasPreview ? 0 : -1}
             ref={spotifyRef}
             onMouseDown={(e) => { if (!hasPreview || processing) e.preventDefault(); }}
-            style={{ width: '100%', paddingRight: 72, paddingLeft: 32 }}
+            style={{ width: '100%', paddingRight: 72, paddingLeft: 32, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text' }}
           />
           <SpotifyIcon size={16} className={`input-icon ${spotifyLink?.trim() && (spotifyLink.includes('spotify.com') || spotifyLink.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />
         </div>

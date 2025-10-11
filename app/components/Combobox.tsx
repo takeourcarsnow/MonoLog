@@ -23,15 +23,34 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
   }, [value]);
 
   useEffect(() => {
-    if (inputValue.trim() === '') {
-      setFilteredOptions(options);
-    } else {
-      const filtered = options.filter(option =>
-        option.toLowerCase().includes(inputValue.toLowerCase())
-      );
-      setFilteredOptions(filtered);
-    }
-  }, [inputValue, options]);
+    const restore: Array<() => void> = [];
+    try {
+      const inp = inputRef.current;
+      if (inp) {
+        const orig = (inp as any).focus;
+        (inp as any).focus = function (...args: any[]) {
+          if (!disabled) return orig.apply(this, args);
+          return undefined;
+        };
+        restore.push(() => { try { (inp as any).focus = orig; } catch (_) {} });
+      }
+    } catch (_) {}
+    // Also capture phase focusin to immediately blur if focus sneaks in
+    const onFocusIn = (e: FocusEvent) => {
+      try {
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+        if (target === inputRef.current && disabled) {
+          try { (target as HTMLElement).blur(); } catch (_) {}
+        }
+      } catch (_) {}
+    };
+    document.addEventListener('focusin', onFocusIn, true);
+    return () => {
+      try { document.removeEventListener('focusin', onFocusIn, true); } catch (_) {}
+      for (const r of restore) r();
+    };
+  }, [disabled]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -80,9 +99,11 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        disabled={disabled}
+        readOnly={disabled}
+        tabIndex={disabled ? -1 : 0}
         autoComplete="off"
-        style={{ width: '100%' }}
+        onMouseDown={(e) => { if (disabled) e.preventDefault(); }}
+        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text' }}
       />
       {isOpen && filteredOptions.length > 0 && (
         <ul

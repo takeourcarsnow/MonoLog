@@ -460,19 +460,15 @@
 }
 
 /* Favorite (star) animation and color feedback */
-.action.favorite { transition: none; }
-.action.favorite svg { transition: none; }
 .action.favorite .star { display: inline-block; font-size: 16px; line-height: 1; transition: none; color: color-mix(in srgb, var(--muted), transparent 20%); }
 .action.favorite.active { color: #FFD700; }
 .action.favorite.active .star { color: #FFD700; text-shadow: 0 6px 18px rgba(255,215,0,0.18); }
-.action.favorite.active svg { 
-  fill: currentColor; 
+.action.favorite.active svg {
+  fill: currentColor;
   /* thicker darker outline so the yellow star reads on light backgrounds */
   stroke: rgba(0,0,0,0.48);
   stroke-width: 1.8px;
-}
-
-/* Dark theme: use a lighter stroke for contrast on dark backgrounds */
+}/* Dark theme: use a lighter stroke for contrast on dark backgrounds */
 :root[data-theme="dark"] .action.favorite.active svg {
   stroke: rgba(255,255,255,0.22);
   stroke-width: 1.8px;
@@ -488,7 +484,6 @@
 /* share action */
 .action.share { opacity: 0.82; transition: opacity 180ms var(--transition-mid), transform 200ms var(--transition-mid); }
 .action.share:hover { opacity: 1; }
-.action.share:active { transform: scale(.9); }
 
 /* Double-tap favorite overlay */
 .favorite-overlay {

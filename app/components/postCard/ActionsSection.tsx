@@ -135,7 +135,7 @@ export const ActionsSection = function ActionsSection({
         <LinkIcon size={16} />
       </button>
       {setShowExif && (
-        <div
+        <button
           key={showExif ? 'active' : 'inactive'}
           className="action exif-info"
           title={`Show EXIF info ${showExif ? "(active)" : ""}`}
@@ -147,11 +147,9 @@ export const ActionsSection = function ActionsSection({
             console.log('EXIF button clicked, current state:', showExif);
             setShowExif(!showExif); 
           }}
-          role="button"
-          tabIndex={0}
         >
           <InfoIcon size={16} />
-        </div>
+        </button>
       )}
       <button
         className="action fullscreen"

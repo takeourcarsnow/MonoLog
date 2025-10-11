@@ -16,10 +16,48 @@
   padding: 16px 16px 16px 16px; /* Even more compact padding */
 }
 
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .aboutCard {
+    max-width: 800px;
+    padding: 32px 24px 32px 24px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .aboutCard {
+    max-width: 900px;
+    padding: 48px 32px 48px 32px;
+  }
+}
+
 .topLogo {
   margin-bottom: 4px;
   color: var(--text);
   animation: fadeInUp 0.8s ease-out, gentlePulse 4s ease-in-out infinite;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .topLogo {
+    margin-bottom: 8px;
+  }
+  .topLogo svg {
+    width: 64px !important;
+    height: 64px !important;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .topLogo {
+    margin-bottom: 12px;
+  }
+  .topLogo svg {
+    width: 80px !important;
+    height: 80px !important;
+  }
 }
 
 /* Enhanced typography and spacing */
@@ -32,6 +70,22 @@
   animation: fadeInUp 0.8s ease-out;
 }
 
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .aboutTitle {
+    font-size: 2.5rem;
+    margin: 8px 0 4px 0;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .aboutTitle {
+    font-size: 3rem;
+    margin: 12px 0 6px 0;
+  }
+}
+
 .aboutSubtitle {
   margin: 0 0 12px 0;
   font-size: 1rem;
@@ -41,9 +95,41 @@
   animation: fadeInUp 0.8s ease-out 0.2s both;
 }
 
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .aboutSubtitle {
+    font-size: 1.25rem;
+    margin: 0 0 20px 0;
+    max-width: 600px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .aboutSubtitle {
+    font-size: 1.5rem;
+    margin: 0 0 24px 0;
+    max-width: 700px;
+  }
+}
+
 .aboutSection {
   margin-bottom: 12px;
   animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .aboutSection {
+    margin-bottom: 24px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .aboutSection {
+    margin-bottom: 32px;
+  }
 }
 
 .aboutSection h2 {
@@ -53,11 +139,43 @@
   color: var(--text);
 }
 
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .aboutSection h2 {
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .aboutSection h2 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+}
+
 .aboutSection p {
   font-size: 0.9rem;
   color: var(--muted);
   line-height: 1.5;
   margin: 0 0 6px 0;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .aboutSection p {
+    font-size: 1rem;
+    margin: 0 0 8px 0;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .aboutSection p {
+    font-size: 1.125rem;
+    margin: 0 0 12px 0;
+  }
 }
 
 /* Specific delays for different sections */
@@ -100,11 +218,41 @@
   animation: fadeInUp 0.8s ease-out 0.6s both;
 }
 
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .highlightsSection {
+    margin-bottom: 24px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .highlightsSection {
+    margin-bottom: 32px;
+  }
+}
+
 .highlightsSection h2 {
   font-size: 1rem;
   font-weight: 700;
   margin-bottom: 8px;
   color: var(--text);
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .highlightsSection h2 {
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .highlightsSection h2 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
 }
 
 .highlightsGrid {
@@ -113,6 +261,22 @@
   justify-content: center;
   gap: 12px;
   margin-top: 4px;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .highlightsGrid {
+    gap: 16px;
+    margin-top: 8px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .highlightsGrid {
+    gap: 20px;
+    margin-top: 12px;
+  }
 }
 
 .highlightItem {
@@ -128,9 +292,43 @@
   max-width: 160px;
 }
 
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .highlightItem {
+    gap: 8px;
+    padding: 16px 12px;
+    min-width: 140px;
+    max-width: 180px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .highlightItem {
+    gap: 12px;
+    padding: 20px 16px;
+    min-width: 160px;
+    max-width: 200px;
+  }
+}
+
 .highlightIcon {
   color: var(--muted);
   margin-bottom: 2px;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .highlightIcon {
+    margin-bottom: 4px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .highlightIcon {
+    margin-bottom: 6px;
+  }
 }
 
 .highlightItem h3 {
@@ -141,11 +339,41 @@
   line-height: 1.2;
 }
 
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .highlightItem h3 {
+    font-size: 1rem;
+    margin: 0 0 4px 0;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .highlightItem h3 {
+    font-size: 1.125rem;
+    margin: 0 0 6px 0;
+  }
+}
+
 .highlightItem p {
   font-size: 0.8rem;
   color: var(--muted);
   line-height: 1.3;
   margin: 0;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .highlightItem p {
+    font-size: 0.9rem;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .highlightItem p {
+    font-size: 1rem;
+  }
 }
 
 .ritualGrid {
@@ -209,6 +437,20 @@
   text-decoration: none;
   font-size: 0.85rem;
   animation: fadeInUp 0.8s ease-out 0.8s both;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .authorLink {
+    font-size: 1rem;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .authorLink {
+    font-size: 1.125rem;
+  }
 }
 
 .authorLink:hover {

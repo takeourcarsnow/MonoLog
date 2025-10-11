@@ -6,6 +6,8 @@ import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
 import { SkeletonCard, SkeletonTile } from "./Skeleton";
 import { useEventListener } from "@/src/lib/hooks/useEventListener";
+import { Star as StarIcon } from "lucide-react";
+import Link from "next/link";
 
 export function FavoritesView() {
   const [posts, setPosts] = useState<HydratedPost[]>([]);
@@ -51,7 +53,26 @@ export function FavoritesView() {
       </div>
     );
   }
-  if (!posts.length) return <div className="view-fade"><div className="empty">No favorites yet. Tap the star on any post to save it.</div></div>;
+  if (!posts.length) {
+    return (
+      <div className="view-fade" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 120px)' }}>
+        <div className="empty feed-empty" style={{ textAlign: 'center' }}>
+          <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
+              <StarIcon size={56} strokeWidth={1.5} />
+            </div>
+
+            <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>No favorites yet</h2>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Tap the star on any post to save it here.</p>
+
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
+              <Link href="/explore" className="btn">Explore posts</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="view-fade">

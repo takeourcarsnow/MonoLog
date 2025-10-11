@@ -36,7 +36,7 @@ export const GridView = memo(function GridView({ posts, hasMore, setSentinel, lo
           onKeyDown={(e) => { if (e.key==='Enter') handleTileClick(e as any, p); }}
           style={{ position: 'relative' }}
         >
-          <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents' }} onClick={(e)=> e.preventDefault()}>
+          <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents', position: 'relative' }} onClick={(e)=> e.preventDefault()}>
             <OptimizedImage
               fill
               src={Array.isArray(p.thumbnailUrls) && p.thumbnailUrls[0] ? p.thumbnailUrls[0] : Array.isArray(p.imageUrls) && p.imageUrls[0] ? p.imageUrls[0] : p.thumbnailUrl || p.imageUrl || ''}

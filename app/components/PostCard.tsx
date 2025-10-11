@@ -196,18 +196,14 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
               </a>
             </div>
           ) : null}
-          {showExif ? (
-            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px' }}>
-              {post.camera ? <span>📷 {post.camera}</span> : <span>📷 No camera data</span>}
-              {post.lens ? <span>🔍 {post.lens}</span> : <span>🔍 No lens data</span>}
-              {post.filmType ? <span>🎞️ {post.filmType}</span> : <span>🎞️ No film data</span>}
-            </div>
-          ) : null}
           <ActionsSection
             postId={post.id}
             count={count}
             commentsOpen={commentsOpen}
-            setCommentsOpen={setCommentsOpen}
+            setCommentsOpen={(value: boolean) => {
+              setCommentsOpen(value);
+              if (value) setShowExif(false); // Close EXIF when opening comments
+            }}
             commentsMounted={commentsMounted}
             setCommentsMounted={setCommentsMounted}
             commentsRef={commentsRef}
@@ -220,7 +216,13 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             toast={toast}
             showFavoriteFeedback={showFavoriteFeedback}
             showExif={showExif}
-            setShowExif={setShowExif}
+            setShowExif={(value: boolean) => {
+              setShowExif(value);
+              if (value) {
+                setCommentsOpen(false); // Close comments when opening EXIF
+                setCommentsMounted(false);
+              }
+            }}
             openFullscreen={() => {
               const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
               const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
@@ -229,6 +231,19 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
               if (src) handleOpenFullscreen(src, alt);
             }}
           />
+          <div className={`exif-section ${showExif ? "open" : ""}`}>
+            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px', justifyContent: post.camera || post.lens || post.filmType ? 'flex-start' : 'center' }}>
+              {post.camera || post.lens || post.filmType ? (
+                <>
+                  {post.camera ? <span>📷 {post.camera}</span> : <span>📷 No camera data</span>}
+                  {post.lens ? <span>🔍 {post.lens}</span> : <span>🔍 No lens data</span>}
+                  {post.filmType ? <span>🎞️ {post.filmType}</span> : <span>🎞️ No film data</span>}
+                </>
+              ) : (
+                <span>📷 No EXIF data</span>
+              )}
+            </div>
+          </div>
           <CommentsSection
             postId={post.id}
             commentsMounted={commentsMounted}

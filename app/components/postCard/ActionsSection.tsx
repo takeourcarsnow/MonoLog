@@ -137,15 +137,10 @@ export const ActionsSection = function ActionsSection({
       {setShowExif && (
         <div
           key={showExif ? 'active' : 'inactive'}
-          className={`action exif-info ${showExif ? "active" : ""}`}
+          className="action exif-info"
           title={`Show EXIF info ${showExif ? "(active)" : ""}`}
           aria-label="Toggle EXIF information"
           aria-pressed={showExif}
-          style={{
-            backgroundColor: showExif ? 'var(--primary)' : 'transparent',
-            color: showExif ? 'white' : 'var(--muted)',
-            border: showExif ? '1px solid var(--primary)' : 'none'
-          }}
           onClick={(e) => { 
             e.stopPropagation(); 
             e.preventDefault(); 

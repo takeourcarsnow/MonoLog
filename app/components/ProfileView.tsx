@@ -2,6 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "./Button";
 import { api } from "@/src/lib/api";
 import type { HydratedPost, User } from "@/src/lib/types";
@@ -13,10 +14,14 @@ import { ProfileHeader } from "./profile/ProfileHeader";
 import { PostsGrid } from "./profile/PostsGrid";
 import { SkeletonAvatar, SkeletonText, SkeletonTile } from "./Skeleton";
 import { AuthRequired } from "./AuthRequired";
+import { ViewToggle } from "./ViewToggle";
+import { PostCard } from "./PostCard";
+import { User as UserIcon } from "lucide-react";
 
 export function ProfileView({ userId }: { userId?: string }) {
   const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam } = useUserData(userId);
   const router = useRouter();
+  const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("profileView") as any)) || "grid");
 
   const handleAuthRequired = () => {
     router.push('/profile');
@@ -84,8 +89,20 @@ export function ProfileView({ userId }: { userId?: string }) {
         }}
         onAuthRequired={handleAuthRequired}
       />
-      <div className="feed grid-view">
-        <PostsGrid posts={posts} />
+      {posts.length > 0 && (
+        <ViewToggle
+          title={<UserIcon size={20} strokeWidth={2} />}
+          subtitle={`${user?.username || 'User'}'s posts`}
+          selected={view}
+          onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("profileView", v); }}
+        />
+      )}
+      <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
+        {view === 'grid' ? (
+          <PostsGrid posts={posts} />
+        ) : (
+          posts.map(p => <PostCard key={p.id} post={p} />)
+        )}
       </div>
     </div>
   );

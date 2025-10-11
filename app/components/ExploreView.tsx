@@ -40,10 +40,7 @@ export function ExploreView() {
       return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handler); };
     }, []);
 
-    const emptyMessage =
-      canPost === true
-        ? "Be the first to create today's entry — tell the story of your day in pictures!"
-        : "MonoLogs from people you aren't following yet";
+    const emptyMessage = "This section shows MonoLogs from people you don't follow yet. Follow more accounts to see their posts in your feed!";
 
     return (
       <FeedPage

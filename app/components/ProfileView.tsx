@@ -68,10 +68,18 @@ export function ProfileView({ userId }: { userId?: string }) {
     }
 
     return (
-      <div className="empty" style={{ position: "relative" }}>
-        <div>User not found. Pick an account from the Account menu to get started.</div>
-        <div style={{ marginTop: 12 }}>
-          <Button onClick={() => { try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {} handleAuthRequired(); }}>Sign in / Sign up</Button>
+      <div className="empty feed-empty" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
+            <UserIcon size={56} strokeWidth={1.5} />
+          </div>
+
+          <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>User not found</h2>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>This user doesn't exist or may have been deleted.</p>
+
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
+            <Link href="/explore" className="btn">Find new users</Link>
+          </div>
         </div>
       </div>
     );

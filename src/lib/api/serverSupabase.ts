@@ -18,6 +18,20 @@ export function getServiceSupabase() {
   if (keyLooksLikeUrl) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY appears to contain the Supabase project URL. Make sure SUPABASE_SERVICE_ROLE_KEY contains the service_role (JWT-like) secret from Supabase Project → Settings → API, and that NEXT_PUBLIC_SUPABASE_URL contains the project URL.');
   }
-  svc = createClient(url, key);
+  svc = createClient(url, key, {
+    auth: {
+      persistSession: false, // Server-side doesn't need session persistence
+      autoRefreshToken: false, // Disable token refresh on server
+    },
+    // Add connection pooling hints for better performance
+    db: {
+      schema: 'public',
+    },
+    global: {
+      headers: {
+        'x-application-name': 'monolog-server',
+      },
+    },
+  });
   return svc;
 }

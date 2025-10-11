@@ -205,7 +205,7 @@ export async function POST(req: Request) {
               .in('username', mentions);
             if (!usersErr && mentionedUsers) {
               const mentionedUserIds = mentionedUsers.map(u => u.id);
-              // Insert into post_mentions (best-effort, table may not exist)
+              // Batch insert into post_mentions and notifications
               try {
                 const mentionInserts = mentionedUserIds.map(mentionedId => ({
                   id: uid(),
@@ -213,12 +213,6 @@ export async function POST(req: Request) {
                   mentioned_user_id: mentionedId,
                   created_at: created_at,
                 }));
-                await sb.from('post_mentions').insert(mentionInserts);
-              } catch (e) {
-                // Ignore if table doesn't exist
-              }
-              // Create notifications for mentions
-              try {
                 const notifInserts = mentionedUserIds.map(mentionedId => ({
                   id: uid(),
                   user_id: mentionedId,
@@ -229,9 +223,18 @@ export async function POST(req: Request) {
                   created_at: created_at,
                   read: false,
                 }));
-                await sb.from('notifications').insert(notifInserts);
+
+                // Batch insert mentions
+                if (mentionInserts.length > 0) {
+                  await sb.from('post_mentions').insert(mentionInserts);
+                }
+
+                // Batch insert notifications
+                if (notifInserts.length > 0) {
+                  await sb.from('notifications').insert(notifInserts);
+                }
               } catch (e) {
-                // Ignore notification errors
+                // Ignore if tables don't exist or other errors
               }
             }
           } catch (e) {

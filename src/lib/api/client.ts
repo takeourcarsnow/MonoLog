@@ -30,7 +30,18 @@ export function getClient() {
   if (!url || !anonKey) {
     throw new Error("Supabase not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
   }
-  supabase = createClient(url, anonKey);
+  supabase = createClient(url, anonKey, {
+    auth: {
+      persistSession: true, // Keep sessions in localStorage
+      autoRefreshToken: true, // Auto refresh tokens
+      detectSessionInUrl: true, // Handle auth redirects
+    },
+    global: {
+      headers: {
+        'x-application-name': 'monolog-client',
+      },
+    },
+  });
   return supabase;
 }
 

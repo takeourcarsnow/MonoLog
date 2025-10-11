@@ -1,6 +1,7 @@
 import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, getAccessToken } from "./client";
 import { mapRowToHydratedPost, selectUserFields } from "./utils";
 import { logger } from "../logger";
+import { apiCache } from "./cache";
 
 export async function getExploreFeed() {
 logger.debug("supabaseApi.getExploreFeed called");
@@ -9,18 +10,20 @@ logger.debug("supabaseApi.getExploreFeed called");
   // view only shows other people's public posts that you aren't following.
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
-  let q: any = sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").eq("public", true).order("created_at", { ascending: false });
+  let q: any = sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("public", true).order("created_at", { ascending: false });
   if (me) {
     // Get following list to exclude followed users' posts
-    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
-    if (!profErr && profile) {
-      const followingIds: string[] = profile.following || [];
-      const excludeIds = [me.id, ...followingIds];
-      q = q.not("user_id", "in", `(${excludeIds.join(',')})`);
-    } else {
-      // If can't get following, at least exclude own posts
-      q = q.neq("user_id", me.id);
+    const followingKey = `following:${me.id}`;
+    let followingIds: string[] = apiCache.get(followingKey) || [];
+    if (followingIds.length === 0) {
+      const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+      if (!profErr && profile) {
+        followingIds = profile.following || [];
+        apiCache.set(followingKey, followingIds, 5 * 60 * 1000); // Cache for 5 minutes
+      }
     }
+    const excludeIds = [me.id, ...followingIds];
+    q = q.not("user_id", "in", `(${excludeIds.join(',')})`);
   }
   const { data, error } = await q;
   logSupabaseError("getExploreFeed", { data, error });
@@ -33,18 +36,20 @@ export async function getExploreFeedPage({ limit, before }: { limit: number; bef
   // Exclude current user's posts and posts from followed users from explore results.
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
-  let q: any = sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").eq("public", true).order("created_at", { ascending: false }).limit(limit);
+  let q: any = sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("public", true).order("created_at", { ascending: false }).limit(limit);
   if (me) {
     // Get following list to exclude followed users' posts
-    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
-    if (!profErr && profile) {
-      const followingIds: string[] = profile.following || [];
-      const excludeIds = [me.id, ...followingIds];
-      q = q.not("user_id", "in", `(${excludeIds.join(',')})`);
-    } else {
-      // If can't get following, at least exclude own posts
-      q = q.neq("user_id", me.id);
+    const followingKey = `following:${me.id}`;
+    let followingIds: string[] = apiCache.get(followingKey) || [];
+    if (followingIds.length === 0) {
+      const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+      if (!profErr && profile) {
+        followingIds = profile.following || [];
+        apiCache.set(followingKey, followingIds, 5 * 60 * 1000); // Cache for 5 minutes
+      }
     }
+    const excludeIds = [me.id, ...followingIds];
+    q = q.not("user_id", "in", `(${excludeIds.join(',')})`);
   }
   if (before) q = q.lt("created_at", before);
   const { data, error } = await q;
@@ -59,24 +64,52 @@ export async function getFollowingFeed() {
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
   if (!me) return [];
-  const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
-  if (profErr || !profile) return [];
-const ids: string[] = profile.following || [];
-  // Fetch public posts from followed users
-const { data: followedRows, error: followedErr } = await sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false });
-  logSupabaseError("getFollowingFeed.followed", { data: followedRows, error: followedErr });
-  if (followedErr) throw followedErr;
-  // Also fetch the current user's posts (include private posts owned by the user)
-  const { data: myRows, error: myErr } = await sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").eq("user_id", me.id).order("created_at", { ascending: false });
-  logSupabaseError("getFollowingFeed.mine", { data: myRows, error: myErr });
-  if (myErr) throw myErr;
-  const rows = ((followedRows || []) as any[]).concat((myRows || []) as any[]);
-  // dedupe by id and sort
+
+  // Cache following list to avoid repeated fetches
+  const followingKey = `following:${me.id}`;
+  let followingIds: string[] = apiCache.get(followingKey) || [];
+  if (followingIds.length === 0) {
+    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+    if (profErr || !profile) return [];
+    followingIds = profile.following || [];
+    apiCache.set(followingKey, followingIds, 5 * 60 * 1000); // Cache for 5 minutes
+  }
+
+  // Single query to get posts from followed users + own posts
+  const allUserIds = [...followingIds, me.id];
+  const { data: rows, error } = await sb.from("posts").select(`
+    *,
+    users!left(id, username, display_name, avatar_url),
+    public_profiles!left(id, username, display_name, avatar_url)
+  `).in("user_id", allUserIds).eq("public", true).order("created_at", { ascending: false });
+
+  logSupabaseError("getFollowingFeed", { data: rows, error });
+  if (error) throw error;
+
+  // For followed users, only include public posts; for own posts, include all
+  // Since we filtered by public=true above, we need to add back own posts
+  const publicRows = rows || [];
+  let ownPosts: any[] = [];
+  if (me) {
+    const { data: myRows, error: myErr } = await sb.from("posts").select(`
+      *,
+      users!left(id, username, display_name, avatar_url),
+      public_profiles!left(id, username, display_name, avatar_url)
+    `).eq("user_id", me.id).order("created_at", { ascending: false });
+    if (!myErr && myRows) {
+      ownPosts = myRows;
+    }
+  }
+
+  const allRows = [...publicRows, ...ownPosts];
+
+  // Dedupe by id and sort
   const seen = new Set<string>();
-  const merged = rows
+  const deduped = allRows
     .filter(r => { if (!r) return false; if (seen.has(r.id)) return false; seen.add(r.id); return true; })
     .sort((a, b) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime());
-  return (merged || []).map((row: any) => mapRowToHydratedPost(row));
+
+  return deduped.map((row: any) => mapRowToHydratedPost(row));
 }
 
 export async function getFollowingFeedPage({ limit, before }: { limit: number; before?: string }) {
@@ -84,32 +117,68 @@ export async function getFollowingFeedPage({ limit, before }: { limit: number; b
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
   if (!me) return [];
-  const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
-  if (profErr || !profile) return [];
-const ids: string[] = profile.following || [];
-  // Fetch followed users' public posts (paged)
-let q1: any = sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").in("user_id", ids).eq("public", true).order("created_at", { ascending: false }).limit(limit);
-  if (before) q1 = q1.lt("created_at", before);
-  const { data: followedRows, error: followedErr } = await q1;
-  logSupabaseError("getFollowingFeedPage.followed", { data: followedRows, error: followedErr });
-  if (followedErr) throw followedErr;
-  // Also fetch the current user's own posts (not limited by public flag). For pagination, fetch up to `limit` posts before `before` as well.
-let q2: any = sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").eq("user_id", me.id).order("created_at", { ascending: false }).limit(limit);
-  if (before) q2 = q2.lt("created_at", before);
-  const { data: myRows, error: myErr } = await q2;
-  logSupabaseError("getFollowingFeedPage.mine", { data: myRows, error: myErr });
-  if (myErr) throw myErr;
-  // Merge, dedupe, sort and then take the first `limit` items to emulate a unified paged feed.
-  const rows = ((followedRows || []) as any[]).concat((myRows || []) as any[]);
-  const mapById: Record<string, any> = {};
-  for (const r of rows) mapById[r.id] = r;
-  const merged = Object.values(mapById).sort((a, b) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime()).slice(0, limit);
-  return (merged || []).map((row: any) => mapRowToHydratedPost(row));
+
+  // Cache following list to avoid repeated fetches
+  const followingKey = `following:${me.id}`;
+  let followingIds: string[] = apiCache.get(followingKey) || [];
+  if (followingIds.length === 0) {
+    const { data: profile, error: profErr } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
+    if (profErr || !profile) return [];
+    followingIds = profile.following || [];
+    apiCache.set(followingKey, followingIds, 5 * 60 * 1000); // Cache for 5 minutes
+  }
+
+  // Single query to get posts from followed users + own posts
+  // Use a more efficient query that avoids unnecessary joins for comments
+  const allUserIds = [...followingIds, me.id];
+  let query = sb.from("posts").select(`
+    *,
+    users!left(id, username, display_name, avatar_url),
+    public_profiles!left(id, username, display_name, avatar_url)
+  `).in("user_id", allUserIds).order("created_at", { ascending: false }).limit(limit * 2); // Fetch more to account for deduping
+
+  if (before) query = query.lt("created_at", before);
+
+  const { data: rows, error } = await query;
+  logSupabaseError("getFollowingFeedPage", { data: rows, error });
+  if (error) throw error;
+
+  // For followed users, only include public posts; for own posts, include all
+  const filteredRows = (rows || []).filter((row: any) => {
+    if (row.user_id === me.id) return true; // Include all own posts
+    return row.public === true; // Only public posts from followed users
+  });
+
+  // Dedupe and sort (in case of overlaps)
+  const seen = new Set<string>();
+  const deduped = filteredRows
+    .filter(r => { if (!r) return false; if (seen.has(r.id)) return false; seen.add(r.id); return true; })
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit);
+
+  // Get comment counts separately for better performance
+  const postIds = deduped.map(r => r.id);
+  let commentCounts: Record<string, number> = {};
+  if (postIds.length > 0) {
+    const { data: comments } = await sb.from("comments").select("post_id").in("post_id", postIds);
+    if (comments) {
+      commentCounts = comments.reduce((acc, comment) => {
+        acc[comment.post_id] = (acc[comment.post_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+    }
+  }
+
+  // Map to hydrated posts with comment counts
+  return deduped.map((row: any) => ({
+    ...mapRowToHydratedPost(row),
+    commentsCount: commentCounts[row.id] || 0
+  }));
 }
 
 export async function getUserPosts(userId: string) {
   const sb = getClient();
-const { data, error } = await sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").eq("user_id", userId).order("created_at", { ascending: false });
+const { data, error } = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("user_id", userId).order("created_at", { ascending: false });
 logSupabaseError("getUserPosts", { data, error });
   if (error) throw error;
   return (data || []).map((row: any) => mapRowToHydratedPost(row));
@@ -120,7 +189,7 @@ export async function getPostsByDate(dateKey: string) {
   const start = new Date(dateKey + "T00:00:00.000Z");
   const end = new Date(start);
   end.setDate(start.getDate() + 1);
-const { data, error } = await sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).order("created_at", { ascending: false });
+const { data, error } = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).order("created_at", { ascending: false });
 logSupabaseError("getPostsByDate", { data, error });
 if (error) throw error;
   return (data || []).map((row: any) => mapRowToHydratedPost(row));
@@ -176,7 +245,7 @@ export async function getPost(id: string) {
 
   // Try exact match first
   // debug removed
-  let res: any = await sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").eq("id", candidateId).limit(1).maybeSingle();
+  let res: any = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("id", candidateId).limit(1).maybeSingle();
   // debug removed
   if (!res.error && res.data) {
     logSupabaseError("getPost", res);
@@ -186,7 +255,7 @@ export async function getPost(id: string) {
   // If candidateId is a short prefix (<= 12 chars), try prefix match
   if (!res.data && candidateId.length <= 12) {
     try {
-      const prefRes: any = await sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").ilike("id", `${candidateId}%`).limit(1).maybeSingle();
+      const prefRes: any = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").ilike("id", `${candidateId}%`).limit(1).maybeSingle();
       logSupabaseError("getPost(prefix)", prefRes);
       if (!prefRes.error && prefRes.data) return mapRowToHydratedPost(prefRes.data) as any;
     } catch (e) {
@@ -196,7 +265,7 @@ export async function getPost(id: string) {
 
   // lastly, try exact match on the original raw value
   try {
-    const rawRes: any = await sb.from("posts").select("*, users!left(*), public_profiles!left(*), comments!left(id)").eq("id", raw).limit(1).maybeSingle();
+    const rawRes: any = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("id", raw).limit(1).maybeSingle();
     logSupabaseError("getPost(raw)", rawRes);
     if (!rawRes.error && rawRes.data) return mapRowToHydratedPost(rawRes.data) as any;
   } catch (e) {

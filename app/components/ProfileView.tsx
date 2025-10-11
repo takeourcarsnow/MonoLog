@@ -97,13 +97,30 @@ export function ProfileView({ userId }: { userId?: string }) {
           onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("profileView", v); }}
         />
       )}
-      <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
-        {view === 'grid' ? (
-          <PostsGrid posts={posts} />
-        ) : (
-          posts.map(p => <PostCard key={p.id} post={p} />)
-        )}
-      </div>
+      {
+        // Render both grid and list variants and toggle their visibility with
+        // inline display styles. This mirrors the FeedPage pattern so the
+        // existing CSS animations for .card and .grid .tile run when switching.
+      }
+      {(() => {
+        const gridView = <PostsGrid posts={posts} />;
+        const listView = (
+          <>
+            {posts.map(p => <PostCard key={p.id} post={p} />)}
+          </>
+        );
+
+        return (
+          <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
+            <div style={{ display: view === 'grid' ? 'block' : 'none' }}>
+              {gridView}
+            </div>
+            <div style={{ display: view === 'list' ? 'block' : 'none' }}>
+              {listView}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

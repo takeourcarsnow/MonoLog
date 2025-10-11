@@ -91,7 +91,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   const { sharePost } = useShare(post);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const spotifyMeta = useSpotifyMeta(post.spotifyLink);
+  const spotifyMeta = useSpotifyMeta(post.spotifyLink, post.id);
   const { fsOpen, fsSrc, fsAlt, handleOpenFullscreen, handleCloseFullscreen } = useFullscreen();
   const handleCardClick = useCardNavigation(postHref, editing);
   const { showEditor, editorAnim, opening, editorWrapRef, handleTransitionEnd } = useEditorAnimation(editing);

@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useTypingAnimation } from "./useTypingAnimation";
 import { PHRASES } from "./constants";
+import { Combobox } from "../Combobox";
+import { CAMERA_PRESETS, LENS_PRESETS, FILM_TYPE_PRESETS } from "@/src/lib/exifPresets";
 
 // Custom Spotify icon component
 const SpotifyIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
@@ -21,6 +23,12 @@ interface CaptionInputProps {
   setCaption: (caption: string) => void;
   spotifyLink?: string;
   setSpotifyLink?: (link: string) => void;
+  camera?: string;
+  setCamera?: (camera: string) => void;
+  lens?: string;
+  setLens?: (lens: string) => void;
+  filmType?: string;
+  setFilmType?: (filmType: string) => void;
   // typed removed - this component now owns the typing animation internally
   captionFocused: boolean;
   setCaptionFocused: (focused: boolean) => void;
@@ -37,6 +45,12 @@ export function CaptionInput({
   setCaptionFocused,
   spotifyLink,
   setSpotifyLink,
+  camera,
+  setCamera,
+  lens,
+  setLens,
+  filmType,
+  setFilmType,
   hasPreview,
   processing,
   CAPTION_MAX,
@@ -209,6 +223,30 @@ export function CaptionInput({
           />
           <SpotifyIcon size={16} className={`input-icon ${spotifyLink?.trim() && (spotifyLink.includes('spotify.com') || spotifyLink.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />
         </div>
+      </div>
+      {/* EXIF inputs - optional */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
+        <Combobox
+          value={camera || ''}
+          onChange={setCamera || (() => {})}
+          options={CAMERA_PRESETS}
+          placeholder="Camera"
+          disabled={!hasPreview || processing}
+        />
+        <Combobox
+          value={lens || ''}
+          onChange={setLens || (() => {})}
+          options={LENS_PRESETS}
+          placeholder="Lens"
+          disabled={!hasPreview || processing}
+        />
+        <Combobox
+          value={filmType || ''}
+          onChange={setFilmType || (() => {})}
+          options={FILM_TYPE_PRESETS}
+          placeholder="Film type"
+          disabled={!hasPreview || processing}
+        />
       </div>
     </div>
   );

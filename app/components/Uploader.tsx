@@ -54,6 +54,9 @@ function UploaderCore() {
     alt,
     caption,
   spotifyLink,
+  camera,
+  lens,
+  filmType,
     captionFocused,
     visibility,
     previewLoaded,
@@ -93,6 +96,9 @@ function UploaderCore() {
     setAlt,
     setCaption,
   setSpotifyLink,
+  setCamera,
+  setLens,
+  setFilmType,
     setCaptionFocused,
     setVisibility,
     setPreviewLoaded,
@@ -330,6 +336,12 @@ function UploaderCore() {
           setCaption={setCaption}
           spotifyLink={spotifyLink}
           setSpotifyLink={setSpotifyLink}
+          camera={camera}
+          setCamera={setCamera}
+          lens={lens}
+          setLens={setLens}
+          filmType={filmType}
+          setFilmType={setFilmType}
           captionFocused={captionFocused}
           setCaptionFocused={setCaptionFocused}
           hasPreview={hasPreview}

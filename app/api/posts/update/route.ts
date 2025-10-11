@@ -14,6 +14,9 @@ export async function POST(req: Request) {
     if (patch.caption !== undefined) updates.caption = patch.caption;
     if (patch.alt !== undefined) updates.alt = patch.alt;
     if (patch.public !== undefined) updates.public = patch.public;
+    if (patch.camera !== undefined) updates.camera = patch.camera;
+    if (patch.lens !== undefined) updates.lens = patch.lens;
+    if (patch.filmType !== undefined) updates.film_type = patch.film_type;
     const { error } = await sb.from('posts').update(updates).eq('id', id);
     if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
 

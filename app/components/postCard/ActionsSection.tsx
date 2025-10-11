@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon } from "lucide-react";
+import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Info as InfoIcon } from "lucide-react";
 
 interface ActionsSectionProps {
   postId: string;
@@ -18,9 +18,11 @@ interface ActionsSectionProps {
   toast: any;
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
   openFullscreen?: () => void;
+  showExif?: boolean;
+  setShowExif?: (value: boolean) => void;
 }
 
-export const ActionsSection = memo(function ActionsSection({
+export const ActionsSection = function ActionsSection({
   postId,
   count,
   commentsOpen,
@@ -37,6 +39,8 @@ export const ActionsSection = memo(function ActionsSection({
   toast,
   showFavoriteFeedback,
   openFullscreen,
+  showExif,
+  setShowExif,
 }: ActionsSectionProps) {
   return (
     <div className="actions">
@@ -130,6 +134,30 @@ export const ActionsSection = memo(function ActionsSection({
       >
         <LinkIcon size={16} />
       </button>
+      {setShowExif && (
+        <div
+          key={showExif ? 'active' : 'inactive'}
+          className={`action exif-info ${showExif ? "active" : ""}`}
+          title={`Show EXIF info ${showExif ? "(active)" : ""}`}
+          aria-label="Toggle EXIF information"
+          aria-pressed={showExif}
+          style={{
+            backgroundColor: showExif ? 'var(--primary)' : 'transparent',
+            color: showExif ? 'white' : 'var(--muted)',
+            border: showExif ? '1px solid var(--primary)' : 'none'
+          }}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            e.preventDefault(); 
+            console.log('EXIF button clicked, current state:', showExif);
+            setShowExif(!showExif); 
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          <InfoIcon size={16} />
+        </div>
+      )}
       <button
         className="action fullscreen"
         title="View photo"
@@ -140,4 +168,4 @@ export const ActionsSection = memo(function ActionsSection({
       </button>
     </div>
   );
-});
+}

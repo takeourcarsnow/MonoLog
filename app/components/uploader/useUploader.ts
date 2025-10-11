@@ -16,6 +16,7 @@ import { useFileHandling } from "./useFileHandling";
 import { useToast } from "../Toast";
 import { EDITING_SESSION_KEY, DRAFT_KEY } from "./constants";
 import { EditorSettings } from "../imageEditor/types";
+import exifr from 'exifr';
 
 export function useUploader() {
   const CAPTION_MAX = 1000;
@@ -26,6 +27,9 @@ export function useUploader() {
   const [alt, setAlt] = useState<string | string[]>("");
   const [caption, setCaption] = useState("");
   const [spotifyLink, setSpotifyLink] = useState("");
+  const [camera, setCamera] = useState("");
+  const [lens, setLens] = useState("");
+  const [filmType, setFilmType] = useState("");
   const [captionFocused, setCaptionFocused] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [previewLoaded, setPreviewLoaded] = useState(false);
@@ -72,7 +76,10 @@ export function useUploader() {
     compressedSize, setCompressedSize,
     originalSize, setOriginalSize,
     index, setIndex,
-    spotifyLink, setSpotifyLink
+    spotifyLink, setSpotifyLink,
+    camera, setCamera,
+    lens, setLens,
+    filmType, setFilmType
   );
 
   // Ensure we don't show a stale "processing" loader when navigating back
@@ -189,7 +196,10 @@ export function useUploader() {
     setOriginalDataUrls([]);
     setEditorSettings([]);
     setCaption("");
-  setSpotifyLink("");
+    setSpotifyLink("");
+    setCamera("");
+    setLens("");
+    setFilmType("");
     setAlt("");
     setVisibility("public");
     setCompressedSize(null);
@@ -200,9 +210,7 @@ export function useUploader() {
     // Clear file inputs to allow re-selection
     try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
     try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
-  }
-
-  function removePhoto(atIndex: number) {
+  }  function removePhoto(atIndex: number) {
     if (dataUrls.length === 0) return;
     const safeIndex = Math.min(atIndex, dataUrls.length - 1);
     const newDataUrls = dataUrls.filter((_, i) => i !== safeIndex);
@@ -256,6 +264,23 @@ export function useUploader() {
       setEditing(false);
       try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
       if (!alt && caption) setAlt(caption);
+
+      // Extract EXIF data
+      try {
+        const exif = await exifr.parse(file, { pick: ['Make', 'Model', 'LensModel', 'LensMake'] });
+        if (exif) {
+          const cameraMake = exif.Make || '';
+          const cameraModel = exif.Model || '';
+          const camera = cameraMake && cameraModel ? `${cameraMake} ${cameraModel}` : cameraMake || cameraModel || '';
+          const lensMake = exif.LensMake || '';
+          const lensModel = exif.LensModel || '';
+          const lens = lensMake && lensModel ? `${lensMake} ${lensModel}` : lensMake || lensModel || '';
+          if (camera) setCamera(camera);
+          if (lens) setLens(lens);
+        }
+      } catch (e) {
+        // Ignore EXIF extraction errors
+      }
     } catch (e) {
       console.error(e);
       toast.show("Failed to process image");
@@ -278,9 +303,12 @@ export function useUploader() {
         imageUrls: images.slice(0, 5),
         caption,
         spotifyLink: spotifyLink || undefined,
-  alt: alt || caption || "Photo from today's entry",
+        alt: alt || caption || "Photo from today's entry",
         replace,
         public: visibility === "public",
+        camera: camera || undefined,
+        lens: lens || undefined,
+        filmType: filmType || undefined,
       });
       try {
         if (typeof window !== 'undefined') {
@@ -441,6 +469,9 @@ export function useUploader() {
     alt,
     caption,
   spotifyLink,
+  camera,
+  lens,
+  filmType,
     captionFocused,
     visibility,
     previewLoaded,
@@ -487,6 +518,9 @@ export function useUploader() {
     setAlt,
     setCaption,
   setSpotifyLink,
+  setCamera,
+  setLens,
+  setFilmType,
     setCaptionFocused,
     setVisibility,
     setPreviewLoaded,

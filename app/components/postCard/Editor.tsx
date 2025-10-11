@@ -1,14 +1,19 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/src/lib/types";
 import { Check, X } from "lucide-react";
+import { Combobox } from "../Combobox";
+import { CAMERA_PRESETS, LENS_PRESETS, FILM_TYPE_PRESETS } from "@/src/lib/exifPresets";
 
 export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   post: HydratedPost;
   onCancel: () => void;
-  onSave: (patch: { caption: string; public: boolean }) => Promise<void>;
+  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string }) => Promise<void>;
 }, ref: any) {
   const [caption, setCaption] = useState(post.caption || "");
   const [visibility, setVisibility] = useState(post.public ? "public" : "private");
+  const [camera, setCamera] = useState(post.camera || "");
+  const [lens, setLens] = useState(post.lens || "");
+  const [filmType, setFilmType] = useState(post.filmType || "");
   const [saving, setSaving] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -16,11 +21,11 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
     if (saving) return;
     setSaving(true);
     try {
-      await onSave({ caption, public: visibility === 'public' });
+      await onSave({ caption, public: visibility === 'public', camera, lens, filmType });
     } finally {
       setSaving(false);
     }
-  }, [caption, visibility, onSave, saving]);
+  }, [caption, visibility, camera, lens, filmType, onSave, saving]);
 
   useImperativeHandle(ref, () => ({
     save: doSave,
@@ -54,6 +59,26 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
           }
         }}
       />
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <Combobox
+          value={camera}
+          onChange={setCamera}
+          options={CAMERA_PRESETS}
+          placeholder="Camera"
+        />
+        <Combobox
+          value={lens}
+          onChange={setLens}
+          options={LENS_PRESETS}
+          placeholder="Lens"
+        />
+        <Combobox
+          value={filmType}
+          onChange={setFilmType}
+          options={FILM_TYPE_PRESETS}
+          placeholder="Film type"
+        />
+      </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 10 }}>
         <div>
           <button

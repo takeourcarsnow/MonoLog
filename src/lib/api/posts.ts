@@ -271,7 +271,7 @@ export async function canPostToday() {
   return { allowed: true };
 }
 
-export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; replace?: boolean; public?: boolean; spotifyLink?: string }) {
+export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink, camera, lens, filmType }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; replace?: boolean; public?: boolean; spotifyLink?: string; camera?: string; lens?: string; filmType?: string }) {
   const cur = await getCurrentUser();
   if (!cur) throw new Error('Not logged in');
 
@@ -305,7 +305,7 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
   const sb2 = getClient();
   ensureAuthListener(sb2);
   const token2 = await getAccessToken(sb2);
-  const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token2 ? { Authorization: `Bearer ${token2}` } : {}) }, body: JSON.stringify({ imageUrls: finalUrls, thumbnailUrls: finalThumbUrls, caption, alt, replace, public: isPublic, spotifyLink }) });
+  const res = await fetch('/api/posts/create', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token2 ? { Authorization: `Bearer ${token2}` } : {}) }, body: JSON.stringify({ imageUrls: finalUrls, thumbnailUrls: finalThumbUrls, caption, alt, replace, public: isPublic, spotifyLink, camera, lens, filmType }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to create post');
   return json.post as any;

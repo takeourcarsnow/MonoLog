@@ -97,6 +97,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   const { showEditor, editorAnim, opening, editorWrapRef, handleTransitionEnd } = useEditorAnimation(editing);
 
   const [showAuth, setShowAuth] = useState(false);
+  const [showExif, setShowExif] = useState(false);
   const pathname = usePathname();
   const { isMe, isLoading: authLoading } = useIsMe(post.userId);
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -195,6 +196,13 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
               </a>
             </div>
           ) : null}
+          {showExif ? (
+            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px' }}>
+              {post.camera ? <span>📷 {post.camera}</span> : <span>📷 No camera data</span>}
+              {post.lens ? <span>🔍 {post.lens}</span> : <span>🔍 No lens data</span>}
+              {post.filmType ? <span>🎞️ {post.filmType}</span> : <span>🎞️ No film data</span>}
+            </div>
+          ) : null}
           <ActionsSection
             postId={post.id}
             count={count}
@@ -211,6 +219,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             api={api}
             toast={toast}
             showFavoriteFeedback={showFavoriteFeedback}
+            showExif={showExif}
+            setShowExif={setShowExif}
             openFullscreen={() => {
               const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
               const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
@@ -257,12 +267,4 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
 }
 
 // Memoize PostCard with shallow comparison to prevent re-renders when posts haven't changed
-export const PostCard = memo(PostCardComponent, (prev, next) => {
-  // Only re-render if post ID or allowCarouselTouch changes
-  return prev.post.id === next.post.id && 
-         prev.allowCarouselTouch === next.allowCarouselTouch &&
-         prev.post.caption === next.post.caption &&
-         prev.post.public === next.post.public &&
-         prev.post.commentsCount === next.post.commentsCount &&
-         (prev.post as any).spotifyLink === (next.post as any).spotifyLink;
-});
+export const PostCard = PostCardComponent;

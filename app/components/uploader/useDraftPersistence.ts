@@ -21,7 +21,13 @@ export function useDraftPersistence(
   index: number,
   setIndex: (index: number) => void,
   spotifyLink: string,
-  setSpotifyLink: (link: string) => void
+  setSpotifyLink: (link: string) => void,
+  camera: string,
+  setCamera: (camera: string) => void,
+  lens: string,
+  setLens: (lens: string) => void,
+  filmType: string,
+  setFilmType: (filmType: string) => void
 ) {
   // restore draft on mount
   useEffect(() => {
@@ -48,10 +54,13 @@ export function useDraftPersistence(
       if (parsed.originalSize !== undefined) setOriginalSize(parsed.originalSize);
       if (parsed.index !== undefined) setIndex(parsed.index);
       if (parsed.spotifyLink !== undefined) setSpotifyLink(parsed.spotifyLink);
+      if (parsed.camera !== undefined) setCamera(parsed.camera);
+      if (parsed.lens !== undefined) setLens(parsed.lens);
+      if (parsed.filmType !== undefined) setFilmType(parsed.filmType);
     } catch (e) {
       // ignore parse errors
     }
-  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink]);
+  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType]);
 
   // Persist draft whenever key pieces of state change
   useEffect(() => {
@@ -67,6 +76,9 @@ export function useDraftPersistence(
         originalSize: originalSize ?? undefined,
         spotifyLink: spotifyLink || undefined,
         index,
+        camera: camera || undefined,
+        lens: lens || undefined,
+        filmType: filmType || undefined,
         savedAt: Date.now(),
       };
 
@@ -87,6 +99,9 @@ export function useDraftPersistence(
           if (existing.originalDataUrls) payload.originalDataUrls = existing.originalDataUrls;
           if (existing.editorSettings) payload.editorSettings = existing.editorSettings;
           if (existing.spotifyLink && !payload.spotifyLink) payload.spotifyLink = existing.spotifyLink;
+          if (existing.camera && !payload.camera) payload.camera = existing.camera;
+          if (existing.lens && !payload.lens) payload.lens = existing.lens;
+          if (existing.filmType && !payload.filmType) payload.filmType = existing.filmType;
         }
       } catch (e) {
         // ignore parse errors and fall back to writing payload as-is
@@ -96,5 +111,5 @@ export function useDraftPersistence(
     } catch (e) {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [dataUrls, originalDataUrls, editorSettings, caption, alt, visibility, compressedSize, originalSize, index, spotifyLink]);
+  }, [dataUrls, originalDataUrls, editorSettings, caption, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType]);
 }

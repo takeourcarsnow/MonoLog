@@ -8,7 +8,7 @@ import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 export async function POST(req: Request) {
   try {
   const body = await req.json();
-  const { imageUrls, thumbnailUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink } = body;
+  const { imageUrls, thumbnailUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink, camera, lens, filmType } = body;
   const authUser = await getUserFromAuthHeader(req);
   if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const userId = authUser.id;
@@ -104,6 +104,9 @@ export async function POST(req: Request) {
     const created_at = new Date().toISOString();
   const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: !!isPublic };
   if (spotifyLink) insertObj.spotify_link = spotifyLink;
+  if (camera) insertObj.camera = camera;
+  if (lens) insertObj.lens = lens;
+  if (filmType) insertObj.film_type = filmType;
     
     // Handle image URLs - prefer array format when multiple images
     if (imageUrls && imageUrls.length > 0) {
@@ -126,12 +129,20 @@ export async function POST(req: Request) {
     try {
       const res = await sb.from('posts').insert(insertObj).select('*').limit(1).single();
       if (res.error) {
-        // If the error is about the image_urls column not existing, try without it
-        if (res.error.message?.toLowerCase().includes('image_urls') || res.error.message?.toLowerCase().includes('column')) {
+        // If the error is about missing columns, try without them
+        if (res.error.message?.toLowerCase().includes('column') ||
+            res.error.message?.toLowerCase().includes('image_urls') ||
+            res.error.message?.toLowerCase().includes('camera') ||
+            res.error.message?.toLowerCase().includes('lens') ||
+            res.error.message?.toLowerCase().includes('film_type')) {
           const fallbackObj = { ...insertObj };
-          delete fallbackObj.image_urls; // Remove the problematic column
-          // Also remove spotify_link if that's the problematic column
+          // Remove potentially problematic columns
+          delete fallbackObj.image_urls;
+          delete fallbackObj.thumbnail_urls;
           if (fallbackObj.spotify_link) delete fallbackObj.spotify_link;
+          if (fallbackObj.camera) delete fallbackObj.camera;
+          if (fallbackObj.lens) delete fallbackObj.lens;
+          if (fallbackObj.film_type) delete fallbackObj.film_type;
           const fallbackRes = await sb.from('posts').insert(fallbackObj).select('*').limit(1).single();
           if (fallbackRes.error) {
             return NextResponse.json({ error: `Database schema error: ${fallbackRes.error.message}` }, { status: 500 });

@@ -226,6 +226,14 @@ export function useUploader() {
       setAlt(alt.filter((_, i) => i !== safeIndex));
     }
     if (newDataUrls.length === 0) {
+      // Clear all inputs when no photos remain
+      setCaption("");
+      setSpotifyLink("");
+      setCamera("");
+      setLens("");
+      setFilmType("");
+      setFilmIso("");
+      setAlt("");
       setIndex(0);
     } else {
       if (safeIndex === 0) {

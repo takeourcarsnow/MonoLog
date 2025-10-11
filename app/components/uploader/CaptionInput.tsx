@@ -3,7 +3,7 @@ import { useTypingAnimation } from "./useTypingAnimation";
 import { PHRASES } from "./constants";
 import { Combobox } from "../Combobox";
 import { CAMERA_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
-import { Camera, Settings, Image } from "lucide-react";
+import { Camera, Settings, Image, Pen, Gauge } from "lucide-react";
 
 // Custom Spotify icon component
 const SpotifyIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
@@ -138,7 +138,20 @@ export function CaptionInput({
     const textarea = inputRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
+      const scrollH = textarea.scrollHeight;
+      const minH = 48;
+      const lineH = 21; // approx line-height * font-size
+      const originalPadding = 12;
+      if (scrollH <= minH) {
+        textarea.style.height = minH + 'px';
+        const paddingV = (minH - lineH) / 2;
+        textarea.style.paddingTop = paddingV + 'px';
+        textarea.style.paddingBottom = paddingV + 'px';
+      } else {
+        textarea.style.height = scrollH + 'px';
+        textarea.style.paddingTop = originalPadding + 'px';
+        textarea.style.paddingBottom = originalPadding + 'px';
+      }
     }
   }, [caption]);
 
@@ -149,6 +162,7 @@ export function CaptionInput({
         .caption-counter.visible { opacity: 1; transform: translateY(-50%) scale(1); }
         .caption-counter.near { color: #c47700; }
         .caption-counter.limit { color: #b91c1c; }
+        .input-ghost-placeholder { left: 32px !important; }
       `}</style>
       <div className="input-wrapper" style={{ flex: 1, position: 'relative', width: '100%' }}>
         {/** keep the ghost/typewriter visible even before a photo is selected,
@@ -188,9 +202,10 @@ export function CaptionInput({
           }}
           onFocus={(e) => { setCaptionFocused(true); }}
           onBlur={() => setCaptionFocused(false)}
-          style={{ width: '100%', cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', paddingRight: 72 }}
+          style={{ width: '100%', cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', paddingRight: 72, paddingLeft: 32 }}
           rows={1}
         />
+        <Pen size={16} className="input-icon" />
         {/* compact counter: only visible when input is focused; shows remaining when close to limit */}
         <div
           aria-hidden
@@ -274,6 +289,7 @@ export function CaptionInput({
             options={ISO_PRESETS}
             placeholder="ISO"
             disabled={!hasPreview || processing}
+            icon={Gauge}
           />
         )}
       </div>

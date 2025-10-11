@@ -1243,7 +1243,6 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .input[type="textarea"],
   textarea.input {
     resize: none;
-    min-height: 48px;
     overflow: hidden;
     line-height: 1.4;
   }
@@ -1268,6 +1267,10 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 .input-icon.spotify-filled {
   color: #1db954; /* Spotify green */
+}
+
+.input-icon.input-filled {
+  color: var(--primary);
 }
 
 /* small helper: visually hidden but available to screen readers */

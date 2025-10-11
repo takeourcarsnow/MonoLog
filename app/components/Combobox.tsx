@@ -91,7 +91,7 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
 
   return (
     <div className={`combobox ${className || ''}`} style={{ position: 'relative' }}>
-      {Icon && <Icon size={16} className="input-icon" />}
+      {Icon && <Icon size={16} className={`input-icon ${value ? 'input-filled' : ''}`} />}
       <input
         ref={inputRef}
         type="text"

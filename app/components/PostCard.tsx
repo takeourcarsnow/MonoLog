@@ -218,15 +218,15 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             }}
           />
           <div className={`exif-section ${showExif ? "open" : ""}`}>
-            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px', justifyContent: 'center' }}>
+            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', alignItems: 'center' }}>
               {post.camera || post.lens || post.filmType ? (
                 <>
-                  {post.camera ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Camera size={14} /> {post.camera}</span> : <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Camera size={14} /> No camera data</span>}
-                  {post.lens ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Settings size={14} /> {post.lens}</span> : <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Settings size={14} /> No lens data</span>}
-                  {post.filmType ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Image size={14} /> {post.filmType}</span> : <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Image size={14} /> No film data</span>}
+                  {post.camera && <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><Camera size={14} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.camera}</span></div>}
+                  {post.lens && <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><Settings size={14} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.lens}</span></div>}
+                  {post.filmType && <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><Image size={14} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.filmType}</span></div>}
                 </>
               ) : (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Camera size={14} /> No EXIF data</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Camera size={14} /> No EXIF data</div>
               )}
             </div>
           </div>

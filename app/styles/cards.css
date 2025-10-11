@@ -765,7 +765,7 @@
 .exif-section.open {
   /* visible state */
   opacity: 1;
-  max-height: 60px; /* enough for the exif info content */
+  max-height: 120px; /* increased to accommodate vertical layout with multiple lines */
 }
 
 @media (prefers-reduced-motion: reduce) {

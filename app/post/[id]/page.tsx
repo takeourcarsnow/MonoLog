@@ -40,6 +40,9 @@ function mapRowToHydratedPost(row: any): HydratedPost {
     spotifyLink: row.spotify_link || row.spotifyLink || undefined,
     createdAt: row.created_at || row.createdAt,
     public: row.public ?? true,
+    camera: row.camera || undefined,
+    lens: row.lens || undefined,
+    filmType: row.film_type || row.filmType || undefined,
     user: {
       id: row.users?.id || row.user_id,
       username: row.users?.username || '',

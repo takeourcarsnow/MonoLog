@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/src/lib/types";
-import { Check, X } from "lucide-react";
+import { Check, X, Camera, Settings, Image, Gauge } from "lucide-react";
 import { Combobox } from "../Combobox";
 import { CAMERA_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
 
@@ -86,12 +86,14 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
           onChange={setCamera}
           options={CAMERA_PRESETS}
           placeholder="Camera"
+          icon={Camera}
         />
         <Combobox
           value={lens}
           onChange={setLens}
           options={LENS_PRESETS}
           placeholder="Lens"
+          icon={Settings}
         />
         <Combobox
           value={filmType}
@@ -101,6 +103,7 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
           }}
           options={FILM_PRESETS}
           placeholder="Film"
+          icon={Image}
         />
         {filmType && (
           <Combobox
@@ -108,6 +111,7 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
             onChange={setFilmIso}
             options={ISO_PRESETS}
             placeholder="ISO"
+            icon={Gauge}
           />
         )}
       </div>
@@ -138,22 +142,22 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             type="button"
-            className={`btn icon-reveal ${saving ? 'disabled' : ''}`}
+            className={`btn ${saving ? 'disabled' : ''}`}
             onClick={async () => { if (!saving) await doSave(); }}
             aria-label="Save edits"
             disabled={saving}
+            style={{ padding: '10px' }}
           >
-            <span className="icon" aria-hidden="true"><Check size={16} /></span>
-            <span className="reveal label">{saving ? 'Saving…' : 'Save'}</span>
+            <Check size={16} />
           </button>
           <button
             type="button"
-            className="btn ghost icon-reveal"
+            className="btn ghost"
             onClick={() => onCancel()}
             aria-label="Cancel edits"
+            style={{ padding: '10px' }}
           >
-            <span className="icon" aria-hidden="true"><X size={16} /></span>
-            <span className="reveal label">Cancel</span>
+            <X size={16} />
           </button>
         </div>
       </div>

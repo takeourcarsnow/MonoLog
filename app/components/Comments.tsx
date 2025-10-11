@@ -49,11 +49,19 @@ export function Comments({ postId, onCountChange }: Props) {
     }
 
     setLoading(true);
-    const list = await api.getComments(postId);
-    setComments(list);
-    setCachedComments(postId, list);
-    notifyCount(list.length);
-    setLoading(false);
+    try {
+      const list = await api.getComments(postId);
+      setComments(list);
+      setCachedComments(postId, list);
+      notifyCount(list.length);
+    } catch (e: any) {
+      console.error('Failed to load comments:', e);
+      // On error, show empty comments instead of crashing
+      setComments([]);
+      notifyCount(0);
+    } finally {
+      setLoading(false);
+    }
   }, [postId, notifyCount]);
 
   useEffect(() => { load(); }, [load]);

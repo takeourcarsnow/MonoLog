@@ -2,45 +2,11 @@ import { getClient, logSupabaseError, getAccessToken } from "./client";
 import { DEFAULT_AVATAR } from "./utils";
 
 export async function getComments(postId: string) {
-  const sb = getClient();
-  // Query comments using the correct column names
-  const { data, error } = await sb.from("comments").select("*, users!left(*)").eq("post_id", postId).order("created_at", { ascending: true });
-  if (error) throw error;
-  const comments = (data || []) as any[];
-
-  // If the related `users` join returned null (common when the DB doesn't have a foreign key
-  // relationship), fetch the user rows by id and attach them client-side. This keeps the UI
-  // working even when the DB schema lacks FK constraints.
-  const missingUsers = comments.filter(c => !c.users).map(c => c.user_id || c.userId).filter(Boolean);
-  let userMap: Record<string, any> = {};
-  if (missingUsers.length) {
-    try {
-      const uniq = Array.from(new Set(missingUsers));
-      const { data: usersData, error: usersErr } = await sb.from('users').select('*').in('id', uniq);
-      if (!usersErr && usersData) {
-        for (const u of usersData) userMap[u.id] = u;
-      }
-    } catch (e) {
-      // ignore; we'll just render whatever we have
-    }
-  }
-
-  return comments.map((c: any) => {
-    const urow = c.users || userMap[c.user_id] || null;
-    return {
-      id: c.id,
-      postId: c.post_id,
-      userId: c.user_id,
-      text: c.text,
-      createdAt: c.created_at,
-      user: {
-        id: urow?.id || c.user_id,
-        username: urow?.username || urow?.user_name || "",
-        displayName: urow?.displayName || urow?.display_name || "",
-          avatarUrl: urow?.avatarUrl || urow?.avatar_url || DEFAULT_AVATAR,
-      }
-    };
-  });
+  // Use the public API route to allow access for non-logged-in users
+  const res = await fetch(`/api/comments?postId=${encodeURIComponent(postId)}`);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json?.error || 'Failed to load comments');
+  return json;
 }
 
 export async function addComment(postId: string, text: string) {

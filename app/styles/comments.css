@@ -164,7 +164,7 @@
   pointer-events: none;
 }
 
-.comment-badge { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:6px; background:color-mix(in srgb, var(--bg-elev), transparent 20%); border-radius:8px; border:1px solid var(--border); color:var(--muted); }
+.comment-badge { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:6px; background:color-mix(in srgb, var(--bg-elev), transparent 20%); border-radius:8px; color:var(--muted); }
 
 .empty {
   padding: 32px 16px; text-align: center; color: var(--muted);

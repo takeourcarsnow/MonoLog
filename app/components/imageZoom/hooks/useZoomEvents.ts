@@ -170,7 +170,10 @@ export const useZoomEvents = (state: ZoomState) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    if (scale > 1) {
+    // Use the ref to ensure we always read the latest scale (avoid stale
+    // closure values). This makes double-tap reliably toggle zoom out when
+    // the image is currently zoomed in.
+    if (scaleRef.current > 1) {
       // Zoom out to center
       setScale(1);
       setTx(0);
@@ -213,7 +216,7 @@ export const useZoomEvents = (state: ZoomState) => {
         } catch (_) {}
       }
     }
-  }, [containerRef, imgRef, naturalRef, scale, setScale, setTx, setTy, wheelEnabledRef, instanceIdRef, isFullscreen, maxScale]);
+  }, [containerRef, imgRef, naturalRef, setScale, setTx, setTy, wheelEnabledRef, instanceIdRef, isFullscreen, maxScale]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (scale <= 1) return;

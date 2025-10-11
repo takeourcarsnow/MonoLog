@@ -281,15 +281,11 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   padding: 20px 24px;
   border: 1px dashed color-mix(in srgb, var(--border), transparent 60%);
   border-radius: 16px;
-  background: transparent;
+  background: color-mix(in srgb, var(--primary-weak), transparent 95%);
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   animation: gentle-float 6s ease-in-out infinite;
-}
-
-.drop-zone:hover {
   border-color: color-mix(in srgb, var(--primary), transparent 40%);
-  background: color-mix(in srgb, var(--primary-weak), transparent 95%);
   transform: translateY(-1px);
 }
 
@@ -640,10 +636,6 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 /* Light theme adjustments */
 :root[data-theme="light"] .drop-zone {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-:root[data-theme="light"] .drop-zone:hover {
   background: rgba(255, 255, 255, 0.6);
 }
 
@@ -773,17 +765,18 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .drop-zone,
-  .drop-zone-icon,
+  .drop-zone.dragover,
+  .drop-zone .drop-zone-icon,
+  .drop-zone.dragover .drop-zone-icon,
   .camera-btn,
-  .drop-zone-loader {
+  .camera-btn.primary,
+  .camera-btn.primary:hover,
+  .camera-btn.primary:active {
     transition: none !important;
     animation: none !important;
   }
 
-  .drop-zone:hover,
   .drop-zone.dragover,
-  .drop-zone:hover .drop-zone-icon,
-  .drop-zone.dragover .drop-zone-icon,
   .camera-btn.primary,
   .camera-btn.primary:hover,
   .camera-btn.primary:active {

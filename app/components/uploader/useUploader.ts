@@ -319,14 +319,7 @@ export function useUploader() {
         }
       } catch (_) { /* ignore */ }
       resetDraft();
-      try {
-        const cur = await api.getCurrentUser();
-        if (cur?.username) router.push(`/${cur.username}`);
-        else if (cur?.id) router.push(`/${cur.id}`);
-        else router.push("/profile");
-      } catch (e) {
-        router.push("/profile");
-      }
+      router.push("/");
     } catch (e: any) {
       if (e?.code === "LIMIT") {
         toast.show("You already posted today. Tap 'Replace today's post' to replace it.");

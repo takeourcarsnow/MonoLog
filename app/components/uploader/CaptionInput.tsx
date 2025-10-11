@@ -3,6 +3,7 @@ import { useTypingAnimation } from "./useTypingAnimation";
 import { PHRASES } from "./constants";
 import { Combobox } from "../Combobox";
 import { CAMERA_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
+import { Camera, Settings, Image } from "lucide-react";
 
 // Custom Spotify icon component
 const SpotifyIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
@@ -245,6 +246,7 @@ export function CaptionInput({
           options={CAMERA_PRESETS}
           placeholder="Camera"
           disabled={!hasPreview || processing}
+          icon={Camera}
         />
         <Combobox
           value={lens || ''}
@@ -252,6 +254,7 @@ export function CaptionInput({
           options={LENS_PRESETS}
           placeholder="Lens"
           disabled={!hasPreview || processing}
+          icon={Settings}
         />
         <Combobox
           value={filmType || ''}
@@ -262,6 +265,7 @@ export function CaptionInput({
           options={FILM_PRESETS}
           placeholder="Film"
           disabled={!hasPreview || processing}
+          icon={Image}
         />
         {filmType && (
           <Combobox

@@ -24,6 +24,7 @@ import { useToast } from "./Toast";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { CaptionDisplay } from "./postCard/CaptionDisplay";
+import { Camera, Settings, Image } from "lucide-react";
 
 // Lazy load heavy components
 const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
@@ -98,6 +99,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
 
   const [showAuth, setShowAuth] = useState(false);
   const [showExif, setShowExif] = useState(false);
+  const [showSpotify, setShowSpotify] = useState(false);
   const pathname = usePathname();
   const { isMe, isLoading: authLoading } = useIsMe(post.userId);
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -165,9 +167,72 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             expands, avoiding a sudden jump on open. */}
   <div className="caption-wrap" aria-hidden={editorAnim === 'enter'}>
           <CaptionDisplay caption={post.caption} />
-          {post.spotifyLink ? (
-            <div className="spotify-link" style={{ marginTop: 8 }}>
-              {spotifyMeta ? (
+          <ActionsSection
+            postId={post.id}
+            count={count}
+            commentsOpen={commentsOpen}
+            setCommentsOpen={(value: boolean) => {
+              setCommentsOpen(value);
+              if (value) setShowExif(false); // Close EXIF when opening comments
+              if (value) setShowSpotify(false); // Close Spotify when opening comments
+            }}
+            commentsMounted={commentsMounted}
+            setCommentsMounted={setCommentsMounted}
+            commentsRef={commentsRef}
+            isFavorite={isFavorite}
+            setIsFavorite={setIsFavorite}
+            showAuth={showAuth}
+            setShowAuth={setShowAuth}
+            sharePost={sharePost}
+            api={api}
+            toast={toast}
+            showFavoriteFeedback={showFavoriteFeedback}
+            showExif={showExif}
+            setShowExif={(value: boolean) => {
+              setShowExif(value);
+              if (value) {
+                setCommentsOpen(false); // Close comments when opening EXIF
+                setCommentsMounted(false);
+                setShowSpotify(false); // Close Spotify when opening EXIF
+              }
+            }}
+            showSpotify={showSpotify}
+            setShowSpotify={(value: boolean) => {
+              setShowSpotify(value);
+              if (value) {
+                setCommentsOpen(false); // Close comments when opening Spotify
+                setCommentsMounted(false);
+                setShowExif(false); // Close EXIF when opening Spotify
+              }
+            }}
+            spotifyLink={post.spotifyLink}
+            camera={post.camera}
+            lens={post.lens}
+            filmType={post.filmType}
+            openFullscreen={() => {
+              const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+              const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
+              const src = imageUrls[currentImageIndex] || imageUrls[0];
+              const alt = alts[currentImageIndex] || alts[0] || 'Photo';
+              if (src) handleOpenFullscreen(src, alt);
+            }}
+          />
+          <div className={`exif-section ${showExif ? "open" : ""}`}>
+            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px', justifyContent: 'center' }}>
+              {post.camera || post.lens || post.filmType ? (
+                <>
+                  {post.camera ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Camera size={14} /> {post.camera}</span> : <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Camera size={14} /> No camera data</span>}
+                  {post.lens ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Settings size={14} /> {post.lens}</span> : <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Settings size={14} /> No lens data</span>}
+                  {post.filmType ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Image size={14} /> {post.filmType}</span> : <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Image size={14} /> No film data</span>}
+                </>
+              ) : (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Camera size={14} /> No EXIF data</span>
+              )}
+            </div>
+          </div>
+          <div className={`spotify-section ${showSpotify ? "open" : ""}`}>
+            {post.spotifyLink && spotifyMeta ? (
+              <div className="spotify-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px' }}>
                 <a
                   href={post.spotifyLink}
                   target="_blank"
@@ -195,56 +260,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
                     {spotifyMeta.title || 'Open on Spotify'}
                   </span>
                 </a>
-              ) : null}
-            </div>
-          ) : null}
-          <ActionsSection
-            postId={post.id}
-            count={count}
-            commentsOpen={commentsOpen}
-            setCommentsOpen={(value: boolean) => {
-              setCommentsOpen(value);
-              if (value) setShowExif(false); // Close EXIF when opening comments
-            }}
-            commentsMounted={commentsMounted}
-            setCommentsMounted={setCommentsMounted}
-            commentsRef={commentsRef}
-            isFavorite={isFavorite}
-            setIsFavorite={setIsFavorite}
-            showAuth={showAuth}
-            setShowAuth={setShowAuth}
-            sharePost={sharePost}
-            api={api}
-            toast={toast}
-            showFavoriteFeedback={showFavoriteFeedback}
-            showExif={showExif}
-            setShowExif={(value: boolean) => {
-              setShowExif(value);
-              if (value) {
-                setCommentsOpen(false); // Close comments when opening EXIF
-                setCommentsMounted(false);
-              }
-            }}
-            openFullscreen={() => {
-              const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
-              const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
-              const src = imageUrls[currentImageIndex] || imageUrls[0];
-              const alt = alts[currentImageIndex] || alts[0] || 'Photo';
-              if (src) handleOpenFullscreen(src, alt);
-            }}
-          />
-          <div className={`exif-section ${showExif ? "open" : ""}`}>
-            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px', justifyContent: 'center' }}>
-              {post.camera || post.lens || post.filmType ? (
-                <>
-                  {post.camera ? <span>📷 {post.camera}</span> : <span>📷 No camera data</span>}
-                  {post.lens ? <span>🔍 {post.lens}</span> : <span>🔍 No lens data</span>}
-                  {post.filmType ? <span>🎞️ {post.filmType}</span> : <span>🎞️ No film data</span>}
-                </>
-              ) : (
-                <span>📷 No EXIF data</span>
-              )}
-            </div>
+              </div>
+            ) : null}
           </div>
           <CommentsSection
             postId={post.id}

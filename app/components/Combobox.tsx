@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { LucideIcon } from "lucide-react";
 
 interface ComboboxProps {
   value: string;
@@ -9,9 +10,10 @@ interface ComboboxProps {
   placeholder: string;
   disabled?: boolean;
   className?: string;
+  icon?: LucideIcon;
 }
 
-export function Combobox({ value, onChange, options, placeholder, disabled, className }: ComboboxProps) {
+export function Combobox({ value, onChange, options, placeholder, disabled, className, icon: Icon }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const [filteredOptions, setFilteredOptions] = useState(options);
@@ -89,6 +91,7 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
 
   return (
     <div className={`combobox ${className || ''}`} style={{ position: 'relative' }}>
+      {Icon && <Icon size={16} className="input-icon" />}
       <input
         ref={inputRef}
         type="text"
@@ -103,7 +106,7 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
         tabIndex={disabled ? -1 : 0}
         autoComplete="off"
         onMouseDown={(e) => { if (disabled) e.preventDefault(); }}
-        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text' }}
+        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined }}
       />
       {isOpen && filteredOptions.length > 0 && (
         <ul

@@ -568,6 +568,26 @@
 .action.share { opacity: 0.82; transition: opacity 180ms var(--transition-mid), transform 200ms var(--transition-mid); }
 .action.share:hover { opacity: 1; }
 
+/* Spotify action with link - subtle green tint */
+.action.spotify-has-link {
+  color: #1DB954;
+  opacity: 0.9;
+}
+.action.spotify-has-link:hover {
+  color: #1DB954;
+  background: color-mix(in srgb, #1DB954, transparent 85%);
+}
+
+/* EXIF action with data - subtle blue tint */
+.action.exif-has-data {
+  color: #3B82F6;
+  opacity: 0.9;
+}
+.action.exif-has-data:hover {
+  color: #3B82F6;
+  background: color-mix(in srgb, #3B82F6, transparent 85%);
+}
+
 /* Double-tap favorite overlay */
 .favorite-overlay {
   position: absolute;
@@ -750,6 +770,30 @@
 
 @media (prefers-reduced-motion: reduce) {
   .exif-section { transition: none !important; max-height: none !important; opacity: 1 !important; }
+}
+
+/* Spotify section open/close animation
+   Similar to exif animation: animate max-height and opacity for smooth expand/collapse
+*/
+.spotify-section {
+  /* collapsed by default */
+  max-height: 0px;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.spotify-section > * {
+  /* ensure inner wrapper doesn't overflow visually during the transition */
+  overflow: hidden;
+}
+.spotify-section.open {
+  /* visible state */
+  opacity: 1;
+  max-height: 80px; /* enough for the spotify info content */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotify-section { transition: none !important; max-height: none !important; opacity: 1 !important; }
 }
 
 /* Desktop: constrain caption width so long captions wrap earlier for readability */

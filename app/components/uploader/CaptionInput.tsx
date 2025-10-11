@@ -85,7 +85,7 @@ export function CaptionInput({
     return () => clearTimeout(timer);
   }, [caption, captionFocused, processing, placeholder, setPlaceholder]);
   const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const spotifyRef = useRef<HTMLInputElement | null>(null);
 
   // Override programmatic focus to only work when allowed. This prevents
@@ -132,6 +132,15 @@ export function CaptionInput({
     };
   }, [hasPreview, processing]);
 
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+  }, [caption]);
+
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexDirection: 'column' }}>
       <style>{`
@@ -158,9 +167,8 @@ export function CaptionInput({
           </span>
         ) : null}
 
-        <input
+        <textarea
           className="input"
-          type="text"
           aria-label="Caption"
           placeholder={caption ? undefined : ''}
           value={caption}
@@ -180,6 +188,7 @@ export function CaptionInput({
           onFocus={(e) => { setCaptionFocused(true); }}
           onBlur={() => setCaptionFocused(false)}
           style={{ width: '100%', cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', paddingRight: 72 }}
+          rows={1}
         />
         {/* compact counter: only visible when input is focused; shows remaining when close to limit */}
         <div

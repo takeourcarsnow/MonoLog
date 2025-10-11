@@ -1239,6 +1239,15 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   /* inputs stretch to full width and have comfortable spacing */
   .input { font-size: 15px; padding: 12px; }
 
+  /* textarea specific styles */
+  .input[type="textarea"],
+  textarea.input {
+    resize: none;
+    min-height: 48px;
+    overflow: hidden;
+    line-height: 1.4;
+  }
+
   /* reduce carousel control sizes on small screens */
   .carousel-arrow { width: 34px; height: 34px; }
 }

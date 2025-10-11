@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '../../../../src/lib/api/serverSupabase';
 import { uid } from '../../../../src/lib/id';
 import { getUserFromAuthHeader } from '../../../../src/lib/api/serverVerifyAuth';
+import { checkComment } from '../../../../src/lib/moderation';
 
 export async function POST(req: Request) {
   try {
@@ -14,6 +15,22 @@ export async function POST(req: Request) {
     const actorId = authUser.id;
     const COMMENT_MAX = 500;
     if (typeof text === 'string' && text.trim().length > COMMENT_MAX) return NextResponse.json({ error: `Comment exceeds ${COMMENT_MAX} characters` }, { status: 400 });
+    // run automod checks
+    try {
+      const mod = checkComment(String(text));
+      if (mod.action === 'reject') {
+        return NextResponse.json({ error: 'Comment rejected by moderation', reasons: mod.reasons, score: mod.score }, { status: 400 });
+      }
+      if (mod.action === 'flag') {
+        // For now treat flagged comments as rejected; alternatively we could
+        // insert with a 'flagged' column or moderation queue. This is a
+        // conservative default to avoid posting spam/links immediately.
+        return NextResponse.json({ error: 'Comment flagged by moderation', reasons: mod.reasons, score: mod.score }, { status: 400 });
+      }
+    } catch (e) {
+      // If moderation util throws for unexpected reason, allow the comment
+      // to avoid blocking users. Moderation should be best-effort.
+    }
     const sb = getServiceSupabase();
 
   const id = uid();

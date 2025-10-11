@@ -573,8 +573,8 @@
 /* Ensure list (single-column) feed has extra breathing room so posts don't feel cramped.
    Using a list-specific selector placed after other rules helps avoid accidental overrides. */
 .feed:not(.grid-view) {
-  /* increased from 28px to provide more vertical spacing between posts */
-  gap: 40px;
+  /* reduced from 40px to provide tighter vertical spacing between posts */
+  gap: 24px;
 }
 
 /* The PullToRefreshWrapper renders an outer container and places the
@@ -583,7 +583,7 @@
 .feed:not(.grid-view) > div:last-child {
   display: grid;
   /* keep the inner wrapper gap consistent with the feed gap */
-  gap: 40px;
+  gap: 24px;
 }
 
 /* Fallback: some feed renderers wrap posts inside an extra inner <div> that
@@ -592,7 +592,7 @@
    regardless of markup, add a margin-based fallback on the post cards
    themselves when in list view. */
 .feed:not(.grid-view) .card {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 .feed:not(.grid-view) .card:last-child {
   margin-bottom: 0;

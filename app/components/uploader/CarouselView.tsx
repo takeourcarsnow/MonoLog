@@ -160,6 +160,7 @@ export function CarouselView({
                 src={u || "/logo.svg"}
                 alt={Array.isArray(alt) ? (alt[idx] || `Image ${idx + 1}`) : (alt || `Image ${idx + 1}`)}
                 fill
+                sizes="100vw"
                 style={{ objectFit: 'contain' }}
                 onLoadingComplete={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}

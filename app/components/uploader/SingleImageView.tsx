@@ -63,6 +63,7 @@ export function SingleImageView({
           alt={Array.isArray(alt) ? (alt[index] || 'Preview') : (alt || 'Preview')}
           src={(dataUrls.length ? dataUrls[index] : dataUrl) || "/logo.svg"}
           fill
+          sizes="100vw"
           style={{ objectFit: 'contain' }}
           onLoadingComplete={() => setPreviewLoaded(true)}
           onError={() => setPreviewLoaded(true)}

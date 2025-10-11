@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
@@ -13,7 +14,7 @@ interface GridViewProps {
   error?: Error | null;
 }
 
-export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onRetry, error }: GridViewProps) {
+export const GridView = memo(function GridView({ posts, hasMore, setSentinel, loadingMore = false, onRetry, error }: GridViewProps) {
   const router = useRouter();
 
   const handleTileClick = (e: React.MouseEvent, post: HydratedPost) => {
@@ -41,6 +42,8 @@ export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onR
               src={Array.isArray(p.thumbnailUrls) && p.thumbnailUrls[0] ? p.thumbnailUrls[0] : Array.isArray(p.imageUrls) && p.imageUrls[0] ? p.imageUrls[0] : p.thumbnailUrl || p.imageUrl || ''}
               alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
               loading="eager"
+              unoptimized={true}
+              sizes="(min-width: 768px) 25vw, 33vw"
               style={{
                 objectFit: 'cover',
                 objectPosition: 'center center',
@@ -60,4 +63,4 @@ export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onR
       />
     </div>
   );
-}
+});

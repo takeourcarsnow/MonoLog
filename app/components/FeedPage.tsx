@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, lazy, Suspense, cloneElement, isValidElement } from "react";
+import { useEffect, useState, useCallback, useMemo, cloneElement, isValidElement } from "react";
 import { getSlideState, setSlideState } from '@/src/lib/slideStateCache';
 import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
@@ -13,9 +13,7 @@ import Link from "next/link";
 import { User as UserIcon } from "lucide-react";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
 import { SkeletonCard } from "./Skeleton";
-
-// Lazy load GridView
-const GridView = lazy(() => import("./GridView").then(mod => ({ default: mod.GridView })));
+import { GridView } from "./GridView";
 
 interface FeedPageProps {
   fetchFunction: (opts: { limit: number; before?: string }) => Promise<HydratedPost[]>;
@@ -132,34 +130,44 @@ export function FeedPage({
         </div>
       );
     }
-    return (
-      view === "grid" ? (
-        <Suspense fallback={<div>Loading grid...</div>}>
-          <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
-            const sentinel = document.querySelector('.tile.sentinel');
+
+    const gridView = (
+      <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
+        const sentinel = document.querySelector('.tile.sentinel');
+        if (sentinel) {
+          setSentinel(sentinel as HTMLDivElement);
+        }
+      }} error={error} />
+    );
+
+    const listView = (
+      <>
+        {posts.map(p => <PostCard key={p.id} post={p} />)}
+        <InfiniteScrollLoader
+          loading={loadingMore}
+          hasMore={hasMore}
+          error={error}
+          setSentinel={setSentinel}
+          onRetry={() => {
+            // Retry loading more posts
+            const sentinel = document.querySelector('.feed-sentinel');
             if (sentinel) {
               setSentinel(sentinel as HTMLDivElement);
             }
-          }} error={error} />
-        </Suspense>
-      ) : (
-        <>
-          {posts.map(p => <PostCard key={p.id} post={p} />)}
-          <InfiniteScrollLoader
-            loading={loadingMore}
-            hasMore={hasMore}
-            error={error}
-            setSentinel={setSentinel}
-            onRetry={() => {
-              // Retry loading more posts
-              const sentinel = document.querySelector('.feed-sentinel');
-              if (sentinel) {
-                setSentinel(sentinel as HTMLDivElement);
-              }
-            }}
-          />
-        </>
-      )
+          }}
+        />
+      </>
+    );
+
+    return (
+      <>
+        <div style={{ display: view === 'grid' ? 'block' : 'none' }}>
+          {gridView}
+        </div>
+        <div style={{ display: view === 'list' ? 'block' : 'none' }}>
+          {listView}
+        </div>
+      </>
     );
   }, [loading, posts, view, hasMore, loadingMore, setSentinel, error, emptyMessage, title, viewStorageKey]);
 

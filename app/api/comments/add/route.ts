@@ -61,28 +61,11 @@ export async function POST(req: Request) {
       // ignore
     }
 
-  // Try inserting using common snake_case column names first, then
-    // fall back to alternate naming if the insert fails (some schemas
-    // use `postid`/`userid` or camelCase). This keeps the endpoint
-    // tolerant of DB variations.
-    const insertAttempts = [
-      { id, post_id: postId, user_id: actorId, text: text.trim(), created_at },
-      { id, postid: postId, userid: actorId, text: text.trim(), createdat: created_at },
-      { id, postId, userId: actorId, text: text.trim(), createdAt: created_at },
-    ];
-
-    let insertErr: any = null;
-    for (const data of insertAttempts) {
-      try {
-        const res = await sb.from('comments').insert(data);
-        insertErr = res.error;
-        if (!insertErr) break;
-      } catch (e) {
-        insertErr = e;
-      }
-    }
-
-    if (insertErr) return NextResponse.json({ error: String(insertErr.message || insertErr) }, { status: 500 });
+    // Insert using the correct snake_case column names that match the database schema
+    const insertData = { id, post_id: postId, user_id: actorId, text: text.trim(), created_at };
+    
+    const res = await sb.from('comments').insert(insertData);
+    if (res.error) return NextResponse.json({ error: String(res.error.message || res.error) }, { status: 500 });
     // Try to create a notification for the post owner. This is best-effort
     // — if the notifications table doesn't exist or the insert fails, we
     // shouldn't block comment creation.

@@ -3,20 +3,8 @@ import { DEFAULT_AVATAR } from "./utils";
 
 export async function getComments(postId: string) {
   const sb = getClient();
-  // Some DB schemas may use `post_id` or `postid` or `postId` as the column.
-  // Try common variants and fall back gracefully.
-  let data: any = null;
-  let error: any = null;
-  try {
-    const res = await sb.from("comments").select("*, users!left(*)").eq("post_id", postId).order("created_at", { ascending: true });
-    data = res.data; error = res.error;
-  } catch (e) { error = e; }
-  if (error) {
-    try {
-      const res2 = await sb.from("comments").select("*, users!left(*)").eq("postid", postId).order("createdat", { ascending: true });
-      data = res2.data; error = res2.error;
-    } catch (e) { error = e; }
-  }
+  // Query comments using the correct column names
+  const { data, error } = await sb.from("comments").select("*, users!left(*)").eq("post_id", postId).order("created_at", { ascending: true });
   if (error) throw error;
   const comments = (data || []) as any[];
 
@@ -38,13 +26,13 @@ export async function getComments(postId: string) {
   }
 
   return comments.map((c: any) => {
-    const urow = c.users || userMap[c.user_id || c.userId] || null;
+    const urow = c.users || userMap[c.user_id] || null;
     return {
       id: c.id,
-      postId: c.post_id || c.postId,
-      userId: c.user_id || c.userId,
+      postId: c.post_id,
+      userId: c.user_id,
       text: c.text,
-      createdAt: c.created_at || c.createdAt,
+      createdAt: c.created_at,
       user: {
         id: urow?.id || c.user_id,
         username: urow?.username || urow?.user_name || "",

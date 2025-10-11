@@ -127,6 +127,16 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
     }
   });
 
+  // Refresh feed when a new post is created
+  useEventListener('monolog:post_created', () => {
+    loadInitialPosts();
+  });
+
+  // Refresh feed when a new post is created
+  useEventListener('monolog:post_created', () => {
+    loadInitialPosts();
+  });
+
   // Handle follow changes. If applyFollowChangesOnUnmount is true we intentionally
   // defer applying the change so the user continues seeing the current feed
   // until they navigate away (the parent view will reload on mount).
@@ -148,6 +158,17 @@ export function useFeed(fetchFunction: (opts: { limit: number; before?: string }
       loadInitialPosts();
     }
   }, [loadInitialPosts, applyFollowChangesOnUnmount]);
+
+  // Refresh feed when page is restored from bfcache
+  useEffect(() => {
+    const pageshowHandler = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        loadInitialPosts();
+      }
+    };
+    window.addEventListener('pageshow', pageshowHandler);
+    // Do not remove to handle bfcache
+  }, [loadInitialPosts]);
 
   // Refresh feed when authentication state changes (sign in / sign out)
   useEffect(() => {

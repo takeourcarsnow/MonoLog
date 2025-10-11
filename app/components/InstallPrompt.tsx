@@ -13,16 +13,13 @@ export function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      return; // Already installed, don't show prompt
-    }
+    // Helper checks
+    const isAlreadyInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    if (isAlreadyInstalled) return; // Already installed, don't show prompt
 
-    // Respect prior choices:
-    // - permanent dismissal (no longer show)
-    // - snooze until a future timestamp (remind later)
     const dismissed = localStorage.getItem('pwa-install-dismissed');
     if (dismissed) return;
+
     const snooze = localStorage.getItem('pwa-install-snooze');
     if (snooze) {
       const until = Number(snooze) || 0;
@@ -31,18 +28,53 @@ export function InstallPrompt() {
       localStorage.removeItem('pwa-install-snooze');
     }
 
-    // Prefer showing only to mobile users (Chrome on Android is the primary target).
-    // This prevents a desktop infobar from feeling intrusive.
+    // Only show to mobile-like user agents (primary target: Android Chrome)
     const isMobileLike = /Android|Mobile|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (!isMobileLike) return;
 
-    // Check if the deferred prompt is available
+    // If the global deferredPrompt is already set (e.g. captured by inline
+    // script in <head>), use it. Otherwise attach a listener so we capture
+    // the event even if it fires after hydration.
+    const tryShowFromEvent = (e: Event) => {
+      try {
+        const be = e as BeforeInstallPromptEvent;
+        // Prevent the browser from showing the default prompt; we'll show a
+        // custom UI instead.
+        if (typeof be.preventDefault === 'function') be.preventDefault();
+        (window as any).deferredPrompt = be;
+        setDeferredPrompt(be);
+        // Small delay so the UI doesn't interrupt the immediate task
+        setTimeout(() => setShowPrompt(true), 3000);
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    // If something already set the global deferred prompt, use it immediately
     if ((window as any).deferredPrompt) {
       setDeferredPrompt((window as any).deferredPrompt);
-      // Show our custom install prompt after a short delay so it doesn't
-      // interrupt the user's immediate task.
       setTimeout(() => setShowPrompt(true), 3000);
     }
+
+    window.addEventListener('beforeinstallprompt', tryShowFromEvent as EventListener);
+
+    // Also listen for appinstalled to clear any stored prompt/state
+    const onAppInstalled = () => {
+      try {
+        localStorage.setItem('pwa-install-dismissed', 'true');
+        setShowPrompt(false);
+        setDeferredPrompt(null);
+        (window as any).deferredPrompt = null;
+      } catch (e) {
+        // ignore
+      }
+    };
+    window.addEventListener('appinstalled', onAppInstalled as EventListener);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', tryShowFromEvent as EventListener);
+      window.removeEventListener('appinstalled', onAppInstalled as EventListener);
+    };
   }, []);
 
   const handleInstall = async () => {

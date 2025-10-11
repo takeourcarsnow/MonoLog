@@ -25,42 +25,43 @@ export const GridView = memo(function GridView({ posts, hasMore, setSentinel, lo
   };
 
   return (
-    <div className="grid">
-      {posts.map(p => (
-        <div
-          key={p.id}
-          className="tile"
-          onClick={(e) => handleTileClick(e, p)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key==='Enter') handleTileClick(e as any, p); }}
-          style={{ position: 'relative' }}
-        >
-          <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents', position: 'relative' }} onClick={(e)=> e.preventDefault()}>
-            <OptimizedImage
-              fill
-              src={Array.isArray(p.thumbnailUrls) && p.thumbnailUrls[0] ? p.thumbnailUrls[0] : Array.isArray(p.imageUrls) && p.imageUrls[0] ? p.imageUrls[0] : p.thumbnailUrl || p.imageUrl || ''}
-              alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
-              loading="eager"
-              unoptimized={true}
-              sizes="(min-width: 768px) 25vw, 33vw"
-              style={{
-                objectFit: 'cover',
-                objectPosition: 'center center',
-                borderRadius: 'inherit'
-              }}
-            />
-          </Link>
-        </div>
-      ))}
+    <>
+      <div className="grid">
+        {posts.map(p => (
+          <div
+            key={p.id}
+            className="tile"
+            onClick={(e) => handleTileClick(e, p)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key==='Enter') handleTileClick(e as any, p); }}
+            style={{ position: 'relative' }}
+          >
+            <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents', position: 'relative' }} onClick={(e)=> e.preventDefault()}>
+              <OptimizedImage
+                fill
+                src={Array.isArray(p.thumbnailUrls) && p.thumbnailUrls[0] ? p.thumbnailUrls[0] : Array.isArray(p.imageUrls) && p.imageUrls[0] ? p.imageUrls[0] : p.thumbnailUrl || p.imageUrl || ''}
+                alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
+                loading="eager"
+                unoptimized={true}
+                sizes="(min-width: 768px) 25vw, 33vw"
+                style={{
+                  objectFit: 'cover',
+                  objectPosition: 'center center',
+                  borderRadius: 'inherit'
+                }}
+              />
+            </Link>
+          </div>
+        ))}
+      </div>
       <InfiniteScrollLoader
         loading={loadingMore}
         hasMore={hasMore}
         error={error}
         setSentinel={setSentinel}
         onRetry={onRetry}
-        className="col-span-full"
       />
-    </div>
+    </>
   );
 });

@@ -149,7 +149,7 @@ export function CalendarView() {
                 className={className}
                 role="button" tabIndex={0}
                 aria-pressed={isSelected}
-                aria-label={`${d.getDate()} ${new Date(dk).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })} — ${count} public post${count===1? '' : 's'}${isMine ? ', includes your posts' : ''}`}
+                aria-label={`${d.getDate()} ${new Date(dk).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })} — ${count} post${count===1? '' : 's'}${isMine ? ', includes your posts' : ''}`}
                 onClick={() => showDay(dk)}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && showDay(dk)}
               >
@@ -165,7 +165,7 @@ export function CalendarView() {
           <div className="calendar-legend" aria-hidden style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div className="legend-item" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
               <span className="legend-dot post" />
-              <span className="dim">Public posts</span>
+              <span className="dim">Posts</span>
             </div>
             <div className="legend-item" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
               <span className="legend-dot mine" />
@@ -195,7 +195,7 @@ export function CalendarView() {
         dayPosts.map(p => <PostCard key={p.id} post={p} disableMediaNavigation={true} />)
       )
     )
-      : <div className="empty">No public posts for that day.</div>)
+      : <div className="empty">No posts for that day.</div>)
       : null
   )}
       </div>

@@ -50,14 +50,14 @@
 
 /* subtle indicator for days that include the current user's posts
    - keep the day's base appearance unchanged and add a small accent dot
-     in the top-right so it's discoverable but not loud */
+     in the bottom-right so it's discoverable but not loud */
 .day.mine::after {
   content: "";
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   right: 8px;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 2px 6px rgba(0,0,0,0.12);
@@ -97,6 +97,7 @@
   .calendar-grid { gap: 8px; }
   .day .d { font-size: 15px; }
   .day .dot { top: 10px; right: 10px; }
+  .day.mine::after { bottom: 10px; right: 10px; }
 }
 
 /* small dot indicator for days with posts */
@@ -146,7 +147,7 @@
   .calendar-weekdays { gap: 4px; }
   .day .d { font-size: 12px; }
   .day .count { font-size: 10px; left: 6px; bottom: 6px; }
-  .day.mine::after { top: 6px; right: 6px; }
+  .day.mine::after { bottom: 6px; right: 6px; }
   .day .dot { top: 6px; right: 6px; }
   .calendar .header {
     position: sticky;

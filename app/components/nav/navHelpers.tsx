@@ -13,7 +13,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { path: "/feed", icon: Home, label: "Feed", color: "hsl(220, 70%, 50%)" },
   { path: "/explore", icon: Compass, label: "Explore", color: "hsl(160, 70%, 45%)" },
-  { path: "/upload", icon: LogoIcon, label: "Log", color: "hsl(0, 0%, 15%)" },
+  { path: "/upload", icon: LogoIcon, label: "Log", color: "hsl(270, 70%, 50%)" },
   { path: "/calendar", icon: Calendar, label: "Calendar", color: "hsl(40, 85%, 55%)" },
   { path: "/profile", icon: User, label: "Profile", color: "hsl(320, 70%, 50%)" },
 ];

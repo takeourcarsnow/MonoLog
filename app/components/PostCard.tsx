@@ -234,7 +234,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             }}
           />
           <div className={`exif-section ${showExif ? "open" : ""}`}>
-            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px', justifyContent: post.camera || post.lens || post.filmType ? 'flex-start' : 'center' }}>
+            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px', justifyContent: 'center' }}>
               {post.camera || post.lens || post.filmType ? (
                 <>
                   {post.camera ? <span>📷 {post.camera}</span> : <span>📷 No camera data</span>}

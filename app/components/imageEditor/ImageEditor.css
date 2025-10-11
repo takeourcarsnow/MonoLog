@@ -3,9 +3,11 @@
 .image-editor {
   display: flex;
   flex-direction: column;
-  /* let the editor size to its content instead of forcing a full viewport height
-     (this avoids creating extra empty space below the panels on smaller content). */
+  /* allow the editor to size to content while using flex to fill available
+    vertical space when in fullscreen; avoid forcing an overly large min-height
+    that creates empty space below controls. */
   height: auto;
+  min-height: 0; /* important for flex children to not overflow their parent */
   max-height: calc(var(--viewport-height, 1vh) * 100);
   overflow: hidden;
   /* other styles */
@@ -14,10 +16,10 @@
   margin: 0 auto;
   color: var(--text);
   padding: 8px;
-  padding-bottom: 12px;
+  padding-bottom: 6px; /* slightly reduced bottom padding to reclaim space */
   border-radius: 8px;
   /* subtle mount animation: only translate and fade (no scaling) to
-     avoid a size jump when the canvas finishes sizing. */
+    avoid a size jump when the canvas finishes sizing. */
   transform: translateY(0);
   opacity: 1;
   transition: opacity 220ms ease, transform 260ms cubic-bezier(.2,.9,.2,1);
@@ -31,22 +33,24 @@
 /* Full-screen mode for upload editor: fill from top to bottom but centered horizontally */
 .upload-editor-fullscreen .image-editor {
   position: fixed;
-  top: 0;
-  bottom: 0;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: auto;
   max-width: min(85vw, 720px);
-  height: calc(var(--viewport-height, 1vh) * 100);
+  /* use full available height but allow internal flex children to size properly */
+  height: auto;
+  max-height: 95vh;
   margin: 0;
   padding: 8px;
-  padding-bottom: 12px;
+  padding-bottom: 6px; /* reduce bottom padding in fullscreen */
   border-radius: 8px;
   /* sit above the portal overlay so the editor itself can receive clicks */
   z-index: 10001;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  align-items: stretch; /* ensure children stretch vertically to fill space */
 }
 
 /* When Portal creates an element with class `upload-editor-fullscreen`, we want
@@ -60,8 +64,12 @@
   width: 100vw;
   height: 100vh;
   display: flex;
+  /* center the editor vertically and horizontally */
   align-items: center;
   justify-content: center;
+  /* small top padding so the editor sits slightly below any safe-area */
+  padding: 12px;
+  overflow-y: auto; /* allow scrolling if editor height exceeds viewport */
   z-index: 10000; /* higher than .tabbar (9999) */
   pointer-events: auto;
 }
@@ -80,7 +88,8 @@
 }
 
 .image-editor-canvas-container {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0; /* avoid flex item causing parent to overflow */
   overflow: hidden;
 }
 
@@ -88,6 +97,7 @@
   flex: 0 0 auto;
   max-height: 160px;
   overflow-y: auto;
+  padding-bottom: 6px; /* small padding so content isn't flush, but not too tall */
 }
 
 /* Responsive adjustments for full-screen mode */
@@ -212,12 +222,12 @@
   overflow-y: auto;
   overflow-x: hidden; /* avoid transient horizontal scroll */
   -webkit-overflow-scrolling: touch;
-  padding: 12px;
+  padding: 10px; /* slightly reduced padding */
   gap: 10px;
   display: grid;
   background: var(--bg-color);
   border-radius: 8px;
-  min-height: 140px;
+  min-height: 100px; /* lower min-height to prevent panels from forcing tall layout */
 }
 
 /* Reduce header icon button size to make the top bar less tall */

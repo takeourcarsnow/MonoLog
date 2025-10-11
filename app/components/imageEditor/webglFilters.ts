@@ -74,16 +74,14 @@ void main() {
   // Brightness (simple multiplier)
   color *= u_brightness;
 
-  // Apply mild filmic tone mapping when we've brightened the image to
-  // compress highlights and avoid hard clipping. This is a compact
-  // Reinhard-esque operator blended with the linear color based on how
-  // much we brightened.
-  if (u_brightness > 1.02) {
+  // Apply very gentle tone mapping only when brightness is pushed very high
+  // to help preserve highlights without being too aggressive
+  if (u_brightness > 2.0) {
     // amount to apply tone mapping (0 = none, 1 = full)
-    float tmAmount = clamp((u_brightness - 1.0) / 1.5, 0.0, 1.0);
-    vec3 mapped = color / (color + vec3(1.0)); // simple Reinhard
+    float tmAmount = clamp((u_brightness - 2.0) / 2.0, 0.0, 0.3);
+    vec3 mapped = color / (color + vec3(0.5)); // gentle Reinhard
     // blend between linear and mapped based on tmAmount
-    color = mix(color, mapped, tmAmount * 0.9);
+    color = mix(color, mapped, tmAmount);
   }
 
   // Contrast around 0.5 midpoint

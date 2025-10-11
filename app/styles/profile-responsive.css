@@ -50,6 +50,7 @@
     font-size: 13px;
     padding: 12px;
     margin-top: 8px;
+    max-width: 240px; /* narrower on mobile to break lines even sooner */
   }
 }
 

@@ -130,7 +130,7 @@
   /* Override global .dim single-line rules so bio can span multiple lines */
   overflow: visible;
   text-overflow: clip;
-  max-width: 100%;
+  max-width: 280px; /* constrain width to break lines sooner */
 }
 
 

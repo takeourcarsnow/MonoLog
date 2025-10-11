@@ -1,9 +1,6 @@
-import { useState } from "react";
-import { useGridDoubleClick } from "@/src/lib/hooks/useGridDoubleClick";
-import { useToast } from "./Toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import ImageZoom from "./ImageZoom";
+import { OptimizedImage } from "./OptimizedImage";
 import type { HydratedPost } from "@/src/lib/types";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
 
@@ -17,19 +14,14 @@ interface GridViewProps {
 }
 
 export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onRetry, error }: GridViewProps) {
-  const toast = useToast();
   const router = useRouter();
-  const [overlayStates, setOverlayStates] = useState<Record<string, 'adding' | 'removing' | null>>({});
 
-  const { handleTileClick, handleTileDblClick, showOverlay } = useGridDoubleClick(toast, router, {
-    onShowOverlay: (postId, action) => {
-      setOverlayStates(prev => ({ ...prev, [postId]: action }));
-      // Clear overlay after animation
-      setTimeout(() => {
-        setOverlayStates(prev => ({ ...prev, [postId]: null }));
-      }, action === 'adding' ? 600 : 500);
-    }
-  });
+  const handleTileClick = (e: React.MouseEvent, post: HydratedPost) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const href = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
+    router.push(href);
+  };
 
   return (
     <div className="grid">
@@ -38,22 +30,22 @@ export function GridView({ posts, hasMore, setSentinel, loadingMore = false, onR
           key={p.id}
           className="tile"
           onClick={(e) => handleTileClick(e, p)}
-          onDoubleClick={(e) => handleTileDblClick(e, p)}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => { if (e.key==='Enter') handleTileClick(e as any, p); }}
           style={{ position: 'relative' }}
         >
-          {overlayStates[p.id] && (
-            <div className={`favorite-overlay ${overlayStates[p.id]}`} aria-hidden="true">
-              ★
-            </div>
-          )}
           <Link aria-hidden href={`/post/${p.user.username || p.userId}-${p.id.slice(0,8)}`} prefetch={false} style={{ display:'contents' }} onClick={(e)=> e.preventDefault()}>
-            <ImageZoom
-              loading="eager"
-              src={Array.isArray(p.thumbnailUrls) && p.thumbnailUrls[0] ? p.thumbnailUrls[0] : Array.isArray(p.imageUrls) ? p.imageUrls[0] : p.thumbnailUrl || p.imageUrl}
+            <OptimizedImage
+              fill
+              src={Array.isArray(p.thumbnailUrls) && p.thumbnailUrls[0] ? p.thumbnailUrls[0] : Array.isArray(p.imageUrls) && p.imageUrls[0] ? p.imageUrls[0] : p.thumbnailUrl || p.imageUrl || ''}
               alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
+              loading="eager"
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center center',
+                borderRadius: 'inherit'
+              }}
             />
           </Link>
         </div>

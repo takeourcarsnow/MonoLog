@@ -1,5 +1,6 @@
 import Link from "next/link";
-import ImageZoom from "../ImageZoom";
+import dynamic from 'next/dynamic';
+const ImageZoom = dynamic(() => import('../ImageZoom'), { ssr: false });
 import type { HydratedPost } from "@/src/lib/types";
 
 interface PostsListProps {

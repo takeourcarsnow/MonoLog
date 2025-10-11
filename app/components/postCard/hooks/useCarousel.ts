@@ -23,7 +23,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   const locked = useRef(false); // locked to horizontal
   const rafRef = useRef<number | null>(null);
 
-  useEffect(() => { if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1)); }, [imageUrls.length, index]);
+  useEffect(() => { if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1)); }, [imageUrls.length, setIndex]);
   useEffect(() => { indexRef.current = index; }, [index]);
   useEffect(() => { onIndexChange?.(index); }, [index, onIndexChange]);
 
@@ -37,7 +37,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     // clean up transition after it finishes
     const t = setTimeout(() => { if (el) el.style.transition = ''; }, 300);
     return () => clearTimeout(t);
-  }, [index]);
+  }, [index, trackRef]);
 
   const applyTransform = (x: number) => {
     const el = trackRef.current;
@@ -94,7 +94,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     }
   };
 
-  const endDrag = () => {
+  const endDrag = useCallback(() => {
     if (!dragging.current) return;
     dragging.current = false;
     locked.current = false;
@@ -122,7 +122,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
     setIndex(target);
-  };
+  }, [imageUrls.length, setIndex]);
 
   // Pointer / touch / mouse handlers (kept minimal)
   const onTouchStart = (e: React.TouchEvent) => {
@@ -221,7 +221,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
         window.removeEventListener('monolog:zoom_end', onZoomEnd as EventListener);
       }
     };
-  }, []);
+  }, [trackRef, endDrag]);
 
   const pointerSupported = typeof window !== 'undefined' && (window as any).PointerEvent !== undefined;
 

@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState, useCallback } from "react";
-import ImageZoom from "../ImageZoom";
+import dynamic from 'next/dynamic';
+const ImageZoom = dynamic(() => import('../ImageZoom'), { ssr: false });
 import { useCarousel } from "./hooks/useCarousel";
 import { useMediaClick } from "./hooks/useMediaClick";
 
@@ -51,7 +52,7 @@ export const Carousel = memo(function Carousel({
     if (wrapper) {
       isMultipostInFeedRef.current = wrapper.closest('.feed .card.multipost') !== null;
     }
-  }, []);
+  }, [wrapperRef]);
 
   const measureImage = useCallback((idx: number) => {
     const img = imgRefs.current[idx];
@@ -140,8 +141,10 @@ export const Carousel = memo(function Carousel({
     return () => {
       try {
         const obs = resizeObserverRef.current;
+        // Snapshot current img refs now so cleanup doesn't access a mutated ref
+        const imgsSnapshot = imgRefs.current ? imgRefs.current.slice() : [];
         if (obs) {
-          imgRefs.current.forEach(img => { if (img) try { obs.unobserve(img); } catch (_) {} });
+          imgsSnapshot.forEach(img => { if (img) try { obs.unobserve(img); } catch (_) {} });
           try { obs.disconnect(); } catch (_) {}
         }
       } catch (_) {}

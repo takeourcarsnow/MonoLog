@@ -3,7 +3,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Portal from "./Portal";
-import ImageZoom from "./ImageZoom";
+import dynamic from 'next/dynamic';
+const ImageZoom = dynamic(() => import('./ImageZoom'), { ssr: false });
 
 
 type Props = {
@@ -54,12 +55,14 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     document.body.classList.add('fs-open');
 
     // Blur background after paint for smooth transition
+    // Capture the current viewer id so cleanup/notifications use the same id
+    const viewerId = viewerIdRef.current;
     const raf = requestAnimationFrame(() => {
       document.body.classList.add('fs-blur');
       setIsActive(true);
       // Notify other ImageZoom instances that fullscreen viewer is active
       // so they can reset (zoom out). Include our viewer id as origin.
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: viewerIdRef.current } })); } catch (_) {}
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: viewerId } })); } catch (_) {}
     });
 
     // Push a history entry so the browser "back" action closes fullscreen
@@ -84,8 +87,9 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       document.body.style.overflow = '';
       window.scrollTo(0, scrollY.current);
       // When closing/unmounting, ensure any zoom state triggered by the
-      // fullscreen viewer is cleared.
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: viewerIdRef.current } })); } catch (_) {}
+      // fullscreen viewer is cleared. Use the captured viewerId so the
+      // cleanup references the same instance that opened the viewer.
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: viewerId } })); } catch (_) {}
     };
   }, []);
 

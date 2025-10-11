@@ -63,7 +63,7 @@ export function useDraftPersistence(
     } catch (e) {
       // ignore parse errors
     }
-  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType]);
+  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType, setFilmIso]);
 
   // Persist draft whenever key pieces of state change
   useEffect(() => {

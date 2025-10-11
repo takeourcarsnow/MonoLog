@@ -259,5 +259,5 @@ export const useImageSizing = (
         }
       } catch (_) {}
     };
-  }, [isFullscreen, src]);
+  }, [isFullscreen, src, containerRef, imgRef]);
 };

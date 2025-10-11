@@ -96,10 +96,10 @@ export function ProfileActions({
   // Trigger animation when following state changes
   useEffect(() => {
     const targetText = following ? 'Followed' : 'Unfollowed';
-    if (displayText !== targetText && !isAnimating) {
+    if (!isAnimating) {
       animateTextChange(displayText, targetText);
     }
-  }, [following, displayText, isAnimating]);
+  }, [following]);
 
   // Cleanup animation timeout on unmount
   useEffect(() => {

@@ -16,6 +16,8 @@ export default function Portal({ children, wrapperId = 'modal-root', className }
       root.id = wrapperId;
       if (className) root.className = className;
       document.body.appendChild(root);
+    } else if (className && root.className !== className) {
+      root.className = className;
     }
     return () => {
       const root = document.getElementById(wrapperId);
@@ -23,7 +25,7 @@ export default function Portal({ children, wrapperId = 'modal-root', className }
         root.remove();
       }
     };
-  }, [wrapperId]);
+  }, [wrapperId, className]);
 
   if (!mounted) return null;
   const root = document.getElementById(wrapperId)!;

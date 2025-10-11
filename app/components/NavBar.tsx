@@ -13,11 +13,25 @@ export function Navbar({ activeIndex }: NavbarProps) {
 
   useEffect(() => {
     if ((window as any).__MONOLOG_PRELOADER_HAS_RUN__) {
-      setShow(true);
+  setShow(true);
+  // Notify layout-aware components that navbar is now visible so they can
+  // re-measure (image sizing, card layout). Some clients load the navbar
+  // after the post view, so dispatch an event here to trigger updates.
+  try { window.dispatchEvent(new Event('monolog:card_layout_change')); } catch(_) {}
+  try { window.dispatchEvent(new Event('monolog:navbar_shown')); } catch(_) {}
+  // Also dispatch a synthetic resize after a short delay — many third-party
+  // listeners rely on the resize event and this helps ensure compatibility.
+  try { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 40); } catch(_) {}
     } else {
       const handler = () => setShow(true);
-      window.addEventListener('preloader-finished', handler);
-      return () => window.removeEventListener('preloader-finished', handler);
+      const wrapped = () => {
+        setShow(true);
+        try { window.dispatchEvent(new Event('monolog:card_layout_change')); } catch(_) {}
+        try { window.dispatchEvent(new Event('monolog:navbar_shown')); } catch(_) {}
+        try { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 40); } catch(_) {}
+      };
+      window.addEventListener('preloader-finished', wrapped);
+      return () => window.removeEventListener('preloader-finished', wrapped);
     }
   }, []);
 

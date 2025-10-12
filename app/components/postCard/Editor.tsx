@@ -142,6 +142,15 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             type="button"
+            className="btn ghost no-effects"
+            onClick={() => onCancel()}
+            aria-label="Cancel edits"
+            style={{ padding: '10px' }}
+          >
+            <X size={16} />
+          </button>
+          <button
+            type="button"
             className={`btn btn-no-bg keep-border no-effects ${saving ? 'disabled' : ''}`}
             onClick={async () => { if (!saving) await doSave(); }}
             aria-label="Save edits"
@@ -149,15 +158,6 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
             style={{ padding: '10px' }}
           >
             <Check size={16} />
-          </button>
-          <button
-            type="button"
-            className="btn ghost no-effects"
-            onClick={() => onCancel()}
-            aria-label="Cancel edits"
-            style={{ padding: '10px' }}
-          >
-            <X size={16} />
           </button>
         </div>
       </div>

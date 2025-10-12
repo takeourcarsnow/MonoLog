@@ -61,7 +61,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         style={{
           transform: `translate(${state.tx}px, ${state.ty}px) scale(${state.scale})`,
           transformOrigin: "center center",
-          transition: state.isPanning ? "none" : "transform 0.2s ease-out",
+          transition: "none",
           display: "block",
           width: state.isTile ? "100%" : "auto",
           maxWidth: state.isTile ? undefined : "100%",
@@ -73,6 +73,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           pointerEvents: "auto",
           // remove image rounding so the outer container's border-radius clips the image
           borderRadius: 0,
+          background: isFullscreen ? "#000" : undefined,
         }}
         onLoad={(e) => {
           e.currentTarget.classList.add("loaded");

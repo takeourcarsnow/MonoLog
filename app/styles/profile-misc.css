@@ -374,6 +374,7 @@ html.fs-open #modal-root,
   justify-content: stretch !important;
   overflow: visible !important;
   pointer-events: none !important;
+  background: #000 !important;
 }
 
 body.fs-open #modal-root > *,
@@ -382,6 +383,11 @@ html.fs-open #modal-root > *,
   max-height: none !important;
   height: 100svh !important;
   width: 100svw !important;
+}
+
+/* Fullscreen portal should have black background */
+.fullscreen-portal {
+  background: #000 !important;
 }
 
 /* --- Upload page desktop spacing fix --------------------------------------

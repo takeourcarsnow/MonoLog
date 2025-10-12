@@ -284,6 +284,12 @@
   background-clip: border-box; /* ensure no rounding artifacts */
 }
 
+/* Fullscreen image zoom should have black background to prevent white flash */
+.fullscreen-viewer .monolog-image-zoom,
+.fullscreen-viewer .monolog-image-zoom img {
+  background: #000 !important;
+}
+
 /* Defensive: ensure all images inside post cards (including carousel slides
    and grid tiles) are clipped to rounded corners even if an inner element
    or inline style tries to override rounding. This keeps post images

@@ -35,11 +35,8 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       window.history.back();
     }
 
-    document.body.classList.remove('fs-blur');
     setIsActive(false);
-    setTimeout(() => {
-      onClose();
-    }, 180);
+    onClose();
   }, [isActive, onClose]);
 
   // Lock scroll and add fullscreen classes
@@ -54,16 +51,10 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     document.body.style.overflow = 'hidden';
     document.body.classList.add('fs-open');
 
-    // Blur background after paint for smooth transition
-    // Capture the current viewer id so cleanup/notifications use the same id
-    const viewerId = viewerIdRef.current;
-    const raf = requestAnimationFrame(() => {
-      document.body.classList.add('fs-blur');
-      setIsActive(true);
-      // Notify other ImageZoom instances that fullscreen viewer is active
-      // so they can reset (zoom out). Include our viewer id as origin.
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: viewerId } })); } catch (_) {}
-    });
+    setIsActive(true);
+    // Notify other ImageZoom instances that fullscreen viewer is active
+    // so they can reset (zoom out). Include our viewer id as origin.
+    try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: viewerIdRef.current } })); } catch (_) {}
 
     // Push a history entry so the browser "back" action closes fullscreen
     // instead of navigating away from the current page.
@@ -76,8 +67,6 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     }
 
     return () => {
-      cancelAnimationFrame(raf);
-      document.body.classList.remove('fs-blur');
       document.body.classList.remove('fs-open');
       document.body.style.position = '';
       document.body.style.top = '';
@@ -89,7 +78,7 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       // When closing/unmounting, ensure any zoom state triggered by the
       // fullscreen viewer is cleared. Use the captured viewerId so the
       // cleanup references the same instance that opened the viewer.
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: viewerId } })); } catch (_) {}
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: viewerIdRef.current } })); } catch (_) {}
     };
   }, []);
 
@@ -139,13 +128,14 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
   }, []);
 
   return (
-    <Portal>
+    <Portal className="fullscreen-portal">
       <div
         ref={rootRef}
         tabIndex={-1}
-        className={`fullscreen-viewer no-swipe${isActive ? ' fs-active' : ''}`}
+        className="fullscreen-viewer no-swipe"
         role="dialog"
         aria-modal="true"
+        style={{ background: '#000' }}
       >
         <button className="fv-close" aria-label="Close" onClick={startClose}>✕</button>
         <div className="fv-inner">

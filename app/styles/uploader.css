@@ -1121,6 +1121,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   gap: 8px;
   padding: 10px 16px; /* unified pill spacing */
   min-height: var(--action-pill-height,42px);
+  width: 110px; /* fixed width to prevent any content movement */
   border-radius: 999px;
   background: var(--vis-bg) !important;
   border: 1px solid var(--border) !important;
@@ -1212,6 +1213,11 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
     width: auto;
     max-width: none;
     margin: 0;
+  }
+
+  /* Ensure vis-toggle maintains consistent width */
+  .uploader .form-row .vis-toggle {
+    width: 110px;
   }
 
   /* Ensure internal padding adapts with smaller height */

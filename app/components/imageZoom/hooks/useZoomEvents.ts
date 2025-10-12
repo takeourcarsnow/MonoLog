@@ -22,6 +22,8 @@ interface ZoomState {
   setIsTile: (tile: boolean) => void;
   isPanning: boolean;
   setIsPanning: (panning: boolean) => void;
+  isTransitioning: boolean;
+  setIsTransitioning: (transitioning: boolean) => void;
   lastDoubleTapRef: React.MutableRefObject<number | null>;
   lastTapTimeoutRef: React.MutableRefObject<number | null>;
   lastEventTimeRef: React.MutableRefObject<number | null>;
@@ -57,6 +59,8 @@ export const useZoomEvents = (state: ZoomState) => {
     setIsTile,
     isPanning,
     setIsPanning,
+    isTransitioning,
+    setIsTransitioning,
     lastDoubleTapRef,
     lastTapTimeoutRef,
     lastEventTimeRef,
@@ -188,6 +192,9 @@ export const useZoomEvents = (state: ZoomState) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
+    // Enable smooth transition for zoom operations
+    setIsTransitioning(true);
+
     // Use the ref to ensure we always read the latest scale (avoid stale
     // closure values). This makes double-tap reliably toggle zoom out when
     // the image is currently zoomed in.
@@ -203,6 +210,8 @@ export const useZoomEvents = (state: ZoomState) => {
           window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: instanceIdRef.current } }));
         } catch (_) {}
       }
+      // Disable transition after animation completes
+      setTimeout(() => setIsTransitioning(false), 300);
     } else {
       // Zoom in to double tap location - use smaller scale for fullscreen
       const zoomScale = isFullscreen ? 1.5 : maxScale;
@@ -233,8 +242,10 @@ export const useZoomEvents = (state: ZoomState) => {
           window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: instanceIdRef.current } }));
         } catch (_) {}
       }
+      // Disable transition after animation completes
+      setTimeout(() => setIsTransitioning(false), 300);
     }
-  }, [setScale, setTx, setTy, isFullscreen, maxScale]);
+  }, [setScale, setTx, setTy, isFullscreen, maxScale, setIsTransitioning]);
 
   /* eslint-disable-next-line react-hooks/exhaustive-deps */
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -243,6 +254,8 @@ export const useZoomEvents = (state: ZoomState) => {
     pointerStartRef.current = { x: e.clientX, y: e.clientY };
     movedRef.current = false;
 
+    // Disable transitions during panning for instant response
+    setIsTransitioning(false);
     setIsPanning(true);
     panStartRef.current = {
       x: e.clientX,
@@ -259,7 +272,7 @@ export const useZoomEvents = (state: ZoomState) => {
     }
 
     e.preventDefault();
-  }, [scale, setIsPanning]);
+  }, [scale, setIsPanning, setIsTransitioning]);
 
   /* eslint-disable-next-line react-hooks/exhaustive-deps */
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
@@ -340,6 +353,8 @@ export const useZoomEvents = (state: ZoomState) => {
       // Make sure we aren't in pan mode
       setIsPanning(false);
       panStartRef.current = null;
+      // Enable smooth transitions for pinch gestures
+      setIsTransitioning(true);
       // Dispatch zoom start if we're starting from unzoomed
       if (scaleRef.current <= 1) {
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch(_) {}
@@ -360,6 +375,8 @@ export const useZoomEvents = (state: ZoomState) => {
       touchStartRef.current = { x: touch.clientX, y: touch.clientY };
       movedRef.current = false;
 
+      // Disable transitions during panning for instant response
+      setIsTransitioning(false);
       setIsPanning(true);
       panStartRef.current = {
         x: touch.clientX,
@@ -378,7 +395,7 @@ export const useZoomEvents = (state: ZoomState) => {
       // with passive: false) handle calling preventDefault when necessary.
       e.stopPropagation();
     }
-  }, [setIsPanning]);
+  }, [setIsPanning, setIsTransitioning]);
 
   /* eslint-disable-next-line react-hooks/exhaustive-deps */
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
@@ -457,6 +474,8 @@ export const useZoomEvents = (state: ZoomState) => {
     const wasPinch = pinchRef.current !== null;
     if (pinchRef.current && e.touches.length < 2) {
       pinchRef.current = null;
+      // Disable transitions after pinch ends
+      setTimeout(() => setIsTransitioning(false), 300);
       // If we scaled back to 1, dispatch zoom end
       if (scaleRef.current <= 1) {
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch(_) {}
@@ -481,7 +500,7 @@ export const useZoomEvents = (state: ZoomState) => {
         window.dispatchEvent(new CustomEvent('monolog:pan_end'));
       } catch (_) {}
     }
-  }, [setIsPanning]);
+  }, [setIsPanning, setIsTransitioning]);
 
   // Unified tap/double-tap registration helper to avoid races between
   // pointer and native touch handlers. Uses a timeout ref so we can
@@ -580,6 +599,9 @@ export const useZoomEvents = (state: ZoomState) => {
       e.preventDefault();
       e.stopPropagation();
 
+      // Enable smooth transitions for wheel zoom
+      setIsTransitioning(true);
+
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
 
@@ -610,6 +632,8 @@ export const useZoomEvents = (state: ZoomState) => {
             window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
           } catch (_) {}
         }
+        // Disable transitions after animation
+        setTimeout(() => setIsTransitioning(false), 300);
       } else {
         // Clamp to bounds
         const bounds = getBounds(containerRef, imgRef, naturalRef, newScale);
@@ -628,6 +652,8 @@ export const useZoomEvents = (state: ZoomState) => {
             } catch (_) {}
           }
         }
+        // Disable transitions after animation
+        setTimeout(() => setIsTransitioning(false), 300);
       }
     };
 
@@ -636,7 +662,7 @@ export const useZoomEvents = (state: ZoomState) => {
     return () => {
       imgElement.removeEventListener('wheel', handleWheelEvent);
     };
-  }, [wheelEnabledRef, maxScale, setScale, setTx, setTy, scale]);
+  }, [wheelEnabledRef, maxScale, setScale, setTx, setTy, scale, setIsTransitioning]);
 
   return {
     handlePointerDown,

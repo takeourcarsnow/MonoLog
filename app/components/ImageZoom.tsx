@@ -61,7 +61,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         style={{
           transform: `translate(${state.tx}px, ${state.ty}px) scale(${state.scale})`,
           transformOrigin: "center center",
-          transition: "none",
+          transition: state.isTransitioning ? "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
           display: "block",
           width: state.isTile ? "100%" : "auto",
           maxWidth: state.isTile ? undefined : "100%",

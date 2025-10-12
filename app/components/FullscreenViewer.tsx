@@ -36,7 +36,10 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     }
 
     setIsActive(false);
-    onClose();
+    // Delay calling onClose to allow the fade out animation to complete
+    setTimeout(() => {
+      onClose();
+    }, 300);
   }, [isActive, onClose]);
 
   // Lock scroll and add fullscreen classes
@@ -51,7 +54,11 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     document.body.style.overflow = 'hidden';
     document.body.classList.add('fs-open');
 
-    setIsActive(true);
+    // Delay setting active to allow initial render with blur effect
+    setTimeout(() => {
+      setIsActive(true);
+    }, 10);
+    
     // Notify other ImageZoom instances that fullscreen viewer is active
     // so they can reset (zoom out). Include our viewer id as origin.
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: viewerIdRef.current } })); } catch (_) {}
@@ -132,10 +139,9 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       <div
         ref={rootRef}
         tabIndex={-1}
-        className="fullscreen-viewer no-swipe"
+        className={`fullscreen-viewer no-swipe ${isActive ? 'active' : ''}`}
         role="dialog"
         aria-modal="true"
-        style={{ background: '#000' }}
       >
         <button className="fv-close" aria-label="Close" onClick={startClose}>✕</button>
         <div className="fv-inner">

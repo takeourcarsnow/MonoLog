@@ -198,14 +198,6 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
           >
             <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 160, height: 160 }}>
               <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName} width={160} height={160} />
-              {avatarUploading ? (
-                <div className="avatar-spinner" aria-hidden>
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="10" stroke="rgba(0,0,0,0.12)" strokeWidth="3" />
-                    <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                  </svg>
-                </div>
-              ) : null}
             </div>
           </button>
           <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} disabled={avatarUploading} />

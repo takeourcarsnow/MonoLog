@@ -8,6 +8,7 @@ export const useZoomState = () => {
   const [ty, setTy] = useState(0);
   const [isTile, setIsTile] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const lastDoubleTapRef = useRef<number | null>(null);
   const lastTapTimeoutRef = useRef<number | null>(null);
   const lastEventTimeRef = useRef<number | null>(null);
@@ -43,6 +44,8 @@ export const useZoomState = () => {
     setIsTile,
     isPanning,
     setIsPanning,
+    isTransitioning,
+    setIsTransitioning,
     lastDoubleTapRef,
     lastTapTimeoutRef,
     lastEventTimeRef,

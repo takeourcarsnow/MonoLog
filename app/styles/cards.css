@@ -488,7 +488,6 @@
   font-size: 13px; cursor: pointer; padding: 6px 8px; border-radius: 8px;
   transition: background var(--transition-fast), color var(--transition-fast);
 }
-.action:hover { background: color-mix(in srgb, var(--primary-weak), transparent 70%); color: var(--text); }
 
 /* Tap / press feedback for action icons */
 /* Ensure svgs inherit color and animate smoothly */
@@ -569,10 +568,6 @@
   visibility: hidden;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .action:hover { transform: translateY(-2px); }
-}
-
 /* Favorite (star) animation and color feedback */
 .action.favorite .star { display: inline-block; font-size: 16px; line-height: 1; transition: none; color: color-mix(in srgb, var(--muted), transparent 20%); }
 .action.favorite.active { color: #FFD700; }
@@ -597,26 +592,21 @@
 }
 /* share action */
 .action.share { opacity: 0.82; transition: opacity 180ms var(--transition-mid), transform 200ms var(--transition-mid); }
-.action.share:hover { opacity: 1; }
 
 /* Spotify action with link - subtle green tint */
 .action.spotify-has-link {
   color: #1DB954;
   opacity: 0.9;
 }
-.action.spotify-has-link:hover {
-  color: #1DB954;
-  background: color-mix(in srgb, #1DB954, transparent 85%);
+.action.spotify-info svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* EXIF action with data - subtle blue tint */
 .action.exif-has-data {
   color: #3B82F6;
   opacity: 0.9;
-}
-.action.exif-has-data:hover {
-  color: #3B82F6;
-  background: color-mix(in srgb, #3B82F6, transparent 85%);
 }
 
 /* Double-tap favorite overlay */

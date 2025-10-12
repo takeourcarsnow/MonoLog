@@ -226,6 +226,10 @@ export function useUploader() {
     setDataUrls(newDataUrls);
     setOriginalDataUrls(newOriginalDataUrls);
     setEditorSettings(newEditorSettings);
+    // Reset blur state when photos are present to prevent stuck blur
+    if (newDataUrls.length > 0) {
+      setJustDiscarded(false);
+    }
     if (Array.isArray(alt)) {
       setAlt(alt.filter((_, i) => i !== safeIndex));
     }

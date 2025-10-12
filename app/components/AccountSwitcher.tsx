@@ -118,7 +118,12 @@ export function AccountSwitcher() {
           </span>
         ) : current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {/* Avatar first in the DOM; CSS will use row-reverse so the avatar stays at the far right
+                and the account name expands to the left pushing other header items. */}
             <OptimizedImage src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" width={22} height={22} />
+            <span className="account-name" aria-hidden>
+              {current.username || current.displayName || current.id}
+            </span>
           </span>
         ) : (
           // show a user icon instead of the text "Account" when unauthenticated

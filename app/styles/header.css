@@ -53,6 +53,46 @@
   transform: translateY(-50%);
 }
 
+/* We render the account switcher avatar and name in DOM order (avatar then name)
+   but visually keep the avatar at the far right by reversing the row for
+   the account-switcher container. This lets the account label expand to the
+   left and push other header items when revealed. */
+/* Keep normal order for header actions so the action group order remains
+  left-to-right. We only reverse the inner order of the account button so
+  the avatar visually stays at the far right while the label expands left. */
+
+/* Limit how much the account label can grow while allowing a smooth reveal. */
+.account-switcher { display: inline-flex; align-items: center; flex: 0 0 auto; }
+/* Reverse only the contents of the account switcher button: DOM keeps
+  avatar first but visually avatar sits to the right. This prevents all
+  header buttons from being reordered. */
+.account-switcher .btn { display: inline-flex; align-items: center; gap: 8px; flex-direction: row-reverse; }
+.account-switcher .btn .account-name {
+  display: inline-block;
+  max-width: 0; /* collapsed by default */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: max-width 220ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms ease;
+  opacity: 0;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* On hover or focus of the account button, expand the account name to the left.
+   Because .header-actions uses row-reverse, expanding the inline element increases
+   the space to the left and effectively pushes the other header controls. */
+.account-switcher .btn:hover .account-name,
+.account-switcher .btn:focus .account-name {
+  max-width: 160px; /* reasonable visible length */
+  opacity: 1;
+}
+
+/* Reduce motion preference: use instant reveal without animation */
+@media (prefers-reduced-motion: reduce) {
+  .account-switcher .btn .account-name { transition: none; }
+}
+
 /* Normalize header action button heights so icon-only and text buttons match */
 .header-actions .btn {
   height: 36px; /* match .btn.icon width/height for visual consistency */

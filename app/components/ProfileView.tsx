@@ -75,7 +75,7 @@ export function ProfileView({ userId }: { userId?: string }) {
           </div>
 
           <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>User not found</h2>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>This user doesn't exist or may have been deleted.</p>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>This user doesn&apos;t exist or may have been deleted.</p>
 
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
           </div>
@@ -100,7 +100,7 @@ export function ProfileView({ userId }: { userId?: string }) {
       {posts.length > 0 && (
         <ViewToggle
           title={<UserIcon size={20} strokeWidth={2} />}
-          subtitle={`${user?.username || 'User'}'s posts`}
+          subtitle={`${user?.username || 'User'}&apos;s posts`}
           selected={view}
           onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("profileView", v); }}
         />

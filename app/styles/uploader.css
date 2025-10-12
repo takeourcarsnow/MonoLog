@@ -1082,12 +1082,12 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 12px 20px;
   min-height: var(--action-pill-height,42px);
-  width: 110px;
+  width: 220px;
   border-radius: 999px;
-  background: transparent !important;
-  border: 1px solid transparent !important;
+  background: var(--bg-elev);
+  border: 2px solid var(--border);
   color: var(--text);
   position: relative;
   transition: background 360ms cubic-bezier(.2,.8,.2,1), color 260ms var(--transition-fast);
@@ -1109,18 +1109,24 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .vis-toggle:hover {
   transform: none !important;
   box-shadow: none !important;
-  background: transparent !important;
-  border-color: transparent !important;
+  background: var(--bg-elev);
+  border-color: var(--border);
 }
 .vis-toggle:hover::before {
   display: none !important;
 }
 
+/* Make vis-toggle transparent with no border in uploader context */
+.uploader .publish-controls-row .vis-toggle {
+  background: transparent !important;
+  border: none !important;
+}
+
 /* subtle press feedback */
 .vis-toggle:active { 
   transform: translateY(-1px) scale(0.997); 
-  background: transparent !important;
-  border-color: transparent !important;
+  background: var(--bg-elev);
+  border-color: var(--border);
 }
 
 @media (prefers-reduced-motion: reduce) {

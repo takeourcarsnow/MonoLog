@@ -3,8 +3,7 @@
 /* Shared custom properties so both Publish and Cancel buttons can reference height */
 :root {
   --publish-two-line-height: 48px;
-  /* widened slightly to avoid content-driven jumps between timer and two-line messages */
-  --publish-button-min-width: 240px;
+  /* Removed --publish-button-min-width to allow free expansion */
 }
 
 .publish-button {
@@ -12,7 +11,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: var(--publish-button-min-width);
+  /* Removed min-width to allow button to expand freely */
   height: var(--publish-two-line-height);
   min-height: var(--publish-two-line-height);
   padding: 7px 16px; /* slightly reduced padding to match shorter height */
@@ -25,7 +24,7 @@
   transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
   /* smooth any width changes (keeps UI from jumping) */
   transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), width 180ms ease;
-  overflow: hidden;
+  /* Removed overflow: hidden to allow full text display */
   background: var(--primary-weak); /* pastel base (cooldown style) */
   color: var(--text);
   /* remove persistent halo/shadow to match Cancel button vibe */
@@ -164,8 +163,7 @@
   align-items: center;
   font-variant-numeric: tabular-nums;
   letter-spacing: .5px;
-  /* reserve space so content swaps don't jump */
-  min-width: 9ch;
+  /* Removed min-width to allow full text display */
 }
 
 .countdown-time,
@@ -185,18 +183,15 @@
   opacity: 1;
 }
 
-.countdown-time { font-size: 16px; /* slightly reduced weight for subtler look */ font-weight: 600; text-shadow: none; }
+.countdown-time { font-size: 14px; font-weight: 400; text-shadow: none; }
 
 /* Inline wait message (rotating). Constrain to two lines and center.) */
 .wait-message {
-  font-size: 15px;
-  /* slightly lighter so the ephemeral hint reads friendly */
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1.05;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 20ch;
+  /* Removed max-width, overflow, and text-overflow to allow full text display */
 }
 
 /* removed show-message state */
@@ -226,15 +221,15 @@
 /* Mobile responsive */
 @media (max-width: 640px) {
   :root { --publish-two-line-height: 44px; }
-  :root { --publish-button-min-width: 160px; }
+  /* Removed --publish-button-min-width override */
   .publish-button {
     /* slightly smaller on mobile but still fits two lines */
     padding: 6px 14px;
     font-size: 13.5px;
   }
-  .wait-message { max-width: 20ch; }
+  /* Removed max-width constraint from wait-message */
   .cooldown-message { font-size: 13px; padding: 0 24px; }
-  .time-value { font-size: 15px; }
+  .time-value { font-size: 13px; }
 }
 
 /* When form controls are stacked (mobile), make publish & cancel buttons full width */
@@ -251,7 +246,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: var(--publish-button-min-width);
+  /* Removed min-width to match publish button flexibility */
   height: var(--publish-two-line-height);
   min-height: var(--publish-two-line-height);
   padding: 7px 16px; /* match publish button */

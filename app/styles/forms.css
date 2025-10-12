@@ -85,204 +85,113 @@
 
 .form-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 6px; }
 
-/* Center publish controls row on desktop to align buttons under the preview */
+/* Publish Controls Row - Clean layout for the three action buttons */
 .publish-controls-row {
-  justify-content: center; /* center the label and button group as a unit */
-}
-.publish-controls-row .vis-label {
-  margin-right: 12px; /* small spacing between visibility pill and buttons */
-}
-.publish-controls-row .btn-group {
-  display: inline-flex; align-items: center; gap: 12px; /* larger gap for clarity */
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  margin: 0 auto;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
 }
 
-/* Ensure controls inside the publish-controls-row share the same height and visual rhythm */
-.publish-controls-row {
-  --publish-control-height: var(--publish-two-line-height, 48px);
-  --publish-control-padding-vertical: 7px;
-  --publish-control-padding-horizontal: 16px;
-  display: flex !important;
-  width: max-content !important;
-  margin: 0 auto !important; /* center the whole group in its container */
-  justify-content: center !important;
-  align-items: center !important;
-}
-.publish-controls-row .vis-toggle,
-.publish-controls-row .vis-toggle.btn,
-.publish-controls-row .vis-label .btn,
+/* Base button styles for publish controls */
+.publish-controls-row .publish-button,
 .publish-controls-row .discard-btn,
-.publish-controls-row .publish-button {
-  min-height: var(--publish-control-height);
-  height: var(--publish-control-height);
-  padding: var(--publish-control-padding-vertical) var(--publish-control-padding-horizontal);
+.publish-controls-row .vis-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: var(--publish-two-line-height, 48px);
+  height: var(--publish-two-line-height, 48px);
+  padding: 7px 16px;
   border-radius: 999px;
-}
-.publish-controls-row .vis-toggle span { line-height: 1; }
-.publish-controls-row { align-items: center; gap: 16px; }
-
-/* Ensure all direct children are inline-flex and aligned to center so their
-   baselines match exactly and gaps are consistent */
-.publish-controls-row > * {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-sizing: border-box !important;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  box-sizing: border-box;
+  vertical-align: middle;
 }
 
-.publish-controls-row .publish-button,
-.publish-controls-row .discard-btn,
-.publish-controls-row .vis-toggle,
-.publish-controls-row .form-row .vis-label .btn{
-  box-sizing: border-box !important;
-  vertical-align: middle !important;
-  line-height: 1 !important;
+/* Publish button - flexible width for wait messages */
+.publish-controls-row .publish-button {
+  width: auto;
+  min-width: 120px;
+  background: transparent;
+  border: none;
+}
+
+/* Discard button - transparent with no border */
+.publish-controls-row .discard-btn {
+  width: 220px;
+  background: transparent;
+  border: none;
+}
+
+/* Visibility toggle - transparent with no border */
+.publish-controls-row .vis-toggle {
+  width: 220px;
+  background: transparent;
+  border: none;
+  gap: 8px;
+  position: relative;
+  transition: color 260ms var(--transition-fast);
+}
+
+.publish-controls-row .vis-toggle .vis-icon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.publish-controls-row .vis-toggle .vis-icon svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms var(--transition-fast);
+}
+
+.publish-controls-row .vis-toggle::after {
+  display: none !important;
+}
+
+.publish-controls-row .vis-toggle.public .eye-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.publish-controls-row .vis-toggle.public .eye-closed {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.92) rotate(-6deg);
+}
+
+.publish-controls-row .vis-toggle.private .eye-open {
+  opacity: 0;
+  transform: translateY(6px) scale(0.92);
+}
+
+.publish-controls-row .vis-toggle.private .eye-closed {
+  opacity: 1;
+  transform: translateY(0) scale(1) rotate(0deg);
+}
+
+.publish-controls-row .vis-toggle:active {
+  transform: translateY(-1px) scale(0.997);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .publish-controls-row .vis-toggle .vis-icon svg {
+    transition: none !important;
+  }
 }
 
 /* Slightly increase gap inside btn-group to visually separate the three controls */
 .publish-controls-row .btn-group { gap: 16px; }
-.form-row .vis-label { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
-.visibility-select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
-
-/* Segmented visibility buttons (Public / Private) */
-.form-row .vis-label .btn {
-  border-radius: 999px;
-  padding: 8px 14px;
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  box-shadow: none;
-  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
-}
-.form-row .vis-label .btn:hover {
-  transform: translateY(-1px);
-}
-.form-row .vis-label .btn.active,
-.form-row .vis-label .btn[aria-pressed="true"] {
-  background: var(--primary);
-  border-color: transparent;
-  color: white;
-  box-shadow: 0 12px 30px color-mix(in srgb, var(--primary), transparent 70%);
-  transform: translateY(-6px);
-}
-.form-row .vis-label .btn:focus {
-  outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%);
-  outline-offset: 4px;
-}
-
-/* Overrides for the publish-controls-row: make the vis-label horizontal and
-   ensure the pill button uses the same height/padding as other controls. */
-.publish-controls-row .vis-label {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 8px !important;
-}
-.publish-controls-row .vis-label .btn,
-.publish-controls-row .btn.vis-toggle {
-  padding: var(--publish-control-padding-vertical) var(--publish-control-padding-horizontal) !important;
-  min-height: var(--publish-control-height) !important;
-  height: var(--publish-control-height) !important;
-  box-sizing: border-box !important;
-}
-
-/* Neutralize the active/private translate lifts inside the centered publish controls
-   so the visibility pill doesn't shift vertically relative to the Publish/Discard buttons. */
-.publish-controls-row .vis-label .btn.active,
-.publish-controls-row .vis-toggle.private,
-.publish-controls-row .vis-toggle {
-  transform: none !important;
-}
-
-/* Also ensure any translateY adjustments applied elsewhere don't affect items here */
-.publish-controls-row .vis-label .btn.active::after {
-  transform: none !important;
-}
-
-/* active pill glow and lift */
-.form-row .vis-label .btn.active {
-  transform: translateY(-6px);
-  color: #fff;
-}
-.form-row .vis-label .btn.active::after {
-  content: "";
-  position: absolute;
-  inset: -8px; /* expand behind the pill */
-  border-radius: 999px;
-  z-index: -1;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--primary), transparent 40%), transparent 60%);
-  filter: blur(10px);
-  opacity: 0.95;
-  transition: opacity 220ms var(--transition-fast), transform 220ms var(--transition-fast);
-}
-
-/* Public active pill: strong primary color */
-.form-row .vis-label button[data-type="public"].active {
-  background: var(--primary);
-  border-color: transparent;
-}
-
-/* In light theme use dark text for the active visibility pill (pastel/weak primary)
-   but keep white text in dark theme for contrast. These selectors are placed
-   after the base rules to take precedence. */
-:root[data-theme="light"] .form-row .vis-label .btn.active,
-:root[data-theme="light"] .form-row .vis-label button[data-type="public"].active {
-  color: var(--text) !important;
-}
-
-/* Private active pill: muted but still with visible accent */
-.form-row .vis-label button[data-type="private"].active {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), rgba(255,255,255,0.02)), color-mix(in srgb, var(--primary), transparent 92%));
-  border-color: transparent;
-}
-
-/* In light theme make Private active pill use dark text (match Public) */
-:root[data-theme="light"] .form-row .vis-label button[data-type="private"].active {
-  /* mix primary with the light background to produce a subtle blue pill */
-  background: color-mix(in srgb, var(--primary), var(--bg) 62%);
-  border-color: transparent;
-  box-shadow: 0 12px 30px rgba(37,99,235,0.10);
-  color: var(--text) !important;
-}
-
-/* Single toggle style for visibility (eye icon) */
-/* ensure vis-toggle overrides base .btn styles when both are present */
-.vis-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  min-height: var(--action-pill-height,42px);
-  width: 110px;
-  border-radius: 999px;
-  background: transparent !important;
-  border: 1px solid transparent !important;
-  color: var(--text);
-  position: relative;
-  transition: background 360ms cubic-bezier(.2,.8,.2,1), color 260ms var(--transition-fast);
-}
-.vis-toggle .vis-icon { position: relative; width: 18px; height: 18px; display: inline-grid; place-items: center; }
-.vis-toggle .vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms var(--transition-fast); }
-.vis-toggle::after {
-  /* remove the large outer halo completely to avoid double-outline */
-  display: none !important;
-}
-
-.vis-toggle.public .eye-open { opacity: 1; transform: translateY(0) scale(1); }
-.vis-toggle.public .eye-closed { opacity: 0; transform: translateY(-6px) scale(0.92) rotate(-6deg); }
-
-.vis-toggle.private .eye-open { opacity: 0; transform: translateY(6px) scale(0.92); }
-.vis-toggle.private .eye-closed { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
-
-/* subtle press feedback */
-.vis-toggle:active { transform: translateY(-1px) scale(0.997); }
-
-@media (prefers-reduced-motion: reduce) {
-  .vis-toggle, .vis-toggle .vis-icon svg { transition: none !important; }
-}
 
 /* Mobile: stack form rows and ensure button group fills width */
 @media (max-width: 640px) {
@@ -311,37 +220,3 @@
     width: 100%;
   }
 }
-
-/* Strong overrides scoped to the uploader publish controls to ensure nothing
-   else (including component-local CSS) can shift their vertical alignment. */
-.uploader .publish-controls-row .publish-button,
-.uploader .publish-controls-row .discard-btn,
-.uploader .publish-controls-row .vis-toggle,
-.uploader .publish-controls-row .vis-label .btn {
-  box-sizing: border-box !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  height: var(--publish-two-line-height, 48px) !important;
-  min-height: var(--publish-two-line-height, 48px) !important;
-  padding: 7px 16px !important;
-  line-height: 1 !important;
-  margin: 0 !important;
-  vertical-align: middle !important;
-  transform: none !important; /* cancel lifts/translates */
-}
-
-/* Cancel any ::after pseudo-element positioning that could nudge layout */
-.uploader .publish-controls-row .vis-label .btn::after {
-  transform: none !important;
-}
-
-/* Ensure the publish button and discard button use the same font-size/weight */
-.uploader .publish-controls-row .publish-button,
-.uploader .publish-controls-row .discard-btn {
-  font-size: 14px !important;
-  font-weight: 400 !important;
-}
-
-/* Slightly tighten gaps so the three controls read as a single group */
-.uploader .publish-controls-row { gap: 14px !important; }

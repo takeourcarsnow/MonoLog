@@ -129,9 +129,6 @@ function WebVitalsScript() {
   React.useEffect(() => {
     (async () => {
       try {
-        const { initWebVitals } = await import('@/src/lib/performance');
-        initWebVitals({ sampleRate: 1 });
-
         // Register service worker for caching
   if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production' && !isInAppBrowser()) {
           navigator.serviceWorker.register('/sw.js').then((registration) => {

@@ -130,6 +130,28 @@
 .post-editor .icon-reveal:hover .reveal,
 .post-editor .icon-reveal:focus .reveal { max-width: 120px; }
 
+/* Compact visibility toggle used inside the post editor: keep the icon and border,
+   remove large padding and hide the textual label to save horizontal space. */
+.post-editor .vis-toggle {
+  padding: 6px !important;
+  /* compact, icon-only: small min-width to fit the eye icon */
+  min-width: 40px !important;
+  width: auto !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+}
+.post-editor .vis-toggle .vis-icon { width: 18px; height: 18px; }
+.post-editor .vis-toggle .vis-icon svg { width: 16px; height: 16px; }
+/* Hide any text label next to the icon inside the editor toggle so it's icon-only */
+.post-editor .vis-toggle > span:not(.vis-icon) { display: none !important; }
+.post-editor .vis-toggle .reveal { display: none !important; }
+.post-editor .vis-toggle::before, .post-editor .vis-toggle::after { display: none !important; }
+.post-editor .vis-toggle:hover { transform: none !important; box-shadow: none !important; }
+
 /* keep motion minimal for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .icon-reveal .icon, .icon-reveal .reveal, .icon-reveal:hover .icon, .icon-reveal:focus .icon, .icon-reveal:hover .reveal, .icon-reveal:focus .reveal { transition: none !important; transform: none !important; }
@@ -430,6 +452,9 @@
      prevents clipping while keeping the transition smooth. */
   max-height: 420px;
   opacity: 1;
+  /* When the editor is open allow visible overflow so focus outlines and
+     input borders are not clipped by the animated container. */
+  overflow: visible;
 }
 .post-editor-wrap.exit {
   max-height: 0;
@@ -626,7 +651,10 @@
   transition: border-color 220ms var(--transition-mid), padding-top 220ms var(--transition-mid);
 }
 .card.editor-open .post-editor {
-  border-top-color: color-mix(in srgb, var(--primary), transparent 84%);
+  /* Remove the subtle blue divider above the caption input while the
+     editor is open. Keep input :focus outlines untouched (they are
+     defined in forms.css). */
+  border-top-color: transparent !important;
 }
 
 /* Mobile adjustments for tighter photos */

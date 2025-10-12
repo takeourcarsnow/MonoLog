@@ -190,6 +190,13 @@
   display: none !important;
 }
 
+/* Utility: keep the outer border while removing background and hover effects
+   Use by adding both `btn-no-bg` and `keep-border` classes to a button. */
+.btn-no-bg.keep-border {
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
 /* For the small view toggle button we don't want the touch/press background
    ripple or active transform — keep it visually stable on press while
    preserving keyboard focus styles. */

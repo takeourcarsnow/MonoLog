@@ -48,7 +48,7 @@ export function PublishControls({
                 role="switch"
                 aria-checked={visibility === 'private'}
                 aria-label={visibility === 'private' ? 'Make post public' : 'Make post private'}
-                className={`vis-toggle btn ${visibility === 'private' ? 'private' : 'public'}`}
+                className={`vis-toggle ${visibility === 'private' ? 'private' : 'public'}`}
                 onClick={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
               >
                 <span className="vis-icon" aria-hidden>

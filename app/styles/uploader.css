@@ -1017,36 +1017,11 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   outline-offset: 4px;
 }
 
-/* Visibility icon and subtle animation */
-.vis-icon { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 8px; position: relative; }
-.vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; color: currentColor; transition: opacity 180ms var(--transition-fast), transform 200ms var(--transition-fast); }
-/* default: show open eye for Public, hide closed eye */
-.form-row .vis-label button[data-type="public"] .vis-icon .eye-open { opacity: 1; transform: scale(1); }
-.form-row .vis-label button[data-type="public"] .vis-icon .eye-closed { opacity: 0; transform: scale(0.92) rotate(-6deg); }
-/* default: show closed eye for Private (muted) */
-.form-row .vis-label button[data-type="private"] .vis-icon .eye-open { opacity: 0.42; transform: scale(0.98); }
-.form-row .vis-label button[data-type="private"] .vis-icon .eye-closed { opacity: 0.9; transform: scale(1); }
-/* when active, swap to the correct icon and apply subtle motion */
-.form-row .vis-label button[data-type="public"][aria-pressed="true"] .vis-icon .eye-open {
-  opacity: 1; transform: scale(1) rotate(0deg);
-}
-.form-row .vis-label button[data-type="public"][aria-pressed="true"] .vis-icon .eye-closed {
-  opacity: 0; transform: scale(0.92) rotate(-6deg);
-}
-
-.form-row .vis-label button[data-type="private"][aria-pressed="true"] .vis-icon .eye-open {
-  opacity: 0; transform: scale(0.92) rotate(6deg);
-}
-.form-row .vis-label button[data-type="private"][aria-pressed="true"] .vis-icon .eye-closed {
-  opacity: 1; transform: scale(1) rotate(0deg);
-}
-
 /* active pill glow and lift */
 .form-row .vis-label .btn.active {
   transform: translateY(-6px);
   color: #fff;
 }
-.form-row .vis-label .btn.active .vis-icon svg { color: #fff; }
 .form-row .vis-label .btn.active::after {
   content: "";
   position: absolute;
@@ -1071,15 +1046,10 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 :root[data-theme="light"] .form-row .vis-label button[data-type="public"].active {
   color: var(--text) !important;
 }
-:root[data-theme="light"] .form-row .vis-label .btn.active .vis-icon svg,
-:root[data-theme="light"] .form-row .vis-label button[data-type="public"].active .vis-icon svg {
-  color: var(--text) !important;
-}
 
 /* Also ensure the vis-toggle CSS variable used for color is dark in light theme
    (vis-toggle uses --vis-color and applies it with !important). */
 :root[data-theme="light"] .vis-toggle.public,
-:root[data-theme="light"] .btn.vis-toggle.public,
 :root[data-theme="light"] .form-row .vis-label button[data-type="public"].active.vis-toggle {
   --vis-color: var(--text) !important;
 }
@@ -1101,83 +1071,60 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 /* Also ensure the vis-toggle CSS variable for private is dark in light theme */
 :root[data-theme="light"] .vis-toggle.private,
-:root[data-theme="light"] .btn.vis-toggle.private,
 :root[data-theme="light"] .form-row .vis-label button[data-type="private"].active.vis-toggle {
   --vis-color: var(--text) !important;
 }
 
 /* Single toggle style for visibility (eye icon) */
 /* ensure vis-toggle overrides base .btn styles when both are present */
-.btn.vis-toggle,
 .vis-toggle {
-  /* use CSS vars so transitions are smooth between states */
-  --vis-bg: var(--bg-elev);
-  --vis-color: var(--text);
-  --vis-glow: transparent;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px; /* unified pill spacing */
+  padding: 10px 16px;
   min-height: var(--action-pill-height,42px);
-  width: 110px; /* fixed width to prevent any content movement */
+  width: 110px;
   border-radius: 999px;
-  background: var(--vis-bg) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--vis-color) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--text);
   position: relative;
-  transition: background 360ms cubic-bezier(.2,.8,.2,1), color 260ms var(--transition-fast), box-shadow 360ms cubic-bezier(.2,.8,.2,1), transform 220ms var(--transition-fast);
+  transition: background 360ms cubic-bezier(.2,.8,.2,1), color 260ms var(--transition-fast);
 }
+.vis-toggle .vis-icon { position: relative; width: 18px; height: 18px; display: inline-grid; place-items: center; }
+.vis-toggle .vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms var(--transition-fast); }
 .vis-toggle::after {
   /* remove the large outer halo completely to avoid double-outline */
   display: none !important;
 }
-.vis-toggle .vis-icon { position: relative; width: 18px; height: 18px; display: inline-grid; place-items: center; }
-.vis-toggle .vis-icon svg { position: absolute; top: 0; left: 0; width: 18px; height: 18px; transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms var(--transition-fast); }
 
-.vis-toggle.public {
-  /* Public: blue-ish pill (active visible state) */
-  --vis-bg: color-mix(in srgb, var(--primary), var(--bg) 64%);
-  --vis-color: #fff;
-  --vis-glow: color-mix(in srgb, var(--primary), transparent 70%);
-  transform: none;
-  border-color: transparent;
-  box-shadow: none; /* remove strong outer shadow that looks like an outline */
-}
-
-/* Ensure the toggle does not show an outline or shadow when focused */
-.vis-toggle:focus,
-.vis-toggle:focus-visible,
-.btn.vis-toggle:focus,
-.btn.vis-toggle:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
 .vis-toggle.public .eye-open { opacity: 1; transform: translateY(0) scale(1); }
 .vis-toggle.public .eye-closed { opacity: 0; transform: translateY(-6px) scale(0.92) rotate(-6deg); }
 
-.vis-toggle.private {
-  /* Private: dark-ish pill (hidden/private state) */
-  --vis-bg: color-mix(in srgb, rgba(0,0,0,0.6), var(--bg) 36%);
-  --vis-color: #fff;
-  --vis-glow: transparent;
-  transform: translateY(-1px);
-  border-color: transparent;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-}
 .vis-toggle.private .eye-open { opacity: 0; transform: translateY(6px) scale(0.92); }
 .vis-toggle.private .eye-closed { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
 
-/* focus state for accessibility */
-.vis-toggle:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 64%); outline-offset: 4px; }
+/* Remove hover effects */
+.vis-toggle:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+.vis-toggle:hover::before {
+  display: none !important;
+}
 
 /* subtle press feedback */
-.vis-toggle:active { transform: translateY(-1px) scale(0.997); }
+.vis-toggle:active { 
+  transform: translateY(-1px) scale(0.997); 
+  background: transparent !important;
+  border-color: transparent !important;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .vis-toggle, .vis-toggle .vis-icon svg { transition: none !important; }
-  .vis-toggle::after { transition: none !important; }
 }
 
 
@@ -1223,7 +1170,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   /* Ensure internal padding adapts with smaller height */
   .uploader .form-row .vis-toggle { padding: 8px 12px; }
   .uploader .form-row .publish-button { padding: 8px 14px; }
-  .uploader .form-row .discard-btn { padding: 8px 14px; }
+  .uploader .form-row .discard-btn { padding: 6px 14px; }
 }
 
 

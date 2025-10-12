@@ -39,9 +39,7 @@
 }
 
 .publish-button:not(:disabled):hover {
-  transform: translateY(-2px);
-  /* subtle hover shadow to hint interactiveness */
-  /* removed hover shadow */
+  transform: none;
   box-shadow: none;
 }
 
@@ -51,8 +49,8 @@
 
 /* Ready state - can publish */
 .publish-button.ready {
-  background: var(--primary);
-  color: #fff;
+  background: transparent;
+  color: var(--text);
 }
 
 /* subtler pulse */
@@ -74,7 +72,7 @@
 
 /* Cooldown state */
 .publish-button.cooldown {
-  background: color-mix(in srgb, var(--primary-weak), var(--primary) 22%); /* slightly richer than weak */
+  background: transparent;
   color: var(--text);
   cursor: default;
 }
@@ -86,8 +84,8 @@
 }
 
 /* Cooldown shrinking bar (remaining portion) */
-.cooldown-bar { position:absolute; inset:0; border-radius:inherit; overflow:hidden; background: color-mix(in srgb, var(--primary-weak), transparent 60%); }
-.cooldown-bar .fill { position:absolute; top:0; bottom:0; left:0; background: linear-gradient(90deg, color-mix(in srgb, var(--primary), #fff 20%), var(--primary)); opacity:.18; backdrop-filter: blur(1px) brightness(1.05); transition: width 1s linear; }
+.cooldown-bar { position:absolute; inset:0; border-radius:inherit; overflow:hidden; background: transparent; }
+.cooldown-bar .fill { position:absolute; top:0; bottom:0; left:0; background: transparent; opacity:.18; backdrop-filter: blur(1px) brightness(1.05); transition: width 1s linear; }
 .publish-button.flash .cooldown-bar .fill { animation: flashBar 900ms ease; }
 @keyframes flashBar { 0% { filter: brightness(1.8); opacity:.55; } 40% { filter: brightness(1.1); opacity:.22; } 100% { filter: brightness(1); opacity:.18; } }
 

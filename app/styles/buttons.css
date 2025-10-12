@@ -115,11 +115,13 @@
   align-items: center;
   justify-content: center;
   padding: 10px 16px;
-  min-height: var(--action-pill-height, 42px);
+  min-height: var(--publish-two-line-height);
+  height: var(--publish-two-line-height);
+  min-width: var(--publish-button-min-width);
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-elev);
-  color: var(--text-secondary);
+  border: none;
+  background: transparent;
+  color: var(--text);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -129,8 +131,8 @@
 }
 
 .discard-btn:hover:not(:disabled) {
-  background: var(--bg-hover);
-  transform: translateY(-2px);
+  background: transparent;
+  transform: none;
 }
 
 .discard-btn:active:not(:disabled) {
@@ -144,20 +146,20 @@
 }
 
 .discard-btn.confirm {
-  background: var(--danger);
-  color: #fff;
-  border-color: var(--danger);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--danger), transparent 70%);
+  background: transparent;
+  color: var(--danger);
+  border: none;
+  box-shadow: none;
 }
 
 .discard-btn.confirm:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--danger), #000 10%);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--danger), transparent 60%);
+  background: transparent;
+  box-shadow: none;
 }
 
 .discard-btn.confirm:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--danger), transparent 70%);
+  box-shadow: none;
 }
 
 .discard-btn:focus-visible {
@@ -324,4 +326,12 @@
   transition: none !important;
   transform: none !important;
   animation: none !important;
+}
+
+/* Mobile adjustments for discard button */
+@media (max-width: 640px) {
+  .discard-btn {
+    padding: 6px 14px;
+    font-size: 13.5px;
+  }
 }

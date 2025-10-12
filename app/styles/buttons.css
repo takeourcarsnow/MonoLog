@@ -103,6 +103,19 @@
   display: none !important;
 }
 
+/* Restore hover effects for about and favorites buttons */
+.about-btn:hover,
+.favorites-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  transition: transform 200ms ease, box-shadow 200ms ease !important;
+}
+.about-btn:hover svg,
+.favorites-btn:hover svg {
+  transform: scale(1.05) !important;
+  transition: transform 200ms ease !important;
+}
+
 .btn { transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; }
 .btn:active { transform: translateY(1px) scale(.997); }
 

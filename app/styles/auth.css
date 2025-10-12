@@ -43,6 +43,29 @@
   border-color: color-mix(in srgb, var(--primary), transparent 76%);
 }
 
+/* Simple 3D Auth Header Area */
+.auth-header-area {
+  perspective: 600px;
+  transform-style: preserve-3d;
+  margin-bottom: 8px;
+}
+
+.auth-message,
+.auth-header-notice {
+  animation: authHeaderFlip 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transform-origin: center center;
+}
+
+.auth-header-notice.enter {
+  animation: authHeaderFlip 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.auth-header-notice.exit {
+  animation: authHeaderFlip 0.5s cubic-bezier(0.55, 0.06, 0.68, 0.19) reverse both;
+}
+
 .auth-form .username-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }
 .auth-form .username-wrap.open { overflow: visible; max-height: 160px; opacity: 1; transform: translateY(0); }
 .auth-form .username-wrap .help { margin-top: 4px; }
@@ -178,6 +201,22 @@
     opacity: 1; 
     transform: translateY(0); 
   } 
+}
+
+/* Smooth 3D flip card animations for auth header area */
+@keyframes authHeaderFlip {
+  0% {
+    opacity: 0;
+    transform: rotateX(-90deg) translateY(-10px);
+  }
+  60% {
+    opacity: 1;
+    transform: rotateX(5deg) translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateX(0deg) translateY(0px);
+  }
 }
 .cancel-btn { position: relative; }
 .cancel-btn:disabled { opacity: .5; cursor: not-allowed; }

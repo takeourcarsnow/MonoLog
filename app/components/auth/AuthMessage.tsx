@@ -25,7 +25,7 @@ export function AuthMessage({ mode }: AuthMessageProps) {
       key={mode}
       className="auth-message"
       style={{
-        animation: 'fadeInSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+        animation: 'authHeaderFlip 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
       }}
     >
       <strong

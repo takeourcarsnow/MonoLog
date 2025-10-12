@@ -89,6 +89,7 @@ function UploaderCore() {
     confirmCancel,
     setConfirmCancel,
     confirmCancelTimerRef,
+    justDiscarded,
     hasPreview,
     captionRemaining,
     CAPTION_MAX,
@@ -124,7 +125,7 @@ function UploaderCore() {
   } = useUploader();
 
   return (
-    <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''}`}>
+    <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''} ${justDiscarded ? 'just-discarded' : ''}`}>
   {editing && (dataUrls[editingIndex] || dataUrls[0]) && (
         <Portal className="upload-editor-fullscreen">
           <Suspense fallback={

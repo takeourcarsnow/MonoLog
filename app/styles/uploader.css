@@ -415,7 +415,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   padding: 0;
   border-radius: 50%;
   background: transparent;
-  border: 2px solid var(--text);
+  border: none;
   color: var(--text);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -428,7 +428,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .drop-zone-gallery-button:hover {
   transform: scale(1.05);
   background: transparent;
-  border: 2px solid var(--text);
+  border: none;
   box-shadow: none;
 }
 
@@ -443,7 +443,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   cursor: not-allowed;
   transform: none;
   background: transparent;
-  border: 2px solid var(--text);
+  border: none;
 }
 
 .drop-zone-camera-button .drop-zone-icon,
@@ -782,6 +782,13 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .camera-btn.primary:active {
     transform: none !important;
   }
+}
+
+/* Subtle blur effect when discarding and returning to clean uploader view */
+.uploader.just-discarded {
+  filter: blur(1.5px);
+  opacity: 0.95;
+  transition: filter 0.5s ease-out, opacity 0.5s ease-out;
 }
 
 /* LogoLoader Animations */

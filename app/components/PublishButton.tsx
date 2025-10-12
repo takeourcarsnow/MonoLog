@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './PublishButton.css';
 import { MESSAGES, getWaitIcons, selectTimeIcon } from './publish/publishHelpers';
+import { LogoIcon } from './nav/LogoIcon';
 
 interface PublishButtonProps {
   canPost: boolean;
@@ -99,10 +100,7 @@ export function PublishButton({
       <span className="publish-content">
         {canPost ? (
           <span className="publish-text ready-text">
-            <svg className="icon-publish" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M12 2L12 14M12 2L7 7M12 2L17 7" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M3 14L3 20C3 21.1046 3.89543 22 5 22L19 22C20.1046 22 21 21.1046 21 20L21 14" strokeLinecap="round"/>
-            </svg>
+            <LogoIcon size={20} strokeWidth={2} />
             Publish
           </span>
         ) : (

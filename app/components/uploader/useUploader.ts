@@ -59,6 +59,7 @@ export function useUploader() {
   const toast = useToast();
   const [confirmCancel, setConfirmCancel] = useState(false);
   const confirmCancelTimerRef = useRef<number | null>(null);
+  const [justDiscarded, setJustDiscarded] = useState(false);
 
   // Provide a stable wrapper for setAlt so draft persistence doesn't get a
   // new function on every render (which would retrigger its effects).
@@ -192,27 +193,36 @@ export function useUploader() {
   };
 
   function resetDraft() {
-    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
-    sessionStorage.removeItem(EDITING_SESSION_KEY);
-    setDataUrls([]);
-    setOriginalDataUrls([]);
-    setEditorSettings([]);
-    setCaption("");
-    setSpotifyLink("");
-    setCamera("");
-    setLens("");
-    setFilmType("");
-    setFilmIso("");
-    setAlt("");
-    setVisibility("public");
-    setCompressedSize(null);
-    setOriginalSize(null);
-    setIndex(0);
-    setPreviewLoaded(false);
-    setEditing(false);
-    // Clear file inputs to allow re-selection
-    try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
-    try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
+    // Add blur effect before clearing data
+    setJustDiscarded(true);
+    
+    // Clear data after blur starts
+    setTimeout(() => {
+      try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+      sessionStorage.removeItem(EDITING_SESSION_KEY);
+      setDataUrls([]);
+      setOriginalDataUrls([]);
+      setEditorSettings([]);
+      setCaption("");
+      setSpotifyLink("");
+      setCamera("");
+      setLens("");
+      setFilmType("");
+      setFilmIso("");
+      setAlt("");
+      setVisibility("public");
+      setCompressedSize(null);
+      setOriginalSize(null);
+      setIndex(0);
+      setPreviewLoaded(false);
+      setEditing(false);
+      // Clear file inputs to allow re-selection
+      try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
+      try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
+      
+      // Remove blur after data is cleared
+      setTimeout(() => setJustDiscarded(false), 300);
+    }, 200);
   }  function removePhoto(atIndex: number) {
     if (dataUrls.length === 0) return;
     const safeIndex = Math.min(atIndex, dataUrls.length - 1);
@@ -511,6 +521,7 @@ export function useUploader() {
     confirmCancel,
     setConfirmCancel,
     confirmCancelTimerRef,
+    justDiscarded,
     hasPreview,
     captionRemaining,
     CAPTION_MAX,

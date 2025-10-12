@@ -42,17 +42,6 @@ export function PublishControls({
     <>
       {(hasPreview) && !editing ? (
   <div className="form-row publish-controls-row">
-    {/* Publish Button */}
-    <PublishButton
-      canPost={canPost ?? false}
-      remaining={remaining}
-      remainingMs={remainingMs}
-      countdownTotalMs={countdownTotalMs}
-      processing={processing}
-      disabled={compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024}
-      onPublish={onPublish}
-    />
-
     {/* Visibility Toggle */}
     <button
       type="button"
@@ -74,6 +63,17 @@ export function PublishControls({
       </span>
       <span>{visibility === 'private' ? 'Private' : 'Public'}</span>
     </button>
+
+    {/* Publish Button */}
+    <PublishButton
+      canPost={canPost ?? false}
+      remaining={remaining}
+      remainingMs={remainingMs}
+      countdownTotalMs={countdownTotalMs}
+      processing={processing}
+      disabled={compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024}
+      onPublish={onPublish}
+    />
 
     {/* Discard Button */}
     <button

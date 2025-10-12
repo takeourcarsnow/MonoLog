@@ -105,10 +105,6 @@ export function PublishControls({
     </button>
   </div>
       ) : null}
-
-      <div aria-live="polite" className="sr-only status">
-        {/* screen-reader updates for processing/errors */}
-      </div>
     </>
   );
 }

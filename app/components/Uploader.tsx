@@ -189,6 +189,25 @@ function UploaderCore() {
         </Portal>
       )}
 
+      <PublishControls
+        hasPreview={hasPreview}
+        editing={editing}
+        visibility={visibility}
+        setVisibility={setVisibility}
+        canPost={canPost}
+        remaining={remaining}
+        remainingMs={remainingMs}
+        countdownTotalMs={countdownTotalMs}
+        processing={processing}
+        compressedSize={compressedSize}
+        CONFIG={CONFIG}
+        onPublish={() => publish(false)}
+        confirmCancel={confirmCancel}
+        setConfirmCancel={setConfirmCancel}
+        confirmCancelTimerRef={confirmCancelTimerRef}
+        resetDraft={resetDraft}
+      />
+
   {!dataUrls.length && (
         <DropZone
           processing={processing}
@@ -326,11 +345,9 @@ function UploaderCore() {
         </div>
       ) : null}
 
-      <div style={{ marginTop: 8 }}>
-        {compressedSize != null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024 ? (
-          <div className="warn">Compressed image exceeds the maximum of {CONFIG.imageMaxSizeMB} MB. Please resize or choose a smaller file.</div>
-        ) : null}
-      </div>
+      {compressedSize != null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024 && (
+        <div className="warn" style={{ marginTop: 8 }}>Compressed image exceeds the maximum of {CONFIG.imageMaxSizeMB} MB. Please resize or choose a smaller file.</div>
+      )}
 
       {!editing && (
         <CaptionInput
@@ -355,28 +372,6 @@ function UploaderCore() {
         />
       )}
 
-      <PublishControls
-        hasPreview={hasPreview}
-        editing={editing}
-        visibility={visibility}
-        setVisibility={setVisibility}
-        canPost={canPost}
-        remaining={remaining}
-        remainingMs={remainingMs}
-        countdownTotalMs={countdownTotalMs}
-        processing={processing}
-        compressedSize={compressedSize}
-        CONFIG={CONFIG}
-        onPublish={() => publish(false)}
-        confirmCancel={confirmCancel}
-        setConfirmCancel={setConfirmCancel}
-        confirmCancelTimerRef={confirmCancelTimerRef}
-        resetDraft={resetDraft}
-      />
-
-      <div aria-live="polite" className="sr-only status">
-        {/* screen-reader updates for processing/errors */}
-      </div>
     </div>
   );
 }

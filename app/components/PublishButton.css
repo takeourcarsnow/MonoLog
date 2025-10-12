@@ -15,7 +15,7 @@
   height: var(--publish-two-line-height);
   min-height: var(--publish-two-line-height);
   padding: 7px 16px; /* slightly reduced padding to match shorter height */
-  border: none;
+  border: 2px solid var(--border);
   border-radius: 999px; /* pill */
   font-size: 14px;
   /* softer weight for calmer UI */

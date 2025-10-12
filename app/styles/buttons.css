@@ -132,7 +132,7 @@
   height: var(--publish-two-line-height);
   min-width: var(--publish-button-min-width);
   border-radius: 999px;
-  border: none;
+  border: 2px solid var(--border);
   background: transparent;
   color: var(--text);
   font-size: 14px;

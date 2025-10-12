@@ -108,7 +108,7 @@ export const ActionsSection = function ActionsSection({
         title="Toggle comments"
       >
         <MessageCircle size={16} />
-        <span style={{ marginLeft: 8 }}>{count}</span>
+        <span style={{ marginLeft: 2 }}>{count}</span>
       </button>
       <button
         className={`action favorite ${isFavorite ? "active" : ""}`}

@@ -40,7 +40,7 @@ export function ExploreView() {
       return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handler); };
     }, []);
 
-    const emptyMessage = "This section shows MonoLogs from people you don't follow yet. Follow more accounts to see their posts in your feed!";
+    const emptyMessage = "Discover new creators and follow them to see their posts in your feed. Explore different topics and communities!";
 
     return (
       <FeedPage

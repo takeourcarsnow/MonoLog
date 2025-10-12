@@ -32,7 +32,7 @@ export function FeedPage({
   subtitle,
   viewStorageKey,
   scrollStateKey = 'feed',
-  emptyMessage = "Follow people in Explore to see their daily posts.",
+  emptyMessage = "Follow people to see their posts in your feed. Start by exploring creators, friends, and topics you like.",
   deferFollowChanges = false,
 }: FeedPageProps) {
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
@@ -104,6 +104,9 @@ export function FeedPage({
             <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>{emptyMessage}</p>
 
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
+              {!isExplore && (
+                <Link href="/explore" className="btn" aria-label="Explore users to follow">Explore users</Link>
+              )}
             </div>
 
             {/* Removed duplicate bottom text — emptyMessage already contains the CTA/explanation */}

@@ -13,6 +13,9 @@
 .follow-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  max-width: var(--max-expanded, 220px) !important;
+  padding-left: 12px !important;
+  padding-right: 14px !important;
 }
 .follow-btn[aria-pressed="true"] {
   background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent), var(--primary) 30%));
@@ -74,7 +77,11 @@
 
 /* ensure label reveal behavior remains snappy but smooth */
 .follow-btn.not-following .reveal.label { transform: translateX(-6px) scale(.98); opacity: 0; max-width: 0; overflow: hidden; }
-.follow-btn.following .reveal.label { transform: translateX(0) scale(1); opacity: 1; max-width: 160px; }
+.follow-btn:hover .reveal.label {
+  opacity: 1 !important;
+  transform: translateX(0) scale(1) !important;
+  max-width: 160px !important;
+}
 
 /* Default: collapsed (icon-only) unless explicitly expanded.
    Use max-width animation (not width) so expansions/collapses animate smoothly

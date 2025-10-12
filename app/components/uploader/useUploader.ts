@@ -175,18 +175,12 @@ export function useUploader() {
     return () => { document.body.classList.remove(cls); };
   }, [canPost]);
 
-  // Size stats tracked internally but not logged in production
+  // Ensure justDiscarded is reset when photos are present
   useEffect(() => {
-    if (originalSize != null) {
-      // Size tracking available for debugging if needed
+    if (dataUrls.length > 0) {
+      setJustDiscarded(false);
     }
-  }, [originalSize]);
-
-  useEffect(() => {
-    if (compressedSize != null) {
-      // Size tracking available for debugging if needed
-    }
-  }, [compressedSize]);
+  }, [dataUrls.length]);
 
   const setDrag = (on: boolean) => {
     dropRef.current?.classList.toggle("dragover", on);
@@ -221,8 +215,8 @@ export function useUploader() {
       try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
       
       // Remove blur after data is cleared
-      setTimeout(() => setJustDiscarded(false), 300);
-    }, 200);
+      setTimeout(() => setJustDiscarded(false), 200);
+    }, 100);
   }  function removePhoto(atIndex: number) {
     if (dataUrls.length === 0) return;
     const safeIndex = Math.min(atIndex, dataUrls.length - 1);

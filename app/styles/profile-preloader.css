@@ -42,6 +42,12 @@
   position: relative;
   z-index: 2;
 }
+:root[data-theme="light"] .preloader-logo {
+  color: black;
+}
+:root[data-theme="dark"] .preloader-logo {
+  color: white;
+}
 .preloader-inner::before {
   /* faint pulsing ring behind the logo for subtle emphasis */
   content: "";
@@ -62,17 +68,8 @@
   animation-delay: 220ms; /* reveal shortly after the logo */
 }
 
-/* In dark mode the preloader shows over a dark background; invert the logo so
-  the SVG (which may be dark) remains visible. We target both the dataset
-  based theme and the legacy `.dark` class. */
-:root[data-theme="dark"] .preloader-logo img,
-:root[data-theme="dark"] .preloader-logo,
-.dark .preloader-logo img,
-.dark .preloader-logo {
-  /* invert only the logo visual. If the logo is an inline SVG or uses currentColor
-    the color variables will handle it, but we include filter invert as a safe fallback. */
-  filter: invert(1) hue-rotate(180deg);
-}
+/* In dark mode the preloader shows over a dark background; the logo now uses currentColor
+  so it will automatically use the appropriate --primary color for visibility. */
 
 @keyframes preloader-spin-scale {
   /* ramp: quick acceleration first 20%, then smooth mid-sweep, gentle deceleration to 360deg */

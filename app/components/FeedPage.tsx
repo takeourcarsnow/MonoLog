@@ -100,18 +100,10 @@ export function FeedPage({
               {iconNode}
             </div>
 
-            <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>{isExplore ? 'No posts yet' : 'Your feed is quiet'}</h2>
+            <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>{isExplore ? 'No posts to explore' : 'Your feed is quiet'}</h2>
             <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>{emptyMessage}</p>
 
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
-              {isExplore ? (
-                <Link href="/upload" className="btn">Create a post</Link>
-              ) : (
-                <>
-                  <Link href="/explore" className="btn">Explore users</Link>
-                  <Link href="/upload" className="btn" style={{ background: 'transparent', border: '1px solid var(--muted-border)', color: 'var(--text-secondary)', padding: '8px 12px', borderRadius: 8 }}>Upload</Link>
-                </>
-              )}
             </div>
 
             {/* Removed duplicate bottom text — emptyMessage already contains the CTA/explanation */}

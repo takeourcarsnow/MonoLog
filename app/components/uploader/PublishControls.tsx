@@ -1,4 +1,5 @@
 import { PublishButton } from "../PublishButton";
+import { Trash } from "lucide-react";
 
 interface PublishControlsProps {
   hasPreview: boolean;
@@ -101,6 +102,7 @@ export function PublishControls({
               disabled={processing}
               aria-label={confirmCancel ? 'Click again to discard draft' : 'Discard draft'}
             >
+              <Trash size={16} aria-hidden="true" />
               {confirmCancel ? 'Confirm' : 'Discard'}
             </button>
           </div>

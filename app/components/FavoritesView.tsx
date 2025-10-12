@@ -66,7 +66,6 @@ export function FavoritesView() {
             <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Tap the star on any post to save it here.</p>
 
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
-              <Link href="/explore" className="btn">Explore posts</Link>
             </div>
           </div>
         </div>

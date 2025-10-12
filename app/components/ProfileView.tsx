@@ -78,7 +78,6 @@ export function ProfileView({ userId }: { userId?: string }) {
           <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>This user doesn't exist or may have been deleted.</p>
 
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
-            <Link href="/explore" className="btn">Find new users</Link>
           </div>
         </div>
       </div>

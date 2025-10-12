@@ -125,6 +125,7 @@
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
   line-height: 1;
+  gap: 8px;
 }
 
 .discard-btn:hover:not(:disabled) {

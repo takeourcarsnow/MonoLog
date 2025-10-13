@@ -310,11 +310,19 @@ export const useZoomEvents = (state: ZoomState) => {
     // touch double-tap behaviour so quick taps on touch devices also trigger
     // zoom.
     try {
-      if (e && (e as any).pointerType === 'touch') {
-        // Only consider it a tap (and potential double-tap) when not panning
-        // and the pointer didn't move beyond the tap threshold
-        if (!isPanning && !movedRef.current) {
-          registerTap(e.clientX, e.clientY);
+      if (e) {
+        const pointerType = (e as any).pointerType;
+        if (pointerType === 'touch') {
+          // Only consider it a tap (and potential double-tap) when not panning
+          // and the pointer didn't move beyond the tap threshold
+          if (!isPanning && !movedRef.current) {
+            // registerTap(e.clientX, e.clientY); // Removed to prevent duplicate with native touch
+          }
+        } else {
+          // For mouse, register tap on pointer up if not panning and not moved
+          if (!isPanning && !movedRef.current) {
+            registerTap(e.clientX, e.clientY);
+          }
         }
       }
     } catch (_) {
@@ -511,7 +519,7 @@ export const useZoomEvents = (state: ZoomState) => {
     const now = Date.now();
     // Ignore duplicate events from different event systems (pointer + touch)
     // fired almost simultaneously for a single physical tap.
-    if (lastEventTimeRef.current && now - lastEventTimeRef.current < 10) return;
+    if (lastEventTimeRef.current && now - lastEventTimeRef.current < 50) return;
     lastEventTimeRef.current = now;
 
     if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {

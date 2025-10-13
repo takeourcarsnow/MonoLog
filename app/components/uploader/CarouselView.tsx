@@ -66,8 +66,19 @@ export function CarouselView({
 
   // Listen to slider drag events
   useEffect(() => {
-    const start = () => setIsDragging(true);
-    const end = () => setIsDragging(false);
+    // We ignore events that originate from this component instance by
+    // checking event.detail.source === SELF_SOURCE.
+    const SELF_SOURCE = 'uploader_carousel';
+    const start = (ev: Event) => {
+      const cev = ev as CustomEvent<any>;
+      if (cev?.detail?.source === SELF_SOURCE) return;
+      setIsDragging(true);
+    };
+    const end = (ev: Event) => {
+      const cev = ev as CustomEvent<any>;
+      if (cev?.detail?.source === SELF_SOURCE) return;
+      setIsDragging(false);
+    };
     window.addEventListener('monolog:carousel_drag_start', start);
     window.addEventListener('monolog:carousel_drag_end', end);
     return () => {
@@ -85,6 +96,9 @@ export function CarouselView({
       if (isDragging) return;
       e.stopPropagation();
       e.preventDefault();
+      // Notify the app that an inner carousel drag is starting so the
+      // outer AppShell swiper can temporarily disable touch navigation.
+  try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start', { detail: { source: 'uploader_carousel' } })); } catch (_) {}
       touchStartX.current = e.touches[0].clientX;
       touchDeltaX.current = 0;
     };
@@ -104,6 +118,9 @@ export function CarouselView({
       if (isDragging) return;
       e.stopPropagation();
       e.preventDefault();
+      // Notify the app that the inner carousel drag has ended so the outer
+      // AppShell swiper can re-enable touch navigation.
+  try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end', { detail: { source: 'uploader_carousel' } })); } catch (_) {}
       if (touchStartX.current == null || containerWidth === 0) return;
       const delta = touchDeltaX.current;
       const threshold = 50;

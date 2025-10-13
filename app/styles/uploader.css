@@ -843,16 +843,6 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   extra bottom padding when a preview exists and cap preview heights
   relative to the viewport so buttons remain visible. */
 @media (min-width: 900px) {
-  /* Reserve more space at the bottom of the page when the uploader has a preview
-    so the tabbar and publish controls do not overlap the form at default zoom. */
-  /* Make more room at the bottom for the tabbar + action row so the publish
-    controls are unlikely to be occluded on desktop. */
-  /* Reserve space equal to the fixed action bar height so page content
-    (caption input, etc.) doesn't get overlapped. The action bar is fixed
-    to the bottom and visually sits above the tabbar; keep container
-    padding in sync with the action bar height. */
-  .uploader.has-preview { padding-bottom: calc(92px + var(--safe-bottom)) !important; }
-
   /* Aggressively cap preview height on desktop so the form controls remain
     visible without requiring the user to scroll. */
   /* Cap preview heights so the form controls remain visible without forcing
@@ -861,32 +851,16 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .uploader .preview-inner { max-height: min(40vh, calc((var(--viewport-height, 1vh) * 100) - 180px)); }
   .uploader .preview img { max-height: min(40vh, calc((var(--viewport-height, 1vh) * 100) - 180px)); }
 
-  /* On wide screens, keep the normal layout spacing, but when a preview
-     exists show the uploader action row as a fixed, centered bar above
-     the bottom nav. This prevents reserving large blank space while
-     keeping controls accessible. */
+  /* On wide screens, keep the normal layout spacing */
   .uploader .form-row { margin-top: 2px; }
 
-  .uploader.has-preview .form-row {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: calc(12px + var(--safe-bottom));
-    z-index: 100002;
-    width: min(calc(100% - 48px), var(--maxw));
-    height: 72px; /* reserve a consistent action bar height */
-    display: flex;
-    align-items: center; /* vertically center the buttons */
+  /* Keep publish controls in a horizontal row on desktop like mobile */
+  .uploader .publish-controls-row {
+    flex-direction: row;
+    width: auto;
+    margin: 0;
     justify-content: space-between;
-   gap: 12px;
-   /* Keep layout/spacing but remove the visible rounded container so
-     buttons don't sit inside a separate box. */
-   background: transparent;
-   border-radius: 0;
-   padding: 0 6px; /* keep a little horizontal breathing room */
-   pointer-events: auto;
-   box-shadow: none;
-   z-index: 120000;
+    gap: 12px;
   }
 }
 
@@ -906,30 +880,6 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 /* Reduce the vertical gap between the caption input and action pills specifically
    inside the uploader to make the controls feel more compact on desktop and mobile */
 .uploader .form-row { margin-top: 2px; gap: 6px; }
-
-/* Additional, page-scoped desktop override: prevent additive bottom padding
-   (from .content + .uploader) from creating excessive empty space on wide
-   screens. Keep the action row comfortably above the bottom nav. */
-@media (min-width: 900px) {
-  .content .uploader.has-preview { padding-bottom: calc(36px + var(--safe-bottom)) !important; }
-  .content .uploader .form-row { bottom: calc(12px + var(--safe-bottom)) !important; }
-}
-
-/* When the upload UI includes a preview, reduce the outer content padding so
-   the uploader controls don't create a large empty area. Use :has() to target
-   the page container when it contains the uploader. Modern Chromium browsers
-   support :has(); if the browser doesn't support it the fixed action bar
-   fallback will still keep controls accessible. */
-@media (min-width: 900px) {
-  .content:has(.uploader.has-preview) {
-    padding-bottom: calc(24px + var(--safe-bottom)) !important;
-  }
-}
-
-/* Fallback for browsers without :has() — toggled by the uploader JS */
-@media (min-width: 900px) {
-  body.uploader-has-preview .content { padding-bottom: calc(24px + var(--safe-bottom)) !important; }
-}
 
 .image-editor { z-index: 80; position: relative; }
 .preview:not(.hidden) { display: block; }

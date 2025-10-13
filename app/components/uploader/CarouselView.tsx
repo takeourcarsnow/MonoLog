@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { LoadingBadge } from "./LoadingBadge";
+import { useZoomState } from "../imageZoom/hooks/useZoomState";
+import { getBounds } from "../imageZoom/utils/zoomUtils";
 
 interface CarouselViewProps {
   dataUrls: string[];
@@ -51,6 +53,36 @@ export function CarouselView({
   const [containerWidth, setContainerWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Zoom state
+  const zoomState = useZoomState();
+  const {
+    scale,
+    setScale,
+    tx,
+    setTx,
+    ty,
+    setTy,
+    isPanning,
+    setIsPanning,
+    isTransitioning,
+    setIsTransitioning,
+    lastDoubleTapRef,
+    lastTapTimeoutRef,
+    lastEventTimeRef,
+    panStartRef,
+    naturalRef,
+    touchStartRef,
+    pointerStartRef,
+    movedRef,
+    TAP_MOVE_THRESHOLD,
+    scaleRef,
+    txRef,
+    tyRef,
+    pinchRef,
+    wheelEnabledRef,
+    instanceIdRef,
+  } = zoomState;
+
   // Update container width on resize
   useEffect(() => {
     const updateWidth = () => {
@@ -93,7 +125,7 @@ export function CarouselView({
     if (!track || editing) return;
 
     const handleTouchStart = (e: TouchEvent) => {
-      if (isDragging) return;
+      if (isDragging || scale > 1) return;
       e.stopPropagation();
       e.preventDefault();
       // Notify the app that an inner carousel drag is starting so the
@@ -104,7 +136,7 @@ export function CarouselView({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (isDragging) return;
+      if (isDragging || scale > 1) return;
       e.stopPropagation();
       e.preventDefault();
       if (touchStartX.current == null || !trackRef.current || containerWidth === 0) return;
@@ -115,7 +147,7 @@ export function CarouselView({
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (isDragging) return;
+      if (isDragging || scale > 1) return;
       e.stopPropagation();
       e.preventDefault();
       // Notify the app that the inner carousel drag has ended so the outer
@@ -124,10 +156,16 @@ export function CarouselView({
       if (touchStartX.current == null || containerWidth === 0) return;
       const delta = touchDeltaX.current;
       const threshold = 50;
-      let target = index;
-      if (delta > threshold) target = Math.max(0, index - 1);
-      else if (delta < -threshold) target = Math.min(dataUrls.length - 1, index + 1);
-      setIndex(target);
+      if (Math.abs(delta) > threshold) {
+        // Handle swipe
+        let target = index;
+        if (delta > threshold) target = Math.max(0, index - 1);
+        else if (delta < -threshold) target = Math.min(dataUrls.length - 1, index + 1);
+        setIndex(target);
+      } else {
+        // Handle tap
+        registerTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      }
       touchStartX.current = null;
       touchDeltaX.current = 0;
     };
@@ -150,6 +188,153 @@ export function CarouselView({
     }
   }, [index, containerWidth, trackRef]);
 
+  // Reset zoom when changing images
+  useEffect(() => {
+    setScale(1);
+    setTx(0);
+    setTy(0);
+    wheelEnabledRef.current = false;
+  }, [index, setScale, setTx, setTy]);
+
+  // Unified tap/double-tap registration helper
+  const registerTap = (clientX: number, clientY: number) => {
+    const now = Date.now();
+    // Ignore duplicate events from different event systems
+    if (lastEventTimeRef.current && now - lastEventTimeRef.current < 50) return;
+    lastEventTimeRef.current = now;
+
+    if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
+      // Detected double-tap
+      lastDoubleTapRef.current = null;
+      if (lastTapTimeoutRef.current) {
+        clearTimeout(lastTapTimeoutRef.current as any);
+        lastTapTimeoutRef.current = null;
+      }
+      handleDoubleTap(clientX, clientY);
+    } else {
+      lastDoubleTapRef.current = now;
+      if (lastTapTimeoutRef.current) {
+        clearTimeout(lastTapTimeoutRef.current as any);
+      }
+      lastTapTimeoutRef.current = window.setTimeout(() => {
+        if (lastDoubleTapRef.current === now) lastDoubleTapRef.current = null;
+        lastTapTimeoutRef.current = null;
+      }, 310) as any;
+    }
+  };
+
+  // Handle double-tap to zoom in/out
+  const handleDoubleTap = (clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    // Enable smooth transition for zoom operations
+    setIsTransitioning(true);
+
+    if (scale > 1) {
+      // Zoom out to center
+      setScale(1);
+      setTx(0);
+      setTy(0);
+      wheelEnabledRef.current = false;
+      // Disable transition after animation completes
+      setTimeout(() => setIsTransitioning(false), 300);
+    } else {
+      // Zoom in to double tap location
+      const zoomScale = 2;
+      setScale(zoomScale);
+
+      // Calculate translation to center the tap point
+      const localX = clientX - rect.left;
+      const localY = clientY - rect.top;
+      const containerWidth = rect.width;
+      const containerHeight = rect.height;
+
+      const newTx = -(localX - containerWidth / 2) * zoomScale;
+      const newTy = -(localY - containerHeight / 2) * zoomScale;
+
+      // Clamp to bounds
+      const bounds = getBounds(containerRef, { current: null }, naturalRef, zoomScale);
+      const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+      const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+
+      setTx(clampedTx);
+      setTy(clampedTy);
+      // Allow wheel zoom now that the user explicitly triggered zoom
+      wheelEnabledRef.current = true;
+
+      // Disable transition after animation completes
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
+  };
+
+  // Handle pointer down for panning
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (scale <= 1) return;
+    // record pointer start to distinguish tap vs drag
+    pointerStartRef.current = { x: e.clientX, y: e.clientY };
+    movedRef.current = false;
+
+    // Disable transitions during panning for instant response
+    setIsTransitioning(false);
+    setIsPanning(true);
+    panStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      tx: tx,
+      ty: ty
+    };
+
+    e.preventDefault();
+  };
+
+  // Handle pointer move for panning
+  const handlePointerMove = (e: React.PointerEvent) => {
+    // mark moved if movement exceeds threshold
+    if (pointerStartRef.current) {
+      const dxStart = e.clientX - pointerStartRef.current.x;
+      const dyStart = e.clientY - pointerStartRef.current.y;
+      if (!movedRef.current && Math.hypot(dxStart, dyStart) > TAP_MOVE_THRESHOLD) movedRef.current = true;
+    }
+
+    if (!isPanning || !panStartRef.current) return;
+
+    const dx = e.clientX - panStartRef.current.x;
+    const dy = e.clientY - panStartRef.current.y;
+
+    const newTx = panStartRef.current.tx + dx;
+    const newTy = panStartRef.current.ty + dy;
+
+    const bounds = getBounds(containerRef, { current: null }, naturalRef, scale);
+    const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
+    const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
+
+    setTx(clampedTx);
+    setTy(clampedTy);
+
+    // Prevent parent components from receiving swipe gestures when panning
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
+  // Handle pointer up
+  const handlePointerUp = (e: React.PointerEvent) => {
+    // Register tap for mouse and touch events if not moved
+    if (!movedRef.current) {
+      registerTap(e.clientX, e.clientY);
+    }
+
+    setIsPanning(false);
+    panStartRef.current = null;
+    pointerStartRef.current = null;
+    movedRef.current = false;
+  };
+
+  // Attach native touch listeners to allow preventDefault
+  useEffect(() => {
+    // Touch handling is done by pointer events and onClick
+  }, []);
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowLeft') setIndex(i => Math.max(0, i - 1));
     if (e.key === 'ArrowRight') setIndex(i => Math.min(dataUrls.length - 1, i + 1));
@@ -169,9 +354,20 @@ export function CarouselView({
         <div
           className="carousel-track"
           ref={trackRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
         >
           {dataUrls.map((u, idx) => (
-            <div key={idx} className="carousel-slide">
+            <div 
+              key={idx} 
+              className="carousel-slide"
+              style={{
+                transform: idx === index ? `translate(${tx}px, ${ty}px) scale(${scale})` : undefined,
+                transformOrigin: idx === index ? "center center" : undefined,
+                transition: idx === index && isTransitioning ? "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
+              }}
+            >
               <Image
                 className="no-swipe"
                 src={u || "/logo.svg"}
@@ -181,6 +377,15 @@ export function CarouselView({
                 style={{ objectFit: 'contain' }}
                 onLoadingComplete={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}
+                onClick={idx === index ? (e) => {
+                  e.preventDefault();
+                  registerTap(e.clientX, e.clientY);
+                } : undefined}
+                onDoubleClick={idx === index ? (e) => {
+                  e.preventDefault();
+                  // Fallback for browsers that still fire double-click despite onClick
+                } : undefined}
+                draggable={false}
               />
             </div>
           ))}

@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/src/lib/types";
-import { Check, X, Camera, Settings, Image, Gauge } from "lucide-react";
+import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeOff } from "lucide-react";
 import { Combobox } from "../Combobox";
 import { CAMERA_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
 
@@ -10,11 +10,11 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string }) => Promise<void>;
 }, ref: any) {
   const [caption, setCaption] = useState(post.caption || "");
-  const [visibility, setVisibility] = useState(post.public ? "public" : "private");
   const [camera, setCamera] = useState(post.camera || "");
   const [lens, setLens] = useState(post.lens || "");
   const [filmType, setFilmType] = useState("");
   const [filmIso, setFilmIso] = useState("");
+  const [isPublic, setIsPublic] = useState(post.public);
   const [saving, setSaving] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -42,11 +42,11 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
     setSaving(true);
     try {
       const combinedFilmType = (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || undefined;
-      await onSave({ caption, public: visibility === 'public', camera, lens, filmType: combinedFilmType });
+      await onSave({ caption, public: isPublic, camera, lens, filmType: combinedFilmType });
     } finally {
       setSaving(false);
     }
-  }, [caption, visibility, camera, lens, filmType, filmIso, onSave, saving]);
+  }, [caption, camera, lens, filmType, filmIso, isPublic, onSave, saving]);
 
   useImperativeHandle(ref, () => ({
     save: doSave,
@@ -115,31 +115,17 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
           />
         )}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 10 }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 10 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <button
             type="button"
-            role="switch"
-            aria-checked={visibility === 'private'}
-            aria-label={visibility === 'private' ? 'Make post public' : 'Make post private'}
-            className={`vis-toggle btn ${visibility === 'private' ? 'private' : 'public'}`}
-            onClick={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
+            className="btn ghost no-effects"
+            onClick={() => setIsPublic(!isPublic)}
+            aria-label={isPublic ? "Make private" : "Make public"}
+            style={{ padding: '10px' }}
           >
-            <span className="vis-icon" aria-hidden>
-              <svg className="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" />
-                <circle cx="12" cy="12" r="3" stroke="currentColor" />
-              </svg>
-              <svg className="eye-closed" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19C5 19 1 12 1 12a20.16 20.16 0 0 1 5.06-5.94" stroke="currentColor" />
-                <path d="M1 1l22 22" stroke="currentColor" />
-              </svg>
-            </span>
-            <span style={{ marginLeft: 8 }}>{visibility === 'private' ? 'Private' : 'Public'}</span>
+            {isPublic ? <Eye size={16} /> : <EyeOff size={16} />}
           </button>
-        </div>
-
-        <div style={{ display: 'flex', gap: 8 }}>
           <button
             type="button"
             className="btn ghost no-effects"

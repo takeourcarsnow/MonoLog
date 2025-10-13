@@ -380,6 +380,9 @@
   user-select: none;
   -webkit-user-select: none;
 }
+:root[data-theme="light"] .fullscreen-viewer .fv-close {
+  color: white;
+}
 .fullscreen-viewer .fv-close:focus {
   outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%);
   outline-offset: 2px;

@@ -131,6 +131,24 @@
   white-space: nowrap !important;
 }
 
+/* When the controls are in countdown mode, allow the publish-button to
+   occupy available width and remove nowrap/overflow constraints so the
+   countdown digits are not clipped. This only applies while countdown
+   is active to avoid changing default layout. */
+.uploader .publish-controls-row.in-countdown {
+  overflow-x: visible !important;
+  white-space: normal !important;
+}
+
+.uploader .publish-controls-row.in-countdown > * {
+  white-space: normal !important;
+}
+
+.uploader .publish-controls-row.in-countdown .publish-button {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
 .uploader .publish-controls-row .vis-toggle,
 .uploader .publish-controls-row .discard-btn {
   width: auto !important;
@@ -165,6 +183,21 @@
   min-width: 120px;
   background: transparent;
   border: none;
+}
+
+/* When publish-button is the only visible control, allow it to expand
+   to occupy available space and wrap its internal content so text
+   doesn't get clipped (e.g. when visibility/discard are hidden). */
+.uploader .publish-controls-row > .publish-button:only-child {
+  flex: 1 0 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  overflow: visible !important;
+}
+
+.uploader .publish-controls-row > .publish-button:only-child .publish-content {
+  white-space: normal !important;
+  flex-wrap: wrap !important;
 }
 
 /* Discard button - transparent with no border */

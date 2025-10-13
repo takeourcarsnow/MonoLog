@@ -114,18 +114,34 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
             icon={Gauge}
           />
         )}
+        <button
+          type="button"
+          className={`vis-toggle ${isPublic ? 'public' : 'private'}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsPublic(!isPublic);
+          }}
+          aria-label={isPublic ? "Make private" : "Make public"}
+          style={{ padding: '10px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}
+        >
+          <span className="vis-icon" aria-hidden>
+            {isPublic ? (
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19C5 19 1 12 1 12a20.16 20.16 0 0 1 5.06-5.94" stroke="currentColor" />
+                <path d="M1 1l22 22" stroke="currentColor" />
+              </svg>
+            )}
+          </span>
+          <span>{isPublic ? 'Public' : 'Private'}</span>
+        </button>
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 10 }}>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            type="button"
-            className="btn ghost no-effects"
-            onClick={() => setIsPublic(!isPublic)}
-            aria-label={isPublic ? "Make private" : "Make public"}
-            style={{ padding: '10px' }}
-          >
-            {isPublic ? <Eye size={16} /> : <EyeOff size={16} />}
-          </button>
           <button
             type="button"
             className="btn ghost no-effects"

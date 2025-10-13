@@ -49,7 +49,10 @@ export function PublishControls({
       aria-checked={visibility === 'private'}
       aria-label={visibility === 'private' ? 'Make post public' : 'Make post private'}
       className={`vis-toggle ${visibility === 'private' ? 'private' : 'public'}`}
-      onClick={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
+      onClick={(e) => {
+        e.stopPropagation();
+        setVisibility(v => v === 'public' ? 'private' : 'public');
+      }}
     >
       <span className="vis-icon" aria-hidden>
         <svg className="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">

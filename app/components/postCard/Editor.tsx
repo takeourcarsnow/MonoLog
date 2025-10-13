@@ -114,6 +114,8 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
             icon={Gauge}
           />
         )}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 10 }}>
         <button
           type="button"
           className={`vis-toggle ${isPublic ? 'public' : 'private'}`}
@@ -139,8 +141,6 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
           </span>
           <span>{isPublic ? 'Public' : 'Private'}</span>
         </button>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 10 }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             type="button"

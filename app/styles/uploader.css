@@ -858,8 +858,8 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .uploader .publish-controls-row {
     flex-direction: row;
     width: auto;
-    margin: 0;
-    justify-content: space-between;
+    margin: 0 auto;
+    justify-content: center;
     gap: 12px;
   }
 }

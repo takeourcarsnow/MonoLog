@@ -83,6 +83,18 @@
   .input-ghost-placeholder .typewriter { animation: none; border-right: none; }
 }
 
+/* Disable the native textarea resize handle for the uploader's caption only.
+   The caption textarea uses the shared `.input` class but lives inside
+   `.uploader` -> `.input-wrapper`, so scope the rule to avoid globally
+   disabling resizing for other textareas. */
+.uploader .input-wrapper textarea.input {
+  resize: none; /* prevents manual corner resize */
+  overflow: auto; /* allow internal scrolling if content overflows */
+}
+
+/* Hide the small drag-resizer in WebKit-based browsers (Chrome, Edge, Safari) */
+.uploader .input-wrapper textarea.input::-webkit-resizer { display: none; }
+
 .form-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 6px; }
 
 /* Publish Controls Row - Clean layout for the three action buttons */
@@ -94,6 +106,39 @@
   justify-content: center;
   align-items: center;
   gap: 12px;
+}
+
+/* Keep uploader publish controls on a single line at all sizes.
+   Scoped to `.uploader .publish-controls-row` so other form layouts
+   retain their responsive stacking. Allow horizontal scroll if the
+   viewport becomes too narrow instead of wrapping to multiple lines. */
+.uploader .publish-controls-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  margin: 0 auto !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  white-space: nowrap !important;
+}
+
+.uploader .publish-controls-row > * {
+  flex: 0 1 auto !important; /* allow shrinking */
+  min-width: 72px !important; /* avoid collapsing too small */
+  white-space: nowrap !important;
+}
+
+.uploader .publish-controls-row .vis-toggle,
+.uploader .publish-controls-row .discard-btn {
+  width: auto !important;
+  max-width: none !important;
+}
+
+.uploader .publish-controls-row .publish-button {
+  min-width: 72px !important;
 }
 
 /* Base button styles for publish controls */

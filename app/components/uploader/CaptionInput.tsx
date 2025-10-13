@@ -152,6 +152,18 @@ export function CaptionInput({
         textarea.style.paddingTop = originalPadding + 'px';
         textarea.style.paddingBottom = originalPadding + 'px';
       }
+      // Avoid showing a vertical scrollbar when the content fits within
+      // the computed height (e.g., single-line captions). Only allow
+      // vertical scrolling when the content truly overflows.
+      try {
+        // Use clientHeight (actual layout height) rather than the style string
+        // which can differ across browsers. Add a small tolerance to avoid
+        // showing a scrollbar for negligible differences (1px gap).
+        const currentH = textarea.clientHeight || parseInt(textarea.style.height || '0', 10) || 0;
+        textarea.style.overflowY = scrollH > (currentH + 1) ? 'auto' : 'hidden';
+      } catch (_) {
+        // ignore and leave browser default if any issue
+      }
     }
   }, [caption]);
 

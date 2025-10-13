@@ -257,11 +257,13 @@ export const useZoomEvents = (state: ZoomState) => {
     // Disable transitions during panning for instant response
     setIsTransitioning(false);
     setIsPanning(true);
+    // Use the ref-backed tx/ty values here to ensure we capture the
+    // most recent translation even if this callback was created earlier.
     panStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-      tx: tx,
-      ty: ty
+      tx: txRef.current,
+      ty: tyRef.current
     };
 
     // Dispatch pan start event

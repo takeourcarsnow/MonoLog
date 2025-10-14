@@ -21,10 +21,13 @@ export const useSpotifyMeta = (spotifyLink?: string, postId?: string) => {
     if (!spotifyLink) return;
 
     let mounted = true;
-    let obs: IntersectionObserver | null = null;
 
-    // If already cached, we're done
-    if (spotifyMetaCache.has(spotifyLink)) return;
+    // If already cached, set it and we're done
+    if (spotifyMetaCache.has(spotifyLink)) {
+      const cached = spotifyMetaCache.get(spotifyLink);
+      if (mounted) setSpotifyMeta(cached || null);
+      return;
+    }
 
     const doFetch = async () => {
       try {
@@ -86,50 +89,16 @@ export const useSpotifyMeta = (spotifyLink?: string, postId?: string) => {
       } catch (e) {
         // Cache a null to avoid retry storms
         spotifyMetaCache.set(spotifyLink, null);
+        if (mounted) setSpotifyMeta(null);
       }
     };
 
-    const el = postId ? document.getElementById(`post-${postId}`) : null;
-
-    // If we have a post element, only fetch when it becomes visible or on hover/focus
-    if (el && typeof IntersectionObserver !== 'undefined') {
-      try {
-        obs = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              doFetch();
-              if (obs) { obs.disconnect(); obs = null; }
-            }
-          });
-        }, { rootMargin: '300px' });
-        obs.observe(el);
-      } catch (e) {
-        // Fall back to waiting for hover/focus
-      }
-
-      const onEnter = () => {
-        if (spotifyMetaCache.has(spotifyLink)) return;
-        doFetch();
-      };
-      el.addEventListener('pointerenter', onEnter);
-      el.addEventListener('focus', onEnter);
-
-      return () => {
-        mounted = false;
-        try { el.removeEventListener('pointerenter', onEnter); el.removeEventListener('focus', onEnter); } catch (_) {}
-        if (obs) obs.disconnect();
-      };
-    }
-
-    // If no postId or no element found, we avoid eager fetching to prevent
-    // making many network requests on page load. Instead, fetch immediately
-    // only as a last resort (this preserves previous behavior when callers
-    // don't provide a postId).
+    // Fetch immediately when spotifyLink is provided
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     (async () => { await doFetch(); })();
 
     return () => { mounted = false; };
-  }, [spotifyLink, postId]);
+  }, [spotifyLink]);
 
   return spotifyMeta;
 };

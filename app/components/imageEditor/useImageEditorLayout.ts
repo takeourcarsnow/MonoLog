@@ -145,13 +145,33 @@ export function useImageEditorLayout(
     const t2 = window.setTimeout(() => resize(), 340);
 
     // also listen to container size changes via ResizeObserver so opening animations or theme changes reflow correctly
+    // Use a debounced rAF-based callback and avoid observing the canvas itself. Observing the canvas and then
+    // mutating its style/size inside the callback can cause ResizeObserver to report undelivered notifications
+    // and trigger the "ResizeObserver loop completed with undelivered notifications" error in some browsers.
     let ro: ResizeObserver | null = null;
     try {
-      ro = new ResizeObserver(() => resize());
-      if (containerRef.current) ro.observe(containerRef.current);
-      if (canvasRef.current) ro.observe(canvasRef.current);
+      let scheduled = false;
+      ro = new ResizeObserver(() => {
+        if (scheduled) return;
+        scheduled = true;
+        try {
+          requestAnimationFrame(() => {
+            scheduled = false;
+            try { resize(); } catch (e) { /* swallow resize errors */ }
+          });
+        } catch (e) {
+          // fallback: run resize synchronously if rAF fails
+          scheduled = false;
+          try { resize(); } catch (_) {}
+        }
+      });
+      if (containerRef.current) {
+        try { ro.observe(containerRef.current); } catch (_) {}
+      }
+      // Do NOT observe the canvas element itself. The canvas size/style is updated inside `resize()` and
+      // observing it can create a feedback loop that some browsers report as a ResizeObserver loop error.
     } catch (e) {
-      // ResizeObserver may not be available in some environments; fall back to window resize
+      // ResizeObserver may not be available or observing may fail in some environments; fall back to window resize
       window.addEventListener("resize", resize);
     }
 

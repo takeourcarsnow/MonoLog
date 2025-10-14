@@ -43,7 +43,7 @@
   z-index: 2;
   transform-origin: center;
 }
-:root[data-theme="dark"] .preloader-logo {
+:root[data-theme="light"] .preloader-logo {
   filter: invert(1);
 }
 .preloader-inner::before {

@@ -585,7 +585,7 @@
 /* Pull-to-refresh loader/logo adjustments */
 .pull-to-refresh-logo { display: inline-block; filter: none; transition: filter 180ms ease, opacity 180ms ease; }
 /* In dark theme, invert and slightly brighten the loader so it shows against dark backgrounds */
-:root[data-theme="dark"] .pull-to-refresh-logo {
+:root[data-theme="light"] .pull-to-refresh-logo {
   /* invert colors and increase brightness a bit; keep saturation */
   filter: invert(100%) brightness(1.05) saturate(1.02);
   opacity: 0.98;

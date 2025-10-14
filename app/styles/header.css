@@ -36,7 +36,7 @@
   background-repeat: no-repeat;
   background-position: center;
 }
-:root[data-theme="dark"] .brand .logo {
+:root[data-theme="light"] .brand .logo {
   filter: invert(1);
 }
 .brand:hover .logo {

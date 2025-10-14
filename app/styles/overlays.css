@@ -233,10 +233,7 @@
   z-index: 2;
 }
 :root[data-theme="light"] .preloader-logo {
-  color: black;
-}
-:root[data-theme="dark"] .preloader-logo {
-  color: white;
+  filter: invert(1);
 }
 .preloader-inner::before {
   /* faint pulsing ring behind the logo for subtle emphasis */

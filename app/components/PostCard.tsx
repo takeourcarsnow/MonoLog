@@ -231,7 +231,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             </div>
           </div>
           <div className={`spotify-section ${showSpotify ? "open" : ""}`}>
-            {post.spotifyLink ? (
+            {post.spotifyLink && spotifyMeta ? (
               <div className="spotify-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
                 <a
                   href={post.spotifyLink}
@@ -241,7 +241,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
                   style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit', justifyContent: 'center' }}
                 >
                   {/* show album art thumbnail when available, otherwise small Spotify icon */}
-                  {spotifyMeta?.thumbnail_url ? (
+                  {spotifyMeta.thumbnail_url ? (
                     <img
                       src={spotifyMeta.thumbnail_url}
                       alt={spotifyMeta.title ? `${spotifyMeta.title} album art` : 'Spotify album art'}
@@ -256,8 +256,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
                     </svg>
                   )}
                   <span style={{ fontSize: 13, color: 'var(--text)' }}>
-                    {spotifyMeta?.author_name ? `${spotifyMeta.author_name} - ` : ''}
-                    {spotifyMeta?.title || 'Open on Spotify'}
+                    {spotifyMeta.author_name ? `${spotifyMeta.author_name} - ` : ''}
+                    {spotifyMeta.title || 'Open on Spotify'}
                   </span>
                 </a>
               </div>

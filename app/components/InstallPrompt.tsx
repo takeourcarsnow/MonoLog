@@ -137,9 +137,11 @@ export function InstallPrompt() {
 
       <div className="pr-8">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-10 h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center">
-            <div className="w-5 h-5 bg-white dark:bg-black rounded-full"></div>
-          </div>
+          <img
+            src="/logo.svg"
+            alt="MonoLog"
+            className="w-10 h-10 rounded-lg"
+          />
           <h3 id="install-title" className="text-lg font-semibold text-gray-900 dark:text-white">
             Add MonoLog to your phone
           </h3>

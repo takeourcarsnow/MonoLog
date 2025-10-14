@@ -4,9 +4,25 @@ import { uid } from '@/src/lib/id';
 import { logger } from '@/src/lib/logger';
 import { parseMentions } from '@/src/lib/mentions';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { strictRateLimiter } from '@/src/lib/rateLimiter';
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting: strict limits for post creation
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const rateLimit = strictRateLimiter.checkLimit(ip);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        error: 'Too many requests. Please try again later.',
+        retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000)
+      }, {
+        status: 429,
+        headers: {
+          'Retry-After': Math.ceil((rateLimit.resetTime - Date.now()) / 1000).toString()
+        }
+      });
+    }
+
   const body = await req.json();
   const { imageUrls, thumbnailUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink, camera, lens, filmType } = body;
   const authUser = await getUserFromAuthHeader(req);

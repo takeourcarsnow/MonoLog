@@ -334,4 +334,4 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
 }
 
 // Memoize PostCard with shallow comparison to prevent re-renders when posts haven't changed
-export const PostCard = PostCardComponent;
+export const PostCard = memo(PostCardComponent);

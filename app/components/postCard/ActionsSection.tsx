@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Info as InfoIcon, Camera } from "lucide-react";
+import { ReportButton } from "../ReportButton";
 
 interface ActionsSectionProps {
   postId: string;
@@ -194,6 +195,7 @@ export const ActionsSection = function ActionsSection({
       >
         <FullscreenIcon size={16} />
       </button>
+      <ReportButton postId={postId} />
     </div>
   );
 }

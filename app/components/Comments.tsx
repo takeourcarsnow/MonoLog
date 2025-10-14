@@ -8,6 +8,7 @@ import { getClient, getAccessToken } from '@/src/lib/api/client';
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
 import { useToast } from "./Toast";
+import { ReportButton } from "./ReportButton";
 
 // Lazy load icons to reduce initial bundle size
 const Send = lazy(() => import("lucide-react").then(mod => ({ default: mod.Send })));
@@ -227,6 +228,9 @@ export function Comments({ postId, onCountChange }: Props) {
                         <Trash2 size={14} />
                       </Suspense>
                     </button>
+                  ) : null}
+                  {currentUser && currentUser.id !== c.user?.id ? (
+                    <ReportButton commentId={c.id} />
                   ) : null}
                 </div>
                 <div

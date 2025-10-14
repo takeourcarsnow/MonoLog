@@ -3,9 +3,25 @@ import { getServiceSupabase } from '../../../../src/lib/api/serverSupabase';
 import { uid } from '../../../../src/lib/id';
 import { getUserFromAuthHeader } from '../../../../src/lib/api/serverVerifyAuth';
 import { checkComment } from '../../../../src/lib/moderation';
+import { apiRateLimiter } from '../../../../src/lib/rateLimiter';
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting: moderate limits for comment creation
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const rateLimit = apiRateLimiter.checkLimit(ip);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        error: 'Too many requests. Please try again later.',
+        retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000)
+      }, {
+        status: 429,
+        headers: {
+          'Retry-After': Math.ceil((rateLimit.resetTime - Date.now()) / 1000).toString()
+        }
+      });
+    }
+
     const body = await req.json();
     const postId = body.postId;
     const text = body.text;

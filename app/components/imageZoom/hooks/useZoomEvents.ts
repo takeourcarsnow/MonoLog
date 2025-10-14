@@ -217,14 +217,16 @@ export const useZoomEvents = (state: ZoomState) => {
       const zoomScale = isFullscreen ? 1.5 : maxScale;
       setScale(zoomScale);
 
-      // Calculate translation to center the tap point
-      const localX = clientX - rect.left;
-      const localY = clientY - rect.top;
-      const containerWidth = rect.width;
-      const containerHeight = rect.height;
+  // Calculate translation to center the tap point using center-relative coordinates
+  const localX = clientX - rect.left;
+  const localY = clientY - rect.top;
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+  const dx = localX - cx;
+  const dy = localY - cy;
 
-      const newTx = -(localX - containerWidth / 2) * zoomScale;
-      const newTy = -(localY - containerHeight / 2) * zoomScale;
+  const newTx = txRef.current * zoomScale + dx * (1 - zoomScale);
+  const newTy = tyRef.current * zoomScale + dy * (1 - zoomScale);
 
       // Clamp to bounds
       const bounds = getBounds(containerRef, imgRef, naturalRef, zoomScale);
@@ -601,9 +603,11 @@ export const useZoomEvents = (state: ZoomState) => {
 
     const handleWheelEvent = (e: WheelEvent) => {
       // Only allow wheel to initiate zoom if the image is already zoomed or
-      // the user explicitly activated zoom (double-click or pinch). This
-      // prevents accidental zoom when simply scrolling the page over images.
-      if (!wheelEnabledRef.current && scaleRef.current <= 1) return;
+      // the user explicitly activated zoom (double-click or pinch),
+      // except when rendered fullscreen — in fullscreen we allow immediate
+      // wheel zoom to give desktop users direct control without needing a
+      // prior double-tap.
+      if (!isFullscreen && !wheelEnabledRef.current && scaleRef.current <= 1) return;
 
       // Allow wheel zoom (in/out) — if zooming out to scale 1 we reset to center
       e.preventDefault();
@@ -615,21 +619,28 @@ export const useZoomEvents = (state: ZoomState) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
 
-      // Determine zoom direction and amount
-      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out on scroll down, zoom in on scroll up
-      const newScale = Math.max(1, Math.min(maxScale, scaleRef.current * zoomFactor));
+
+  // Determine zoom direction and amount
+  const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out on scroll down, zoom in on scroll up
+  const newScale = Math.max(1, Math.min(maxScale, scaleRef.current * zoomFactor));
 
       // If scale didn't change, don't do anything
       if (newScale === scaleRef.current) return;
 
-      // Calculate the point under the mouse cursor
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+  // Calculate the point under the mouse cursor (relative to container)
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
 
-      // Calculate new translation to keep the mouse point fixed
-      const scaleRatio = newScale / scaleRef.current;
-      const newTx = mouseX - (mouseX - txRef.current) * scaleRatio;
-      const newTy = mouseY - (mouseY - tyRef.current) * scaleRatio;
+  // Calculate new translation to keep the mouse point fixed, using
+  // coordinates relative to container center so translations align with
+  // the implementation's centered coordinate system.
+  const scaleRatio = newScale / scaleRef.current;
+  const dx = mouseX - cx;
+  const dy = mouseY - cy;
+  const newTx = txRef.current * scaleRatio + dx * (1 - scaleRatio);
+  const newTy = tyRef.current * scaleRatio + dy * (1 - scaleRatio);
 
       // If zooming out to scale 1, reset to center
       if (newScale === 1) {
@@ -655,10 +666,14 @@ export const useZoomEvents = (state: ZoomState) => {
         setTy(clampedTy);
 
         // Dispatch zoom events
-        if (scale === 1 && newScale > 1) {
+        // If we're transitioning from unzoomed -> zoomed, announce zoom start
+        if (scaleRef.current <= 1 && newScale > 1) {
+          // mark wheel as enabled so subsequent wheel/pan interactions behave
+          // like an explicit activation (double-tap/pinch)
+          wheelEnabledRef.current = true;
           if (typeof window !== 'undefined') {
             try {
-              window.dispatchEvent(new CustomEvent('monolog:zoom_start'));
+              window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: instanceIdRef.current } }));
             } catch (_) {}
           }
         }

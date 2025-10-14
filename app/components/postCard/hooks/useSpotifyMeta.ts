@@ -56,6 +56,8 @@ export const useSpotifyMeta = (spotifyLink?: string, postId?: string) => {
 
     if (el && typeof IntersectionObserver !== 'undefined') {
       try {
+        // Increase rootMargin so metadata is fetched before the post fully
+        // enters the viewport (preload while the user scrolls nearby).
         obs = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -63,7 +65,7 @@ export const useSpotifyMeta = (spotifyLink?: string, postId?: string) => {
               if (obs) { obs.disconnect(); obs = null; }
             }
           });
-        }, { rootMargin: '300px' });
+        }, { rootMargin: '800px' });
         obs.observe(el);
       } catch (e) {
         // Fall back to waiting for hover/focus

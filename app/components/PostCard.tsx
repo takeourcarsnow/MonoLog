@@ -217,32 +217,20 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
               if (src) handleOpenFullscreen(src, alt);
             }}
           />
-          <div className={`exif-section ${showExif ? "open" : ""}`}>
-            <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', alignItems: 'center' }}>
-              {post.camera || post.lens || post.filmType ? (
-                <>
-                  {post.camera && <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><Camera size={14} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.camera}</span></div>}
-                  {post.lens && <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><Settings size={14} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.lens}</span></div>}
-                  {post.filmType && <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><Image size={14} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.filmType}</span></div>}
-                </>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Camera size={14} /> No EXIF data</div>
-              )}
-            </div>
-          </div>
-          <div className={`spotify-section ${showSpotify ? "open" : ""}`}>
+
+          <div className={`spotify-section ${showSpotify ? 'open' : ''}`}>
             {post.spotifyLink && showSpotify ? (
               <div className="spotify-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
-                {spotifyMeta ? (
+                <div className="spotify-preview-content" style={{ position: 'relative', minHeight: 24 }}>
                   <a
                     href={post.spotifyLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="spotify-preview-link"
+                    className={`spotify-preview-link ${spotifyMeta ? 'visible' : ''}`}
                     style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit', justifyContent: 'center' }}
+                    aria-hidden={!spotifyMeta}
                   >
-                    {/* show album art thumbnail when available, otherwise small Spotify icon */}
-                    {spotifyMeta.thumbnail_url ? (
+                    {spotifyMeta?.thumbnail_url ? (
                       <img
                         src={spotifyMeta.thumbnail_url}
                         alt={spotifyMeta.title ? `${spotifyMeta.title} album art` : 'Spotify album art'}
@@ -251,25 +239,18 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
                         style={{ display: 'block', objectFit: 'cover', borderRadius: '50%', width: 36, height: 36, flexShrink: 0 }}
                       />
                     ) : (
-                      <svg viewBox="0 0 168 168" width="18" height="18" aria-hidden style={{ display: 'block' }}>
-                        <path fill="#1DB954" d="M84 0a84 84 0 1 0 0 168A84 84 0 0 0 84 0z" />
-                        <path fill="#fff" d="M120.6 115.6c-1.9 2.9-5.9 3.8-8.8 1.9-21.8-14.3-49.3-17.6-81.5-9.9-3.3.8-6.5-1.3-7.4-4.6-.9-3.3 1.3-6.5 4.6-7.4 35.3-8.6 66.4-5 90.3 11.7 2.9 1.9 3.8 5.9 1.8 8.3zM126.6 92c-2.4 3.6-7.7 4.6-11.4 2.2-25.1-16.2-63.4-20.9-93.2-11.8-4 .1-7.3-2.6-7.7-6.6-.4-3.9 2.6-7.3 6.6-7.7 33.5-8.6 75.1-3.6 103.8 13.4 3.6 2.4 4.6 7.7 2.2 11.9zM129.6 68.6c-28.3-17.1-79.5-18.6-109.2-10.5-4.6 1.1-9.3-1.7-10.4-6.3-1.1-4.6 1.7-9.3 6.3-10.4 33.9-7.9 90.6-6 126 13.1 5.1 3 6.8 9.7 3.8 14.8-3 5.1-9.7 6.8-14.5 3.4z" />
-                      </svg>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden style={{ display: 'block' }}>
+                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.6-.12-.421.18-.78.6-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.241 1.081zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.42-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.781-.18-.601.18-1.2.78-1.381 4.5-1.14 11.28-.86 15.72 1.621.479.3.599 1.02.3 1.5-.3.48-.84.599-1.32.3z" /></svg>
                     )}
-                    <span style={{ fontSize: 13, color: 'var(--text)' }}>
-                      {spotifyMeta.author_name ? `${spotifyMeta.author_name} - ` : ''}
-                      {spotifyMeta.title || 'Open on Spotify'}
-                    </span>
+                    <span style={{ fontSize: 13, color: 'var(--text)' }}>{spotifyMeta?.author_name ? `${spotifyMeta.author_name} - ` : ''}{spotifyMeta?.title || 'Open on Spotify'}</span>
                   </a>
-                ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-                    <svg viewBox="0 0 168 168" width="18" height="18" aria-hidden style={{ display: 'block' }}>
-                      <path fill="#1DB954" d="M84 0a84 84 0 1 0 0 168A84 84 0 0 0 84 0z" />
-                      <path fill="#fff" d="M120.6 115.6c-1.9 2.9-5.9 3.8-8.8 1.9-21.8-14.3-49.3-17.6-81.5-9.9-3.3.8-6.5-1.3-7.4-4.6-.9-3.3 1.3-6.5 4.6-7.4 35.3-8.6 66.4-5 90.3 11.7 2.9 1.9 3.8 5.9 1.8 8.3zM126.6 92c-2.4 3.6-7.7 4.6-11.4 2.2-25.1-16.2-63.4-20.9-93.2-11.8-4 .1-7.3-2.6-7.7-6.6-.4-3.9 2.6-7.3 6.6-7.7 33.5-8.6 75.1-3.6 103.8 13.4 3.6 2.4 4.6 7.7 2.2 11.9zM129.6 68.6c-28.3-17.1-79.5-18.6-109.2-10.5-4.6 1.1-9.3-1.7-10.4-6.3-1.1-4.6 1.7-9.3 6.3-10.4 33.9-7.9 90.6-6 126 13.1 5.1 3 6.8 9.7 3.8 14.8-3 5.1-9.7 6.8-14.5 3.4z" />
-                    </svg>
+
+                  <div className={`spotify-loading ${spotifyMeta ? '' : 'visible'}`} aria-hidden={!!spotifyMeta} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden style={{ display: 'block' }}>
+                      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.6-.12-.421.18-.78.6-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.241 1.081zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.42-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.781-.18-.601.18-1.2.78-1.381 4.5-1.14 11.28-.86 15.72 1.621.479.3.599 1.02.3 1.5-.3.48-.84.599-1.32.3z" /></svg>
                     <span style={{ fontSize: 13, color: 'var(--text)' }}>Loading Spotify info...</span>
                   </div>
-                )}
+                </div>
               </div>
             ) : null}
           </div>
@@ -303,7 +284,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         </div>
       {fsOpen && fsSrc && (
         <Suspense fallback={null}>
-          <FullscreenViewer src={fsSrc} alt={fsAlt} onClose={handleCloseFullscreen} />
+          <FullscreenViewer src={fsSrc!} alt={fsAlt!} onClose={handleCloseFullscreen} />
         </Suspense>
       )}
     </article>

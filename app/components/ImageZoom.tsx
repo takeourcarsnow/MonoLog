@@ -39,7 +39,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           // second tap and zoom the page instead of sending events to us.
           // For non-fullscreen mode, allow pan-y when unzoomed so the page
           // can still scroll vertically.
-          touchAction: "auto",
+          // In fullscreen we fully control gestures — disable native
+          // browser touch handling to avoid competing zoom/pinch behavior.
+          touchAction: isFullscreen ? "none" : "auto",
         display: "block",
         width: "100%",
         height: isFullscreen ? "100%" : (state.isTile ? "100%" : undefined),
@@ -59,9 +61,14 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         src={src}
         alt={alt}
         style={{
-          transform: `translate(${state.tx}px, ${state.ty}px) scale(${state.scale})`,
+          // Use a 3D transform to encourage GPU compositing which prevents
+          // the browser from temporarily rasterizing the image at lower
+          // quality during animated transform updates.
+          transform: `translate3d(${state.tx}px, ${state.ty}px, 0) scale(${state.scale})`,
           transformOrigin: "center center",
           transition: state.isTransitioning ? "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
+          willChange: "transform",
+          transformStyle: "preserve-3d",
           display: "block",
           width: state.isTile ? "100%" : "auto",
           maxWidth: state.isTile ? undefined : "100%",
@@ -74,6 +81,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           // remove image rounding so the outer container's border-radius clips the image
           borderRadius: 0,
           background: isFullscreen ? "#000" : undefined,
+          // Hint to browsers to avoid special low-quality resampling while
+          // animating transforms. Keep image-rendering default (auto) but
+          // ensure high-quality compositing where supported.
+          imageRendering: "auto",
         }}
         onLoad={(e) => {
           e.currentTarget.classList.add("loaded");

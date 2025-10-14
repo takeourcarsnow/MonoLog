@@ -603,6 +603,13 @@
   height: 14px;
 }
 
+/* Make Spotify preview/loading icons use Spotify green to match brand */
+.spotify-info svg,
+.spotify-info svg path {
+  color: #1DB954; /* for icons using currentColor */
+  fill: #1DB954;  /* for icons using fill attribute */
+}
+
 /* EXIF action with data - subtle blue tint */
 .action.exif-has-data {
   color: #3B82F6;
@@ -770,6 +777,39 @@
   display: inline-flex; /* ensure anchor sizes to content when centered */
   align-items: center;
   gap: 8px;
+}
+
+/* Spotify preview crossfade/translate animation between loading and loaded states */
+.spotify-info { position: relative; }
+.spotify-preview-content { position: relative; }
+.spotify-preview-link,
+.spotify-loading {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 260ms cubic-bezier(0.2,0,0,1), transform 260ms cubic-bezier(0.2,0,0,1);
+  will-change: opacity, transform;
+  opacity: 0;
+  transform: translateY(6px);
+}
+.spotify-preview-link.visible,
+.spotify-loading.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.spotify-loading {
+  /* keep loading centered above the preview; invisible when not visible */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateY(6px);
+}
+.spotify-preview-link.visible { transform: translateY(0); }
+
+/* Slightly reduce motion for prefers-reduced-motion users */
+@media (prefers-reduced-motion: reduce) {
+  .spotify-preview-link, .spotify-loading { transition: none !important; transform: none !important; }
 }
 
 /* EXIF section open/close animation

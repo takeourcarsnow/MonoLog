@@ -99,7 +99,7 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
       className={`preloader-overlay ${initial ? 'preloader-initial' : ''} ${exiting ? 'preloader-exit' : ''}`}
     >
       <div className="preloader-inner" role="img" aria-label="Loading MonoLog">
-        <img src="/newlogo.svg" alt="MonoLog Logo" width="86" height="86" className="preloader-logo" />
+        <img src="/logo.svg" alt="MonoLog Logo" width="86" height="86" className="preloader-logo" />
         <div className="preloader-wordmark">MonoLog</div>
       </div>
     </div>

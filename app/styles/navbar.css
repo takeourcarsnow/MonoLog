@@ -158,8 +158,16 @@
 .tab-icon svg,
 .tab-icon svg * {
   stroke: currentColor !important;
-  fill: none;
   transition: stroke 260ms cubic-bezier(.2,.9,.2,1), fill 260ms cubic-bezier(.2,.9,.2,1), color 260ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* Handle img elements (like the logo icon) for theming */
+.tab-icon img {
+  transition: filter 260ms cubic-bezier(.2,.9,.2,1);
+}
+
+:root[data-theme="dark"] .tab-icon img {
+  filter: invert(1);
 }
 
 .tab-item.active .tab-label {

@@ -99,15 +99,7 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
       className={`preloader-overlay ${initial ? 'preloader-initial' : ''} ${exiting ? 'preloader-exit' : ''}`}
     >
       <div className="preloader-inner" role="img" aria-label="Loading MonoLog">
-        <svg className="preloader-logo" width="86" height="86" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <mask id="logoMask">
-              <rect width="96" height="96" fill="white"/>
-              <circle cx="48" cy="48" r="22" fill="black"/>
-            </mask>
-          </defs>
-          <rect rx="20" width="96" height="96" fill="currentColor" mask="url(#logoMask)"/>
-        </svg>
+        <img src="/newlogo.svg" alt="MonoLog Logo" width="86" height="86" className="preloader-logo" />
         <div className="preloader-wordmark">MonoLog</div>
       </div>
     </div>

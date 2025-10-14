@@ -23,9 +23,21 @@
 .brand .logo {
   width: 28px; height: 28px; border-radius: 8px; background: var(--text); position: relative; overflow: hidden;
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  background-image: url('/newlogo.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
-.brand .logo::after {
-  content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg);
+.brand .logo {
+  width: 28px; height: 28px; border-radius: 8px; background: transparent; position: relative; overflow: hidden;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  background-image: url('/newlogo.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+:root[data-theme="dark"] .brand .logo {
+  filter: invert(1);
 }
 .brand:hover .logo {
   transform: none;

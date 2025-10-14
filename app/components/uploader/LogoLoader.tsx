@@ -8,7 +8,7 @@ type Props = {
 export default function LogoLoader({ size = 72, variant = 'theme' }: Props) {
   const className = variant === 'reverse' ? 'logo-subtle-reverse' : 'logo-subtle-theme';
   return (
-    <img src="/logo.svg" alt="MonoLog Logo" width={size} height={size} className={className} />
+    <img src="/newlogo.svg" alt="MonoLog Logo" width={size} height={size} className={className} />
   );
 }
 

@@ -41,12 +41,10 @@
   animation: preloader-spin-scale 2400ms var(--preloader-ease-smooth) infinite !important;
   position: relative;
   z-index: 2;
-}
-:root[data-theme="light"] .preloader-logo {
-  color: black;
+  transform-origin: center;
 }
 :root[data-theme="dark"] .preloader-logo {
-  color: white;
+  filter: invert(1);
 }
 .preloader-inner::before {
   /* faint pulsing ring behind the logo for subtle emphasis */
@@ -73,12 +71,12 @@
 
 @keyframes preloader-spin-scale {
   /* ramp: quick acceleration first 20%, then smooth mid-sweep, gentle deceleration to 360deg */
-  0%   { transform: rotate(0deg)   scale(0.986); }
-  12%  { transform: rotate(55deg)  scale(1.04); }
-  28%  { transform: rotate(120deg) scale(1.02); }
-  60%  { transform: rotate(230deg) scale(0.995); }
-  88%  { transform: rotate(320deg) scale(1.002); }
-  100% { transform: rotate(360deg) scale(1); }
+  0%   { transform: rotate(0deg); }
+  12%  { transform: rotate(55deg); }
+  28%  { transform: rotate(120deg); }
+  60%  { transform: rotate(230deg); }
+  88%  { transform: rotate(320deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @keyframes preloader-pulse {

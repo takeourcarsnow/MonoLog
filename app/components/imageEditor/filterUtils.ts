@@ -24,12 +24,19 @@ export function mapBasicAdjustments({ exposure = 0, contrast = 0, saturation = 0
   const cssContrastBase = 1 + contrast * 0.45;
   const cssContrast = contrast >= 0 ? Math.pow(cssContrastBase, 1.06) : 1 / Math.pow(1 - contrast * 0.35, 1.02);
 
-  const baseFilter = `brightness(${brightness}) contrast(${cssContrast}) saturate(${cssSaturation}) hue-rotate(${hue}deg)`;
-
   // Temperature tint: provide a small normalized tint value (-1..1) which
   // the renderer/shader can use to apply a warm/cool color cast. We keep the
   // tint subtle by default so temperature behaves predictably.
   const tempTint = Math.max(-1, Math.min(1, temperature / 100));
+
+  // Additionally bake a very small hue offset derived from the tint into the
+  // CSS filter string so the canvas 2D export path (which uses CSS filters)
+  // visually matches the GPU shader/preview which applies an extra tint.
+  // The tint hue is intentionally small (≈6 degrees max) so it behaves like a
+  // color cast rather than a full hue rotation.
+  const tintHue = tempTint * 6.0;
+
+  const baseFilter = `brightness(${brightness}) contrast(${cssContrast}) saturate(${cssSaturation}) hue-rotate(${hue + tintHue}deg)`;
 
   return {
     brightness,
@@ -37,5 +44,6 @@ export function mapBasicAdjustments({ exposure = 0, contrast = 0, saturation = 0
     cssSaturation,
     hue,
     baseFilter,
+    tempTint,
   };
 }

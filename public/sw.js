@@ -8,7 +8,6 @@ const API_CACHE_NAME = 'monolog-api-v3';
 const STATIC_CACHE_URLS = [
   '/',
   '/manifest.webmanifest',
-  '/icon.svg',
   '/logo.svg',
 ];
 

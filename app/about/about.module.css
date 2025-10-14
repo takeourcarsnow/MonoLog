@@ -429,6 +429,27 @@
   animation: fadeInUp 0.8s ease-out 0.8s both;
 }
 
+.installSection {
+  margin-bottom: 12px;
+  animation: fadeInUp 0.8s ease-out 0.7s both;
+  display: flex;
+  justify-content: center;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .installSection {
+    margin-bottom: 24px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1024px) {
+  .installSection {
+    margin-bottom: 32px;
+  }
+}
+
 .authorLink {
   display: inline-flex;
   align-items: center;

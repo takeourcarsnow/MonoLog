@@ -65,6 +65,10 @@ export default function AboutPage() {
         </div>
       </div>
 
+      <div className={styles.installSection}>
+        <InstallButton />
+      </div>
+
       <a className={styles.authorLink} href="https://nefas.tv" target="_blank" rel="noopener noreferrer" aria-label="Author">
         <Sparkles size={14} />
       </a>

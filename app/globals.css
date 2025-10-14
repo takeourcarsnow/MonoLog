@@ -210,6 +210,16 @@ html.about-page-scroll .content {
 @import './styles/overlays.css';
 @import './styles/navbar.css';
 
+/* Dice icon 180deg spin animation for username generator */
+@keyframes dice-spin-180 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(180deg); }
+}
+.dice-spin {
+  display: inline-block;
+  animation: dice-spin-180 600ms cubic-bezier(.2,.8,.2,1) both;
+}
+
 /* Custom scrollbar styling - minimalistic and modern */
 ::-webkit-scrollbar {
   width: 8px;

@@ -29,6 +29,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
 
   const isUsernameValid = validUsername(username || "");
 
+  const [generatingUsername, setGeneratingUsername] = useState(false);
+
   async function submit(e?: any) {
     e?.preventDefault();
     const start = Date.now();
@@ -133,7 +135,151 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   useEffect(() => {
     if (headerNotice) setHeaderNotice(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, password]);
+  }, [email, password, username]);
+
+  // Generate a random username and ensure it's available (retry a few times)
+  async function generateUsername() {
+    // Only allow during signup mode
+    if (mode !== 'signup') return null;
+    setGeneratingUsername(true);
+
+    // Much larger word lists for high variety; avoid personal names
+    const nicknames = [
+      'sammy','remy','moss','momo','bex','rue','sly','lou','ani','kai','nico','taz','ricky','jaz','kit','mika','zuri','ely',
+      'zen','vox','lynx','nova','echo','blitz','fizz','gizmo','haze','jinx','koda','luxe','maze','onyx','pika','quill','rune','saga','tide','ursa','vibe','wisp','xeno','yara','zest',
+      'spry','mirth','bobo','puck','tiki','zelo','fawn','brio','coda','dax','emberly','fable','gale','halo','indo','juno','keta','lux','miso','nori','orbi','polo','quirk','riven','sable','tavi'
+    ];
+
+    const adjectives = [
+      'blue','quiet','bold','little','golden','urban','frosty','sage','neon','retro','cosmic','rusty','silk','mellow','crimson','velvet','arctic',
+      'tropical','pixel','atomic','fable','hyper','slick','honest','ember','luminous','brisk','sable','glassy','brave','spry','auric','plume','verdant','opal','sable','brisk','ripple','sonic'
+    ];
+
+    const nouns = [
+      'fox','river','cloud','orbit','pixel','stream','ember','trail','anchor','haven','ripple','glint','spark','forge','quartz','atlas','cinder','delta','globe','harbor',
+      'isle','jewel','kite','lumen','maze','nova','opal','peak','quill','ridge','spire','tide','umbra','vale','whirl','xyl','yew','zenith','bloom','cascade','dune','echo','fjord','grove','hollow','ink','jet','knoll','lagoon','marsh','nimbus'
+    ];
+
+    const separators = ['', '-', '_', '.'];
+    const maxAttempts = 200; // increase attempts for more variety
+
+    // helper to pick random element
+    const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+
+    // helper to produce a leetspeak-ish variant sometimes
+    const maybeLeet = (s: string) => {
+      if (Math.random() < 0.08) {
+        return s.replace(/a/g, '4').replace(/e/g, '3').replace(/i/g, '1').replace(/o/g, '0').replace(/s/g, '5');
+      }
+      return s;
+    };
+
+    try {
+      for (let i = 0; i < maxAttempts; i++) {
+        const patternType = Math.random();
+        let candidate = '';
+
+        if (patternType < 0.12) {
+          // single nickname + optional 2-digit suffix
+          const nick = pick(nicknames);
+          const useNum = Math.random() < 0.5;
+          const num = useNum ? String(Math.floor(Math.random() * 90) + 10) : '';
+          candidate = `${nick}${num}`;
+        } else if (patternType < 0.28) {
+          // adjective + noun or adjective.adj.noun (2-3 parts)
+          const parts = [maybeLeet(pick(adjectives)), maybeLeet(pick(nouns))];
+          if (Math.random() < 0.3) parts.splice(1, 0, maybeLeet(pick(adjectives)));
+          const sep = pick(separators);
+          candidate = parts.join(sep);
+        } else if (patternType < 0.42) {
+          // noun + noun (compound) with optional sep and optional number
+          const n1 = maybeLeet(pick(nouns));
+          let n2 = maybeLeet(pick(nouns));
+          // avoid identical pair
+          if (n1 === n2) n2 = maybeLeet(pick(nouns));
+          const sep = pick(separators);
+          const useNum = Math.random() < 0.25;
+          const num = useNum ? String(Math.floor(Math.random() * 900) + 10) : '';
+          candidate = `${n1}${sep}${n2}${num}`;
+        } else if (patternType < 0.55) {
+          // nickname + adjective or nickname-adj-noun
+          const nick = maybeLeet(pick(nicknames));
+          if (Math.random() < 0.5) {
+            candidate = `${nick}${pick(separators)}${maybeLeet(pick(adjectives))}`;
+          } else {
+            candidate = `${nick}${pick(separators)}${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(nouns))}`;
+          }
+        } else if (patternType < 0.7) {
+          // random 2-4 word mash from mixed pools, joined by separator or camelCase
+          const pool = [...nicknames, ...adjectives, ...nouns];
+          const count = 2 + Math.floor(Math.random() * 3); // 2-4
+          const parts: string[] = [];
+          for (let j = 0; j < count; j++) {
+            parts.push(maybeLeet(pick(pool)));
+          }
+          const sep = pick(separators);
+          if (sep === '') {
+            // sometimes use camelcase for visual variety
+            candidate = parts.map((p, idx) => idx === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1)).join('');
+          } else {
+            candidate = parts.join(sep);
+          }
+        } else if (patternType < 0.85) {
+          // adjective + number (3 digits) or noun + short number
+          const a = maybeLeet(pick(adjectives));
+          const n = maybeLeet(pick(nouns));
+          if (Math.random() < 0.5) candidate = `${a}${String(Math.floor(Math.random() * 900) + 100)}`;
+          else candidate = `${n}${String(Math.floor(Math.random() * 90) + 10)}`;
+        } else {
+          // more playful combos: adjective + adjective + noun or nickname + noun
+          if (Math.random() < 0.5) {
+            candidate = `${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(nouns))}`;
+          } else {
+            candidate = `${maybeLeet(pick(nicknames))}${pick(separators)}${maybeLeet(pick(nouns))}`;
+          }
+        }
+
+  // normalize: collapse multiple separators, remove illegal chars, and lowercase for checks
+  // allow dot in generation but replace with separator-friendly char if needed
+  candidate = candidate.replace(/\.+/g, '-');
+  candidate = candidate.replace(/[-_]{2,}/g, (m) => m.charAt(0));
+  candidate = candidate.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        // collapse consecutive separators to a single instance
+        candidate = candidate.replace(/[-_]{2,}/g, (m) => m.charAt(0));
+        // strip leading/trailing separators
+        candidate = candidate.replace(/^[-_]+|[-_]+$/g, '');
+
+        // enforce length rules
+        if (candidate.length < 3 || candidate.length > 32) continue;
+        if (!validUsername(candidate)) continue;
+
+        try {
+          const ok = await checkUsernameAvailability(candidate);
+          if (ok) {
+            // create a friendlier display version with some capitalization
+            let display = candidate;
+            if (candidate.includes('-') || candidate.includes('_')) {
+              display = candidate.split(/[-_]/).map(s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '').join(candidate.includes('-') ? '-' : '_');
+            } else {
+              display = candidate.charAt(0).toUpperCase() + candidate.slice(1);
+            }
+
+            setUsername(display);
+            showHeaderNotice({ title: 'Generated username', subtitle: `Using “${display}”. You can change it before continuing.`, variant: 'info' }, 5000);
+            return candidate;
+          }
+        } catch (e) {
+          // availability check failed — try again next attempt
+          continue;
+        }
+      }
+
+      showHeaderNotice({ title: 'Could not generate', subtitle: 'I tried a few names — please try again or pick your own username.', variant: 'warn' }, 4500);
+      return null;
+    } finally {
+      setGeneratingUsername(false);
+    }
+  }
 
   return (
     <form
@@ -164,6 +310,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         username={username}
         setUsername={setUsername}
         mode={mode}
+        generateUsername={generateUsername}
+        generating={generatingUsername}
       />
 
       <AuthButton

@@ -100,7 +100,7 @@ export function ProfileView({ userId }: { userId?: string }) {
       {posts.length > 0 && (
         <ViewToggle
           title={<UserIcon size={20} strokeWidth={2} />}
-          subtitle={`${user?.username || 'User'}&apos;s posts`}
+          subtitle={`${user?.username || 'User'}'s posts`}
           selected={view}
           onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("profileView", v); }}
         />

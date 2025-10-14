@@ -53,7 +53,7 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
         spinTimeoutRef.current = null;
       }
     };
-  }, [generating]);
+  }, [generating]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="w-full flex flex-col gap-2 inputs-wrap" style={{ maxWidth: 400 }}>
@@ -127,7 +127,7 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
             </div>
           </div>
             <div id="username-help" className="dim help" aria-live="polite">
-            3–32 chars: letters, numbers, '-' or '_'. (Displayed capitalization is allowed; the username will be matched case-insensitively.)
+            3–32 chars: letters, numbers, &#39;-&#39; or &#39;_&#39;. (Displayed capitalization is allowed; the username will be matched case-insensitively.)
           </div>
         </div>
       </div>

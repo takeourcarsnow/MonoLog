@@ -24,7 +24,7 @@ import { useToast } from "./Toast";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { CaptionDisplay } from "./postCard/CaptionDisplay";
-import { Camera, Settings, Image } from "lucide-react";
+import { Camera, Settings, Image, Gauge } from "lucide-react";
 
 // Lazy load heavy components
 const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
@@ -250,6 +250,48 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
                       <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.6-.12-.421.18-.78.6-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.241 1.081zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.42-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.781-.18-.601.18-1.2.78-1.381 4.5-1.14 11.28-.86 15.72 1.621.479.3.599 1.02.3 1.5-.3.48-.84.599-1.32.3z" /></svg>
                     <span style={{ fontSize: 13, color: 'var(--text)' }}>Loading Spotify info...</span>
                   </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <div className={`exif-section ${showExif ? 'open' : ''}`}>
+            {(post.camera || post.lens || post.filmType) && showExif ? (
+              <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px 12px', justifyContent: 'center', alignItems: 'center' }}>
+                  {(() => {
+                    const parts = [];
+                    if (post.camera) parts.push(<><Camera size={12} style={{ marginRight: 4 }} />{post.camera}</>);
+                    if (post.lens) parts.push(<><Settings size={12} style={{ marginRight: 4 }} />{post.lens}</>);
+                    
+                    // Parse film type and ISO from combined field
+                    if (post.filmType) {
+                      const filmParts = post.filmType.trim().split(' ');
+                      if (filmParts.length > 1) {
+                        const lastPart = filmParts[filmParts.length - 1];
+                        // Check if last part looks like ISO (number, number+F, or CT[number])
+                        const isoRegex = /^(\d+|CT\d+|\d+F)$/i;
+                        if (isoRegex.test(lastPart)) {
+                          const filmType = filmParts.slice(0, -1).join(' ');
+                          const iso = lastPart;
+                          if (filmType) parts.push(<><Image size={12} style={{ marginRight: 4 }} />{filmType}</>);
+                          parts.push(<><Gauge size={12} style={{ marginRight: 4 }} />{iso}</>);
+                        } else {
+                          parts.push(<><Image size={12} style={{ marginRight: 4 }} />{post.filmType}</>);
+                        }
+                      } else {
+                        parts.push(<><Image size={12} style={{ marginRight: 4 }} />{post.filmType}</>);
+                      }
+                    }
+                    
+                    const content = parts.map((part, index) => (
+                      <span key={index} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        {part}
+                      </span>
+                    ));
+                    
+                    // Duplicate content for seamless scrolling
+                    return [...content, ...content];
+                  })()}
                 </div>
               </div>
             ) : null}

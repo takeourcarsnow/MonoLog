@@ -40,10 +40,15 @@ export const useSpotifyMeta = (spotifyLink?: string, postId?: string) => {
         } as SpotifyMeta;
 
         spotifyMetaCache.set(spotifyLink, meta);
-        if (mounted) setSpotifyMeta(meta);
+        if (mounted) {
+          setSpotifyMeta(meta);
+          // Notify layout observers (image sizing) that the card structure changed
+          try { window.dispatchEvent(new CustomEvent('monolog:card_layout_change')); } catch (_) {}
+        }
       } catch (e) {
         // Cache a null to avoid retry storms
         spotifyMetaCache.set(spotifyLink, null);
+        try { window.dispatchEvent(new CustomEvent('monolog:card_layout_change')); } catch (_) {}
       }
     };
 

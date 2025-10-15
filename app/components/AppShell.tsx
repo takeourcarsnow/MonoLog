@@ -33,8 +33,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
+      <Header />
       <div className="app-content">
-        <Header />
         <main
           ref={mainRef}
           className="content"

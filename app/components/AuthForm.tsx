@@ -83,7 +83,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         const elapsedSignup = Date.now() - start;
         const remainingSignup = Math.max(0, MIN_MS - elapsedSignup);
         if (remainingSignup > 0) await new Promise((res) => setTimeout(res, remainingSignup));
-        showHeaderNotice({ title: 'Next steps', subtitle: 'If the chosen details were accepted, we will email instructions to complete account setup.', variant: 'info' }, 4500);
+        showHeaderNotice({ title: 'Next steps', subtitle: 'If approved, we\'ll email setup instructions.', variant: 'info' }, 4500);
         return;
       }
     } catch (err: any) {
@@ -103,7 +103,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         }
       } else {
         try { setMode('signin'); } catch (_) {}
-        showHeaderNotice({ title: 'Next steps', subtitle: 'If the chosen details were accepted, we will email instructions to complete account setup.', variant: 'info' }, 4000);
+        showHeaderNotice({ title: 'Next steps', subtitle: 'If approved, we\'ll email setup instructions.', variant: 'info' }, 4000);
       }
     } finally {
       const elapsed = Date.now() - start;

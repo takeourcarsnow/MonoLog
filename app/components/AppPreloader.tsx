@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import Preloader from "./Preloader";
 
 export default function AppPreloader() {
+  const [hasShown, setHasShown] = useState(() => {
+    try {
+      return sessionStorage.getItem('monolog_preloader_shown') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
   const [ready, setReady] = useState(() => {
     try {
       return Boolean((window as any).__MONOLOG_APP_READY__);
@@ -23,5 +31,10 @@ export default function AppPreloader() {
     };
   }, [ready]);
 
-  return <Preloader ready={ready} />;
+  if (hasShown) return null;
+
+  return <Preloader ready={ready} onFinish={() => {
+    setHasShown(true);
+    try { sessionStorage.setItem('monolog_preloader_shown', 'true'); } catch (e) {}
+  }} />;
 }

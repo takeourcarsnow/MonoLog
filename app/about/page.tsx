@@ -65,7 +65,7 @@ export default function AboutPage() {
         <h2>The Idea</h2>
         <p>
           In a world of viral moments and endless scrolling, this is a quiet place to record one
-          meaningful photo and a few words each day. Over time those small entries become a
+          meaningful post and a few words each day. Over time those small entries become a
           searchable archive for reflection — personal and free from algorithmic pressure.
         </p>
       </div>

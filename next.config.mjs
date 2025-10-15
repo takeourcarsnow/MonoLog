@@ -11,7 +11,10 @@ const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  // Allow camera and microphone for same-origin pages — previously these
+  // were disabled with `camera=()` which prevents `getUserMedia` from
+  // working in many mobile browsers. Keep geolocation disabled by default.
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
   // A reasonably strict default CSP that allows images from https/data/blob and connections to same-origin and https.
   // Adjust `connect-src`/`img-src` as needed for Supabase or other remote hosts.
   {

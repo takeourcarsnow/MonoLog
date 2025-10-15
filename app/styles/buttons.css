@@ -258,6 +258,28 @@
   animation: signout-border-pulse 720ms ease-out 1;
 }
 
+/* Keep the confirm (armed) visual state stable on hover/interaction.
+   Some broader :hover rules can override background/border; explicitly
+   restate the confirm styles for :hover and descendant svg to prevent
+   the red warning disappearing on mouse hover. */
+.signout-btn.no-effects.confirm:hover,
+.profile-actions .signout-btn.no-effects.confirm:hover,
+.signout-btn.no-effects.confirm:focus,
+.signout-btn.no-effects.confirm:active {
+  background: var(--danger) !important;
+  color: #fff !important;
+  border-color: var(--danger) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  animation: none !important; /* keep pulse from being re-triggered by hover */
+}
+.signout-btn.no-effects.confirm svg,
+.signout-btn.no-effects.confirm:hover svg {
+  transform: none !important;
+  transition: none !important;
+  color: inherit !important;
+}
+
 /* DeleteAccount: similar to signout but with more prominent danger styling */
 .delete-account-btn.no-effects {
   /* keep it visually simple: no background ripple or movement
@@ -354,4 +376,23 @@
     padding: 6px 14px;
     font-size: 13.5px;
   }
+}
+
+/* Profile-specific override: remove any hover/transition/animation effects
+   for the sign out button when displayed inside the profile actions area.
+   This ensures the sign out control remains visually stable on hover. */
+.profile-actions .signout-btn.no-effects:not(.confirm),
+.profile-actions .signout-btn.no-effects:not(.confirm):hover,
+.profile-actions .signout-btn.no-effects:not(.confirm):active,
+.profile-actions .signout-btn.no-effects:not(.confirm):focus,
+.profile-actions .signout-btn.no-effects:not(.confirm)::before,
+.profile-actions .signout-btn.no-effects:not(.confirm)::after,
+.profile-actions .signout-btn.no-effects:not(.confirm) svg {
+  transition: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  /* don't forcibly override border/color for the armed (.confirm) state */
+  outline: none !important;
+  animation: none !important;
 }

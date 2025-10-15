@@ -18,7 +18,7 @@ export function SignOutButton() {
   return (
     <>
       <button
-        className={`btn icon signout-btn no-effects ${confirmArm ? "confirm" : ""}`}
+        className={`btn icon signout-btn no-effects ${confirmArm ? "confirm" : "no-tap-effects"}`}
         title={confirmArm ? "Click again to confirm sign out" : "Sign out"}
         aria-label={confirmArm ? "Click again to confirm sign out" : "Sign out"}
         onClick={async () => {

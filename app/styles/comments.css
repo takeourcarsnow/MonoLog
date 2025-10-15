@@ -73,8 +73,10 @@
 .comment-list { display: grid; gap: 10px; }
 .comment-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; background: color-mix(in srgb, var(--bg-elev), transparent 6%); border: 1px solid var(--border); }
 .comment-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; flex: 0 0 36px; }
+.comment-avatar-link:hover .comment-avatar { transform: scale(1.05); transition: transform 0.2s ease; }
 .comment-body { display: block; min-width: 0; }
 .comment-head { display:flex; gap:8px; align-items:center; margin-bottom:4px; }
+.comment-author-link:hover .author { color: var(--primary); transition: color 0.2s ease; }
 .comment-text { 
   font-size: 14px; 
   color: var(--text);

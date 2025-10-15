@@ -9,6 +9,7 @@ import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
 import { useToast } from "./Toast";
 import { ReportButton } from "./ReportButton";
+import Link from "next/link";
 
 // Lazy load icons to reduce initial bundle size
 const Send = lazy(() => import("lucide-react").then(mod => ({ default: mod.Send })));
@@ -149,17 +150,29 @@ export function Comments({ postId, onCountChange }: Props) {
         ) : (
           comments.map((c, idx) => (
             <div key={c.id} className={`comment-item appear ${c.id === newCommentId ? 'new' : ''} ${removingIds.has(c.id) ? 'removing' : ''}`} style={{ animationDelay: `${idx * 40}ms` }}>
-              <OptimizedImage
-                className="comment-avatar"
-                src={c.user?.avatarUrl || "/logo.svg"}
-                alt={c.user?.displayName || c.user?.username || "User"}
-                width={32}
-                height={32}
-                unoptimized={false}
-              />
+              <Link 
+                href={`/${c.user?.username || c.user?.id}`} 
+                className="comment-avatar-link"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <OptimizedImage
+                  className="comment-avatar"
+                  src={c.user?.avatarUrl || "/logo.svg"}
+                  alt={c.user?.displayName || c.user?.username || "User"}
+                  width={32}
+                  height={32}
+                  unoptimized={false}
+                />
+              </Link>
               <div className="comment-body">
                 <div className="comment-head">
-                  <span className="author">{c.user?.displayName || c.user?.username || "User"}</span>
+                  <Link 
+                    href={`/${c.user?.username || c.user?.id}`} 
+                    className="comment-author-link"
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <span className="author">{c.user?.displayName || c.user?.username || "User"}</span>
+                  </Link>
                   <span className="dim">{new Date(c.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                   {currentUser && currentUser.id === c.user?.id ? (
                     <button

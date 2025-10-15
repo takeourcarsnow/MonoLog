@@ -86,22 +86,11 @@ export function useDraftPersistence(
         savedAt: Date.now(),
       };
 
-      // Defensive merge: preserve existing saved images if the new payload
-      // contains no images (for example, when opening the file picker and
-      // cancelling). Also migrate legacy single-image drafts to the modern
-      // array form if present in existing storage.
+      // Defensive merge: preserve existing optional fields if not set
       try {
         const existingRaw = localStorage.getItem(DRAFT_KEY);
         if (existingRaw) {
           const existing = JSON.parse(existingRaw);
-          if (!payload.dataUrls && existing?.dataUrls) {
-            payload.dataUrls = existing.dataUrls;
-          } else if (!payload.dataUrls && existing?.dataUrl) {
-            // migrate legacy single-image into dataUrls
-            payload.dataUrls = [existing.dataUrl];
-          }
-          if (existing.originalDataUrls) payload.originalDataUrls = existing.originalDataUrls;
-          if (existing.editorSettings) payload.editorSettings = existing.editorSettings;
           if (existing.spotifyLink && !payload.spotifyLink) payload.spotifyLink = existing.spotifyLink;
           if (existing.camera && !payload.camera) payload.camera = existing.camera;
           if (existing.lens && !payload.lens) payload.lens = existing.lens;

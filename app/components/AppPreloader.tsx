@@ -25,6 +25,8 @@ export default function AppPreloader() {
       // Remove the blur class since preloader won't show
       try { document.documentElement.classList.remove('preloader-active'); } catch (e) {}
       try { document.body.classList.add('preloader-finished'); } catch (e) {}
+      try { (window as any).__MONOLOG_PRELOADER_HAS_RUN__ = true; } catch (e) {}
+      try { window.dispatchEvent(new CustomEvent('preloader-finished')); } catch (e) {}
     }
   }, [hasShown]);
 

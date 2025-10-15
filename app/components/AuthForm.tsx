@@ -13,6 +13,39 @@ import { AuthMessage } from "./auth/AuthMessage";
 import { validUsername } from "./auth/authUtils";
 import { signIn, signUp, checkUsernameAvailability } from "./auth/authActions";
 
+function isTempEmail(email: string): boolean {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return false;
+  
+  // Common temporary/disposable email domains
+  const tempDomains = [
+    '10minutemail.com', 'guerrillamail.com', 'mailinator.com', 'temp-mail.org', 'throwaway.email',
+    'yopmail.com', 'maildrop.cc', 'tempail.com', 'dispostable.com', 'getnada.com',
+    'mail-temporaire.fr', 'mytemp.email', 'temp-mail.io', 'tempmail.net', 'fakeinbox.com',
+    'mailcatch.com', 'tempinbox.com', 'temp-mail.ru', '10minutemail.net', 'guerrillamail.net',
+    'mailinator.net', 'temp-mail.org', 'throwaway.email', 'yopmail.fr', 'maildrop.cc',
+    'tempail.com', 'dispostable.com', 'getnada.com', 'mail-temporaire.fr', 'mytemp.email',
+    'temp-mail.io', 'tempmail.net', 'fakeinbox.com', 'mailcatch.com', 'tempinbox.com',
+    'temp-mail.ru', '10minutemail.de', 'guerrillamail.de', 'mailinator.de', 'temp-mail.de',
+    'throwaway.email', 'yopmail.de', 'maildrop.cc', 'tempail.de', 'dispostable.de',
+    'getnada.de', 'mail-temporaire.de', 'mytemp.email', 'temp-mail.io', 'tempmail.de',
+    'fakeinbox.de', 'mailcatch.de', 'tempinbox.de', 'temp-mail.ru', '10minutemail.co.uk',
+    'guerrillamail.co.uk', 'mailinator.co.uk', 'temp-mail.co.uk', 'throwaway.email',
+    'yopmail.co.uk', 'maildrop.cc', 'tempail.co.uk', 'dispostable.co.uk', 'getnada.co.uk',
+    'mail-temporaire.co.uk', 'mytemp.email', 'temp-mail.io', 'tempmail.co.uk', 'fakeinbox.co.uk',
+    'mailcatch.co.uk', 'tempinbox.co.uk', 'temp-mail.ru', '10minutemail.com.au', 'guerrillamail.com.au',
+    'mailinator.com.au', 'temp-mail.com.au', 'throwaway.email', 'yopmail.com.au', 'maildrop.cc',
+    'tempail.com.au', 'dispostable.com.au', 'getnada.com.au', 'mail-temporaire.com.au', 'mytemp.email',
+    'temp-mail.io', 'tempmail.com.au', 'fakeinbox.com.au', 'mailcatch.com.au', 'tempinbox.com.au',
+    'temp-mail.ru', '10minutemail.ca', 'guerrillamail.ca', 'mailinator.ca', 'temp-mail.ca',
+    'throwaway.email', 'yopmail.ca', 'maildrop.cc', 'tempail.ca', 'dispostable.ca',
+    'getnada.ca', 'mail-temporaire.ca', 'mytemp.email', 'temp-mail.io', 'tempmail.ca',
+    'fakeinbox.ca', 'mailcatch.ca', 'tempinbox.ca', 'temp-mail.ru'
+  ];
+  
+  return tempDomains.includes(domain);
+}
+
 export function AuthForm({ onClose }: { onClose?: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +83,11 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         if (!emailOk) {
           setLoading(false);
           showHeaderNotice({ title: 'Invalid email', subtitle: 'Please enter a valid email address.', variant: 'warn' }, 4000);
+          return;
+        }
+        if (isTempEmail(email)) {
+          setLoading(false);
+          showHeaderNotice({ title: 'Temporary emails not allowed', subtitle: 'Please use a permanent email address.', variant: 'warn' }, 4000);
           return;
         }
         if (!password || password.length < 8) {

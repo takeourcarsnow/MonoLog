@@ -119,7 +119,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
 
     const toggleEdit = async () => {
       if (!isEditingProfile) {
-        setEditDisplayName(user.displayName || "");
+        setEditDisplayName(user.displayName && user.displayName !== user.username ? user.displayName : "");
         setEditUsername(user.username || "");
         setEditBio((user.bio || "").slice(0,200));
         setEditTwitter(user.socialLinks?.twitter || "");

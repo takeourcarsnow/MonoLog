@@ -83,7 +83,7 @@ export async function POST(req: Request) {
           // ignore admin fetch errors
         }
 
-  const up: any = { id: actorId, username, display_name: displayName };
+  const up: any = { id: actorId, username, display_name: null };
   if (avatarUrl) up.avatar_url = avatarUrl;
   // only create the minimal profile when missing. Use insert rather
   // than upsert to avoid overwriting an existing row if the earlier

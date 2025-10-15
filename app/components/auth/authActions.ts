@@ -34,9 +34,8 @@ export async function signIn(identifier: string, password: string) {
         const { data: existing } = await sb.from('users').select('id').eq('id', u.id).limit(1).maybeSingle();
         if (!existing) {
           const synthUsername = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : u.id);
-          const synthDisplay = u.user_metadata?.name || synthUsername;
           try {
-            await sb.from('users').insert({ id: u.id, username: synthUsername, display_name: synthDisplay, avatar_url: '/logo.svg' });
+            await sb.from('users').insert({ id: u.id, username: synthUsername, display_name: null, avatar_url: '/logo.svg' });
           } catch (e) { /* ignore */ }
         }
       }
@@ -47,7 +46,7 @@ export async function signIn(identifier: string, password: string) {
 export async function signUp(email: string, password: string, username: string) {
   const sb = getSupabaseClient();
   const chosen = username.trim().toLowerCase();
-  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username: chosen, name: chosen } } });
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username: chosen, name: null } } });
   if (error) throw error;
   // when signing up, only create a users profile row client-side if the
   // signup returned an active session (some flows require email
@@ -58,7 +57,7 @@ export async function signUp(email: string, password: string, username: string) 
   const sessionPresent = (data as any)?.session ?? false;
   if (userId && sessionPresent) {
     try {
-      await sb.from('users').upsert({ id: userId, username: chosen, display_name: chosen, avatar_url: "/logo.svg" });
+      await sb.from('users').upsert({ id: userId, username: chosen, display_name: null, avatar_url: "/logo.svg" });
     } catch (e) { /* ignore upsert errors for now */ }
   }
 }

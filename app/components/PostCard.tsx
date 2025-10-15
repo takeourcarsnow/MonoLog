@@ -302,15 +302,13 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
               </div>
             ) : null}
           </div>
-          {post.commentsCount > 0 && (
-            <CommentsSection
-              postId={post.id}
-              commentsMounted={commentsMounted}
-              commentsOpen={commentsOpen}
-              commentsRef={commentsRef}
-              setCount={setCount}
-            />
-          )}
+          <CommentsSection
+            postId={post.id}
+            commentsMounted={commentsMounted}
+            commentsOpen={commentsOpen}
+            commentsRef={commentsRef}
+            setCount={setCount}
+          />
         </div>
 
         {/* Render editor while editing OR while it's animating out (showEditor)

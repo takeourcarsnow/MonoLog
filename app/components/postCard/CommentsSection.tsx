@@ -18,7 +18,7 @@ export const CommentsSection = memo(function CommentsSection({
 }: CommentsSectionProps) {
   return (
     <div className={`comments ${commentsOpen ? "open" : ""}`} id={`comments-${postId}`} ref={commentsRef}>
-      {commentsOpen && (
+      {(commentsMounted || commentsOpen) && (
         <div>
           <Comments postId={postId} onCountChange={setCount} />
         </div>

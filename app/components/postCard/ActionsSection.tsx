@@ -64,45 +64,17 @@ export const ActionsSection = function ActionsSection({
         onClick={() => {
           if (!commentsMounted) {
             setCommentsMounted(true);
-            requestAnimationFrame(() => {
-              setCommentsOpen(true);
-              const onOpenEnd = () => {
-                if (!commentsRef.current) return;
-                try { commentsRef.current.removeEventListener('transitionend', onOpenEnd); } catch (_) {}
-                try { commentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
-              };
-              commentsRef.current?.addEventListener('transitionend', onOpenEnd);
-            });
+            setCommentsOpen(true);
           } else {
             const willOpen = !commentsOpen;
             if (!willOpen) {
               setCommentsOpen(false);
-              const el = commentsRef.current;
-              if (el) {
-                const onClose = (ev: TransitionEvent) => {
-                  if (ev.propertyName !== 'max-height') return;
-                  try { el.removeEventListener('transitionend', onClose as any); } catch (_) {}
-                  setCommentsMounted(false);
-                };
-                el.addEventListener('transitionend', onClose as any);
-                setTimeout(() => {
-                  try { el.removeEventListener('transitionend', onClose as any); } catch (_) {}
-                  setCommentsMounted(false);
-                }, 520);
-              } else {
+              // Unmount after a delay to allow animation to complete
+              setTimeout(() => {
                 setCommentsMounted(false);
-              }
+              }, 320);
             } else {
               setCommentsOpen(true);
-              const el = commentsRef.current;
-              if (el) {
-                const onOpen = (ev?: TransitionEvent) => {
-                  if (ev && ev.propertyName !== 'max-height') return;
-                  try { el.removeEventListener('transitionend', onOpen as any); } catch (_) {}
-                  try { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
-                };
-                el.addEventListener('transitionend', onOpen as any);
-              }
             }
           }
         }}

@@ -90,39 +90,13 @@ export function useComments(postId: string, initialCount: number) {
     // Notify listeners that layout change is starting
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: open ? 'opening' : 'closing' } })); } catch(_) {}
     if (open) {
-      // measure and set explicit max-height so CSS can animate it
-      const h = el.scrollHeight;
-      // allow a small extra so inner margins/paddings don't clip
-      el.style.maxHeight = h + 24 + 'px';
-      // ensure the open class is present so opacity transitions
+      // Let CSS handle the animation - just add the open class
       el.classList.add('open');
-      // remove any previous transitionend handlers
-      const onEnd = () => { 
-        el.style.maxHeight = ''; 
-        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'opened' } })); } catch(_) {}
-        el.removeEventListener('transitionend', onEnd);
-      };
-      el.addEventListener('transitionend', onEnd);
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'opened' } })); } catch(_) {}
     } else {
-      // closing: set maxHeight to current height then to 0 so transition runs
-      const h = el.scrollHeight;
-      el.style.maxHeight = h + 'px';
-      // Force layout so the browser notices the change before collapsing
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      el.offsetHeight;
-      // remove open class after transition completes
-      const onEnd = (ev: TransitionEvent) => {
-        if (ev.propertyName === 'max-height' || ev.propertyName === 'max-height') {
-          el.classList.remove('open');
-          el.style.maxHeight = '';
-          try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'closed' } })); } catch(_) {}
-          el.removeEventListener('transitionend', onEnd as any);
-        }
-      };
-      el.addEventListener('transitionend', onEnd as any);
-      // trigger collapse
-      el.style.maxHeight = '0px';
-      el.style.opacity = '0';
+      // For closing, let CSS handle the transition
+      el.classList.remove('open');
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'closed' } })); } catch(_) {}
     }
   };
 

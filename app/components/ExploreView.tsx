@@ -40,7 +40,7 @@ export function ExploreView() {
       return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handler); };
     }, []);
 
-    const emptyMessage = "Discover new creators and follow them to see their posts in your feed. Explore different topics and communities!";
+    const emptyMessage = "You're already following everyone! This section shows posts from users you're not following yet.";
 
     return (
       <FeedPage

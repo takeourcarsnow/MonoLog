@@ -21,6 +21,14 @@ export default function AppPreloader() {
   });
 
   useEffect(() => {
+    if (hasShown) {
+      // Remove the blur class since preloader won't show
+      try { document.documentElement.classList.remove('preloader-active'); } catch (e) {}
+      try { document.body.classList.add('preloader-finished'); } catch (e) {}
+    }
+  }, [hasShown]);
+
+  useEffect(() => {
     if (ready) return;
     const handler = () => setReady(true);
     try {

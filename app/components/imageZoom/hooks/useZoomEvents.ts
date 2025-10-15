@@ -36,7 +36,19 @@ interface ZoomState {
   scaleRef: React.MutableRefObject<number>;
   txRef: React.MutableRefObject<number>;
   tyRef: React.MutableRefObject<number>;
-  pinchRef: React.MutableRefObject<null | { initialDistance: number; initialScale: number }>;
+  pinchRef: React.MutableRefObject<
+    | null
+    | {
+        initialDistance: number;
+        initialScale: number;
+        // midpoint inside the container at gesture start
+        midLocalX: number;
+        midLocalY: number;
+        // tx/ty at gesture start (so we can compute scale-ratio-preserving translation)
+        startTx: number;
+        startTy: number;
+      }
+  >;
   wheelEnabledRef: React.MutableRefObject<boolean>;
   instanceIdRef: React.MutableRefObject<string>;
   maxScale: number;
@@ -361,7 +373,17 @@ export const useZoomEvents = (state: ZoomState) => {
       if (!rect) return;
       const midLocalX = midX - rect.left;
       const midLocalY = midY - rect.top;
-      pinchRef.current = { initialDistance: dist, initialScale: scaleRef.current };
+      // Store the translation at pinch start so we can preserve the point
+      // under the fingers when scale changes by applying a scale-ratio
+      // transformation.
+      pinchRef.current = {
+        initialDistance: dist,
+        initialScale: scaleRef.current,
+        midLocalX,
+        midLocalY,
+        startTx: txRef.current,
+        startTy: tyRef.current,
+      };
       // Make sure we aren't in pan mode
       setIsPanning(false);
       panStartRef.current = null;
@@ -418,23 +440,32 @@ export const useZoomEvents = (state: ZoomState) => {
       const dx = t1.clientX - t0.clientX;
       const dy = t1.clientY - t0.clientY;
       const dist = Math.hypot(dx, dy) || 1;
-      const { initialDistance, initialScale } = pinchRef.current;
-      const ratio = dist / initialDistance;
-      let newScale = Math.max(1, Math.min(maxScale, initialScale * ratio));
+      const p = pinchRef.current;
+      const ratio = dist / p.initialDistance;
+      let newScale = Math.max(1, Math.min(maxScale, p.initialScale * ratio));
 
-      // Calculate current midpoint
-      const midX = (t0.clientX + t1.clientX) / 2;
-      const midY = (t0.clientY + t1.clientY) / 2;
+      // Preserve the point under the fingers by computing translation
+      // relative to the pinch-start midpoint using scale ratio math.
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect) {
-        const midLocalX = midX - rect.left;
-        const midLocalY = midY - rect.top;
         const containerWidth = rect.width;
         const containerHeight = rect.height;
 
-        // Center the zoom on the current midpoint
-        const newTx = -(midLocalX - containerWidth / 2) * newScale;
-        const newTy = -(midLocalY - containerHeight / 2) * newScale;
+        // Coordinates of pinch midpoint at start (midLocalX/midLocalY)
+        // We want that same point to remain under fingers, so compute
+        // newTx/newTy by scaling the delta from center and applying
+        // the change relative to startTx/startTy.
+        const scaleRatio = newScale / p.initialScale;
+        const cx = containerWidth / 2;
+        const cy = containerHeight / 2;
+
+        // Vector from center to midpoint at start
+        const dxMid = p.midLocalX - cx;
+        const dyMid = p.midLocalY - cy;
+
+        // New translation so that midpoint stays fixed
+        const newTx = p.startTx * scaleRatio + dxMid * (1 - scaleRatio);
+        const newTy = p.startTy * scaleRatio + dyMid * (1 - scaleRatio);
 
         // Clamp to bounds
         const bounds = getBounds(containerRef, imgRef, naturalRef, newScale);

@@ -80,10 +80,15 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         // Normalize social links: send null when the user cleared all social fields
         const socialLinksNormalized = Object.keys(socialLinks).length ? socialLinks : null;
 
-        // Debug: log the payload we're about to send
-        try { console.log('[ProfileEditForm] outgoing payload', { username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized }); } catch (_) {}
+  // Normalize displayName: send null when the user cleared the field so the
+  // server can set the DB column to NULL. Previously we sent `undefined`
+  // which caused the key to be omitted from the PATCH body and the old
+  // display name remained.
+  const displayNameNormalized = (editDisplayName || '').trim() === '' ? null : (editDisplayName || '').trim();
+  // Debug: log the payload we're about to send
+  try { console.log('[ProfileEditForm] outgoing payload', { username: uname, displayName: displayNameNormalized, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized }); } catch (_) {}
 
-        const payload = { username: uname, displayName: (editDisplayName || '').trim() || undefined, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized } as any;
+  const payload = { username: uname, displayName: displayNameNormalized, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized } as any;
   await api.updateCurrentUser(payload as Partial<User>);
         // Notify any listeners and revalidate app-router data so the UI updates
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (_) {}
@@ -209,7 +214,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         {!isEditingProfile && !isClosing && (
           <div className="profile-static-info">
             <div className="username">@{user.username}</div>
-            <div className="dim">{user.displayName}</div>
+            {user.displayName && <div className="dim">{user.displayName}</div>}
             <div className="dim">joined {new Date(user.joinedAt).toLocaleDateString()}</div>
             {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
           </div>

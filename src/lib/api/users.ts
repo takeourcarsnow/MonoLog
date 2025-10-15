@@ -91,15 +91,7 @@ export async function updateUser(id: string, patch: Partial<User>) {
   const { error, data } = await sb.from("users").update(upd).eq("id", id).select("*").limit(1).single();
   if (error) throw error;
   const profile = data as any;
-  return {
-    id: profile.id,
-    username: profile.username || profile.user_name,
-    displayName: profile.displayName || profile.display_name,
-avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
-    bio: profile.bio,
-    socialLinks: profile.socialLinks ? JSON.parse(profile.socialLinks) : undefined,
-    joinedAt: profile.joinedAt || profile.joined_at,
-  } as any;
+  return mapProfileToUser(profile) as any;
 }
 
 export async function updateCurrentUser(patch: Partial<User>) {
@@ -189,16 +181,10 @@ logger.debug("users.upsert payload", safe(upsertObj));
     })();
     throw new Error(`Server update failed: empty profile returned (${bodyText}).`);
   }
-  return {
-    id: profile.id,
-    username: profile.username || profile.user_name,
-    displayName: profile.displayName || profile.display_name,
-    avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
-    bio: profile.bio,
-    socialLinks: profile.socialLinks ? JSON.parse(profile.socialLinks) : undefined,
-    joinedAt: profile.joinedAt || profile.joined_at,
-    usernameChangedAt: profile.username_changed_at || profile.usernameChangedAt,
-  } as any;
+  // Use the shared mapper so fields like displayName are normalized
+  const mapped = mapProfileToUser(profile) as any;
+  mapped.usernameChangedAt = profile.username_changed_at || profile.usernameChangedAt;
+  return mapped as any;
 }
 
 export async function signOut() {

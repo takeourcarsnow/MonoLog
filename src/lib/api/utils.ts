@@ -39,7 +39,14 @@ export function mapProfileToUser(profile: any) {
   return {
     id: profile.id,
     username: profile.username || profile.user_name || "",
-    displayName: profile.displayName || profile.display_name || "",
+    // Treat explicit NULL or empty-string display names as absent so callers
+    // can rely on `undefined` and fall back to username when rendering.
+    displayName: (() => {
+      const raw = profile.displayName ?? profile.display_name;
+      if (raw === undefined || raw === null) return undefined;
+      const s = String(raw);
+      return s.trim() === '' ? undefined : s;
+    })(),
     avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
     socialLinks,
@@ -116,7 +123,12 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
     user: {
       id: (row.users || row.public_profiles)?.id || row.user_id,
       username: (row.users || row.public_profiles)?.username || "",
-      displayName: (row.users || row.public_profiles)?.display_name || (row.users || row.public_profiles)?.displayName || "",
+      displayName: (() => {
+        const src = (row.users || row.public_profiles)?.display_name ?? (row.users || row.public_profiles)?.displayName;
+        if (src === undefined || src === null) return undefined;
+        const s = String(src);
+        return s.trim() === '' ? undefined : s;
+      })(),
       avatarUrl: (row.users || row.public_profiles)?.avatar_url || (row.users || row.public_profiles)?.avatarUrl || DEFAULT_AVATAR,
     },
     // If the server query included a `comments` array, use its length. Otherwise

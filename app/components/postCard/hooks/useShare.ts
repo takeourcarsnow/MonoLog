@@ -1,11 +1,11 @@
 import { useToast } from "../../Toast";
 
-export function useShare(post: { id: string; user: { username?: string; id: string; displayName: string }; caption?: string }) {
+export function useShare(post: { id: string; user: { username?: string; id: string; displayName?: string }; caption?: string }) {
   const toast = useToast();
 
   const sharePost = async () => {
     const url = `${(typeof window !== 'undefined' ? window.location.origin : '')}/post/${post.user.username || post.user.id}-${post.id.slice(0,8)}`;
-    const title = `${post.user.displayName}'s MonoLog`;
+  const title = `${post.user.displayName ?? post.user.username ?? post.user.id}'s MonoLog`;
     const text = post.caption ? post.caption : 'Check out this MonoLog photo';
     try {
       if (typeof navigator !== 'undefined' && (navigator as any).share) {

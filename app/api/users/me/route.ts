@@ -56,7 +56,7 @@ export async function PATCH(req: Request) {
       upd.username = usernameIncoming;
       upd.username_changed_at = new Date().toISOString();
     }
-    if (displayNameIncoming !== undefined) upd.display_name = displayNameIncoming;
+  if (displayNameIncoming !== undefined) upd.display_name = displayNameIncoming === '' ? null : displayNameIncoming;
     if (avatarUrlIncoming !== undefined) upd.avatar_url = avatarUrlIncoming;
     if (bioIncoming !== undefined) upd.bio = bioIncoming;
   if (socialLinksIncoming !== undefined) upd.social_links = socialLinksIncoming ? JSON.stringify(socialLinksIncoming) : null;
@@ -101,7 +101,7 @@ export async function PATCH(req: Request) {
     const insertObj: any = { id: actorId };
     if (upd.username !== undefined) insertObj.username = upd.username;
     if (upd.username_changed_at !== undefined) insertObj.username_changed_at = upd.username_changed_at;
-    if (upd.display_name !== undefined) insertObj.display_name = upd.display_name;
+  if (upd.display_name !== undefined) insertObj.display_name = upd.display_name === '' ? null : upd.display_name;
     if (upd.avatar_url !== undefined) insertObj.avatar_url = upd.avatar_url;
     if (upd.bio !== undefined) insertObj.bio = upd.bio;
   if (upd.social_links !== undefined) insertObj.social_links = upd.social_links;

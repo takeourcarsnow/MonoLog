@@ -80,14 +80,14 @@ export default function FollowingPage() {
               <div key={user.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16 }}>
                 <Image
                   src={user.avatarUrl || "/logo.svg"}
-                  alt={user.displayName}
+                  alt={user.displayName ?? user.username}
                   className="avatar large"
                   width={48}
                   height={48}
                 />
                 <div style={{ flex: 1 }}>
                   <Link href={`/${user.username}`} style={{ fontWeight: 'bold', textDecoration: 'none', color: 'inherit' }}>
-                    {user.displayName}
+                    {user.displayName ?? user.username}
                   </Link>
                   <div style={{ fontSize: '0.9em', color: 'var(--text-secondary)' }}>
                     @{user.username}

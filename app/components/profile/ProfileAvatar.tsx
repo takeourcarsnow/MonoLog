@@ -197,7 +197,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
             type="button"
           >
             <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 160, height: 160 }}>
-              <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName} width={160} height={160} />
+              <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} />
             </div>
           </button>
           <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} disabled={avatarUploading} />
@@ -206,7 +206,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
         <>
           <button
             type="button"
-            aria-label={`Toggle ${user.displayName}'s avatar`}
+            aria-label={`Toggle ${(user.displayName ?? user.username)}'s avatar`}
             className="profile-avatar-button"
             onClick={() => setExpanded((s) => !s)}
             aria-expanded={expanded}
@@ -236,7 +236,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
               <Image
                 className="profile-avatar"
                 src={user.avatarUrl || "/logo.svg"}
-                alt={user.displayName}
+                alt={user.displayName ?? user.username}
                 width={160}
                 height={160}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px', filter: expanded ? 'none' : 'none' }}

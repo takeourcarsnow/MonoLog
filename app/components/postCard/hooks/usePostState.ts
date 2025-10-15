@@ -14,7 +14,7 @@ export function usePostState(initialPost: HydratedPost) {
         if (!post.user?.avatarUrl) {
           const u = await api.getUser(post.user.id);
           if (mounted && u && u.avatarUrl) {
-            setPost(p => ({ ...p, user: { ...p.user, avatarUrl: u.avatarUrl, displayName: u.displayName || p.user.displayName } }));
+            setPost(p => ({ ...p, user: { ...p.user, avatarUrl: u.avatarUrl, displayName: u.displayName ?? p.user.displayName ?? p.user.username } }));
           }
         }
       } catch (e) {

@@ -1,7 +1,8 @@
 export type User = {
   id: string;
   username: string;
-  displayName: string;
+  // optional display name; when absent UI should fall back to `username`
+  displayName?: string;
   avatarUrl: string;
   bio?: string;
   // Social links stored as a small map of platform->value (either full url or handle)

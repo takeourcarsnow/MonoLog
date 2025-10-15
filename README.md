@@ -185,4 +185,3 @@ This project is private and proprietary.
 ---
 
 **MonoLog** — Your day in pictures.
-<parameter name="filePath">c:\Users\i\Desktop\webdev\MonoLog\README.md

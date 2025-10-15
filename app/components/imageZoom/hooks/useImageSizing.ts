@@ -211,6 +211,7 @@ export const useImageSizing = (
     // Observe card/container changes (comments opening/closing, caption height changes)
     let ro: ResizeObserver | null = null;
     let mo: MutationObserver | null = null;
+    let imgLoadListener: (() => void) | null = null;
     try {
         if (container) {
             const cardEl = (container.closest('article.card') as HTMLElement | null) || (container.closest('.card') as HTMLElement | null) || container;
@@ -230,6 +231,13 @@ export const useImageSizing = (
             });
             mo.observe(cardEl, { childList: true, subtree: true });
           }
+        if (img && !img.complete) {
+          imgLoadListener = () => {
+            if (raf) cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(() => { updateSizing(); raf = null; });
+          };
+          img.addEventListener('load', imgLoadListener);
+        }
     } catch (_) {
       // ignore observer failures
     }
@@ -240,6 +248,7 @@ export const useImageSizing = (
   if ((window as any).visualViewport) (window as any).visualViewport.removeEventListener('resize', onResize as any);
   if (ro) try { ro.disconnect(); } catch(_) {}
   if (mo) try { mo.disconnect(); } catch(_) {}
+  if (imgLoadListener && img) try { img.removeEventListener('load', imgLoadListener); } catch(_) {}
   try { window.removeEventListener('monolog:card_layout_change', onLayoutChange as any); } catch(_) {}
       if (raf) cancelAnimationFrame(raf as number);
       // Clear inline sizing when unmounted so other layouts aren't affected

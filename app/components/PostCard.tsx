@@ -219,7 +219,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
           />
 
           <div className={`spotify-section ${showSpotify ? 'open' : ''}`}>
-            {post.spotifyLink && showSpotify ? (
+            {post.spotifyLink ? (
               <div className="spotify-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
                 <div className="spotify-preview-content" style={{ position: 'relative', minHeight: 24 }}>
                   <a
@@ -255,7 +255,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             ) : null}
           </div>
           <div className={`exif-section ${showExif ? 'open' : ''}`}>
-            {(post.camera || post.lens || post.filmType) && showExif ? (
+            {(post.camera || post.lens || post.filmType) ? (
               <div className="exif-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
                 <div style={{ display: 'flex', gap: '8px 12px', justifyContent: 'center', alignItems: 'center' }}>
                   {(() => {
@@ -284,25 +284,33 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
                     }
                     
                     const content = parts.map((part, index) => (
-                      <span key={index} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <span key={`first-${index}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
                         {part}
                       </span>
                     ));
                     
                     // Duplicate content for seamless scrolling
-                    return [...content, ...content];
+                    const duplicated = parts.map((part, index) => (
+                      <span key={`second-${index}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        {part}
+                      </span>
+                    ));
+                    
+                    return [...content, ...duplicated];
                   })()}
                 </div>
               </div>
             ) : null}
           </div>
-          <CommentsSection
-            postId={post.id}
-            commentsMounted={commentsMounted}
-            commentsOpen={commentsOpen}
-            commentsRef={commentsRef}
-            setCount={setCount}
-          />
+          {post.commentsCount > 0 && (
+            <CommentsSection
+              postId={post.id}
+              commentsMounted={commentsMounted}
+              commentsOpen={commentsOpen}
+              commentsRef={commentsRef}
+              setCount={setCount}
+            />
+          )}
         </div>
 
         {/* Render editor while editing OR while it's animating out (showEditor)

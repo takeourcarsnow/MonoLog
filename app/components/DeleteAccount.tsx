@@ -74,33 +74,48 @@ export function DeleteAccountButton() {
           </span>
         </button>
 
-        {confirmArm ? (
-          <div className="confirm-popover" role="dialog" aria-labelledby="delete-account-title" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="confirm-popover-arrow" aria-hidden />
-            <div className="confirm-popover-body">
-              <h3 id="delete-account-title">Permanently delete your account</h3>
+        {confirmArm && (
+          <>
+            {/* Backdrop to capture clicks outside */}
+            <div 
+              className="confirm-popover-backdrop"
+              onClick={() => {
+                setConfirmArm(false);
+                setConfirmText("");
+                setError(null);
+                if (timerRef.current) {
+                  window.clearTimeout(timerRef.current);
+                  timerRef.current = null;
+                }
+              }}
+            />
+            <div className="confirm-popover" role="dialog" aria-labelledby="delete-account-title" onMouseDown={(e) => e.stopPropagation()}>
+              <div className="confirm-popover-arrow" aria-hidden />
+              <div className="confirm-popover-body">
+                <h3 id="delete-account-title">Permanently delete your account</h3>
 
-              <input
-                ref={inputRef}
-                className="input"
-                aria-label="Type delete to confirm account deletion"
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                onKeyDown={async (e) => {
-                  if (e.key === "Enter") {
-                    if (confirmText.trim().toLowerCase() === "delete") {
-                      e.preventDefault();
-                      await performDelete();
+                <input
+                  ref={inputRef}
+                  className="input"
+                  aria-label="Type delete to confirm account deletion"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  onKeyDown={async (e) => {
+                    if (e.key === "Enter") {
+                      if (confirmText.trim().toLowerCase() === "delete") {
+                        e.preventDefault();
+                        await performDelete();
+                      }
                     }
-                  }
-                }}
-                placeholder="Type delete to confirm"
-              />
+                  }}
+                  placeholder="Type delete to confirm"
+                />
 
-              {error ? <p className="error">{error}</p> : null}
+                {error ? <p className="error">{error}</p> : null}
+              </div>
             </div>
-          </div>
-        ) : null}
+          </>
+        )}
       </div>
     </>
   );

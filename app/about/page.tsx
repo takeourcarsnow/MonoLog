@@ -21,43 +21,69 @@ export default function AboutPage() {
     };
   }, []);
 
+  useEffect(() => {
+    // Scroll reveal with IntersectionObserver + CSS-driven stagger
+    if (typeof window === 'undefined') return;
+
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const els = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+
+    if (prefersReduced) {
+      els.forEach((el) => el.classList.add('inView'));
+      return;
+    }
+
+    els.forEach((el, i) => {
+      if (!el.style.getPropertyValue('--index')) el.style.setProperty('--index', String(i));
+    });
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const t = entry.target as HTMLElement;
+        if (entry.isIntersecting) {
+          t.classList.add('inView');
+          io.unobserve(t);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
   return (
   <div ref={cardRef} className={`${styles.aboutCard}`}>
-  <div className={styles.topLogo}>
+  <div className={`${styles.topLogo} reveal`} data-reveal>
     <LogoIcon size={48} />
   </div>
-      <h1 className={styles.aboutTitle}>MonoLog <span className="sr-only">— Your day in pictures.</span></h1>
-      <p className={styles.aboutSubtitle}>
-        MonoLog is a private, chronological photo journal — one thoughtful post per day. No chasing likes, no algorithmic feeds.
+      <h1 className={`${styles.aboutTitle} reveal`} data-reveal>MonoLog <span className="sr-only">— Your day in pictures.</span></h1>
+      <p className={`${styles.aboutSubtitle} reveal`} data-reveal>
+        Capture a meaningful moment each day in a private journal — build a lasting, ad-free archive.
       </p>
 
-      <div className={styles.aboutSection}>
+      <div className={`${styles.aboutSection} reveal stagger`} data-reveal>
         <h2>The Idea</h2>
         <p>
-          In a world of viral moments and endless scrolling, MonoLog offers a quiet alternative.
-          Capture meaningful moments daily through photos and notes, building a coherent narrative
-          of your life — intentional, private, and yours alone.
-        </p>
-        <p>
-          While social platforms chase engagement, MonoLog preserves what matters.
-          Your posts build a personal legacy, creating space for genuine expression.
+          In a world of viral moments and endless scrolling, this is a quiet place to record one
+          meaningful photo and a few words each day. Over time those small entries become a
+          searchable archive for reflection — personal and free from algorithmic pressure.
         </p>
       </div>
 
       <div className={styles.highlightsSection}>
         <h2>Why It Matters</h2>
         <div className={styles.highlightsGrid}>
-          <div className={styles.highlightItem}>
+          <div className={`${styles.highlightItem} reveal`} data-reveal>
             <Brain className={styles.highlightIcon} size={24} />
             <h3>Mindful Daily Ritual</h3>
             <p>Intentional reflection through consistent photo journaling</p>
           </div>
-          <div className={styles.highlightItem}>
+          <div className={`${styles.highlightItem} reveal`} data-reveal>
             <Lock className={styles.highlightIcon} size={24} />
             <h3>True Privacy</h3>
             <p>Your moments stay yours — no algorithms, no ads, no data collection</p>
           </div>
-          <div className={styles.highlightItem}>
+          <div className={`${styles.highlightItem} reveal`} data-reveal>
             <Archive className={styles.highlightIcon} size={24} />
             <h3>Personal Archive</h3>
             <p>Build a chronological story of your life that you can revisit anytime</p>
@@ -65,11 +91,11 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <div className={styles.installSection}>
+      <div className={`${styles.installSection} reveal`} data-reveal>
         <InstallButton />
       </div>
 
-      <a className={styles.authorLink} href="https://nefas.tv" target="_blank" rel="noopener noreferrer" aria-label="Author">
+      <a className={`${styles.authorLink} reveal`} data-reveal href="https://nefas.tv" target="_blank" rel="noopener noreferrer" aria-label="Author">
         <Sparkles size={14} />
       </a>
     </div>

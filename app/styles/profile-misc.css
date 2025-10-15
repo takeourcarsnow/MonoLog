@@ -100,6 +100,12 @@
   transform-origin: top right;
   animation: popConfirm 200ms var(--transition-mid) both;
 }
+.confirm-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: transparent;
+}
 .confirm-popover-arrow {
   position: absolute;
   top: -8px;

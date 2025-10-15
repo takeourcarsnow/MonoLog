@@ -56,6 +56,8 @@ export const OptimizedImage = memo(function OptimizedImage({
       className={className}
       style={{
         ...style,
+        width: fill ? undefined : width,
+        height: fill ? undefined : height,
         transition: 'opacity 0.3s ease-in-out',
         opacity: isLoading ? 0.7 : 1,
       }}

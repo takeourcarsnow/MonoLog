@@ -28,8 +28,8 @@
 
 /* Skeleton placeholder styles */
 .skeleton { background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); color: transparent; pointer-events: none; }
-.skeleton .comment-avatar { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 6%), color-mix(in srgb, var(--bg-elev), transparent 2%)); border-radius: 10px; }
-.skeleton-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); }
+.skeleton .comment-avatar { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 6%), color-mix(in srgb, var(--bg-elev), transparent 2%)); border-radius: 50%; }
+.skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); }
 .skeleton-line { height: 12px; border-radius: 8px; margin-bottom: 8px; background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 8%), color-mix(in srgb, var(--bg-elev), transparent 2%)); }
 .skeleton-author { width: 110px; height: 14px; margin-right: 8px; display: inline-block; }
 .skeleton-time { width: 40px; height: 12px; display: inline-block; }

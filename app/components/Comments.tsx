@@ -142,7 +142,7 @@ export function Comments({ postId, onCountChange }: Props) {
   };
 
   return (
-    <div>
+    <>
       <div className="comment-list">
         {loading && comments.length === 0 ? (
           <div className="dim">Loading comments…</div>
@@ -151,21 +151,21 @@ export function Comments({ postId, onCountChange }: Props) {
         ) : (
           comments.map((c, idx) => (
             <div key={c.id} className={`comment-item appear ${c.id === newCommentId ? 'new' : ''} ${removingIds.has(c.id) ? 'removing' : ''}`} style={{ animationDelay: `${idx * 40}ms` }}>
-              <Link 
-                href={`/${c.user?.username || c.user?.id}`} 
-                className="comment-avatar-link"
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <OptimizedImage
-                  className="comment-avatar"
-                  src={c.user?.avatarUrl || "/logo.svg"}
-                  alt={c.user?.username || c.user?.displayName || "User"}
-                  width={36}
-                  height={36}
-                  unoptimized={false}
-                />
-              </Link>
-              <div className="comment-body">
+              <div className="comment-row">
+                <Link 
+                  href={`/${c.user?.username || c.user?.id}`} 
+                  className="comment-avatar-link"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div className="comment-avatar">
+                    <OptimizedImage
+                      src={c.user?.avatarUrl || "/logo.svg"}
+                      alt={c.user?.username || c.user?.displayName || "User"}
+                      fill={true}
+                      unoptimized={false}
+                    />
+                  </div>
+                </Link>
                 <div className="comment-head">
                   <Link 
                     href={`/${c.user?.username || c.user?.id}`} 
@@ -247,6 +247,8 @@ export function Comments({ postId, onCountChange }: Props) {
                     <ReportButton commentId={c.id} />
                   ) : null}
                 </div>
+              </div>
+              <div className="comment-body">
                 <div
                   className="comment-text"
                   style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'break-word' }}
@@ -260,55 +262,53 @@ export function Comments({ postId, onCountChange }: Props) {
       </div>
 
       <div className="comment-box" style={{ marginTop: 8 }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <input
-            className="input"
-            type="text"
-            placeholder="Add a comment…"
-            aria-label="Add a comment"
-            value={text}
-            maxLength={COMMENT_MAX}
-            onChange={e => {
-              const v = e.target.value;
-              if (v.length <= COMMENT_MAX) setText(v);
-              else {
-                // defensive: should be prevented by maxLength but notify user if they paste huge text
-                toast.show(`Comments are limited to ${COMMENT_MAX} characters`);
-              }
+        <input
+          className="input"
+          type="text"
+          placeholder="Add a comment…"
+          aria-label="Add a comment"
+          value={text}
+          maxLength={COMMENT_MAX}
+          onChange={e => {
+            const v = e.target.value;
+            if (v.length <= COMMENT_MAX) setText(v);
+            else {
+              // defensive: should be prevented by maxLength but notify user if they paste huge text
+              toast.show(`Comments are limited to ${COMMENT_MAX} characters`);
+            }
+          }}
+          onKeyDown={async (e) => {
+            if (e.key === "Enter") {
+              if (!text.trim()) return;
+              if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
+              setSending(true);
+              const sendText = text;
+              setText("");
+              await doOptimisticAdd(sendText);
+              setSending(false);
+            }
+          }}
+          style={{ width: '100%', paddingRight: 72, position: 'relative' }}
+        />
+        {/* character counter overlaid inside the input on the right */}
+        {text.length > 0 ? (
+          <div
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: 12,
+              color: commentRemaining <= 20 ? '#d9534f' : 'var(--dim)',
+              pointerEvents: 'none',
+              fontVariantNumeric: 'tabular-nums'
             }}
-            onKeyDown={async (e) => {
-              if (e.key === "Enter") {
-                if (!text.trim()) return;
-                if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
-                setSending(true);
-                const sendText = text;
-                setText("");
-                await doOptimisticAdd(sendText);
-                setSending(false);
-              }
-            }}
-            style={{ width: '100%', paddingRight: 72 }}
-          />
-          {/* character counter overlaid inside the input on the right */}
-          {text.length > 0 ? (
-            <div
-              style={{
-                position: 'absolute',
-                right: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                fontSize: 12,
-                color: commentRemaining <= 20 ? '#d9534f' : 'var(--dim)',
-                pointerEvents: 'none',
-                fontVariantNumeric: 'tabular-nums'
-              }}
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              {text.length}/{COMMENT_MAX}
-            </div>
-          ) : null}
-        </div>
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {text.length}/{COMMENT_MAX}
+          </div>
+        ) : null}
 
         <button
           ref={sendBtnRef}
@@ -340,6 +340,6 @@ export function Comments({ postId, onCountChange }: Props) {
           <span className="sr-only">{sending ? "Sending comment" : "Send comment"}</span>
         </button>
       </div>
-    </div>
+    </>
   );
 }

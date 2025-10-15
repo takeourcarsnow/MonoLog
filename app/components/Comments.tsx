@@ -159,9 +159,9 @@ export function Comments({ postId, onCountChange }: Props) {
                 <OptimizedImage
                   className="comment-avatar"
                   src={c.user?.avatarUrl || "/logo.svg"}
-                  alt={c.user?.displayName || c.user?.username || "User"}
-                  width={32}
-                  height={32}
+                  alt={c.user?.username || c.user?.displayName || "User"}
+                  width={36}
+                  height={36}
                   unoptimized={false}
                 />
               </Link>
@@ -172,7 +172,7 @@ export function Comments({ postId, onCountChange }: Props) {
                     className="comment-author-link"
                     style={{ textDecoration: 'none', color: 'inherit' }}
                   >
-                    <span className="author">{c.user?.displayName || c.user?.username || "User"}</span>
+                    <span className="author">{c.user?.username || c.user?.displayName || "User"}</span>
                   </Link>
                   <span className="dim">{new Date(c.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                   {currentUser && currentUser.id === c.user?.id ? (

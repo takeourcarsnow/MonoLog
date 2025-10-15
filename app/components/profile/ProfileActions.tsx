@@ -183,7 +183,7 @@ export function ProfileActions({
               </span>
             </Link>
             <button
-              className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 no-effects' : 'btn edit-profile-btn no-effects'}`}
+              className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 edit-confirm-glow' : 'btn edit-profile-btn no-effects'}`}
               onClick={(e) => { onEditToggle(); (e.target as HTMLButtonElement).blur(); }}
               aria-expanded={isEditingProfile}
               aria-label={isEditingProfile ? 'Save profile changes' : 'Edit profile'}

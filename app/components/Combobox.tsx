@@ -11,18 +11,36 @@ interface ComboboxProps {
   disabled?: boolean;
   className?: string;
   icon?: LucideIcon;
+  header?: React.ReactNode;
 }
 
-export function Combobox({ value, onChange, options, placeholder, disabled, className, icon: Icon }: ComboboxProps) {
+export function Combobox({ value, onChange, options, placeholder, disabled, className, icon: Icon, header }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const [filteredOptions, setFilteredOptions] = useState(options);
+  const [filteredOptions, setFilteredOptions] = useState<string[]>(options);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
+
+  // Update filtered options when the available options or input value changes.
+  useEffect(() => {
+    const q = (inputValue || '').trim().toLowerCase();
+    if (!q) {
+      setFilteredOptions(options || []);
+      return;
+    }
+    const starts: string[] = [];
+    const contains: string[] = [];
+    for (const opt of options || []) {
+      const low = opt.toLowerCase();
+      if (low.startsWith(q)) starts.push(opt);
+      else if (low.includes(q)) contains.push(opt);
+    }
+    setFilteredOptions([...starts, ...contains]);
+  }, [inputValue, options]);
 
   useEffect(() => {
     const restore: Array<() => void> = [];
@@ -80,13 +98,34 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node) &&
+        listRef.current &&
+        !listRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const handleFocus = () => {
     setIsOpen(true);
   };
 
-  const handleBlur = () => {
-    // Delay closing to allow option selection
-    setTimeout(() => setIsOpen(false), 150);
+  const handleBlur = (e: React.FocusEvent) => {
+    // Only close on blur if we're not clicking inside the dropdown
+    // The click outside handler will handle closing when clicking elsewhere
   };
 
   return (
@@ -127,7 +166,16 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
             padding: 0,
             listStyle: 'none'
           }}
+          onMouseDown={(e) => e.preventDefault()} // Prevent blur when clicking inside dropdown
         >
+          {header && (
+            <li 
+              style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              {header}
+            </li>
+          )}
           {filteredOptions.map((option, index) => (
             <li
               key={option}

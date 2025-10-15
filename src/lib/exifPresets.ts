@@ -1,6 +1,5 @@
 // Camera, lens, and film type presets for EXIF input
-export const CAMERA_PRESETS = [
-  // Digital cameras
+export const CAMERA_DIGITAL_PRESETS = [
   'Canon EOS R5',
   'Canon EOS R6',
   'Canon EOS 5D Mark IV',
@@ -21,8 +20,10 @@ export const CAMERA_PRESETS = [
   'Olympus OM-D E-M1 Mark III',
   'Panasonic Lumix S5',
   'Hasselblad X1D II',
-  'Phase One XF',
-  // Film cameras
+  'Phase One XF'
+].sort();
+
+export const CAMERA_FILM_PRESETS = [
   'Canon AE-1',
   'Canon F-1',
   'Nikon FM2',
@@ -44,6 +45,8 @@ export const CAMERA_PRESETS = [
   'Kodak Brownie',
   'Zeiss Ikon'
 ].sort();
+
+export const CAMERA_PRESETS = [...CAMERA_DIGITAL_PRESETS, ...CAMERA_FILM_PRESETS].sort();
 
 export const LENS_PRESETS = [
   // Canon EF/EF-S

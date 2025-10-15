@@ -1,8 +1,8 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/src/lib/types";
-import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeOff } from "lucide-react";
+import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeOff, Monitor, Film } from "lucide-react";
 import { Combobox } from "../Combobox";
-import { CAMERA_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
+import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
 
 export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   post: HydratedPost;
@@ -81,12 +81,9 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         }}
       />
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        <Combobox
-          value={camera}
-          onChange={setCamera}
-          options={CAMERA_PRESETS}
-          placeholder="Camera"
-          icon={Camera}
+        <CameraScopeSelector
+          camera={camera}
+          setCamera={setCamera}
         />
         <Combobox
           value={lens}
@@ -166,3 +163,37 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
     </div>
   );
 });
+
+function CameraScopeSelector({ camera, setCamera }: { camera: string; setCamera: (c: string) => void }) {
+  const [scope, setScope] = useState<'all' | 'digital' | 'film'>('all');
+  const getOptions = () => {
+    if (scope === 'digital') return CAMERA_DIGITAL_PRESETS;
+    if (scope === 'film') return CAMERA_FILM_PRESETS;
+    return CAMERA_PRESETS;
+  };
+
+  const header = (
+    <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' }}>
+      <button type="button" className={`btn mini ${scope === 'all' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setScope('all'); }} aria-pressed={scope === 'all'} title="All cameras">
+        <Camera size={14} />
+      </button>
+      <button type="button" className={`btn mini ${scope === 'digital' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setScope('digital'); }} aria-pressed={scope === 'digital'} title="Digital cameras">
+        <Monitor size={14} />
+      </button>
+      <button type="button" className={`btn mini ${scope === 'film' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setScope('film'); }} aria-pressed={scope === 'film'} title="Film cameras">
+        <Film size={14} />
+      </button>
+    </div>
+  );
+
+  return (
+    <Combobox
+      value={camera}
+      onChange={setCamera}
+      options={getOptions()}
+      placeholder="Camera"
+      icon={Camera}
+      header={header}
+    />
+  );
+}

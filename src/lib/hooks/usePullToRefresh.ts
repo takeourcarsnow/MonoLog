@@ -75,7 +75,8 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
 
     if (deltaY > 0) {
       if (e.cancelable) e.preventDefault();
-      setPullDistance(Math.min(deltaY, threshold * 2));
+  const newDistance = Math.min(deltaY, threshold * 2);
+  setPullDistance(newDistance);
       setIsPulling(true);
     }
   }, [disabled, isRefreshing, threshold]);

@@ -23,7 +23,7 @@ export const useZoomState = () => {
   const scaleRef = useRef<number>(scale);
   const txRef = useRef<number>(tx);
   const tyRef = useRef<number>(ty);
-  const pinchRef = useRef<null | { initialDistance: number; initialScale: number }>(null);
+  const pinchRef = useRef<null | { initialDistance: number; initialScale: number; midLocalX: number; midLocalY: number; startTx: number; startTy: number }>(null);
   // Whether wheel-driven zoom is allowed. It becomes true when the user
   // explicitly starts a zoom (double-click or pinch). This prevents the
   // mouse wheel from initiating zoom on accidental scrolls.

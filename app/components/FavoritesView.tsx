@@ -10,6 +10,22 @@ import { Star as StarIcon } from "lucide-react";
 import Link from "next/link";
 
 export function FavoritesView() {
+  // Ensure the page can scroll: some layout rules set overflow:hidden on
+  // the root/html to implement internal scrolling. When this view mounts
+  // we add a class that enables body/html scrolling (and the .content
+  // fallback). Remove it on unmount.
+  useEffect(() => {
+    try {
+      document.documentElement.classList.add('favorites-page-scroll');
+      document.body.classList.add('favorites-page-scroll');
+    } catch (e) {}
+    return () => {
+      try {
+        document.documentElement.classList.remove('favorites-page-scroll');
+        document.body.classList.remove('favorites-page-scroll');
+      } catch (e) {}
+    };
+  }, []);
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);
 

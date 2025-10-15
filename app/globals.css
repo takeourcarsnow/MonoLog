@@ -17,6 +17,12 @@ html.about-page-scroll {
   overflow: auto !important;
 }
 
+/* Allow body scrolling on favorites page */
+body.favorites-page-scroll,
+html.favorites-page-scroll {
+  overflow: auto !important;
+}
+
 /* If the app uses an internal scrolling container (.content) we must also
    allow that container to scroll when on the About page. The .content
    rules in layout.css set overflow: hidden for most routes; this selector
@@ -35,6 +41,23 @@ html.about-page-scroll {
    body/html class added by the About page JS. */
 body.about-page-scroll .content,
 html.about-page-scroll .content {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* If .content contains the Favorites page, allow internal scrolling too */
+.content:has(.favorites) {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fallback for browsers not supporting :has() */
+body.favorites-page-scroll .content,
+html.favorites-page-scroll .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;

@@ -216,8 +216,27 @@ function UploaderCore() {
             try {
               await openCamera();
             } catch (e) {
-              try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-              try { cameraInputRef.current?.click(); } catch (_) {}
+              // Fallback to native camera input after a brief delay
+              // This gives users a chance to see any error messages first
+              setTimeout(() => {
+                try {
+                  if (cameraInputRef.current) {
+                    (cameraInputRef.current as HTMLInputElement).value = "";
+                  }
+                  cameraInputRef.current?.click();
+                } catch (fallbackError) {
+                  console.warn('Camera fallback also failed:', fallbackError);
+                  // Final fallback: try regular file input
+                  try {
+                    if (fileInputRef.current) {
+                      (fileInputRef.current as HTMLInputElement).value = "";
+                    }
+                    fileInputRef.current?.click();
+                  } catch (finalError) {
+                    console.error('All camera fallbacks failed:', finalError);
+                  }
+                }
+              }, 100);
             }
           }}
           onFileSelect={() => {

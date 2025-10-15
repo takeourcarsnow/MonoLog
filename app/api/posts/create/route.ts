@@ -76,10 +76,12 @@ export async function POST(req: Request) {
           const base = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '') + '/storage/v1/object/public/posts/';
           const toRemove: string[] = [];
           for (const p of (todays || [])) {
-            const existingImageUrls: string[] = [];
-            if (p.image_urls && Array.isArray(p.image_urls)) existingImageUrls.push(...p.image_urls);
-            else if (p.image_url) existingImageUrls.push(p.image_url);
-            for (const u of existingImageUrls) {
+            const existingUrls: string[] = [];
+            if (p.image_urls && Array.isArray(p.image_urls)) existingUrls.push(...p.image_urls);
+            else if (p.image_url) existingUrls.push(p.image_url);
+            if (p.thumbnail_urls && Array.isArray(p.thumbnail_urls)) existingUrls.push(...p.thumbnail_urls);
+            else if (p.thumbnail_url) existingUrls.push(p.thumbnail_url);
+            for (const u of existingUrls) {
               if (typeof u === 'string' && u.startsWith(base)) {
                 toRemove.push(decodeURIComponent(u.slice(base.length)));
               }

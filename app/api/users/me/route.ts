@@ -137,6 +137,37 @@ export async function DELETE(req: Request) {
     const sb = getServiceSupabase();
     const actorId = authUser.id;
 
+    // Fetch all user's posts to get image URLs before deleting
+    const { data: userPosts } = await sb.from('posts').select('id, image_url, image_urls, thumbnail_url, thumbnail_urls').eq('user_id', actorId);
+
+    // Delete images from storage
+    if (userPosts && userPosts.length > 0) {
+      try {
+        const base = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '') + '/storage/v1/object/public/posts/';
+        const toRemove: string[] = [];
+        for (const post of userPosts) {
+          const allUrls: string[] = [];
+          
+          // Add image URLs
+          if (post.image_urls && Array.isArray(post.image_urls)) allUrls.push(...post.image_urls);
+          else if (post.image_url) allUrls.push(post.image_url);
+          
+          // Add thumbnail URLs
+          if (post.thumbnail_urls && Array.isArray(post.thumbnail_urls)) allUrls.push(...post.thumbnail_urls);
+          else if (post.thumbnail_url) allUrls.push(post.thumbnail_url);
+          
+          for (const u of allUrls) {
+            if (typeof u === 'string' && u.startsWith(base)) {
+              toRemove.push(decodeURIComponent(u.slice(base.length)));
+            }
+          }
+        }
+        if (toRemove.length) await sb.storage.from('posts').remove(toRemove);
+      } catch (e) {
+        console.warn('DELETE /api/users/me: storage removal failed', e);
+      }
+    }
+
     // Delete all user's posts
     const { error: postsError } = await sb.from('posts').delete().eq('user_id', actorId);
     if (postsError) {

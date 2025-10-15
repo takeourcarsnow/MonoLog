@@ -16,14 +16,16 @@ export async function POST(req: Request) {
     if (post) {
       // ensure the authenticated user owns the post or is an admin (service role users not allowed via this endpoint)
       if (String(post.user_id) !== String(authUser.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      const imageUrls: string[] = [];
-      if (post.image_urls && Array.isArray(post.image_urls)) imageUrls.push(...post.image_urls);
-      else if (post.image_url) imageUrls.push(post.image_url);
+      const allUrls: string[] = [];
+      if (post.image_urls && Array.isArray(post.image_urls)) allUrls.push(...post.image_urls);
+      else if (post.image_url) allUrls.push(post.image_url);
+      if (post.thumbnail_urls && Array.isArray(post.thumbnail_urls)) allUrls.push(...post.thumbnail_urls);
+      else if (post.thumbnail_url) allUrls.push(post.thumbnail_url);
       // remove storage objects that point to posts bucket
       try {
         const base = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '') + '/storage/v1/object/public/posts/';
         const toRemove: string[] = [];
-        for (const u of imageUrls) {
+        for (const u of allUrls) {
           if (typeof u === 'string' && u.startsWith(base)) {
             toRemove.push(decodeURIComponent(u.slice(base.length)));
           }

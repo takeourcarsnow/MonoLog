@@ -1,10 +1,8 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import { PreviewSectionProps } from "./types";
-import { useCameraCaptureHandler } from "./useCameraCaptureHandler";
 import { LoadingBadge } from "./LoadingBadge";
 import { CarouselView } from "./CarouselView";
-import { CameraModal } from "./CameraModal";
 import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
 
 
@@ -33,17 +31,12 @@ export function PreviewSection({
   trackRef,
   touchStartX,
   touchDeltaX,
-  cameraOpen,
-  setCameraOpen,
-  videoRef,
-  streamRef,
   fileActionRef,
   replaceIndexRef,
   fileInputRef,
   cameraInputRef,
   toast,
-  handleFile,
-  openCamera
+  handleFile
 }: PreviewSectionProps) {
   const pathname = usePathname();
 
@@ -60,25 +53,6 @@ export function PreviewSection({
       setIndex(previewUrls.length - 1);
     }
   }, [previewUrls.length, index, setIndex]);
-
-  const { onCameraCapture } = useCameraCaptureHandler({
-    dataUrls,
-    index,
-    setDataUrls,
-    setOriginalDataUrls,
-    setEditorSettings,
-    setPreviewLoaded,
-    setCompressedSize,
-    setOriginalSize,
-    setProcessing,
-    fileActionRef,
-    replaceIndexRef,
-    videoRef,
-    streamRef,
-    setCameraOpen,
-    toast,
-    handleFile
-  });
 
   async function onDropPreview(e: React.DragEvent) {
     e.preventDefault();
@@ -136,10 +110,6 @@ export function PreviewSection({
             setEditing={setEditing}
             fileActionRef={fileActionRef}
             replaceIndexRef={replaceIndexRef}
-            setCameraOpen={setCameraOpen}
-            videoRef={videoRef}
-            streamRef={streamRef}
-            cameraInputRef={cameraInputRef}
             toast={toast}
             setPreviewLoaded={setPreviewLoaded}
             processing={processing}
@@ -148,15 +118,6 @@ export function PreviewSection({
           />
         )}
       </div>
-
-      <CameraModal
-        cameraOpen={cameraOpen}
-        setCameraOpen={setCameraOpen}
-        videoRef={videoRef}
-        streamRef={streamRef}
-        processing={processing}
-        onCapture={onCameraCapture}
-      />
 
       {dataUrls.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 2, gap: 2 }}>

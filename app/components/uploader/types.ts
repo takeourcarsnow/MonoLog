@@ -25,16 +25,11 @@ export interface PreviewSectionProps {
   trackRef: React.RefObject<HTMLDivElement>;
   touchStartX: React.MutableRefObject<number | null>;
   touchDeltaX: React.MutableRefObject<number>;
-  cameraOpen: boolean;
-  setCameraOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  videoRef: React.RefObject<HTMLVideoElement>;
-  streamRef: React.MutableRefObject<MediaStream | null>;
   fileActionRef: React.MutableRefObject<'append' | 'replace'>;
   replaceIndexRef: React.MutableRefObject<number | null>;
   fileInputRef: React.RefObject<HTMLInputElement>;
   cameraInputRef: React.RefObject<HTMLInputElement>;
   toast: any;
   handleFile: (file: File) => Promise<void>;
-  openCamera: () => Promise<void>;
 }
 

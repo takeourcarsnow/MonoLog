@@ -16,10 +16,6 @@ interface CarouselViewProps {
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
   fileActionRef: React.MutableRefObject<'append' | 'replace'>;
   replaceIndexRef: React.MutableRefObject<number | null>;
-  setCameraOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  videoRef: React.RefObject<HTMLVideoElement>;
-  streamRef: React.MutableRefObject<MediaStream | null>;
-  cameraInputRef: React.RefObject<HTMLInputElement>;
   toast: any;
   setPreviewLoaded: React.Dispatch<React.SetStateAction<boolean>>;
   processing: boolean;
@@ -39,10 +35,6 @@ export function CarouselView({
   setEditing,
   fileActionRef,
   replaceIndexRef,
-  setCameraOpen,
-  videoRef,
-  streamRef,
-  cameraInputRef,
   toast,
   setPreviewLoaded,
   processing,

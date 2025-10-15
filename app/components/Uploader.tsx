@@ -71,12 +71,6 @@ function UploaderCore() {
   remaining,
   remainingMs,
   countdownTotalMs,
-    cameraOpen,
-    setCameraOpen,
-    videoRef,
-    streamRef,
-    openCamera,
-    closeCamera,
     dropRef,
     fileInputRef,
     cameraInputRef,
@@ -212,32 +206,11 @@ function UploaderCore() {
   {!dataUrls.length && (
         <DropZone
           processing={processing}
-          onCameraSelect={async () => {
-            try {
-              await openCamera();
-            } catch (e) {
-              // Fallback to native camera input after a brief delay
-              // This gives users a chance to see any error messages first
-              setTimeout(() => {
-                try {
-                  if (cameraInputRef.current) {
-                    (cameraInputRef.current as HTMLInputElement).value = "";
-                  }
-                  cameraInputRef.current?.click();
-                } catch (fallbackError) {
-                  console.warn('Camera fallback also failed:', fallbackError);
-                  // Final fallback: try regular file input
-                  try {
-                    if (fileInputRef.current) {
-                      (fileInputRef.current as HTMLInputElement).value = "";
-                    }
-                    fileInputRef.current?.click();
-                  } catch (finalError) {
-                    console.error('All camera fallbacks failed:', finalError);
-                  }
-                }
-              }, 100);
-            }
+          onCameraSelect={() => {
+            // Directly use native camera input instead of custom modal
+            fileActionRef.current = 'append';
+            try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
+            try { cameraInputRef.current?.click(); } catch (_) {}
           }}
           onFileSelect={() => {
             fileActionRef.current = 'append';
@@ -296,17 +269,12 @@ function UploaderCore() {
           trackRef={trackRef}
           touchStartX={touchStartX}
           touchDeltaX={touchDeltaX}
-          cameraOpen={cameraOpen}
-          setCameraOpen={setCameraOpen}
-          videoRef={videoRef}
-          streamRef={streamRef}
           fileActionRef={fileActionRef}
           replaceIndexRef={replaceIndexRef}
           fileInputRef={fileInputRef}
           cameraInputRef={cameraInputRef}
           toast={toast}
           handleFile={handleFile}
-          openCamera={openCamera}
         />
       )}
 

@@ -11,7 +11,6 @@ import { useCountdown } from "./useCountdown";
 // typing animation intentionally handled locally in CaptionInput to avoid
 // high-frequency state updates re-rendering the uploader tree and stealing
 // focus from unrelated inputs.
-import { useCameraCapture } from "./useCameraCapture";
 import { useFileHandling } from "./useFileHandling";
 import { useToast } from "../Toast";
 import { EDITING_SESSION_KEY, DRAFT_KEY } from "./constants";
@@ -44,7 +43,6 @@ export function useUploader() {
 
   const { canPost, nextAllowedAt, remaining, remainingMs, countdownTotalMs } = useCountdown();
   // typing animation removed from this hook (kept local to CaptionInput)
-  const { cameraOpen, setCameraOpen, videoRef, streamRef, openCamera, closeCamera } = useCameraCapture();
   const { handleFile: handleFileProcessing } = useFileHandling();
 
   const dropRef = useRef<HTMLDivElement>(null);
@@ -500,12 +498,6 @@ export function useUploader() {
     remainingMs,
     countdownTotalMs,
   // placeholder, typed removed - handled inside CaptionInput
-    cameraOpen,
-    setCameraOpen,
-    videoRef,
-    streamRef,
-    openCamera,
-    closeCamera,
     handleFileProcessing,
     dropRef,
     fileInputRef,

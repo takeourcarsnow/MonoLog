@@ -152,14 +152,14 @@ export function Comments({ postId, onCountChange }: Props) {
               <OptimizedImage
                 className="comment-avatar"
                 src={c.user?.avatarUrl || "/logo.svg"}
-                alt={c.user?.displayName || "User"}
+                alt={c.user?.displayName || c.user?.username || "User"}
                 width={32}
                 height={32}
                 unoptimized={false}
               />
               <div className="comment-body">
                 <div className="comment-head">
-                  <span className="author">{c.user?.displayName || "User"}</span>
+                  <span className="author">{c.user?.displayName || c.user?.username || "User"}</span>
                   <span className="dim">{new Date(c.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                   {currentUser && currentUser.id === c.user?.id ? (
                     <button

@@ -41,7 +41,7 @@ export async function GET(req: Request) {
         user: {
           id: urow?.id || c.user_id,
           username: urow?.username || urow?.user_name || '',
-          displayName: urow?.display_name || urow?.displayName || '',
+          displayName: urow?.display_name || urow?.displayName || urow?.username || urow?.user_name || '',
           avatarUrl: urow?.avatar_url || urow?.avatarUrl || '/logo.svg',
         }
       };

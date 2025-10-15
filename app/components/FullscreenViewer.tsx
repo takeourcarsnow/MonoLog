@@ -8,21 +8,114 @@ const ImageZoom = dynamic(() => import('./ImageZoom'), { ssr: false });
 
 
 type Props = {
-  src: string;
-  alt?: string;
+  images: {src: string, alt: string}[];
+  currentIndex: number;
   onClose: () => void;
+  onNext: () => void;
+  onPrev: () => void;
 };
 
 
-export default function FullscreenViewer({ src, alt, onClose }: Props) {
+export default function FullscreenViewer({ images, currentIndex, onClose, onNext, onPrev }: Props) {
   const [isActive, setIsActive] = useState(false);
+  const [showNav, setShowNav] = useState(images.length > 1);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const ignorePopRef = useRef(false);
   const scrollY = useRef<number>(0);
+  const navTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Swipe detection
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchEndRef = useRef<{ x: number; y: number } | null>(null);
   // A stable id for this fullscreen viewer instance so ImageZoom instances
   // can include it in zoom events and other instances can reset when the
   // fullscreen viewer opens.
   const viewerIdRef = useRef<string>(Math.random().toString(36).slice(2));
+
+  const currentImage = images[currentIndex];
+
+  // Swipe detection functions
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = touchStartRef.current.x - currentX;
+    const diffY = touchStartRef.current.y - currentY;
+    
+    // If vertical movement is greater than horizontal, let it pass through (for zoom)
+    if (Math.abs(diffY) > Math.abs(diffX)) {
+      return;
+    }
+    
+    // Note: Removed preventDefault() to avoid passive event listener errors
+    // The swipe detection will still work without preventing default scrolling
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) {
+      // Not a swipe, don't handle interaction here (let click handler do it)
+      return;
+    }
+    
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const diffX = touchStartRef.current.x - endX;
+    const diffY = touchStartRef.current.y - endY;
+    
+    // Minimum swipe distance (50px) and horizontal movement should be greater than vertical
+    const minSwipeDistance = 50;
+    if (Math.abs(diffX) > minSwipeDistance && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        // Swiped left - next image
+        onNext();
+      } else {
+        // Swiped right - previous image
+        onPrev();
+      }
+    }
+    // If not a significant swipe, let the click handler handle showing navigation
+    
+    // Reset touch refs
+    touchStartRef.current = null;
+    touchEndRef.current = null;
+  }, [onNext, onPrev]);
+
+  // Show navigation arrows and set auto-hide timer
+  const showNavigation = useCallback(() => {
+    setShowNav(true);
+    // Clear any existing timer
+    if (navTimerRef.current) {
+      clearTimeout(navTimerRef.current);
+    }
+    // Set new timer to hide after 3 seconds
+    navTimerRef.current = setTimeout(() => {
+      setShowNav(false);
+    }, 3000);
+  }, []);
+
+  // Hide navigation arrows immediately
+  const hideNavigation = useCallback(() => {
+    if (navTimerRef.current) {
+      clearTimeout(navTimerRef.current);
+    }
+    setShowNav(false);
+  }, []);
+
+  // Handle click/touch on fullscreen viewer to show navigation
+  const handleViewerInteraction = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    // Only show nav if interacting with the viewer itself, not on buttons
+    if ((e.target as HTMLElement).closest('.fv-nav, .fv-close')) {
+      return;
+    }
+    showNavigation();
+  }, [showNavigation]);
 
   // Start close sequence: fade out then call onClose
   const startClose = useCallback(() => {
@@ -82,6 +175,10 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
       document.body.style.paddingRight = '';
       document.body.style.overflow = '';
       window.scrollTo(0, scrollY.current);
+      // Clear navigation timer
+      if (navTimerRef.current) {
+        clearTimeout(navTimerRef.current);
+      }
       // When closing/unmounting, ensure any zoom state triggered by the
       // fullscreen viewer is cleared. Use the captured viewerId so the
       // cleanup references the same instance that opened the viewer.
@@ -89,14 +186,16 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     };
   }, []);
 
-  // Keyboard: close on Escape
+  // Keyboard: close on Escape, navigate with arrow keys
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') startClose();
+      if (e.key === 'ArrowLeft' && images.length > 1) onPrev();
+      if (e.key === 'ArrowRight' && images.length > 1) onNext();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [startClose]);
+  }, [startClose, onPrev, onNext, images.length]);
 
   // Intercept browser back (popstate) while fullscreen is open and close the
   // viewer instead of allowing the navigation.
@@ -134,6 +233,21 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
     rootRef.current?.focus();
   }, []);
 
+  // Auto-hide navigation arrows after initial display
+  useEffect(() => {
+    if (images.length > 1 && showNav && !navTimerRef.current) {
+      navTimerRef.current = setTimeout(() => {
+        setShowNav(false);
+      }, 3000); // Hide after 3 seconds
+    }
+    return () => {
+      if (navTimerRef.current) {
+        clearTimeout(navTimerRef.current);
+        navTimerRef.current = null;
+      }
+    };
+  }, [images.length, showNav]);
+
   return (
     <Portal className="fullscreen-portal">
       <div
@@ -142,10 +256,44 @@ export default function FullscreenViewer({ src, alt, onClose }: Props) {
         className={`fullscreen-viewer no-swipe ${isActive ? 'active' : ''}`}
         role="dialog"
         aria-modal="true"
+        onClick={handleViewerInteraction}
+        onTouchEnd={handleViewerInteraction}
       >
         <button className="fv-close" aria-label="Close" onClick={startClose}>✕</button>
-        <div className="fv-inner">
-          <ImageZoom src={src} alt={alt || 'Photo'} maxScale={6} isFullscreen instanceId={viewerIdRef.current} />
+        {images.length > 1 && (
+          <>
+            <button 
+              className={`fv-nav fv-prev ${showNav ? 'visible' : ''}`} 
+              aria-label="Previous image" 
+              onClick={onPrev}
+              onMouseEnter={showNavigation}
+              onMouseLeave={hideNavigation}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button 
+              className={`fv-nav fv-next ${showNav ? 'visible' : ''}`} 
+              aria-label="Next image" 
+              onClick={onNext}
+              onMouseEnter={showNavigation}
+              onMouseLeave={hideNavigation}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+          </>
+        )}
+        <div 
+          className="fv-inner" 
+          onClick={handleViewerInteraction} 
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <ImageZoom src={currentImage.src} alt={currentImage.alt} maxScale={6} isFullscreen instanceId={viewerIdRef.current} />
         </div>
       </div>
     </Portal>

@@ -385,6 +385,44 @@
   outline-offset: 2px;
   border-radius: 6px;
 }
+.fullscreen-viewer .fv-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
+  visibility: hidden;
+}
+.fullscreen-viewer .fv-nav.visible {
+  opacity: 1;
+  visibility: visible;
+}
+.fullscreen-viewer .fv-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+.fullscreen-viewer .fv-nav:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%);
+  outline-offset: 2px;
+}
+.fullscreen-viewer .fv-prev {
+  left: 18px;
+}
+.fullscreen-viewer .fv-next {
+  right: 18px;
+}
 
 /* Touch-target and feedback for fullscreen close on touch devices */
 @media (pointer: coarse) {

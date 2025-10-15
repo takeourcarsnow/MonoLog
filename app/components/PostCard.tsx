@@ -93,7 +93,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const spotifyMeta = useSpotifyMeta(post.spotifyLink, post.id);
-  const { fsOpen, fsSrc, fsAlt, handleOpenFullscreen, handleCloseFullscreen } = useFullscreen();
+  const { fsOpen, fsImages, fsCurrentIndex, handleOpenFullscreen, handleCloseFullscreen, handleNextImage, handlePrevImage } = useFullscreen();
   const handleCardClick = useCardNavigation(postHref, editing);
   const { showEditor, editorAnim, opening, editorWrapRef, handleTransitionEnd } = useEditorAnimation(editing);
 
@@ -212,9 +212,11 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             openFullscreen={() => {
               const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
               const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
-              const src = imageUrls[currentImageIndex] || imageUrls[0];
-              const alt = alts[currentImageIndex] || alts[0] || 'Photo';
-              if (src) handleOpenFullscreen(src, alt);
+              const images = imageUrls.map((src: string, index: number) => ({
+                src,
+                alt: alts[index] || `Photo ${index + 1}`
+              }));
+              handleOpenFullscreen(images, currentImageIndex);
             }}
           />
 
@@ -330,9 +332,15 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
           </div>
         )}
         </div>
-      {fsOpen && fsSrc && (
+      {fsOpen && fsImages.length > 0 && (
         <Suspense fallback={null}>
-          <FullscreenViewer src={fsSrc!} alt={fsAlt!} onClose={handleCloseFullscreen} />
+          <FullscreenViewer 
+            images={fsImages} 
+            currentIndex={fsCurrentIndex} 
+            onClose={handleCloseFullscreen}
+            onNext={handleNextImage}
+            onPrev={handlePrevImage}
+          />
         </Suspense>
       )}
     </article>

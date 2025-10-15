@@ -603,11 +603,20 @@
   height: 14px;
 }
 
-/* Make Spotify preview/loading icons use Spotify green to match brand */
+/* Spotify icons default (no link) - muted/grey */
 .spotify-info svg,
 .spotify-info svg path {
-  color: #1DB954; /* for icons using currentColor */
-  fill: #1DB954;  /* for icons using fill attribute */
+  color: var(--muted, #9ca3af); /* muted grey when no spotify link */
+  fill: currentColor;
+}
+
+/* When a spotify link exists, make icons use Spotify green to match brand */
+.action.spotify-has-link svg,
+.action.spotify-has-link svg path,
+.spotify-has-link svg,
+.spotify-has-link svg path {
+  color: #1DB954;
+  fill: currentColor;
 }
 
 /* EXIF action with data - subtle blue tint */

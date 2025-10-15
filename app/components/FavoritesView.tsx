@@ -8,6 +8,8 @@ import { SkeletonCard, SkeletonTile } from "./Skeleton";
 import { useEventListener } from "@/src/lib/hooks/useEventListener";
 import { Star as StarIcon } from "lucide-react";
 import Link from "next/link";
+import { ViewToggle } from "./ViewToggle";
+import { GridView } from "./GridView";
 
 export function FavoritesView() {
   // Ensure the page can scroll: some layout rules set overflow:hidden on
@@ -28,6 +30,7 @@ export function FavoritesView() {
   }, []);
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("favoritesView") as any)) || "list");
 
   const loadFavorites = useCallback(async () => {
     try {
@@ -91,8 +94,15 @@ export function FavoritesView() {
 
   return (
     <div className="view-fade">
-      <div className="feed">
-        {posts.map(p => <PostCard key={p.id} post={p} />)}
+      {posts.length > 0 && (
+        <ViewToggle title={<StarIcon size={20} strokeWidth={2} />} subtitle="Your favorite posts" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("favoritesView", v); }} />
+      )}
+      <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
+        {view === 'list' ? (
+          posts.map(p => <PostCard key={p.id} post={p} />)
+        ) : (
+          <GridView posts={posts} hasMore={false} setSentinel={() => {}} />
+        )}
       </div>
     </div>
   );

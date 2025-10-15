@@ -126,7 +126,7 @@ export function FeedPage({
 
     const listView = (
       <>
-        {posts.map(p => <PostCard key={p.id} post={p} />)}
+        {posts.map(p => <PostCard key={p.id} post={p} disableCardNavigation={true} />)}
         <InfiniteScrollLoader
           loading={loadingMore}
           hasMore={hasMore}

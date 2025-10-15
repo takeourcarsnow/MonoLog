@@ -31,7 +31,7 @@ const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
 const Editor = lazy(() => import("./postCard/Editor").then(mod => ({ default: mod.Editor })));
 
 // Memoize PostCard to prevent unnecessary re-renders when parent updates
-const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavigation }: { post: HydratedPost; allowCarouselTouch?: boolean; disableMediaNavigation?: boolean }) => {
+const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavigation, disableCardNavigation }: { post: HydratedPost; allowCarouselTouch?: boolean; disableMediaNavigation?: boolean; disableCardNavigation?: boolean }) => {
   const { post, setPost } = usePostState(initial);
   const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
   const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
@@ -106,7 +106,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   const toast = useToast();
 
   return (
-  <article id={`post-${post.id}`} onClick={handleCardClick} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
+  <article id={`post-${post.id}`} onClick={disableCardNavigation ? undefined : handleCardClick} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
       <UserHeader
         post={post}
         isMe={isMe}

@@ -1,11 +1,11 @@
 .input {
   width: 100%; border: 1px solid var(--border); background: var(--bg);
-  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 12px;
 }
 .input:focus { outline: 2px solid color-mix(in srgb, var(--primary), transparent 60%); border-color: var(--primary); }
 .bio-editor {
   width: 100%; border: 1px solid var(--border); background: var(--bg);
-  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 12px;
   /* prevent the user from manually resizing the textarea (we control sizing via grid/CSS) */
   resize: none;
   /* allow internal scrolling if content overflows the configured height */
@@ -27,7 +27,7 @@
   position: absolute;
   left: 12px; right: 12px; top: 50%; transform: translateY(-50%);
   pointer-events: none; color: color-mix(in srgb, var(--muted), transparent 12%);
-  font-size: 14px; line-height: 1; overflow: hidden; white-space: nowrap;
+  font-size: 12px; line-height: 1; overflow: hidden; white-space: nowrap;
 }
 .input-ghost-placeholder { display: flex; align-items: center; gap: 6px; }
 .input-ghost-placeholder .typewriter {

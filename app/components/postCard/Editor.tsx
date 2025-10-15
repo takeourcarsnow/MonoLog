@@ -16,6 +16,7 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   const [filmIso, setFilmIso] = useState("");
   const [isPublic, setIsPublic] = useState(post.public);
   const [saving, setSaving] = useState(false);
+  const [activeExifField, setActiveExifField] = useState<string | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   // Split existing filmType into film name and ISO
@@ -81,35 +82,104 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         }}
       />
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        <CameraScopeSelector
-          camera={camera}
-          setCamera={setCamera}
-        />
-        <Combobox
-          value={lens}
-          onChange={setLens}
-          options={LENS_PRESETS}
-          placeholder="Lens"
-          icon={Settings}
-        />
-        <Combobox
-          value={filmType}
-          onChange={(value) => {
-            setFilmType(value);
-            if (!value) setFilmIso(''); // Clear ISO when film is cleared
-          }}
-          options={FILM_PRESETS}
-          placeholder="Film"
-          icon={Image}
-        />
-        {filmType && (
-          <Combobox
-            value={filmIso}
-            onChange={setFilmIso}
-            options={ISO_PRESETS}
-            placeholder="ISO"
-            icon={Gauge}
-          />
+        {activeExifField === null ? (
+          // Show all fields when none is active
+          <>
+            <CameraScopeSelector
+              camera={camera}
+              setCamera={setCamera}
+              onFocus={() => setActiveExifField('camera')}
+              onBlur={() => setActiveExifField(null)}
+            />
+            <Combobox
+              value={lens}
+              onChange={setLens}
+              options={LENS_PRESETS}
+              placeholder="Lens"
+              icon={Settings}
+              onFocus={() => setActiveExifField('lens')}
+              onBlur={() => setActiveExifField(null)}
+            />
+            {!camera || !CAMERA_DIGITAL_PRESETS.includes(camera) ? (
+              <>
+                <Combobox
+                  value={filmType}
+                  onChange={(value) => {
+                    setFilmType(value);
+                    if (!value) setFilmIso(''); // Clear ISO when film is cleared
+                  }}
+                  options={FILM_PRESETS}
+                  placeholder="Film"
+                  icon={Image}
+                  onFocus={() => setActiveExifField('film')}
+                  onBlur={() => setActiveExifField(null)}
+                />
+                {filmType && (
+                  <Combobox
+                    value={filmIso}
+                    onChange={setFilmIso}
+                    options={ISO_PRESETS}
+                    placeholder="ISO"
+                    icon={Gauge}
+                    onFocus={() => setActiveExifField('iso')}
+                    onBlur={() => setActiveExifField(null)}
+                  />
+                )}
+              </>
+            ) : null}
+          </>
+        ) : (
+          // Show only the active field in full width
+          <div style={{ width: '100%' }}>
+            {activeExifField === 'camera' && (
+              <CameraScopeSelector
+                camera={camera}
+                setCamera={setCamera}
+                onFocus={() => setActiveExifField('camera')}
+                onBlur={() => setActiveExifField(null)}
+                expanded={true}
+              />
+            )}
+            {activeExifField === 'lens' && (
+              <Combobox
+                value={lens}
+                onChange={setLens}
+                options={LENS_PRESETS}
+                placeholder="Lens"
+                icon={Settings}
+                onFocus={() => setActiveExifField('lens')}
+                onBlur={() => setActiveExifField(null)}
+                expanded={true}
+              />
+            )}
+            {activeExifField === 'film' && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
+              <Combobox
+                value={filmType}
+                onChange={(value) => {
+                  setFilmType(value);
+                  if (!value) setFilmIso(''); // Clear ISO when film is cleared
+                }}
+                options={FILM_PRESETS}
+                placeholder="Film"
+                icon={Image}
+                onFocus={() => setActiveExifField('film')}
+                onBlur={() => setActiveExifField(null)}
+                expanded={true}
+              />
+            )}
+            {activeExifField === 'iso' && filmType && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
+              <Combobox
+                value={filmIso}
+                onChange={setFilmIso}
+                options={ISO_PRESETS}
+                placeholder="ISO"
+                icon={Gauge}
+                onFocus={() => setActiveExifField('iso')}
+                onBlur={() => setActiveExifField(null)}
+                expanded={true}
+              />
+            )}
+          </div>
         )}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 10 }}>
@@ -164,7 +234,7 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   );
 });
 
-function CameraScopeSelector({ camera, setCamera }: { camera: string; setCamera: (c: string) => void }) {
+function CameraScopeSelector({ camera, setCamera, onFocus, onBlur, expanded }: { camera: string; setCamera: (c: string) => void; onFocus?: () => void; onBlur?: () => void; expanded?: boolean }) {
   const [scope, setScope] = useState<'all' | 'digital' | 'film'>('all');
   const getOptions = () => {
     if (scope === 'digital') return CAMERA_DIGITAL_PRESETS;
@@ -194,6 +264,9 @@ function CameraScopeSelector({ camera, setCamera }: { camera: string; setCamera:
       placeholder="Camera"
       icon={Camera}
       header={header}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      expanded={expanded}
     />
   );
 }

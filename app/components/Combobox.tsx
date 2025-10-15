@@ -12,18 +12,29 @@ interface ComboboxProps {
   className?: string;
   icon?: LucideIcon;
   header?: React.ReactNode;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  expanded?: boolean;
 }
 
-export function Combobox({ value, onChange, options, placeholder, disabled, className, icon: Icon, header }: ComboboxProps) {
+export function Combobox({ value, onChange, options, placeholder, disabled, className, icon: Icon, header, onFocus, onBlur, expanded }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const [filteredOptions, setFilteredOptions] = useState<string[]>(options);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
+
+  // Auto-open dropdown when expanded
+  useEffect(() => {
+    if (expanded) {
+      setIsOpen(true);
+    }
+  }, [expanded]);
 
   // Update filtered options when the available options or input value changes.
   useEffect(() => {
@@ -34,12 +45,20 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
     }
     const starts: string[] = [];
     const contains: string[] = [];
+    const separators: string[] = [];
+    
     for (const opt of options || []) {
-      const low = opt.toLowerCase();
-      if (low.startsWith(q)) starts.push(opt);
-      else if (low.includes(q)) contains.push(opt);
+      if (opt.startsWith('───')) {
+        separators.push(opt);
+      } else {
+        const low = opt.toLowerCase();
+        if (low.startsWith(q)) starts.push(opt);
+        else if (low.includes(q)) contains.push(opt);
+      }
     }
-    setFilteredOptions([...starts, ...contains]);
+    
+    // Include separators and matching options
+    setFilteredOptions([...separators, ...starts, ...contains]);
   }, [inputValue, options]);
 
   useEffect(() => {
@@ -80,9 +99,14 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
   };
 
   const handleOptionSelect = (option: string) => {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
     setInputValue(option);
     onChange(option);
     setIsOpen(false);
+    onBlur?.(); // Trigger blur to close expanded view
     inputRef.current?.blur();
   };
 
@@ -106,6 +130,10 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
         listRef.current &&
         !listRef.current.contains(event.target as Node)
       ) {
+        if (blurTimeoutRef.current) {
+          clearTimeout(blurTimeoutRef.current);
+          blurTimeoutRef.current = null;
+        }
         setIsOpen(false);
       }
     };
@@ -120,12 +148,20 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
   }, [isOpen]);
 
   const handleFocus = () => {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
     setIsOpen(true);
+    onFocus?.();
   };
 
   const handleBlur = (e: React.FocusEvent) => {
-    // Only close on blur if we're not clicking inside the dropdown
-    // The click outside handler will handle closing when clicking elsewhere
+    // Delay the blur to allow clicks on options to be processed first
+    blurTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+      onBlur?.();
+    }, 150);
   };
 
   return (
@@ -170,49 +206,62 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
         >
           {header && (
             <li 
-              style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}
+              style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-light)', fontSize: '12px' }}
               onMouseDown={(e) => e.preventDefault()}
             >
               {header}
             </li>
           )}
-          {filteredOptions.map((option, index) => (
-            <li
-              key={option}
-              tabIndex={0}
-              onClick={() => handleOptionSelect(option)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleOptionSelect(option);
-                } else if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  const next = e.currentTarget.nextElementSibling as HTMLElement;
-                  next?.focus();
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  const prev = e.currentTarget.previousElementSibling as HTMLElement;
-                  if (prev) {
-                    prev.focus();
-                  } else {
-                    inputRef.current?.focus();
+          {filteredOptions.map((option, index) => {
+            const isSeparator = option.startsWith('───');
+            return (
+              <li
+                key={option}
+                tabIndex={isSeparator ? -1 : 0}
+                onClick={() => !isSeparator && handleOptionSelect(option)}
+                onKeyDown={(e) => {
+                  if (isSeparator) return;
+                  if (e.key === 'Enter') {
+                    handleOptionSelect(option);
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = e.currentTarget.nextElementSibling as HTMLElement;
+                    next?.focus();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = e.currentTarget.previousElementSibling as HTMLElement;
+                    if (prev) {
+                      prev.focus();
+                    } else {
+                      inputRef.current?.focus();
+                    }
                   }
-                }
-              }}
-              style={{
-                padding: '8px 12px',
-                cursor: 'pointer',
-                borderBottom: index < filteredOptions.length - 1 ? '1px solid var(--border-light)' : 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              {option}
-            </li>
-          ))}
+                }}
+                style={{
+                  padding: isSeparator ? '4px 12px' : '8px 12px',
+                  cursor: isSeparator ? 'default' : 'pointer',
+                  borderBottom: index < filteredOptions.length - 1 ? '1px solid var(--border-light)' : 'none',
+                  fontSize: '12px',
+                  fontWeight: isSeparator ? 'bold' : 'normal',
+                  color: isSeparator ? 'var(--muted)' : 'inherit',
+                  textAlign: isSeparator ? 'center' : 'left',
+                  background: isSeparator ? 'var(--bg-elev)' : 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSeparator) {
+                    e.currentTarget.style.background = 'var(--bg-hover)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSeparator) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
+              >
+                {option}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

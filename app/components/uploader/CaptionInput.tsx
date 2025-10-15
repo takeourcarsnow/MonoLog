@@ -66,6 +66,7 @@ export function CaptionInput({
   // high-frequency updates which can affect focus.
   const { placeholder, startIndex, setPlaceholder } = useTypingAnimation(caption, !hasPreview && !captionFocused);
   const [localIndex, setLocalIndex] = useState<number>(startIndex >= 0 ? startIndex : 0);
+  const [activeExifField, setActiveExifField] = useState<string | null>(null);
 
   // Rotate the placeholder in-page while caption is empty and unfocused.
   // Schedule the next rotation after the CSS animation completes so the
@@ -267,39 +268,112 @@ export function CaptionInput({
       </div>
       {/* EXIF inputs - optional */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
-        <CameraScopeSelector
-          camera={camera}
-          setCamera={setCamera}
-          disabled={!hasPreview || processing}
-        />
-        <Combobox
-          value={lens || ''}
-          onChange={setLens || (() => {})}
-          options={LENS_PRESETS}
-          placeholder="Lens"
-          disabled={!hasPreview || processing}
-          icon={Settings}
-        />
-        <Combobox
-          value={filmType || ''}
-          onChange={(value) => {
-            setFilmType?.(value);
-            if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
-          }}
-          options={FILM_PRESETS}
-          placeholder="Film"
-          disabled={!hasPreview || processing}
-          icon={Image}
-        />
-        {filmType && (
-          <Combobox
-            value={filmIso || ''}
-            onChange={setFilmIso || (() => {})}
-            options={ISO_PRESETS}
-            placeholder="ISO"
-            disabled={!hasPreview || processing}
-            icon={Gauge}
-          />
+        {activeExifField === null ? (
+          // Show all fields when none is active
+          <>
+            <CameraScopeSelector
+              camera={camera}
+              setCamera={setCamera}
+              disabled={!hasPreview || processing}
+              onFocus={() => setActiveExifField('camera')}
+              onBlur={() => setActiveExifField(null)}
+            />
+            <Combobox
+              value={lens || ''}
+              onChange={setLens || (() => {})}
+              options={LENS_PRESETS}
+              placeholder="Lens"
+              disabled={!hasPreview || processing}
+              icon={Settings}
+              onFocus={() => setActiveExifField('lens')}
+              onBlur={() => setActiveExifField(null)}
+            />
+            {!camera || !CAMERA_DIGITAL_PRESETS.includes(camera) ? (
+              <>
+                <Combobox
+                  value={filmType || ''}
+                  onChange={(value) => {
+                    setFilmType?.(value);
+                    if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
+                  }}
+                  options={FILM_PRESETS}
+                  placeholder="Film"
+                  disabled={!hasPreview || processing}
+                  icon={Image}
+                  onFocus={() => setActiveExifField('film')}
+                  onBlur={() => setActiveExifField(null)}
+                />
+                {filmType && (
+                  <Combobox
+                    value={filmIso || ''}
+                    onChange={setFilmIso || (() => {})}
+                    options={ISO_PRESETS}
+                    placeholder="ISO"
+                    disabled={!hasPreview || processing}
+                    icon={Gauge}
+                    onFocus={() => setActiveExifField('iso')}
+                    onBlur={() => setActiveExifField(null)}
+                  />
+                )}
+              </>
+            ) : null}
+          </>
+        ) : (
+          // Show only the active field in full width
+          <div style={{ width: '100%' }}>
+            {activeExifField === 'camera' && (
+              <CameraScopeSelector
+                camera={camera}
+                setCamera={setCamera}
+                disabled={!hasPreview || processing}
+                onFocus={() => setActiveExifField('camera')}
+                onBlur={() => setActiveExifField(null)}
+                expanded={true}
+              />
+            )}
+            {activeExifField === 'lens' && (
+              <Combobox
+                value={lens || ''}
+                onChange={setLens || (() => {})}
+                options={LENS_PRESETS}
+                placeholder="Lens"
+                disabled={!hasPreview || processing}
+                icon={Settings}
+                onFocus={() => setActiveExifField('lens')}
+                onBlur={() => setActiveExifField(null)}
+                expanded={true}
+              />
+            )}
+            {activeExifField === 'film' && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
+              <Combobox
+                value={filmType || ''}
+                onChange={(value) => {
+                  setFilmType?.(value);
+                  if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
+                }}
+                options={FILM_PRESETS}
+                placeholder="Film"
+                disabled={!hasPreview || processing}
+                icon={Image}
+                onFocus={() => setActiveExifField('film')}
+                onBlur={() => setActiveExifField(null)}
+                expanded={true}
+              />
+            )}
+            {activeExifField === 'iso' && filmType && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
+              <Combobox
+                value={filmIso || ''}
+                onChange={setFilmIso || (() => {})}
+                options={ISO_PRESETS}
+                placeholder="ISO"
+                disabled={!hasPreview || processing}
+                icon={Gauge}
+                onFocus={() => setActiveExifField('iso')}
+                onBlur={() => setActiveExifField(null)}
+                expanded={true}
+              />
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -307,7 +381,7 @@ export function CaptionInput({
 }
 
 // Small scoped selector component for picking between All/Digital/Film cameras
-function CameraScopeSelector({ camera, setCamera, disabled }: { camera?: string; setCamera?: (c: string) => void; disabled?: boolean }) {
+function CameraScopeSelector({ camera, setCamera, disabled, onFocus, onBlur, expanded }: { camera?: string; setCamera?: (c: string) => void; disabled?: boolean; onFocus?: () => void; onBlur?: () => void; expanded?: boolean }) {
   const [scope, setScope] = useState<'all' | 'digital' | 'film'>('all');
   const getOptions = () => {
     if (scope === 'digital') return CAMERA_DIGITAL_PRESETS;
@@ -338,6 +412,9 @@ function CameraScopeSelector({ camera, setCamera, disabled }: { camera?: string;
       disabled={disabled}
       icon={Camera}
       header={header}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      expanded={expanded}
     />
   );
 }

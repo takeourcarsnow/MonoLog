@@ -217,7 +217,7 @@ export function ThreadView() {
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
               <span>by @{thread.user.username}</span>
               <span>•</span>
-              <span>{thread.created_at ? new Date(thread.created_at).toLocaleDateString() : 'Unknown date'}</span>
+              <span>{thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : 'Unknown date'}</span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <MessageSquare size={14} />

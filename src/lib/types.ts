@@ -76,6 +76,7 @@ export type Thread = {
   communityId: string;
   userId: string;
   title: string;
+  slug: string;
   content: string;
   createdAt: string;
   updatedAt?: string;
@@ -162,6 +163,7 @@ export interface Api {
   // Threads
   getCommunityThreads(communityId: string): Promise<HydratedThread[]>;
   getThread(id: string): Promise<HydratedThread | null>;
+  getThreadBySlug(slug: string): Promise<HydratedThread | null>;
   createThread(input: { communityId: string; title: string; content: string }): Promise<HydratedThread>;
   updateThread(id: string, patch: { title?: string; content?: string }): Promise<HydratedThread>;
   deleteThread(id: string): Promise<boolean>;

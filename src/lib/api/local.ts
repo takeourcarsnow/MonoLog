@@ -389,6 +389,8 @@ export const localApi: Api = {
   async isCommunityMember() { return false; },
   async getCommunityThreads() { return []; },
   async getThread() { return null; },
+  // Lookup a thread by its slug (local mode does not implement threads yet)
+  async getThreadBySlug() { return null; },
   async createThread() { throw new Error('Threads not supported in local mode'); },
   async updateThread() { throw new Error('Threads not supported in local mode'); },
   async deleteThread() { throw new Error('Threads not supported in local mode'); },

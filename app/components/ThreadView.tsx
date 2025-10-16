@@ -15,7 +15,7 @@ export function ThreadView() {
   const router = useRouter();
   const { me: currentUser } = useAuth();
   const communitySlug = params.slug as string;
-  const threadId = params.threadId as string;
+  const threadSlug = params.threadSlug as string;
 
   const [thread, setThread] = useState<HydratedThread | null>(null);
   const [replies, setReplies] = useState<HydratedThreadReply[]>([]);
@@ -25,15 +25,28 @@ export function ThreadView() {
   const [submitting, setSubmitting] = useState(false);
 
   const loadThread = useCallback(async () => {
-    if (!threadId) return;
+    if (!threadSlug) return;
 
     try {
       setLoading(true);
       setError(null);
-      const [threadData, repliesData] = await Promise.all([
-        api.getThread(threadId),
-        api.getThreadReplies(threadId)
-      ]);
+      let threadData = await api.getThreadBySlug(threadSlug);
+      
+      // If slug lookup failed, try to find by ID (for backward compatibility)
+      if (!threadData) {
+        // Check if threadSlug looks like a UUID
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(threadSlug)) {
+          threadData = await api.getThread(threadSlug);
+        }
+      }
+      
+      if (!threadData) {
+        setError('Thread not found');
+        setLoading(false);
+        return;
+      }
+      const repliesData = await api.getThreadReplies(threadData.id);
       setThread(threadData);
       setReplies(repliesData);
     } catch (e: any) {
@@ -41,7 +54,7 @@ export function ThreadView() {
     } finally {
       setLoading(false);
     }
-  }, [threadId]);
+  }, [threadSlug]);
 
   useEffect(() => {
     loadThread();
@@ -49,11 +62,11 @@ export function ThreadView() {
 
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newReply.trim() || submitting) return;
+    if (!newReply.trim() || submitting || !thread) return;
 
     try {
       setSubmitting(true);
-      const reply = await api.addThreadReply(threadId, newReply.trim());
+      const reply = await api.addThreadReply(thread.id, newReply.trim());
       setReplies(prev => [...prev, reply]);
       setNewReply("");
       // Update reply count in thread

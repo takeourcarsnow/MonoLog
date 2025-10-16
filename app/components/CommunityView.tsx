@@ -222,7 +222,7 @@ export function CommunityView() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <Link href={`/communities/${community.slug}/thread/${thread.id}`}>
+                    <Link href={`/communities/${community.slug}/thread/${thread.slug}`}>
                       <h3 className="font-semibold text-lg hover:underline">{thread.title}</h3>
                     </Link>
                     {currentUser && thread.user.id === currentUser.id && (

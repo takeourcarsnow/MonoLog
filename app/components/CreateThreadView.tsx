@@ -43,7 +43,7 @@ export function CreateThreadView() {
         title: title.trim(),
         content: content.trim()
       });
-      navigate.push(`/communities/${communitySlug}/thread/${thread.id}`);
+      navigate.push(`/communities/${communitySlug}/thread/${thread.slug}`);
     } catch (e: any) {
       setError(e?.message || 'Failed to create thread');
     } finally {

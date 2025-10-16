@@ -289,6 +289,45 @@ export async function getThread(id: string): Promise<HydratedThread | null> {
   };
 }
 
+export async function getThreadBySlug(slug: string): Promise<HydratedThread | null> {
+  const sb = getSupabaseClient();
+  const { data, error } = await sb
+    .from('threads')
+    .select(`
+      *,
+      user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
+      community:communities!threads_community_id_fkey(id, name)
+    `)
+    .eq('slug', slug)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null; // Not found
+    throw new Error(error.message);
+  }
+
+  // Get reply count
+  const { count } = await sb
+    .from('thread_replies')
+    .select('id', { count: 'exact', head: true })
+    .eq('thread_id', data.id);
+
+  // Normalize nested user profile
+  const rawUser = (data as any).user;
+  const mappedUser = mapProfileToUser(rawUser) || rawUser;
+
+  return { 
+    ...data,
+    user: {
+      id: mappedUser.id,
+      username: mappedUser.username,
+      displayName: mappedUser.displayName,
+      avatarUrl: mappedUser.avatarUrl,
+    },
+    replyCount: count || 0
+  };
+}
+
 export async function createThread(input: { communityId: string; title: string; content: string }): Promise<HydratedThread> {
   const sb = getSupabaseClient();
   const authUser = await sb.auth.getUser();
@@ -300,6 +339,8 @@ export async function createThread(input: { communityId: string; title: string; 
     throw new Error('You must be a member of this community to create threads');
   }
 
+  const slug = slugify(input.title);
+
   const { data, error } = await sb
     .from('threads')
     .insert({
@@ -307,6 +348,7 @@ export async function createThread(input: { communityId: string; title: string; 
       community_id: input.communityId,
       user_id: authUser.data.user.id,
       title: input.title,
+      slug,
       content: input.content,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()

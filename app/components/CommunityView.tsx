@@ -230,15 +230,25 @@ export function CommunityView() {
           </div>
           <div className="flex-shrink-0 flex gap-2">
             {currentUser && community.creator.id === currentUser.id && (
-              <Button
-                variant="danger"
-                size="sm"
-                className={`small-min ${deleteArmed ? 'confirm' : ''}`}
-                onClick={handleDelete}
-                aria-label={deleteArmed ? 'Confirm delete community' : 'Delete community'}
-              >
-                <Trash2 size={16} />
-              </Button>
+              <>
+                <Link href={`/communities/${community.slug}/edit`}>
+                  <Button variant="ghost" size="sm" className="small-min" aria-label="Edit community">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </Button>
+                </Link>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className={`small-min ${deleteArmed ? 'confirm' : ''}`}
+                  onClick={handleDelete}
+                  aria-label={deleteArmed ? 'Confirm delete community' : 'Delete community'}
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </>
             )}
             {community.isMember && (
               <Link href={`/communities/${community.slug}/create-thread`}>
@@ -261,14 +271,14 @@ export function CommunityView() {
       </div>
 
       {/* Threads List */}
-      <div className="content-body">
+      <div className="content-body space-y-6">
         {threads.length === 0 ? (
           <div className="card">
             <p>No threads yet. {community.isMember ? 'Be the first to create one!' : 'Join the community to start discussing!'}</p>
           </div>
         ) : (
           threads.map((thread) => (
-            <div key={thread.id} className="card">
+            <div key={thread.id} className="card mb-20">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   {(() => {

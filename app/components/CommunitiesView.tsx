@@ -112,14 +112,14 @@ export function CommunitiesView() {
           </Link>
         </div>
       </div>
-      <div className="content-body">
+      <div className="content-body space-y-6">
         {communities.length === 0 ? (
           <div className="card">
             <p>No communities yet. Be the first to create one!</p>
           </div>
         ) : (
           communities.map((community) => (
-            <div key={community.id} className="card">
+            <div key={community.id} className="card mb-16">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   {/* Community image or default logo */}

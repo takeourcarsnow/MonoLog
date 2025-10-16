@@ -29,6 +29,7 @@ export async function getCommunities(): Promise<HydratedCommunity[]> {
 
       return {
         ...community,
+        imageUrl: community.image_url,
         creator: {
           id: mappedCreator.id,
           username: mappedCreator.username,
@@ -85,6 +86,7 @@ export async function getCommunity(slug: string): Promise<HydratedCommunity | nu
 
   return { 
     ...data,
+    imageUrl: data.image_url,
     creator: {
       id: mappedCreator.id,
       username: mappedCreator.username,
@@ -134,7 +136,88 @@ export async function createCommunity(input: { name: string; description: string
       joined_at: new Date().toISOString()
     });
 
-  return { ...data, memberCount: 1, threadCount: 0, isMember: true };
+  return { 
+    ...data, 
+    imageUrl: data.image_url,
+    memberCount: 1, 
+    threadCount: 0, 
+    isMember: true 
+  };
+}
+
+export async function updateCommunity(slug: string, input: { name?: string; description?: string; imageUrl?: string }): Promise<HydratedCommunity> {
+  const sb = getSupabaseClient();
+  const authUser = await sb.auth.getUser();
+  if (!authUser.data.user) throw new Error('Not authenticated');
+
+  // First get the community to check ownership
+  const { data: existingCommunity, error: fetchError } = await sb
+    .from('communities')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (fetchError || !existingCommunity) throw new Error('Community not found');
+  if (existingCommunity.creator_id !== authUser.data.user.id) throw new Error('You can only edit communities you created');
+
+  // Prepare update data
+  const updateData: any = {};
+  if (input.name !== undefined) {
+    updateData.name = input.name;
+    updateData.slug = slugify(input.name);
+  }
+  if (input.description !== undefined) updateData.description = input.description;
+  if (input.imageUrl !== undefined) updateData.image_url = input.imageUrl;
+  updateData.updated_at = new Date().toISOString();
+
+  const { data, error } = await sb
+    .from('communities')
+    .update(updateData)
+    .eq('id', existingCommunity.id)
+    .eq('creator_id', authUser.data.user.id)
+    .select(`
+      *,
+      creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
+    `)
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  // Get member and thread counts
+  const [memberCountResult, threadCountResult] = await Promise.all([
+    sb.from('community_members').select('id', { count: 'exact', head: true }).eq('community_id', data.id),
+    sb.from('threads').select('id', { count: 'exact', head: true }).eq('community_id', data.id)
+  ]);
+
+  // Check if current user is a member
+  let isMember = false;
+  if (authUser.data.user) {
+    const { data: membership } = await sb
+      .from('community_members')
+      .select('id')
+      .eq('community_id', data.id)
+      .eq('user_id', authUser.data.user.id)
+      .single();
+    isMember = !!membership;
+  }
+
+  // Normalize creator profile
+  const rawCreator = (data as any).creator;
+  const mappedCreator = mapProfileToUser(rawCreator) || rawCreator;
+
+  return { 
+    ...data,
+    imageUrl: data.image_url,
+    creator: {
+      id: mappedCreator.id,
+      username: mappedCreator.username,
+      displayName: mappedCreator.displayName,
+      avatarUrl: mappedCreator.avatarUrl,
+    },
+    memberCount: memberCountResult.count || 0,
+    threadCount: threadCountResult.count || 0,
+    isMember 
+  };
 }
 
 export async function joinCommunity(communityId: string): Promise<void> {

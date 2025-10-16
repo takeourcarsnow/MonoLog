@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { Button } from "@/app/components/Button";
 import Link from "next/link";
@@ -9,9 +9,13 @@ import { compressImage } from "@/src/lib/image";
 import { getSupabaseClient, getAccessToken } from "@/src/lib/api/client";
 import { AuthRequired } from "./AuthRequired";
 import { AuthForm } from "./AuthForm";
+import type { HydratedCommunity } from "@/src/lib/types";
 
-export function CreateCommunityView() {
+export function EditCommunityView() {
   const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -20,6 +24,8 @@ export function CreateCommunityView() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [community, setCommunity] = useState<HydratedCommunity | null>(null);
+  const [communityLoading, setCommunityLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,32 +41,30 @@ export function CreateCommunityView() {
     checkAuth();
   }, []);
 
-  if (authLoading) {
-    return (
-      <div className="content">
-        <div className="content-body">
-          <div className="card max-w-2xl">
-            <div className="animate-pulse space-y-6">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <AuthRequired>
-        <AuthForm onClose={async () => {
-          const user = await api.getCurrentUser();
-          setCurrentUser(user);
-        }} />
-      </AuthRequired>
-    );
-  }
+  useEffect(() => {
+    const loadCommunity = async () => {
+      if (!slug) return;
+      try {
+        setCommunityLoading(true);
+        const communityData = await api.getCommunity(slug);
+        if (!communityData) {
+          setError('Community not found');
+          return;
+        }
+        setCommunity(communityData);
+        setName(communityData.name);
+        setDescription(communityData.description);
+        if (communityData.imageUrl) {
+          setImagePreview(communityData.imageUrl);
+        }
+      } catch (e: any) {
+        setError(e?.message || 'Failed to load community');
+      } finally {
+        setCommunityLoading(false);
+      }
+    };
+    loadCommunity();
+  }, [slug]);
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -82,10 +86,10 @@ export function CreateCommunityView() {
     try {
       const sb = getSupabaseClient();
       const token = await getAccessToken(sb);
-      
+
       const response = await fetch('/api/storage/upload', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
@@ -113,32 +117,94 @@ export function CreateCommunityView() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Upload image if selected
       let imageUrl: string | undefined = undefined;
       if (imageFile) {
         imageUrl = await uploadImage() || undefined;
+      } else if (imagePreview && !imageFile) {
+        // Keep existing image if no new file selected but preview exists
+        imageUrl = imagePreview;
       }
-      
-      const community = await api.createCommunity({
+
+      await api.updateCommunity(slug, {
         name: name.trim(),
         description: description.trim(),
         imageUrl
       });
-      router.push(`/communities/${community.slug}`);
+
+      router.push(`/communities/${community?.slug}`);
     } catch (e: any) {
-      setError(e?.message || 'Failed to create community');
+      setError(e?.message || 'Failed to update community');
     } finally {
       setLoading(false);
     }
   };
 
+  if (authLoading || communityLoading) {
+    return (
+      <div className="content">
+        <div className="content-body">
+          <div className="card max-w-2xl">
+            <div className="animate-pulse space-y-6">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <AuthRequired>
+        <AuthForm onClose={async () => {
+          const user = await api.getCurrentUser();
+          setCurrentUser(user);
+        }} />
+      </AuthRequired>
+    );
+  }
+
+  if (!community) {
+    return (
+      <div className="content">
+        <div className="content-body">
+          <div className="card">
+            <p className="text-red-500">{error || 'Community not found'}</p>
+            <Link href="/communities">
+              <Button>Back to Communities</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is the creator
+  if (community.creator.id !== currentUser.id) {
+    return (
+      <div className="content">
+        <div className="content-body">
+          <div className="card">
+            <p className="text-red-500">You can only edit communities you created</p>
+            <Link href={`/communities/${community.slug}`}>
+              <Button>Back to Community</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="content">
       <div className="content-header">
         <div className="text-center w-full">
-          <h1 className="content-title">Create Community</h1>
-          <p className="content-subtitle">Start a new community for discussions</p>
+          <h1 className="content-title">Edit Community</h1>
+          <p className="content-subtitle">Update your community details</p>
         </div>
       </div>
       <div className="content-body">
@@ -216,9 +282,9 @@ export function CreateCommunityView() {
 
             <div className="flex gap-3">
               <Button type="submit" disabled={!name.trim() || !description.trim() || loading} loading={loading}>
-                Create Community
+                Update Community
               </Button>
-              <Link href="/communities">
+              <Link href={`/communities/${community.slug}`}>
                 <Button variant="ghost">Cancel</Button>
               </Link>
             </div>

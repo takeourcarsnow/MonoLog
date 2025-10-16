@@ -384,6 +384,7 @@ export const localApi: Api = {
   async getCommunities() { return []; },
   async getCommunity() { return null; },
   async createCommunity() { throw new Error('Communities not supported in local mode'); },
+  async updateCommunity() { throw new Error('Communities not supported in local mode'); },
   async joinCommunity() { throw new Error('Communities not supported in local mode'); },
   async leaveCommunity() { throw new Error('Communities not supported in local mode'); },
   async isCommunityMember() { return false; },

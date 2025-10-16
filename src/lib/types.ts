@@ -156,6 +156,7 @@ export interface Api {
   getCommunities(): Promise<HydratedCommunity[]>;
   getCommunity(slug: string): Promise<HydratedCommunity | null>;
   createCommunity(input: { name: string; description: string; imageUrl?: string }): Promise<HydratedCommunity>;
+  updateCommunity(slug: string, input: { name?: string; description?: string; imageUrl?: string }): Promise<HydratedCommunity>;
   joinCommunity(communityId: string): Promise<void>;
   leaveCommunity(communityId: string): Promise<void>;
   deleteCommunity(id: string): Promise<boolean>;

@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from 'next/link';
 import { OptimizedImage } from './OptimizedImage';
 
@@ -10,9 +11,10 @@ type Props = {
   memberCount?: number | null;
   threadCount?: number | null;
   creator?: any;
+  children?: React.ReactNode;
 };
 
-export default function CommunityCardServer({ id, name, slug, description, imageUrl, memberCount, threadCount, creator }: Props) {
+export default function CommunityCardServer({ id, name, slug, description, imageUrl, memberCount, threadCount, creator, children }: Props) {
   return (
     <div className="card mb-8">
       <div className="flex flex-col items-center text-center gap-3 py-4">
@@ -40,8 +42,8 @@ export default function CommunityCardServer({ id, name, slug, description, image
           <span>by @{creator?.username}</span>
         </div>
 
-        {/* Client mountpoint for join/leave button mounted by CommunityCardClient on the client */}
-        <div id={`community-client-${id}`} />
+        {/* Render any client-side children (eg. join/leave button) inside the card */}
+        {children}
       </div>
     </div>
   );

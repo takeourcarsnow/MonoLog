@@ -1,6 +1,7 @@
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import CommunityCardServer from '@/app/components/CommunityCardServer';
 import CommunityCardClient from '@/app/components/CommunityCardClient';
+import CommunitiesClient from './CommunitiesClient';
 
 export default async function CommunitiesPage() {
   // Fetch list of communities server-side. Use RPC if available (serverSupabase configured).
@@ -11,11 +12,13 @@ export default async function CommunitiesPage() {
 
     // Render server markup for the list and include client components for interactivity.
     return (
-      <div className="communities">
+      <CommunitiesClient>
+        <div className="communities">
         <div className="content-header mt-8">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
-              <strong>Communities</strong>
+              {/* visually hide the main heading but keep it accessible to screen readers */}
+              <span className="sr-only">Communities</span>
               <span className="dim">Communities and threads with latest activity are displayed first</span>
             </h1>
           </div>
@@ -38,19 +41,21 @@ export default async function CommunitiesPage() {
                   memberCount={c.member_count}
                   threadCount={c.thread_count}
                   creator={c.creator}
-                />
-                {/* Mount client component under the server-rendered markup to handle join/leave */}
-                <CommunityCardClient
-                  communityId={c.id}
-                  initialIsMember={!!c.is_member}
-                  initialMemberCount={c.member_count || 0}
-                  creatorId={c.creator?.id}
-                />
+                >
+                  {/* Mount client component inside the server-rendered card to handle join/leave */}
+                  <CommunityCardClient
+                    communityId={c.id}
+                    initialIsMember={!!c.is_member}
+                    initialMemberCount={c.member_count || 0}
+                    creatorId={c.creator?.id}
+                  />
+                </CommunityCardServer>
               </div>
             ))
           )}
         </div>
-      </div>
+        </div>
+      </CommunitiesClient>
     );
   } catch (e) {
     // Fallback: render a simple server message when RPC not available
@@ -59,7 +64,7 @@ export default async function CommunitiesPage() {
         <div className="content-header mt-8">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
-              <strong>Communities</strong>
+              <span className="sr-only">Communities</span>
               <span className="dim">Unable to load communities</span>
             </h1>
           </div>

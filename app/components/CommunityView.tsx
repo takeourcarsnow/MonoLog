@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/src/lib/api";
-import { Users, MessageSquare, Plus, Trash2 } from "lucide-react";
+import { Users, MessageSquare, Plus, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { useRef } from "react";
 import type { HydratedCommunity, HydratedThread } from "@/src/lib/types";
 import { Button } from "./Button";
 import Link from "next/link";
@@ -20,6 +21,8 @@ export function CommunityView() {
   const [threads, setThreads] = useState<HydratedThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const deleteTimeoutRef = useRef<number | null>(null);
 
   const loadCommunity = useCallback(async () => {
     if (!slug) return;
@@ -81,13 +84,23 @@ export function CommunityView() {
   const handleDelete = async () => {
     if (!community) return;
 
-    if (!confirm('Are you sure you want to delete this community? This action cannot be undone.')) return;
+    // Two-step confirm: first click arms the delete button (visual), second click performs delete
+    if (!deleteArmed) {
+      setDeleteArmed(true);
+      // auto-disarm after 6 seconds
+      if (deleteTimeoutRef.current) window.clearTimeout(deleteTimeoutRef.current);
+      deleteTimeoutRef.current = window.setTimeout(() => setDeleteArmed(false), 6000);
+      return;
+    }
 
     try {
+      if (deleteTimeoutRef.current) window.clearTimeout(deleteTimeoutRef.current);
       await api.deleteCommunity(community.slug);
       router.push('/communities');
     } catch (e: any) {
       setError(e?.message || 'Failed to delete community');
+    } finally {
+      setDeleteArmed(false);
     }
   };
 
@@ -166,26 +179,28 @@ export function CommunityView() {
               <Button
                 variant="danger"
                 size="sm"
+                className={`small-min ${deleteArmed ? 'confirm' : ''}`}
                 onClick={handleDelete}
+                aria-label={deleteArmed ? 'Confirm delete community' : 'Delete community'}
               >
                 <Trash2 size={16} />
-                Delete Community
               </Button>
             )}
             {community.isMember && (
               <Link href={`/communities/${community.slug}/create-thread`}>
-                <Button size="sm">
+                <Button size="sm" className="small-min" aria-label="New thread">
                   <Plus size={16} />
-                  New Thread
                 </Button>
               </Link>
             )}
             <Button
               variant={community.isMember ? "ghost" : "default"}
               size="sm"
+              className="small-min"
               onClick={handleJoinLeave}
+              aria-label={community.isMember ? 'Leave community' : 'Join community'}
             >
-              {community.isMember ? 'Leave Community' : 'Join Community'}
+              {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
             </Button>
           </div>
         </div>

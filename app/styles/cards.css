@@ -38,6 +38,15 @@
   contain: layout style paint;
   content-visibility: auto;
 }
+
+/* Add internal padding for cards rendered inside page content so their
+   children (like the community list items) don't sit flush to card edges.
+   Using a scoped selector avoids changing media-focused cards that rely
+   on full-bleed media layout. */
+.content .card {
+  padding: 12px 16px;
+  box-sizing: border-box;
+}
 @keyframes in {
   to { transform: translateY(0); opacity: 1; }
 }
@@ -686,6 +695,11 @@
   }
   .card-body {
     padding: 12px 16px;
+  }
+
+  /* mobile: slightly reduce card padding inside the content area */
+  .content .card {
+    padding: 10px 12px;
   }
 }
 

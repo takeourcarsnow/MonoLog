@@ -56,6 +56,17 @@
 .btn.small-min:hover { background: color-mix(in srgb, var(--primary), transparent 85%) !important; transform: none !important; }
 .btn.small-min svg { width: 16px !important; height: 16px !important; }
 
+/* Confirm visual state for small-min icon buttons (two-step confirms) */
+.btn.small-min.confirm {
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+  background: color-mix(in srgb, var(--danger), transparent 96%) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 90%) !important;
+}
+.btn.small-min.confirm:hover {
+  background: color-mix(in srgb, var(--danger), transparent 92%) !important;
+}
+
 /* Touch-specific: enlarge icon buttons for comfortable tap targets and
    provide a subtle tap feedback. Kept under pointer:coarse so desktop
    layout isn't affected. */

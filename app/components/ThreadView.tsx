@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { api } from "@/src/lib/api";
 import { MessageSquare, ArrowLeft, Trash2 } from "lucide-react";
 import type { HydratedThread, HydratedThreadReply } from "@/src/lib/types";
@@ -23,6 +23,11 @@ export function ThreadView() {
   const [error, setError] = useState<string | null>(null);
   const [newReply, setNewReply] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [threadDeleteArmed, setThreadDeleteArmed] = useState(false);
+  const threadDeleteTimeoutRef = useRef<number | null>(null);
+
+  const [replyArmedSet, setReplyArmedSet] = useState<Set<string>>(new Set());
+  const replyDeleteTimeoutsRef = useRef<Map<string, number>>(new Map());
 
   const loadThread = useCallback(async () => {
     if (!threadSlug) return;
@@ -82,14 +87,63 @@ export function ThreadView() {
 
   const handleDeleteThread = async () => {
     if (!thread) return;
-
-    if (!confirm('Are you sure you want to delete this thread? This action cannot be undone.')) return;
+    // Two-step confirm: arm on first click, delete on second
+    if (!threadDeleteArmed) {
+      setThreadDeleteArmed(true);
+      if (threadDeleteTimeoutRef.current) window.clearTimeout(threadDeleteTimeoutRef.current);
+      threadDeleteTimeoutRef.current = window.setTimeout(() => setThreadDeleteArmed(false), 6000);
+      return;
+    }
 
     try {
+      if (threadDeleteTimeoutRef.current) window.clearTimeout(threadDeleteTimeoutRef.current);
       await api.deleteThread(thread.id);
       router.push(`/communities/${communitySlug}`);
     } catch (e: any) {
       setError(e?.message || 'Failed to delete thread');
+    } finally {
+      setThreadDeleteArmed(false);
+    }
+  };
+
+  const handleDeleteReply = async (replyId: string) => {
+    if (!thread) return;
+
+    // If not armed, arm the reply delete and set timeout
+    if (!replyArmedSet.has(replyId)) {
+      const next = new Set(replyArmedSet);
+      next.add(replyId);
+      setReplyArmedSet(next);
+      // set/replace timeout
+      const prev = replyDeleteTimeoutsRef.current.get(replyId);
+      if (prev) window.clearTimeout(prev);
+      const t = window.setTimeout(() => {
+        const s = new Set(replyArmedSet);
+        s.delete(replyId);
+        setReplyArmedSet(s);
+        replyDeleteTimeoutsRef.current.delete(replyId);
+      }, 6000);
+      replyDeleteTimeoutsRef.current.set(replyId, t);
+      return;
+    }
+
+    // Confirmed: perform delete
+    try {
+      const prev = replyDeleteTimeoutsRef.current.get(replyId);
+      if (prev) window.clearTimeout(prev);
+      replyDeleteTimeoutsRef.current.delete(replyId);
+      await api.deleteThreadReply(replyId);
+      setReplies(prev => prev.filter(r => r.id !== replyId));
+      // Update reply count
+      if (thread) {
+        setThread(prev => prev ? { ...prev, replyCount: Math.max(0, (prev.replyCount || 0) - 1) } : null);
+      }
+      // remove armed state
+      const s = new Set(replyArmedSet);
+      s.delete(replyId);
+      setReplyArmedSet(s);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to delete reply');
     }
   };
 
@@ -150,10 +204,11 @@ export function ThreadView() {
                 <Button
                   variant="danger"
                   size="sm"
+                  className={`small-min ${threadDeleteArmed ? 'confirm' : ''}`}
                   onClick={handleDeleteThread}
+                  aria-label={threadDeleteArmed ? 'Confirm delete thread' : 'Delete thread'}
                 >
                   <Trash2 size={16} />
-                  Delete Thread
                 </Button>
               )}
             </div>
@@ -237,19 +292,11 @@ export function ThreadView() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        className={`small-min ${replyArmedSet.has(reply.id) ? 'confirm' : ''}`}
                         onClick={async () => {
-                          if (!confirm('Are you sure you want to delete this reply?')) return;
-                          try {
-                            await api.deleteThreadReply(reply.id);
-                            setReplies(prev => prev.filter(r => r.id !== reply.id));
-                            // Update reply count
-                            if (thread) {
-                              setThread(prev => prev ? { ...prev, replyCount: Math.max(0, (prev.replyCount || 0) - 1) } : null);
-                            }
-                          } catch (e: any) {
-                            setError(e?.message || 'Failed to delete reply');
-                          }
+                          await handleDeleteReply(reply.id);
                         }}
+                        aria-label={replyArmedSet.has(reply.id) ? 'Confirm delete reply' : 'Delete reply'}
                       >
                         <Trash2 size={14} />
                       </Button>

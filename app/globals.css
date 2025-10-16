@@ -97,9 +97,10 @@ html.favorites-page-scroll .content {
   --transition-mid: 260ms cubic-bezier(.2,.7,.2,1);
   /* Responsive maximum content width: grows on larger screens but caps for readability */
   --maxw: clamp(640px, 90vw, 1100px);
-  /* Page side padding (use for header, content, and feed) and mobile variant */
-  --page-side-padding: 12px;
-  --page-side-padding-mobile: 16px;
+  /* Page side padding (use for header, content, and feed) and mobile variant.
+    Increased so page content doesn't sit flush against the viewport edges. */
+  --page-side-padding: 20px;
+  --page-side-padding-mobile: 20px;
 
   /* color used for active tab / navbar indicators */
   --tab-color: var(--primary);

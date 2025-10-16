@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/src/lib/api";
-import { Users } from "lucide-react";
+import { Users, UserMinus, UserPlus } from "lucide-react";
 import type { HydratedCommunity } from "@/src/lib/types";
 import { Button } from "./Button";
 import Link from "next/link";
@@ -152,9 +152,11 @@ export function CommunitiesView() {
                   <Button
                     variant={community.isMember ? "ghost" : "default"}
                     size="sm"
+                    className="small-min"
                     onClick={() => handleJoinLeave(community.id, community.isMember || false)}
+                    aria-label={community.isMember ? 'Leave community' : 'Join community'}
                   >
-                    {community.isMember ? 'Leave' : 'Join'}
+                    {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
                   </Button>
                 </div>
               </div>

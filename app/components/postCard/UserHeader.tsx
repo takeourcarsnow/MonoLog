@@ -95,6 +95,47 @@ export const UserHeader = memo(function UserHeader({
     </>
   );
 
+  // Two-step confirm state for deleting this post (click once to arm, click again to confirm)
+  const [postDeleteArmed, setPostDeleteArmed] = useState(false);
+  const postDeleteTimeoutRef = useRef<number | null>(null);
+
+  const handleArmOrDeletePost = async () => {
+    // First click arms
+    if (!postDeleteArmed) {
+      setPostDeleteArmed(true);
+      if (deleteExpandTimerRef && deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
+      deleteExpandTimerRef.current = window.setTimeout(() => {
+        setPostDeleteArmed(false);
+        if (deleteExpandTimerRef) deleteExpandTimerRef.current = null;
+      }, 6000);
+      // mirror parent's expanded state for visual consistency
+      try { setDeleteExpanded(true); } catch (_) {}
+      return;
+    }
+
+    // Confirmed: perform delete
+    try {
+      if (postDeleteTimeoutRef.current) window.clearTimeout(postDeleteTimeoutRef.current);
+      // optimistic remove DOM element like original
+      (document.getElementById(`post-${post.id}`)?.remove?.());
+      await api.deletePost(post.id);
+      window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId: post.id } }));
+      if (pathname?.startsWith("/post/")) router.push("/");
+    } catch (e: any) {
+      toast.show(e?.message || "Failed to delete post");
+    } finally {
+      setPostDeleteArmed(false);
+      try { setDeleteExpanded(false); } catch (_) {}
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (postDeleteTimeoutRef.current) window.clearTimeout(postDeleteTimeoutRef.current);
+      if (deleteExpandTimerRef && deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
+    };
+  }, []);
+
   return (
     <div className="card-head">
       <Link className="user-link" href={`/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
@@ -208,11 +249,21 @@ export const UserHeader = memo(function UserHeader({
                   <span className="icon" aria-hidden="true"><Edit size={16} /></span>
                   <span className="reveal label">{editorSaving ? 'Saving…' : 'Edit'}</span>
                 </button>
-                <div className={`btn ghost icon-reveal delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${deleteExpanded ? 'confirming expanded' : ''}`} style={{ position: 'relative' }}>
-                  <div aria-hidden="true">
-                    <span className="icon"><Trash size={16} /></span>
-                    <span className="reveal label">{showConfirmText ? 'Confirm' : 'Delete'}</span>
-                  </div>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    className={`btn ghost small-min delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${postDeleteArmed || deleteExpanded ? 'confirm' : ''}`}
+                    aria-label={postDeleteArmed || deleteExpanded ? 'Confirm delete post' : 'Delete post'}
+                    onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => { try { e.preventDefault(); } catch (_) {} setIsPressingDelete(true); }}
+                    onMouseUp={() => setIsPressingDelete(false)}
+                    onMouseLeave={() => setIsPressingDelete(false)}
+                    onTouchStart={() => { setIsPressingDelete(true); }}
+                    onTouchEnd={() => setIsPressingDelete(false)}
+                    onClick={async () => { await handleArmOrDeletePost(); }}
+                    style={{ position: 'relative' }}
+                  >
+                    <span aria-hidden><Trash size={16} /></span>
+                  </button>
+
                   {overlayEnabled && (
                     <div
                       ref={deleteBtnRef as any}
@@ -223,47 +274,17 @@ export const UserHeader = memo(function UserHeader({
                       onTouchStart={() => { setIsPressingDelete(true); }}
                       onTouchEnd={() => setIsPressingDelete(false)}
                       onClick={async () => {
-                        if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-                          try {
-                            (document.getElementById(`post-${post.id}`)?.remove?.());
-                            await api.deletePost(post.id);
-                            // Dispatch event to notify other components (e.g., feed) that post was deleted
-                            window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId: post.id } }));
-                            if (pathname?.startsWith("/post/")) router.push("/");
-                          } catch (e: any) {
-                            toast.show(e?.message || "Failed to delete post");
-                          }
-                        }
+                        await handleArmOrDeletePost();
                       }}
                     />
                   )}
+
                   <button
-                    aria-label="Delete post"
+                    aria-label={postDeleteArmed ? 'Confirm delete post' : 'Delete post'}
                     onClick={async () => { 
-                      if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-                        try {
-                          (document.getElementById(`post-${post.id}`)?.remove?.());
-                          await api.deletePost(post.id);
-                          // Dispatch event to notify other components (e.g., feed) that post was deleted
-                          window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId: post.id } }));
-                          if (pathname?.startsWith("/post/")) router.push("/");
-                        } catch (e: any) {
-                          toast.show(e?.message || "Failed to delete post");
-                        }
-                      }
+                      await handleArmOrDeletePost();
                     }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) { 
-                      (async () => {
-                        try {
-                          (document.getElementById(`post-${post.id}`)?.remove?.());
-                          await api.deletePost(post.id);
-                          window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId: post.id } }));
-                          if (pathname?.startsWith("/post/")) router.push("/");
-                        } catch (e: any) {
-                          toast.show(e?.message || "Failed to delete post");
-                        }
-                      })();
-                    } } }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (async () => { await handleArmOrDeletePost(); })(); } }}
                     style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
                   />
                 </div>

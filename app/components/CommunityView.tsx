@@ -23,6 +23,8 @@ export function CommunityView() {
   const [error, setError] = useState<string | null>(null);
   const [deleteArmed, setDeleteArmed] = useState(false);
   const deleteTimeoutRef = useRef<number | null>(null);
+  const [threadDeleteArmedSet, setThreadDeleteArmedSet] = useState<Set<string>>(new Set());
+  const threadDeleteTimeoutsRef = useRef<Map<string, number>>(new Map());
 
   const loadCommunity = useCallback(async () => {
     if (!slug) return;
@@ -103,6 +105,56 @@ export function CommunityView() {
       setDeleteArmed(false);
     }
   };
+
+  const handleDeleteThread = async (threadId: string) => {
+    if (!community) return;
+
+    // If not armed, arm this thread's delete button
+    if (!threadDeleteArmedSet.has(threadId)) {
+      const next = new Set(threadDeleteArmedSet);
+      next.add(threadId);
+      setThreadDeleteArmedSet(next);
+      // set/replace timeout
+      const prev = threadDeleteTimeoutsRef.current.get(threadId);
+      if (prev) window.clearTimeout(prev);
+      const t = window.setTimeout(() => {
+        const s = new Set(threadDeleteArmedSet);
+        s.delete(threadId);
+        setThreadDeleteArmedSet(s);
+        threadDeleteTimeoutsRef.current.delete(threadId);
+      }, 6000);
+      threadDeleteTimeoutsRef.current.set(threadId, t);
+      return;
+    }
+
+    // Confirmed: perform delete
+    try {
+      const prev = threadDeleteTimeoutsRef.current.get(threadId);
+      if (prev) window.clearTimeout(prev);
+      threadDeleteTimeoutsRef.current.delete(threadId);
+      await api.deleteThread(threadId);
+      setThreads(prev => prev.filter(t => t.id !== threadId));
+      // Update thread count
+      if (community) {
+        setCommunity(prev => prev ? { ...prev, threadCount: Math.max(0, (prev.threadCount || 0) - 1) } : null);
+      }
+    } catch (error: any) {
+      setError(error?.message || 'Failed to delete thread');
+    } finally {
+      const s = new Set(threadDeleteArmedSet);
+      s.delete(threadId);
+      setThreadDeleteArmedSet(s);
+    }
+  };
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (deleteTimeoutRef.current) window.clearTimeout(deleteTimeoutRef.current);
+      threadDeleteTimeoutsRef.current.forEach((t) => window.clearTimeout(t));
+      threadDeleteTimeoutsRef.current.clear();
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -244,20 +296,12 @@ export function CommunityView() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        className={`small-min ${threadDeleteArmedSet.has(thread.id) ? 'confirm' : ''}`}
                         onClick={async (e) => {
                           e.preventDefault();
-                          if (!confirm('Are you sure you want to delete this thread?')) return;
-                          try {
-                            await api.deleteThread(thread.id);
-                            setThreads(prev => prev.filter(t => t.id !== thread.id));
-                            // Update thread count
-                            if (community) {
-                              setCommunity(prev => prev ? { ...prev, threadCount: Math.max(0, (prev.threadCount || 0) - 1) } : null);
-                            }
-                          } catch (error: any) {
-                            setError(error?.message || 'Failed to delete thread');
-                          }
+                          await handleDeleteThread(thread.id);
                         }}
+                        aria-label={threadDeleteArmedSet.has(thread.id) ? 'Confirm delete thread' : 'Delete thread'}
                       >
                         <Trash2 size={14} />
                       </Button>

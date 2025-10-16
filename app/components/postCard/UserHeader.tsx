@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useRef, useState, useEffect } from "react";
 import type { HydratedPost } from "@/src/lib/types";
 import { api } from "@/src/lib/api";
@@ -8,6 +10,7 @@ import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { Lock, UserPlus, UserCheck, Edit, Trash } from "lucide-react";
 import { AuthForm } from "../AuthForm";
 import { useToast } from "../Toast";
+import { usePathname, useRouter } from "next/navigation";
 
 interface UserHeaderProps {
   post: HydratedPost;
@@ -83,6 +86,8 @@ export const UserHeader = memo(function UserHeader({
   toast,
 }: UserHeaderProps) {
   const editClickLockRef = useRef<number | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
   const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
   const userLine = (
     <>

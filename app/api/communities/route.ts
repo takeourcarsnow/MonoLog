@@ -6,9 +6,9 @@ export async function GET(req: Request) {
   try {
     const sb = getServiceSupabase();
     const url = new URL(req.url);
-    const id = url.searchParams.get('id');
+    const slug = url.searchParams.get('slug');
 
-    if (id) {
+    if (slug) {
       // Get single community
       const { data: community, error } = await sb
         .from('communities')
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
           memberCount:community_members(count),
           threadCount:threads(count)
         `)
-        .eq('id', id)
+        .eq('slug', slug)
         .single();
 
       if (error) {
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
         const { data: membership } = await sb
           .from('community_members')
           .select('id')
-          .eq('community_id', id)
+          .eq('community_id', community.id)
           .eq('user_id', authUser.id)
           .single();
         isMember = !!membership;
@@ -77,8 +77,8 @@ export async function GET(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const url = new URL(req.url);
-    const id = url.searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'Community ID is required' }, { status: 400 });
+    const slug = url.searchParams.get('slug');
+    if (!slug) return NextResponse.json({ error: 'Community slug is required' }, { status: 400 });
 
     const authUser = await getUserFromAuthHeader(req);
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -89,7 +89,7 @@ export async function DELETE(req: Request) {
     const { data: community } = await sb
       .from('communities')
       .select('creator_id')
-      .eq('id', id)
+      .eq('slug', slug)
       .single();
 
     if (!community) {
@@ -104,7 +104,7 @@ export async function DELETE(req: Request) {
     const { error } = await sb
       .from('communities')
       .delete()
-      .eq('id', id);
+      .eq('slug', slug);
 
     if (error) {
       console.error('Delete community error:', error);

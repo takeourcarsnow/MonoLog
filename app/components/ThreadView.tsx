@@ -14,7 +14,7 @@ export function ThreadView() {
   const params = useParams();
   const router = useRouter();
   const { me: currentUser } = useAuth();
-  const communityId = params.id as string;
+  const communitySlug = params.slug as string;
   const threadId = params.threadId as string;
 
   const [thread, setThread] = useState<HydratedThread | null>(null);
@@ -74,7 +74,7 @@ export function ThreadView() {
 
     try {
       await api.deleteThread(thread.id);
-      router.push(`/communities/${communityId}`);
+      router.push(`/communities/${communitySlug}`);
     } catch (e: any) {
       setError(e?.message || 'Failed to delete thread');
     }
@@ -99,7 +99,7 @@ export function ThreadView() {
         <div className="content-body">
           <div className="card">
             <p className="text-red-500">{error || 'Thread not found'}</p>
-            <Link href={`/communities/${communityId}`}>
+            <Link href={`/communities/${communitySlug}`}>
               <Button>Back to Community</Button>
             </Link>
           </div>
@@ -112,7 +112,7 @@ export function ThreadView() {
     <div className="content">
       {/* Back Navigation */}
       <div className="mb-4">
-        <Link href={`/communities/${communityId}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+        <Link href={`/communities/${communitySlug}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
           <ArrowLeft size={16} />
           Back to {thread.community.name}
         </Link>

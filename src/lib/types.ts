@@ -58,6 +58,7 @@ export type Comment = {
 export type Community = {
   id: string;
   name: string;
+  slug: string;
   description: string;
   creatorId: string;
   createdAt: string;
@@ -151,7 +152,7 @@ export interface Api {
 
   // Communities
   getCommunities(): Promise<HydratedCommunity[]>;
-  getCommunity(id: string): Promise<HydratedCommunity | null>;
+  getCommunity(slug: string): Promise<HydratedCommunity | null>;
   createCommunity(input: { name: string; description: string }): Promise<HydratedCommunity>;
   joinCommunity(communityId: string): Promise<void>;
   leaveCommunity(communityId: string): Promise<void>;

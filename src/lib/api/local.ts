@@ -394,4 +394,6 @@ export const localApi: Api = {
   async deleteThread() { throw new Error('Threads not supported in local mode'); },
   async getThreadReplies() { return []; },
   async addThreadReply() { throw new Error('Thread replies not supported in local mode'); },
+  async deleteCommunity() { throw new Error('Communities not supported in local mode'); },
+  async deleteThreadReply() { throw new Error('Thread replies not supported in local mode'); },
 };

@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS communities (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
+    slug TEXT UNIQUE,
     description TEXT NOT NULL,
     creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

@@ -8,8 +8,8 @@ import Link from "next/link";
 import type { HydratedCommunity } from "@/src/lib/types";
 
 export function CreateThreadView() {
-  const router = useParams();
-  const communityId = router.id as string;
+  const params = useParams();
+  const communitySlug = params.slug as string;
   const navigate = useRouter();
 
   const [community, setCommunity] = useState<HydratedCommunity | null>(null);
@@ -20,30 +20,30 @@ export function CreateThreadView() {
 
   useEffect(() => {
     const loadCommunity = async () => {
-      if (!communityId) return;
+      if (!communitySlug) return;
       try {
-        const data = await api.getCommunity(communityId);
+        const data = await api.getCommunity(communitySlug);
         setCommunity(data);
       } catch (e) {
         setError('Community not found');
       }
     };
     loadCommunity();
-  }, [communityId]);
+  }, [communitySlug]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim() || loading) return;
+    if (!title.trim() || !content.trim() || loading || !community) return;
 
     try {
       setLoading(true);
       setError(null);
       const thread = await api.createThread({
-        communityId,
+        communityId: community.id,
         title: title.trim(),
         content: content.trim()
       });
-      navigate.push(`/communities/${communityId}/thread/${thread.id}`);
+      navigate.push(`/communities/${communitySlug}/thread/${thread.id}`);
     } catch (e: any) {
       setError(e?.message || 'Failed to create thread');
     } finally {
@@ -125,7 +125,7 @@ export function CreateThreadView() {
               <Button type="submit" disabled={!title.trim() || !content.trim() || loading} loading={loading}>
                 Create Thread
               </Button>
-              <Link href={`/communities/${communityId}`}>
+              <Link href={`/communities/${communitySlug}`}>
                 <Button variant="ghost">Cancel</Button>
               </Link>
             </div>

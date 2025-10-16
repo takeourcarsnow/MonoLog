@@ -14,7 +14,7 @@ export function CommunityView() {
   const params = useParams();
   const router = useRouter();
   const { me: currentUser } = useAuth();
-  const communityId = params.id as string;
+  const slug = params.slug as string;
 
   const [community, setCommunity] = useState<HydratedCommunity | null>(null);
   const [threads, setThreads] = useState<HydratedThread[]>([]);
@@ -22,15 +22,18 @@ export function CommunityView() {
   const [error, setError] = useState<string | null>(null);
 
   const loadCommunity = useCallback(async () => {
-    if (!communityId) return;
+    if (!slug) return;
 
     try {
       setLoading(true);
       setError(null);
-      const [communityData, threadsData] = await Promise.all([
-        api.getCommunity(communityId),
-        api.getCommunityThreads(communityId)
-      ]);
+      const communityData = await api.getCommunity(slug);
+      if (!communityData) {
+        setError('Community not found');
+        setLoading(false);
+        return;
+      }
+      const threadsData = await api.getCommunityThreads(communityData.id);
       setCommunity(communityData);
       setThreads(threadsData);
     } catch (e: any) {
@@ -38,7 +41,7 @@ export function CommunityView() {
     } finally {
       setLoading(false);
     }
-  }, [communityId]);
+  }, [slug]);
 
   useEffect(() => {
     loadCommunity();
@@ -81,7 +84,7 @@ export function CommunityView() {
     if (!confirm('Are you sure you want to delete this community? This action cannot be undone.')) return;
 
     try {
-      await api.deleteCommunity(community.id);
+      await api.deleteCommunity(community.slug);
       router.push('/communities');
     } catch (e: any) {
       setError(e?.message || 'Failed to delete community');
@@ -170,7 +173,7 @@ export function CommunityView() {
               </Button>
             )}
             {community.isMember && (
-              <Link href={`/communities/${community.id}/create-thread`}>
+              <Link href={`/communities/${community.slug}/create-thread`}>
                 <Button size="sm">
                   <Plus size={16} />
                   New Thread
@@ -219,7 +222,7 @@ export function CommunityView() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <Link href={`/communities/${community.id}/thread/${thread.id}`}>
+                    <Link href={`/communities/${community.slug}/thread/${thread.id}`}>
                       <h3 className="font-semibold text-lg hover:underline">{thread.title}</h3>
                     </Link>
                     {currentUser && thread.user.id === currentUser.id && (

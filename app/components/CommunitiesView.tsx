@@ -136,7 +136,7 @@ export function CommunitiesView() {
                   })()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <Link href={`/communities/${community.id}`}>
+                  <Link href={`/communities/${community.slug}`}>
                     <h3 className="font-semibold text-lg hover:underline">{community.name}</h3>
                   </Link>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

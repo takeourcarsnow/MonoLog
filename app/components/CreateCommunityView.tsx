@@ -24,7 +24,7 @@ export function CreateCommunityView() {
         name: name.trim(),
         description: description.trim()
       });
-      router.push(`/communities/${community.id}`);
+      router.push(`/communities/${community.slug}`);
     } catch (e: any) {
       setError(e?.message || 'Failed to create community');
     } finally {

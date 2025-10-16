@@ -1,5 +1,6 @@
 import { getSupabaseClient, getAccessToken } from "./client";
 import { mapProfileToUser } from "./utils";
+import { slugify } from "../utils";
 import type { HydratedCommunity, HydratedThread, HydratedThreadReply } from "../types";
 
 export async function getCommunities(): Promise<HydratedCommunity[]> {
@@ -43,7 +44,7 @@ export async function getCommunities(): Promise<HydratedCommunity[]> {
   return communitiesWithCounts;
 }
 
-export async function getCommunity(id: string): Promise<HydratedCommunity | null> {
+export async function getCommunity(slug: string): Promise<HydratedCommunity | null> {
   const sb = getSupabaseClient();
   const { data, error } = await sb
     .from('communities')
@@ -51,7 +52,7 @@ export async function getCommunity(id: string): Promise<HydratedCommunity | null
       *,
       creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
     `)
-    .eq('id', id)
+    .eq('slug', slug)
     .single();
 
   if (error) {
@@ -61,8 +62,8 @@ export async function getCommunity(id: string): Promise<HydratedCommunity | null
 
   // Get member and thread counts
   const [memberCountResult, threadCountResult] = await Promise.all([
-    sb.from('community_members').select('id', { count: 'exact', head: true }).eq('community_id', id),
-    sb.from('threads').select('id', { count: 'exact', head: true }).eq('community_id', id)
+    sb.from('community_members').select('id', { count: 'exact', head: true }).eq('community_id', data.id),
+    sb.from('threads').select('id', { count: 'exact', head: true }).eq('community_id', data.id)
   ]);
 
   // Check if current user is a member
@@ -72,7 +73,7 @@ export async function getCommunity(id: string): Promise<HydratedCommunity | null
     const { data: membership } = await sb
       .from('community_members')
       .select('id')
-      .eq('community_id', id)
+      .eq('community_id', data.id)
       .eq('user_id', authUser.data.user.id)
       .single();
     isMember = !!membership;
@@ -101,11 +102,14 @@ export async function createCommunity(input: { name: string; description: string
   const authUser = await sb.auth.getUser();
   if (!authUser.data.user) throw new Error('Not authenticated');
 
+  const slug = slugify(input.name);
+
   const { data, error } = await sb
     .from('communities')
     .insert({
       id: crypto.randomUUID(),
       name: input.name,
+      slug,
       description: input.description,
       creator_id: authUser.data.user.id,
       created_at: new Date().toISOString(),
@@ -174,10 +178,10 @@ export async function leaveCommunity(communityId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function deleteCommunity(id: string): Promise<boolean> {
+export async function deleteCommunity(slug: string): Promise<boolean> {
   const sb = getSupabaseClient();
   const token = await getAccessToken(sb);
-  const response = await fetch(`/api/communities?id=${encodeURIComponent(id)}`, {
+  const response = await fetch(`/api/communities?slug=${encodeURIComponent(slug)}`, {
     method: 'DELETE',
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     credentials: 'include',

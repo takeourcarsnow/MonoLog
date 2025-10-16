@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { uid } from '@/src/lib/id';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { slugify } from '@/src/lib/utils';
 
 export async function POST(req: Request) {
   try {
@@ -37,6 +38,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Community name already exists' }, { status: 409 });
     }
 
+    const slug = slugify(name);
+
+    // Check if slug already exists
+    const { data: existingSlug } = await sb
+      .from('communities')
+      .select('id')
+      .eq('slug', slug)
+      .single();
+
+    if (existingSlug) {
+      return NextResponse.json({ error: 'Community slug already exists' }, { status: 409 });
+    }
+
     const id = uid();
     const created_at = new Date().toISOString();
 
@@ -46,6 +60,7 @@ export async function POST(req: Request) {
       .insert({
         id,
         name,
+        slug,
         description,
         creator_id: userId,
         created_at,

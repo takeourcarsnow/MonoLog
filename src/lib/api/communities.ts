@@ -314,6 +314,9 @@ export async function getCommunityThreads(communityId: string): Promise<Hydrated
         displayName: mappedUser.displayName,
         avatarUrl: mappedUser.avatarUrl,
       },
+      // Map RPC/fallback reply counts and activity timestamps to app fields
+      replyCount: (thread.reply_count ?? thread.replyCount) || 0,
+      lastActivity: thread.last_activity || thread.lastActivity || thread.updated_at || thread.updatedAt || thread.created_at || thread.createdAt,
     };
   });
 
@@ -569,16 +572,19 @@ export async function addThreadReply(threadId: string, content: string): Promise
   const rawUser = (data as any).user;
   const mappedUser = mapProfileToUser(rawUser) || rawUser;
 
-  return {
-    ...data,
-    createdAt: data.created_at,
-    user: {
-      id: mappedUser.id,
-      username: mappedUser.username,
-      displayName: mappedUser.displayName,
-      avatarUrl: mappedUser.avatarUrl,
-    }
-  };
+    return { 
+      ...data,
+      createdAt: data.created_at,
+      user: {
+        id: mappedUser.id,
+        username: mappedUser.username,
+        displayName: mappedUser.displayName,
+        avatarUrl: mappedUser.avatarUrl,
+      },
+      // Map possible RPC fields to the app-friendly names
+      replyCount: (data.reply_count ?? data.replyCount) || 0,
+      lastActivity: data.last_activity || data.lastActivity || data.updated_at || data.updatedAt || data.created_at || data.createdAt,
+    };
 }
 
 export async function deleteThreadReply(id: string): Promise<boolean> {

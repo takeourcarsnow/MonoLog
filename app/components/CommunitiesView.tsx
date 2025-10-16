@@ -120,7 +120,7 @@ export function CommunitiesView() {
 
   return (
     <div className="communities">
-      <div className="content-header mt-8">
+      <div className="content-header mt-8 mb-6">
         <div className="text-center w-full">
           <h1 className="content-title inline-flex items-center justify-center gap-2">
             <strong><Users size={18} strokeWidth={2} /></strong>

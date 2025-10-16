@@ -14,7 +14,7 @@ export default async function CommunitiesPage() {
     return (
       <CommunitiesClient>
         <div className="communities">
-        <div className="content-header mt-8">
+        <div className="content-header mt-8 mb-6">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
               {/* visually hide the main heading but keep it accessible to screen readers */}

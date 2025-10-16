@@ -39,6 +39,85 @@
   content-visibility: auto;
 }
 
+/* Make community panels narrower on wide screens for better readability. */
+.communities .content-body .card {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 992px) {
+  /* Limit community card width on desktop so panels aren't too wide */
+  .communities .content-body .card {
+    max-width: 720px; /* narrower panels on desktop */
+    width: 100%;
+  }
+}
+
+/* Match the communities list: make the single-community page's cards narrower and centered */
+.community .card {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 992px) {
+  .community .card {
+    max-width: 720px;
+    width: 100%;
+  }
+  /* Also constrain thread cards inside content-body for consistent layout */
+  .community .content-body .card {
+    max-width: 720px;
+    width: 100%;
+  }
+}
+
+/* Thread view: center and constrain thread header, replies, and reply form */
+.content.thread .card,
+.thread .card {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 992px) {
+  .content.thread .card,
+  .thread .card,
+  .content.thread .content-body .card {
+    max-width: 720px;
+    width: 100%;
+  }
+  /* Ensure the main thread container doesn't force full-bleed width */
+  .content.thread {
+    width: 100%;
+  }
+}
+
+/* Align back navigation with the centered panel for community and thread pages */
+.community > :first-child,
+.content.thread > :first-child {
+  /* The back-link wrapper sits before the main card; constrain and center it */
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .community > :first-child,
+  .content.thread > :first-child {
+    max-width: 720px;
+    padding-left: 0; /* let the link align flush with the card */
+    /* thread should sit higher: pull it up relative to the normal flow */
+    margin-top: -1.5rem; /* raise by 24px on desktop */
+  }
+  /* If we still need to adjust thread position further, we can use a negative
+     margin-top here specifically for .content.thread > :first-child. */
+  .community > :first-child a.inline-flex,
+  .content.thread > :first-child a.inline-flex {
+    display: inline-flex; /* ensure link keeps its inline-flex layout */
+    align-items: center;
+    gap: 8px;
+  }
+}
+
 /* Add internal padding for cards rendered inside page content so their
    children (like the community list items) don't sit flush to card edges.
    Using a scoped selector avoids changing media-focused cards that rely

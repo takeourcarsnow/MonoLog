@@ -11,7 +11,7 @@ import { AuthInputs } from "./auth/AuthInputs";
 import { AuthButton } from "./auth/AuthButton";
 import { AuthMessage } from "./auth/AuthMessage";
 import { validUsername } from "./auth/authUtils";
-import { signIn, signUp, checkUsernameAvailability } from "./auth/authActions";
+import { signIn, signUp, checkUsernameAvailability, resetPassword } from "./auth/authActions";
 
 function isTempEmail(email: string): boolean {
   const domain = email.split('@')[1]?.toLowerCase();
@@ -55,7 +55,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
   const [hasError, setHasError] = useState(false);
   const [hasSuccess, setHasSuccess] = useState(false);
   const [justSignedIn, setJustSignedIn] = useState(false);
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const router = useRouter();
   const toast = useToast();
   const { headerNotice, headerNoticePhase, showHeaderNotice, setHeaderNotice } = useHeaderNotice();
@@ -77,7 +77,25 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         shouldCloseAndRefresh = true;
         setHasSuccess(true);
         setJustSignedIn(true);
+      } else if (mode === "forgot") {
+        // Handle forgot password
+        const emailOk = typeof email === 'string' && /\S+@\S+\.\S+/.test(email);
+        if (!emailOk) {
+          setLoading(false);
+          showHeaderNotice({ title: 'Invalid email', subtitle: 'Please enter a valid email address.', variant: 'warn' }, 4000);
+          return;
+        }
+        if (isTempEmail(email)) {
+          setLoading(false);
+          showHeaderNotice({ title: 'Temporary emails not allowed', subtitle: 'Please use a permanent email address.', variant: 'warn' }, 4000);
+          return;
+        }
+        // Call forgot password API
+        await resetPassword(email);
+        showHeaderNotice({ title: 'Reset email sent', subtitle: 'Check your email for password reset instructions.', variant: 'info' }, 5000);
+        setMode("signin");
       } else {
+        // signup logic...
         // Client-side validation before contacting server
         const emailOk = typeof email === 'string' && /\S+@\S+\.\S+/.test(email);
         if (!emailOk) {
@@ -338,7 +356,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      <AuthToggle mode={mode} setMode={setMode} />
+      {mode !== "forgot" && <AuthToggle mode={mode as "signin" | "signup"} setMode={setMode} />}
 
       <AuthInputs
         email={email}
@@ -351,6 +369,32 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         generateUsername={generateUsername}
         generating={generatingUsername}
       />
+
+      {mode === "signin" && (
+        <div style={{ textAlign: 'center', marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn small dim"
+            onClick={() => setMode("forgot")}
+            style={{ fontSize: 14 }}
+          >
+            Forgot password?
+          </button>
+        </div>
+      )}
+
+      {mode === "forgot" && (
+        <div style={{ textAlign: 'center', marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn small dim"
+            onClick={() => setMode("signin")}
+            style={{ fontSize: 14 }}
+          >
+            Back to sign in
+          </button>
+        </div>
+      )}
 
       <AuthButton
         mode={mode}

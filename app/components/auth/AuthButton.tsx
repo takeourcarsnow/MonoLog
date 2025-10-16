@@ -1,6 +1,6 @@
 // AuthButton.tsx
 interface AuthButtonProps {
-  mode: "signin" | "signup";
+  mode: "signin" | "signup" | "forgot";
   loading: boolean;
   hasError: boolean;
   hasSuccess: boolean;
@@ -16,7 +16,26 @@ export function AuthButton({ mode, loading, hasError, hasSuccess, justSignedIn, 
   );
   // Do not add a visual "error" class to the button on failure; keep error
   // state for inline messages/toasts but avoid turning the button red.
-  const btnClass = `auth-confirm-btn ${loading ? 'loading' : ''} ${buttonState === 'signup-sent' || buttonState === 'success' ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : 'mode-signin'}`;
+  const btnClass = `auth-confirm-btn ${loading ? 'loading' : ''} ${buttonState === 'signup-sent' || buttonState === 'success' ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : mode === 'forgot' ? 'mode-forgot' : 'mode-signin'}`;
+
+  const getButtonLabel = () => {
+    if (buttonState === 'success') return 'Signed in';
+    if (mode === 'signup') return 'Create account';
+    if (mode === 'forgot') return 'Send reset email';
+    return 'Sign in';
+  };
+
+  const getAriaLabel = () => {
+    if (mode === 'signup') return loading ? 'Creating account' : 'Create account';
+    if (mode === 'forgot') return loading ? 'Sending reset email' : 'Send reset email';
+    return loading ? 'Signing in' : 'Sign in';
+  };
+
+  const getSrLoadingText = () => {
+    if (mode === 'signup') return 'Creating account';
+    if (mode === 'forgot') return 'Sending reset email';
+    return 'Signing in';
+  };
 
   return (
     <div className="auth-actions flex gap-1 justify-center w-full" style={{ maxWidth: 400 }}>
@@ -27,7 +46,7 @@ export function AuthButton({ mode, loading, hasError, hasSuccess, justSignedIn, 
         onClick={onSubmit}
         aria-busy={loading}
         aria-live="polite"
-        aria-label={mode === 'signup' ? (loading ? 'Creating account' : 'Create account') : (loading ? 'Signing in' : 'Sign in')}
+        aria-label={getAriaLabel()}
       >
         <span className="btn-inner">
           {buttonState === 'signup-sent' && (
@@ -59,13 +78,13 @@ export function AuthButton({ mode, loading, hasError, hasSuccess, justSignedIn, 
 
           <span
             className="btn-label"
-            data-text={buttonState === 'success' ? 'Signed in' : (mode === 'signup' ? 'Create account' : 'Sign in')}
+            data-text={getButtonLabel()}
           >
-            {buttonState === 'success' ? 'Signed in' : (mode === 'signup' ? 'Create account' : 'Sign in')}
+            {getButtonLabel()}
           </span>
         </span>
         {/* visible hint for screen readers during loading */}
-        {loading && <span className="sr-only">{mode === 'signup' ? 'Creating account' : 'Signing in'}</span>}
+        {loading && <span className="sr-only">{getSrLoadingText()}</span>}
       </button>
     </div>
   );

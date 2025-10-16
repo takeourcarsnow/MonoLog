@@ -1,5 +1,5 @@
 import { getSupabaseClient, getAccessToken } from "./client";
-import { mapProfileToUser } from "./utils";
+import { mapProfileToUser, DEFAULT_AVATAR } from "./utils";
 import { slugify } from "../utils";
 import type { HydratedCommunity, HydratedThread, HydratedThreadReply } from "../types";
 
@@ -25,7 +25,12 @@ export async function getCommunities(): Promise<HydratedCommunity[]> {
 
       // Normalize nested creator profile (DB returns snake_case like avatar_url)
       const rawCreator = (community as any).creator;
-      const mappedCreator = mapProfileToUser(rawCreator) || rawCreator;
+      const mappedCreator = mapProfileToUser(rawCreator) || {
+        id: rawCreator?.id || 'unknown',
+        username: rawCreator?.username || 'unknown',
+        displayName: rawCreator?.display_name || rawCreator?.displayName || null,
+        avatarUrl: rawCreator?.avatar_url || rawCreator?.avatarUrl || DEFAULT_AVATAR,
+      };
 
       return {
         ...community,
@@ -82,7 +87,12 @@ export async function getCommunity(slug: string): Promise<HydratedCommunity | nu
 
   // Normalize creator profile
   const rawCreator = (data as any).creator;
-  const mappedCreator = mapProfileToUser(rawCreator) || rawCreator;
+  const mappedCreator = mapProfileToUser(rawCreator) || {
+    id: rawCreator?.id || 'unknown',
+    username: rawCreator?.username || 'unknown',
+    displayName: rawCreator?.display_name || rawCreator?.displayName || null,
+    avatarUrl: rawCreator?.avatar_url || rawCreator?.avatarUrl || DEFAULT_AVATAR,
+  };
 
   return { 
     ...data,

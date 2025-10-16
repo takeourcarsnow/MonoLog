@@ -1,6 +1,6 @@
 // AuthMessage.tsx
 interface AuthMessageProps {
-  mode: "signin" | "signup";
+  mode: "signin" | "signup" | "forgot";
 }
 
 export function AuthMessage({ mode }: AuthMessageProps) {
@@ -9,6 +9,11 @@ export function AuthMessage({ mode }: AuthMessageProps) {
       return {
         title: "Welcome back",
         subtitle: "Your memories are waiting"
+      };
+    } else if (mode === "forgot") {
+      return {
+        title: "Reset your password",
+        subtitle: "Enter your email to receive reset instructions"
       };
     } else {
       return {

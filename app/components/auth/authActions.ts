@@ -62,12 +62,35 @@ export async function signUp(email: string, password: string, username: string) 
   }
 }
 
-export async function checkUsernameAvailability(username: string) {
-  const sb = getSupabaseClient();
-  const chosen = username.trim().toLowerCase();
-  const { data: existing, error: exErr } = await sb.from("users").select("id").eq("username", chosen).limit(1).maybeSingle();
-  if (exErr) {
-    throw new Error('Unable to check username');
+export async function resetPassword(email: string) {
+  const resp = await fetch('/api/auth/forgot-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => ({}));
+    throw new Error(body?.error || `Failed to send reset email (${resp.status})`);
   }
-  return !existing;
+}
+
+export async function checkUsernameAvailability(username: string): Promise<boolean> {
+  try {
+    const resp = await fetch('/api/auth/resolve-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    if (!resp.ok) {
+      // API returns 404 when not found; treat as unavailable=false
+      if (resp.status === 404) return false;
+      return false;
+    }
+    const body = await resp.json().catch(() => ({}));
+    // If API returns ok:true then username exists -> not available
+    return !(body && body.ok === true);
+  } catch (e) {
+    // On network errors, conservatively treat as unavailable to avoid duplicates
+    return false;
+  }
 }

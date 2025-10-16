@@ -11,7 +11,7 @@ interface AuthInputsProps {
   setPassword: (password: string) => void;
   username: string;
   setUsername: (username: string) => void;
-  mode: "signin" | "signup";
+  mode: "signin" | "signup" | "forgot";
   generateUsername?: () => Promise<string | null>;
   generating?: boolean;
 }
@@ -60,26 +60,28 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
       <div className="field-group flex flex-col gap-2 w-full">
         <input
           className="input fancy-input"
-          placeholder="Email or username"
+          placeholder={mode === "forgot" ? "Email address" : "Email or username"}
           value={email}
           name="email"
           autoComplete="email"
           inputMode="email"
           onChange={e => setEmail(e.target.value)}
-          aria-label="Email or username"
+          aria-label={mode === "forgot" ? "Email address" : "Email or username"}
           autoCorrect="off"
           autoCapitalize="none"
         />
-        <input
-          className="input fancy-input"
-          placeholder="Password"
-          type="password"
-          value={password}
-          name="password"
-          autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-          onChange={e => setPassword(e.target.value)}
-          aria-label="Password"
-        />
+        {mode !== "forgot" && (
+          <input
+            className="input fancy-input"
+            placeholder="Password"
+            type="password"
+            value={password}
+            name="password"
+            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+            onChange={e => setPassword(e.target.value)}
+            aria-label="Password"
+          />
+        )}
         <div
           className={`username-wrap transition-all duration-300 ease-out ${mode === 'signup' ? 'open' : 'closed'}`}
           aria-hidden={mode !== 'signup'}

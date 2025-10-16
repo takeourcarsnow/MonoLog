@@ -6,8 +6,8 @@ import { Users, UserMinus, UserPlus } from "lucide-react";
 import type { HydratedCommunity } from "@/src/lib/types";
 import { Button } from "./Button";
 import Link from "next/link";
-import { OptimizedImage } from "./OptimizedImage";
 import { useAuth } from "@/src/lib/hooks/useAuth";
+import CommunityCard from "./CommunityCard";
 
 export function CommunitiesView() {
   const { me } = useAuth();
@@ -42,12 +42,18 @@ export function CommunitiesView() {
     }
   }, [communities]);
 
-  const handleJoinLeave = async (communityId: string, isMember: boolean) => {
-    // Prevent duplicate join/leave requests
+  const handleJoinLeave = useCallback(async (communityId: string, isMember: boolean) => {
     if (pendingJoin.has(communityId)) return;
-    const next = new Set(pendingJoin);
-    next.add(communityId);
-    setPendingJoin(next);
+    // Optimistic update: flip isMember locally and adjust counts
+    setPendingJoin((s) => new Set(s).add(communityId));
+    setCommunities((prev) => prev.map(c => {
+      if (c.id !== communityId) return c;
+      return {
+        ...c,
+        isMember: !isMember,
+        memberCount: isMember ? Math.max(0, (c.memberCount || 1) - 1) : (c.memberCount || 0) + 1
+      };
+    }));
 
     try {
       if (isMember) {
@@ -55,16 +61,19 @@ export function CommunitiesView() {
       } else {
         await api.joinCommunity(communityId);
       }
-      // Reload communities to update membership status
-      await loadCommunities();
+      // Success: nothing else to do because UI already reflects change
     } catch (e: any) {
+      // Revert optimistic update on error
+      setCommunities((prev) => prev.map(c => c.id === communityId ? { ...c, isMember, memberCount: isMember ? (c.memberCount || 0) + 1 : Math.max(0, (c.memberCount || 1) - 1) } : c));
       setError(e?.message || 'Failed to update membership');
     } finally {
-      const updated = new Set(pendingJoin);
-      updated.delete(communityId);
-      setPendingJoin(updated);
+      setPendingJoin((s) => {
+        const next = new Set(s);
+        next.delete(communityId);
+        return next;
+      });
     }
-  };
+  }, [pendingJoin]);
 
   if (loading) {
     return (
@@ -129,50 +138,13 @@ export function CommunitiesView() {
           </div>
         ) : (
           communities.map((community) => (
-            <div key={community.id} className="card mb-8">
-              <div className="flex flex-col items-center text-center gap-3 py-4">
-                {/* Community image or default logo - moved to top and centered */}
-                <OptimizedImage
-                  src={community.imageUrl || "/logo.svg"}
-                  alt={community.name}
-                  width={80}
-                  height={80}
-                  className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
-                  fallbackSrc="/logo.svg"
-                />
-
-                <Link href={`/communities/${community.slug}`}>
-                  <h3 className="font-semibold text-lg hover:underline">{community.name}</h3>
-                </Link>
-
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 max-w-[40ch]">
-                  {community.description}
-                </p>
-
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
-                  <span>{community.memberCount || 0} members</span>
-                  <span>{community.threadCount || 0} threads</span>
-                  <span>by @{community.creator.username}</span>
-                </div>
-
-                <div className="mt-3">
-                  {/* Don't show join button for community creators */}
-                  {me?.id !== community.creator.id && (
-                    <Button
-                      variant={community.isMember ? "ghost" : "default"}
-                      size="sm"
-                      className="small-min"
-                      onClick={() => handleJoinLeave(community.id, community.isMember || false)}
-                      aria-label={community.isMember ? 'Leave community' : 'Join community'}
-                      title={community.isMember ? 'Leave community' : 'Join community'}
-                      disabled={pendingJoin.has(community.id)}
-                    >
-                      {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <CommunityCard
+              key={community.id}
+              community={community}
+              meId={me?.id}
+              pending={pendingJoin.has(community.id)}
+              onJoinLeave={handleJoinLeave}
+            />
           ))
         )}
       </div>

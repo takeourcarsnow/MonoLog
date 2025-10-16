@@ -50,14 +50,22 @@ export async function GET(req: Request) {
       });
     } else {
       // List all communities ordered by last activity
+      // Add simple pagination to limit DB/RPC load
+      const urlParams = new URL(req.url).searchParams;
+      const page = Math.max(1, parseInt(urlParams.get('page') || '1', 10));
+      const limit = Math.min(50, Math.max(5, parseInt(urlParams.get('limit') || '20', 10)));
+      const offset = (page - 1) * limit;
+
       let communities: any[] = [];
       let error = null;
 
       try {
+        // Call RPC and apply pagination server-side (RPC currently returns all rows)
         const result = await sb.rpc('get_communities_ordered_by_activity');
-        communities = result.data || [];
+        const rows = (result && result.data) || [];
+        communities = rows.slice(offset, offset + limit);
         error = result.error;
-        console.debug('[GET /api/communities] rpc result:', { ok: !error, rows: (communities || []).length, error });
+        console.debug('[GET /api/communities] rpc result:', { ok: !error, rows: (rows || []).length, returned: communities.length, error });
       } catch (rpcError) {
         error = rpcError;
         console.debug('[GET /api/communities] rpc threw an exception:', rpcError);
@@ -65,13 +73,14 @@ export async function GET(req: Request) {
 
       if (error) {
         // Fallback to simple ordering if RPC doesn't exist
+        // Fallback: select only the minimal fields for list view and apply pagination
         const { data: fallbackCommunities, error: fallbackError } = await sb
           .from('communities')
           .select(`
-            *,
-            creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
+            id, name, slug, description, image_url, creator_id, created_at, updated_at
           `)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1);
 
         if (fallbackError) {
           return NextResponse.json({ error: fallbackError.message }, { status: 500 });
@@ -82,6 +91,8 @@ export async function GET(req: Request) {
 
       // Process communities based on source
       let communitiesWithCounts;
+      let totalCount = 0;
+
       if (error) {
         // Fallback case: get counts for each community
         communitiesWithCounts = await Promise.all(
@@ -98,6 +109,9 @@ export async function GET(req: Request) {
             };
           })
         );
+        // For fallback (we used .range), compute total count separately
+        const { count } = await sb.from('communities').select('id', { count: 'exact', head: true });
+        totalCount = count || 0;
       } else {
         // RPC case: data already includes counts, transform creator
         communitiesWithCounts = communities.map((community: any) => ({
@@ -106,9 +120,23 @@ export async function GET(req: Request) {
           threadCount: community.thread_count || 0,
           creator: community.creator, // Already JSONB object
         }));
+        // If RPC returned a full set (we sliced server-side), we can try to infer total from result.data length
+        try {
+          const fullResult = await sb.rpc('get_communities_ordered_by_activity');
+          totalCount = (fullResult && fullResult.data && fullResult.data.length) || communitiesWithCounts.length;
+        } catch (e) {
+          totalCount = communitiesWithCounts.length;
+        }
       }
 
-      return NextResponse.json(communitiesWithCounts);
+      const res = NextResponse.json(communitiesWithCounts);
+      // Attach total count header for client pagination controls
+      try {
+        res.headers.set('X-Total-Count', String(totalCount));
+      } catch (e) {
+        // NextResponse.headers may be read-only in some runtimes; ignore if set fails
+      }
+      return res;
     }
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });

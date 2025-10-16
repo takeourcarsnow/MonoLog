@@ -9,6 +9,7 @@ import { compressImage } from "@/src/lib/image";
 import { getSupabaseClient, getAccessToken } from "@/src/lib/api/client";
 import { AuthRequired } from "./AuthRequired";
 import { AuthForm } from "./AuthForm";
+import { ArrowLeft } from "lucide-react";
 import type { HydratedCommunity } from "@/src/lib/types";
 
 export function EditCommunityView() {
@@ -144,13 +145,11 @@ export function EditCommunityView() {
   if (authLoading || communityLoading) {
     return (
       <div className="content">
-        <div className="content-body">
-          <div className="card max-w-2xl">
-            <div className="animate-pulse space-y-6">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
+        <div className="card max-w-2xl">
+          <div className="animate-pulse space-y-6">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
           </div>
         </div>
       </div>
@@ -171,13 +170,11 @@ export function EditCommunityView() {
   if (!community) {
     return (
       <div className="content">
-        <div className="content-body">
-          <div className="card">
-            <p className="text-red-500">{error || 'Community not found'}</p>
-            <Link href="/communities">
-              <Button>Back to Communities</Button>
-            </Link>
-          </div>
+        <div className="card">
+          <p className="text-red-500">{error || 'Community not found'}</p>
+          <Link href="/communities">
+            <Button>Back to Communities</Button>
+          </Link>
         </div>
       </div>
     );
@@ -187,13 +184,11 @@ export function EditCommunityView() {
   if (community.creator.id !== currentUser.id) {
     return (
       <div className="content">
-        <div className="content-body">
-          <div className="card">
-            <p className="text-red-500">You can only edit communities you created</p>
-            <Link href={`/communities/${community.slug}`}>
-              <Button>Back to Community</Button>
-            </Link>
-          </div>
+        <div className="card">
+          <p className="text-red-500">You can only edit communities you created</p>
+          <Link href={`/communities/${community.slug}`}>
+            <Button>Back to Community</Button>
+          </Link>
         </div>
       </div>
     );
@@ -201,9 +196,16 @@ export function EditCommunityView() {
 
   return (
     <div className="content">
-      <div className="content-body">
-        <div className="card max-w-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Back Navigation */}
+      <div className="mb-4">
+        <Link href={`/communities/${community.slug}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+          <ArrowLeft size={16} />
+          Back to Community
+        </Link>
+      </div>
+
+      <div className="card max-w-2xl community">
+        <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="sr-only">
                 Community Name *
@@ -284,7 +286,6 @@ export function EditCommunityView() {
             </div>
           </form>
         </div>
-      </div>
     </div>
   );
 }

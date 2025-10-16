@@ -49,34 +49,64 @@ export async function GET(req: Request) {
         isMember
       });
     } else {
-      // List all communities
-      const { data: communities, error } = await sb
-        .from('communities')
-        .select(`
-          *,
-          creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
-        `)
-        .order('created_at', { ascending: false });
+      // List all communities ordered by last activity
+      let communities: any[] = [];
+      let error = null;
 
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+      try {
+        const result = await sb.rpc('get_communities_ordered_by_activity');
+        communities = result.data || [];
+        error = result.error;
+        console.debug('[GET /api/communities] rpc result:', { ok: !error, rows: (communities || []).length, error });
+      } catch (rpcError) {
+        error = rpcError;
+        console.debug('[GET /api/communities] rpc threw an exception:', rpcError);
       }
 
-      // Get counts for each community
-      const communitiesWithCounts = await Promise.all(
-        communities.map(async (community) => {
-          const [memberCountResult, threadCountResult] = await Promise.all([
-            sb.from('community_members').select('*', { count: 'exact', head: true }).eq('community_id', community.id),
-            sb.from('threads').select('*', { count: 'exact', head: true }).eq('community_id', community.id)
-          ]);
+      if (error) {
+        // Fallback to simple ordering if RPC doesn't exist
+        const { data: fallbackCommunities, error: fallbackError } = await sb
+          .from('communities')
+          .select(`
+            *,
+            creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
+          `)
+          .order('created_at', { ascending: false });
 
-          return {
-            ...community,
-            memberCount: memberCountResult.count || 0,
-            threadCount: threadCountResult.count || 0,
-          };
-        })
-      );
+        if (fallbackError) {
+          return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+        }
+
+        communities = fallbackCommunities || [];
+      }
+
+      // Process communities based on source
+      let communitiesWithCounts;
+      if (error) {
+        // Fallback case: get counts for each community
+        communitiesWithCounts = await Promise.all(
+          communities.map(async (community) => {
+            const [memberCountResult, threadCountResult] = await Promise.all([
+              sb.from('community_members').select('*', { count: 'exact', head: true }).eq('community_id', community.id),
+              sb.from('threads').select('*', { count: 'exact', head: true }).eq('community_id', community.id)
+            ]);
+
+            return {
+              ...community,
+              memberCount: memberCountResult.count || 0,
+              threadCount: threadCountResult.count || 0,
+            };
+          })
+        );
+      } else {
+        // RPC case: data already includes counts, transform creator
+        communitiesWithCounts = communities.map((community: any) => ({
+          ...community,
+          memberCount: community.member_count || 0,
+          threadCount: community.thread_count || 0,
+          creator: community.creator, // Already JSONB object
+        }));
+      }
 
       return NextResponse.json(communitiesWithCounts);
     }

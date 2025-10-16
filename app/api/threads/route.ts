@@ -35,36 +35,45 @@ export async function GET(req: Request) {
         replyCount: replyCount || 0
       });
     } else if (communityId) {
-      // List threads in a community
-      const { data: threads, error } = await sb
-        .from('threads')
-        .select(`
-          *,
-          user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-          community:communities!threads_community_id_fkey(id, name)
-        `)
-        .eq('community_id', communityId)
-        .order('created_at', { ascending: false });
+      // List threads in a community ordered by last activity
+      const { data: threads, error } = await sb.rpc('get_community_threads_ordered_by_activity', {
+        p_community_id: communityId
+      });
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // Fallback to simple ordering if RPC doesn't exist
+        const { data: fallbackThreads, error: fallbackError } = await sb
+          .from('threads')
+          .select(`
+            *,
+            user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
+            community:communities!threads_community_id_fkey(id, name)
+          `)
+          .eq('community_id', communityId)
+          .order('created_at', { ascending: false });
+
+        if (fallbackError) {
+          return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+        }
+
+        // Get reply counts for each thread
+        const threadsWithReplyCounts = await Promise.all(
+          fallbackThreads.map(async (thread) => {
+            const { count: replyCount } = await sb
+              .from('thread_replies')
+              .select('*', { count: 'exact', head: true })
+              .eq('thread_id', thread.id);
+            return {
+              ...thread,
+              replyCount: replyCount || 0,
+            };
+          })
+        );
+
+        return NextResponse.json(threadsWithReplyCounts);
       }
 
-      // Get reply counts for each thread
-      const threadsWithReplyCounts = await Promise.all(
-        threads.map(async (thread) => {
-          const { count: replyCount } = await sb
-            .from('thread_replies')
-            .select('*', { count: 'exact', head: true })
-            .eq('thread_id', thread.id);
-          return {
-            ...thread,
-            replyCount: replyCount || 0,
-          };
-        })
-      );
-
-      return NextResponse.json(threadsWithReplyCounts);
+      return NextResponse.json(threads);
     } else {
       return NextResponse.json({ error: 'Either id or communityId parameter is required' }, { status: 400 });
     }

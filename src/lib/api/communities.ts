@@ -17,7 +17,7 @@ export async function getCommunities(): Promise<HydratedCommunity[]> {
   const data = await response.json();
 
   // Map the communities to include normalized creator profiles
-  return data.map((community: any) => {
+  const mapped = data.map((community: any) => {
     // Normalize nested creator profile
     const rawCreator = community.creator;
     const mappedCreator = mapProfileToUser(rawCreator) || {
@@ -38,6 +38,24 @@ export async function getCommunities(): Promise<HydratedCommunity[]> {
       },
     };
   });
+
+  // If the server returned a `last_activity` timestamp, ensure clients show
+  // the most recently active communities first as a safety-net in case the
+  // RPC is not deployed or the fallback ordering was used server-side.
+  try {
+    mapped.sort((a: any, b: any) => {
+      const ta = a.last_activity || a.lastActivity || a.updated_at || a.updatedAt || null;
+      const tb = b.last_activity || b.lastActivity || b.updated_at || b.updatedAt || null;
+      if (!ta && !tb) return 0;
+      if (!ta) return 1;
+      if (!tb) return -1;
+      return new Date(tb).getTime() - new Date(ta).getTime();
+    });
+  } catch (e) {
+    // noop
+  }
+
+  return mapped;
 }
 
 export async function getCommunity(slug: string): Promise<HydratedCommunity | null> {
@@ -282,7 +300,7 @@ export async function getCommunityThreads(communityId: string): Promise<Hydrated
   const data = await response.json();
 
   // Map the threads to include normalized user profiles
-  return data.map((thread: any) => {
+  const mapped = data.map((thread: any) => {
     // Normalize nested user profile
     const rawUser = thread.user;
     const mappedUser = mapProfileToUser(rawUser) || rawUser;
@@ -298,6 +316,22 @@ export async function getCommunityThreads(communityId: string): Promise<Hydrated
       },
     };
   });
+
+  // Client-side safety sort by last_activity (or updated_at) if present
+  try {
+    mapped.sort((a: any, b: any) => {
+      const ta = a.last_activity || a.lastActivity || a.updated_at || a.updatedAt || a.createdAt || null;
+      const tb = b.last_activity || b.lastActivity || b.updated_at || b.updatedAt || b.createdAt || null;
+      if (!ta && !tb) return 0;
+      if (!ta) return 1;
+      if (!tb) return -1;
+      return new Date(tb).getTime() - new Date(ta).getTime();
+    });
+  } catch (e) {
+    // ignore
+  }
+
+  return mapped;
 }
 
 export async function getThread(id: string): Promise<HydratedThread | null> {

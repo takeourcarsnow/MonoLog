@@ -69,13 +69,12 @@ export function CommunitiesView() {
   if (loading) {
     return (
       <div className="communities">
-        <div className="content-header">
+        <div className="content-header mt-8">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
-              <Users size={20} strokeWidth={2} />
-              Communities
+              <strong><Users size={18} strokeWidth={2} /></strong>
+              <span className="dim">Join communities and discuss topics with others</span>
             </h1>
-            <p className="content-subtitle text-center">Join communities and discuss topics with others</p>
           </div>
         </div>
         <div className="content-body">
@@ -90,13 +89,12 @@ export function CommunitiesView() {
   if (error) {
     return (
       <div className="communities">
-        <div className="content-header">
+        <div className="content-header mt-8">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
-              <Users size={20} strokeWidth={2} />
-              Communities
+              <strong><Users size={18} strokeWidth={2} /></strong>
+              <span className="dim">Join communities and discuss topics with others</span>
             </h1>
-            <p className="content-subtitle text-center">Join communities and discuss topics with others</p>
           </div>
         </div>
         <div className="content-body">
@@ -111,15 +109,14 @@ export function CommunitiesView() {
 
   return (
     <div className="communities">
-      <div className="content-header">
+      <div className="content-header mt-8">
         <div className="text-center w-full">
           <h1 className="content-title inline-flex items-center justify-center gap-2">
-            <Users size={20} strokeWidth={2} />
-            Communities
+            <strong><Users size={18} strokeWidth={2} /></strong>
+            <span className="dim">Join communities and discuss topics with others</span>
           </h1>
-          <p className="content-subtitle text-center">Join communities and discuss topics with others</p>
         </div>
-        <div className="content-actions my-6 flex justify-center w-full">
+        <div className="content-actions my-8 flex justify-center w-full">
           <Link href="/communities/create">
             <Button title="Create Community">Create Community</Button>
           </Link>

@@ -39,7 +39,7 @@ export function CreateCommunityView() {
     return (
       <div className="content">
         <div className="content-body">
-          <div className="card max-w-2xl">
+          <div className="card max-w-2xl communities">
             <div className="animate-pulse space-y-6">
               <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -136,7 +136,7 @@ export function CreateCommunityView() {
   return (
     <div className="content">
       <div className="content-body">
-        <div className="card max-w-2xl">
+        <div className="card max-w-2xl communities">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="sr-only">

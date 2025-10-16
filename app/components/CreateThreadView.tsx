@@ -53,7 +53,7 @@ export function CreateThreadView() {
 
   if (!community && !error) {
     return (
-      <div className="content">
+      <div className="content create-thread">
         <div className="card skeleton" style={{ height: 100 }} />
       </div>
     );
@@ -61,7 +61,7 @@ export function CreateThreadView() {
 
   if (error || !community) {
     return (
-      <div className="content">
+      <div className="content create-thread">
         <div className="content-body">
           <div className="card">
             <p className="text-red-500">{error || 'Community not found'}</p>
@@ -75,7 +75,7 @@ export function CreateThreadView() {
   }
 
   return (
-    <div className="content">
+    <div className="content create-thread">
       <div className="content-body">
         <div className="card max-w-4xl">
           <form onSubmit={handleSubmit} className="space-y-6">

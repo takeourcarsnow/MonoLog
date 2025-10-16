@@ -41,6 +41,12 @@ html.thread-page-scroll {
   overflow: auto !important;
 }
 
+/* Allow body scrolling on create thread page */
+body.create-thread-page-scroll,
+html.create-thread-page-scroll {
+  overflow: auto !important;
+}
+
 /* If the app uses an internal scrolling container (.content) we must also
    allow that container to scroll when on the About page. The .content
    rules in layout.css set overflow: hidden for most routes; this selector
@@ -106,6 +112,14 @@ html.favorites-page-scroll .content {
   -webkit-overflow-scrolling: touch;
 }
 
+/* If .content contains the Create Thread page, allow internal scrolling too */
+.content:has(.create-thread) {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Fallback for browsers not supporting :has() */
 body.community-page-scroll .content,
 html.community-page-scroll .content {
@@ -118,6 +132,15 @@ html.community-page-scroll .content {
 /* Fallback for browsers not supporting :has() */
 body.thread-page-scroll .content,
 html.thread-page-scroll .content {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fallback for browsers not supporting :has() */
+body.create-thread-page-scroll .content,
+html.create-thread-page-scroll .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;

@@ -68,7 +68,7 @@ export function CommunitiesView() {
 
   if (loading) {
     return (
-      <div className="content communities">
+      <div className="communities">
         <div className="content-header">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
@@ -89,7 +89,7 @@ export function CommunitiesView() {
 
   if (error) {
     return (
-      <div className="content communities">
+      <div className="communities">
         <div className="content-header">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
@@ -110,7 +110,7 @@ export function CommunitiesView() {
   }
 
   return (
-    <div className="content communities">
+    <div className="communities">
       <div className="content-header">
         <div className="text-center w-full">
           <h1 className="content-title inline-flex items-center justify-center gap-2">

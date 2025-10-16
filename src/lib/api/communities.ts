@@ -97,7 +97,7 @@ export async function getCommunity(slug: string): Promise<HydratedCommunity | nu
   };
 }
 
-export async function createCommunity(input: { name: string; description: string }): Promise<HydratedCommunity> {
+export async function createCommunity(input: { name: string; description: string; imageUrl?: string }): Promise<HydratedCommunity> {
   const sb = getSupabaseClient();
   const authUser = await sb.auth.getUser();
   if (!authUser.data.user) throw new Error('Not authenticated');
@@ -111,6 +111,7 @@ export async function createCommunity(input: { name: string; description: string
       name: input.name,
       slug,
       description: input.description,
+      image_url: input.imageUrl || null,
       creator_id: authUser.data.user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()

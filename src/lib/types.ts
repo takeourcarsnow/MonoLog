@@ -62,6 +62,7 @@ export type Community = {
   description: string;
   creatorId: string;
   createdAt: string;
+  imageUrl?: string;
   memberCount?: number;
   threadCount?: number;
 };
@@ -154,7 +155,7 @@ export interface Api {
   // Communities
   getCommunities(): Promise<HydratedCommunity[]>;
   getCommunity(slug: string): Promise<HydratedCommunity | null>;
-  createCommunity(input: { name: string; description: string }): Promise<HydratedCommunity>;
+  createCommunity(input: { name: string; description: string; imageUrl?: string }): Promise<HydratedCommunity>;
   joinCommunity(communityId: string): Promise<void>;
   leaveCommunity(communityId: string): Promise<void>;
   deleteCommunity(id: string): Promise<boolean>;

@@ -201,11 +201,6 @@ export function EditCommunityView() {
 
   return (
     <div className="content">
-      <div className="content-header">
-        <div className="text-center w-full">
-          <h1 className="content-title">Edit Community</h1>
-        </div>
-      </div>
       <div className="content-body">
         <div className="card max-w-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">

@@ -236,6 +236,7 @@ export async function getCommunityThreads(communityId: string): Promise<Hydrated
 
       return {
         ...thread,
+        createdAt: thread.created_at,
         user: {
           id: mappedUser.id,
           username: mappedUser.username,
@@ -279,6 +280,7 @@ export async function getThread(id: string): Promise<HydratedThread | null> {
 
   return { 
     ...data,
+    createdAt: data.created_at,
     user: {
       id: mappedUser.id,
       username: mappedUser.username,
@@ -318,6 +320,7 @@ export async function getThreadBySlug(slug: string): Promise<HydratedThread | nu
 
   return { 
     ...data,
+    createdAt: data.created_at,
     user: {
       id: mappedUser.id,
       username: mappedUser.username,
@@ -432,6 +435,7 @@ export async function getThreadReplies(threadId: string): Promise<HydratedThread
     const mappedUser = mapProfileToUser(rawUser) || rawUser;
     return {
       ...reply,
+      createdAt: reply.created_at,
       user: {
         id: mappedUser.id,
         username: mappedUser.username,
@@ -484,6 +488,7 @@ export async function addThreadReply(threadId: string, content: string): Promise
 
   return {
     ...data,
+    createdAt: data.created_at,
     user: {
       id: mappedUser.id,
       username: mappedUser.username,

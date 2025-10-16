@@ -217,7 +217,7 @@ export function ThreadView() {
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
               <span>by @{thread.user.username}</span>
               <span>•</span>
-              <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
+              <span>{thread.created_at ? new Date(thread.created_at).toLocaleDateString() : 'Unknown date'}</span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <MessageSquare size={14} />
@@ -232,11 +232,7 @@ export function ThreadView() {
       </div>
 
       {/* Replies Section */}
-      <div className="content-body">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Replies ({replies.length})</h2>
-        </div>
-
+      <div className="content-body mt-8">
         {/* Reply Form */}
         <div className="card mb-6">
           <form onSubmit={handleSubmitReply}>
@@ -245,7 +241,7 @@ export function ThreadView() {
                 value={newReply}
                 onChange={(e) => setNewReply(e.target.value)}
                 placeholder="Write a reply..."
-                className="w-full p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                className="w-full p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 rows={3}
                 maxLength={5000}
               />
@@ -290,7 +286,7 @@ export function ThreadView() {
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <span className="font-medium">@{reply.user.username}</span>
                       <span>•</span>
-                      <span>{new Date(reply.createdAt).toLocaleDateString()}</span>
+                      <span>{reply.createdAt ? new Date(reply.createdAt).toLocaleDateString() : 'Unknown date'}</span>
                     </div>
                     {currentUser && reply.user.id === currentUser.id && (
                       <Button

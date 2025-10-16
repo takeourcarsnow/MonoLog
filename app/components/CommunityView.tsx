@@ -317,7 +317,7 @@ export function CommunityView() {
                   <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                     <span>by @{thread.user.username}</span>
                     <span>{thread.replyCount || 0} replies</span>
-                    <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
+                    <span>{thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : 'Unknown date'}</span>
                   </div>
                 </div>
               </div>

@@ -204,20 +204,23 @@ export function ThreadView() {
         )}
 
         <div className="flex flex-col items-center text-center gap-4 py-4">
-          <Link href={`/${thread.user.username}`}>
-            <OptimizedImage
-              src={(thread.user.avatarUrl || "").trim() || "/logo.svg"}
-              alt={thread.user.username}
-              width={80}
-              height={80}
-              className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
-            />
-          </Link>
-
           <h1 className="text-2xl font-bold">{thread.title}</h1>
 
           <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 justify-center">
-            <span>by @{thread.user.username}</span>
+            <div className="flex items-center gap-2">
+              <div className="flex-shrink-0">
+                <Link href={`/${thread.user.username}`}>
+                  <OptimizedImage
+                    src={(thread.user.avatarUrl || "").trim() || "/logo.svg"}
+                    alt={thread.user.username}
+                    width={24}
+                    height={24}
+                    className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                  />
+                </Link>
+              </div>
+              <span>by @{thread.user.username}</span>
+            </div>
             <span>•</span>
             <span>{thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : 'Unknown date'}</span>
             <span>•</span>
@@ -274,42 +277,40 @@ export function ThreadView() {
         ) : (
           replies.map((reply) => (
             <div key={reply.id} className="card">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <Link href={`/${reply.user.username}`}>
-                    <OptimizedImage
-                      src={(reply.user.avatarUrl || "").trim() || "/logo.svg"}
-                      alt={reply.user.username}
-                      width={32}
-                      height={32}
-                      className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                    />
-                  </Link>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span className="font-medium">@{reply.user.username}</span>
-                      <span>•</span>
-                      <span>{reply.createdAt ? new Date(reply.createdAt).toLocaleDateString() : 'Unknown date'}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex-shrink-0 mr-2">
+                      <Link href={`/${reply.user.username}`}>
+                        <OptimizedImage
+                          src={(reply.user.avatarUrl || "").trim() || "/logo.svg"}
+                          alt={reply.user.username}
+                          width={24}
+                          height={24}
+                          className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                        />
+                      </Link>
                     </div>
-                    {currentUser && reply.user.id === currentUser.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`small-min ${replyArmedSet.has(reply.id) ? 'confirm' : ''}`}
-                        onClick={async () => {
-                          await handleDeleteReply(reply.id);
-                        }}
-                        aria-label={replyArmedSet.has(reply.id) ? 'Confirm delete reply' : 'Delete reply'}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    )}
+                    <span className="font-medium">@{reply.user.username}</span>
+                    <span>•</span>
+                    <span>{reply.createdAt ? new Date(reply.createdAt).toLocaleDateString() : 'Unknown date'}</span>
                   </div>
-                  <div className="mt-2 prose dark:prose-invert max-w-none">
-                    <p className="whitespace-pre-wrap">{reply.content}</p>
-                  </div>
+                  {currentUser && reply.user.id === currentUser.id && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`small-min ${replyArmedSet.has(reply.id) ? 'confirm' : ''}`}
+                      onClick={async () => {
+                        await handleDeleteReply(reply.id);
+                      }}
+                      aria-label={replyArmedSet.has(reply.id) ? 'Confirm delete reply' : 'Delete reply'}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  )}
+                </div>
+                <div className="mt-2 prose dark:prose-invert max-w-none">
+                  <p className="whitespace-pre-wrap">{reply.content}</p>
                 </div>
               </div>
             </div>

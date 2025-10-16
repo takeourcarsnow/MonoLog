@@ -343,27 +343,22 @@ export async function getCommunityThreads(communityId: string): Promise<Hydrated
 }
 
 export async function getThread(id: string): Promise<HydratedThread | null> {
+  // Use the server API route so responses include the joined user profile
+  // even for unauthenticated clients (server uses service role).
   const sb = getSupabaseClient();
-  const { data, error } = await sb
-    .from('threads')
-    .select(`
-      *,
-      user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-      community:communities!threads_community_id_fkey(id, name)
-    `)
-    .eq('id', id)
-    .single();
+  const token = await getAccessToken(sb);
+  const resp = await fetch(`/api/threads?id=${encodeURIComponent(id)}`, {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: 'include',
+  });
 
-  if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
-    throw new Error(error.message);
+  if (!resp.ok) {
+    if (resp.status === 404) return null;
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to fetch thread');
   }
 
-  // Get reply count
-  const { count } = await sb
-    .from('thread_replies')
-    .select('id', { count: 'exact', head: true })
-    .eq('thread_id', id);
+  const data = await resp.json();
 
   // Normalize nested user profile
   const rawUser = (data as any).user;
@@ -391,32 +386,29 @@ export async function getThread(id: string): Promise<HydratedThread | null> {
       id: rawCommunity.id,
       name: rawCommunity.name,
     },
-    replyCount: count || 0
+    replyCount: data.replyCount || 0
   };
 }
 
 export async function getThreadBySlug(slug: string): Promise<HydratedThread | null> {
+  // Use server API route for consistent public shape
   const sb = getSupabaseClient();
-  const { data, error } = await sb
-    .from('threads')
-    .select(`
-      *,
-      user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-      community:communities!threads_community_id_fkey(id, name)
-    `)
-    .eq('slug', slug)
-    .single();
+  const token = await getAccessToken(sb);
+  const resp = await fetch(`/api/threads?slug=${encodeURIComponent(slug)}`, {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: 'include',
+  });
 
-  if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
-    throw new Error(error.message);
+  if (!resp.ok) {
+    if (resp.status === 404) return null;
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to fetch thread');
   }
 
-  // Get reply count
-  const { count } = await sb
-    .from('thread_replies')
-    .select('id', { count: 'exact', head: true })
-    .eq('thread_id', data.id);
+  const data = await resp.json();
+
+  // Get replyCount if server didn't include it
+  const replyCount = data.replyCount ?? data.reply_count ?? 0;
 
   // Normalize nested user profile
   const rawUser = (data as any).user;
@@ -444,7 +436,7 @@ export async function getThreadBySlug(slug: string): Promise<HydratedThread | nu
       id: rawCommunity.id,
       name: rawCommunity.name,
     },
-    replyCount: count || 0
+    replyCount: replyCount
   };
 }
 
@@ -534,21 +526,24 @@ export async function deleteThread(id: string): Promise<boolean> {
 }
 
 export async function getThreadReplies(threadId: string): Promise<HydratedThreadReply[]> {
+  // Use server API route so public requests return joined user profiles
   const sb = getSupabaseClient();
-  const { data, error } = await sb
-    .from('thread_replies')
-    .select(`
-      *,
-      user:users!thread_replies_user_id_fkey(id, username, display_name, avatar_url)
-    `)
-    .eq('thread_id', threadId)
-    .order('created_at', { ascending: true });
+  const token = await getAccessToken(sb);
+  const resp = await fetch(`/api/threads/replies?threadId=${encodeURIComponent(threadId)}`, {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: 'include',
+  });
 
-  if (error) throw new Error(error.message);
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to fetch thread replies');
+  }
+
+  const data = await resp.json();
 
   // Map user profiles
-  return (data || []).map(reply => {
-    const rawUser = (reply as any).user;
+  return (data || []).map((reply: any) => {
+    const rawUser = reply.user;
     const mappedUser = mapProfileToUser(rawUser) || rawUser;
     return {
       ...reply,

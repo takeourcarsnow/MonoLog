@@ -6,6 +6,7 @@ export async function GET(req: Request) {
     const sb = getServiceSupabase();
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
+    const slug = url.searchParams.get('slug');
     const communityId = url.searchParams.get('communityId');
 
     if (id) {
@@ -29,6 +30,32 @@ export async function GET(req: Request) {
         .from('thread_replies')
         .select('*', { count: 'exact', head: true })
         .eq('thread_id', id);
+
+      return NextResponse.json({
+        ...thread,
+        replyCount: replyCount || 0
+      });
+    } else if (slug) {
+      // Get single thread by slug
+      const { data: thread, error } = await sb
+        .from('threads')
+        .select(`
+          *,
+          user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
+          community:communities!threads_community_id_fkey(id, name)
+        `)
+        .eq('slug', slug)
+        .single();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 404 });
+      }
+
+      // Get reply count
+      const { count: replyCount } = await sb
+        .from('thread_replies')
+        .select('*', { count: 'exact', head: true })
+        .eq('thread_id', thread.id);
 
       return NextResponse.json({
         ...thread,

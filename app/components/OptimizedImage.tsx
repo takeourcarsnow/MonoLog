@@ -83,7 +83,7 @@ export const OptimizedImage = memo(function OptimizedImage({
       unoptimized={unoptimized}
       priority={priority}
       sizes={sizes}
-      loading={loading}
+      loading={loading ?? (priority ? 'eager' : 'lazy')}
       placeholder={shouldUsePlaceholder ? placeholder : 'empty'}
       blurDataURL={defaultBlurDataURL}
       onLoad={() => {

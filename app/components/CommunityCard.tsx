@@ -4,6 +4,8 @@ import React from "react";
 import Link from "next/link";
 import type { HydratedCommunity } from "@/src/lib/types";
 import { OptimizedImage } from "./OptimizedImage";
+import SkeletonCard from "./SkeletonCard";
+import LazyMount from "./LazyMount";
 import { Button } from "./Button";
 import { UserMinus, UserPlus } from "lucide-react";
 
@@ -18,14 +20,16 @@ function CommunityCardInner({ community, meId, pending, onJoinLeave }: Props) {
   return (
     <div className="card mb-8">
       <div className="flex flex-col items-center text-center gap-3 py-4">
-        <OptimizedImage
-          src={community.imageUrl || "/logo.svg"}
-          alt={community.name}
-          width={80}
-          height={80}
-          className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
-          fallbackSrc="/logo.svg"
-        />
+        <LazyMount rootMargin="150px">
+          <OptimizedImage
+            src={community.imageUrl || "/logo.svg"}
+            alt={community.name}
+            width={80}
+            height={80}
+            className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
+            fallbackSrc="/logo.svg"
+          />
+        </LazyMount>
 
         <Link href={`/communities/${community.slug}`}>
           <h3 className="font-semibold text-lg hover:underline">{community.name}</h3>

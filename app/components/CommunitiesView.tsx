@@ -8,6 +8,8 @@ import { Button } from "./Button";
 import Link from "next/link";
 import { useAuth } from "@/src/lib/hooks/useAuth";
 import CommunityCard from "./CommunityCard";
+import LazyMount from "./LazyMount";
+import SkeletonCard from "./SkeletonCard";
 
 export function CommunitiesView() {
   const { me } = useAuth();
@@ -86,9 +88,9 @@ export function CommunitiesView() {
             </h1>
           </div>
         </div>
-        <div className="content-body">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="card skeleton" style={{ height: 120 }} />
+        <div className="content-body space-y-6">
+          {[...Array(6)].map((_, i) => (
+            <SkeletonCard key={i} />
           ))}
         </div>
       </div>
@@ -138,13 +140,14 @@ export function CommunitiesView() {
           </div>
         ) : (
           communities.map((community) => (
-            <CommunityCard
-              key={community.id}
-              community={community}
-              meId={me?.id}
-              pending={pendingJoin.has(community.id)}
-              onJoinLeave={handleJoinLeave}
-            />
+            <LazyMount key={community.id} rootMargin="300px">
+              <CommunityCard
+                community={community}
+                meId={me?.id}
+                pending={pendingJoin.has(community.id)}
+                onJoinLeave={handleJoinLeave}
+              />
+            </LazyMount>
           ))
         )}
       </div>

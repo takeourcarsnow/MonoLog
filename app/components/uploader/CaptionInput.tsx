@@ -89,83 +89,49 @@ export function CaptionInput({
   const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const spotifyRef = useRef<HTMLInputElement | null>(null);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Override programmatic focus to only work when allowed. This prevents
-  // other code calling `.focus()` from stealing focus when the input
-  // shouldn't be active.
+  // Simplified focus management - prevent focus when not allowed
+  // Removed complex overrides and event listeners to reduce DOM interference
+
+  // Auto-resize textarea based on content (debounced to reduce lag on mobile)
   useEffect(() => {
-    const restore: Array<() => void> = [];
-    try {
-      const inp = inputRef.current;
-      if (inp) {
-        const orig = (inp as any).focus;
-        (inp as any).focus = function (...args: any[]) {
-          if (hasPreview && !processing) return orig.apply(this, args);
-          return undefined;
-        };
-        restore.push(() => { try { (inp as any).focus = orig; } catch (_) {} });
-      }
-    } catch (_) {}
-    try {
-      const sp = spotifyRef.current;
-      if (sp) {
-        const origSp = (sp as any).focus;
-        (sp as any).focus = function (...args: any[]) {
-          if (hasPreview && !processing) return origSp.apply(this, args);
-          return undefined;
-        };
-        restore.push(() => { try { (sp as any).focus = origSp; } catch (_) {} });
-      }
-    } catch (_) {}
-    // Also capture phase focusin to immediately blur if focus sneaks in
-    const onFocusIn = (e: FocusEvent) => {
-      try {
-        const target = e.target as HTMLElement | null;
-        if (!target) return;
-        if ((target === inputRef.current || target === spotifyRef.current) && (!hasPreview || processing)) {
-          try { (target as HTMLElement).blur(); } catch (_) {}
+    if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
+    resizeTimeoutRef.current = setTimeout(() => {
+      const textarea = inputRef.current;
+      if (textarea) {
+        textarea.style.height = 'auto';
+        const scrollH = textarea.scrollHeight;
+        const minH = 48;
+        const lineH = 21; // approx line-height * font-size
+        const originalPadding = 12;
+        if (scrollH <= minH) {
+          textarea.style.height = minH + 'px';
+          const paddingV = (minH - lineH) / 2;
+          textarea.style.paddingTop = paddingV + 'px';
+          textarea.style.paddingBottom = paddingV + 'px';
+        } else {
+          textarea.style.height = scrollH + 'px';
+          textarea.style.paddingTop = originalPadding + 'px';
+          textarea.style.paddingBottom = originalPadding + 'px';
         }
-      } catch (_) {}
-    };
-    document.addEventListener('focusin', onFocusIn, true);
+        // Avoid showing a vertical scrollbar when the content fits within
+        // the computed height (e.g., single-line captions). Only allow
+        // vertical scrolling when the content truly overflows.
+        try {
+          // Use clientHeight (actual layout height) rather than the style string
+          // which can differ across browsers. Add a small tolerance to avoid
+          // showing a scrollbar for negligible differences (1px gap).
+          const currentH = textarea.clientHeight || parseInt(textarea.style.height || '0', 10) || 0;
+          textarea.style.overflowY = scrollH > (currentH + 1) ? 'auto' : 'hidden';
+        } catch (_) {
+          // ignore and leave browser default if any issue
+        }
+      }
+    }, 100); // 100ms debounce to prevent excessive DOM updates during typing
     return () => {
-      try { document.removeEventListener('focusin', onFocusIn, true); } catch (_) {}
-      for (const r of restore) r();
+      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
     };
-  }, [hasPreview, processing]);
-
-  // Auto-resize textarea based on content
-  useEffect(() => {
-    const textarea = inputRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      const scrollH = textarea.scrollHeight;
-      const minH = 48;
-      const lineH = 21; // approx line-height * font-size
-      const originalPadding = 12;
-      if (scrollH <= minH) {
-        textarea.style.height = minH + 'px';
-        const paddingV = (minH - lineH) / 2;
-        textarea.style.paddingTop = paddingV + 'px';
-        textarea.style.paddingBottom = paddingV + 'px';
-      } else {
-        textarea.style.height = scrollH + 'px';
-        textarea.style.paddingTop = originalPadding + 'px';
-        textarea.style.paddingBottom = originalPadding + 'px';
-      }
-      // Avoid showing a vertical scrollbar when the content fits within
-      // the computed height (e.g., single-line captions). Only allow
-      // vertical scrolling when the content truly overflows.
-      try {
-        // Use clientHeight (actual layout height) rather than the style string
-        // which can differ across browsers. Add a small tolerance to avoid
-        // showing a scrollbar for negligible differences (1px gap).
-        const currentH = textarea.clientHeight || parseInt(textarea.style.height || '0', 10) || 0;
-        textarea.style.overflowY = scrollH > (currentH + 1) ? 'auto' : 'hidden';
-      } catch (_) {
-        // ignore and leave browser default if any issue
-      }
-    }
   }, [caption]);
 
   return (
@@ -213,7 +179,13 @@ export function CaptionInput({
             // Block mouse interaction when no image is selected so clicks don't focus the input
             if (!hasPreview || processing) e.preventDefault();
           }}
-          onFocus={(e) => { setCaptionFocused(true); }}
+          onFocus={(e) => {
+            if (!hasPreview || processing) {
+              e.target.blur();
+              return;
+            }
+            setCaptionFocused(true);
+          }}
           onBlur={() => setCaptionFocused(false)}
           style={{ width: '100%', cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', paddingRight: 72, paddingLeft: 32 }}
           rows={1}
@@ -261,6 +233,12 @@ export function CaptionInput({
             tabIndex={hasPreview ? 0 : -1}
             ref={spotifyRef}
             onMouseDown={(e) => { if (!hasPreview || processing) e.preventDefault(); }}
+            onFocus={(e) => {
+              if (!hasPreview || processing) {
+                e.target.blur();
+                return;
+              }
+            }}
             style={{ width: '100%', paddingRight: 72, paddingLeft: 32, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text' }}
           />
           <SpotifyIcon size={16} className={`input-icon ${spotifyLink?.trim() && (spotifyLink.includes('spotify.com') || spotifyLink.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />

@@ -192,8 +192,8 @@ export function CommunityView() {
 
   return (
     <div className="community">
-      {/* Back Navigation */}
-      <div className="mb-4">
+  {/* Back Navigation */}
+  <div className="mt-8 mb-4">
         <Link href="/communities" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
           <ArrowLeft size={16} />
           Back to Communities

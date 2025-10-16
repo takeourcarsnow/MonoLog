@@ -73,7 +73,7 @@ export function CommunitiesView() {
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
               <strong><Users size={18} strokeWidth={2} /></strong>
-              <span className="dim">Join communities and discuss topics with others</span>
+              <span className="dim">Communities and threads with latest activity are displayed first</span>
             </h1>
           </div>
         </div>
@@ -93,7 +93,7 @@ export function CommunitiesView() {
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
               <strong><Users size={18} strokeWidth={2} /></strong>
-              <span className="dim">Join communities and discuss topics with others</span>
+              <span className="dim">Communities and threads with latest activity are displayed first</span>
             </h1>
           </div>
         </div>
@@ -113,7 +113,7 @@ export function CommunitiesView() {
         <div className="text-center w-full">
           <h1 className="content-title inline-flex items-center justify-center gap-2">
             <strong><Users size={18} strokeWidth={2} /></strong>
-            <span className="dim">Join communities and discuss topics with others</span>
+            <span className="dim">Communities and threads with latest activity are displayed first</span>
           </h1>
         </div>
         <div className="content-actions my-8 flex justify-center w-full">

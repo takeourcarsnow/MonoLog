@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     // Check if thread exists and user is a member of the community
     const { data: thread } = await sb
       .from('threads')
-      .select('id, community_id')
+      .select('id, community_id, user_id')
       .eq('id', threadId)
       .single();
 
@@ -96,6 +96,28 @@ export async function POST(req: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Try to create a notification for the thread owner. This is best-effort
+    // — if the notifications table doesn't exist or the insert fails, we
+    // shouldn't block reply creation.
+    (async () => {
+      try {
+        const notifId = uid();
+        const notif = {
+          id: notifId,
+          user_id: thread.user_id,
+          actor_id: userId,
+          thread_id: threadId,
+          type: 'thread_reply',
+          text: content.trim().slice(0, 240),
+          created_at,
+          read: false,
+        } as any;
+        await sb.from('notifications').insert(notif);
+      } catch (e) {
+        // ignore notification errors
+      }
+    })();
 
     return NextResponse.json(reply);
   } catch (e: any) {

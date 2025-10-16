@@ -17,6 +17,7 @@ interface OptimizedImageProps {
   onError?: () => void;
   blurDataURL?: string;
   placeholder?: 'blur' | 'empty';
+  fallbackSrc?: string;
 }
 
 export const OptimizedImage = memo(function OptimizedImage({
@@ -35,8 +36,15 @@ export const OptimizedImage = memo(function OptimizedImage({
   onError,
   blurDataURL,
   placeholder = 'blur',
+  fallbackSrc,
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [currentSrc, setCurrentSrc] = useState(src);
+
+  // Debugging: log initial src for browser console to help trace avatar issues
+  try {
+    console.debug('[OptimizedImage] init src:', { src, currentSrc, fallbackSrc });
+  } catch (e) {}
 
   // For small images (<=40px), don't use placeholder for performance
   const shouldUsePlaceholder = placeholder !== 'empty' && (!width || !height || (width > 40 && height > 40));
@@ -46,9 +54,20 @@ export const OptimizedImage = memo(function OptimizedImage({
     "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+IRjWjBqO6O2mhP//Z" :
     undefined);
 
+  const handleError = () => {
+    // If an error occurs, switch to fallback and log the event so it can be inspected
+    if (fallbackSrc && currentSrc !== fallbackSrc) {
+      try { console.debug('[OptimizedImage] image failed to load, switching to fallback:', { currentSrc, fallbackSrc }); } catch (e) {}
+      setCurrentSrc(fallbackSrc);
+    } else {
+      try { console.debug('[OptimizedImage] image failed to load, no fallback available:', { currentSrc }); } catch (e) {}
+      onError?.();
+    }
+  };
+
   return (
     <Image
-      src={src}
+      src={currentSrc}
       alt={alt}
       width={fill ? undefined : width}
       height={fill ? undefined : height}
@@ -71,7 +90,7 @@ export const OptimizedImage = memo(function OptimizedImage({
         setIsLoading(false);
         onLoad?.();
       }}
-      onError={onError}
+      onError={handleError}
     />
   );
 });

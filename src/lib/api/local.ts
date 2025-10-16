@@ -379,4 +379,19 @@ export const localApi: Api = {
       }
     } catch (_) { /* ignore */ }
   },
+
+  // Communities - stub implementations for local mode
+  async getCommunities() { return []; },
+  async getCommunity() { return null; },
+  async createCommunity() { throw new Error('Communities not supported in local mode'); },
+  async joinCommunity() { throw new Error('Communities not supported in local mode'); },
+  async leaveCommunity() { throw new Error('Communities not supported in local mode'); },
+  async isCommunityMember() { return false; },
+  async getCommunityThreads() { return []; },
+  async getThread() { return null; },
+  async createThread() { throw new Error('Threads not supported in local mode'); },
+  async updateThread() { throw new Error('Threads not supported in local mode'); },
+  async deleteThread() { throw new Error('Threads not supported in local mode'); },
+  async getThreadReplies() { return []; },
+  async addThreadReply() { throw new Error('Thread replies not supported in local mode'); },
 };

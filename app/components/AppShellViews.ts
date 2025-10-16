@@ -8,6 +8,7 @@ import { RESERVED_ROUTES } from "@/src/lib/types";
 // Lazy load view components to reduce initial bundle size
 const FeedView = lazy(() => import("./FeedView").then(mod => ({ default: mod.FeedView })));
 const ExploreView = lazy(() => import("./ExploreView").then(mod => ({ default: mod.ExploreView })));
+const CommunitiesView = lazy(() => import("./CommunitiesView").then(mod => ({ default: mod.CommunitiesView })));
 const Uploader = lazy(() => import("./Uploader").then(mod => ({ default: mod.Uploader })));
 const CalendarView = lazy(() => import("./CalendarView").then(mod => ({ default: mod.CalendarView })));
 const ProfileView = lazy(() => import("./ProfileView").then(mod => ({ default: mod.ProfileView })));
@@ -15,6 +16,7 @@ const ProfileView = lazy(() => import("./ProfileView").then(mod => ({ default: m
 export const views = [
   { path: "/feed", component: FeedView },
   { path: "/explore", component: ExploreView },
+  { path: "/communities", component: CommunitiesView },
   { path: "/upload", component: Uploader },
   { path: "/calendar", component: CalendarView },
   { path: "/profile", component: ProfileView },

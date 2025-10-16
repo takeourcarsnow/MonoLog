@@ -129,7 +129,7 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
         const s = String(src);
         return s.trim() === '' ? undefined : s;
       })(),
-      avatarUrl: (row.users || row.public_profiles)?.avatar_url || (row.users || row.public_profiles)?.avatarUrl || DEFAULT_AVATAR,
+      avatarUrl: (((row.users || row.public_profiles)?.avatar_url || (row.users || row.public_profiles)?.avatarUrl || "").trim() || DEFAULT_AVATAR),
     },
     // If the server query included a `comments` array, use its length. Otherwise
     // fall back to common count columns or 0.

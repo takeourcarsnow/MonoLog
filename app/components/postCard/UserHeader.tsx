@@ -93,7 +93,7 @@ export const UserHeader = memo(function UserHeader({
   return (
     <div className="card-head">
       <Link className="user-link" href={`/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
-  <OptimizedImage className="avatar" src={post.user.avatarUrl || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
+  <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
         <div className="user-line">
           <span className="username">@{post.user.username} <span className="dim">{userLine}</span></span>
         </div>
@@ -217,18 +217,48 @@ export const UserHeader = memo(function UserHeader({
                       onMouseLeave={() => setIsPressingDelete(false)}
                       onTouchStart={() => { setIsPressingDelete(true); }}
                       onTouchEnd={() => setIsPressingDelete(false)}
-                      onClick={() => {
-                        try { setIsPressingDelete(false); } catch (_) {}
-                        try { setOverlayEnabled(false); } catch (_) {}
-                        try { setTimeout(() => { setOverlayEnabled(true); }, 220); } catch (_) {}
-                        deleteHandlerRef.current && deleteHandlerRef.current();
+                      onClick={async () => {
+                        if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+                          try {
+                            (document.getElementById(`post-${post.id}`)?.remove?.());
+                            await api.deletePost(post.id);
+                            // Dispatch event to notify other components (e.g., feed) that post was deleted
+                            window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId: post.id } }));
+                            if (pathname?.startsWith("/post/")) router.push("/");
+                          } catch (e: any) {
+                            toast.show(e?.message || "Failed to delete post");
+                          }
+                        }
                       }}
                     />
                   )}
                   <button
-                    aria-label={showConfirmText ? 'Confirm delete' : 'Delete post'}
-                    onClick={() => { deleteHandlerRef.current && deleteHandlerRef.current(); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); deleteHandlerRef.current && deleteHandlerRef.current(); } }}
+                    aria-label="Delete post"
+                    onClick={async () => { 
+                      if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+                        try {
+                          (document.getElementById(`post-${post.id}`)?.remove?.());
+                          await api.deletePost(post.id);
+                          // Dispatch event to notify other components (e.g., feed) that post was deleted
+                          window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId: post.id } }));
+                          if (pathname?.startsWith("/post/")) router.push("/");
+                        } catch (e: any) {
+                          toast.show(e?.message || "Failed to delete post");
+                        }
+                      }
+                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) { 
+                      (async () => {
+                        try {
+                          (document.getElementById(`post-${post.id}`)?.remove?.());
+                          await api.deletePost(post.id);
+                          window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId: post.id } }));
+                          if (pathname?.startsWith("/post/")) router.push("/");
+                        } catch (e: any) {
+                          toast.show(e?.message || "Failed to delete post");
+                        }
+                      })();
+                    } } }}
                     style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
                   />
                 </div>

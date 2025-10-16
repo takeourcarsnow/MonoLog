@@ -55,6 +55,49 @@ export type Comment = {
   createdAt: string;
 };
 
+export type Community = {
+  id: string;
+  name: string;
+  description: string;
+  creatorId: string;
+  createdAt: string;
+  memberCount?: number;
+  threadCount?: number;
+};
+
+export type HydratedCommunity = Community & {
+  creator: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
+  isMember?: boolean;
+};
+
+export type Thread = {
+  id: string;
+  communityId: string;
+  userId: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+  replyCount?: number;
+};
+
+export type HydratedThread = Thread & {
+  user: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
+  community: Pick<Community, "id" | "name">;
+};
+
+export type ThreadReply = {
+  id: string;
+  threadId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+};
+
+export type HydratedThreadReply = ThreadReply & {
+  user: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
+};
+
 export type CalendarStats = { counts: Record<string, number>, mine: Set<string> };
 
 export interface Api {
@@ -106,6 +149,27 @@ export interface Api {
   getComments(postId: string): Promise<(Comment & { user: User | {} })[]>;
   addComment(postId: string, text: string): Promise<Comment & { user: User }>;
 
+  // Communities
+  getCommunities(): Promise<HydratedCommunity[]>;
+  getCommunity(id: string): Promise<HydratedCommunity | null>;
+  createCommunity(input: { name: string; description: string }): Promise<HydratedCommunity>;
+  joinCommunity(communityId: string): Promise<void>;
+  leaveCommunity(communityId: string): Promise<void>;
+  deleteCommunity(id: string): Promise<boolean>;
+  isCommunityMember(communityId: string): Promise<boolean>;
+
+  // Threads
+  getCommunityThreads(communityId: string): Promise<HydratedThread[]>;
+  getThread(id: string): Promise<HydratedThread | null>;
+  createThread(input: { communityId: string; title: string; content: string }): Promise<HydratedThread>;
+  updateThread(id: string, patch: { title?: string; content?: string }): Promise<HydratedThread>;
+  deleteThread(id: string): Promise<boolean>;
+
+  // Thread replies
+  getThreadReplies(threadId: string): Promise<HydratedThreadReply[]>;
+  addThreadReply(threadId: string, content: string): Promise<HydratedThreadReply>;
+  deleteThreadReply(id: string): Promise<boolean>;
+
   // sign out the current user (client-side)
   signOut(): Promise<void>;
 
@@ -114,7 +178,7 @@ export interface Api {
 
 // Reserved route names that should not be treated as usernames
 export const RESERVED_ROUTES = [
-  'about', 'api', 'calendar', 'explore', 'favorites',
+  'about', 'api', 'calendar', 'communities', 'explore', 'favorites',
   'feed', 'post', 'profile', 'upload', 'admin',
   'settings', 'help', 'terms', 'privacy', 'login',
   'register', 'signup', 'signin', 'logout', 'auth',

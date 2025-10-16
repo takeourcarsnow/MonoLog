@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Search, Plus, Calendar, User, Compass, type LucideIcon } from "lucide-react";
+import { Home, Search, Plus, Calendar, User, Compass, Users, type LucideIcon } from "lucide-react";
 import { LogoIcon } from "./LogoIcon";
 
 export interface NavItem {
@@ -13,6 +13,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { path: "/feed", icon: Home, label: "Feed", color: "hsl(220, 70%, 50%)" },
   { path: "/explore", icon: Compass, label: "Explore", color: "hsl(160, 70%, 45%)" },
+  // Communities moved to header actions
   { path: "/upload", icon: LogoIcon, label: "Log", color: "hsl(270, 70%, 50%)" },
   { path: "/calendar", icon: Calendar, label: "Calendar", color: "hsl(40, 85%, 55%)" },
   { path: "/profile", icon: User, label: "Profile", color: "hsl(320, 70%, 50%)" },
@@ -30,7 +31,7 @@ export function isNavItemActive(pathname: string, itemPath: string) {
 
     const pathSegments = pathname.split('/').filter(Boolean);
     const reserved = [
-      'about', 'api', 'calendar', 'explore', 'favorites',
+      'about', 'api', 'calendar', 'communities', 'explore', 'favorites',
       'feed', 'post', 'upload', 'admin', 'settings', 'help',
       'terms', 'privacy', 'login', 'register', 'signup', 'signin', 'logout', 'auth'
     ];

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import type { HydratedPost } from '@/src/lib/types';
+import { DEFAULT_AVATAR } from '@/src/lib/api/utils';
 
 // Lazy load the PostView component
 const PostView = lazy(() => import("@/app/components/PostView").then(mod => ({ default: mod.PostView })));
@@ -47,7 +48,7 @@ function mapRowToHydratedPost(row: any): HydratedPost {
       id: row.users?.id || row.user_id,
       username: row.users?.username || '',
       displayName: row.users?.display_name || row.users?.displayName || '',
-      avatarUrl: row.users?.avatar_url || row.users?.avatarUrl || '',
+      avatarUrl: row.users?.avatar_url || row.users?.avatarUrl || DEFAULT_AVATAR,
     },
     commentsCount: Array.isArray(row.comments) ? row.comments.length : 0,
   };

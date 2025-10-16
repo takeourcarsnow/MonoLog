@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePrevPathToggle } from "./usePrevPathToggle";
 import { Info, Star } from "lucide-react";
+import { Users } from "lucide-react";
+import Link from "next/link";
 
 // Non-critical header components loaded dynamically
 const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { ssr: false });
@@ -96,15 +98,19 @@ export function HeaderInteractive() {
         </h1>
       </button>
       <div className="header-actions" id="header-actions">
-            <button
-              className={`btn icon about-btn no-tap-effects ${pathname === '/about' ? 'active' : ''}`}
-              title="About MonoLog"
-              aria-label="About MonoLog"
-              aria-current={pathname === '/about' ? 'page' : undefined}
-              onClick={usePrevPathToggle('/about', 'monolog:prev-path-before-about').toggle}
-            >
-              <Info size={20} strokeWidth={2} />
-            </button>
+        {/* Communities button moved from navbar to header - left-most */}
+        <Link href="/communities" className={`btn icon about-btn no-tap-effects ${pathname === '/communities' ? 'active' : ''}`} aria-label="Communities">
+          <Users size={20} strokeWidth={2} />
+        </Link>
+        <button
+          className={`btn icon about-btn no-tap-effects ${pathname === '/about' ? 'active' : ''}`}
+          title="About MonoLog"
+          aria-label="About MonoLog"
+          aria-current={pathname === '/about' ? 'page' : undefined}
+          onClick={usePrevPathToggle('/about', 'monolog:prev-path-before-about').toggle}
+        >
+          <Info size={20} strokeWidth={2} />
+        </button>
         <InstallButton />
         <ThemeToggle />
         <button

@@ -5,6 +5,7 @@ import { follow, unfollow, isFollowing, getFollowingUsers } from "./follows";
 import { favoritePost, unfavoritePost, isFavorite, getFavoritePosts } from "./favorites";
 import { getComments, addComment } from "./comments";
 import { calendarStats } from "./calendar";
+import { getCommunities, getCommunity, createCommunity, joinCommunity, leaveCommunity, deleteCommunity, isCommunityMember, getCommunityThreads, getThread, createThread, updateThread, deleteThread, getThreadReplies, addThreadReply, deleteThreadReply } from "./communities";
 import type { Api } from "../types";
 
 export const supabaseApi: Api = {
@@ -47,6 +48,21 @@ export const supabaseApi: Api = {
   signOut,
   deleteCurrentUser,
   calendarStats,
+  getCommunities,
+  getCommunity,
+  createCommunity,
+  joinCommunity,
+  leaveCommunity,
+  deleteCommunity,
+  isCommunityMember,
+  getCommunityThreads,
+  getThread,
+  createThread,
+  updateThread,
+  deleteThread,
+  getThreadReplies,
+  addThreadReply,
+  deleteThreadReply,
 };
 
 // Re-export client accessors for direct use by components

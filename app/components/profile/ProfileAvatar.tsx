@@ -66,23 +66,6 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
       const publicUrl = urlRes.data.publicUrl;
       // Add a cache-busting query param so the browser requests the fresh image
       const cacheBusted = publicUrl + (publicUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
-      await api.updateCurrentUser({ avatarUrl: cacheBusted });
-
-      // After successful update, delete the old avatar if it's not the default
-      if (oldAvatarUrl && oldAvatarUrl !== '/logo.svg' && oldAvatarUrl.includes('supabase.co')) {
-        try {
-          // Extract path from URL: https://xxx.supabase.co/storage/v1/object/public/posts/avatars/userId/filename.jpg
-          const url = new URL(oldAvatarUrl);
-          const pathParts = url.pathname.split('/storage/v1/object/public/posts/');
-          if (pathParts.length > 1) {
-            const oldPath = pathParts[1];
-            await sb.storage.from("posts").remove([oldPath]);
-          }
-        } catch (deleteError) {
-          console.warn('Failed to delete old avatar:', deleteError);
-          // Don't throw - old avatar deletion failure shouldn't block the upload
-        }
-      }
 
       // Wait for the browser to actually load the new image (covers CDN processing)
       const waitForImageLoad = (url: string, timeout = 10000) => new Promise<void>((resolve, reject) => {
@@ -101,10 +84,30 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
         timer = window.setTimeout(() => { clean(); reject(new Error('image load timeout')); }, timeout);
       });
 
+      // Verify the uploaded image loads before updating the user profile
       try {
         await waitForImageLoad(cacheBusted, 12000);
-      } catch (_) {
-        // Ignore errors/timeouts; proceed to update UI anyway so we don't block forever
+      } catch (loadError) {
+        console.warn('Avatar image failed to load after upload, but proceeding with update:', loadError);
+        // Proceed anyway since we have fallback in display
+      }
+
+      await api.updateCurrentUser({ avatarUrl: cacheBusted });
+
+      // After successful update, delete the old avatar if it's not the default
+      if (oldAvatarUrl && oldAvatarUrl !== '/logo.svg' && oldAvatarUrl.includes('supabase.co')) {
+        try {
+          // Extract path from URL: https://xxx.supabase.co/storage/v1/object/public/posts/avatars/userId/filename.jpg
+          const url = new URL(oldAvatarUrl);
+          const pathParts = url.pathname.split('/storage/v1/object/public/posts/');
+          if (pathParts.length > 1) {
+            const oldPath = pathParts[1];
+            await sb.storage.from("posts").remove([oldPath]);
+          }
+        } catch (deleteError) {
+          console.warn('Failed to delete old avatar:', deleteError);
+          // Don't throw - old avatar deletion failure shouldn't block the upload
+        }
       }
 
       // Refresh user in UI: notify listeners (useUserData listens for 'auth:changed')

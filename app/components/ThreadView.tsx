@@ -185,49 +185,54 @@ export function ThreadView() {
         </Link>
       </div>
 
-      {/* Thread Header */}
-      <div className="card">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
-            <Link href={`/${thread.user.username}`}>
-              <OptimizedImage
-                src={(thread.user.avatarUrl || "").trim() || "/logo.svg"}
-                alt={thread.user.username}
-                width={48}
-                height={48}
-                className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-              />
-            </Link>
+      {/* Thread Header - centered stacked layout */}
+      <div className="card relative">
+
+        {/* Delete button in corner for thread owner */}
+        {currentUser && thread.user.id === currentUser.id && (
+          <div className="absolute right-3 top-3">
+            <Button
+              variant="danger"
+              size="sm"
+              className={`small-min ${threadDeleteArmed ? 'confirm' : ''}`}
+              onClick={handleDeleteThread}
+              aria-label={threadDeleteArmed ? 'Confirm delete thread' : 'Delete thread'}
+            >
+              <Trash2 size={16} />
+            </Button>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold">{thread.title}</h1>
-              {currentUser && thread.user.id === currentUser.id && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  className={`small-min ${threadDeleteArmed ? 'confirm' : ''}`}
-                  onClick={handleDeleteThread}
-                  aria-label={threadDeleteArmed ? 'Confirm delete thread' : 'Delete thread'}
-                >
-                  <Trash2 size={16} />
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-              <span>by @{thread.user.username}</span>
-              <span>•</span>
-              <span>{thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : 'Unknown date'}</span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <MessageSquare size={14} />
-                {thread.replyCount || 0} replies
-              </span>
-            </div>
+        )}
+
+        <div className="flex flex-col items-center text-center gap-4 py-4">
+          <Link href={`/${thread.user.username}`}>
+            <OptimizedImage
+              src={(thread.user.avatarUrl || "").trim() || "/logo.svg"}
+              alt={thread.user.username}
+              width={80}
+              height={80}
+              className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
+            />
+          </Link>
+
+          <h1 className="text-2xl font-bold">{thread.title}</h1>
+
+          <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 justify-center">
+            <span>by @{thread.user.username}</span>
+            <span>•</span>
+            <span>{thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : 'Unknown date'}</span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <MessageSquare size={14} />
+              {thread.replyCount || 0} replies
+            </span>
           </div>
+
+          {/* action buttons (if any) can be added here; delete is shown in corner */}
+
         </div>
+
         <div className="mt-4 prose dark:prose-invert max-w-none">
-          <p className="whitespace-pre-wrap">{thread.content}</p>
+          <p className="whitespace-pre-wrap text-center">{thread.content}</p>
         </div>
       </div>
 

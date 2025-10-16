@@ -22,6 +22,7 @@ export function CommunityView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteArmed, setDeleteArmed] = useState(false);
+  const [pendingJoin, setPendingJoin] = useState(false);
   const deleteTimeoutRef = useRef<number | null>(null);
   const [threadDeleteArmedSet, setThreadDeleteArmedSet] = useState<Set<string>>(new Set());
   const threadDeleteTimeoutsRef = useRef<Map<string, number>>(new Map());
@@ -70,6 +71,9 @@ export function CommunityView() {
   const handleJoinLeave = async () => {
     if (!community) return;
 
+    // Prevent duplicate requests
+    if (pendingJoin) return;
+    setPendingJoin(true);
     try {
       if (community.isMember) {
         await api.leaveCommunity(community.id);
@@ -80,6 +84,8 @@ export function CommunityView() {
       await loadCommunity();
     } catch (e: any) {
       setError(e?.message || 'Failed to update membership');
+    } finally {
+      setPendingJoin(false);
     }
   };
 
@@ -194,39 +200,45 @@ export function CommunityView() {
         </Link>
       </div>
 
-      {/* Community Header */}
+      {/* Community Header - centered stacked layout */}
       <div className="card">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          <div className="flex-shrink-0">
-            {/* Compute community image src explicitly and log helpful identifiers for debugging */}
-            {(() => {
-              const imageSrc = ((community.imageUrl || "") + "").trim() || "/logo.svg";
-              try {
-                console.debug('[CommunityView] header image', { communityId: community.id, imageUrl: community.imageUrl, chosenSrc: imageSrc });
-              } catch (e) {}
-              return (
-                <OptimizedImage
-                  src={imageSrc}
-                  alt={community.name}
-                  width={60}
-                  height={60}
-                  className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                  fallbackSrc="/logo.svg"
-                />
-              );
-            })()}
+        <div className="flex flex-col items-center text-center gap-4 py-4">
+          {/* Compute community image src explicitly and log helpful identifiers for debugging */}
+          {(() => {
+            const imageSrc = ((community.imageUrl || "") + "").trim() || "/logo.svg";
+            try {
+              console.debug('[CommunityView] header image', { communityId: community.id, imageUrl: community.imageUrl, chosenSrc: imageSrc });
+            } catch (e) {}
+            return (
+              <OptimizedImage
+                src={imageSrc}
+                alt={community.name}
+                width={80}
+                height={80}
+                className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
+                fallbackSrc="/logo.svg"
+              />
+            );
+          })()}
+
+          <h1 className="text-2xl font-bold break-words">{community.name}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1 break-words max-w-[60ch]">
+            {community.description}
+          </p>
+
+          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
+            <span>{community.memberCount || 0} members</span>
+            <span>{community.threadCount || 0} threads</span>
+            <span>by @{community.creator.username}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold break-words">{community.name}</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1 break-words">
-              {community.description}
-            </p>
-          </div>
-          <div className="flex-shrink-0 flex flex-wrap gap-2 sm:flex-nowrap">
+
+          <div className="flex flex-wrap gap-2 justify-center mt-3">
             {currentUser && community.creator.id === currentUser.id && (
               <>
                 <Link href={`/communities/${community.slug}/edit`}>
                   <Button variant="ghost" size="sm" className="small-min" aria-label="Edit community">
+                    {/* tooltip */}
+                    {""}
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -246,20 +258,26 @@ export function CommunityView() {
             )}
             {community.isMember && (
               <Link href={`/communities/${community.slug}/create-thread`}>
-                <Button size="sm" className="small-min" aria-label="New thread">
+                <Button size="sm" className="small-min" aria-label="New thread" title="Create a new thread in this community">
                   <Plus size={16} />
                 </Button>
               </Link>
             )}
-            <Button
-              variant={community.isMember ? "ghost" : "default"}
-              size="sm"
-              className="small-min"
-              onClick={handleJoinLeave}
-              aria-label={community.isMember ? 'Leave community' : 'Join community'}
-            >
-              {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
-            </Button>
+
+            {/* Don't show join button for community creators */}
+            {currentUser?.id !== community.creator.id && (
+              <Button
+                variant={community.isMember ? "ghost" : "default"}
+                size="sm"
+                className="small-min"
+                onClick={handleJoinLeave}
+                aria-label={community.isMember ? 'Leave community' : 'Join community'}
+                title={community.isMember ? 'Leave community' : 'Join community'}
+                disabled={pendingJoin}
+              >
+                {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
+              </Button>
+            )}
           </div>
         </div>
       </div>

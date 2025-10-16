@@ -98,12 +98,17 @@ export function ProfileView({ userId }: { userId?: string }) {
         onAuthRequired={handleAuthRequired}
       />
       {posts.length > 0 && (
-        <ViewToggle
-          title={<UserIcon size={20} strokeWidth={2} />}
-          subtitle={`${user?.username || 'User'}'s posts`}
-          selected={view}
-          onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("profileView", v); }}
-        />
+        (() => {
+          const subtitle = (currentUserId && user && currentUserId === user.id) ? 'Your posts' : `${user?.username || 'User'}'s posts`;
+          return (
+            <ViewToggle
+              title={<UserIcon size={20} strokeWidth={2} />}
+              subtitle={subtitle}
+              selected={view}
+              onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("profileView", v); }}
+            />
+          );
+        })()
       )}
       {
         // Render both grid and list variants and toggle their visibility with

@@ -76,17 +76,10 @@ export function CreateThreadView() {
 
   return (
     <div className="content">
-      <div className="content-header">
-        <h1 className="content-title">Create Thread in {community.name}</h1>
-        <p className="content-subtitle">Start a new discussion</p>
-      </div>
       <div className="content-body">
         <div className="card max-w-4xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium mb-2">
-                Thread Title *
-              </label>
               <input
                 type="text"
                 id="title"
@@ -101,9 +94,6 @@ export function CreateThreadView() {
             </div>
 
             <div>
-              <label htmlFor="content" className="block text-sm font-medium mb-2">
-                Content *
-              </label>
               <textarea
                 id="content"
                 value={content}

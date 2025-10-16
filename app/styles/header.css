@@ -185,7 +185,7 @@
   padding: 6px 6px; /* slightly smaller touch target for header */
 }
 .account-switcher .btn img.avatar {
-  width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;
+  width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;
 }
 .account-switcher .btn span {
   display: inline-block;

@@ -113,14 +113,14 @@ export function AccountSwitcher() {
         {me === undefined ? (
           // small skeleton to avoid layout shift and to indicate loading
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }} aria-hidden>
-            <span style={{ width: 22, height: 22, borderRadius: 999, background: 'rgba(255,255,255,0.06)', display: 'inline-block' }} />
+            <span style={{ width: 32, height: 32, borderRadius: 999, background: 'rgba(255,255,255,0.06)', display: 'inline-block' }} />
             <span style={{ width: 64, height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.04)', display: 'inline-block' }} />
           </span>
         ) : current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             {/* Avatar first in the DOM; CSS will use row-reverse so the avatar stays at the far right
                 and the account name expands to the left pushing other header items. */}
-            <OptimizedImage src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" width={22} height={22} />
+            <OptimizedImage src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" width={32} height={32} />
             <span className="account-name" aria-hidden>
               {current.username || current.displayName || current.id}
             </span>

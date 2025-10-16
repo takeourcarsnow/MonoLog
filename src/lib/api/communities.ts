@@ -5,88 +5,57 @@ import type { HydratedCommunity, HydratedThread, HydratedThreadReply } from "../
 
 export async function getCommunities(): Promise<HydratedCommunity[]> {
   const sb = getSupabaseClient();
-  const { data, error } = await sb
-    .from('communities')
-    .select(`
-      *,
-      creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
-    `)
-    .order('created_at', { ascending: false });
+  const token = await getAccessToken(sb);
+  const response = await fetch('/api/communities', {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch communities');
+  }
+  const data = await response.json();
 
-  if (error) throw new Error(error.message);
+  // Map the communities to include normalized creator profiles
+  return data.map((community: any) => {
+    // Normalize nested creator profile
+    const rawCreator = community.creator;
+    const mappedCreator = mapProfileToUser(rawCreator) || {
+      id: rawCreator?.id || 'unknown',
+      username: rawCreator?.username || 'unknown',
+      displayName: rawCreator?.display_name || rawCreator?.displayName || null,
+      avatarUrl: rawCreator?.avatar_url || rawCreator?.avatarUrl || DEFAULT_AVATAR,
+    };
 
-  // Get member and thread counts for each community
-  const communitiesWithCounts = await Promise.all(
-    (data || []).map(async (community) => {
-      const [memberCountResult, threadCountResult] = await Promise.all([
-        sb.from('community_members').select('id', { count: 'exact', head: true }).eq('community_id', community.id),
-        sb.from('threads').select('id', { count: 'exact', head: true }).eq('community_id', community.id)
-      ]);
-
-      // Normalize nested creator profile (DB returns snake_case like avatar_url)
-      const rawCreator = (community as any).creator;
-      const mappedCreator = mapProfileToUser(rawCreator) || {
-        id: rawCreator?.id || 'unknown',
-        username: rawCreator?.username || 'unknown',
-        displayName: rawCreator?.display_name || rawCreator?.displayName || null,
-        avatarUrl: rawCreator?.avatar_url || rawCreator?.avatarUrl || DEFAULT_AVATAR,
-      };
-
-      return {
-        ...community,
-        imageUrl: community.image_url,
-        creator: {
-          id: mappedCreator.id,
-          username: mappedCreator.username,
-          displayName: mappedCreator.displayName,
-          avatarUrl: mappedCreator.avatarUrl,
-        },
-        memberCount: memberCountResult.count || 0,
-        threadCount: threadCountResult.count || 0
-      };
-    })
-  );
-
-  return communitiesWithCounts;
+    return {
+      ...community,
+      imageUrl: community.image_url,
+      creator: {
+        id: mappedCreator.id,
+        username: mappedCreator.username,
+        displayName: mappedCreator.displayName,
+        avatarUrl: mappedCreator.avatarUrl,
+      },
+    };
+  });
 }
 
 export async function getCommunity(slug: string): Promise<HydratedCommunity | null> {
   const sb = getSupabaseClient();
-  const { data, error } = await sb
-    .from('communities')
-    .select(`
-      *,
-      creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
-    `)
-    .eq('slug', slug)
-    .single();
-
-  if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
-    throw new Error(error.message);
+  const token = await getAccessToken(sb);
+  const response = await fetch(`/api/communities?slug=${encodeURIComponent(slug)}`, {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch community');
   }
-
-  // Get member and thread counts
-  const [memberCountResult, threadCountResult] = await Promise.all([
-    sb.from('community_members').select('id', { count: 'exact', head: true }).eq('community_id', data.id),
-    sb.from('threads').select('id', { count: 'exact', head: true }).eq('community_id', data.id)
-  ]);
-
-  // Check if current user is a member
-  const authUser = await sb.auth.getUser();
-  let isMember = false;
-  if (authUser.data.user) {
-    const { data: membership } = await sb
-      .from('community_members')
-      .select('id')
-      .eq('community_id', data.id)
-      .eq('user_id', authUser.data.user.id)
-      .single();
-    isMember = !!membership;
-  }
+  const data = await response.json();
 
   // Normalize creator profile
-  const rawCreator = (data as any).creator;
+  const rawCreator = data.creator;
   const mappedCreator = mapProfileToUser(rawCreator) || {
     id: rawCreator?.id || 'unknown',
     username: rawCreator?.username || 'unknown',
@@ -103,9 +72,6 @@ export async function getCommunity(slug: string): Promise<HydratedCommunity | nu
       displayName: mappedCreator.displayName,
       avatarUrl: mappedCreator.avatarUrl,
     },
-    memberCount: memberCountResult.count || 0,
-    threadCount: threadCountResult.count || 0,
-    isMember 
   };
 }
 
@@ -304,45 +270,34 @@ export async function isCommunityMember(communityId: string): Promise<boolean> {
 
 export async function getCommunityThreads(communityId: string): Promise<HydratedThread[]> {
   const sb = getSupabaseClient();
-  const { data, error } = await sb
-    .from('threads')
-    .select(`
-      *,
-      user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-      community:communities!threads_community_id_fkey(id, name)
-    `)
-    .eq('community_id', communityId)
-    .order('created_at', { ascending: false });
+  const token = await getAccessToken(sb);
+  const response = await fetch(`/api/threads?communityId=${encodeURIComponent(communityId)}`, {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch threads');
+  }
+  const data = await response.json();
 
-  if (error) throw new Error(error.message);
+  // Map the threads to include normalized user profiles
+  return data.map((thread: any) => {
+    // Normalize nested user profile
+    const rawUser = thread.user;
+    const mappedUser = mapProfileToUser(rawUser) || rawUser;
 
-  // Get reply counts for each thread
-  const threadsWithReplyCounts = await Promise.all(
-    (data || []).map(async (thread) => {
-      const { count } = await sb
-        .from('thread_replies')
-        .select('id', { count: 'exact', head: true })
-        .eq('thread_id', thread.id);
-
-      // Normalize nested user profile
-      const rawUser = (thread as any).user;
-      const mappedUser = mapProfileToUser(rawUser) || rawUser;
-
-      return {
-        ...thread,
-        createdAt: thread.created_at,
-        user: {
-          id: mappedUser.id,
-          username: mappedUser.username,
-          displayName: mappedUser.displayName,
-          avatarUrl: mappedUser.avatarUrl,
-        },
-        replyCount: count || 0
-      };
-    })
-  );
-
-  return threadsWithReplyCounts;
+    return {
+      ...thread,
+      createdAt: thread.created_at,
+      user: {
+        id: mappedUser.id,
+        username: mappedUser.username,
+        displayName: mappedUser.displayName,
+        avatarUrl: mappedUser.avatarUrl,
+      },
+    };
+  });
 }
 
 export async function getThread(id: string): Promise<HydratedThread | null> {

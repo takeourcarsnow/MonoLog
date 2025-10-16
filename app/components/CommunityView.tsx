@@ -190,24 +190,21 @@ export function CommunityView() {
       <div className="card">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
-            {/* Compute avatar src explicitly and log helpful identifiers for debugging */}
+            {/* Compute community image src explicitly and log helpful identifiers for debugging */}
             {(() => {
-              const creatorAny = (community.creator as any) || {};
-              const avatarSrc = ((creatorAny.avatarUrl || creatorAny.avatar_url || "") + "").trim() || "/logo.svg";
+              const imageSrc = ((community.imageUrl || "") + "").trim() || "/logo.svg";
               try {
-                console.debug('[CommunityView] header avatar', { communityId: community.id, creatorId: creatorAny.id, avatarUrl: creatorAny.avatarUrl, avatar_url: creatorAny.avatar_url, chosenSrc: avatarSrc });
+                console.debug('[CommunityView] header image', { communityId: community.id, imageUrl: community.imageUrl, chosenSrc: imageSrc });
               } catch (e) {}
               return (
-                <Link href={`/${community.creator.username}`}>
-                  <OptimizedImage
-                    src={avatarSrc}
-                    alt={community.creator.username}
-                    width={60}
-                    height={60}
-                    className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                    fallbackSrc="/logo.svg"
-                  />
-                </Link>
+                <OptimizedImage
+                  src={imageSrc}
+                  alt={community.name}
+                  width={60}
+                  height={60}
+                  className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                  fallbackSrc="/logo.svg"
+                />
               );
             })()}
           </div>
@@ -271,7 +268,7 @@ export function CommunityView() {
       </div>
 
       {/* Threads List */}
-      <div className="content-body space-y-6">
+      <div className="content-body space-y-6 pt-8">
         {threads.length === 0 ? (
           <div className="card">
             <p>No threads yet. {community.isMember ? 'Be the first to create one!' : 'Join the community to start discussing!'}</p>

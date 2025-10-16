@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/src/lib/api";
-import { Users, MessageSquare, Plus, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { Users, MessageSquare, Plus, Trash2, UserMinus, UserPlus, ArrowLeft } from "lucide-react";
 import { useRef } from "react";
 import type { HydratedCommunity, HydratedThread } from "@/src/lib/types";
 import { Button } from "./Button";
@@ -186,9 +186,17 @@ export function CommunityView() {
 
   return (
     <div className="content">
+      {/* Back Navigation */}
+      <div className="mb-4">
+        <Link href="/communities" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+          <ArrowLeft size={16} />
+          Back to Communities
+        </Link>
+      </div>
+
       {/* Community Header */}
       <div className="card">
-        <div className="flex items-start gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
           <div className="flex-shrink-0">
             {/* Compute community image src explicitly and log helpful identifiers for debugging */}
             {(() => {
@@ -209,23 +217,12 @@ export function CommunityView() {
             })()}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold">{community.name}</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <h1 className="text-2xl font-bold break-words">{community.name}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1 break-words">
               {community.description}
             </p>
-            <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-              <span className="flex items-center gap-1">
-                <Users size={16} />
-                {community.memberCount || 0} members
-              </span>
-              <span className="flex items-center gap-1">
-                <MessageSquare size={16} />
-                {community.threadCount || 0} threads
-              </span>
-              <span>Created by @{community.creator.username}</span>
-            </div>
           </div>
-          <div className="flex-shrink-0 flex gap-2">
+          <div className="flex-shrink-0 flex flex-wrap gap-2 sm:flex-nowrap">
             {currentUser && community.creator.id === currentUser.id && (
               <>
                 <Link href={`/communities/${community.slug}/edit`}>

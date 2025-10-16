@@ -124,14 +124,16 @@ export function CommunitiesView() {
                       console.debug('[CommunitiesView] avatar', { communityId: community.id, creatorId: creatorAny.id, avatarUrl: creatorAny.avatarUrl, avatar_url: creatorAny.avatar_url, chosenSrc: avatarSrc });
                     } catch (e) {}
                     return (
-                      <OptimizedImage
-                        src={avatarSrc}
-                        alt={community.creator.displayName || community.creator.username}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                        fallbackSrc="/logo.svg"
-                      />
+                      <Link href={`/${community.creator.username}`}>
+                        <OptimizedImage
+                          src={avatarSrc}
+                          alt={community.creator.username}
+                          width={40}
+                          height={40}
+                          className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                          fallbackSrc="/logo.svg"
+                        />
+                      </Link>
                     );
                   })()}
                 </div>
@@ -145,7 +147,7 @@ export function CommunitiesView() {
                   <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                     <span>{community.memberCount || 0} members</span>
                     <span>{community.threadCount || 0} threads</span>
-                    <span>by {community.creator.displayName || community.creator.username}</span>
+                    <span>by @{community.creator.username}</span>
                   </div>
                 </div>
                 <div className="flex-shrink-0">

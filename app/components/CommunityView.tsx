@@ -198,14 +198,16 @@ export function CommunityView() {
                 console.debug('[CommunityView] header avatar', { communityId: community.id, creatorId: creatorAny.id, avatarUrl: creatorAny.avatarUrl, avatar_url: creatorAny.avatar_url, chosenSrc: avatarSrc });
               } catch (e) {}
               return (
-                <OptimizedImage
-                  src={avatarSrc}
-                  alt={community.creator.displayName || community.creator.username}
-                  width={60}
-                  height={60}
-                  className="rounded-full"
-                  fallbackSrc="/logo.svg"
-                />
+                <Link href={`/${community.creator.username}`}>
+                  <OptimizedImage
+                    src={avatarSrc}
+                    alt={community.creator.username}
+                    width={60}
+                    height={60}
+                    className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                    fallbackSrc="/logo.svg"
+                  />
+                </Link>
               );
             })()}
           </div>
@@ -223,7 +225,7 @@ export function CommunityView() {
                 <MessageSquare size={16} />
                 {community.threadCount || 0} threads
               </span>
-              <span>Created by {community.creator.displayName || community.creator.username}</span>
+              <span>Created by @{community.creator.username}</span>
             </div>
           </div>
           <div className="flex-shrink-0 flex gap-2">
@@ -276,14 +278,16 @@ export function CommunityView() {
                       console.debug('[CommunityView] thread avatar', { threadId: thread.id, userId: userAny.id, avatarUrl: userAny.avatarUrl, avatar_url: userAny.avatar_url, chosenSrc: avatarSrc });
                     } catch (e) {}
                     return (
-                      <OptimizedImage
-                        src={avatarSrc}
-                        alt={thread.user.displayName || thread.user.username}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                        fallbackSrc="/logo.svg"
-                      />
+                      <Link href={`/${thread.user.username}`}>
+                        <OptimizedImage
+                          src={avatarSrc}
+                          alt={thread.user.username}
+                          width={40}
+                          height={40}
+                          className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                          fallbackSrc="/logo.svg"
+                        />
+                      </Link>
                     );
                   })()}
                 </div>
@@ -311,7 +315,7 @@ export function CommunityView() {
                     {thread.content}
                   </p>
                   <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                    <span>by {thread.user.displayName || thread.user.username}</span>
+                    <span>by @{thread.user.username}</span>
                     <span>{thread.replyCount || 0} replies</span>
                     <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
                   </div>

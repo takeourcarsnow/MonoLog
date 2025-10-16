@@ -189,13 +189,15 @@ export function ThreadView() {
       <div className="card">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
-            <OptimizedImage
-              src={(thread.user.avatarUrl || "").trim() || "/logo.svg"}
-              alt={thread.user.displayName || thread.user.username}
-              width={48}
-              height={48}
-              className="rounded-full"
-            />
+            <Link href={`/${thread.user.username}`}>
+              <OptimizedImage
+                src={(thread.user.avatarUrl || "").trim() || "/logo.svg"}
+                alt={thread.user.username}
+                width={48}
+                height={48}
+                className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
@@ -213,7 +215,7 @@ export function ThreadView() {
               )}
             </div>
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-              <span>by {thread.user.displayName || thread.user.username}</span>
+              <span>by @{thread.user.username}</span>
               <span>•</span>
               <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
               <span>•</span>
@@ -273,18 +275,20 @@ export function ThreadView() {
             <div key={reply.id} className="card">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  <OptimizedImage
-                    src={(reply.user.avatarUrl || "").trim() || "/logo.svg"}
-                    alt={reply.user.displayName || reply.user.username}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
+                  <Link href={`/${reply.user.username}`}>
+                    <OptimizedImage
+                      src={(reply.user.avatarUrl || "").trim() || "/logo.svg"}
+                      alt={reply.user.username}
+                      width={32}
+                      height={32}
+                      className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                    />
+                  </Link>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span className="font-medium">{reply.user.displayName || reply.user.username}</span>
+                      <span className="font-medium">@{reply.user.username}</span>
                       <span>•</span>
                       <span>{new Date(reply.createdAt).toLocaleDateString()}</span>
                     </div>

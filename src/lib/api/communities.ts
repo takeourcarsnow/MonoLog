@@ -379,7 +379,21 @@ export async function getThreadReplies(threadId: string): Promise<HydratedThread
     .order('created_at', { ascending: true });
 
   if (error) throw new Error(error.message);
-  return data || [];
+
+  // Map user profiles
+  return (data || []).map(reply => {
+    const rawUser = (reply as any).user;
+    const mappedUser = mapProfileToUser(rawUser) || rawUser;
+    return {
+      ...reply,
+      user: {
+        id: mappedUser.id,
+        username: mappedUser.username,
+        displayName: mappedUser.displayName,
+        avatarUrl: mappedUser.avatarUrl,
+      }
+    };
+  });
 }
 
 export async function addThreadReply(threadId: string, content: string): Promise<HydratedThreadReply> {
@@ -417,7 +431,20 @@ export async function addThreadReply(threadId: string, content: string): Promise
     .single();
 
   if (error) throw new Error(error.message);
-  return data;
+
+  // Map user profile
+  const rawUser = (data as any).user;
+  const mappedUser = mapProfileToUser(rawUser) || rawUser;
+
+  return {
+    ...data,
+    user: {
+      id: mappedUser.id,
+      username: mappedUser.username,
+      displayName: mappedUser.displayName,
+      avatarUrl: mappedUser.avatarUrl,
+    }
+  };
 }
 
 export async function deleteThreadReply(id: string): Promise<boolean> {

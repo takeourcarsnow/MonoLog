@@ -149,7 +149,7 @@ export function ThreadView() {
 
   if (loading) {
     return (
-      <div className="content">
+      <div className="content thread">
         <div className="card skeleton" style={{ height: 200 }} />
         <div className="content-body">
           {[...Array(3)].map((_, i) => (
@@ -162,7 +162,7 @@ export function ThreadView() {
 
   if (error || !thread) {
     return (
-      <div className="content">
+      <div className="content thread">
         <div className="content-body">
           <div className="card">
             <p className="text-red-500">{error || 'Thread not found'}</p>
@@ -176,7 +176,7 @@ export function ThreadView() {
   }
 
   return (
-    <div className="content">
+    <div className="content thread">
       {/* Back Navigation */}
       <div className="mb-4">
         <Link href={`/communities/${communitySlug}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">

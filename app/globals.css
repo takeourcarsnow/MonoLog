@@ -29,6 +29,18 @@ html.communities-page-scroll {
   overflow: auto !important;
 }
 
+/* Allow body scrolling on community page */
+body.community-page-scroll,
+html.community-page-scroll {
+  overflow: auto !important;
+}
+
+/* Allow body scrolling on thread page */
+body.thread-page-scroll,
+html.thread-page-scroll {
+  overflow: auto !important;
+}
+
 /* If the app uses an internal scrolling container (.content) we must also
    allow that container to scroll when on the About page. The .content
    rules in layout.css set overflow: hidden for most routes; this selector
@@ -78,9 +90,34 @@ html.favorites-page-scroll .content {
   -webkit-overflow-scrolling: touch;
 }
 
+/* If .content contains the Community page, allow internal scrolling too */
+.content:has(.community) {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* If .content contains the Thread page, allow internal scrolling too */
+.content:has(.thread) {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Fallback for browsers not supporting :has() */
-body.communities-page-scroll .content,
-html.communities-page-scroll .content {
+body.community-page-scroll .content,
+html.community-page-scroll .content {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fallback for browsers not supporting :has() */
+body.thread-page-scroll .content,
+html.thread-page-scroll .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;

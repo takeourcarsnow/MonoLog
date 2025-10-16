@@ -15,8 +15,7 @@ export async function GET(req: Request) {
         .select(`
           *,
           user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-          community:communities!threads_community_id_fkey(id, name),
-          replyCount:thread_replies(count)
+          community:communities!threads_community_id_fkey(id, name)
         `)
         .eq('id', id)
         .single();
@@ -25,9 +24,15 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 404 });
       }
 
+      // Get reply count
+      const { count: replyCount } = await sb
+        .from('thread_replies')
+        .select('*', { count: 'exact', head: true })
+        .eq('thread_id', id);
+
       return NextResponse.json({
         ...thread,
-        replyCount: thread.replyCount?.count || 0
+        replyCount: replyCount || 0
       });
     } else if (communityId) {
       // List threads in a community
@@ -36,8 +41,7 @@ export async function GET(req: Request) {
         .select(`
           *,
           user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-          community:communities!threads_community_id_fkey(id, name),
-          replyCount:thread_replies(count)
+          community:communities!threads_community_id_fkey(id, name)
         `)
         .eq('community_id', communityId)
         .order('created_at', { ascending: false });
@@ -46,13 +50,21 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
-      // Transform the count objects to numbers
-      const transformedThreads = threads.map(thread => ({
-        ...thread,
-        replyCount: thread.replyCount?.count || 0,
-      }));
+      // Get reply counts for each thread
+      const threadsWithReplyCounts = await Promise.all(
+        threads.map(async (thread) => {
+          const { count: replyCount } = await sb
+            .from('thread_replies')
+            .select('*', { count: 'exact', head: true })
+            .eq('thread_id', thread.id);
+          return {
+            ...thread,
+            replyCount: replyCount || 0,
+          };
+        })
+      );
 
-      return NextResponse.json(transformedThreads);
+      return NextResponse.json(threadsWithReplyCounts);
     } else {
       return NextResponse.json({ error: 'Either id or communityId parameter is required' }, { status: 400 });
     }

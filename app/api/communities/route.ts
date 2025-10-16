@@ -14,9 +14,7 @@ export async function GET(req: Request) {
         .from('communities')
         .select(`
           *,
-          creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url),
-          memberCount:community_members(count),
-          threadCount:threads(count)
+          creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
         `)
         .eq('slug', slug)
         .single();
@@ -24,6 +22,12 @@ export async function GET(req: Request) {
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 404 });
       }
+
+      // Get member and thread counts
+      const [memberCountResult, threadCountResult] = await Promise.all([
+        sb.from('community_members').select('*', { count: 'exact', head: true }).eq('community_id', community.id),
+        sb.from('threads').select('*', { count: 'exact', head: true }).eq('community_id', community.id)
+      ]);
 
       // Check if current user is a member
       const authUser = await getUserFromAuthHeader(req);
@@ -40,8 +44,8 @@ export async function GET(req: Request) {
 
       return NextResponse.json({
         ...community,
-        memberCount: community.memberCount?.count || 0,
-        threadCount: community.threadCount?.count || 0,
+        memberCount: memberCountResult.count || 0,
+        threadCount: threadCountResult.count || 0,
         isMember
       });
     } else {
@@ -50,9 +54,7 @@ export async function GET(req: Request) {
         .from('communities')
         .select(`
           *,
-          creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url),
-          memberCount:community_members(count),
-          threadCount:threads(count)
+          creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
         `)
         .order('created_at', { ascending: false });
 
@@ -60,14 +62,23 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
-      // Transform the count objects to numbers
-      const transformedCommunities = communities.map(community => ({
-        ...community,
-        memberCount: community.memberCount?.count || 0,
-        threadCount: community.threadCount?.count || 0,
-      }));
+      // Get counts for each community
+      const communitiesWithCounts = await Promise.all(
+        communities.map(async (community) => {
+          const [memberCountResult, threadCountResult] = await Promise.all([
+            sb.from('community_members').select('*', { count: 'exact', head: true }).eq('community_id', community.id),
+            sb.from('threads').select('*', { count: 'exact', head: true }).eq('community_id', community.id)
+          ]);
 
-      return NextResponse.json(transformedCommunities);
+          return {
+            ...community,
+            memberCount: memberCountResult.count || 0,
+            threadCount: threadCountResult.count || 0,
+          };
+        })
+      );
+
+      return NextResponse.json(communitiesWithCounts);
     }
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
@@ -163,9 +174,7 @@ export async function PUT(req: Request) {
       .eq('id', existingCommunity.id)
       .select(`
         *,
-        creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url),
-        memberCount:community_members(count),
-        threadCount:threads(count)
+        creator:users!communities_creator_id_fkey(id, username, display_name, avatar_url)
       `)
       .single();
 
@@ -173,6 +182,12 @@ export async function PUT(req: Request) {
       console.error('Update community error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Get member and thread counts
+    const [memberCountResult, threadCountResult] = await Promise.all([
+      sb.from('community_members').select('*', { count: 'exact', head: true }).eq('community_id', updatedCommunity.id),
+      sb.from('threads').select('*', { count: 'exact', head: true }).eq('community_id', updatedCommunity.id)
+    ]);
 
     // Check if current user is a member
     let isMember = false;
@@ -187,8 +202,8 @@ export async function PUT(req: Request) {
     return NextResponse.json({
       ...updatedCommunity,
       imageUrl: updatedCommunity.image_url,
-      memberCount: updatedCommunity.memberCount?.count || 0,
-      threadCount: updatedCommunity.threadCount?.count || 0,
+      memberCount: memberCountResult.count || 0,
+      threadCount: threadCountResult.count || 0,
       isMember
     });
   } catch (e: any) {

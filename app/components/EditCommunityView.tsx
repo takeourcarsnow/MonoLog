@@ -204,7 +204,6 @@ export function EditCommunityView() {
       <div className="content-header">
         <div className="text-center w-full">
           <h1 className="content-title">Edit Community</h1>
-          <p className="content-subtitle">Update your community details</p>
         </div>
       </div>
       <div className="content-body">

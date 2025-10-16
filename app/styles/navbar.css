@@ -67,13 +67,11 @@
   right: 0;
   /* expose the effective tabbar height so other layout rules can
      reserve appropriate bottom spacing (JS may overwrite this at runtime) */
-  --tabbar-height: calc(56px + env(safe-area-inset-bottom, 0px));
+  --tabbar-height: 56px;
   background: color-mix(in srgb, var(--bg-elev), transparent 15%);
-  border-top: 1px solid var(--border);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   z-index: 9999;
-  padding-bottom: env(safe-area-inset-bottom, 0);
   transform: translateZ(0);
   transition: opacity 0.15s ease;
   /* Ensure the tabbar fills the measured tabbar height to avoid
@@ -92,22 +90,6 @@
   margin: 0 auto;
   /* Ensure interactive content sits above the decorative pseudo element */
   z-index: 1;
-}
-
-/* Decorative cover to hide any hairline/slit under the tabbar on some
-   mobile browsers. It's non-interactive and sits behind the inner content. */
-.tabbar::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  /* Keep the decorative cover flush with the tabbar bottom so it hides
-     any hairline or the browser gesture bar area. */
-  bottom: 0;
-  height: calc(1px + env(safe-area-inset-bottom, 0px));
-  background: var(--bg-elev);
-  pointer-events: none;
-  z-index: 0;
 }
 
 .tab-item {

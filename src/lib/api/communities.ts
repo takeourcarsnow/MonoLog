@@ -305,6 +305,9 @@ export async function getCommunityThreads(communityId: string): Promise<Hydrated
     const rawUser = thread.user;
     const mappedUser = mapProfileToUser(rawUser) || rawUser;
 
+    // Skip threads with missing users
+    if (!mappedUser) return null;
+
     return {
       ...thread,
       createdAt: thread.created_at,
@@ -318,7 +321,7 @@ export async function getCommunityThreads(communityId: string): Promise<Hydrated
       replyCount: (thread.reply_count ?? thread.replyCount) || 0,
       lastActivity: thread.last_activity || thread.lastActivity || thread.updated_at || thread.updatedAt || thread.created_at || thread.createdAt,
     };
-  });
+  }).filter(Boolean);
 
   // Client-side safety sort by last_activity (or updated_at) if present
   try {
@@ -364,14 +367,27 @@ export async function getThread(id: string): Promise<HydratedThread | null> {
   const rawUser = (data as any).user;
   const mappedUser = mapProfileToUser(rawUser) || rawUser;
 
+  // If community is missing, return null
+  const rawCommunity = (data as any).community;
+  if (!rawCommunity) return null;
+
   return { 
     ...data,
     createdAt: data.created_at,
-    user: {
+    user: mappedUser ? {
       id: mappedUser.id,
       username: mappedUser.username,
       displayName: mappedUser.displayName,
       avatarUrl: mappedUser.avatarUrl,
+    } : {
+      id: 'deleted',
+      username: 'deleted-user',
+      displayName: null,
+      avatarUrl: '/logo.svg',
+    },
+    community: {
+      id: rawCommunity.id,
+      name: rawCommunity.name,
     },
     replyCount: count || 0
   };
@@ -404,14 +420,27 @@ export async function getThreadBySlug(slug: string): Promise<HydratedThread | nu
   const rawUser = (data as any).user;
   const mappedUser = mapProfileToUser(rawUser) || rawUser;
 
+  // If community is missing, return null
+  const rawCommunity = (data as any).community;
+  if (!rawCommunity) return null;
+
   return { 
     ...data,
     createdAt: data.created_at,
-    user: {
+    user: mappedUser ? {
       id: mappedUser.id,
       username: mappedUser.username,
       displayName: mappedUser.displayName,
       avatarUrl: mappedUser.avatarUrl,
+    } : {
+      id: 'deleted',
+      username: 'deleted-user',
+      displayName: null,
+      avatarUrl: '/logo.svg',
+    },
+    community: {
+      id: rawCommunity.id,
+      name: rawCommunity.name,
     },
     replyCount: count || 0
   };
@@ -519,6 +548,7 @@ export async function getThreadReplies(threadId: string): Promise<HydratedThread
   return (data || []).map(reply => {
     const rawUser = (reply as any).user;
     const mappedUser = mapProfileToUser(rawUser) || rawUser;
+    if (!mappedUser) return null; // Skip replies with missing users
     return {
       ...reply,
       createdAt: reply.created_at,
@@ -529,7 +559,7 @@ export async function getThreadReplies(threadId: string): Promise<HydratedThread
         avatarUrl: mappedUser.avatarUrl,
       }
     };
-  });
+  }).filter(Boolean);
 }
 
 export async function addThreadReply(threadId: string, content: string): Promise<HydratedThreadReply> {
@@ -571,6 +601,8 @@ export async function addThreadReply(threadId: string, content: string): Promise
   // Map user profile
   const rawUser = (data as any).user;
   const mappedUser = mapProfileToUser(rawUser) || rawUser;
+
+  if (!mappedUser) throw new Error('User profile not found');
 
     return { 
       ...data,

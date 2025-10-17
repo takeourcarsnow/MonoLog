@@ -6,8 +6,17 @@
   correct runtime behavior we disable the rule for this file.
 */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useCallback, useEffect } from 'react';
-import { getBounds } from '../utils/zoomUtils';
+import React from 'react';
+import { useZoomStateSync } from './useZoomStateSync';
+import { useGlobalZoomEvents } from './useGlobalZoomEvents';
+import { useTileDetection } from './useTileDetection';
+import { useImageDimensions } from './useImageDimensions';
+import { useDoubleTap } from './useDoubleTap';
+import { usePointerEvents } from './usePointerEvents';
+import { useTouchEvents } from './useTouchEvents';
+import { useWheelEvents } from './useWheelEvents';
+import { useTapRegistration } from './useTapRegistration';
+import { useInactiveReset } from './useInactiveReset';
 
 interface ZoomState {
   containerRef: React.RefObject<HTMLDivElement>;
@@ -94,631 +103,141 @@ export const useZoomEvents = (state: ZoomState) => {
     src,
   } = state;
 
-  // keep refs in sync with state
-  // refs are stable objects; include only the changing values in deps
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => { scaleRef.current = scale; }, [scale]);
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => { txRef.current = tx; }, [tx]);
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => { tyRef.current = ty; }, [ty]);
-
-  // When another ImageZoom instance starts zooming, reset this one if it's
-  // currently zoomed in. The originating instance will include its id in
-  // the event detail; ignore events that originate from this instance.
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => {
-    const onOtherZoom = (ev: Event) => {
-      try {
-        const e = ev as CustomEvent;
-        const originId = e?.detail?.id as string | undefined;
-        // If originId exists and it's from this instance, ignore. Otherwise
-        // treat it as a request to close/reset this zoom instance.
-        if (originId && originId === instanceIdRef.current) return; // ignore our own
-        if (scaleRef.current > 1) {
-          setScale(1);
-          setTx(0);
-          setTy(0);
-          wheelEnabledRef.current = false;
-          try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: instanceIdRef.current } })); } catch(_) {}
-        }
-      } catch (_) {
-        // ignore
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('monolog:zoom_start', onOtherZoom as any);
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('monolog:zoom_start', onOtherZoom as any);
-      }
-    };
-  }, [setScale, setTx, setTy, wheelEnabledRef]);
-
-  // Detect if this ImageZoom is rendered inside a grid tile
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => {
-    try {
-      const el = containerRef.current;
-      if (!el) return;
-      const tile = el.closest && (el.closest('.tile') as Element | null);
-      setIsTile(!!tile);
-    } catch (e) {
-      // ignore
-    }
-  }, [containerRef, setIsTile]);
-
-  // Reset zoom when the image becomes inactive
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => {
-    if (!isActive) {
-      setScale(1);
-      setTx(0);
-      setTy(0);
-      // Dispatch zoom end event
-      if (typeof window !== 'undefined') {
-        try {
-          window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
-        } catch (_) {}
-      }
-    }
-  }, [isActive, setScale, setTx, setTy]);
-
-  // Set natural dimensions when image loads
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => {
-    const img = imgRef.current;
-    if (img) {
-      if (img.complete) {
-        naturalRef.current.w = img.naturalWidth;
-        naturalRef.current.h = img.naturalHeight;
-      } else {
-        const onLoad = () => {
-          naturalRef.current.w = img.naturalWidth;
-          naturalRef.current.h = img.naturalHeight;
-        };
-        img.addEventListener('load', onLoad);
-        return () => img.removeEventListener('load', onLoad);
-      }
-    }
-  }, [src]);
-
-  // Reset zoom state when src changes
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => {
-    setScale(1);
-    setTx(0);
-    setTy(0);
-    // Dispatch zoom end event
-    if (typeof window !== 'undefined') {
-      try {
-        window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: instanceIdRef.current } }));
-      } catch (_) {}
-    }
-  }, [src, setScale, setTx, setTy]);
-
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  const handleDoubleTap = useCallback((clientX: number, clientY: number) => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    // Enable smooth transition for zoom operations
-    setIsTransitioning(true);
-
-    // Use the ref to ensure we always read the latest scale (avoid stale
-    // closure values). This makes double-tap reliably toggle zoom out when
-    // the image is currently zoomed in.
-    if (scaleRef.current > 1) {
-      // Zoom out to center
-      setScale(1);
-      setTx(0);
-      setTy(0);
-      wheelEnabledRef.current = false;
-      // Dispatch zoom end event
-      if (typeof window !== 'undefined') {
-        try {
-          window.dispatchEvent(new CustomEvent('monolog:zoom_end', { detail: { id: instanceIdRef.current } }));
-        } catch (_) {}
-      }
-      // Disable transition after animation completes
-      setTimeout(() => setIsTransitioning(false), 300);
-    } else {
-      // Zoom in to double tap location - use smaller scale for fullscreen
-      const zoomScale = isFullscreen ? 1.5 : maxScale;
-      setScale(zoomScale);
-
-  // Calculate translation to center the tap point using center-relative coordinates
-  const localX = clientX - rect.left;
-  const localY = clientY - rect.top;
-  const cx = rect.width / 2;
-  const cy = rect.height / 2;
-  const dx = localX - cx;
-  const dy = localY - cy;
-
-  const newTx = txRef.current * zoomScale + dx * (1 - zoomScale);
-  const newTy = tyRef.current * zoomScale + dy * (1 - zoomScale);
-
-      // Clamp to bounds
-      const bounds = getBounds(containerRef, imgRef, naturalRef, zoomScale);
-      const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
-      const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
-
-      setTx(clampedTx);
-      setTy(clampedTy);
-      // Allow wheel zoom now that the user explicitly triggered zoom
-      wheelEnabledRef.current = true;
-
-      // Dispatch zoom start event
-      if (typeof window !== 'undefined') {
-        try {
-          window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: instanceIdRef.current } }));
-        } catch (_) {}
-      }
-      // Disable transition after animation completes
-      setTimeout(() => setIsTransitioning(false), 300);
-    }
-  }, [setScale, setTx, setTy, isFullscreen, maxScale, setIsTransitioning]);
-
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (scale <= 1) return;
-    // record pointer start to distinguish tap vs drag
-    pointerStartRef.current = { x: e.clientX, y: e.clientY };
-    movedRef.current = false;
-
-    // Disable transitions during panning for instant response
-    setIsTransitioning(false);
-    setIsPanning(true);
-    // Use the ref-backed tx/ty values here to ensure we capture the
-    // most recent translation even if this callback was created earlier.
-    panStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      tx: txRef.current,
-      ty: tyRef.current
-    };
-
-    // Dispatch pan start event
-    if (typeof window !== 'undefined') {
-      try {
-        window.dispatchEvent(new CustomEvent('monolog:pan_start'));
-      } catch (_) {}
-    }
-
-    e.preventDefault();
-  }, [scale, setIsPanning, setIsTransitioning]);
-
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    // mark moved if movement exceeds threshold
-    if (pointerStartRef.current) {
-      const dxStart = e.clientX - pointerStartRef.current.x;
-      const dyStart = e.clientY - pointerStartRef.current.y;
-      if (!movedRef.current && Math.hypot(dxStart, dyStart) > TAP_MOVE_THRESHOLD) movedRef.current = true;
-    }
-
-    if (!isPanning || !panStartRef.current) return;
-
-    const dx = e.clientX - panStartRef.current.x;
-    const dy = e.clientY - panStartRef.current.y;
-
-    const newTx = panStartRef.current.tx + dx;
-    const newTy = panStartRef.current.ty + dy;
-
-    const bounds = getBounds(containerRef, imgRef, naturalRef, scale);
-    const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
-    const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
-
-    setTx(clampedTx);
-    setTy(clampedTy);
-
-    // Prevent parent components from receiving swipe gestures when panning
-    e.stopPropagation();
-    e.preventDefault();
-  }, [isPanning, TAP_MOVE_THRESHOLD, setTx, setTy, scale]);
-
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  const handlePointerUp = useCallback((e?: React.PointerEvent) => {
-    // Pointer-based double-tap detection for platforms that use Pointer Events
-    // (modern browsers replace touch events with pointer events). Mirror the
-    // touch double-tap behaviour so quick taps on touch devices also trigger
-    // zoom.
-    try {
-      if (e) {
-        const pointerType = (e as any).pointerType;
-        if (pointerType === 'touch') {
-          // Only consider it a tap (and potential double-tap) when not panning
-          // and the pointer didn't move beyond the tap threshold
-          if (!isPanning && !movedRef.current) {
-            // registerTap(e.clientX, e.clientY); // Removed to prevent duplicate with native touch
-          }
-        } else {
-          // For mouse, register tap on pointer up if not panning and not moved
-          if (!isPanning && !movedRef.current) {
-            registerTap(e.clientX, e.clientY);
-          }
-        }
-      }
-    } catch (_) {
-      // ignore
-    }
-
-    setIsPanning(false);
-    panStartRef.current = null;
-    pointerStartRef.current = null;
-    movedRef.current = false;
-
-    // Dispatch pan end event
-    if (typeof window !== 'undefined') {
-      try {
-        window.dispatchEvent(new CustomEvent('monolog:pan_end'));
-      } catch (_) {}
-    }
-  }, [isPanning]);
-
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // If two fingers, start a pinch gesture
-    if (e.touches.length === 2) {
-      const t0 = e.touches[0];
-      const t1 = e.touches[1];
-      const dx = t1.clientX - t0.clientX;
-      const dy = t1.clientY - t0.clientY;
-      const dist = Math.hypot(dx, dy) || 1;
-      const midX = (t0.clientX + t1.clientX) / 2;
-      const midY = (t0.clientY + t1.clientY) / 2;
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const midLocalX = midX - rect.left;
-      const midLocalY = midY - rect.top;
-      // Store the translation at pinch start so we can preserve the point
-      // under the fingers when scale changes by applying a scale-ratio
-      // transformation.
-      pinchRef.current = {
-        initialDistance: dist,
-        initialScale: scaleRef.current,
-        midLocalX,
-        midLocalY,
-        startTx: txRef.current,
-        startTy: tyRef.current,
-      };
-      // Make sure we aren't in pan mode
-      setIsPanning(false);
-      panStartRef.current = null;
-      // Enable smooth transitions for pinch gestures
-      setIsTransitioning(true);
-      // Dispatch zoom start if we're starting from unzoomed
-      if (scaleRef.current <= 1) {
-        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start')); } catch(_) {}
-        // Pinch explicitly activated zoom — allow wheel zoom too
-        wheelEnabledRef.current = true;
-      }
-      // Prevent parent components from receiving touch start when pinching
-      e.stopPropagation();
-      return;
-    }
-
-    // Single-finger pan start only when already zoomed in
-    if (scaleRef.current <= 1) return;
-
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      // record touch start to distinguish tap vs drag
-      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-      movedRef.current = false;
-
-      // Disable transitions during panning for instant response
-      setIsTransitioning(false);
-      setIsPanning(true);
-      panStartRef.current = {
-        x: touch.clientX,
-        y: touch.clientY,
-        tx: txRef.current,
-        ty: tyRef.current
-      };
-      // Dispatch pan start event
-      if (typeof window !== 'undefined') {
-        try {
-          window.dispatchEvent(new CustomEvent('monolog:pan_start'));
-      } catch (_) {}
-      }
-      // Prevent parent components from receiving touch start when starting to pan.
-      // We do not call preventDefault here because native listeners (attached
-      // with passive: false) handle calling preventDefault when necessary.
-      e.stopPropagation();
-    }
-  }, [setIsPanning, setIsTransitioning]);
-
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // If pinch in progress (two touches), handle pinch-to-zoom
-    if (e.touches.length === 2 && pinchRef.current) {
-      const t0 = e.touches[0];
-      const t1 = e.touches[1];
-      const dx = t1.clientX - t0.clientX;
-      const dy = t1.clientY - t0.clientY;
-      const dist = Math.hypot(dx, dy) || 1;
-      const p = pinchRef.current;
-      const ratio = dist / p.initialDistance;
-      let newScale = Math.max(1, Math.min(maxScale, p.initialScale * ratio));
-
-      // Preserve the point under the fingers by computing translation
-      // relative to the pinch-start midpoint using scale ratio math.
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (rect) {
-        const containerWidth = rect.width;
-        const containerHeight = rect.height;
-
-        // Coordinates of pinch midpoint at start (midLocalX/midLocalY)
-        // We want that same point to remain under fingers, so compute
-        // newTx/newTy by scaling the delta from center and applying
-        // the change relative to startTx/startTy.
-        const scaleRatio = newScale / p.initialScale;
-        const cx = containerWidth / 2;
-        const cy = containerHeight / 2;
-
-        // Vector from center to midpoint at start
-        const dxMid = p.midLocalX - cx;
-        const dyMid = p.midLocalY - cy;
-
-        // New translation so that midpoint stays fixed
-        const newTx = p.startTx * scaleRatio + dxMid * (1 - scaleRatio);
-        const newTy = p.startTy * scaleRatio + dyMid * (1 - scaleRatio);
-
-        // Clamp to bounds
-        const bounds = getBounds(containerRef, imgRef, naturalRef, newScale);
-        const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
-        const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
-
-        setScale(newScale);
-        setTx(clampedTx);
-        setTy(clampedTy);
-      }
-
-      // Prevent parent components from receiving swipe gestures when pinching
-      e.stopPropagation();
-      return;
-    }
-
-    if (e.touches.length !== 1) return;
-
-    const touch = e.touches[0];
-    // mark moved if movement exceeds threshold
-    if (touchStartRef.current) {
-      const dxStart = touch.clientX - touchStartRef.current.x;
-      const dyStart = touch.clientY - touchStartRef.current.y;
-      if (!movedRef.current && Math.hypot(dxStart, dyStart) > TAP_MOVE_THRESHOLD) movedRef.current = true;
-    }
-
-    if (!isPanning || !panStartRef.current) return;
-
-    const dx = touch.clientX - panStartRef.current.x;
-    const dy = touch.clientY - panStartRef.current.y;
-
-    const newTx = panStartRef.current.tx + dx;
-    const newTy = panStartRef.current.ty + dy;
-
-    const bounds = getBounds(containerRef, imgRef, naturalRef, scaleRef.current);
-    const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
-    const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
-
-    setTx(clampedTx);
-    setTy(clampedTy);
-
-    // Prevent parent components from receiving swipe gestures when panning
-    e.stopPropagation();
-  }, [maxScale, setScale, setTx, setTy, TAP_MOVE_THRESHOLD, isPanning]);
-
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    // If pinch was active and now fewer than 2 touches remain, end pinch
-    const wasPinch = pinchRef.current !== null;
-    if (pinchRef.current && e.touches.length < 2) {
-      pinchRef.current = null;
-      // Disable transitions after pinch ends
-      setTimeout(() => setIsTransitioning(false), 300);
-      // If we scaled back to 1, dispatch zoom end
-      if (scaleRef.current <= 1) {
-        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_end')); } catch(_) {}
-      }
-      // fallthrough to clear panning/double-tap handlers when appropriate
-    }
-
-    setIsPanning(false);
-    panStartRef.current = null;
-    // Clear touch start/moved tracking and only register tap if movement small
-    const t = (e.changedTouches && e.changedTouches[0]);
-    if (t && !movedRef.current && !wasPinch) {
-      // This will be a tap; register it
-      registerTap(t.clientX, t.clientY);
-    }
-    touchStartRef.current = null;
-    movedRef.current = false;
-
-    // Dispatch pan end event
-    if (typeof window !== 'undefined') {
-      try {
-        window.dispatchEvent(new CustomEvent('monolog:pan_end'));
-      } catch (_) {}
-    }
-  }, [setIsPanning, setIsTransitioning]);
-
-  // Unified tap/double-tap registration helper to avoid races between
-  // pointer and native touch handlers. Uses a timeout ref so we can
-  // reliably clear pending timers on unmount and prevent duplicate
-  // double-tap invocations.
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  const registerTap = useCallback((clientX: number, clientY: number) => {
-    const now = Date.now();
-    // Ignore duplicate events from different event systems (pointer + touch)
-    // fired almost simultaneously for a single physical tap.
-    if (lastEventTimeRef.current && now - lastEventTimeRef.current < 50) return;
-    lastEventTimeRef.current = now;
-
-    if (lastDoubleTapRef.current && now - lastDoubleTapRef.current < 300) {
-      // Detected double-tap
-      lastDoubleTapRef.current = null;
-      if (lastTapTimeoutRef.current) {
-        clearTimeout(lastTapTimeoutRef.current as any);
-        lastTapTimeoutRef.current = null;
-      }
-      try {
-        handleDoubleTap(clientX, clientY);
-      } catch (_) {}
-    } else {
-      lastDoubleTapRef.current = now;
-      if (lastTapTimeoutRef.current) {
-        clearTimeout(lastTapTimeoutRef.current as any);
-      }
-      lastTapTimeoutRef.current = window.setTimeout(() => {
-        if (lastDoubleTapRef.current === now) lastDoubleTapRef.current = null;
-        lastTapTimeoutRef.current = null;
-      }, 310) as any;
-    }
-  }, [handleDoubleTap]);
-
-  // Attach native touch listeners to allow preventDefault (passive: false)
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const onTouchStart = (ev: TouchEvent) => {
-      try {
-        // If we're showing the image fullscreen, block the browser's native
-        // double-tap-to-zoom by preventing the default on touchstart. Some
-        // older mobile browsers ignore touch-action so this guard ensures our
-        // double-tap handler runs. Also prevent when two-finger gestures begin.
-        if (isFullscreen || (ev.touches && ev.touches.length === 2)) ev.preventDefault();
-      } catch (_) {}
-      try { handleTouchStart((ev as unknown) as React.TouchEvent); } catch (_) {}
-    };
-
-    const onTouchMove = (ev: TouchEvent) => {
-      try {
-        // Prevent browser scrolling only when pinch/panning/zoom is active.
-        // Do NOT prevent simply because we've detected movement (movedRef) —
-        // that would block normal page scrolls when the image is unzoomed.
-        if (pinchRef.current || isPanning || scaleRef.current > 1) ev.preventDefault();
-      } catch (_) {}
-      try { handleTouchMove((ev as unknown) as React.TouchEvent); } catch (_) {}
-    };
-
-    const onTouchEnd = (ev: TouchEvent) => {
-      try { handleTouchEnd((ev as unknown) as React.TouchEvent); } catch (_) {}
-    };
-
-  el.addEventListener('touchstart', onTouchStart, { passive: false });
-  el.addEventListener('touchmove', onTouchMove, { passive: false });
-  el.addEventListener('touchend', onTouchEnd, { passive: false });
-
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart as any);
-      el.removeEventListener('touchmove', onTouchMove as any);
-      el.removeEventListener('touchend', onTouchEnd as any);
-      // Clear any pending tap timeout to avoid stale timers after unmount
-      if (lastTapTimeoutRef.current) {
-        clearTimeout(lastTapTimeoutRef.current as any);
-        lastTapTimeoutRef.current = null;
-      }
-    };
-  }, [containerRef, isFullscreen, isPanning]);
-
-  // Add wheel event listener with passive: false to prevent default scrolling
-  /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  useEffect(() => {
-    const imgElement = imgRef.current;
-    if (!imgElement) return;
-
-    const handleWheelEvent = (e: WheelEvent) => {
-      // Only allow wheel to initiate zoom if the image is already zoomed or
-      // the user explicitly activated zoom (double-click or pinch),
-      // except when rendered fullscreen — in fullscreen we allow immediate
-      // wheel zoom to give desktop users direct control without needing a
-      // prior double-tap.
-      if (!isFullscreen && !wheelEnabledRef.current && scaleRef.current <= 1) return;
-
-      // Allow wheel zoom (in/out) — if zooming out to scale 1 we reset to center
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Enable smooth transitions for wheel zoom
-      setIsTransitioning(true);
-
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-
-
-  // Determine zoom direction and amount
-  const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out on scroll down, zoom in on scroll up
-  const newScale = Math.max(1, Math.min(maxScale, scaleRef.current * zoomFactor));
-
-      // If scale didn't change, don't do anything
-      if (newScale === scaleRef.current) return;
-
-  // Calculate the point under the mouse cursor (relative to container)
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
-  const cx = rect.width / 2;
-  const cy = rect.height / 2;
-
-  // Calculate new translation to keep the mouse point fixed, using
-  // coordinates relative to container center so translations align with
-  // the implementation's centered coordinate system.
-  const scaleRatio = newScale / scaleRef.current;
-  const dx = mouseX - cx;
-  const dy = mouseY - cy;
-  const newTx = txRef.current * scaleRatio + dx * (1 - scaleRatio);
-  const newTy = tyRef.current * scaleRatio + dy * (1 - scaleRatio);
-
-      // If zooming out to scale 1, reset to center
-      if (newScale === 1) {
-        setScale(1);
-        setTx(0);
-        setTy(0);
-        wheelEnabledRef.current = false;
-        if (typeof window !== 'undefined') {
-          try {
-            window.dispatchEvent(new CustomEvent('monolog:zoom_end'));
-          } catch (_) {}
-        }
-        // Disable transitions after animation
-        setTimeout(() => setIsTransitioning(false), 300);
-      } else {
-        // Clamp to bounds
-        const bounds = getBounds(containerRef, imgRef, naturalRef, newScale);
-        const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
-        const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
-
-        setScale(newScale);
-        setTx(clampedTx);
-        setTy(clampedTy);
-
-        // Dispatch zoom events
-        // If we're transitioning from unzoomed -> zoomed, announce zoom start
-        if (scaleRef.current <= 1 && newScale > 1) {
-          // mark wheel as enabled so subsequent wheel/pan interactions behave
-          // like an explicit activation (double-tap/pinch)
-          wheelEnabledRef.current = true;
-          if (typeof window !== 'undefined') {
-            try {
-              window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: instanceIdRef.current } }));
-            } catch (_) {}
-          }
-        }
-        // Disable transitions after animation
-        setTimeout(() => setIsTransitioning(false), 300);
-      }
-    };
-
-  imgElement.addEventListener('wheel', handleWheelEvent, { passive: false });
-
-    return () => {
-      imgElement.removeEventListener('wheel', handleWheelEvent);
-    };
-  }, [wheelEnabledRef, maxScale, setScale, setTx, setTy, scale, setIsTransitioning]);
+  // Use smaller hooks
+  useZoomStateSync({
+    scale,
+    tx,
+    ty,
+    scaleRef,
+    txRef,
+    tyRef,
+  });
+
+  useGlobalZoomEvents({
+    scaleRef,
+    setScale,
+    setTx,
+    setTy,
+    wheelEnabledRef,
+    instanceIdRef,
+  });
+
+  useTileDetection({
+    containerRef,
+    setIsTile,
+  });
+
+  useImageDimensions({
+    imgRef,
+    naturalRef,
+    src,
+    setScale,
+    setTx,
+    setTy,
+    instanceIdRef,
+  });
+
+  useInactiveReset({
+    isActive,
+    setScale,
+    setTx,
+    setTy,
+  });
+
+  const { handleDoubleTap } = useDoubleTap({
+    containerRef,
+    imgRef,
+    naturalRef,
+    scaleRef,
+    txRef,
+    tyRef,
+    setScale,
+    setTx,
+    setTy,
+    isFullscreen,
+    maxScale,
+    setIsTransitioning,
+    wheelEnabledRef,
+    instanceIdRef,
+  });
+
+  const { registerTap } = useTapRegistration({
+    lastDoubleTapRef,
+    lastTapTimeoutRef,
+    lastEventTimeRef,
+    handleDoubleTap,
+  });
+
+  const {
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+  } = usePointerEvents({
+    scale,
+    setIsPanning,
+    setIsTransitioning,
+    pointerStartRef,
+    movedRef,
+    panStartRef,
+    txRef,
+    tyRef,
+    isPanning,
+    setTx,
+    setTy,
+    containerRef,
+    imgRef,
+    naturalRef,
+    TAP_MOVE_THRESHOLD,
+    registerTap,
+  });
+
+  const {
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useTouchEvents({
+    scale,
+    scaleRef,
+    txRef,
+    tyRef,
+    setIsPanning,
+    setIsTransitioning,
+    panStartRef,
+    touchStartRef,
+    movedRef,
+    pinchRef,
+    wheelEnabledRef,
+    containerRef,
+    imgRef,
+    naturalRef,
+    maxScale,
+    setScale,
+    setTx,
+    setTy,
+    TAP_MOVE_THRESHOLD,
+    isPanning,
+    isFullscreen,
+    lastTapTimeoutRef,
+    registerTap,
+  });
+
+  useWheelEvents({
+    imgRef,
+    isFullscreen,
+    wheelEnabledRef,
+    scaleRef,
+    maxScale,
+    setIsTransitioning,
+    containerRef,
+    txRef,
+    tyRef,
+    naturalRef,
+    setScale,
+    setTx,
+    setTy,
+    scale,
+    instanceIdRef,
+  });
 
   return {
     handlePointerDown,

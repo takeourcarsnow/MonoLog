@@ -20,7 +20,7 @@ import { PostCard } from "./PostCard";
 import { User as UserIcon } from "lucide-react";
 
 export function ProfileView({ userId }: { userId?: string }) {
-  const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam } = useUserData(userId);
+  const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam, setUser } = useUserData(userId);
   const router = useRouter();
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("profileView") as any)) || "grid");
 
@@ -92,6 +92,7 @@ export function ProfileView({ userId }: { userId?: string }) {
         isOtherParam={isOtherParam}
         following={following}
         setFollowing={setFollowing}
+        setUser={setUser}
         onAvatarChange={() => {
           // The ProfileHeader handles avatar changes internally
         }}

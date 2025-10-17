@@ -10,6 +10,7 @@ interface ProfileEditFormProps {
   user: User;
   isEditingProfile: boolean;
   setIsEditingProfile: (editing: boolean) => void;
+  setUser: (user: User | null) => void;
 }
 
 export interface ProfileEditFormRef {
@@ -17,7 +18,7 @@ export interface ProfileEditFormRef {
 }
 
 export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormProps>(
-  ({ user, isEditingProfile, setIsEditingProfile }, ref) => {
+  ({ user, isEditingProfile, setIsEditingProfile, setUser }, ref) => {
     const router = useRouter();
     const toast = useToast();
     const displayNameRef = useRef<HTMLInputElement | null>(null);
@@ -89,7 +90,9 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
   try { console.log('[ProfileEditForm] outgoing payload', { username: uname, displayName: displayNameNormalized, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized }); } catch (_) {}
 
   const payload = { username: uname, displayName: displayNameNormalized, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized } as any;
-  await api.updateCurrentUser(payload as Partial<User>);
+  const updatedUser = await api.updateCurrentUser(payload as Partial<User>);
+        // Update the local user state immediately
+        setUser(updatedUser);
         // Notify any listeners and revalidate app-router data so the UI updates
         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('auth:changed')); } catch (_) {}
         try { router.refresh?.(); } catch (_) {}

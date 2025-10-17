@@ -109,8 +109,8 @@ export function useUserData(userId?: string) {
 
     let me: any = null;
     for (let i = 0; i < 8; i++) {
-      // Use deduplication for auth checks
-      me = await dedupe('getCurrentUser', () => api.getCurrentUser());
+      // Skip dedupe for auth changes to ensure fresh data after profile updates
+      me = await api.getCurrentUser();
       if (me) break;
       await new Promise(r => setTimeout(r, 120));
     }

@@ -79,14 +79,14 @@ export default function AboutPage() {
             <p>Intentional reflection through consistent photo journaling</p>
           </div>
           <div className={`${styles.highlightItem} reveal`} data-reveal>
-            <Lock className={styles.highlightIcon} size={24} />
-            <h3>True Privacy</h3>
-            <p>Your moments stay yours — no algorithms, no ads, no data collection</p>
-          </div>
-          <div className={`${styles.highlightItem} reveal`} data-reveal>
             <Archive className={styles.highlightIcon} size={24} />
             <h3>Personal Archive</h3>
             <p>Build a chronological story of your life that you can revisit anytime</p>
+          </div>
+          <div className={`${styles.highlightItem} reveal`} data-reveal>
+            <Lock className={styles.highlightIcon} size={24} />
+            <h3>True Privacy</h3>
+            <p>Your moments stay yours — no algorithms, ads or data collection</p>
           </div>
         </div>
       </div>

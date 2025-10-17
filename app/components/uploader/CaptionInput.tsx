@@ -1,23 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useTypingAnimation } from "./useTypingAnimation";
 import { PHRASES } from "./constants";
-import { Combobox } from "../Combobox";
-import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
-import { Camera, Settings, Image, Pen, Gauge, Monitor, Film } from "lucide-react";
-
-// Custom Spotify icon component
-const SpotifyIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.6-.12-.421.18-.78.6-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.241 1.081zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.42-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.781-.18-.601.18-1.2.78-1.381 4.5-1.14 11.28-.86 15.72 1.621.479.3.599 1.02.3 1.5-.3.48-.84.599-1.32.3z"/>
-  </svg>
-);
+import { Pen } from "lucide-react";
+import { SpotifyIcon } from "./SpotifyIcon";
+import { ExifInputs } from "./ExifInputs";
 
 interface CaptionInputProps {
   caption: string;
@@ -66,7 +52,6 @@ export function CaptionInput({
   // high-frequency updates which can affect focus.
   const { placeholder, startIndex, setPlaceholder } = useTypingAnimation(caption, !hasPreview && !captionFocused);
   const [localIndex, setLocalIndex] = useState<number>(startIndex >= 0 ? startIndex : 0);
-  const [activeExifField, setActiveExifField] = useState<string | null>(null);
 
   // Rotate the placeholder in-page while caption is empty and unfocused.
   // Schedule the next rotation after the CSS animation completes so the
@@ -245,154 +230,20 @@ export function CaptionInput({
         </div>
       </div>
       {/* EXIF inputs - optional */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
-        {activeExifField === null ? (
-          // Show all fields when none is active
-          <>
-            <CameraScopeSelector
-              camera={camera}
-              setCamera={setCamera}
-              disabled={!hasPreview || processing}
-              onFocus={() => setActiveExifField('camera')}
-              onBlur={() => setActiveExifField(null)}
-            />
-            <Combobox
-              value={lens || ''}
-              onChange={setLens || (() => {})}
-              options={LENS_PRESETS}
-              placeholder="Lens"
-              disabled={!hasPreview || processing}
-              icon={Settings}
-              onFocus={() => setActiveExifField('lens')}
-              onBlur={() => setActiveExifField(null)}
-            />
-            {!camera || !CAMERA_DIGITAL_PRESETS.includes(camera) ? (
-              <>
-                <Combobox
-                  value={filmType || ''}
-                  onChange={(value) => {
-                    setFilmType?.(value);
-                    if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
-                  }}
-                  options={FILM_PRESETS}
-                  placeholder="Film"
-                  disabled={!hasPreview || processing}
-                  icon={Image}
-                  onFocus={() => setActiveExifField('film')}
-                  onBlur={() => setActiveExifField(null)}
-                />
-                {filmType && (
-                  <Combobox
-                    value={filmIso || ''}
-                    onChange={setFilmIso || (() => {})}
-                    options={ISO_PRESETS}
-                    placeholder="ISO"
-                    disabled={!hasPreview || processing}
-                    icon={Gauge}
-                    onFocus={() => setActiveExifField('iso')}
-                    onBlur={() => setActiveExifField(null)}
-                  />
-                )}
-              </>
-            ) : null}
-          </>
-        ) : (
-          // Show only the active field in full width
-          <div style={{ width: '100%' }}>
-            {activeExifField === 'camera' && (
-              <CameraScopeSelector
-                camera={camera}
-                setCamera={setCamera}
-                disabled={!hasPreview || processing}
-                onFocus={() => setActiveExifField('camera')}
-                onBlur={() => setActiveExifField(null)}
-                expanded={true}
-              />
-            )}
-            {activeExifField === 'lens' && (
-              <Combobox
-                value={lens || ''}
-                onChange={setLens || (() => {})}
-                options={LENS_PRESETS}
-                placeholder="Lens"
-                disabled={!hasPreview || processing}
-                icon={Settings}
-                onFocus={() => setActiveExifField('lens')}
-                onBlur={() => setActiveExifField(null)}
-                expanded={true}
-              />
-            )}
-            {activeExifField === 'film' && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
-              <Combobox
-                value={filmType || ''}
-                onChange={(value) => {
-                  setFilmType?.(value);
-                  if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
-                }}
-                options={FILM_PRESETS}
-                placeholder="Film"
-                disabled={!hasPreview || processing}
-                icon={Image}
-                onFocus={() => setActiveExifField('film')}
-                onBlur={() => setActiveExifField(null)}
-                expanded={true}
-              />
-            )}
-            {activeExifField === 'iso' && filmType && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
-              <Combobox
-                value={filmIso || ''}
-                onChange={setFilmIso || (() => {})}
-                options={ISO_PRESETS}
-                placeholder="ISO"
-                disabled={!hasPreview || processing}
-                icon={Gauge}
-                onFocus={() => setActiveExifField('iso')}
-                onBlur={() => setActiveExifField(null)}
-                expanded={true}
-              />
-            )}
-          </div>
-        )}
-      </div>
+      <ExifInputs
+        camera={camera}
+        setCamera={setCamera}
+        lens={lens}
+        setLens={setLens}
+        filmType={filmType}
+        setFilmType={setFilmType}
+        filmIso={filmIso}
+        setFilmIso={setFilmIso}
+        hasPreview={hasPreview}
+        processing={processing}
+      />
     </div>
   );
 }
 
-// Small scoped selector component for picking between All/Digital/Film cameras
-function CameraScopeSelector({ camera, setCamera, disabled, onFocus, onBlur, expanded }: { camera?: string; setCamera?: (c: string) => void; disabled?: boolean; onFocus?: () => void; onBlur?: () => void; expanded?: boolean }) {
-  const [scope, setScope] = useState<'all' | 'digital' | 'film'>('all');
-  const getOptions = () => {
-    if (scope === 'digital') return CAMERA_DIGITAL_PRESETS;
-    if (scope === 'film') return CAMERA_FILM_PRESETS;
-    return CAMERA_PRESETS;
-  };
 
-  const header = (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' }}>
-      <button type="button" className={`btn mini ${scope === 'all' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setScope('all'); }} disabled={disabled} aria-pressed={scope === 'all'} title="All cameras">
-        <Camera size={14} />
-      </button>
-      <button type="button" className={`btn mini ${scope === 'digital' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setScope('digital'); }} disabled={disabled} aria-pressed={scope === 'digital'} title="Digital cameras">
-        <Monitor size={14} />
-      </button>
-      <button type="button" className={`btn mini ${scope === 'film' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setScope('film'); }} disabled={disabled} aria-pressed={scope === 'film'} title="Film cameras">
-        <Film size={14} />
-      </button>
-    </div>
-  );
-
-  return (
-    <Combobox
-      value={camera || ''}
-      onChange={setCamera || (() => {})}
-      options={getOptions()}
-      placeholder="Camera"
-      disabled={disabled}
-      icon={Camera}
-      header={header}
-      onFocus={onFocus}
-      onBlur={onBlur}
-      expanded={expanded}
-    />
-  );
-}

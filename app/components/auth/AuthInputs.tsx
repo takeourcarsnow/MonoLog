@@ -14,9 +14,10 @@ interface AuthInputsProps {
   mode: "signin" | "signup" | "forgot";
   generateUsername?: () => Promise<string | null>;
   generating?: boolean;
+  onForgotPassword?: () => void;
 }
 
-export function AuthInputs({ email, setEmail, password, setPassword, username, setUsername, mode, generateUsername, generating }: AuthInputsProps) {
+export function AuthInputs({ email, setEmail, password, setPassword, username, setUsername, mode, generateUsername, generating, onForgotPassword }: AuthInputsProps) {
   // validate against lowercased username (backend rules are lowercase); allow display capitalization
   const isUsernameValid = validUsername((username || "").toLowerCase());
 
@@ -71,16 +72,30 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
           autoCapitalize="none"
         />
         {mode !== "forgot" && (
-          <input
-            className="input fancy-input"
-            placeholder="Password"
-            type="password"
-            value={password}
-            name="password"
-            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            onChange={e => setPassword(e.target.value)}
-            aria-label="Password"
-          />
+          <div className="relative">
+            <input
+              className="input fancy-input pr-24"
+              placeholder="Password"
+              type="password"
+              value={password}
+              name="password"
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              onChange={e => setPassword(e.target.value)}
+              aria-label="Password"
+            />
+            {mode === "signin" && onForgotPassword && (
+              <div style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)' }}>
+                <button
+                  type="button"
+                  className="btn small dim"
+                  onClick={onForgotPassword}
+                  style={{ fontSize: 12, padding: '2px 6px' }}
+                >
+                  Forgot?
+                </button>
+              </div>
+            )}
+          </div>
         )}
         <div
           className={`username-wrap transition-all duration-300 ease-out ${mode === 'signup' ? 'open' : 'closed'}`}

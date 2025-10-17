@@ -61,6 +61,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         mode={mode}
         generateUsername={generateUsername}
         generating={generatingUsername}
+        onForgotPassword={() => setMode("forgot")}
       />
 
       {mode === "forgot" && (
@@ -86,18 +87,6 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         onSubmit={submit}
       />
 
-      {mode === "signin" && (
-        <div style={{ textAlign: 'center', marginTop: 8 }}>
-          <button
-            type="button"
-            className="btn small dim"
-            onClick={() => setMode("forgot")}
-            style={{ fontSize: 14 }}
-          >
-            Forgot password?
-          </button>
-        </div>
-      )}
     </form>
   );
 }

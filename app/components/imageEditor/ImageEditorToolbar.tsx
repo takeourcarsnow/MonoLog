@@ -27,7 +27,7 @@ function ImageEditorToolbarHeader({
   isFullscreen
 }: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited' | 'onToggleFullscreen' | 'isFullscreen'>) {
   return (
-    <header style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 0, gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
+    <header className="image-editor-header" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
       <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
         <span className="sr-only">Edit Photo</span>
       </div>

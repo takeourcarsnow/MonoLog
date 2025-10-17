@@ -93,6 +93,23 @@
   overflow: hidden;
 }
 
+/* Header positioning: raise the header buttons slightly to create more visual
+   separation from the photo. We translate the header upward and add bottom
+   padding on the canvas/container so the overlap doesn't hide content. */
+.image-editor-header {
+  /* move header up to create extra space below the control row */
+  transform: translateY(-6px);
+  /* ensure the header doesn't cover the canvas' interactive area */
+  z-index: 2;
+  /* add a small bottom margin to keep a consistent gap when transform isn't supported */
+  margin-bottom: 8px;
+}
+
+@media (max-width: 640px) {
+  /* smaller upward shift on mobile so buttons remain comfortably reachable */
+  .image-editor-header { transform: translateY(-3px); margin-bottom: 6px; }
+}
+
 .image-editor-panels-container {
   flex: 0 0 auto;
   max-height: 160px;

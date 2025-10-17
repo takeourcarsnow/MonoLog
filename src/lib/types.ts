@@ -175,6 +175,9 @@ export interface Api {
   addThreadReply(threadId: string, content: string): Promise<HydratedThreadReply>;
   deleteThreadReply(id: string): Promise<boolean>;
 
+  // Check for new threads since timestamp
+  hasNewThreads(since: string): Promise<boolean>;
+
   // sign out the current user (client-side)
   signOut(): Promise<void>;
 

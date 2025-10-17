@@ -372,3 +372,19 @@ body.debug-layout-outline .content { outline: 2px dashed rgba(0,200,0,0.9); }
 body.debug-layout-outline .tabbar { outline: 3px dashed rgba(0,120,255,0.9); }
 body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
 
+/* Communities icon pulse animation */
+@keyframes pulse-communities {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.communities-pulse {
+  animation: pulse-communities 2s ease-in-out infinite;
+}
+

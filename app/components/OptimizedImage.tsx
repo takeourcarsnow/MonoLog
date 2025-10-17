@@ -43,11 +43,6 @@ export const OptimizedImage = memo(function OptimizedImage({
   const [isLoading, setIsLoading] = useState(true);
   const [currentSrc, setCurrentSrc] = useState(src);
 
-  // Debugging: log initial src for browser console to help trace avatar issues
-  try {
-    console.debug('[OptimizedImage] init src:', { src, currentSrc, fallbackSrc });
-  } catch (e) {}
-
   // For small images (<=40px), don't use placeholder for performance
   const shouldUsePlaceholder = placeholder !== 'empty' && (!width || !height || (width > 40 && height > 40));
 

@@ -18,6 +18,11 @@ export function CommunitiesView() {
   const [error, setError] = useState<string | null>(null);
   const [pendingJoin, setPendingJoin] = useState<Set<string>>(new Set());
 
+  // Update last checked time when component mounts
+  useEffect(() => {
+    localStorage.setItem('communitiesLastChecked', new Date().toISOString());
+  }, []);
+
   const loadCommunities = useCallback(async () => {
     try {
       setLoading(true);

@@ -257,3 +257,18 @@ async function isCommunityMember(communityId: string): Promise<boolean> {
 
   return !!data;
 }
+
+export async function hasNewThreads(since: string): Promise<boolean> {
+  const sb = getSupabaseClient();
+  const token = await getAccessToken(sb);
+  const response = await fetch(`/api/threads/new?since=${encodeURIComponent(since)}`, {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to check for new threads');
+  }
+  const data = await response.json();
+  return data.hasNewThreads;
+}

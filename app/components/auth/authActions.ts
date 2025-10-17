@@ -82,8 +82,8 @@ export async function checkUsernameAvailability(username: string): Promise<boole
       body: JSON.stringify({ username })
     });
     if (!resp.ok) {
-      // API returns 404 when not found; treat as unavailable=false
-      if (resp.status === 404) return false;
+      // API returns 404 when not found; treat as available=true
+      if (resp.status === 404) return true;
       return false;
     }
     const body = await resp.json().catch(() => ({}));

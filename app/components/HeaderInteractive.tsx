@@ -7,6 +7,7 @@ import { usePrevPathToggle } from "./usePrevPathToggle";
 import { Info, Star } from "lucide-react";
 import { Users } from "lucide-react";
 import Link from "next/link";
+import { api } from "@/src/lib/api";
 
 // Non-critical header components loaded dynamically
 const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { ssr: false });
@@ -16,6 +17,7 @@ export function HeaderInteractive() {
   const router = useRouter();
   const [isLogoAnimating, setIsLogoAnimating] = useState(false);
   const pathname = usePathname();
+  const [hasNewThreads, setHasNewThreads] = useState(false);
 
   const { toggle: toggleFavorites, isActive: favIsActive } = usePrevPathToggle('/favorites', 'monolog:prev-path-before-favorites');
 
@@ -81,6 +83,30 @@ export function HeaderInteractive() {
     };
   }, []);
 
+  // Check for new threads periodically
+  useEffect(() => {
+    const checkForNewThreads = async () => {
+      try {
+        const lastChecked = localStorage.getItem('communitiesLastChecked');
+        if (!lastChecked) return;
+
+        const hasNew = await api.hasNewThreads(lastChecked);
+        setHasNewThreads(hasNew);
+      } catch (e) {
+        // Ignore errors - user might not be authenticated or API might be down
+        setHasNewThreads(false);
+      }
+    };
+
+    // Check immediately
+    checkForNewThreads();
+
+    // Check every 30 seconds
+    const interval = setInterval(checkForNewThreads, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <>
       <button
@@ -98,7 +124,7 @@ export function HeaderInteractive() {
       </button>
       <div className="header-actions" id="header-actions">
         {/* Communities button moved from navbar to header - left-most */}
-        <Link href="/communities" className={`btn icon about-btn no-tap-effects ${pathname === '/communities' ? 'active' : ''}`} aria-label="Communities">
+        <Link href="/communities" className={`btn icon about-btn no-tap-effects ${pathname === '/communities' ? 'active' : ''} ${hasNewThreads ? 'communities-pulse' : ''}`} aria-label="Communities">
           <Users size={20} strokeWidth={2} />
         </Link>
         <button

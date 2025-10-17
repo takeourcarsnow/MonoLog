@@ -52,13 +52,19 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Allow Supabase storage domain
+    // Allow Supabase storage domain and Spotify images
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'gfvdnpcrscszzyicsycp.supabase.co',
         port: '',
         pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.scdn.co',
+        port: '',
+        pathname: '/image/**',
       },
     ],
   },

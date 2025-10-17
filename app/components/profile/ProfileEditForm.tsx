@@ -1,7 +1,8 @@
 import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
 import type { FormEvent } from 'react';
 import { useRouter } from "next/navigation";
-import { Twitter, Instagram, Github, Facebook, Globe } from "lucide-react";
+import { Twitter, Instagram, Facebook, Globe } from "lucide-react";
+import { SpotifyIcon } from "../uploader/SpotifyIcon";
 import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import type { User } from "@/src/lib/types";
@@ -30,7 +31,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     const [editBio, setEditBio] = useState("");
     const [editTwitter, setEditTwitter] = useState("");
     const [editInstagram, setEditInstagram] = useState("");
-  const [editGithub, setEditGithub] = useState("");
+  const [editSpotify, setEditSpotify] = useState("");
   const [editFacebook, setEditFacebook] = useState("");
     const [editWebsite, setEditWebsite] = useState("");
     const [editProcessing, setEditProcessing] = useState(false);
@@ -74,7 +75,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         const socialLinks: Record<string, string | undefined> = {};
         if (editTwitter.trim()) socialLinks.twitter = editTwitter.trim();
         if (editInstagram.trim()) socialLinks.instagram = editInstagram.trim();
-        if (editGithub.trim()) socialLinks.github = editGithub.trim();
+        if (editSpotify.trim()) socialLinks.spotify = editSpotify.trim();
         if (editFacebook.trim()) socialLinks.facebook = editFacebook.trim();
         if (editWebsite.trim()) socialLinks.website = editWebsite.trim();
 
@@ -127,7 +128,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         setEditBio((user.bio || "").slice(0,200));
         setEditTwitter(user.socialLinks?.twitter || "");
         setEditInstagram(user.socialLinks?.instagram || "");
-  setEditGithub(user.socialLinks?.github || "");
+  setEditSpotify(user.socialLinks?.spotify || "");
   setEditFacebook(user.socialLinks?.facebook || "");
         setEditWebsite(user.socialLinks?.website || "");
         setIsEditingProfile(true);
@@ -177,10 +178,10 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
       const t = v.trim();
       return t.startsWith('@') || t.includes('instagram.com') || t.includes('instagr.am');
     };
-    const looksLikeGithub = (v?: string) => {
+    const looksLikeSpotify = (v?: string) => {
       if (!v) return false;
       const t = v.trim();
-      if (t.includes('github.com')) return true;
+      if (t.includes('spotify.com')) return true;
       // simple username pattern: alphanumeric, hyphens
       return /^[a-zA-Z0-9-]+$/.test(t);
     };
@@ -257,13 +258,6 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         <div className="social-drawer" role="region">
           <div style={{ display: 'grid', gap: 8 }}>
             <label className="label-group">
-              <div className="muted-label sr-only">Twitter</div>
-              <div className="input-container">
-                <input className="input" placeholder="Twitter" value={editTwitter} onChange={e => setEditTwitter(e.target.value)} onBlur={() => setEditTwitter(ensureAt(editTwitter))} />
-                <Twitter size={16} className={`input-icon ${looksLikeTwitter(editTwitter) ? 'twitter-filled' : ''}`} />
-              </div>
-            </label>
-            <label className="label-group">
               <div className="muted-label sr-only">Instagram</div>
               <div className="input-container">
                 <input className="input" placeholder="Instagram" value={editInstagram} onChange={e => setEditInstagram(e.target.value)} onBlur={() => setEditInstagram(ensureAt(editInstagram))} />
@@ -271,10 +265,17 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
               </div>
             </label>
             <label className="label-group">
-              <div className="muted-label sr-only">GitHub</div>
+              <div className="muted-label sr-only">Spotify</div>
               <div className="input-container">
-                <input className="input" placeholder="GitHub" value={editGithub} onChange={e => setEditGithub(e.target.value)} />
-                <Github size={16} className={`input-icon ${looksLikeGithub(editGithub) ? 'github-filled' : ''}`} />
+                <input className="input" placeholder="Spotify" value={editSpotify} onChange={e => setEditSpotify(e.target.value)} />
+                <SpotifyIcon size={16} className={`input-icon ${looksLikeSpotify(editSpotify) ? 'spotify-filled' : ''}`} />
+              </div>
+            </label>
+            <label className="label-group">
+              <div className="muted-label sr-only">Twitter</div>
+              <div className="input-container">
+                <input className="input" placeholder="Twitter" value={editTwitter} onChange={e => setEditTwitter(e.target.value)} onBlur={() => setEditTwitter(ensureAt(editTwitter))} />
+                <Twitter size={16} className={`input-icon ${looksLikeTwitter(editTwitter) ? 'twitter-filled' : ''}`} />
               </div>
             </label>
             <label className="label-group">

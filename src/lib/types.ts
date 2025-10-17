@@ -9,8 +9,8 @@ export type User = {
   socialLinks?: {
     twitter?: string;
     instagram?: string;
-    github?: string;
-    linkedin?: string;
+    spotify?: string;
+    facebook?: string;
     website?: string;
     [key: string]: string | undefined;
   };

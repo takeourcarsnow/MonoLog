@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import React, { ReactNode } from 'react';
 
 interface PullToRefreshIndicatorProps {
@@ -43,7 +44,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         }}
       >
         <div className="flex items-center space-x-2">
-          <img src="/logo.svg" alt="logo" className="w-5 h-5 pull-to-refresh-logo" style={{ animation: 'fadeIn 50ms forwards, subtleSpin 1.5s infinite' }} />
+          <Image src="/logo.svg" alt="logo" width={20} height={20} className="w-5 h-5 pull-to-refresh-logo" style={{ animation: 'fadeIn 50ms forwards, subtleSpin 1.5s infinite' }} />
         </div>
       </div>
     </>

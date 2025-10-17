@@ -1,12 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, memo } from "react";
 import { api } from "@/src/lib/api";
 import { Home } from "lucide-react";
 import { FeedPage } from "./FeedPage";
 
-export function FeedView() {
+export const FeedView = memo(function FeedView() {
   const fetchFollowingFeed = useCallback((opts: { limit: number; before?: string }) => api.getFollowingFeedPage(opts), []);
 
   return (
@@ -19,4 +19,4 @@ export function FeedView() {
       deferFollowChanges={true}
     />
   );
-}
+});

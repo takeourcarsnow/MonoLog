@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { SpotifyMeta } from "./hooks/useSpotifyMeta";
 
 interface SpotifySectionProps {
@@ -22,7 +23,7 @@ export const SpotifySection = ({ showSpotify, spotifyLink, spotifyMeta }: Spotif
             aria-hidden={!spotifyMeta}
           >
             {spotifyMeta?.thumbnail_url ? (
-              <img
+              <Image
                 src={spotifyMeta.thumbnail_url}
                 alt={spotifyMeta.title ? `${spotifyMeta.title} album art` : 'Spotify album art'}
                 width={36}

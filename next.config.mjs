@@ -29,7 +29,7 @@ const nextConfig = {
   experimental: {
     // Reduce bundle size by auto-rewriting deep imports for listed packages.
     // lucide-react tree-shakes well, but this shaves a few KB of parser/edge cases.
-    optimizePackageImports: ['lucide-react', 'react-swipeable'],
+    optimizePackageImports: ['lucide-react', 'react-swipeable', '@supabase/supabase-js'],
     // Enable faster builds with turbo
     turbo: {
       rules: {
@@ -79,6 +79,33 @@ const nextConfig = {
         ...config.optimization,
         usedExports: true,
         sideEffects: false,
+        // Split chunks more aggressively
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks?.cacheGroups,
+            // Separate vendor chunks
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              priority: 10,
+            },
+            // Separate large libraries
+            supabase: {
+              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+              name: 'supabase',
+              chunks: 'all',
+              priority: 20,
+            },
+            lucide: {
+              test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+              name: 'lucide',
+              chunks: 'all',
+              priority: 20,
+            },
+          },
+        },
       };
     }
 

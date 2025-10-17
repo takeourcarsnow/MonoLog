@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Image from 'next/image';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter, useParams } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { Button } from "@/app/components/Button";
@@ -253,9 +254,11 @@ export function EditCommunityView() {
               />
               {imagePreview && (
                 <div className="mt-3">
-                  <img
+                  <Image
                     src={imagePreview}
                     alt="Community preview"
+                    width={128}
+                    height={128}
                     className="w-32 h-32 object-cover rounded-md border"
                   />
                   <button

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 
@@ -158,9 +159,11 @@ export function InstallPrompt() {
 
       <div className="pr-8">
         <div className="flex items-center gap-2 mb-2">
-          <img
+          <Image
             src="/logo.svg"
             alt="MonoLog"
+            width={40}
+            height={40}
             className="w-10 h-10 rounded-lg"
           />
           <h3 id="install-title" className="text-lg font-semibold text-gray-900 dark:text-white">

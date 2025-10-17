@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import React from 'react';
 import OfflineButton from '../components/OfflineButton';
 
@@ -11,9 +12,11 @@ export default function OfflinePage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="max-w-md w-full mx-4 text-center">
         <div className="mb-8">
-          <img
+          <Image
             src="/logo.svg"
             alt="MonoLog"
+            width={64}
+            height={64}
             className="w-16 h-16 mx-auto mb-4"
           />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">

@@ -177,6 +177,14 @@ function WebVitalsScript() {
   React.useEffect(() => {
     (async () => {
       try {
+        const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals');
+
+        getCLS(console.log);
+        getFID(console.log);
+        getFCP(console.log);
+        getLCP(console.log);
+        getTTFB(console.log);
+
         // Register service worker for caching
   if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production' && !isInAppBrowser()) {
           navigator.serviceWorker.register('/sw.js').then((registration) => {

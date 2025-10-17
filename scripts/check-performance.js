@@ -48,7 +48,7 @@ try {
 
 // Check 2: PostCard has React.memo
 try {
-  const postCardPath = path.join(__dirname, '..', 'src', 'components', 'PostCard.tsx');
+  const postCardPath = path.join(__dirname, '..', 'app', 'components', 'PostCard.tsx');
   const postCardContent = fs.readFileSync(postCardPath, 'utf8');
   
   if (postCardContent.includes('memo(PostCardComponent')) {

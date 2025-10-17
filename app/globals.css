@@ -11,117 +11,24 @@ html, body {
   height: 100%;
 }
 
-/* Allow body scrolling on about page */
-body.about-page-scroll,
-html.about-page-scroll {
-  overflow: auto !important;
-}
-
-/* Allow body scrolling on favorites page */
-body.favorites-page-scroll,
-html.favorites-page-scroll {
-  overflow: auto !important;
-}
-
-/* Allow body scrolling on communities page */
-body.communities-page-scroll,
-html.communities-page-scroll {
-  overflow: auto !important;
-}
-
-/* Allow body scrolling on community page */
-body.community-page-scroll,
-html.community-page-scroll {
-  overflow: auto !important;
-}
-
-/* Allow body scrolling on thread page */
-body.thread-page-scroll,
-html.thread-page-scroll {
-  overflow: auto !important;
-}
-
-/* Allow body scrolling on create thread page */
-body.create-thread-page-scroll,
-html.create-thread-page-scroll {
+/* Allow body scrolling on pages that need it */
+body[class*="page-scroll"],
+html[class*="page-scroll"] {
   overflow: auto !important;
 }
 
 /* If the app uses an internal scrolling container (.content) we must also
-   allow that container to scroll when on the About page. The .content
+   allow that container to scroll when on certain pages. The .content
    rules in layout.css set overflow: hidden for most routes; this selector
-   overrides that so the About page can scroll normally. */
+   overrides that so the pages can scroll normally. */
 /* Prefer a strictly local selector using :has() — when the content area
-   contains the About wrapper, allow scrolling. This keeps the override
-   strictly scoped to the About subtree. */
-.content:has(.about-wrapper) {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Fallback: older browsers that don't support :has can rely on the
-   body/html class added by the About page JS. */
-body.about-page-scroll .content,
-html.about-page-scroll .content {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* If .content contains the Favorites page, allow internal scrolling too */
-.content:has(.favorites) {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Fallback for browsers not supporting :has() */
-body.favorites-page-scroll .content,
-html.favorites-page-scroll .content {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* If .content contains the Communities page, allow internal scrolling too */
-.content:has(.communities) {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Fallback for browsers not supporting :has() */
-body.communities-page-scroll .content,
-html.communities-page-scroll .content {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* If .content contains the Community page, allow internal scrolling too */
-.content:has(.community) {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* If .content contains the Thread page, allow internal scrolling too */
-.content:has(.thread) {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* If .content contains the Create Thread page, allow internal scrolling too */
+   contains the page wrapper, allow scrolling. This keeps the override
+   strictly scoped. */
+.content:has(.about-wrapper),
+.content:has(.favorites),
+.content:has(.communities),
+.content:has(.community),
+.content:has(.thread),
 .content:has(.create-thread) {
   overflow: auto !important;
   height: auto !important;
@@ -129,27 +36,10 @@ html.communities-page-scroll .content {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Fallback for browsers not supporting :has() */
-body.community-page-scroll .content,
-html.community-page-scroll .content {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Fallback for browsers not supporting :has() */
-body.thread-page-scroll .content,
-html.thread-page-scroll .content {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Fallback for browsers not supporting :has() */
-body.create-thread-page-scroll .content,
-html.create-thread-page-scroll .content {
+/* Fallback: older browsers that don't support :has can rely on the
+   body/html class added by the page JS. */
+body[class*="page-scroll"] .content,
+html[class*="page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
@@ -221,11 +111,6 @@ html.create-thread-page-scroll .content {
 .day-header-anim {
   animation: day-header-in 260ms var(--preloader-ease-quick) both;
   will-change: transform, opacity;
-}
-
-@keyframes day-header-in {
-  0% { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Minimal active state indicator for navigation buttons */
@@ -308,7 +193,6 @@ html.create-thread-page-scroll .content {
 }
 
 /* Import modular CSS files */
-@import './styles/variables.css';
 @import './styles/animations.css';
 @import './styles/global.css';
 @import './styles/header.css';

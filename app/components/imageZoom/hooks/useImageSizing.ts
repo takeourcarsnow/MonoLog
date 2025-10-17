@@ -268,5 +268,11 @@ export const useImageSizing = (
         }
       } catch (_) {}
     };
-  }, [isFullscreen, src, containerRef, imgRef]);
+  // Include ref.current in the dependency list so the effect re-runs when
+  // the refs are populated by the ImageZoom render. Previously the effect
+  // could run before refs were assigned and never re-run, leaving sizing
+  // logic inactive on single-post views after the refactor.
+  //
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullscreen, src, containerRef.current, imgRef.current]);
 };

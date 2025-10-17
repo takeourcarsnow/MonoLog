@@ -35,17 +35,6 @@
   --tab-color: var(--primary);
 }
 
-/* calendar selected-day header animation */
-.day-header-anim {
-  animation: day-header-in 260ms var(--preloader-ease-quick) both;
-  will-change: transform, opacity;
-}
-
-@keyframes day-header-in {
-  0% { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
 /* Header favorites button: disabled - no special coloring when active */
 
 /* About header button active styling: disabled - no special coloring when active */

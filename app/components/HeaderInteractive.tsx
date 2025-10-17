@@ -11,7 +11,6 @@ import Link from "next/link";
 // Non-critical header components loaded dynamically
 const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { ssr: false });
 const AccountSwitcher = dynamic(() => import("./AccountSwitcher").then(mod => mod.AccountSwitcher), { ssr: false });
-const InstallButton = dynamic(() => import("./InstallButton").then(mod => mod.InstallButton), { ssr: false });
 
 export function HeaderInteractive() {
   const router = useRouter();
@@ -111,7 +110,6 @@ export function HeaderInteractive() {
         >
           <Info size={20} strokeWidth={2} />
         </button>
-        <InstallButton />
         <ThemeToggle />
         <button
           className={`btn icon favorites-btn no-tap-effects ${favIsActive ? 'active' : ''}`}

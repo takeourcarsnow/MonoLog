@@ -128,13 +128,13 @@ export function EditCommunityView() {
         imageUrl = imagePreview;
       }
 
-      await api.updateCommunity(slug, {
+      const updatedCommunity = await api.updateCommunity(slug, {
         name: name.trim(),
         description: description.trim(),
         imageUrl
       });
 
-      router.push(`/communities/${community?.slug}`);
+      router.push(`/communities/${updatedCommunity.slug}`);
     } catch (e: any) {
       setError(e?.message || 'Failed to update community');
     } finally {

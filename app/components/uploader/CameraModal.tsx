@@ -54,7 +54,7 @@ export function CameraModal({
                 <Button onClick={onCapture} loading={processing}>
                   {processing ? (
                     <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-                      <LogoLoader size={20} />
+                      <LogoLoader size={20} variant="other" />
                       <span>Processing</span>
                     </span>
                   ) : 'Capture'}

@@ -3,14 +3,21 @@ import React from "react";
 
 type Props = {
   size?: number;
-  variant?: 'theme' | 'reverse';
+  // support legacy 'theme'|'reverse' and new 'first'|'other' variants
+  variant?: 'theme' | 'reverse' | 'first' | 'other';
 };
 
 export default function LogoLoader({ size = 72, variant = 'theme' }: Props) {
-  const className = variant === 'reverse' ? 'logo-subtle-reverse' : 'logo-subtle-theme';
+  // Map variants to explicit CSS classes. Keep backward compatibility with
+  // the previous 'theme' and 'reverse' names by treating them as 'other'.
+  let className = 'logo-subtle-theme';
+  if (variant === 'reverse') className = 'logo-subtle-reverse';
+  if (variant === 'first') className = 'logo-first';
+  if (variant === 'other') className = 'logo-other';
+
   return (
-    // Use high-res PNG so even small rendered sizes look crisp on Retina screens
-    <Image src="/icon-1024.png" alt="MonoLog Logo" width={size} height={size} className={className} />
+    // Use SVG logo for better scalability and transparency
+    <Image src="/logo.svg" alt="MonoLog Logo" width={size} height={size} className={className} />
   );
 }
 

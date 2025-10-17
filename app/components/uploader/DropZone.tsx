@@ -24,7 +24,7 @@ export function DropZone({
     <div className="drop-zone" ref={dropRef}>
       {processing && (
         <div className="drop-zone-loader" role="status" aria-live="polite">
-          <LogoLoader size={86} variant="theme" />
+          <LogoLoader size={86} variant="other" />
         </div>
       )}
 

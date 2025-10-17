@@ -59,15 +59,6 @@ export function CommunityView() {
     }
   }, [currentUser, community]);
 
-  // Debugging: help inspect the loaded community in browser console
-  useEffect(() => {
-    if (community) {
-      try {
-        console.debug('[CommunityView] loaded community:', community);
-      } catch (e) {}
-    }
-  }, [community]);
-
   const handleJoinLeave = async () => {
     if (!community) return;
 
@@ -206,9 +197,6 @@ export function CommunityView() {
           {/* Compute community image src explicitly and log helpful identifiers for debugging */}
           {(() => {
             const imageSrc = ((community.imageUrl || "") + "").trim() || "/logo.svg";
-            try {
-              console.debug('[CommunityView] header image', { communityId: community.id, imageUrl: community.imageUrl, chosenSrc: imageSrc });
-            } catch (e) {}
             return (
               <OptimizedImage
                 src={imageSrc}
@@ -289,16 +277,13 @@ export function CommunityView() {
             <p>No threads yet. {community.isMember ? 'Be the first to create one!' : 'Join the community to start discussing!'}</p>
           </div>
         ) : (
-          threads.map((thread) => (
-            <Link key={thread.id} href={`/communities/${community.slug}/thread/${thread.slug}`} className="card block">
+          threads.map((thread, index) => (
+            <Link key={thread.id} href={`/communities/${community.slug}/thread/${thread.slug}`} className="card block thread-card" style={{ animationDelay: `${index * 0.15}s` }}>
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   {(() => {
                     const userAny = (thread.user as any) || {};
                     const avatarSrc = ((userAny.avatarUrl || userAny.avatar_url || "") + "").trim() || "/logo.svg";
-                    try {
-                      console.debug('[CommunityView] thread avatar', { threadId: thread.id, userId: userAny.id, avatarUrl: userAny.avatarUrl, avatar_url: userAny.avatar_url, chosenSrc: avatarSrc });
-                    } catch (e) {}
                     return (
                       <Link href={`/${thread.user.username}`}>
                         <OptimizedImage

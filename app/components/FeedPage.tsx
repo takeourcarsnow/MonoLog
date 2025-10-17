@@ -145,12 +145,7 @@ export function FeedPage({
 
     return (
       <>
-        <div style={{ display: view === 'grid' ? 'block' : 'none' }}>
-          {gridView}
-        </div>
-        <div style={{ display: view === 'list' ? 'block' : 'none' }}>
-          {listView}
-        </div>
+        {view === 'grid' ? gridView : listView}
       </>
     );
   }, [loading, posts, view, hasMore, loadingMore, setSentinel, error, emptyMessage, title, viewStorageKey]);

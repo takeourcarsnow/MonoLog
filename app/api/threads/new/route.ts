@@ -52,7 +52,53 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: threadsError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ hasNewThreads: threads && threads.length > 0 });
+    // Also check for new replies in threads that the user has participated in
+    // Get threads where user is the author or has replied
+    const { data: participatedThreads, error: participatedError } = await sb
+      .from('threads')
+      .select('id')
+      .or(`user_id.eq.${user.id}`)
+      .in('community_id', communityIds);
+
+    if (participatedError) {
+      return NextResponse.json({ error: participatedError.message }, { status: 500 });
+    }
+
+    // Also get threads where user has replied (but not authored)
+    const { data: repliedThreads, error: repliedError } = await sb
+      .from('thread_replies')
+      .select('thread_id')
+      .eq('user_id', user.id);
+
+    if (repliedError) {
+      return NextResponse.json({ error: repliedError.message }, { status: 500 });
+    }
+
+    const participatedThreadIds = participatedThreads ? participatedThreads.map(t => t.id) : [];
+    const repliedThreadIds = repliedThreads ? repliedThreads.map(r => r.thread_id as string) : [];
+    const allRelevantThreadIds = [...new Set([...participatedThreadIds, ...repliedThreadIds])];
+
+    let hasNewReplies = false;
+    if (allRelevantThreadIds.length > 0) {
+      // Check for new replies in these threads
+      const { data: replies, error: repliesError } = await sb
+        .from('thread_replies')
+        .select('id')
+        .in('thread_id', allRelevantThreadIds)
+        .gt('created_at', since)
+        .neq('user_id', user.id) // Don't notify about user's own replies
+        .limit(1);
+
+      if (repliesError) {
+        return NextResponse.json({ error: repliesError.message }, { status: 500 });
+      }
+
+      hasNewReplies = replies && replies.length > 0;
+    }
+
+    const hasNewActivity = (threads && threads.length > 0) || hasNewReplies;
+
+    return NextResponse.json({ hasNewThreads: hasNewActivity });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

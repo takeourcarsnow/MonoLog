@@ -66,6 +66,12 @@ const nextConfig = {
         port: '',
         pathname: '/image/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'image-cdn-ak.spotifycdn.com',
+        port: '',
+        pathname: '/image/**',
+      },
     ],
   },
   // Enable SWC minification for better performance

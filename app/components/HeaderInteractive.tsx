@@ -1,25 +1,70 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { usePrevPathToggle } from "./usePrevPathToggle";
 import { Info, Star } from "lucide-react";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/src/lib/api";
+import { useToast } from "./Toast";
 
 // Non-critical header components loaded dynamically
 const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { ssr: false });
 const AccountSwitcher = dynamic(() => import("./AccountSwitcher").then(mod => mod.AccountSwitcher), { ssr: false });
 
 export function HeaderInteractive() {
+  console.log('HeaderInteractive rendering');
   const router = useRouter();
   const [isLogoAnimating, setIsLogoAnimating] = useState(false);
   const pathname = usePathname();
   const [hasNewThreads, setHasNewThreads] = useState(false);
+  const prevHasNewThreadsRef = useRef(false);
+  const { show } = useToast();
 
   const { toggle: toggleFavorites, isActive: favIsActive } = usePrevPathToggle('/favorites', 'monolog:prev-path-before-favorites');
+
+  // Define checkForNewThreads function outside useEffect so it can be exposed globally
+  const checkForNewThreads = useCallback(async (forceToast = false) => {
+    console.log('checkForNewThreads called, forceToast:', forceToast);
+    try {
+      let lastChecked = localStorage.getItem('communitiesLastChecked');
+      if (!lastChecked) {
+        // Initialize lastChecked to now if not set
+        lastChecked = new Date().toISOString();
+        localStorage.setItem('communitiesLastChecked', lastChecked);
+        setHasNewThreads(false);
+        return;
+      }
+
+      const hasNew = await api.hasNewThreads(lastChecked);
+      console.log('hasNewThreads result:', hasNew);
+      
+      if (forceToast) {
+        console.log('Forcing toast display');
+        show("New posts in communities (forced)", 3000, "info");
+      } else {
+        setHasNewThreads(hasNew);
+      }
+    } catch (e) {
+      console.log('Error in checkForNewThreads:', e);
+      // Ignore errors - user might not be authenticated or API might be down
+      setHasNewThreads(false);
+    }
+  }, [show]);
+
+  // Expose for console testing
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      (window as any).checkCommunities = (forceToast = false) => checkForNewThreads(forceToast);
+      (window as any).setCommunitiesPulse = (pulse = true) => {
+        console.log('Setting communities pulse to:', pulse);
+        setHasNewThreads(pulse);
+      };
+      console.log('Communities functions available: checkCommunities(forceToast?), setCommunitiesPulse(pulse?)');
+    }
+  }, [checkForNewThreads]);
 
   const handleLogoClick = () => {
     // Use the Web Animations API so the animation is driven by the browser
@@ -85,27 +130,30 @@ export function HeaderInteractive() {
 
   // Check for new threads periodically
   useEffect(() => {
-    const checkForNewThreads = async () => {
-      try {
-        const lastChecked = localStorage.getItem('communitiesLastChecked');
-        if (!lastChecked) return;
-
-        const hasNew = await api.hasNewThreads(lastChecked);
-        setHasNewThreads(hasNew);
-      } catch (e) {
-        // Ignore errors - user might not be authenticated or API might be down
-        setHasNewThreads(false);
-      }
-    };
-
     // Check immediately
     checkForNewThreads();
 
     // Check every 30 seconds
     const interval = setInterval(checkForNewThreads, 30000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+      // Clean up global function
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+        delete (window as any).checkCommunities;
+      }
+    };
+  }, [checkForNewThreads]);
+
+  // Show toast when new threads are detected
+  useEffect(() => {
+    console.log('hasNewThreads changed:', hasNewThreads, 'prev:', prevHasNewThreadsRef.current);
+    if (hasNewThreads && !prevHasNewThreadsRef.current) {
+      console.log('Showing toast for new community posts');
+      show("New posts in communities", 3000, "info");
+    }
+    prevHasNewThreadsRef.current = hasNewThreads;
+  }, [hasNewThreads, show]);
 
   return (
     <>

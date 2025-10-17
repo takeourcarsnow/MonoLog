@@ -39,6 +39,10 @@ const PWAHealthCheck = dynamic(() => import('@/app/components/PWAAnalytics').the
 // Render Header at root so fixed positioning is relative to the viewport.
 const Header = dynamic(() => import('@/app/components/Header').then(mod => mod.Header), { ssr: false });
 
+// Toast provider for the entire app
+const ToastProvider = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastProvider), { ssr: false });
+const ToastHost = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastHost), { ssr: false });
+
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 
 export const metadata: Metadata = {
@@ -152,18 +156,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <a href="#view" className="skip-link">Skip to content</a>
-        <AppPreloader />
-        <Header />
-        <div id="app-root">
-          <ClientErrorBoundary>
-            <AppShell>{children}</AppShell>
-          </ClientErrorBoundary>
-        </div>
-        <Navbar />
-        <InertPolyfillClient />
-        <PWAAnalytics />
-        <PWAHealthCheck />
+        <ToastProvider>
+          <a href="#view" className="skip-link">Skip to content</a>
+          <AppPreloader />
+          <Header />
+          <div id="app-root">
+            <ClientErrorBoundary>
+              <AppShell>{children}</AppShell>
+            </ClientErrorBoundary>
+          </div>
+          <Navbar />
+          <InertPolyfillClient />
+          <PWAAnalytics />
+          <PWAHealthCheck />
+          <ToastHost />
+        </ToastProvider>
   <noscript>MonoLog — Your day in pictures. Requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}
         {process.env.NODE_ENV === 'production' ? <WebVitalsScript /> : null}

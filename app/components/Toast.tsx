@@ -67,6 +67,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     }
   }, [normalizeMessage, show]);
   
+  // Expose toast functions to window for console testing in development
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    (window as any).showToast = show;
+    (window as any).showToastFriendly = showFriendly;
+    console.log('Toast functions available: showToast, showToastFriendly');
+  }
+  
   return (
     <Ctx.Provider value={{ show, showFriendly }}>
       {children}

@@ -43,12 +43,16 @@ export const useSpotifyMeta = (spotifyLink?: string, postId?: string) => {
         if (mounted) {
           setSpotifyMeta(meta);
           // Notify layout observers (image sizing) that the card structure changed
-          try { window.dispatchEvent(new CustomEvent('monolog:card_layout_change')); } catch (_) {}
+          setTimeout(() => {
+            try { window.dispatchEvent(new CustomEvent('monolog:card_layout_change')); } catch (_) {}
+          }, 0);
         }
       } catch (e) {
         // Cache a null to avoid retry storms
         spotifyMetaCache.set(spotifyLink, null);
-        try { window.dispatchEvent(new CustomEvent('monolog:card_layout_change')); } catch (_) {}
+        setTimeout(() => {
+          try { window.dispatchEvent(new CustomEvent('monolog:card_layout_change')); } catch (_) {}
+        }, 0);
       }
     };
 

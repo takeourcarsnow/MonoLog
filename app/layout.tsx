@@ -32,6 +32,9 @@ const Navbar = dynamic(() => import('@/app/components/NavBar').then(mod => mod.N
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfillClient'), { ssr: false });
 
+// Render Header at root so fixed positioning is relative to the viewport.
+const Header = dynamic(() => import('@/app/components/Header').then(mod => mod.Header), { ssr: false });
+
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 
 export const metadata: Metadata = {
@@ -110,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <a href="#view" className="skip-link">Skip to content</a>
         <AppPreloader />
+        <Header />
         <div id="app-root">
           <ClientErrorBoundary>
             <AppShell>{children}</AppShell>

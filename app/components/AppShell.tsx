@@ -14,8 +14,6 @@ import { useAppShellNavigation } from "./AppShellNavigation";
 import { RESERVED_ROUTES } from "@/src/lib/types";
 import { SlideWrapper } from "./SlideWrapper";
 
-// Non-critical components loaded dynamically
-const Header = dynamic(() => import("./Header").then(mod => mod.Header), { ssr: false });
 const NotificationListener = dynamic(() => import("./NotificationListener").then(mod => mod.NotificationListener), { ssr: false });
 const InstallPrompt = dynamic(() => import("./InstallPrompt").then(mod => mod.InstallPrompt), { ssr: false });
 const ToastHost = dynamic(() => import("./Toast").then(mod => mod.ToastHost), { ssr: false });
@@ -33,7 +31,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      <Header />
       <div className="app-content">
         <main
           ref={mainRef}

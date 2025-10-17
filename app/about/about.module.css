@@ -278,38 +278,8 @@
 }
 
 /* Specific delays for different sections */
-.aboutSection:nth-of-type(1) {
-  animation-delay: 0.3s;
-}
-
 .aboutSection:nth-of-type(2) {
   animation-delay: 0.5s;
-}
-
-.featureList {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.featureItem {
-  font-size: 1rem;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--bg-elev);
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  transition: all 0.2s ease;
-}
-
-.featureItem:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-color: var(--primary);
 }
 
 .highlightsSection {
@@ -559,87 +529,6 @@
   }
 }
 
-.ritualGrid {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  margin-top: 16px;
-}
-
-.ritualItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 20px;
-  background: var(--bg-elev);
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  transition: all 0.3s ease;
-  animation: fadeInUp 0.8s ease-out 0.6s both;
-}
-
-.ritualItem:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  border-color: var(--primary);
-}
-
-.ritualIcon {
-  font-size: 2rem;
-  animation: bounceIn 0.6s ease-out;
-}
-
-.ritualTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0;
-}
-
-.ritualDesc {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin: 0;
-  text-align: center;
-}
-
-.footerText {
-  margin: 16px 0 8px 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-  font-style: italic;
-  animation: fadeInUp 0.8s ease-out 0.8s both;
-}
-
-.installSection {
-  margin-bottom: 12px;
-  animation: fadeInUp 0.8s ease-out 0.7s both;
-  display: flex;
-  justify-content: center;
-}
-
-/* Small screens (phones) */
-@media (max-width: 480px) {
-  .installSection {
-    margin-bottom: 8px;
-  }
-}
-
-/* Tablet and larger screens */
-@media (min-width: 768px) {
-  .installSection {
-    margin-bottom: 24px;
-  }
-}
-
-/* Desktop and larger screens */
-@media (min-width: 1024px) {
-  .installSection {
-    margin-bottom: 32px;
-  }
-}
-
 .authorLink {
   display: inline-flex;
   align-items: center;
@@ -722,35 +611,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes bounceIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-  70% {
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes gentlePulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
   }
 }
 

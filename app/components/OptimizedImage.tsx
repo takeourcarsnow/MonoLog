@@ -71,7 +71,7 @@ export const OptimizedImage = memo(function OptimizedImage({
       width={fill ? undefined : width}
       height={fill ? undefined : height}
       fill={fill}
-      className={className}
+      className={`${className || ''} ${currentSrc === '/logo.svg' ? 'default-avatar' : ''}`.trim()}
       style={{
         ...style,
         width: fill ? undefined : width,

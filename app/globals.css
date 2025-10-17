@@ -388,3 +388,8 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
   animation: pulse-communities 2s ease-in-out infinite;
 }
 
+/* Invert default avatar (logo.svg) in light mode for better visibility */
+:root[data-theme="light"] .default-avatar {
+  filter: invert(1);
+}
+

@@ -200,7 +200,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
             type="button"
           >
             <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 160, height: 160 }}>
-              <Image className="profile-avatar" src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} />
+              <Image className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} />
             </div>
           </button>
           <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} disabled={avatarUploading} />
@@ -237,7 +237,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
               }}
             >
               <Image
-                className="profile-avatar"
+                className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`}
                 src={user.avatarUrl || "/logo.svg"}
                 alt={user.displayName ?? user.username}
                 width={160}

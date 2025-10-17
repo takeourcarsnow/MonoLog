@@ -216,7 +216,7 @@ export function ThreadView() {
                     alt={thread.user.username}
                     width={24}
                     height={24}
-                    className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                    className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
                   />
                 </Link>
               </div>
@@ -288,7 +288,7 @@ export function ThreadView() {
                           alt={reply.user.username}
                           width={24}
                           height={24}
-                          className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                          className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
                         />
                       </Link>
                     </div>

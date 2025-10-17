@@ -81,7 +81,7 @@ export default function FollowingPage() {
                 <Image
                   src={user.avatarUrl || "/logo.svg"}
                   alt={user.displayName ?? user.username}
-                  className="avatar large"
+                  className={`avatar large ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`}
                   width={48}
                   height={48}
                 />

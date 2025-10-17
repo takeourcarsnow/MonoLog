@@ -292,7 +292,7 @@ export function CommunityView() {
                           alt={thread.user.username}
                           width={40}
                           height={40}
-                          className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                          className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
                           fallbackSrc="/logo.svg"
                         />
                       </Link>

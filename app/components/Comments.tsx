@@ -164,6 +164,7 @@ export function Comments({ postId, onCountChange }: Props) {
                       alt={c.user?.username || c.user?.displayName || "User"}
                       fill={true}
                       unoptimized={false}
+                      className="avatar"
                     />
                   </div>
                 </Link>

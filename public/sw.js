@@ -1,19 +1,52 @@
 // Enhanced service worker for caching static assets, images, and API responses
-// Bump this value when releasing a new service worker to force cache refreshes
-const CACHE_NAME = 'monolog-v3';
-const STATIC_CACHE_NAME = 'monolog-static-v3';
-const IMAGE_CACHE_NAME = 'monolog-images-v3';
-const API_CACHE_NAME = 'monolog-api-v3';
+// Using Workbox for advanced features
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+
+// Workbox configuration
+workbox.setConfig({
+  debug: false,
+});
+
+// Cache names
+const CACHE_NAME = 'monolog-v4';
+const STATIC_CACHE_NAME = 'monolog-static-v4';
+const IMAGE_CACHE_NAME = 'monolog-images-v4';
+const API_CACHE_NAME = 'monolog-api-v4';
+const OFFLINE_CACHE_NAME = 'monolog-offline-v4';
+
+// Background sync queues
+const bgSyncPlugin = new workbox.backgroundSync.BackgroundSyncPlugin('posts-queue', {
+  maxRetentionTime: 24 * 60, // Retry for max of 24 Hours (specified in minutes)
+});
+
+const commentsBgSyncPlugin = new workbox.backgroundSync.BackgroundSyncPlugin('comments-queue', {
+  maxRetentionTime: 24 * 60,
+});
 
 const STATIC_CACHE_URLS = [
   '/',
   '/manifest.webmanifest',
+  '/offline',
   '/logo.svg',
 ];
 
 // Cache images for longer periods
 const IMAGE_CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 const API_CACHE_MAX_AGE = 5 * 60 * 1000; // 5 minutes
+const OFFLINE_FALLBACK_URL = '/offline';
+
+// Background sync tags
+const BG_SYNC_POSTS = 'background-sync-posts';
+const BG_SYNC_COMMENTS = 'background-sync-comments';
+
+// Precache static assets
+workbox.precaching.precacheAndRoute(STATIC_CACHE_URLS);
+
+// Install event - additional setup
+self.addEventListener('install', (event) => {
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
+});
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -25,20 +58,24 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and take control
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (![CACHE_NAME, STATIC_CACHE_NAME, IMAGE_CACHE_NAME, API_CACHE_NAME].includes(cacheName)) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // Clean up old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (![CACHE_NAME, STATIC_CACHE_NAME, IMAGE_CACHE_NAME, API_CACHE_NAME, OFFLINE_CACHE_NAME].includes(cacheName)) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Take control of all clients
+      self.clients.claim()
+    ])
   );
-  self.clients.claim();
 });
 
 // Allow the page to trigger skipWaiting (so the new SW can take control immediately)
@@ -53,15 +90,165 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Helper: same-origin check
-function isSameOrigin(request) {
+// Background sync for offline actions
+self.addEventListener('sync', (event) => {
+  if (event.tag === BG_SYNC_POSTS) {
+    event.waitUntil(syncPosts());
+  } else if (event.tag === BG_SYNC_COMMENTS) {
+    event.waitUntil(syncComments());
+  }
+});
+
+// Periodic background sync for content refresh
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'content-sync') {
+    event.waitUntil(periodicContentSync());
+  }
+});
+
+// Push notification support
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
   try {
-    const url = new URL(request.url);
-    return url.origin === self.location.origin;
-  } catch (e) {
-    return false;
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      data: data.data || {},
+      actions: data.actions || [],
+      requireInteraction: data.requireInteraction || false,
+      silent: data.silent || false,
+      tag: data.tag || 'default',
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'MonoLog', options)
+    );
+  } catch (error) {
+    console.error('Push notification error:', error);
+  }
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const action = event.action;
+  const data = event.notification.data || {};
+
+  let url = '/';
+
+  if (action === 'view-post' && data.postId) {
+    url = `/post/${data.postId}`;
+  } else if (action === 'view-profile' && data.userId) {
+    url = `/profile/${data.userId}`;
+  } else if (action === 'view-comments' && data.postId) {
+    url = `/post/${data.postId}#comments`;
+  } else if (data.url) {
+    url = data.url;
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Check if there's already a window/tab open with the target URL
+        for (const client of clientList) {
+          if (client.url === url && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // If not, open a new window/tab
+        if (clients.openWindow) {
+          return clients.openWindow(url);
+        }
+      })
+  );
+});
+
+// Background sync functions
+async function syncPosts() {
+  try {
+    const cache = await caches.open(API_CACHE_NAME);
+    // Get pending posts from IndexedDB or similar storage
+    // This would need to be implemented based on your app's storage mechanism
+    const pendingPosts = await getPendingPosts();
+
+    for (const post of pendingPosts) {
+      try {
+        const response = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(post),
+        });
+
+        if (response.ok) {
+          // Remove from pending storage
+          await removePendingPost(post.id);
+        }
+      } catch (error) {
+        console.error('Failed to sync post:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Background sync failed:', error);
   }
 }
+
+async function syncComments() {
+  try {
+    const pendingComments = await getPendingComments();
+
+    for (const comment of pendingComments) {
+      try {
+        const response = await fetch('/api/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(comment),
+        });
+
+        if (response.ok) {
+          await removePendingComment(comment.id);
+        }
+      } catch (error) {
+        console.error('Failed to sync comment:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Comment sync failed:', error);
+  }
+}
+
+async function periodicContentSync() {
+  try {
+    // Refresh cached API data
+    const cache = await caches.open(API_CACHE_NAME);
+    const keys = await cache.keys();
+
+    for (const request of keys) {
+      if (request.url.includes('/api/')) {
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse.ok) {
+            await cache.put(request, networkResponse);
+          }
+        } catch (error) {
+          // Ignore fetch errors during periodic sync
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Periodic sync failed:', error);
+  }
+}
+
+// Placeholder functions for pending data storage (implement based on your storage solution)
+async function getPendingPosts() { return []; }
+async function removePendingPost(id) { }
+async function getPendingComments() { return []; }
+async function removePendingComment(id) { }
 
 // Helper: check if request is for an image
 function isImageRequest(request) {
@@ -81,131 +268,136 @@ function shouldCache(response) {
   return response && response.ok && response.status === 200;
 }
 
-// Fetch event - enhanced caching strategy
-self.addEventListener('fetch', (event) => {
-  // Only handle GET and same-origin requests
-  if (event.request.method !== 'GET') return;
-  if (!isSameOrigin(event.request)) return;
+// Workbox routing for different request types
 
-  const acceptHeader = event.request.headers.get('accept') || '';
-  const isNavigation = event.request.mode === 'navigate' || acceptHeader.includes('text/html');
+// Images - Cache first with expiration
+workbox.routing.registerRoute(
+  ({ request }) => request.destination === 'image',
+  new workbox.strategies.CacheFirst({
+    cacheName: IMAGE_CACHE_NAME,
+    plugins: [
+      new workbox.expiration.ExpirationPlugin({
+        maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+        maxEntries: 100,
+      }),
+    ],
+  })
+);
 
-  if (isNavigation) {
-    // Network-first for navigation (HTML) requests so users get the freshest page
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          // Cache successful navigations for offline fallback
-          if (shouldCache(networkResponse)) {
-            const copy = networkResponse.clone();
-            caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match('/')) // fallback to cached root
+// API routes - Network first with background sync
+workbox.routing.registerRoute(
+  ({ url }) => url.pathname.startsWith('/api/'),
+  new workbox.strategies.NetworkFirst({
+    cacheName: API_CACHE_NAME,
+    plugins: [
+      new workbox.expiration.ExpirationPlugin({
+        maxAgeSeconds: 5 * 60, // 5 minutes
+      }),
+      bgSyncPlugin,
+    ],
+  })
+);
+
+// Navigation routes - Network first with offline fallback
+workbox.routing.registerRoute(
+  ({ request }) => request.mode === 'navigate',
+  new workbox.strategies.NetworkFirst({
+    cacheName: STATIC_CACHE_NAME,
+    plugins: [
+      {
+        handlerDidError: async () => {
+          const cache = await caches.open(OFFLINE_CACHE_NAME);
+          return await cache.match('/offline') || new Response('', { status: 404 });
+        },
+      },
+    ],
+  })
+);
+
+// Static assets - Cache first
+workbox.routing.registerRoute(
+  ({ request }) => request.destination === 'script' ||
+                   request.destination === 'style' ||
+                   request.destination === 'font',
+  new workbox.strategies.CacheFirst({
+    cacheName: STATIC_CACHE_NAME,
+  })
+);
+
+// Background sync for offline actions (fallback for non-Workbox requests)
+self.addEventListener('sync', (event) => {
+  if (event.tag === BG_SYNC_POSTS) {
+    event.waitUntil(syncPosts());
+  } else if (event.tag === BG_SYNC_COMMENTS) {
+    event.waitUntil(syncComments());
+  }
+});
+
+// Periodic background sync for content refresh
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'content-sync') {
+    event.waitUntil(periodicContentSync());
+  }
+});
+
+// Push notification support
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      data: data.data || {},
+      actions: data.actions || [],
+      requireInteraction: data.requireInteraction || false,
+      silent: data.silent || false,
+      tag: data.tag || 'default',
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'MonoLog', options)
     );
-    return;
+  } catch (error) {
+    console.error('Push notification error:', error);
+  }
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const action = event.action;
+  const data = event.notification.data || {};
+
+  let url = '/';
+
+  if (action === 'view-post' && data.postId) {
+    url = `/post/${data.postId}`;
+  } else if (action === 'view-profile' && data.userId) {
+    url = `/profile/${data.userId}`;
+  } else if (action === 'view-comments' && data.postId) {
+    url = `/post/${data.postId}#comments`;
+  } else if (data.url) {
+    url = data.url;
   }
 
-  if (isImageRequest(event.request)) {
-    // Cache-first strategy for images with TTL
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          // Check if cached response is still fresh
-          const cachedTime = new Date(cachedResponse.headers.get('sw-cache-time') || 0).getTime();
-          const now = Date.now();
-          if (now - cachedTime < IMAGE_CACHE_MAX_AGE) {
-            return cachedResponse;
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Check if there's already a window/tab open with the target URL
+        for (const client of clientList) {
+          if (client.url.includes(url) && 'focus' in client) {
+            return client.focus();
           }
         }
-
-        // Fetch fresh image and cache it
-        return fetch(event.request).then((networkResponse) => {
-          if (shouldCache(networkResponse)) {
-            const copy = networkResponse.clone();
-            // Add cache timestamp header
-            const headers = new Headers(copy.headers);
-            headers.set('sw-cache-time', new Date().toISOString());
-            const modifiedResponse = new Response(copy.body, {
-              status: copy.status,
-              statusText: copy.statusText,
-              headers: headers
-            });
-            caches.open(IMAGE_CACHE_NAME).then((cache) => cache.put(event.request, modifiedResponse));
-          }
-          return networkResponse;
-        }).catch(() => {
-          // Return cached version even if expired when offline
-          return cachedResponse || new Response('', { status: 404 });
-        });
-      })
-    );
-    return;
-  }
-
-  if (isApiRequest(event.request)) {
-    // Stale-while-revalidate for API calls with short TTL
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          // Check if cached response is still fresh
-          const cachedTime = new Date(cachedResponse.headers.get('sw-cache-time') || 0).getTime();
-          const now = Date.now();
-          if (now - cachedTime < API_CACHE_MAX_AGE) {
-            // Return cached response and update in background
-            fetch(event.request).then((networkResponse) => {
-              if (shouldCache(networkResponse)) {
-                const copy = networkResponse.clone();
-                const headers = new Headers(copy.headers);
-                headers.set('sw-cache-time', new Date().toISOString());
-                const modifiedResponse = new Response(copy.body, {
-                  status: copy.status,
-                  statusText: copy.statusText,
-                  headers: headers
-                });
-                caches.open(API_CACHE_NAME).then((cache) => cache.put(event.request, modifiedResponse));
-              }
-            }).catch(() => {}); // Ignore background fetch failures
-            return cachedResponse;
-          }
+        // If not, open a new window/tab
+        if (clients.openWindow) {
+          return clients.openWindow(url);
         }
-
-        // Fetch fresh API response
-        return fetch(event.request).then((networkResponse) => {
-          if (shouldCache(networkResponse)) {
-            const copy = networkResponse.clone();
-            const headers = new Headers(copy.headers);
-            headers.set('sw-cache-time', new Date().toISOString());
-            const modifiedResponse = new Response(copy.body, {
-              status: copy.status,
-              statusText: copy.statusText,
-              headers: headers
-            });
-            caches.open(API_CACHE_NAME).then((cache) => cache.put(event.request, modifiedResponse));
-          }
-          return networkResponse;
-        });
       })
-    );
-    return;
-  }
-
-  // For other requests use stale-while-revalidate: return cached if present, and update cache in background
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const networkFetch = fetch(event.request)
-        .then((networkResponse) => {
-          if (shouldCache(networkResponse)) {
-            const copy = networkResponse.clone();
-            caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => undefined);
-
-      // Prefer cached response if available, otherwise wait for network
-      return cachedResponse || networkFetch;
-    })
   );
 });

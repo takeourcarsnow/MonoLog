@@ -32,6 +32,10 @@ const Navbar = dynamic(() => import('@/app/components/NavBar').then(mod => mod.N
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfillClient'), { ssr: false });
 
+// PWA Analytics for tracking installation and usage
+const PWAAnalytics = dynamic(() => import('@/app/components/PWAAnalytics').then(mod => mod.PWAAnalytics), { ssr: false });
+const PWAHealthCheck = dynamic(() => import('@/app/components/PWAAnalytics').then(mod => mod.PWAHealthCheck), { ssr: false });
+
 // Render Header at root so fixed positioning is relative to the viewport.
 const Header = dynamic(() => import('@/app/components/Header').then(mod => mod.Header), { ssr: false });
 
@@ -158,6 +162,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <Navbar />
         <InertPolyfillClient />
+        <PWAAnalytics />
+        <PWAHealthCheck />
   <noscript>MonoLog — Your day in pictures. Requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}
         {process.env.NODE_ENV === 'production' ? <WebVitalsScript /> : null}

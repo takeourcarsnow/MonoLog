@@ -92,6 +92,9 @@ export function AccountSwitcher() {
   // Timer ref for auto-closing the focused reveal (used for touch/click reveal)
   const revealTimeoutRef = useRef<number | null>(null);
 
+  // Ref to the account button so we can blur it programmatically when auto-closing
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+
   // Auto-close delay in milliseconds. Tweak as desired (2.5s chosen as a small delay).
   const AUTO_CLOSE_DELAY = 2500;
 
@@ -119,13 +122,16 @@ export function AccountSwitcher() {
   return (
     <div className={`account-switcher ${isMounted ? 'mounted' : ''}`} style={{ position: "relative" }}>
       <button
+        ref={btnRef}
         className="btn"
         onFocus={() => {
           // Start/refresh auto-close timer when button receives focus (click/tap on some devices).
           try { if (revealTimeoutRef.current) window.clearTimeout(revealTimeoutRef.current); } catch (_) {}
           try {
+            // Prefer blurring the account button directly to ensure the reveal closes
+            // even if the focused element isn't exactly document.activeElement.
             revealTimeoutRef.current = window.setTimeout(() => {
-              try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+              try { btnRef.current?.blur(); } catch (_) {}
             }, AUTO_CLOSE_DELAY) as unknown as number;
           } catch (_) {}
         }}

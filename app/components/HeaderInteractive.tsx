@@ -184,7 +184,31 @@ export function HeaderInteractive() {
         >
           <Info size={20} strokeWidth={2} />
         </button>
-        <ThemeToggle />
+        {/* Shell reserves space for ThemeToggle while the dynamic chunk loads */}
+        <div className="theme-toggle-shell" aria-hidden>
+          {/* Immediate fallback icon so the toggle is visible on first paint
+              while the client-only ThemeToggle chunk loads. The real
+              ThemeToggle will mount and replace this icon. */}
+          <span className="theme-toggle-fallback" aria-hidden>
+            {typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark' ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <circle cx="12" cy="12" r="5"></circle>
+                <path d="M12 1v2"></path>
+                <path d="M12 21v2"></path>
+                <path d="M4.22 4.22l1.42 1.42"></path>
+                <path d="M18.36 18.36l1.42 1.42"></path>
+                <path d="M1 12h2"></path>
+                <path d="M21 12h2"></path>
+                <path d="M4.22 19.78l1.42-1.42"></path>
+                <path d="M18.36 5.64l1.42-1.42"></path>
+              </svg>
+            )}
+          </span>
+        </div>
         <button
           className={`btn icon favorites-btn no-tap-effects ${favIsActive ? 'active' : ''}`}
           title="Favorites"
@@ -194,7 +218,12 @@ export function HeaderInteractive() {
         >
           <Star size={20} strokeWidth={2} />
         </button>
-        <AccountSwitcher />
+        {/* Shell reserves space for the account switcher so the header doesn't
+            reflow when the dynamic AccountSwitcher chunk loads or when the
+            avatar appears. */}
+        <div className="account-switcher-shell" aria-hidden>
+          <AccountSwitcher />
+        </div>
       </div>
     </>
   );

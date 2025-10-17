@@ -12,7 +12,12 @@ export function AccountSwitcher() {
   // UI doesn't prematurely render the unauthenticated variant while we
   // probe the client-side auth state (fixes refresh/hydration flicker).
   const [me, setMe] = useState<User | null | undefined>(undefined);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -85,13 +90,14 @@ export function AccountSwitcher() {
 
   const current = me;
 
-  // Don't render anything if user is not authenticated (but keep loading state)
-  if (current === null) {
-    return null;
-  }
+  // Always render the account switcher container. When the client is still
+  // probing auth state (me === undefined) or when the user is unauthenticated
+  // (current === null) we render a small placeholder/skeleton that reserves
+  // the same space as the avatar. This prevents the header from shifting when
+  // the real avatar is mounted later.
 
   return (
-    <div className="account-switcher" style={{ position: "relative" }}>
+    <div className={`account-switcher ${isMounted ? 'mounted' : ''}`} style={{ position: "relative" }}>
       <button
         className="btn"
         onClick={() => {
@@ -115,18 +121,19 @@ export function AccountSwitcher() {
         }}
         aria-label="Open profile"
       >
-        {me === undefined ? (
-          // small skeleton to avoid layout shift and to indicate loading
+        {(me === undefined || current === null) ? (
+          // small skeleton / unauthenticated placeholder to avoid layout shift
+          // and indicate either loading or sign-in affordance. This keeps the
+          // header controls stable even when auth state resolves later.
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }} aria-hidden>
             <span style={{ width: 32, height: 32, borderRadius: 999, background: 'rgba(255,255,255,0.06)', display: 'inline-block' }} />
-            <span style={{ width: 64, height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.04)', display: 'inline-block' }} />
           </span>
         ) : current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             {/* Avatar first in the DOM; CSS will use row-reverse so the avatar stays at the far right
                 and the account name expands to the left pushing other header items. */}
             <OptimizedImage src={(current as User).avatarUrl} alt={(current as User).displayName || 'Account avatar'} className="avatar" width={32} height={32} />
-            <span className="account-name" aria-hidden>
+            <span className="account-name" aria-hidden style={{ opacity: isMounted ? undefined : 0, maxWidth: isMounted ? undefined : 0 }}>
               {(current as User).username || (current as User).displayName || (current as User).id}
             </span>
           </span>

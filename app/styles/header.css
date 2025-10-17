@@ -85,24 +85,28 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  transition: max-width 220ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms ease;
   opacity: 0;
   font-size: 13px;
   line-height: 20px;
 }
 
+/* Only apply transition after component has mounted to prevent flash on refresh */
+.account-switcher.mounted .btn .account-name {
+  transition: max-width 220ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms ease;
+}
+
 /* On hover or focus of the account button, expand the account name to the left.
    Because .header-actions uses row-reverse, expanding the inline element increases
    the space to the left and effectively pushes the other header controls. */
-.account-switcher .btn:hover .account-name,
-.account-switcher .btn:focus .account-name {
+.account-switcher.mounted .btn:hover .account-name,
+.account-switcher.mounted .btn:focus .account-name {
   max-width: 160px; /* reasonable visible length */
   opacity: 1;
 }
 
 /* Reduce motion preference: use instant reveal without animation */
 @media (prefers-reduced-motion: reduce) {
-  .account-switcher .btn .account-name { transition: none; }
+  .account-switcher.mounted .btn .account-name { transition: none; }
 }
 
 /* Normalize header action button heights so icon-only and text buttons match */
@@ -200,3 +204,26 @@
     display: none;
   }
 }
+
+/* Shell to reserve space for dynamic account switcher to avoid layout shift */
+.account-switcher-shell {
+  display: inline-flex;
+  align-items: center;
+  min-width: 56px; /* space for avatar + small gap */
+  justify-content: center;
+}
+.account-switcher-shell .account-switcher { width: 100%; }
+
+/* Reserve the same square space as other header icon buttons for the theme toggle
+   so it can't push other action buttons when the dynamic component loads. */
+.theme-toggle-shell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px; /* matches .header-actions .btn height */
+  height: 36px;
+}
+.theme-toggle-shell > * { width: 100%; height: 100%; display: inline-flex; align-items: center; justify-content: center; }
+
+.theme-toggle-fallback svg { display: block; width: 20px; height: 20px; }
+.theme-toggle-fallback { color: inherit; display: inline-flex; align-items: center; justify-content: center; }

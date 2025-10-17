@@ -13,7 +13,9 @@
     "check-env": "node ./scripts/check-env.js",
     "check-perf": "node ./scripts/check-performance.js",
     "convert-logo": "node ./scripts/convert-logo.js",
-    "convert-png-to-svg": "node ./scripts/convert-png-to-svg.js"
+    "convert-png-to-svg": "node ./scripts/convert-png-to-svg.js",
+    "generate-icons": "node ./scripts/generate-icons.js",
+    "generate-maskable-icons": "node ./scripts/generate-maskable-icons.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.35.0",

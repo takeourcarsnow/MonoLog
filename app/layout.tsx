@@ -43,14 +43,38 @@ export const metadata: Metadata = {
   // themeColor must be placed in the `viewport` export in Next.js 14+
   manifest: '/manifest.webmanifest',
   icons: '/logo.svg',
+  // SEO helpers
+  keywords: ['photo journal', 'daily photos', 'photo diary', 'MonoLog', 'photo sharing', 'visual diary'],
+  openGraph: {
+    title: 'MonoLog — Your day in pictures.',
+    description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
+    siteName: 'MonoLog',
+    type: 'website',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol',
+    images: [
+      {
+        url: (process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol') + '/logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'MonoLog',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MonoLog — Your day in pictures.',
+    description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
+    site: '@MonoLog',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'MonoLog — Your day in pictures.',
-  },
-  other: {
-    "color-scheme": "light dark",
-    "mobile-web-app-capable": "yes"
   }
 };
 
@@ -108,6 +132,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           id="pwa-install-prevent"
           dangerouslySetInnerHTML={{ __html: `(function(){try{window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); window.deferredPrompt = e; });}catch(e){} })();` }}
+        />
+        {/* JSON-LD Organization structured data for better search results */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: process.env.NEXT_PUBLIC_SITE_NAME || 'MonoLog',
+            url: process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol',
+            logo: (process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol') + '/logo.svg',
+            sameAs: [],
+            description: 'MonoLog — Your day in pictures. A focused daily photo journal.'
+          }) }}
         />
       </head>
       <body>

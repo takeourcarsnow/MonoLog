@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
     // Use Supabase's built-in password reset functionality
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password`,
+  redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol'}/reset-password`,
     });
 
     if (error) {

@@ -64,6 +64,22 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
     return () => { el.removeEventListener('keydown', onKey); };
   }, [onCancel]);
 
+  // Close active EXIF field when clicking outside the editor
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (!el.contains(target)) {
+        // clicking outside editor -> clear active field
+        setActiveExifField(null);
+      }
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
+  }, []);
+
   return (
     <div ref={editorRef} className="post-editor" tabIndex={-1}>
       <input

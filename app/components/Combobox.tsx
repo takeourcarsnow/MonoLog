@@ -24,6 +24,7 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const suppressOpenRef = useRef(false);
 
   useEffect(() => {
     setInputValue(value);
@@ -99,9 +100,24 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
   };
 
   const handleClear = () => {
+    // If the dropdown is closed, just clear the value and don't focus
+    if (!isOpen) {
+      setInputValue('');
+      onChange('');
+      return;
+    }
+
+    // If dropdown is open, prevent the dropdown from reopening when we refocus
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+    suppressOpenRef.current = true;
     setInputValue('');
     onChange('');
     inputRef.current?.focus();
+    // Clear the suppression on the next tick so future focuses behave normally
+    setTimeout(() => { suppressOpenRef.current = false; }, 0);
   };
 
   const handleOptionSelect = (option: string) => {
@@ -141,6 +157,8 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
           blurTimeoutRef.current = null;
         }
         setIsOpen(false);
+        // Inform parent that the combobox effectively blurred due to outside click
+        try { onBlur?.(); } catch (_) {}
       }
     };
 
@@ -157,6 +175,11 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
     if (blurTimeoutRef.current) {
       clearTimeout(blurTimeoutRef.current);
       blurTimeoutRef.current = null;
+    }
+    // If focus occurred as a result of clearing the field, don't auto-open
+    if (suppressOpenRef.current) {
+      onFocus?.();
+      return;
     }
     setIsOpen(true);
     onFocus?.();

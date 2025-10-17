@@ -205,11 +205,21 @@
   }
 }
 
-/* Shell to reserve space for dynamic account switcher to avoid layout shift */
-.account-switcher-shell {
+/* Shell to reserve space for dynamic account switcher to avoid layout shift.
+   Only reserve visible space when the root document has the 'has-account-switcher'
+   class which the client toggles when a signed-in account exists. This
+   prevents showing a placeholder after sign-out. */
+:root.has-account-switcher .account-switcher-shell {
   display: inline-flex;
   align-items: center;
   min-width: 56px; /* space for avatar + small gap */
+  justify-content: center;
+}
+:root:not(.has-account-switcher) .account-switcher-shell {
+  /* Keep the shell present for layout but don't reserve visible space */
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
   justify-content: center;
 }
 .account-switcher-shell .account-switcher { width: 100%; }

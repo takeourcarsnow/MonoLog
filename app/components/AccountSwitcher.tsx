@@ -90,11 +90,26 @@ export function AccountSwitcher() {
 
   const current = me;
 
-  // Always render the account switcher container. When the client is still
-  // probing auth state (me === undefined) or when the user is unauthenticated
-  // (current === null) we render a small placeholder/skeleton that reserves
-  // the same space as the avatar. This prevents the header from shifting when
-  // the real avatar is mounted later.
+  // Sync avatar preload + root class for shell reservation. When signed in
+  // we persist the avatar URL so the layout preload helper can use it; when
+  // signed out we clear it and remove the class so the shell doesn't reserve
+  // visible space.
+  useEffect(() => {
+    try {
+      if (current && (current as User).avatarUrl) {
+        try { localStorage.setItem('monolog_avatar_preload', (current as User).avatarUrl); } catch (e) {}
+        try { (window as any).__MONOLOG_AVATAR_PRELOAD__ = (current as User).avatarUrl; } catch (e) {}
+        try { document.documentElement.classList.add('has-account-switcher'); } catch (e) {}
+      } else if (current === null) {
+        // signed out
+        try { localStorage.removeItem('monolog_avatar_preload'); } catch (e) {}
+        try { delete (window as any).__MONOLOG_AVATAR_PRELOAD__; } catch (e) {}
+        try { document.documentElement.classList.remove('has-account-switcher'); } catch (e) {}
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [current]);
 
   return (
     <div className={`account-switcher ${isMounted ? 'mounted' : ''}`} style={{ position: "relative" }}>
@@ -121,10 +136,10 @@ export function AccountSwitcher() {
         }}
         aria-label="Open profile"
       >
-        {(me === undefined || current === null) ? (
-          // small skeleton / unauthenticated placeholder to avoid layout shift
-          // and indicate either loading or sign-in affordance. This keeps the
-          // header controls stable even when auth state resolves later.
+        {me === undefined ? (
+          // small skeleton while loading to avoid layout shift until the
+          // client auth check finishes. Once we determine signed-out (null)
+          // the component will render nothing.
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }} aria-hidden>
             <span style={{ width: 32, height: 32, borderRadius: 999, background: 'rgba(255,255,255,0.06)', display: 'inline-block' }} />
           </span>
@@ -138,7 +153,7 @@ export function AccountSwitcher() {
             </span>
           </span>
         ) : (
-          // This should never happen since we return null for current === null above
+          // signed-out: render nothing so header shows no avatar placeholder
           null
         )}
       </button>

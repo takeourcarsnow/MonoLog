@@ -170,7 +170,7 @@
 .auth-header-notice.info .notice-title{ color: var(--text); }
 .auth-header-notice.info .notice-sub{ color: var(--muted, #94a3b8); }
 
-.auth-header-notice.error .notice-title{ color: var(--danger, #ef4444); }
+.auth-header-notice.error .notice-title{ color: var(--text); }
 .auth-header-notice.error .notice-sub{ color: var(--muted, #94a3b8); }
 
 .auth-header-notice.success .notice-title{ color: var(--success, #059669); }

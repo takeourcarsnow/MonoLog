@@ -33,10 +33,6 @@ export function PublishButton({
   const ICONS = getWaitIcons();
   const [currentWaitMessage, setCurrentWaitMessage] = useState(MESSAGES[0]);
   const [currentWaitIconIndex, setCurrentWaitIconIndex] = useState(0);
-  // double-buffer two message slots so we can crossfade between warnings
-  const [activeSlot, setActiveSlot] = useState<0 | 1>(0);
-  const slotMessage = useRef<string[]>([MESSAGES[0], '']);
-  const slotIconIndex = useRef<number[]>([0, 0]);
 
   useEffect(() => {
     setPulseAnimation(Boolean(canPost));
@@ -48,13 +44,8 @@ export function PublishButton({
       setTimeout(() => setFlash(false), 900);
 
       const idx = messageIndexRef.current % MESSAGES.length;
-      // write into the inactive slot and flip activeSlot to trigger CSS crossfade
-      const nextSlot = activeSlot === 0 ? 1 : 0;
-      slotMessage.current[nextSlot] = MESSAGES[idx];
-      slotIconIndex.current[nextSlot] = idx % ICONS.length;
       setCurrentWaitMessage(MESSAGES[idx]);
       setCurrentWaitIconIndex(idx % ICONS.length);
-      setActiveSlot(nextSlot);
       messageIndexRef.current = (messageIndexRef.current + 1) % MESSAGES.length;
 
       setWaitMsgVisible(true);
@@ -113,20 +104,12 @@ export function PublishButton({
             Publish
           </span>
         ) : (
-          <span className={`countdown-display ${waitMsgVisible ? 'state-wait' : 'state-countdown'}`} aria-live="polite">
-            <span className={`wait-messages`} aria-hidden={!waitMsgVisible}>
-              <span className={`wait-message slot-0 ${(waitMsgVisible && activeSlot === 0) ? 'visible' : ''}`}>
-                <span className="wait-icon" aria-hidden style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }}>
-                  {ICONS[slotIconIndex.current[0]]}
-                </span>
-                {slotMessage.current[0]}
+          <span className="countdown-display" aria-live="polite">
+            <span className={`wait-message ${waitMsgVisible ? 'visible' : ''}`} aria-hidden={!waitMsgVisible}>
+              <span className="wait-icon" aria-hidden style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }}>
+                {ICONS[currentWaitIconIndex]}
               </span>
-              <span className={`wait-message slot-1 ${(waitMsgVisible && activeSlot === 1) ? 'visible' : ''}`}>
-                <span className="wait-icon" aria-hidden style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }}>
-                  {ICONS[slotIconIndex.current[1]]}
-                </span>
-                {slotMessage.current[1]}
-              </span>
+              {currentWaitMessage}
             </span>
             <span className={`countdown-time ${!waitMsgVisible ? 'visible' : ''}`} aria-hidden={waitMsgVisible}>
               <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }} aria-hidden>{timeIcon}</span>

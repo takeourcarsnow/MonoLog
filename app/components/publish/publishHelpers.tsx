@@ -49,5 +49,5 @@ export function selectTimeIcon(remainingMs: number | null): JSX.Element {
   if (remainingMs <= 60_000) return icons[1];
   if (remainingMs <= 5 * 60_000) return icons[2];
   if (remainingMs <= 30 * 60_000) return icons[1];
-  return icons[3];
+  return icons[1];
 }

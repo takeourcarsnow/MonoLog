@@ -100,10 +100,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  /* Allow content to wrap (two lines max) while keeping button height fixed */
-  flex-wrap: wrap;
   text-align: center;
-  white-space: normal;
 }
 
 /* Ready text with icon */
@@ -161,13 +158,11 @@
 .countdown-display {
   /* Keep the countdown/wait text in-flow so it can size naturally
      and avoid being clipped when the button is narrow. */
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   font-variant-numeric: tabular-nums;
   letter-spacing: .5px;
-  white-space: nowrap;
 }
 
 .countdown-time,
@@ -186,58 +181,29 @@
 
 .countdown-time { font-size: 14px; font-weight: 400; text-shadow: none; }
 
-/* Subtle crossfade/translate when switching between wait message and countdown */
-.countdown-display {
-  position: relative;
-}
-.countdown-display .wait-message,
-.countdown-display .countdown-time {
-  display: inline-block;
-  will-change: opacity, transform;
-}
-
-.countdown-display.state-wait .wait-message.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-.countdown-display.state-wait .countdown-time.visible {
+.countdown-time,
+.wait-message {
+  display: none;
   opacity: 0;
-  transform: translateY(6px);
+  transition: opacity 260ms cubic-bezier(.2,.9,.2,1);
 }
 
-.countdown-display.state-countdown .countdown-time.visible {
+.countdown-time.visible {
+  display: inline;
   opacity: 1;
-  transform: translateY(0);
-}
-.countdown-display.state-countdown .wait-message.visible {
-  opacity: 0;
-  transform: translateY(6px);
 }
 
-/* Slight easing and duration tweak for a gentle feel */
-.countdown-display .wait-message,
-.countdown-display .countdown-time {
-  transition-duration: 300ms;
-  transition-timing-function: cubic-bezier(.2,.9,.2,1);
+.wait-message.visible {
+  display: block;
+  opacity: 1;
 }
 
-/* Double-buffered wait messages crossfade */
-.wait-messages { position: relative; display: inline-block; }
-.wait-messages .wait-message { position: absolute; left: 0; top: 0; right: 0; opacity: 0; transform: translateY(6px); pointer-events: none; }
-.wait-messages .wait-message.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-.wait-messages .wait-message.slot-0 { z-index: 1; }
-.wait-messages .wait-message.slot-1 { z-index: 0; }
-
-/* When the inactive slot becomes active, it fades in above the other */
-.wait-messages .wait-message { transition: opacity 260ms cubic-bezier(.2,.9,.2,1), transform 260ms cubic-bezier(.2,.9,.2,1); }
-
-/* Inline wait message (rotating). Constrain to two lines and center.) */
+/* Inline wait message (rotating). Constrain to two lines and center. */
 .wait-message {
   font-size: 14px;
   font-weight: 400;
   line-height: 1.05;
-  white-space: nowrap;
-  /* Removed max-width, overflow, and text-overflow to allow full text display */
+  text-align: center;
 }
 
 /* removed show-message state */

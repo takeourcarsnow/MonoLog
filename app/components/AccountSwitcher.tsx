@@ -85,6 +85,11 @@ export function AccountSwitcher() {
 
   const current = me;
 
+  // Don't render anything if user is not authenticated (but keep loading state)
+  if (current === null) {
+    return null;
+  }
+
   return (
     <div className="account-switcher" style={{ position: "relative" }}>
       <button
@@ -120,19 +125,14 @@ export function AccountSwitcher() {
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             {/* Avatar first in the DOM; CSS will use row-reverse so the avatar stays at the far right
                 and the account name expands to the left pushing other header items. */}
-            <OptimizedImage src={current.avatarUrl} alt={current.displayName || 'Account avatar'} className="avatar" width={32} height={32} />
+            <OptimizedImage src={(current as User).avatarUrl} alt={(current as User).displayName || 'Account avatar'} className="avatar" width={32} height={32} />
             <span className="account-name" aria-hidden>
-              {current.username || current.displayName || current.id}
+              {(current as User).username || (current as User).displayName || (current as User).id}
             </span>
           </span>
         ) : (
-          // show a user icon instead of the text "Account" when unauthenticated
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </span>
+          // This should never happen since we return null for current === null above
+          null
         )}
       </button>
 

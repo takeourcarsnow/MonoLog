@@ -5,6 +5,7 @@ import { Button } from './Button';
 import { UserMinus, UserPlus } from 'lucide-react';
 import { api } from '@/src/lib/api';
 import { useAuth } from '@/src/lib/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 type Props = {
   communityId: string;
@@ -15,12 +16,20 @@ type Props = {
 
 export default function CommunityCardClient({ communityId, initialIsMember = false, initialMemberCount = 0, creatorId }: Props) {
   const { me } = useAuth();
+  const router = useRouter();
   const [isMember, setIsMember] = useState<boolean>(initialIsMember);
   const [memberCount, setMemberCount] = useState<number>(initialMemberCount || 0);
   const [pending, setPending] = useState(false);
 
   const handleJoinLeave = useCallback(async () => {
     if (pending) return;
+
+    // If user is not authenticated, redirect to auth
+    if (!me) {
+      router.push('/profile');
+      return;
+    }
+
     setPending(true);
     // Optimistic update
     setIsMember((prev) => {
@@ -45,7 +54,7 @@ export default function CommunityCardClient({ communityId, initialIsMember = fal
     } finally {
       setPending(false);
     }
-  }, [communityId, isMember, pending]);
+  }, [communityId, isMember, pending, me, router]);
 
   // Hide join button for creator
   if (me?.id === creatorId) return null;

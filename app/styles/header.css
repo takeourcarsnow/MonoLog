@@ -195,7 +195,7 @@
   white-space: nowrap;
 }
 
-@media (max-width: 320px) {
+@media (max-width: 380px) {
   .brand h1 {
     display: none;
   }

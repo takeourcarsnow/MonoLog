@@ -283,14 +283,14 @@ export function CommunityView() {
       </div>
 
       {/* Threads List */}
-      <div className="content-body space-y-6 pt-8">
+      <div className="content-body space-y-6 pt-6">
         {threads.length === 0 ? (
           <div className="card">
             <p>No threads yet. {community.isMember ? 'Be the first to create one!' : 'Join the community to start discussing!'}</p>
           </div>
         ) : (
           threads.map((thread) => (
-            <div key={thread.id} className="card mb-20">
+            <Link key={thread.id} href={`/communities/${community.slug}/thread/${thread.slug}`} className="card block">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   {(() => {
@@ -315,9 +315,7 @@ export function CommunityView() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <Link href={`/communities/${community.slug}/thread/${thread.slug}`}>
-                      <h3 className="font-semibold text-lg hover:underline">{thread.title}</h3>
-                    </Link>
+                    <h3 className="font-semibold text-lg hover:underline">{thread.title}</h3>
                     {currentUser && thread.user.id === currentUser.id && (
                       <Button
                         variant="ghost"
@@ -343,7 +341,7 @@ export function CommunityView() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))
         )}
       </div>

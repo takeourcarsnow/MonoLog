@@ -18,7 +18,7 @@ type Props = {
 
 function CommunityCardInner({ community, meId, pending, onJoinLeave }: Props) {
   return (
-    <div className="card mb-8">
+    <Link href={`/communities/${community.slug}`} className="card mb-8 block">
       <div className="flex flex-col items-center text-center gap-3 py-4">
         <LazyMount rootMargin="150px">
           <OptimizedImage
@@ -31,9 +31,7 @@ function CommunityCardInner({ community, meId, pending, onJoinLeave }: Props) {
           />
         </LazyMount>
 
-        <Link href={`/communities/${community.slug}`}>
-          <h3 className="font-semibold text-lg hover:underline">{community.name}</h3>
-        </Link>
+        <h3 className="font-semibold text-lg hover:underline">{community.name}</h3>
 
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 max-w-[40ch]">
           {community.description}
@@ -61,7 +59,7 @@ function CommunityCardInner({ community, meId, pending, onJoinLeave }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

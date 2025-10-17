@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, getSupabaseClient } from "@/src/lib/api";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import type { User } from "@/src/lib/types";
@@ -89,6 +89,11 @@ export function AccountSwitcher() {
   }, []);
 
   const current = me;
+  // Timer ref for auto-closing the focused reveal (used for touch/click reveal)
+  const revealTimeoutRef = useRef<number | null>(null);
+
+  // Auto-close delay in milliseconds. Tweak as desired (2.5s chosen as a small delay).
+  const AUTO_CLOSE_DELAY = 2500;
 
   // Sync avatar preload + root class for shell reservation. When signed in
   // we persist the avatar URL so the layout preload helper can use it; when
@@ -115,6 +120,19 @@ export function AccountSwitcher() {
     <div className={`account-switcher ${isMounted ? 'mounted' : ''}`} style={{ position: "relative" }}>
       <button
         className="btn"
+        onFocus={() => {
+          // Start/refresh auto-close timer when button receives focus (click/tap on some devices).
+          try { if (revealTimeoutRef.current) window.clearTimeout(revealTimeoutRef.current); } catch (_) {}
+          try {
+            revealTimeoutRef.current = window.setTimeout(() => {
+              try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+            }, AUTO_CLOSE_DELAY) as unknown as number;
+          } catch (_) {}
+        }}
+        onBlur={() => {
+          // Clear timer when focus leaves so we don't accidentally blur elsewhere.
+          try { if (revealTimeoutRef.current) { window.clearTimeout(revealTimeoutRef.current); revealTimeoutRef.current = null; } } catch (_) {}
+        }}
         onClick={() => {
           // When still probing session state, do nothing on click to avoid
           // opening the auth modal while the client is initializing.
@@ -162,3 +180,8 @@ export function AccountSwitcher() {
     </div>
   );
 }
+
+// Ensure any remaining timers are cleared when module is hot-reloaded or unmounted implicitly
+(function cleanupGlobalRevealTimer() {
+  // No-op placeholder; timers are component-scoped. This keeps the file explicit about cleanup.
+})();

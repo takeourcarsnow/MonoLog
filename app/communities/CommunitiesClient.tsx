@@ -1,21 +1,9 @@
 "use client";
-import React, { useEffect, PropsWithChildren } from 'react';
+import React, { PropsWithChildren } from 'react';
+import { usePageScroll } from "@/src/lib/hooks/usePageScroll";
 
 export default function CommunitiesClient({ children }: PropsWithChildren) {
-  useEffect(() => {
-    // Allow body/html scrolling while this component is mounted
-    if (typeof document !== 'undefined') {
-      document.body.classList.add('communities-page-scroll');
-      document.documentElement.classList.add('communities-page-scroll');
-    }
-
-    return () => {
-      if (typeof document !== 'undefined') {
-        document.body.classList.remove('communities-page-scroll');
-        document.documentElement.classList.remove('communities-page-scroll');
-      }
-    };
-  }, []);
+  usePageScroll('communities-page-scroll');
 
   return <>{children}</>;
 }

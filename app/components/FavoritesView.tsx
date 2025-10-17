@@ -6,46 +6,20 @@ import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
 import { SkeletonCard, SkeletonTile } from "./Skeleton";
 import { useEventListener } from "@/src/lib/hooks/useEventListener";
+import { useDataFetch } from "@/src/lib/hooks/useDataFetch";
+import { usePageScroll } from "@/src/lib/hooks/usePageScroll";
 import { Star as StarIcon } from "lucide-react";
 import Link from "next/link";
 import { ViewToggle } from "./ViewToggle";
 import { GridView } from "./GridView";
 
 export function FavoritesView() {
-  // Ensure the page can scroll: some layout rules set overflow:hidden on
-  // the root/html to implement internal scrolling. When this view mounts
-  // we add a class that enables body/html scrolling (and the .content
-  // fallback). Remove it on unmount.
-  useEffect(() => {
-    try {
-      document.documentElement.classList.add('favorites-page-scroll');
-      document.body.classList.add('favorites-page-scroll');
-    } catch (e) {}
-    return () => {
-      try {
-        document.documentElement.classList.remove('favorites-page-scroll');
-        document.body.classList.remove('favorites-page-scroll');
-      } catch (e) {}
-    };
-  }, []);
-  const [posts, setPosts] = useState<HydratedPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  usePageScroll('favorites-page-scroll');
+  const { data: posts, setData: setPosts, loading, refetch: loadFavorites } = useDataFetch(
+    () => api.getFavoritePosts(),
+    []
+  );
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("favoritesView") as any)) || "list");
-
-  const loadFavorites = useCallback(async () => {
-    try {
-      const data = await api.getFavoritePosts();
-      setPosts(data);
-    } catch (e) {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadFavorites();
-  }, [loadFavorites]);
 
   // Handle favorite changes optimistically
   useEventListener('monolog:favorite_changed', (e: any) => {

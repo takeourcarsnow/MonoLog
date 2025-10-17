@@ -290,6 +290,11 @@
   box-sizing: border-box;
   background: transparent;
 }
+@media (min-width: 900px) {
+  .view-toggle {
+    max-width: 80vw;
+  }
+}
 .view-toggle.tight {
   margin: 2px auto 0px;
 }

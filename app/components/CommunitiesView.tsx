@@ -7,38 +7,33 @@ import type { HydratedCommunity } from "@/src/lib/types";
 import { Button } from "./Button";
 import Link from "next/link";
 import { useAuth } from "@/src/lib/hooks/useAuth";
+import { useDataFetch } from "@/src/lib/hooks/useDataFetch";
 import CommunityCard from "./CommunityCard";
 import LazyMount from "./LazyMount";
 import SkeletonCard from "./SkeletonCard";
 
 export function CommunitiesView() {
   const { me } = useAuth();
-  const [communities, setCommunities] = useState<HydratedCommunity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: communities, setData: setCommunities, loading, error: fetchError, refetch: loadCommunities } = useDataFetch(
+    () => api.getCommunities(),
+    []
+  );
   const [pendingJoin, setPendingJoin] = useState<Set<string>>(new Set());
+  const [error, setError] = useState<string | null>(null);
 
   // Update last checked time when component mounts
   useEffect(() => {
     localStorage.setItem('communitiesLastChecked', new Date().toISOString());
   }, []);
 
-  const loadCommunities = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await api.getCommunities();
-      setCommunities(data);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load communities');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Debugging: log communities array when loaded
   useEffect(() => {
-    loadCommunities();
-  }, [loadCommunities]);
+    if (communities && communities.length > 0) {
+      try {
+        console.debug('[CommunitiesView] loaded communities:', communities.map(c => ({ id: c.id, creator: c.creator })));
+      } catch (e) {}
+    }
+  }, [communities]);
 
   // Debugging: log communities array when loaded
   useEffect(() => {
@@ -102,7 +97,7 @@ export function CommunitiesView() {
     );
   }
 
-  if (error) {
+  if (error || fetchError) {
     return (
       <div className="communities">
         <div className="content-header mt-8">
@@ -115,7 +110,7 @@ export function CommunitiesView() {
         </div>
         <div className="content-body">
           <div className="card">
-            <p className="text-red-500">{error}</p>
+            <p className="text-red-500">{error || fetchError}</p>
             <Button onClick={loadCommunities}>Try Again</Button>
           </div>
         </div>

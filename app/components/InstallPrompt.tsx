@@ -117,9 +117,9 @@ export function InstallPrompt() {
 
   return (
     <div
-      className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md
+      className="fixed top-[calc(var(--header-height)+1rem)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md
                  bg-white dark:bg-gray-900 border border-transparent dark:border-transparent
-                 rounded-xl shadow-lg p-4 z-[9999] animate-slide-down"
+                 rounded-xl shadow-lg p-4 z-[1000001] animate-slide-down"
       role="dialog"
       aria-labelledby="install-title"
       aria-describedby="install-desc"

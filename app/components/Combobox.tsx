@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, X } from "lucide-react";
 
 interface ComboboxProps {
   value: string;
@@ -98,6 +98,12 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
     setIsOpen(true);
   };
 
+  const handleClear = () => {
+    setInputValue('');
+    onChange('');
+    inputRef.current?.focus();
+  };
+
   const handleOptionSelect = (option: string) => {
     if (blurTimeoutRef.current) {
       clearTimeout(blurTimeoutRef.current);
@@ -181,8 +187,18 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
         tabIndex={disabled ? -1 : 0}
         autoComplete="off"
         onMouseDown={(e) => { if (disabled) e.preventDefault(); }}
-        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined }}
+        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined, paddingRight: inputValue ? 32 : undefined }}
       />
+      {inputValue && !disabled && (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="clear-button"
+          title="Clear"
+        >
+          <X size={14} />
+        </button>
+      )}
       {isOpen && filteredOptions.length > 0 && (
         <ul
           ref={listRef}

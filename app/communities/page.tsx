@@ -11,6 +11,7 @@ export default function CommunitiesPage() {
   const [communities, setCommunities] = useState<HydratedCommunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showMessage, setShowMessage] = useState(false);
 
   const loadCommunities = async () => {
     try {
@@ -30,6 +31,11 @@ export default function CommunitiesPage() {
   }, []);
 
   useEffect(() => {
+    const timer = setTimeout(() => setShowMessage(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     const handleFocus = () => {
       loadCommunities();
     };
@@ -46,7 +52,6 @@ export default function CommunitiesPage() {
             <div className="text-center w-full">
               <h1 className="content-title inline-flex items-center justify-center gap-2">
                 <span className="sr-only">Communities</span>
-                <span className="dim">Loading communities...</span>
               </h1>
             </div>
           </div>
@@ -89,7 +94,7 @@ export default function CommunitiesPage() {
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
               <span className="sr-only">Communities</span>
-              <span className="dim">Communities and threads with latest activity are displayed first</span>
+              <span className={`dim transition-opacity duration-1000 ${showMessage ? 'opacity-100' : 'opacity-0'}`}>Communities and threads with latest activity are displayed first</span>
             </h1>
           </div>
         </div>

@@ -370,19 +370,6 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         generating={generatingUsername}
       />
 
-      {mode === "signin" && (
-        <div style={{ textAlign: 'center', marginTop: 8 }}>
-          <button
-            type="button"
-            className="btn small dim"
-            onClick={() => setMode("forgot")}
-            style={{ fontSize: 14 }}
-          >
-            Forgot password?
-          </button>
-        </div>
-      )}
-
       {mode === "forgot" && (
         <div style={{ textAlign: 'center', marginTop: 8 }}>
           <button
@@ -405,6 +392,19 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         signupSent={signupSent}
         onSubmit={submit}
       />
+
+      {mode === "signin" && (
+        <div style={{ textAlign: 'center', marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn small dim"
+            onClick={() => setMode("forgot")}
+            style={{ fontSize: 14 }}
+          >
+            Forgot password?
+          </button>
+        </div>
+      )}
     </form>
   );
 }

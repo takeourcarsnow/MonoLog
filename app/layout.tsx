@@ -55,6 +55,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
   // themeColor supports an array with media queries
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#0f0f10" },
@@ -83,7 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script
           id="set-vh"
-          dangerouslySetInnerHTML={{ __html: `(function(){try{function setVh(){const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight; document.documentElement.style.setProperty('--viewport-height', (vh/100) + 'px');} setVh(); if(window.visualViewport){window.visualViewport.addEventListener('resize', setVh);} window.addEventListener('resize', setVh); window.addEventListener('orientationchange', setVh);}catch(e){} })();` }}
+          dangerouslySetInnerHTML={{ __html: `(function(){try{function setVh(){const vh = window.innerHeight; document.documentElement.style.setProperty('--viewport-height', (vh/100) + 'px');} setVh(); window.addEventListener('resize', setVh); window.addEventListener('orientationchange', setVh);}catch(e){} })();` }}
         />
         <script
           id="runtime-supabase-init"

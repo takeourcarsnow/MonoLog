@@ -66,6 +66,11 @@ export function ThreadView() {
     loadThread();
   }, [loadThread]);
 
+  // Update last checked time when component mounts
+  useEffect(() => {
+    localStorage.setItem('communitiesLastChecked', new Date().toISOString());
+  }, []);
+
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReply.trim() || submitting || !thread) return;

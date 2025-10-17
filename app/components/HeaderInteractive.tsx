@@ -43,7 +43,7 @@ export function HeaderInteractive() {
       
       if (forceToast) {
         console.log('Forcing toast display');
-        show("New posts in communities (forced)", 3000, "info");
+        show("New posts in communities (forced)");
       } else {
         setHasNewThreads(hasNew);
       }
@@ -150,7 +150,7 @@ export function HeaderInteractive() {
     console.log('hasNewThreads changed:', hasNewThreads, 'prev:', prevHasNewThreadsRef.current);
     if (hasNewThreads && !prevHasNewThreadsRef.current) {
       console.log('Showing toast for new community posts');
-      show("New posts in communities", 3000, "info");
+      show("New posts in communities");
     }
     prevHasNewThreadsRef.current = hasNewThreads;
   }, [hasNewThreads, show]);

@@ -54,6 +54,11 @@ export function CommunityView() {
     loadCommunity();
   }, [loadCommunity]);
 
+  // Update last checked time when component mounts
+  useEffect(() => {
+    localStorage.setItem('communitiesLastChecked', new Date().toISOString());
+  }, []);
+
   useEffect(() => {
     if (currentUser && community) {
       console.log('CommunityView: currentUser.id:', currentUser.id, 'community.creator.id:', community.creator.id, 'equal:', currentUser.id === community.creator.id);

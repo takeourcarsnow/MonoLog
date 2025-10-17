@@ -116,7 +116,7 @@ export function FeedPage({
     }
 
     const gridView = (
-      <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} onRetry={() => {
+      <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} active={view === 'grid'} onRetry={() => {
         const sentinel = document.querySelector('.feed-sentinel');
         if (sentinel) {
           setSentinel(sentinel as HTMLDivElement);
@@ -132,6 +132,7 @@ export function FeedPage({
           hasMore={hasMore}
           error={error}
           setSentinel={setSentinel}
+          active={view === 'list'}
           onRetry={() => {
             // Retry loading more posts
             const sentinel = document.querySelector('.feed-sentinel');
@@ -145,7 +146,12 @@ export function FeedPage({
 
     return (
       <>
-        {view === 'grid' ? gridView : listView}
+        <div style={{ display: view === 'grid' ? 'block' : 'none' }}>
+          {gridView}
+        </div>
+        <div style={{ display: view === 'list' ? 'block' : 'none' }}>
+          {listView}
+        </div>
       </>
     );
   }, [loading, posts, view, hasMore, loadingMore, setSentinel, error, emptyMessage, title, viewStorageKey]);

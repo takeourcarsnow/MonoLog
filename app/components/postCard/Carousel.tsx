@@ -242,6 +242,7 @@ export const Carousel = memo(function Carousel({
                 src={u}
                 alt={alts[idx] || `Photo ${idx + 1}`}
                 isActive={idx === index}
+                lazy={true}
                 onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => {
                   // preserve existing loaded class
                   e.currentTarget.classList.add("loaded");

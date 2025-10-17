@@ -64,6 +64,7 @@ interface InfiniteScrollLoaderProps {
   onRetry?: () => void;
   className?: string;
   setSentinel?: (el: HTMLDivElement | null) => void;
+  active?: boolean;
 }
 
 export function InfiniteScrollLoader({
@@ -72,7 +73,8 @@ export function InfiniteScrollLoader({
   error,
   onRetry,
   className = '',
-  setSentinel
+  setSentinel,
+  active = true
 }: InfiniteScrollLoaderProps) {
   if (error) {
     return (
@@ -124,7 +126,7 @@ export function InfiniteScrollLoader({
   }
 
   // When there are more posts available, render the sentinel for infinite scroll
-  if (setSentinel) {
+  if (setSentinel && active) {
     return <div ref={setSentinel} className={`feed-sentinel ${className}`} />;
   }
 

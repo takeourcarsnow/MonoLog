@@ -20,6 +20,7 @@ interface OptimizedImageProps {
   blurDataURL?: string;
   placeholder?: 'blur' | 'empty';
   fallbackSrc?: string;
+  disableLoadingTransition?: boolean;
 }
 
 export const OptimizedImage = memo(function OptimizedImage({
@@ -39,8 +40,9 @@ export const OptimizedImage = memo(function OptimizedImage({
   blurDataURL,
   placeholder = 'blur',
   fallbackSrc,
+  disableLoadingTransition = false,
 }: OptimizedImageProps) {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(disableLoadingTransition ? false : true);
   const [currentSrc, setCurrentSrc] = useState(src);
 
   // For small images (<=40px), don't use placeholder for performance
@@ -74,8 +76,10 @@ export const OptimizedImage = memo(function OptimizedImage({
         ...style,
         width: fill ? undefined : width,
         height: fill ? undefined : height,
-        transition: 'opacity 0.3s ease-in-out',
-        opacity: isLoading ? 0.7 : 1,
+        ...(disableLoadingTransition ? {} : {
+          transition: 'opacity 0.3s ease-in-out',
+          opacity: isLoading ? 0.7 : 1,
+        }),
       }}
       unoptimized={unoptimized}
       priority={priority}
@@ -84,7 +88,9 @@ export const OptimizedImage = memo(function OptimizedImage({
       placeholder={shouldUsePlaceholder ? placeholder : 'empty'}
       blurDataURL={defaultBlurDataURL}
       onLoad={() => {
-        setIsLoading(false);
+        if (!disableLoadingTransition) {
+          setIsLoading(false);
+        }
         onLoad?.();
       }}
       onError={handleError}

@@ -13,6 +13,7 @@ async function generateIcons() {
       const outputPath = path.join(__dirname, '..', 'public', `icon-${size}.png`);
       await sharp(svgBuffer)
         .resize(size, size)
+        .flatten({ background: '#0f0f10' }) // Add solid background to prevent transparency issues
         .png()
         .toFile(outputPath);
       console.log(`Generated icon-${size}.png`);

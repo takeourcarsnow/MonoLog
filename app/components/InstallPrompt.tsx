@@ -43,6 +43,19 @@ export function InstallPrompt() {
         if (typeof be.preventDefault === 'function') be.preventDefault();
         (window as any).deferredPrompt = be;
         setDeferredPrompt(be);
+
+        // Check if dismissed or snoozed before showing
+        const dismissed = localStorage.getItem('pwa-install-dismissed');
+        if (dismissed) return;
+
+        const snooze = localStorage.getItem('pwa-install-snooze');
+        if (snooze) {
+          const until = Number(snooze) || 0;
+          if (Date.now() < until) return; // still snoozed
+          // expired snooze -> remove and allow showing again
+          localStorage.removeItem('pwa-install-snooze');
+        }
+
         // Small delay so the UI doesn't interrupt the immediate task
         setTimeout(() => setShowPrompt(true), 3000);
       } catch (err) {
@@ -52,8 +65,16 @@ export function InstallPrompt() {
 
     // If something already set the global deferred prompt, use it immediately
     if ((window as any).deferredPrompt) {
-      setDeferredPrompt((window as any).deferredPrompt);
-      setTimeout(() => setShowPrompt(true), 3000);
+      // Check if dismissed or snoozed before showing
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      if (!dismissed) {
+        const snooze = localStorage.getItem('pwa-install-snooze');
+        if (!snooze || Date.now() >= (Number(snooze) || 0)) {
+          if (snooze) localStorage.removeItem('pwa-install-snooze'); // expired snooze
+          setDeferredPrompt((window as any).deferredPrompt);
+          setTimeout(() => setShowPrompt(true), 3000);
+        }
+      }
     }
 
     window.addEventListener('beforeinstallprompt', tryShowFromEvent as EventListener);

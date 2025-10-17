@@ -331,6 +331,16 @@
 .signout-btn.no-effects svg { transform: none !important; transition: none !important; }
 .signout-btn.no-effects:hover svg { transform: none !important; }
 
+/* Remove hover effects but allow SVG animations */
+.no-hover-effects {
+  transition: border-color 260ms ease, background 260ms ease, color 260ms ease !important;
+  box-shadow: none !important;
+}
+.no-hover-effects::before { display: none !important; }
+.no-hover-effects:hover { transform: none !important; box-shadow: none !important; }
+.no-hover-effects:active { transform: none !important; }
+.no-hover-effects:focus { box-shadow: none !important; }
+
 /* Generic opt-out for buttons that want no motion/hover effects */
 .no-effects {
   transition: border-color 260ms ease, background 260ms ease, color 260ms ease !important;

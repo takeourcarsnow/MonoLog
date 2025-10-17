@@ -127,7 +127,7 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               {mode === 'signup' ? (
                 <button
                   type="button"
-                  className="btn small dim"
+                  className="btn small dim no-hover-effects"
                   disabled={Boolean(generating)}
                   onClick={async () => {
                     if (!generateUsername) return;

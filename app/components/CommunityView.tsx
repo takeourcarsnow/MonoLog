@@ -6,6 +6,7 @@ import { Users, MessageSquare, Plus, Trash2, UserMinus, UserPlus, ArrowLeft } fr
 import { useRef } from "react";
 import type { HydratedCommunity, HydratedThread } from "@/src/lib/types";
 import { Button } from "./Button";
+import TimeDisplay from "./TimeDisplay";
 import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
 import { useParams, useRouter } from "next/navigation";
@@ -322,7 +323,7 @@ export function CommunityView() {
                   <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                     <span>by @{thread.user.username}</span>
                     <span>{thread.replyCount || 0} replies</span>
-                    <span>{thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : 'Unknown date'}</span>
+                    <TimeDisplay date={thread.createdAt} />
                   </div>
                 </div>
               </div>

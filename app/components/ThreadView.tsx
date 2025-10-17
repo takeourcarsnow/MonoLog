@@ -5,6 +5,7 @@ import { api } from "@/src/lib/api";
 import { MessageSquare, ArrowLeft, Trash2 } from "lucide-react";
 import type { HydratedThread, HydratedThreadReply } from "@/src/lib/types";
 import { Button } from "./Button";
+import TimeDisplay from "./TimeDisplay";
 import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
 import { useParams, useRouter } from "next/navigation";
@@ -222,7 +223,7 @@ export function ThreadView() {
               <span>by @{thread.user.username}</span>
             </div>
             <span>•</span>
-            <span>{thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : 'Unknown date'}</span>
+            <TimeDisplay date={thread.createdAt} />
             <span>•</span>
             <span className="flex items-center gap-1">
               <MessageSquare size={14} />
@@ -293,7 +294,7 @@ export function ThreadView() {
                     </div>
                     <span className="font-medium">@{reply.user.username}</span>
                     <span>•</span>
-                    <span>{reply.createdAt ? new Date(reply.createdAt).toLocaleDateString() : 'Unknown date'}</span>
+                    <TimeDisplay date={reply.createdAt} />
                   </div>
                   {currentUser && reply.user.id === currentUser.id && (
                     <Button

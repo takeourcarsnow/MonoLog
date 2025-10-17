@@ -9,6 +9,7 @@ import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
 import { useToast } from "./Toast";
 import { ReportButton } from "./ReportButton";
+import TimeDisplay from "./TimeDisplay";
 import Link from "next/link";
 import { renderMentions } from "@/src/lib/mentions";
 
@@ -174,7 +175,7 @@ export function Comments({ postId, onCountChange }: Props) {
                   >
                     <span className="author">{c.user?.username || c.user?.displayName || "User"}</span>
                   </Link>
-                  <span className="dim">{new Date(c.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                  <TimeDisplay date={c.createdAt} className="dim" />
                   {currentUser && currentUser.id === c.user?.id ? (
                     <button
                       className={`comment-badge ${confirmingIds.has(c.id) ? 'confirming' : ''}`}

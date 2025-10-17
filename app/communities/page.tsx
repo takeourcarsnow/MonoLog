@@ -6,6 +6,8 @@ import CommunityCardServer from '@/app/components/CommunityCardServer';
 import CommunityCardClient from '@/app/components/CommunityCardClient';
 import CommunitiesClient from './CommunitiesClient';
 import type { HydratedCommunity } from '@/src/lib/types';
+import Link from 'next/link';
+import { Button } from '@/app/components/Button';
 
 export default function CommunitiesPage() {
   const [communities, setCommunities] = useState<HydratedCommunity[]>([]);
@@ -55,6 +57,11 @@ export default function CommunitiesPage() {
               </h1>
             </div>
           </div>
+          <div className="content-actions my-8 flex justify-center w-full">
+            <Link href="/communities/create">
+              <Button title="Create Community">Create Community</Button>
+            </Link>
+          </div>
           <div className="content-body space-y-6">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="card skeleton" style={{ height: 200 }} />
@@ -77,6 +84,11 @@ export default function CommunitiesPage() {
               </h1>
             </div>
           </div>
+          <div className="content-actions my-8 flex justify-center w-full">
+            <Link href="/communities/create">
+              <Button title="Create Community">Create Community</Button>
+            </Link>
+          </div>
           <div className="content-body space-y-6">
             <div className="card">
               <p className="text-red-500">{error}</p>
@@ -97,6 +109,11 @@ export default function CommunitiesPage() {
               <span className={`dim transition-opacity duration-1000 ${showMessage ? 'opacity-100' : 'opacity-0'}`}>Communities and threads with latest activity are displayed first</span>
             </h1>
           </div>
+        </div>
+        <div className="content-actions my-8 flex justify-center w-full">
+          <Link href="/communities/create">
+            <Button title="Create Community">Create Community</Button>
+          </Link>
         </div>
 
         <div className="content-body space-y-6">

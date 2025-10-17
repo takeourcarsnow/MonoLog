@@ -91,13 +91,12 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <div className={`${styles.installSection} reveal`} data-reveal>
+      <div className={`${styles.authorSection} reveal`} data-reveal>
         <InstallButton />
+        <a className={styles.authorLink} href="https://nefas.tv" target="_blank" rel="noopener noreferrer" aria-label="Author">
+          <Sparkles size={14} />
+        </a>
       </div>
-
-      <a className={`${styles.authorLink} reveal`} data-reveal href="https://nefas.tv" target="_blank" rel="noopener noreferrer" aria-label="Author">
-        <Sparkles size={14} />
-      </a>
     </div>
   );
 }

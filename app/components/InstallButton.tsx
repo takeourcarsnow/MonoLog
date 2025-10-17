@@ -64,7 +64,7 @@ export function InstallButton() {
     return (
       <Button
         as="button"
-        className="icon-reveal"
+        className="icon btn-no-bg"
         aria-label="App installed"
         disabled={true}
       >
@@ -76,7 +76,6 @@ export function InstallButton() {
             <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </span>
-        <span className="reveal">Installed</span>
       </Button>
     );
   }
@@ -88,9 +87,9 @@ export function InstallButton() {
         as="button"
         onClick={() => {
           // Show instructions for manual installation
-          alert('To install MonoLog:\n\n• Chrome/Edge: Click the menu (⋮) > "Install MonoLog"\n• Firefox: Click the menu (☰) > "Install This Site as an App"\n• Safari: Share button > "Add to Home Screen"\n• Or use your browser\'s install prompt when available');
+          alert('If you\'re having trouble with the regular install prompt, try these manual installation steps:\n\n• Chrome/Edge: Click the menu (⋮) > "Install MonoLog"\n• Android Chrome: Tap the menu (⋮) > "Add to Home screen" > "Install"\n• Firefox: Click the menu (☰) > "Install This Site as an App"\n• Safari: Share button > "Add to Home Screen"\n• Or use your browser\'s install prompt when available');
         }}
-        className="icon-reveal"
+        className="icon btn-no-bg"
         aria-label="Installation instructions"
       >
         <span className="icon" aria-hidden>
@@ -101,7 +100,6 @@ export function InstallButton() {
             <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </span>
-        <span className="reveal">Install</span>
       </Button>
     );
   }
@@ -110,7 +108,7 @@ export function InstallButton() {
     <Button
       as="button"
       onClick={handleInstall}
-      className="icon-reveal"
+      className="icon btn-no-bg"
       aria-label="Install App"
       disabled={!deferredPrompt}
     >
@@ -122,7 +120,6 @@ export function InstallButton() {
           <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </span>
-      <span className="reveal">{deferredPrompt ? 'Install App' : 'Install'}</span>
     </Button>
   );
 }

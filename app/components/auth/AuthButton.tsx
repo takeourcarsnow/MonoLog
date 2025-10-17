@@ -16,7 +16,7 @@ export function AuthButton({ mode, loading, hasError, hasSuccess, justSignedIn, 
   );
   // Do not add a visual "error" class to the button on failure; keep error
   // state for inline messages/toasts but avoid turning the button red.
-  const btnClass = `auth-confirm-btn ${loading ? 'loading' : ''} ${buttonState === 'signup-sent' || buttonState === 'success' ? 'sent' : ''} ${mode === 'signup' ? 'mode-signup' : mode === 'forgot' ? 'mode-forgot' : 'mode-signin'}`;
+  const btnClass = `auth-confirm-btn ${loading ? 'loading' : ''} ${buttonState === 'signup-sent' || buttonState === 'success' ? 'sent' : ''}`;
 
   const getButtonLabel = () => {
     if (buttonState === 'success') return 'Signed in';

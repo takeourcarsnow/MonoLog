@@ -50,20 +50,11 @@
   margin-bottom: 8px;
 }
 
-.auth-message,
-.auth-header-notice {
+.auth-message {
   animation: authHeaderFlip 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
   transform-style: preserve-3d;
   backface-visibility: hidden;
   transform-origin: center center;
-}
-
-.auth-header-notice.enter {
-  animation: authHeaderFlip 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-}
-
-.auth-header-notice.exit {
-  animation: authHeaderFlip 0.5s cubic-bezier(0.55, 0.06, 0.68, 0.19) reverse both;
 }
 
 .auth-form .username-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }

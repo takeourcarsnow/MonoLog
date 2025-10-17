@@ -118,13 +118,10 @@
   transform: none;
   box-shadow: none;
 }
-:root[data-theme="dark"] .auth-confirm-btn:not(:disabled):hover::before {
-  opacity: 0;
-}
 
 /* idle micro pulse when button is visually ready (not loading/sent) */
 .auth-confirm-btn:not(.loading):not(.sent){
-  animation: popIn 360ms cubic-bezier(.2,.9,.3,1), floatIdle 6s ease-in-out 1.6s infinite;
+  animation: popIn 360ms cubic-bezier(.2,.9,.3,1);
 }
 
 /* subtle icon slide and label crossfade when loading/sent */
@@ -132,22 +129,6 @@
 .auth-confirm-btn .btn-label{ transition: opacity .22s ease, transform .22s ease; }
 .auth-confirm-btn.loading .btn-icon{ transform: translateX(-6px); opacity: .8; }
 .auth-confirm-btn.sent .btn-icon{ transform: translateY(-1px) scale(1.02); }
-
-/* sheen / gloss on hover */
-.auth-confirm-btn::before{
-  content: '';
-  position: absolute;
-  left: -40%;
-  top: -40%;
-  width: 40%;
-  height: 180%;
-  background: linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0.18), rgba(255,255,255,0.06));
-  transform: rotate(12deg) translateX(-8px);
-  transition: transform .8s cubic-bezier(.2,.9,.3,1), opacity .45s ease;
-  opacity: 0;
-  pointer-events: none;
-}
-.auth-confirm-btn:not(:disabled):hover::before{ transform: translateX(180%) rotate(12deg); opacity: 1; }
 
 /* sent check bounce */
 .auth-confirm-btn.sent{ animation: checkBounce 520ms cubic-bezier(.2,.9,.3,1); }
@@ -158,22 +139,11 @@
   100%{ transform: translateY(0) scale(1); opacity: 1 }
 }
 
-@keyframes floatIdle{
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-1.5px); }
-  100% { transform: translateY(0); }
-}
-
 @keyframes checkBounce{
   0% { transform: scale(.88); opacity: .9 }
   40% { transform: scale(1.06); }
   70% { transform: scale(.98); }
   100% { transform: scale(1); opacity: 1 }
-}
-
-@keyframes textPulse{
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
 }
 
 @keyframes dotPulse{
@@ -184,13 +154,6 @@
 
 /* avoid any width shrinking by ensuring a min-width matching current min-width */
 .auth-confirm-btn{ min-width: 160px; }
-
-@keyframes textFun{
-  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
-  25% { transform: scale(1.05) rotate(1deg); opacity: 0.9; }
-  50% { transform: scale(1.1) rotate(0deg); opacity: 0.8; }
-  75% { transform: scale(1.05) rotate(-1deg); opacity: 0.9; }
-}
 
 @keyframes shake{
   0%, 100% { transform: translateX(0); }

@@ -154,7 +154,7 @@
 }
 
 .auth-header-notice.enter .notice-inner { animation-name: noticeEnter; }
-.auth-header-notice.exit .notice-inner { animation-name: noticeExit; }
+.auth-header-notice.exit .notice-inner { animation: noticeExit 420ms cubic-bezier(.18,.9,.35,1) both; }
 
 @keyframes noticeEnter {
   0% { transform: translateZ(-8px) rotateX(-12deg) translateY(-6px); opacity: 0; filter: blur(6px) saturate(.96); }

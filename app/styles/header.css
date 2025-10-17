@@ -235,5 +235,4 @@
 }
 .theme-toggle-shell > * { width: 100%; height: 100%; display: inline-flex; align-items: center; justify-content: center; }
 
-.theme-toggle-fallback svg { display: block; width: 20px; height: 20px; }
-.theme-toggle-fallback { color: inherit; display: inline-flex; align-items: center; justify-content: center; }
+.theme-toggle-shell > button { position: relative; z-index: 1; }

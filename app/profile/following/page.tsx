@@ -77,7 +77,7 @@ export default function FollowingPage() {
         ) : (
           <div className="grid" style={{ gap: 16 }}>
             {following.map(user => (
-              <div key={user.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16 }}>
+              <Link key={user.id} href={`/${user.username}`} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, textDecoration: 'none', color: 'inherit' }}>
                 <Image
                   src={user.avatarUrl || "/logo.svg"}
                   alt={user.displayName ?? user.username}
@@ -86,14 +86,14 @@ export default function FollowingPage() {
                   height={48}
                 />
                 <div style={{ flex: 1 }}>
-                  <Link href={`/${user.username}`} style={{ fontWeight: 'bold', textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ fontWeight: 'bold' }}>
                     {user.displayName ?? user.username}
-                  </Link>
+                  </div>
                   <div style={{ fontSize: '0.9em', color: 'var(--text-secondary)' }}>
                     @{user.username}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

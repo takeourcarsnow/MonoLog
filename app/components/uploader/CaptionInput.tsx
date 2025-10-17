@@ -113,7 +113,7 @@ export function CaptionInput({
           // ignore and leave browser default if any issue
         }
       }
-    }, 100); // 100ms debounce to prevent excessive DOM updates during typing
+    }, 300); // 300ms debounce to prevent excessive DOM updates during typing
     return () => {
       if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
     };

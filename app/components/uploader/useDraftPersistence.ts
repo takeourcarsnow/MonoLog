@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { DRAFT_KEY } from "./constants";
 
 export function useDraftPersistence(
@@ -31,6 +31,7 @@ export function useDraftPersistence(
   filmIso: string,
   setFilmIso: (filmIso: string) => void
 ) {
+  const captionDebounceRef = useRef<NodeJS.Timeout | null>(null);
   // restore draft on mount
   useEffect(() => {
     try {
@@ -65,14 +66,14 @@ export function useDraftPersistence(
     }
   }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType, setFilmIso]);
 
-  // Persist draft whenever key pieces of state change
+  // Persist draft whenever key pieces of state change (excluding caption for performance)
   useEffect(() => {
     try {
       const payload: any = {
         dataUrls: dataUrls.length ? dataUrls : undefined,
         originalDataUrls: originalDataUrls.length ? originalDataUrls : undefined,
         editorSettings: editorSettings.length ? editorSettings : undefined,
-        caption: caption || undefined,
+        // caption persisted separately with debounce
         alt: alt === undefined ? undefined : alt,
         visibility,
         compressedSize: compressedSize ?? undefined,
@@ -91,6 +92,7 @@ export function useDraftPersistence(
         const existingRaw = localStorage.getItem(DRAFT_KEY);
         if (existingRaw) {
           const existing = JSON.parse(existingRaw);
+          if (existing.caption !== undefined && payload.caption === undefined) payload.caption = existing.caption;
           if (existing.spotifyLink && !payload.spotifyLink) payload.spotifyLink = existing.spotifyLink;
           if (existing.camera && !payload.camera) payload.camera = existing.camera;
           if (existing.lens && !payload.lens) payload.lens = existing.lens;
@@ -105,5 +107,28 @@ export function useDraftPersistence(
     } catch (e) {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [dataUrls, originalDataUrls, editorSettings, caption, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType, filmIso]);
+  }, [dataUrls, originalDataUrls, editorSettings, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType, filmIso]);
+
+  // Debounced persistence for caption to avoid lag on mobile typing
+  useEffect(() => {
+    if (captionDebounceRef.current) clearTimeout(captionDebounceRef.current);
+    captionDebounceRef.current = setTimeout(() => {
+      try {
+        const existingRaw = localStorage.getItem(DRAFT_KEY);
+        let payload: any = {};
+        if (existingRaw) {
+          payload = JSON.parse(existingRaw);
+        }
+        payload.caption = caption || undefined;
+        payload.savedAt = Date.now();
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+      } catch (e) {
+        // ignore storage errors
+      }
+    }, 500); // 500ms debounce for caption changes
+
+    return () => {
+      if (captionDebounceRef.current) clearTimeout(captionDebounceRef.current);
+    };
+  }, [caption]);
 }

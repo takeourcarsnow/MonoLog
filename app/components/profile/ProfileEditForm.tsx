@@ -90,7 +90,10 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
   // Debug: log the payload we're about to send
   try { console.log('[ProfileEditForm] outgoing payload', { username: uname, displayName: displayNameNormalized, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized }); } catch (_) {}
 
-  const payload = { username: uname, displayName: displayNameNormalized, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized } as any;
+  const payload: any = { displayName: displayNameNormalized, bio: (editBio || '').trim().slice(0,200), socialLinks: socialLinksNormalized };
+  if (usernameChanged) {
+    payload.username = uname;
+  }
   const updatedUser = await api.updateCurrentUser(payload as Partial<User>);
         // Update the local user state immediately
         setUser(updatedUser);

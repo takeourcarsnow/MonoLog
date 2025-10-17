@@ -18,7 +18,7 @@ export function AuthMessage({ mode }: AuthMessageProps) {
     } else {
       return {
         title: "Start your journey",
-        subtitle: "One photo. One day. One story."
+        subtitle: "One post. One day. One story."
       };
     }
   };

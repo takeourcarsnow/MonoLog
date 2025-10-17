@@ -106,7 +106,8 @@ export function InfiniteScrollLoader({
         `}</style>
         <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
           <div className="flex items-center space-x-2">
-            <Image src="/logo.svg" alt="logo" width={20} height={20} className="w-5 h-5 pull-to-refresh-logo" style={{ animation: 'fadeIn 50ms forwards, subtleSpin 1.5s infinite' }} />
+            {/* high-res PNG for crisp small icon */}
+            <Image src="/icon-1024.png" alt="logo" width={20} height={20} className="w-5 h-5 pull-to-refresh-logo" style={{ animation: 'fadeIn 50ms forwards, subtleSpin 1.5s infinite' }} />
           </div>
           <div className="text-gray-500 text-sm mt-2">Loading more posts...</div>
         </div>

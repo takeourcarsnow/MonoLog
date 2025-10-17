@@ -11,11 +11,19 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#0f0f10',
     orientation: 'portrait-primary',
     icons: [
+      // Prefer raster maskable icons for better splash quality on devices
       {
-        src: '/logo.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
-        purpose: 'any',
+        src: '/icon-1024.png',
+        sizes: '1024x1024',
+        type: 'image/png',
+        // Use 'maskable' so platforms can create full-bleed splash screens
+        purpose: 'maskable',
+      },
+      {
+        src: '/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       },
       {
         src: '/icon-192.png',
@@ -23,16 +31,11 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
         purpose: 'any',
       },
+      // Keep SVG available as a vector fallback
       {
-        src: '/icon-512.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icon-1024.png',
-        sizes: '1024x1024',
-        type: 'image/png',
+        src: '/logo.svg',
+        sizes: 'any',
+        type: 'image/svg+xml',
         purpose: 'any',
       },
     ],

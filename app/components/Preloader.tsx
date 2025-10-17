@@ -100,7 +100,8 @@ export function Preloader({ ready, onFinish }: { ready: boolean; onFinish?: () =
       className={`preloader-overlay ${initial ? 'preloader-initial' : ''} ${exiting ? 'preloader-exit' : ''}`}
     >
       <div className="preloader-inner" role="img" aria-label="Loading MonoLog">
-        <Image src="/logo.svg" alt="MonoLog Logo" width={86} height={86} className="preloader-logo" priority />
+  {/* Use high-res PNG so the preloader appears crisp on Retina / high-DPI screens */}
+  <Image src="/icon-1024.png" alt="MonoLog Logo" width={86} height={86} className="preloader-logo" priority />
         <div className="preloader-wordmark">MonoLog</div>
       </div>
     </div>

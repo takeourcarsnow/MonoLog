@@ -1,4 +1,5 @@
 import React from 'react';
+import OfflineButton from '../components/OfflineButton';
 
 export const metadata = {
   title: 'Offline - MonoLog',
@@ -16,20 +17,15 @@ export default function OfflinePage() {
             className="w-16 h-16 mx-auto mb-4"
           />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            You're Offline
+            You&apos;re Offline
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            It looks like you're not connected to the internet. Don't worry, you can still view cached content.
+            It looks like you&apos;re not connected to the internet. Don&apos;t worry, you can still view cached content.
           </p>
         </div>
 
         <div className="space-y-4">
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-          >
-            Try Again
-          </button>
+          <OfflineButton />
 
           <div className="text-sm text-gray-500 dark:text-gray-400">
             <p className="mb-2">While offline, you can:</p>
@@ -44,7 +40,7 @@ export default function OfflinePage() {
 
         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
           <p className="text-xs text-gray-400">
-            Your posts and comments will sync automatically when you're back online.
+            Your posts and comments will sync automatically when you&apos;re back online.
           </p>
         </div>
       </div>

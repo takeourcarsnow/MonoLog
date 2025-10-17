@@ -77,36 +77,41 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     // Enhanced PWA features
     display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
-    edge_side_panel: {
-      preferred_width: 400,
-    },
+    // edge_side_panel: {
+    //   preferred_width: 400,
+    // },
     launch_handler: {
-      client_mode: 'focus-existing',
+      // client_mode: 'focus-existing',
     },
-    handle_links: 'preferred',
+    // handle_links: 'preferred',
     file_handlers: [
       {
         action: '/upload',
-        accept: {
-          'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'],
-        },
+        accept: [
+          {
+            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'],
+          },
+        ],
       },
     ],
     share_target: {
       action: '/?share=true',
-      method: 'POST',
+      method: 'post',
       enctype: 'multipart/form-data',
-      params: {
-        title: 'title',
-        text: 'text',
-        url: 'url',
-        files: [
-          {
-            name: 'images',
-            accept: ['image/*'],
-          },
-        ],
-      },
+      params: [
+        {
+          name: 'title',
+          value: 'title',
+        },
+        {
+          name: 'text',
+          value: 'text',
+        },
+        {
+          name: 'url',
+          value: 'url',
+        },
+      ],
     },
   };
 }

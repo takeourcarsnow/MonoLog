@@ -570,7 +570,8 @@
   opacity: 0;
 }
 
-.actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.feed .actions { justify-content: flex-start; }
 .action {
   display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
   font-size: 13px; cursor: pointer; padding: 6px 8px; border-radius: 8px;

@@ -17,7 +17,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     isActive,
     src,
   });
-  useImageSizing(state.containerRef, state.imgRef, isFullscreen, src);
+  useImageSizing(state.containerRef, state.imgRef, isFullscreen, src, isActive);
 
   // Lazy loading with IntersectionObserver
   useEffect(() => {

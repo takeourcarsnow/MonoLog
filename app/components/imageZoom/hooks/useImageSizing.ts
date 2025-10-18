@@ -4,7 +4,8 @@ export const useImageSizing = (
   containerRef: React.RefObject<HTMLDivElement>,
   imgRef: React.RefObject<HTMLImageElement>,
   isFullscreen: boolean,
-  src: string | undefined
+  src: string | undefined,
+  isActive: boolean
 ) => {
   // Ensure image fits the visible viewport when rendered in the single-post view.
   // CSS alone didn't reliably prevent edge-overflow across browsers/viewport chrome
@@ -30,6 +31,11 @@ export const useImageSizing = (
     const carouselWrapper = container.closest('.carousel-wrapper') as HTMLElement | null;
     const isInCarousel = !!carouselWrapper;
 
+    // For carousel, only the active slide applies sizing to prevent conflicts
+    if (isInCarousel && !isActive) {
+      return;
+    }
+
     const docEl = document.documentElement;
     const getCSSVar = (name: string, fallback = 0) => {
       try {
@@ -45,6 +51,7 @@ export const useImageSizing = (
     // on mobile during scrolling/keyboard open/close).
     let lastAppliedMaxW = 0;
     let lastAppliedMaxH = 0;
+    let lastAppliedDesiredHeight = 0;
     let lastUpdateTime = 0;
     const MIN_UPDATE_MS = 100; // minimum interval between full updates
 
@@ -91,15 +98,40 @@ export const useImageSizing = (
         // reserve a little breathing room (12-20px) so content doesn't touch exact edges
         const breathing = 16;
 
-        // Available height for the media container so the entire card fits in viewport
-        const availH = Math.max(0, viewportH - headerH - tabbarH - otherCardHeight - breathing);
+        // Available height for the card so it fits in viewport
+        let availH = Math.max(0, viewportH - headerH - tabbarH - breathing);
 
-        const maxH = Math.max(0, Math.round(availH));
+        // Adjust for post-view-wrap padding if present
+        if (container) {
+          const postViewWrap = container.closest('.post-view-wrap') as HTMLElement | null;
+          if (postViewWrap) {
+            const style = getComputedStyle(postViewWrap);
+            const padTop = parseFloat(style.paddingTop) || 0;
+            const padBottom = parseFloat(style.paddingBottom) || 0;
+            availH = Math.max(0, availH - padTop - padBottom);
+          }
+        }
+
+        // Adjust for card padding
+        let cardPadTop = 0;
+        let cardPadBottom = 0;
+        if (container) {
+          const cardEl = (container.closest('article.card') as HTMLElement | null) || (container.closest('.card') as HTMLElement | null);
+          if (cardEl) {
+            const cardStyle = getComputedStyle(cardEl);
+            cardPadTop = parseFloat(cardStyle.paddingTop) || 0;
+            cardPadBottom = parseFloat(cardStyle.paddingBottom) || 0;
+          }
+        }
+
+        const maxH = Math.max(0, Math.round(availH - otherCardHeight - cardPadTop - cardPadBottom));
+
+        let desiredHeight = maxH;
 
         // Throttle rapid changes: if we've updated recently and the
         // rounded sizes didn't change, skip the expensive layout writes.
         const now = Date.now();
-        if (now - lastUpdateTime < MIN_UPDATE_MS && maxW === lastAppliedMaxW && maxH === lastAppliedMaxH) {
+        if (now - lastUpdateTime < MIN_UPDATE_MS && maxW === lastAppliedMaxW && maxH === lastAppliedMaxH && desiredHeight === lastAppliedDesiredHeight) {
           return;
         }
 
@@ -114,7 +146,7 @@ export const useImageSizing = (
           const desiredMaxWidth = `${maxW}px`;
           const desiredMaxHeight = `${maxH}px`;
           const desiredWidth = 'auto';
-          const desiredHeight = `${maxH}px`;
+          const desiredHeightStr = `${desiredHeight}px`;
           const desiredMargin = '0 auto';
 
           const curMaxWidth = targetContainer.style.maxWidth || '';
@@ -127,7 +159,7 @@ export const useImageSizing = (
             curMaxWidth !== desiredMaxWidth ||
             curMaxHeight !== desiredMaxHeight ||
             curWidth !== desiredWidth ||
-            curHeight !== desiredHeight ||
+            curHeight !== desiredHeightStr ||
             curMargin !== desiredMargin
           );
 
@@ -135,11 +167,12 @@ export const useImageSizing = (
             targetContainer.style.maxWidth = desiredMaxWidth;
             targetContainer.style.maxHeight = desiredMaxHeight;
             targetContainer.style.width = desiredWidth;
-            targetContainer.style.height = desiredHeight;
+            targetContainer.style.height = desiredHeightStr;
             targetContainer.style.margin = desiredMargin;
           }
           lastAppliedMaxW = maxW;
           lastAppliedMaxH = maxH;
+          lastAppliedDesiredHeight = desiredHeight;
           lastUpdateTime = now;
         }
         if (img) {
@@ -176,17 +209,16 @@ export const useImageSizing = (
               const allowedBottom = (vv ? vv.height : window.innerHeight) - tabbarH - Math.ceil(breathing / 2);
               let attempts = 0;
               // current container height in px
-              let curH = parseFloat(targetContainer.style.height || `${maxH}`) || maxH;
+              let curH = desiredHeight;
               while (attempts < 6) {
                 const rect = cardEl.getBoundingClientRect();
                 if (rect.bottom <= allowedBottom) break;
                 const overflowPx = rect.bottom - allowedBottom;
                 // shrink container by overflow amount plus small cushion
                 curH = Math.max(64, curH - (overflowPx + 8));
-                targetContainer.style.height = `${curH}px`;
-                if (img) img.style.height = '100%';
                 attempts += 1;
               }
+              desiredHeight = curH;
             }
           }
         } catch (_) {
@@ -220,7 +252,7 @@ export const useImageSizing = (
     let mo: MutationObserver | null = null;
     let imgLoadListener: (() => void) | null = null;
     try {
-        if (container) {
+        if (container && !isInCarousel) {
             const cardEl = (container.closest('article.card') as HTMLElement | null) || (container.closest('.card') as HTMLElement | null) || container;
             ro = new ResizeObserver(() => {
               if (raf) cancelAnimationFrame(raf);
@@ -237,6 +269,22 @@ export const useImageSizing = (
               raf = requestAnimationFrame(() => { updateSizing(); raf = null; });
             });
             mo.observe(cardEl, { childList: true, subtree: true });
+          } else if (isInCarousel && isActive) {
+            // For active carousel slide, observe the card for layout changes
+            const cardEl = (container.closest('article.card') as HTMLElement | null) || (container.closest('.card') as HTMLElement | null);
+            if (cardEl) {
+              ro = new ResizeObserver(() => {
+                if (raf) cancelAnimationFrame(raf);
+                raf = requestAnimationFrame(() => { updateSizing(); raf = null; });
+              });
+              ro.observe(cardEl);
+
+              mo = new MutationObserver(() => {
+                if (raf) cancelAnimationFrame(raf);
+                raf = requestAnimationFrame(() => { updateSizing(); raf = null; });
+              });
+              mo.observe(cardEl, { childList: true, subtree: true });
+            }
           }
         if (img && !img.complete) {
           imgLoadListener = () => {
@@ -282,5 +330,5 @@ export const useImageSizing = (
   // logic inactive on single-post views after the refactor.
   //
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFullscreen, src, containerRef.current, imgRef.current]);
+  }, [isFullscreen, src, isActive, containerRef.current, imgRef.current]);
 };

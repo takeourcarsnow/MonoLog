@@ -249,7 +249,7 @@ export const UserHeader = memo(function UserHeader({
                   <span className="icon" aria-hidden="true"><Edit size={16} /></span>
                   <span className="reveal label">{editorSaving ? 'Saving…' : 'Edit'}</span>
                 </button>
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <button
                     className={`btn ghost small-min delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${postDeleteArmed || deleteExpanded ? 'confirm' : ''}`}
                     aria-label={postDeleteArmed || deleteExpanded ? 'Confirm delete post' : 'Delete post'}

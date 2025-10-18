@@ -7,7 +7,7 @@ import { useZoomState } from "./imageZoom/hooks/useZoomState";
 import { useZoomEvents } from "./imageZoom/hooks/useZoomEvents";
 import { useImageSizing } from "./imageZoom/hooks/useImageSizing";
 
-export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive = true, isFullscreen = false, instanceId, lazy = false, rootMargin = "50px", ...rest }: Props) {
+export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive = true, isFullscreen = false, instanceId, lazy = false, rootMargin = "50px", onDimensionsChange, ...rest }: Props) {
   const [isVisible, setIsVisible] = useState(!lazy);
   const state = useZoomState();
   const { handlePointerDown, handlePointerMove, handlePointerUp, registerTap } = useZoomEvents({
@@ -40,12 +40,14 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     return () => observer.disconnect();
   }, [lazy, isVisible, rootMargin, state.containerRef]);
 
-  // Ensure loaded class is added even for cached images
+  // Call onDimensionsChange when active and loaded
   useEffect(() => {
-    if (state.imgRef.current?.complete) {
-      state.imgRef.current.classList.add("loaded");
+    if (isActive && onDimensionsChange && state.containerRef.current && state.imgRef.current?.complete) {
+      const container = state.containerRef.current;
+      const rect = container.getBoundingClientRect();
+      onDimensionsChange({ width: rect.width, height: rect.height });
     }
-  }, [src, state.imgRef]);
+  }, [isActive, onDimensionsChange, state.containerRef, state.imgRef]);
 
   return (
     <div
@@ -111,6 +113,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           }}
           onLoad={(e) => {
             e.currentTarget.classList.add("loaded");
+            if (onDimensionsChange && state.containerRef.current) {
+              const container = state.containerRef.current;
+              const rect = container.getBoundingClientRect();
+              onDimensionsChange({ width: rect.width, height: rect.height });
+            }
           }}
           onError={(e) => {
             e.currentTarget.classList.add("loaded");

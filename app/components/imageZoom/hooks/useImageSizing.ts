@@ -26,6 +26,10 @@ export const useImageSizing = (
       return; // fullscreen viewer manages its own sizing
     }
 
+    // Check if this image is inside a carousel
+    const carouselWrapper = container.closest('.carousel-wrapper') as HTMLElement | null;
+    const isInCarousel = !!carouselWrapper;
+
     const docEl = document.documentElement;
     const getCSSVar = (name: string, fallback = 0) => {
       try {
@@ -59,9 +63,9 @@ export const useImageSizing = (
         // Respect horizontal page side padding so edges align with header content
         const sidePad = getCSSVar('--page-side-padding', 12);
 
-  // Round measured values to integers to avoid tiny fractional
-  // differences retriggering style writes/observers repeatedly.
-  const maxW = Math.max(0, Math.round(viewportW - (sidePad * 2)));
+        // Round measured values to integers to avoid tiny fractional
+        // differences retriggering style writes/observers repeatedly.
+        const maxW = Math.max(0, Math.round(viewportW - (sidePad * 2)));
 
         // Calculate height taken by other parts of the post card so the media
         // container can shrink to ensure the whole card fits in the viewport.
@@ -99,7 +103,10 @@ export const useImageSizing = (
           return;
         }
 
-        if (container) {
+        // For carousel slides, apply sizing to the carousel wrapper to maintain consistent height
+        const targetContainer = isInCarousel ? carouselWrapper : container;
+
+        if (targetContainer) {
           // Constrain container to measured viewport area. Use explicit height
           // so the image's max-height can correctly scale it without expanding.
           // Only apply style mutations when values actually change so we don't
@@ -110,11 +117,11 @@ export const useImageSizing = (
           const desiredHeight = `${maxH}px`;
           const desiredMargin = '0 auto';
 
-          const curMaxWidth = container.style.maxWidth || '';
-          const curMaxHeight = container.style.maxHeight || '';
-          const curWidth = container.style.width || '';
-          const curHeight = container.style.height || '';
-          const curMargin = container.style.margin || '';
+          const curMaxWidth = targetContainer.style.maxWidth || '';
+          const curMaxHeight = targetContainer.style.maxHeight || '';
+          const curWidth = targetContainer.style.width || '';
+          const curHeight = targetContainer.style.height || '';
+          const curMargin = targetContainer.style.margin || '';
 
           const containerChanged = (
             curMaxWidth !== desiredMaxWidth ||
@@ -125,11 +132,11 @@ export const useImageSizing = (
           );
 
           if (containerChanged) {
-            container.style.maxWidth = desiredMaxWidth;
-            container.style.maxHeight = desiredMaxHeight;
-            container.style.width = desiredWidth;
-            container.style.height = desiredHeight;
-            container.style.margin = desiredMargin;
+            targetContainer.style.maxWidth = desiredMaxWidth;
+            targetContainer.style.maxHeight = desiredMaxHeight;
+            targetContainer.style.width = desiredWidth;
+            targetContainer.style.height = desiredHeight;
+            targetContainer.style.margin = desiredMargin;
           }
           lastAppliedMaxW = maxW;
           lastAppliedMaxH = maxH;
@@ -163,20 +170,20 @@ export const useImageSizing = (
         // or other dynamic content changed after measurement), iteratively reduce
         // the container height until the card fits or a safety limit is reached.
         try {
-          if (container) {
-            const cardEl = (container.closest('article.card') as HTMLElement | null) || (container.closest('.card') as HTMLElement | null);
+          if (targetContainer) {
+            const cardEl = (targetContainer.closest('article.card') as HTMLElement | null) || (targetContainer.closest('.card') as HTMLElement | null);
             if (cardEl) {
               const allowedBottom = (vv ? vv.height : window.innerHeight) - tabbarH - Math.ceil(breathing / 2);
               let attempts = 0;
               // current container height in px
-              let curH = parseFloat(container.style.height || `${maxH}`) || maxH;
+              let curH = parseFloat(targetContainer.style.height || `${maxH}`) || maxH;
               while (attempts < 6) {
                 const rect = cardEl.getBoundingClientRect();
                 if (rect.bottom <= allowedBottom) break;
                 const overflowPx = rect.bottom - allowedBottom;
                 // shrink container by overflow amount plus small cushion
                 curH = Math.max(64, curH - (overflowPx + 8));
-                container.style.height = `${curH}px`;
+                targetContainer.style.height = `${curH}px`;
                 if (img) img.style.height = '100%';
                 attempts += 1;
               }
@@ -253,11 +260,12 @@ export const useImageSizing = (
       if (raf) cancelAnimationFrame(raf as number);
       // Clear inline sizing when unmounted so other layouts aren't affected
       try {
-        if (container) {
-          container.style.maxWidth = '';
-          container.style.maxHeight = '';
-          container.style.width = '';
-          container.style.height = '';
+        const targetContainer = isInCarousel ? carouselWrapper : container;
+        if (targetContainer) {
+          targetContainer.style.maxWidth = '';
+          targetContainer.style.maxHeight = '';
+          targetContainer.style.width = '';
+          targetContainer.style.height = '';
         }
         if (img) {
           img.style.maxWidth = '';

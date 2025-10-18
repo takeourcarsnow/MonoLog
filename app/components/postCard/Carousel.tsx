@@ -38,157 +38,65 @@ export const Carousel = memo(function Carousel({
     onIndexChange: onImageIndexChange,
   });
 
-  // refs and state to measure slide image heights so the wrapper can resize
+  // refs for carousel functionality
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const imgRefs = useRef<Array<HTMLImageElement | null>>([]);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const isMultipostInFeedRef = useRef(false);
-  const [heights, setHeights] = useState<number[]>([]);
-  const [wrapperHeight, setWrapperHeight] = useState<string | number>('auto');
+  // Keep a state copy so we can react to detection (apply height, etc.)
+  const [isMultipostInFeed, setIsMultipostInFeed] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<Array<{ width: number; height: number } | null>>([]);
+  // Stable per-index callbacks for ImageZoom onDimensionsChange to avoid
+  // recreating an inline function every render which can cause parent/child
+  // effect loops when the child calls the callback during mount/load.
+  const dimsCallbacksRef = useRef<Array<((d: { width: number; height: number }) => void) | undefined>>([]);
 
-  // Determine if this carousel is in a multipost card in the feed
+  // Initialize dimensions array
+  useEffect(() => {
+    setImageDimensions(new Array(imageUrls.length).fill(null));
+    // (re)create per-index dimension callbacks when the image list changes
+    dimsCallbacksRef.current = new Array(imageUrls.length).fill(undefined).map((_, i) => {
+      return (dimensions: { width: number; height: number }) => handleDimensionsChange(i, dimensions);
+    });
+  }, [imageUrls.length]);
+
+  const handleDimensionsChange = useCallback((idx: number, dimensions: { width: number; height: number }) => {
+    setImageDimensions(prev => {
+      const newDims = [...prev];
+      newDims[idx] = dimensions;
+      return newDims;
+    });
+    // If this is the current image, update height immediately
+    if (idx === index && isMultipostInFeedRef.current && wrapperRef.current) {
+      wrapperRef.current.style.height = `${dimensions.height}px`;
+    }
+  }, [index]);
+
+  // Determine if this carousel is in a multipost card in the feed and check desktop
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (wrapper) {
-      isMultipostInFeedRef.current = wrapper.closest('.feed .card.multipost') !== null;
+      const isMulti = wrapper.closest('.feed .card.multipost') !== null;
+      isMultipostInFeedRef.current = isMulti;
+      setIsMultipostInFeed(isMulti);
     }
+    const mediaQuery = window.matchMedia('(min-width: 900px)');
+    setIsDesktop(mediaQuery.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mediaQuery.addEventListener('change', onChange);
+    return () => mediaQuery.removeEventListener('change', onChange);
   }, [wrapperRef]);
 
-  const measureImage = useCallback((idx: number) => {
-    const img = imgRefs.current[idx];
-    if (!img) return;
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    // Only measure height for multipost in feed
-    if (!isMultipostInFeedRef.current) return;
-    // Allow the image to size naturally while we measure. We avoid restoring
-    // any previous inline height here so the React-driven inline height
-    // (from state) can be applied without being overwritten.
-    let maxHeight: number | null = null;
-    const vh = window.innerHeight * 0.56;
-    maxHeight = Math.min(vh, 720);
-    // Prefer the currently rendered/displayed height when available. This
-    // ensures the wrapper matches what the user actually sees (especially
-    // when CSS like max-height/object-fit is applied). Fall back to
-    // computing height from natural dimensions only when necessary.
-    const imgRect = img.getBoundingClientRect();
-    const displayedH = imgRect.height || img.offsetHeight || img.clientHeight || 0;
-    const natW = img.naturalWidth || 0;
-    const natH = img.naturalHeight || 0;
-    let h: number | null = null;
-    if (displayedH && isFinite(displayedH) && displayedH > 0) {
-      h = Math.round(displayedH);
-      if (maxHeight !== null && h > maxHeight) h = maxHeight;
-    } else if (natW > 0 && natH > 0) {
-      // Use the image's rendered width to compute expected displayed height
-      const renderedW = imgRect.width || img.offsetWidth || wrapper.clientWidth || wrapper.getBoundingClientRect().width;
-      h = Math.round((natH * renderedW) / natW);
-      if (maxHeight !== null && h > maxHeight) h = maxHeight;
+  // If the carousel is in a multipost card and dimensions are known,
+  // ensure the wrapper height matches the current image so the panel
+  // adapts to the image size like before.
+  useEffect(() => {
+    if (!isMultipostInFeed) return;
+    const dims = imageDimensions[index];
+    if (dims && wrapperRef.current) {
+      wrapperRef.current.style.height = `${dims.height}px`;
     }
-    // Fallback to measured offsetHeight if natural dims or wrapper width unavailable
-    if (h == null || !isFinite(h) || h === 0) {
-      try {
-        // force layout
-        const measured = img.offsetHeight || img.getBoundingClientRect().height || null;
-        h = measured;
-      } catch (_) {
-        h = img.offsetHeight || img.getBoundingClientRect().height || null;
-      }
-      if (maxHeight !== null && h !== null && h > maxHeight) {
-        h = maxHeight;
-      }
-    }
-    if (h == null) return;
-    setHeights(prev => {
-      const copy = prev.slice();
-      copy[idx] = h as number;
-      return copy;
-    });
-    // If this is the active slide, update wrapper height immediately
-    if (idx === index) {
-      setWrapperHeight(h as number);
-    }
-    // (no DOM restore here — leave inline height to React state)
-  }, [index]);
-
-  // Update wrapper height whenever the active index or measured heights change
-  useEffect(() => {
-    if (isMultipostInFeedRef.current) {
-      const h = heights[index];
-      if (typeof h === 'number') setWrapperHeight(h);
-      else setWrapperHeight('auto');
-      // If the active slide hasn't been measured yet, attempt a re-measure
-      if (h == null) {
-        requestAnimationFrame(() => measureImage(index));
-      }
-    } else {
-      setWrapperHeight('auto');
-    }
-  }, [index, heights, measureImage]);
-
-  // Re-measure on window resize in case layout changes
-  useEffect(() => {
-    if (!isMultipostInFeedRef.current) return;
-    const onResize = () => {
-      imgRefs.current.forEach((img, i) => { if (img) { measureImage(i); } });
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [measureImage]);
-
-  // Cleanup: unobserve images when component unmounts or imgRefs change
-  useEffect(() => {
-    return () => {
-      try {
-        const obs = resizeObserverRef.current;
-        // Snapshot current img refs now so cleanup doesn't access a mutated ref
-        const imgsSnapshot = imgRefs.current ? imgRefs.current.slice() : [];
-        if (obs) {
-          imgsSnapshot.forEach(img => { if (img) try { obs.unobserve(img); } catch (_) {} });
-          try { obs.disconnect(); } catch (_) {}
-        }
-      } catch (_) {}
-    };
-  }, []);
-
-  // ResizeObserver: observe image size changes (eg. CSS/layout changes) and re-measure
-  useEffect(() => {
-    if (typeof ResizeObserver === 'undefined' || !isMultipostInFeedRef.current) return;
-    const obs = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const target = entry.target as HTMLImageElement;
-        const idx = imgRefs.current.findIndex(i => i === target);
-        if (idx >= 0) {
-          // Use RAF to ensure layout has settled
-          requestAnimationFrame(() => measureImage(idx));
-        }
-      }
-    });
-    resizeObserverRef.current = obs;
-    return () => {
-      try { obs.disconnect(); } catch (_) {}
-      resizeObserverRef.current = null;
-    };
-  }, [measureImage]);
-
-  // Handle cached images that may have already loaded before our onLoad handler ran
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const imgs = wrapper.querySelectorAll('.carousel-track img') as NodeListOf<HTMLImageElement> | null;
-    if (!imgs || imgs.length === 0) return;
-    imgs.forEach((img, i) => {
-      // Populate imgRefs in order so measureImage can find them
-      imgRefs.current[i] = img;
-      if (isMultipostInFeedRef.current) {
-        try { if (resizeObserverRef.current) resizeObserverRef.current.observe(img); } catch (_) {}
-      }
-      if (img.complete && isMultipostInFeedRef.current) {
-        // measure on next frame
-        requestAnimationFrame(() => measureImage(i));
-      }
-    });
-  }, [imageUrls, measureImage]);
+  }, [isMultipostInFeed, index, imageDimensions]);
 
   const { handleMediaClick } = useMediaClick({
     isFavorite,
@@ -209,7 +117,6 @@ export const Carousel = memo(function Carousel({
         if (e.key === "ArrowRight") next();
       }}
       tabIndex={0}
-      style={{ height: wrapperHeight === 'auto' ? 'auto' : `${wrapperHeight}px` }}
     >
       <div className="edge-area left" />
       <div className="edge-area right" />
@@ -242,23 +149,12 @@ export const Carousel = memo(function Carousel({
                 src={u}
                 alt={alts[idx] || `Photo ${idx + 1}`}
                 isActive={idx === index}
-                lazy={true}
-                onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                  // preserve existing loaded class
-                  e.currentTarget.classList.add("loaded");
-                  // store ref and measure
-                  const imgEl = e.currentTarget as HTMLImageElement;
-                  imgRefs.current[idx] = imgEl;
-                  // If we have a ResizeObserver, observe this image so we re-measure on CSS/layout-driven size changes
-                  if (isMultipostInFeedRef.current) {
-                    try {
-                      if (resizeObserverRef.current) resizeObserverRef.current.observe(imgEl);
-                    } catch (_) {}
-                    // measure on next frame to ensure layout applied
-                    requestAnimationFrame(() => measureImage(idx));
-                  }
-                }}
-                onDragStart={(e: React.DragEvent) => e.preventDefault()}
+                lazy={false}
+                // Always pass a stable callback; we only apply the height
+                // when we detect multipost layout. This lets ImageZoom
+                // report dimensions early while avoiding unstable inline
+                // callbacks that cause render loops.
+                onDimensionsChange={dimsCallbacksRef.current[idx]}
               />
             </div>
           </div>

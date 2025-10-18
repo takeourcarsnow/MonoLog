@@ -7,17 +7,7 @@
 }
 
 /* Controlled transform-based carousel for posts (better UX than free horizontal scroll) */
-.carousel-wrapper { position: relative; overflow: hidden; }
-.carousel-wrapper { /* allow browser to decide; JS will lock to horizontal when appropriate */ touch-action: auto; }
-.carousel-wrapper .carousel-track {
-  /* allow the wrapper to control visible height; track shouldn't force larger height */
-  align-items: flex-start;
-}
-
-/* animate height changes made by JS so switching slides resizes smoothly */
-.carousel-wrapper {
-  transition: height 280ms cubic-bezier(.2,.8,.2,1);
-}
+.carousel-wrapper { position: relative; overflow: hidden; touch-action: auto; transition: height 320ms cubic-bezier(.2,.8,.2,1); }
 .carousel-track {
   display: flex; transition: transform 320ms cubic-bezier(.2,.8,.2,1); width: 100%; will-change: transform;
 }
@@ -77,52 +67,59 @@
   .carousel-dots .dot { width: 7px; height: 7px; }
 }
 
-/* Desktop: cap feed/explore card image height so single posts don't fill the
-   whole viewport at normal browser zoom. Keeps images large but prevents the
-   'zoomed in' feeling on wide screens. Mobile rules above remain unchanged. */
-/* Desktop image sizing: previously 64vh could cause fractional rounding
-   at certain desktop zoom levels (esp. 100% on some displays) leading to
-   a 1px vertical crop because the container was overflow:hidden while
-   the intrinsic image computed a slightly larger pixel height. Give a
-   little headroom (+2vh) and also cap by available dynamic viewport
-   height minus a conservative chrome offset so tall landscape windows
-   still keep images comfortably sized. Use dvh so browser UI changes
-   (URL bar hide/show) on some platforms don't cause jumpy resizes. */
-@media (min-width: 900px) {
-  :root { --chrome-offset: 220px; }
-  .card-media {
-    /* allow the card to size to the image but not exceed viewport height */
-  max-height: min(66vh, calc((var(--viewport-height, 1vh) * 100) - var(--chrome-offset)));
-    display: block;
-    /* avoid inadvertent vertical clipping; we still hide horizontal overflow for carousel drag */
-    overflow-y: visible;
-    overflow-x: hidden;
-  }
-
-  .card-media img,
-  .card-media .carousel img,
-  .carousel-slide img {
-    /* respect image aspect ratio while constraining height */
-  max-height: min(66vh, calc((var(--viewport-height, 1vh) * 100) - var(--chrome-offset)));
-    max-width: 100%;
-    width: auto;
-    object-fit: contain;
-    display: block;
-    margin: 0 auto;
-  }
-
-  /* keep carousel slides vertically centered when images are constrained */
-  .carousel-slide { align-items: center; justify-content: center; }
+/* Carousel image sizing - unified for all screen sizes */
+.card-media img,
+.card-media .carousel img,
+.carousel-slide img {
+  max-height: 70vh;
+  max-width: 100%;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
 }
+
+/* Single-post view: force a stable carousel "canvas" so slides share the same
+  height regardless of image aspect ratio. This avoids layout jumps when
+  swiping and makes images scale to fit the visible area. Kept scoped to
+  .post-view-wrap so feed/grid carousels continue to use natural sizing. */
+.post-view-wrap .card-media {
+  /* allow the media area to occupy a consistent portion of the viewport */
+  max-height: 70vh; /* same cap as images above */
+}
+.post-view-wrap .carousel-wrapper,
+.post-view-wrap .carousel-track,
+.post-view-wrap .carousel-slide,
+.post-view-wrap .card-media .media-link,
+.post-view-wrap .card-media .monolog-image-zoom {
+  height: 100%;
+}
+.post-view-wrap .carousel-wrapper {
+  /* ensure wrapper matches the constrained parent height */
+  height: 100%;
+}
+.post-view-wrap .carousel-slide { align-items: center; }
+
+/* Ensure ImageZoom instances inside the single-post view behave as a
+   contained canvas: make the inner <img> fill the container while
+   preserving aspect ratio via object-fit: contain. This complements the
+   inline styles applied by ImageZoom but gives a CSS fallback and keeps
+   behavior consistent across browsers. */
+.post-view-wrap .monolog-image-zoom img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+/* keep carousel slides vertically centered when images are constrained */
+.carousel-slide { align-items: center; justify-content: center; }
 
 /* Make multipost containers smaller in feed/explore */
 .feed .card.multipost .card-media img,
 .feed .card.multipost .carousel-slide img {
-  /* Override the generic multipost rule and cap height on large screens
-     so multipost slides remain visually consistent and don't expand to
-     fill unusually tall viewports. Keep object-fit: contain so aspect
-     ratio is preserved. */
-  max-height: min(56vh, 720px);
+  max-height: 60vh;
   height: auto;
   width: auto;
   object-fit: contain;

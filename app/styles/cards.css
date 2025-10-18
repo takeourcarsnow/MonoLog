@@ -571,12 +571,6 @@
 }
 
 .actions { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: nowrap; overflow: visible; min-width: 0; flex-shrink: 1; }
-.feed .actions { justify-content: flex-start; }
-
-/* Center actions on desktop screens */
-@media (min-width: 768px) {
-  .feed .actions { justify-content: center; }
-}
 
 /* Make buttons tighter on smaller screens to fit in one line */
 @media (max-width: 640px) {

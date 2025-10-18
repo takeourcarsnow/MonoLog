@@ -120,7 +120,7 @@ export function ProfileView({ userId }: { userId?: string }) {
         const gridView = <PostsGrid posts={posts} />;
         const listView = (
           <>
-            {posts.map(p => <PostCard key={p.id} post={p} />)}
+            {posts.map(p => <PostCard key={p.id} post={p} disableCardNavigation={true} />)}
           </>
         );
 

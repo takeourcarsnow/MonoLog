@@ -425,7 +425,7 @@
   border-radius: 8px;
 }
 
-.card-body { padding: 10px 12px; display: grid; gap: 10px; }
+.card-body { padding: 10px 12px; display: grid; gap: 10px; overflow: visible; }
 .caption {
   font-size: 15px;
   font-family: 'Patrick Hand', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
@@ -570,7 +570,7 @@
   opacity: 0;
 }
 
-.actions { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.actions { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: nowrap; overflow: visible; min-width: 0; flex-shrink: 1; }
 .feed .actions { justify-content: flex-start; }
 
 /* Center actions on desktop screens */
@@ -580,15 +580,33 @@
 
 /* Make buttons tighter on smaller screens to fit in one line */
 @media (max-width: 640px) {
-  .actions { gap: 4px; }
-  .action { padding: 6px 4px; gap: 4px; }
-  .profile-actions { gap: 4px !important; }
-  .profile-actions .btn { padding: 8px 10px !important; }
+  .actions { gap: 2px; }
+  .action { padding: 4px 3px; gap: 2px; font-size: 12px; }
+  .action svg { width: 16px; height: 16px; }
+  .profile-actions { gap: 2px !important; }
+  .profile-actions .btn { padding: 6px 8px !important; font-size: 12px !important; }
+}
+
+/* Extra tight for very small screens */
+@media (max-width: 480px) {
+  .actions { gap: 1px; }
+  .action { padding: 3px 2px; gap: 1px; font-size: 11px; }
+  .action svg { width: 14px; height: 14px; }
+  /* Hide comment count text on very small screens to save space */
+  .action.comments-toggle span { display: none; }
+}
+
+/* Ultra tight for extremely small viewports or high zoom levels */
+@media (max-width: 360px) {
+  .actions { gap: 0px; }
+  .action { padding: 2px 1px; gap: 0px; font-size: 10px; }
+  .action svg { width: 12px; height: 12px; }
 }
 .action {
   display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
   font-size: 13px; cursor: pointer; padding: 6px 6px; border-radius: 8px;
   transition: background var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 1; min-width: 0;
 }
 
 /* Tap / press feedback for action icons */

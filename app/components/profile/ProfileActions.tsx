@@ -171,7 +171,7 @@ export function ProfileActions({
           <span className="reveal label">{displayText}</span>
         </button>
       ) : null}
-      <div className="profile-actions" style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 8 }}>
+      <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 8 }}>
         {/* Show owner actions when the signed-in user is viewing their own profile.
             This handles both /profile (no param) and /profile/[id] when the id
             matches the current user. */}

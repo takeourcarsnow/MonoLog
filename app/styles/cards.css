@@ -570,16 +570,24 @@
   opacity: 0;
 }
 
-.actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.actions { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .feed .actions { justify-content: flex-start; }
 
 /* Center actions on desktop screens */
 @media (min-width: 768px) {
   .feed .actions { justify-content: center; }
 }
+
+/* Make buttons tighter on smaller screens to fit in one line */
+@media (max-width: 640px) {
+  .actions { gap: 4px; }
+  .action { padding: 6px 4px; gap: 4px; }
+  .profile-actions { gap: 4px !important; }
+  .profile-actions .btn { padding: 8px 10px !important; }
+}
 .action {
   display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
-  font-size: 13px; cursor: pointer; padding: 6px 8px; border-radius: 8px;
+  font-size: 13px; cursor: pointer; padding: 6px 6px; border-radius: 8px;
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 

@@ -13,15 +13,15 @@
 .header-inner {
   position: relative;
   max-width: var(--maxw); margin: 0 auto; padding: 8px var(--page-side-padding);
-  display: flex; align-items: center; gap: 10px; justify-content: space-between;
+  display: flex; align-items: center; gap: 12px; justify-content: space-between;
   /* Ensure the header never expands beyond its container (prevents
      long inline labels from increasing the app width on small screens). */
   width: 100%;
   box-sizing: border-box;
 }
-.brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .brand .logo {
-  width: 28px; height: 28px; border-radius: 8px; background: var(--text); position: relative; overflow: hidden;
+  width: 30px; height: 30px; border-radius: 8px; background: var(--text); position: relative; overflow: hidden;
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
   background-image: url('/logo.svg');
   background-size: contain;
@@ -47,7 +47,7 @@
 }
 .brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.2px; }
 
-.header-actions { display: flex; align-items: center; gap: 4px; }
+.header-actions { display: flex; align-items: center; gap: 6px; }
 /* allow header action group to shrink when space is tight (prevents
   the header from growing wider than the viewport when account text
   is present). */

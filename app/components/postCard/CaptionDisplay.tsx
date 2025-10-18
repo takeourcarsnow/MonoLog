@@ -21,7 +21,12 @@ export function CaptionDisplay({ caption, maxLength = 50 }: CaptionDisplayProps)
   // max-height transition, so this keeps the DOM height consistent and lets
   // the CSS transition animate smoothly both opening and closing.
   return (
-    <div className="caption" aria-live="polite">
+    <div 
+      className="caption" 
+      aria-live="polite"
+      onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
+      style={{ cursor: shouldTruncate ? 'pointer' : 'default' }}
+    >
       <div className={`caption-content ${isExpanded ? 'expanded' : 'collapsed'}`}>
         <div className="caption-inner">{renderMentions(caption)}</div>
         {/* subtle gradient hint at the bottom when collapsed */}

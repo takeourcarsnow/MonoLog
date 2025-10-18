@@ -222,8 +222,8 @@ html[class*="page-scroll"] .content {
 
 /* Custom scrollbar styling - minimalistic and modern */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -231,17 +231,17 @@ html[class*="page-scroll"] .content {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--border), transparent 40%);
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--border), transparent 50%);
+  border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--border), transparent 20%);
+  background: color-mix(in srgb, var(--border), transparent 30%);
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: color-mix(in srgb, var(--border), transparent 10%);
+  background: color-mix(in srgb, var(--border), transparent 20%);
 }
 
 /* Firefox scrollbar styling */

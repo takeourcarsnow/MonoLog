@@ -2,7 +2,7 @@
   appearance: none; border: 1px solid var(--border); background: var(--bg-elev);
   color: var(--text); padding: 8px 12px; border-radius: 999px;
   font-size: 14px; line-height: 1; cursor: pointer;
-  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms cubic-bezier(0.4, 0, 0.2, 1), border-color 180ms cubic-bezier(0.4, 0, 0.2, 1), color 180ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 180ms cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 600;
   position: relative;
   overflow: hidden;
@@ -24,8 +24,8 @@
   height: 300px;
 }
 .btn:hover { 
-  transform: translateY(-2px); 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-1px); 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 .btn.primary { 
   background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary), var(--accent) 20%)); 
@@ -34,12 +34,12 @@
   box-shadow: 0 4px 16px color-mix(in srgb, var(--primary), transparent 70%);
 }
 .btn.primary:hover {
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--primary), transparent 60%);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary), transparent 75%);
 }
 .btn.ghost { background: transparent; border-color: var(--border); }
 .btn.icon { padding: 8px; width: 36px; height: 36px; display: grid; place-items: center; }
 .btn.icon svg { transition: transform 0.2s ease; }
-.btn.icon:hover svg { transform: scale(1.1); }
+.btn.icon:hover svg { transform: scale(1.05); }
 
 /* Very small, minimal icon style for in-line controls (add/edit/delete) */
 .btn.small-min {
@@ -127,10 +127,14 @@
   transition: transform 200ms ease !important;
 }
 
-.btn { transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; }
-.btn:active { transform: translateY(1px) scale(.997); }
+.btn { transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 180ms cubic-bezier(0.4, 0, 0.2, 1); }
+.btn:active { transform: translateY(0.5px) scale(0.995); }
 
 .btn-group { display: flex; gap: 8px; align-items: center; }
+.btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%);
+  outline-offset: 2px;
+}
 .btn.primary { padding: 10px 14px; border-radius: 12px; font-weight: 700; }
 
 /* Discard button - matches pill button style */

@@ -42,8 +42,12 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
     if (saving) return;
     setSaving(true);
     try {
-      const combinedFilmType = (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || undefined;
-      await onSave({ caption, public: isPublic, camera, lens, filmType: combinedFilmType });
+      // If both filmType and filmIso are empty, send an empty string so the
+      // server will update/clear the DB value. Previously we sent `undefined`
+      // which meant "do not change" and prevented clearing.
+  const combinedFilmType = (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || '';
+  const patch = { caption, public: isPublic, camera, lens, filmType: combinedFilmType };
+  await onSave(patch);
     } finally {
       setSaving(false);
     }

@@ -16,9 +16,9 @@ export async function POST(req: Request) {
     if (patch.public !== undefined) updates.public = patch.public;
     if (patch.camera !== undefined) updates.camera = patch.camera;
     if (patch.lens !== undefined) updates.lens = patch.lens;
-    if (patch.filmType !== undefined) updates.film_type = patch.film_type;
-    const { error } = await sb.from('posts').update(updates).eq('id', id);
-    if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
+  if (patch.filmType !== undefined) updates.film_type = patch.filmType === '' ? null : patch.filmType;
+  const { data: updatedRows, error } = await sb.from('posts').update(updates).eq('id', id).select('*').limit(1).single();
+  if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
 
     // Handle mentions if caption was updated
     if (patch.caption) {
@@ -85,7 +85,8 @@ export async function POST(req: Request) {
       })();
     }
 
-    return NextResponse.json({ ok: true });
+  // Return the updated row to the client to avoid immediate stale reads
+  return NextResponse.json({ ok: true, post: updatedRows });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

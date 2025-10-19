@@ -55,6 +55,8 @@ export async function updatePost(id: string, patch: { caption?: string; alt?: st
   const res = await fetch('/api/posts/update', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ id, patch }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to update post');
+  // If the server returned the updated post row, use it to avoid a stale re-fetch
+  if (json && json.post) return mapRowToHydratedPost(json.post) as any;
   return await getPost(id) as any;
 }
 

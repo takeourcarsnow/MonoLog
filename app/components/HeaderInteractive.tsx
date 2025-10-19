@@ -15,7 +15,6 @@ const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeT
 const AccountSwitcher = dynamic(() => import("./AccountSwitcher").then(mod => mod.AccountSwitcher), { ssr: false });
 
 export function HeaderInteractive() {
-  console.log('HeaderInteractive rendering');
   const router = useRouter();
   const [isLogoAnimating, setIsLogoAnimating] = useState(false);
   const pathname = usePathname();
@@ -27,7 +26,6 @@ export function HeaderInteractive() {
 
   // Define checkForNewThreads function outside useEffect so it can be exposed globally
   const checkForNewThreads = useCallback(async (forceToast = false) => {
-    console.log('checkForNewThreads called, forceToast:', forceToast);
     try {
       let lastChecked = localStorage.getItem('communitiesLastChecked');
       if (!lastChecked) {
@@ -38,17 +36,14 @@ export function HeaderInteractive() {
         return;
       }
 
-      const hasNew = await api.hasNewThreads(lastChecked);
-      console.log('hasNewThreads result:', hasNew);
+  const hasNew = await api.hasNewThreads(lastChecked);
       
       if (forceToast) {
-        console.log('Forcing toast display');
         show("New posts in communities (forced)");
       } else {
         setHasNewThreads(hasNew);
       }
     } catch (e) {
-      console.log('Error in checkForNewThreads:', e);
       // Ignore errors - user might not be authenticated or API might be down
       setHasNewThreads(false);
     }
@@ -59,10 +54,8 @@ export function HeaderInteractive() {
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       (window as any).checkCommunities = (forceToast = false) => checkForNewThreads(forceToast);
       (window as any).setCommunitiesPulse = (pulse = true) => {
-        console.log('Setting communities pulse to:', pulse);
         setHasNewThreads(pulse);
       };
-      console.log('Communities functions available: checkCommunities(forceToast?), setCommunitiesPulse(pulse?)');
     }
   }, [checkForNewThreads]);
 
@@ -147,9 +140,7 @@ export function HeaderInteractive() {
 
   // Show toast when new threads are detected
   useEffect(() => {
-    console.log('hasNewThreads changed:', hasNewThreads, 'prev:', prevHasNewThreadsRef.current);
     if (hasNewThreads && !prevHasNewThreadsRef.current) {
-      console.log('Showing toast for new community posts');
       show("New posts in communities");
     }
     prevHasNewThreadsRef.current = hasNewThreads;

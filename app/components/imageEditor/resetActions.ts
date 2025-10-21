@@ -42,6 +42,32 @@ export function resetAdjustments(
   cropRatio: React.MutableRefObject<number | null>,
   setPresetIndex: (v: number) => void
 ) {
+  // Runtime validation: ensure refs and setters are the expected types.
+  const makeType = (v: any) => {
+    if (v === null) return 'null';
+    if (v === undefined) return 'undefined';
+    if (typeof v === 'object') return v.hasOwnProperty('current') ? `ref(${typeof v.current})` : 'object';
+    return typeof v;
+  };
+
+  // Quick sanity checks for a few critical params. If these don't match,
+  // log a diagnostic and bail out to avoid hard crashes while preserving app state.
+  const critical = {
+    setExposureType: typeof setExposure,
+    exposureRefType: makeType(exposureRef),
+    setContrastType: typeof setContrast,
+    contrastRefType: makeType(contrastRef),
+    setSelType: typeof setSel,
+    cropRatioType: makeType(cropRatio),
+  } as any;
+
+  if (critical.exposureRefType !== 'ref(number)' && critical.exposureRefType !== 'ref(object)') {
+    // Log detailed diagnostic to help track down incorrect caller wiring
+    // eslint-disable-next-line no-console
+    console.error('resetAdjustments: unexpected argument types', critical);
+    return;
+  }
+
   // Default values
   const defExposure = 0;
   const defContrast = 0;
@@ -58,21 +84,21 @@ export function resetAdjustments(
   const defLightLeak = { preset: 'none', intensity: 0.6 };
   const defRotation = 0;
 
-  // Update state
-  setExposure(defExposure); exposureRef.current = defExposure;
-  setContrast(defContrast); contrastRef.current = defContrast;
-  setSaturation(defSaturation); saturationRef.current = defSaturation;
-  setTemperature(defTemperature); temperatureRef.current = defTemperature;
-  setVignette(defVignette); vignetteRef.current = defVignette;
-  setFrameColor(defFrameColor); frameColorRef.current = defFrameColor;
-  setFrameThickness(defFrameThickness); frameThicknessRef.current = defFrameThickness;
-  setSelectedFilter(defSelectedFilter); selectedFilterRef.current = defSelectedFilter;
-  setFilterStrength(defFilterStrength); filterStrengthRef.current = defFilterStrength;
-  setGrain(defGrain); grainRef.current = defGrain;
-  setSoftFocus(defSoftFocus); softFocusRef.current = defSoftFocus;
-  setFade(defFade); fadeRef.current = defFade;
-  setLightLeak(defLightLeak); lightLeakRef.current = defLightLeak;
-  setRotation(defRotation); rotationRef.current = defRotation;
+  // Update state (defensively check setters to avoid crashes if a setter is not provided)
+  if (typeof setExposure === 'function') { setExposure(defExposure); } exposureRef.current = defExposure;
+  if (typeof setContrast === 'function') { setContrast(defContrast); } contrastRef.current = defContrast;
+  if (typeof setSaturation === 'function') { setSaturation(defSaturation); } saturationRef.current = defSaturation;
+  if (typeof setTemperature === 'function') { setTemperature(defTemperature); } temperatureRef.current = defTemperature;
+  if (typeof setVignette === 'function') { setVignette(defVignette); } vignetteRef.current = defVignette;
+  if (typeof setFrameColor === 'function') { setFrameColor(defFrameColor); } frameColorRef.current = defFrameColor;
+  if (typeof setFrameThickness === 'function') { setFrameThickness(defFrameThickness); } frameThicknessRef.current = defFrameThickness;
+  if (typeof setSelectedFilter === 'function') { setSelectedFilter(defSelectedFilter); } selectedFilterRef.current = defSelectedFilter;
+  if (typeof setFilterStrength === 'function') { setFilterStrength(defFilterStrength); } filterStrengthRef.current = defFilterStrength;
+  if (typeof setGrain === 'function') { setGrain(defGrain); } grainRef.current = defGrain;
+  if (typeof setSoftFocus === 'function') { setSoftFocus(defSoftFocus); } softFocusRef.current = defSoftFocus;
+  if (typeof setFade === 'function') { setFade(defFade); } fadeRef.current = defFade;
+  if (typeof setLightLeak === 'function') { setLightLeak(defLightLeak); } lightLeakRef.current = defLightLeak;
+  if (typeof setRotation === 'function') { setRotation(defRotation); } rotationRef.current = defRotation;
 
   // Also clear any crop selection/preset
   setSel(null);
@@ -111,12 +137,12 @@ export function resetControlToDefault(
   switch (control) {
     case 'exposure': {
       const v = 0;
-      exposureRef.current = v; setExposure(v); draw(); requestAnimationFrame(() => draw());
+      exposureRef.current = v; if (typeof setExposure === 'function') setExposure(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'contrast': {
       const v = 0;
-      contrastRef.current = v; setContrast(v); draw(); requestAnimationFrame(() => draw());
+      contrastRef.current = v; if (typeof setContrast === 'function') setContrast(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'saturation': {
@@ -131,42 +157,42 @@ export function resetControlToDefault(
     }
     case 'filterStrength': {
       const v = 1;
-      filterStrengthRef.current = v; setFilterStrength(v); draw(); requestAnimationFrame(() => draw());
+      filterStrengthRef.current = v; if (typeof setFilterStrength === 'function') setFilterStrength(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'vignette': {
       const v = 0;
-      vignetteRef.current = v; setVignette(v); draw(); requestAnimationFrame(() => draw());
+      vignetteRef.current = v; if (typeof setVignette === 'function') setVignette(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'grain': {
       const v = 0;
-      grainRef.current = v; setGrain(v); draw(); requestAnimationFrame(() => draw());
+      grainRef.current = v; if (typeof setGrain === 'function') setGrain(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'softFocus': {
       const v = 0;
-      softFocusRef.current = v; setSoftFocus(v); draw(); requestAnimationFrame(() => draw());
+      softFocusRef.current = v; if (typeof setSoftFocus === 'function') setSoftFocus(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'fade': {
       const v = 0;
-      fadeRef.current = v; setFade(v); draw(); requestAnimationFrame(() => draw());
+      fadeRef.current = v; if (typeof setFade === 'function') setFade(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'lightLeak': {
       const v = { preset: 'none', intensity: 0.6 };
-      lightLeakRef.current = v; setLightLeak(v); draw(); requestAnimationFrame(() => draw());
+      lightLeakRef.current = v; if (typeof setLightLeak === 'function') setLightLeak(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'rotation': {
       const v = 0;
-      rotationRef.current = v; setRotation(v); draw(); requestAnimationFrame(() => draw());
+      rotationRef.current = v; if (typeof setRotation === 'function') setRotation(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'frameThickness': {
       const v = 0;
-      frameThicknessRef.current = v; setFrameThickness(v); draw(); requestAnimationFrame(() => draw());
+      frameThicknessRef.current = v; if (typeof setFrameThickness === 'function') setFrameThickness(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     default:

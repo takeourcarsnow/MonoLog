@@ -2,10 +2,17 @@ import { CONFIG } from "./config";
 
 export function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
+    if (!file || typeof (file as any).size !== 'number' || typeof (file as any).type !== 'string') {
+      return reject(new TypeError('fileToDataURL: expected a File/Blob but received: ' + String(file)));
+    }
     const fr = new FileReader();
-    fr.onerror = reject;
+    fr.onerror = () => reject(new Error('FileReader failed while reading file'));
     fr.onload = () => resolve(String(fr.result));
-    fr.readAsDataURL(file);
+    try {
+      fr.readAsDataURL(file);
+    } catch (e) {
+      reject(e instanceof Error ? e : new Error(String(e)));
+    }
   });
 }
 

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 export function useImageEditorHighlights(
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame',
+  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak',
   selectedFilter: string,
   categoriesContainerRef: React.RefObject<HTMLDivElement>,
   filtersContainerRef: React.RefObject<HTMLDivElement>,
@@ -15,7 +15,7 @@ export function useImageEditorHighlights(
     const compute = () => {
       const cont = categoriesContainerRef.current;
       if (!cont) { if (alive) setCategoryHighlight(null); return; }
-      const selKey = selectedCategory === 'basic' ? 'basic' : selectedCategory === 'color' ? 'color' : selectedCategory === 'effects' ? 'effects' : selectedCategory === 'crop' ? 'crop' : 'frame';
+      const selKey = selectedCategory === 'basic' ? 'basic' : selectedCategory === 'color' ? 'color' : selectedCategory === 'effects' ? 'effects' : selectedCategory === 'crop' ? 'crop' : selectedCategory === 'lightleak' ? 'lightleak' : 'frame';
       const btn = cont.querySelector<HTMLButtonElement>(`button[data-cat="${selKey}"]`);
       if (!btn) { if (alive) setCategoryHighlight(null); return; }
       const left = Math.round((btn as HTMLElement).offsetLeft - 4);

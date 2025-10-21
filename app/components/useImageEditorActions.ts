@@ -62,8 +62,8 @@ export function useImageEditorActions(
   previewPointerIdRef: React.MutableRefObject<number | null>,
   previewOriginalRef: React.MutableRefObject<boolean>,
   setPreviewOriginal: (value: boolean) => void,
-  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame') => void,
-  previousCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame'
+  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak') => void,
+  previousCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak'
 ) {
   // quick derived flag: has the user made any edits (image replaced, selection or adjustments)
   const isEdited = useMemo(() => {
@@ -104,6 +104,7 @@ export function useImageEditorActions(
       grain,
       softFocus,
       fade,
+      lightLeak,
       rotation,
       rotationRef,
       onApply

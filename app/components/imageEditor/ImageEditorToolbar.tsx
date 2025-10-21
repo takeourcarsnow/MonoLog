@@ -8,6 +8,7 @@ interface ImageEditorToolbarProps {
   isEdited: boolean;
   onToggleFullscreen?: () => void;
   isFullscreen?: boolean;
+  onDownload?: () => void;
   categoriesContainerRef: React.RefObject<HTMLDivElement>;
   selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak';
   setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak') => void;
@@ -26,7 +27,7 @@ function ImageEditorToolbarHeader({
   onToggleFullscreen,
   isFullscreen,
   onDownload
-}: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited' | 'onToggleFullscreen' | 'isFullscreen'> & { onDownload: () => void }) {
+}: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited' | 'onToggleFullscreen' | 'isFullscreen' | 'onDownload'>) {
   return (
     <header className="image-editor-header" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
       <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
@@ -78,7 +79,7 @@ function ImageEditorToolbarCategories({
   resetCrop,
   cancelCrop
 }: Pick<ImageEditorToolbarProps, 'categoriesContainerRef' | 'selectedCategory' | 'setSelectedCategory' | 'categoryHighlight' | 'sel' | 'applyCropOnly' | 'resetCrop' | 'cancelCrop'>) {
-  const category = selectedCategory as 'basic' | 'color' | 'effects' | 'crop' | 'frame';
+  const category = selectedCategory;
 
   // When in crop mode, show Confirm/Reset/Cancel buttons
   if (category === 'crop') {
@@ -426,7 +427,7 @@ function ImageEditorToolbarCategories({
 export default function ImageEditorToolbar(props: ImageEditorToolbarProps) {
   return (
     <>
-      <ImageEditorToolbarHeader onCancel={props.onCancel} resetAdjustments={props.resetAdjustments} applyEdit={props.applyEdit} isEdited={props.isEdited} />
+      <ImageEditorToolbarHeader onCancel={props.onCancel} resetAdjustments={props.resetAdjustments} applyEdit={props.applyEdit} isEdited={props.isEdited} onToggleFullscreen={props.onToggleFullscreen} isFullscreen={props.isFullscreen} onDownload={props.onDownload} />
       <ImageEditorToolbarCategories categoriesContainerRef={props.categoriesContainerRef} selectedCategory={props.selectedCategory} setSelectedCategory={props.setSelectedCategory} categoryHighlight={props.categoryHighlight} sel={props.sel} applyCropOnly={props.applyCropOnly} resetCrop={props.resetCrop} cancelCrop={props.cancelCrop} />
     </>
   );

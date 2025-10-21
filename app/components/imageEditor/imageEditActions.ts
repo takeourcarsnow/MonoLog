@@ -21,7 +21,7 @@ export async function applyEdit(
   grain: number,
   softFocus: number,
   fade: number,
-  lightLeak: string,
+  lightLeak: { preset: string; intensity: number },
   rotation: number,
   rotationRef: React.MutableRefObject<number>,
   onApply: (dataUrl: string, settings: EditorSettings) => void
@@ -230,7 +230,7 @@ export async function applyEdit(
 
       let cx: number, cy: number, radius: number, gradient: CanvasGradient;
 
-      switch (curLightLeak) {
+      switch (curLightLeak.preset) {
         case 'warm-top-right':
           cx = padPx + srcW * 0.8;
           cy = padPx + srcH * 0.2;

@@ -1,4 +1,4 @@
-import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Fullscreen, Sun, Download } from "lucide-react";
+import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Fullscreen, Sun, Download, Layers } from "lucide-react";
 import { CATEGORY_COLORS } from './constants';
 
 interface ImageEditorToolbarProps {
@@ -10,8 +10,8 @@ interface ImageEditorToolbarProps {
   isFullscreen?: boolean;
   onDownload?: () => void;
   categoriesContainerRef: React.RefObject<HTMLDivElement>;
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak';
-  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak') => void;
+  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays';
+  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays') => void;
   categoryHighlight: { left: number; top: number; width: number; height: number } | null;
   sel: { x: number; y: number; w: number; h: number } | null;
   applyCropOnly: () => void;
@@ -420,7 +420,39 @@ function ImageEditorToolbarCategories({
       >
         <ImageIcon size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'frame' ? CATEGORY_COLORS.frame : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Frame</span>
-        </button>
+      </button>
+
+      <button
+        data-cat="overlays"
+        data-active={category === 'overlays'}
+        type="button"
+        aria-label="Overlays"
+        title="Overlays"
+        className="cat-btn"
+        onClick={(e: any) => {
+          try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+          setSelectedCategory('overlays');
+        }}
+        style={{
+          padding: '6px 8px',
+          borderRadius: 10,
+          background: category === 'overlays' ? 'transparent' : 'transparent',
+          color: 'var(--text)',
+          transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
+          position: 'relative',
+          zIndex: 1,
+          flex: '0 0 auto',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          border: 'none',
+          fontWeight: category === 'overlays' ? 700 : 500,
+          overflow: 'hidden'
+        }}
+      >
+        <Layers size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'overlays' ? '#ff6b6b' : undefined }} />
+        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Overlays</span>
+      </button>
     </nav>
   );
 }// Default export: compose header + categories (backwards-compatible)

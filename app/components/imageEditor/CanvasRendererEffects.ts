@@ -311,3 +311,46 @@ export function applyLightLeakEffect(
     ctx.restore();
   }
 }
+
+export function applyOverlayEffect(
+  ctx: CanvasRenderingContext2D,
+  overlay: { img: HTMLImageElement; blendMode: string; opacity: number },
+  imgLeft: number,
+  imgTop: number,
+  imgW: number,
+  imgH: number
+) {
+  if (!overlay) return;
+
+  const drawNow = (ovImg: HTMLImageElement) => {
+    try {
+      ctx.save();
+      ctx.globalAlpha = overlay.opacity;
+      ctx.globalCompositeOperation = overlay.blendMode as GlobalCompositeOperation;
+      // Scale overlay to fit the image area
+      ctx.drawImage(ovImg, imgLeft, imgTop, imgW, imgH);
+      ctx.restore();
+    } catch (e) {
+      // swallow drawing errors
+    }
+  };
+
+  // If the provided image is already loaded, draw immediately.
+  if (overlay.img && overlay.img.complete) {
+    drawNow(overlay.img);
+    return;
+  }
+
+  // Otherwise attempt to load the image and draw when ready. This is a
+  // fallback so selecting overlays (which sets src async) still results in
+  // the overlay appearing once the resource finishes loading.
+  try {
+    const temp = new Image();
+    temp.crossOrigin = 'anonymous';
+    // reuse src if available
+    temp.src = overlay.img?.src || '';
+    temp.onload = () => drawNow(temp);
+  } catch (e) {
+    // no-op if loading fails
+  }
+}

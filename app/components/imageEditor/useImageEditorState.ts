@@ -32,8 +32,8 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [frameColor, setFrameColor] = useState<'white' | 'black'>(initialSettings?.frameColor ?? 'white');
   const [frameThickness, setFrameThickness] = useState<number>(initialSettings?.frameThickness ?? 0); // fraction of min(image dim) — default disabled
   const [controlsOpen, setControlsOpen] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak'>('basic');
-  const [previousCategory, setPreviousCategory] = useState<'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak'>('basic');
+  const [selectedCategory, setSelectedCategory] = useState<'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays'>('basic');
+  const [previousCategory, setPreviousCategory] = useState<'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays'>('basic');
   const ASPECT_PRESETS = [
     { label: 'Free', v: null },
     { label: '16:9', v: 16 / 9 },
@@ -51,6 +51,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [softFocus, setSoftFocus] = useState<number>(initialSettings?.softFocus ?? 0); // gentle blur overlay
   const [fade, setFade] = useState<number>(initialSettings?.fade ?? 0); // faded look
   const [lightLeak, setLightLeak] = useState<{ preset: string; intensity: number }>(initialSettings?.lightLeak ?? { preset: 'none', intensity: 0.6 }); // light leak preset and intensity
+  const [overlay, setOverlay] = useState<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>(initialSettings?.overlay ?? null);
   // refs mirror state for immediate reads inside draw() to avoid stale-state draws
   const exposureRef = useRef<number>(exposure);
   const contrastRef = useRef<number>(contrast);
@@ -65,6 +66,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const softFocusRef = useRef<number>(softFocus);
   const fadeRef = useRef<number>(fade);
   const lightLeakRef = useRef<{ preset: string; intensity: number }>(lightLeak);
+  const overlayRef = useRef<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>(overlay);
   const filtersContainerRef = useRef<HTMLDivElement | null>(null);
   const [filterHighlight, setFilterHighlight] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const suppressFilterTransitionRef = useRef<boolean>(false);
@@ -134,6 +136,8 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
     setFade,
     lightLeak,
     setLightLeak,
+    overlay,
+    setOverlay,
     exposureRef,
     contrastRef,
     saturationRef,
@@ -147,6 +151,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
     softFocusRef,
     fadeRef,
     lightLeakRef,
+    overlayRef,
     filtersContainerRef,
     filterHighlight,
     setFilterHighlight,

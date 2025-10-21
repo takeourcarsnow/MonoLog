@@ -13,6 +13,7 @@ export type EditorSettings = {
   softFocus?: number;
   fade?: number;
   lightLeak?: { preset: string; intensity: number };
+  overlay?: { img: HTMLImageElement; blendMode: string; opacity: number };
 };
 
 export type ImageEditorProps = {

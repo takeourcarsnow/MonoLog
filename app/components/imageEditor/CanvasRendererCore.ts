@@ -21,6 +21,7 @@ export interface DrawParams {
   softFocusRef: React.MutableRefObject<number>;
   fadeRef: React.MutableRefObject<number>;
   lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>;
+  overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>;
   rotationRef: React.MutableRefObject<number>;
   dashOffsetRef: React.MutableRefObject<number>;
   computeImageLayout: () => { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number } | null;

@@ -93,6 +93,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setFade,
     lightLeak,
     setLightLeak,
+    overlay,
+    setOverlay,
     exposureRef,
     contrastRef,
     saturationRef,
@@ -106,6 +108,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     softFocusRef,
     fadeRef,
     lightLeakRef,
+    overlayRef,
     filtersContainerRef,
     filterHighlight,
     setFilterHighlight,
@@ -204,6 +207,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       softFocusRef,
       fadeRef,
       lightLeakRef,
+      overlayRef,
       rotationRef,
       dashOffsetRef,
       computeImageLayout,
@@ -258,6 +262,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   useEffect(() => { softFocusRef.current = softFocus; }, [softFocus, softFocusRef]);
   useEffect(() => { fadeRef.current = fade; }, [fade, fadeRef]);
   useEffect(() => { lightLeakRef.current = lightLeak; }, [lightLeak, lightLeakRef]);
+  useEffect(() => { overlayRef.current = overlay; }, [overlay, overlayRef]);
 
   const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
     if (category === 'crop' && selectedCategory !== 'crop') {
@@ -313,6 +318,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     lightLeak,
     setLightLeak,
     lightLeakRef,
+    overlay,
+    setOverlay,
+    overlayRef,
     setRotation,
     setSel,
     cropRatio,
@@ -452,6 +460,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           frameColor={frameColor}
           setFrameColor={setFrameColor}
           frameColorRef={frameColorRef}
+          overlay={overlay}
+          setOverlay={setOverlay}
+          overlayRef={overlayRef}
         />
       </aside>
       {/* debug overlay removed */}

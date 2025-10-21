@@ -1,7 +1,10 @@
 import { DrawParams, LayoutInfo } from "./CanvasRendererCore";
 
 export function computeImageLayout(params: DrawParams, info?: LayoutInfo) {
-  const { canvasRef, imgRef, offset, computeImageLayout } = params;
+  // `params` may optionally include a computeImageLayout function provided by the
+  // outer layout hook. Rename it here to avoid shadowing this module's
+  // computeImageLayout symbol and validate before calling.
+  const { canvasRef, imgRef, offset, computeImageLayout: computeImageLayoutFromParams } = params;
 
   const canvas = canvasRef.current;
   const img = imgRef.current;
@@ -15,8 +18,19 @@ export function computeImageLayout(params: DrawParams, info?: LayoutInfo) {
     dispW = info.dispW;
     dispH = info.dispH;
   } else {
-    // Try to compute current layout from the canvas to avoid using a stale `offset` value
-    const computed = computeImageLayout();
+    // Try to compute current layout from the canvas to avoid using a stale `offset` value.
+    // The layout hook may provide a helper function via params; only call it when
+    // it's present and actually a function.
+    let computed: { left: number; top: number; dispW: number; dispH: number } | null = null;
+    if (typeof computeImageLayoutFromParams === 'function') {
+      try {
+        computed = computeImageLayoutFromParams();
+      } catch (e) {
+        // if the provided helper throws, fall back to local measurement below
+        computed = null;
+      }
+    }
+
     if (computed) {
       left = computed.left;
       top = computed.top;

@@ -4,7 +4,7 @@ import { getPointerPos } from './pointerUtils';
 export function usePointerEvents(
   canvasRef: React.RefObject<HTMLCanvasElement>,
   containerRef: React.RefObject<HTMLDivElement>,
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak',
+  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays',
   cropRatio: React.MutableRefObject<number | null>,
   dragging: React.MutableRefObject<null | {
     startX: number;

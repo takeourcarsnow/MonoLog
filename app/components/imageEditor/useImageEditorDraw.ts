@@ -21,6 +21,7 @@ export function useImageEditorDraw(
   softFocusRef: React.MutableRefObject<number>,
   fadeRef: React.MutableRefObject<number>,
   lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
+  overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>,
   rotationRef: React.MutableRefObject<number>,
   dashOffsetRef: React.MutableRefObject<number>,
   computeImageLayout: () => void
@@ -46,6 +47,7 @@ export function useImageEditorDraw(
       softFocusRef,
       fadeRef,
       lightLeakRef,
+      overlayRef,
       rotationRef,
       dashOffsetRef,
       computeImageLayout,
@@ -72,6 +74,7 @@ export function useImageEditorDraw(
     softFocusRef,
     fadeRef,
     lightLeakRef,
+    overlayRef,
     rotationRef,
     dashOffsetRef,
     computeImageLayout

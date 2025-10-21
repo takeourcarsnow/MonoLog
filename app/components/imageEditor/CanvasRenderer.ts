@@ -1,7 +1,7 @@
 import { DrawParams, LayoutInfo, DrawOverrides } from "./CanvasRendererCore";
 import { computeImageLayout, computeFrameAdjustedLayout } from "./CanvasRendererLayout";
 import { computeFilterValues } from "./CanvasRendererFilters";
-import { applySoftFocusEffect, applyFadeEffect, applyVignetteEffect, applyGrainEffect, applyLightLeakEffect } from "./CanvasRendererEffects";
+import { applySoftFocusEffect, applyFadeEffect, applyVignetteEffect, applyGrainEffect, applyLightLeakEffect, applyOverlayEffect } from "./CanvasRendererEffects";
 import { drawFrame } from "./CanvasRendererFrame";
 import { drawSelection } from "./CanvasRendererSelection";
 import { drawRotated } from "./CanvasRendererUtils";
@@ -165,8 +165,13 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   if (filterValues.curGrain > 0.001) {
     applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
   }
-  if (filterValues.curLightLeak.preset !== 'none' && filterValues.curLightLeak.preset) {
-    applyLightLeakEffect(ctx, imgLeft, imgTop, imgW, imgH, filterValues.curLightLeak);
+  if (params.overlayRef.current) {
+    try {
+      // Debug: log overlay info to help trace rendering issues
+      // eslint-disable-next-line no-console
+      console.debug('[CanvasRenderer] applying overlay', params.overlayRef.current, { imgLeft, imgTop, imgW, imgH });
+    } catch (e) {}
+    applyOverlayEffect(ctx, params.overlayRef.current, imgLeft, imgTop, imgW, imgH);
   }
 
   // Draw frame if enabled

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 export function useImageEditorHighlights(
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak',
+  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays',
   selectedFilter: string,
   categoriesContainerRef: React.RefObject<HTMLDivElement>,
   filtersContainerRef: React.RefObject<HTMLDivElement>,

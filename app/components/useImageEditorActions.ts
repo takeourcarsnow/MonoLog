@@ -48,6 +48,9 @@ export function useImageEditorActions(
   lightLeak: { preset: string; intensity: number },
   setLightLeak: (v: { preset: string; intensity: number }) => void,
   lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
+  overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null,
+  setOverlay: (v: { img: HTMLImageElement; blendMode: string; opacity: number } | null) => void,
+  overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>,
   setRotation: (value: number) => void,
   setSel: (value: { x: number; y: number; w: number; h: number } | null) => void,
   cropRatio: React.MutableRefObject<number | null>,
@@ -62,8 +65,8 @@ export function useImageEditorActions(
   previewPointerIdRef: React.MutableRefObject<number | null>,
   previewOriginalRef: React.MutableRefObject<boolean>,
   setPreviewOriginal: (value: boolean) => void,
-  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak') => void,
-  previousCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak'
+  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays') => void,
+  previousCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays'
 ) {
   // quick derived flag: has the user made any edits (image replaced, selection or adjustments)
   const isEdited = useMemo(() => {
@@ -81,9 +84,10 @@ export function useImageEditorActions(
       Math.abs(grain) > 0.001,
       frameThickness > 0,
       lightLeak.preset !== 'none',
+      !!overlay,
     ];
     return checks.some(Boolean);
-  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, filterStrength, grain, frameThickness, originalRef, rotation, lightLeak.preset]);
+  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, filterStrength, grain, frameThickness, originalRef, rotation, lightLeak.preset, overlay]);
 
   // Action wrappers that delegate to the standalone action helpers
   function applyEdit() {
@@ -139,6 +143,8 @@ export function useImageEditorActions(
       fadeRef,
       setLightLeak,
       lightLeakRef,
+      setOverlay,
+      overlayRef,
       setRotation,
       rotationRef,
       setSel,

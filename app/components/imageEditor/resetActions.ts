@@ -36,7 +36,9 @@ export function resetAdjustments(
   fadeRef: React.MutableRefObject<number>,
   setLightLeak: (v: { preset: string; intensity: number }) => void,
   lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
-  setRotation: (v: number) => void,
+  setOverlay: (v: { img: HTMLImageElement; blendMode: string; opacity: number } | null) => void,
+  overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>,
+  setRotation: (value: number) => void,
   rotationRef: React.MutableRefObject<number>,
   setSel: (sel: null) => void,
   cropRatio: React.MutableRefObject<number | null>,
@@ -83,6 +85,7 @@ export function resetAdjustments(
   const defFade = 0;
   const defLightLeak = { preset: 'none', intensity: 0.6 };
   const defRotation = 0;
+  const defOverlay = null;
 
   // Update state (defensively check setters to avoid crashes if a setter is not provided)
   if (typeof setExposure === 'function') { setExposure(defExposure); } exposureRef.current = defExposure;
@@ -98,6 +101,7 @@ export function resetAdjustments(
   if (typeof setSoftFocus === 'function') { setSoftFocus(defSoftFocus); } softFocusRef.current = defSoftFocus;
   if (typeof setFade === 'function') { setFade(defFade); } fadeRef.current = defFade;
   if (typeof setLightLeak === 'function') { setLightLeak(defLightLeak); } lightLeakRef.current = defLightLeak;
+  if (typeof setOverlay === 'function') { setOverlay(defOverlay); } overlayRef.current = defOverlay;
   if (typeof setRotation === 'function') { setRotation(defRotation); } rotationRef.current = defRotation;
 
   // Also clear any crop selection/preset

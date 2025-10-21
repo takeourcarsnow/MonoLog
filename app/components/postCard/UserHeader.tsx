@@ -144,7 +144,7 @@ export const UserHeader = memo(function UserHeader({
           <span className="username">@{post.user.username} <span className="dim">{userLine}</span></span>
         </div>
       </Link>
-      <div style={{ marginLeft: "auto", position: "relative", display: "flex", gap: 8, flexShrink: 0 }}>
+      <div style={{ marginLeft: "auto", position: "relative", display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
         {!authLoading && (
           <>
             {!isMe ? (

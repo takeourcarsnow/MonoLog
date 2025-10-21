@@ -85,7 +85,7 @@ export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
       margin: '8px auto 0',
       position: 'relative',
       borderRadius: 12,
-      minHeight: 140
+      minHeight: 100
     }}>
       {props.selectedCategory === 'basic' && (
         <BasicPanel

@@ -25,7 +25,9 @@ export function usePointerEvents(
   previewOriginalRef: React.MutableRefObject<boolean>,
   setPreviewOriginal: (v: boolean) => void,
   computeImageLayout: () => any,
-  draw: () => void
+  draw: () => void,
+  setOverlay: ((v: { img: HTMLImageElement; blendMode: string; opacity: number } | null) => void) | null,
+  overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>
 ) {
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
@@ -298,6 +300,7 @@ export function usePointerEvents(
       // prevent parent handlers from interpreting this as a swipe/drag
       ev.stopPropagation?.();
       try { (ev.target as Element).releasePointerCapture(ev.pointerId); } catch {}
+      const wasDragging = dragging.current !== null;
       dragging.current = null;
       // Only clear the preview if this pointer matches the one that started it
       if (previewPointerIdRef.current == null || previewPointerIdRef.current === ev.pointerId) {
@@ -325,5 +328,5 @@ export function usePointerEvents(
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
     };
-  }, [selectedCategory, sel, offset, canvasRef, computeImageLayout, cropRatio, dragging, draw, previewOriginalRef, previewPointerIdRef, setOffset, setPreviewOriginal, setSel]);
+  }, [selectedCategory, sel, offset, canvasRef, computeImageLayout, cropRatio, dragging, draw, previewOriginalRef, previewPointerIdRef, setOffset, setPreviewOriginal, setSel, setOverlay, overlayRef]);
 }

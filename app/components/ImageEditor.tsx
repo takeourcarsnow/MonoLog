@@ -252,7 +252,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     previewOriginalRef,
     setPreviewOriginal,
     computeImageLayout,
-    draw
+    draw,
+    setOverlay,
+    overlayRef
   );
 
   useSliderEvents(containerRef);

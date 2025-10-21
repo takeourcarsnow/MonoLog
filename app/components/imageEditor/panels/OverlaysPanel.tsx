@@ -24,14 +24,14 @@ export default function OverlaysPanel({
   // of by a full URL. This avoids mismatches between absolute img.src values
   // (which the browser will normalize to absolute URLs) and the relative
   // thumbnail paths used when rendering buttons.
-  const [selectedFile, setSelectedFile] = useState<string | null>(overlay?.img?.src?.split('/').pop() || null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   // Keep selection in sync if parent updates `overlay` (for example when
   // initial settings are provided or an external action changes the overlay).
-  useEffect(() => {
-    const fname = overlay?.img?.src?.split('/').pop() || null;
-    setSelectedFile(fname);
-  }, [overlay]);
+  // useEffect(() => {
+  //   const fname = overlay?.img?.src?.split('/').pop() || null;
+  //   setSelectedFile(fname);
+  // }, [overlay]);
 
   // Map of filename -> boolean indicating if a small thumbnail exists at
   // /overlays/thumbs/{file}. When thumbnails are present we use them for the

@@ -165,6 +165,9 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   if (filterValues.curGrain > 0.001) {
     applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
   }
+  if (filterValues.curLightLeak.preset !== 'none' && filterValues.curLightLeak.preset) {
+    applyLightLeakEffect(ctx, imgLeft, imgTop, imgW, imgH, filterValues.curLightLeak);
+  }
   if (params.overlayRef.current) {
     try {
       // Debug: log overlay info to help trace rendering issues

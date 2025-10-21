@@ -155,6 +155,49 @@ void main() {
     presetColor = mix(vec3(dot(presetColor, lum)), presetColor, 0.92);
     presetColor *= 0.98;
   }
+  // portra400: warm, natural, slight red/yellow boost
+  if (abs(id - 11.0) < 0.5) {
+    presetColor = color * vec3(1.1, 1.0, 0.9); // boost red, reduce blue
+    presetColor = (presetColor - 0.5) * 1.2 + 0.5; // increase contrast
+  }
+  // velvia50: vibrant, high contrast, saturated greens/blues
+  if (abs(id - 12.0) < 0.5) {
+    presetColor = color;
+    presetColor.g *= 1.2; // boost green
+    presetColor.b *= 1.1; // boost blue
+    presetColor = (presetColor - 0.5) * 1.15 + 0.5; // increase contrast
+  }
+  // trix400: high contrast B&W
+  if (abs(id - 13.0) < 0.5) {
+    float l = dot(color, lum);
+    presetColor = vec3(l);
+    presetColor = (presetColor - 0.5) * 1.5 + 0.5; // high contrast
+    presetColor *= 0.9; // darker
+  }
+  // hp5: warm B&W with slight sepia
+  if (abs(id - 14.0) < 0.5) {
+    float l = dot(color, lum);
+    presetColor = vec3(l);
+    presetColor = (presetColor - 0.5) * 1.4 + 0.5; // high contrast
+    presetColor *= 0.95; // slightly darker
+    vec3 sepia = vec3(
+      dot(presetColor, vec3(0.393, 0.769, 0.189)),
+      dot(presetColor, vec3(0.349, 0.686, 0.168)),
+      dot(presetColor, vec3(0.272, 0.534, 0.131))
+    );
+    presetColor = mix(presetColor, sepia, 0.2); // more sepia
+  }
+  // provia: natural, balanced colors
+  if (abs(id - 15.0) < 0.5) {
+    presetColor = (color - 0.5) * 1.1 + 0.5; // mild contrast boost
+    presetColor = mix(vec3(dot(presetColor, lum)), presetColor, 1.05); // mild saturation
+  }
+  // ektar: very saturated, high contrast
+  if (abs(id - 16.0) < 0.5) {
+    presetColor = mix(vec3(dot(color, lum)), color, 1.4); // high saturation
+    presetColor = (presetColor - 0.5) * 1.2 + 0.5; // contrast
+    presetColor *= 0.95; // slightly darker
+  }
 
   color = mix(color, clamp(presetColor, 0.0, 1.0), ps);
 
@@ -310,15 +353,19 @@ export function applyWebGLAdjustments(
         case 'bleach': return 'saturate(1.3) contrast(0.95) brightness(1.02)';
         case 'vintage': return 'sepia(0.35) contrast(0.95) saturate(0.9) brightness(0.98)';
         case 'lomo': return 'contrast(1.25) saturate(1.35) brightness(1.02) sepia(0.08)';
-  case 'warm': return 'saturate(1.05) hue-rotate(-6deg) brightness(1.01)';
-  case 'cool': return 'saturate(0.95) hue-rotate(6deg) brightness(0.99)';
+        case 'warm': return 'saturate(1.05) hue-rotate(-6deg) brightness(1.01)';
+        case 'cool': return 'saturate(0.95) hue-rotate(6deg) brightness(0.99)';
         case 'invert': return 'invert(1)';
         case 'film': return 'contrast(1.08) saturate(0.92) brightness(0.98)';
+        case 'portra400': return 'contrast(1.2) brightness(1.1) saturate(1.1) sepia(0.1) hue-rotate(-5deg)';
+        case 'velvia50': return 'contrast(1.15) saturate(1.3) brightness(0.95)';
+        case 'trix400': return 'grayscale(1) contrast(1.5) brightness(0.9)';
+        case 'hp5': return 'grayscale(1) contrast(1.4) brightness(0.95) sepia(0.2)';
+        case 'provia': return 'contrast(1.1) saturate(1.05) brightness(1.02)';
+        case 'ektar': return 'contrast(1.2) saturate(1.4) brightness(0.95)';
         default: return '';
       }
-    })(adjustments.preset);
-
-    // draw base
+    })(adjustments.preset);    // draw base
     ctx.save();
     ctx.filter = `${bf}`;
     ctx.drawImage(img as any, 0, 0, (img as HTMLImageElement).naturalWidth, (img as HTMLImageElement).naturalHeight, 0, 0, out.width, out.height);
@@ -379,6 +426,12 @@ export function applyWebGLAdjustments(
       case 'cool': return 8;
       case 'invert': return 9;
       case 'film': return 10;
+      case 'portra400': return 11;
+      case 'velvia50': return 12;
+      case 'trix400': return 13;
+      case 'hp5': return 14;
+      case 'provia': return 15;
+      case 'ektar': return 16;
       default: return 0;
     }
   })(presetName);

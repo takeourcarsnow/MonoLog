@@ -17,6 +17,8 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   const ctx = canvas.getContext("2d")!;
   const dpr = window.devicePixelRatio || 1;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
   const layout = computeImageLayout(params, info);
@@ -82,7 +84,7 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   const hueDeg = m.hue || 0;
   const tempTint = (m as any).tempTint || 0;
 
-  const tmpCanvas = applyWebGLAdjustments(img, imgW, imgH, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength, tempTint });
+  const tmpCanvas = applyWebGLAdjustments(img, img.naturalWidth, img.naturalHeight, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength, tempTint });
         // draw the processed GPU canvas (snapshot) onto our main canvas, taking rotation into account
         drawRotated(tmpCanvas, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
         usedGpu = true;
@@ -91,24 +93,46 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       }
 
       if (!usedGpu) {
-        // fallback to existing CSS filter path and preset blending
+        // fallback to CPU filter path with full-res temp canvases
         if (curFilterStrength >= 0.999) {
-          ctx.filter = filter;
-          drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-          ctx.filter = 'none';
+          const temp = document.createElement('canvas');
+          temp.width = img.naturalWidth;
+          temp.height = img.naturalHeight;
+          const tctx = temp.getContext('2d')!;
+          tctx.filter = filter;
+          tctx.drawImage(img, 0, 0);
+          tctx.filter = 'none';
+          drawRotated(temp, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
         } else if (curFilterStrength <= 0.001) {
-          ctx.filter = baseFilter;
-          drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-          ctx.filter = 'none';
+          const temp = document.createElement('canvas');
+          temp.width = img.naturalWidth;
+          temp.height = img.naturalHeight;
+          const tctx = temp.getContext('2d')!;
+          tctx.filter = baseFilter;
+          tctx.drawImage(img, 0, 0);
+          tctx.filter = 'none';
+          drawRotated(temp, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
         } else {
-          // draw base with baseFilter, then composite filtered version on top with globalAlpha = strength
-          ctx.filter = baseFilter;
-          drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-          ctx.filter = filter;
+          const tempBase = document.createElement('canvas');
+          tempBase.width = img.naturalWidth;
+          tempBase.height = img.naturalHeight;
+          const tctxBase = tempBase.getContext('2d')!;
+          tctxBase.filter = baseFilter;
+          tctxBase.drawImage(img, 0, 0);
+          tctxBase.filter = 'none';
+          const tempFilter = document.createElement('canvas');
+          tempFilter.width = img.naturalWidth;
+          tempFilter.height = img.naturalHeight;
+          const tctxFilter = tempFilter.getContext('2d')!;
+          tctxFilter.filter = filter;
+          tctxFilter.drawImage(img, 0, 0);
+          tctxFilter.filter = 'none';
+          // draw base
+          drawRotated(tempBase, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          // composite filtered
           ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
-          drawRotated(img, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          drawRotated(tempFilter, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
           ctx.globalAlpha = 1;
-          ctx.filter = 'none';
         }
       }
     }

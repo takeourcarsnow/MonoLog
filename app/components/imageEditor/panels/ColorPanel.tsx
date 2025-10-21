@@ -27,8 +27,8 @@ export default function ColorPanel({
   filtersContainerRef,
   filterHighlight,
 }: ColorPanelProps) {
-  const colorFilters = ['portra400', 'velvia50', 'provia', 'ektar', 'astia100', 'ektachrome', 'gold200'];
-  const bwFilters = ['trix400', 'hp5', 'delta3200', 'scala', 'fp4', 'tmax100', 'panatomic'];
+  const colorFilters = ['portra', 'velvia', 'provia', 'ektar', 'astia', 'ektachrome', 'gold'];
+  const bwFilters = ['trix', 'hp5', 'delta', 'scala', 'fp4', 'tmax', 'panatomic'];
   const otherFilters = ['none', 'invert'];
 
   const renderFilterGroup = (filters: string[]) => (

@@ -101,19 +101,19 @@ void main() {
   if (abs(id - 1.0) < 0.5) {
     presetColor = vec3(1.0) - color;
   }
-  // portra400: warm, natural, slight red/yellow boost
+  // portra: warm, natural, slight red/yellow boost
   if (abs(id - 2.0) < 0.5) {
     presetColor = color * vec3(1.1, 1.0, 0.9); // boost red, reduce blue
     presetColor = (presetColor - 0.5) * 1.2 + 0.5; // increase contrast
   }
-  // velvia50: vibrant, high contrast, saturated greens/blues
+  // velvia: vibrant, high contrast, saturated greens/blues
   if (abs(id - 3.0) < 0.5) {
     presetColor = color;
     presetColor.g *= 1.2; // boost green
     presetColor.b *= 1.1; // boost blue
     presetColor = (presetColor - 0.5) * 1.15 + 0.5; // increase contrast
   }
-  // trix400: high contrast B&W
+  // trix: high contrast B&W
   if (abs(id - 4.0) < 0.5) {
     float l = dot(color, lum);
     presetColor = vec3(l);
@@ -144,7 +144,7 @@ void main() {
     presetColor = (presetColor - 0.5) * 1.2 + 0.5; // contrast
     presetColor *= 0.95; // slightly darker
   }
-  // astia100: soft, natural tones, low contrast
+  // astia: soft, natural tones, low contrast
   if (abs(id - 8.0) < 0.5) {
     presetColor = (color - 0.5) * 1.1 + 0.5; // mild contrast
     presetColor = mix(vec3(dot(presetColor, lum)), presetColor, 1.15); // mild saturation
@@ -163,14 +163,14 @@ void main() {
     presetColor *= 0.88; // darker
     presetColor = hueRotate(presetColor, 12.0); // cooler
   }
-  // delta3200: high contrast B&W, darker
+  // delta: high contrast B&W, darker
   if (abs(id - 10.0) < 0.5) {
     float l = dot(color, lum);
     presetColor = vec3(l);
     presetColor = (presetColor - 0.5) * 1.4 + 0.5; // high contrast
     presetColor *= 0.8; // darker
   }
-  // gold200: balanced color negative, slight warmth
+  // gold: balanced color negative, slight warmth
   if (abs(id - 11.0) < 0.5) {
     presetColor = (color - 0.5) * 1.2 + 0.5; // contrast
     presetColor = mix(vec3(dot(presetColor, lum)), presetColor, 1.25); // saturation
@@ -196,7 +196,7 @@ void main() {
     presetColor = (presetColor - 0.5) * 1.2 + 0.5; // medium contrast
     presetColor *= 0.95; // slightly darker
   }
-  // tmax100: high contrast B&W
+  // tmax: high contrast B&W
   if (abs(id - 14.0) < 0.5) {
     float l = dot(color, lum);
     presetColor = vec3(l);
@@ -360,19 +360,19 @@ export function applyWebGLAdjustments(
       // map names to same FILTER_PRESETS fragments used elsewhere
       switch (name) {
         case 'invert': return 'invert(1)';
-        case 'portra400': return 'contrast(1.2) brightness(1.1) saturate(1.1) sepia(0.1) hue-rotate(-5deg)';
-        case 'velvia50': return 'contrast(1.15) saturate(1.3) brightness(0.95)';
-        case 'trix400': return 'grayscale(1) contrast(1.5) brightness(0.9)';
+        case 'portra': return 'contrast(1.2) brightness(1.1) saturate(1.1) sepia(0.1) hue-rotate(-5deg)';
+        case 'velvia': return 'contrast(1.15) saturate(1.3) brightness(0.95)';
+        case 'trix': return 'grayscale(1) contrast(1.5) brightness(0.9)';
         case 'hp5': return 'grayscale(1) contrast(1.4) brightness(0.95) sepia(0.2)';
         case 'provia': return 'contrast(1.1) saturate(1.05) brightness(1.02)';
         case 'ektar': return 'contrast(1.2) saturate(1.4) brightness(0.95)';
-        case 'astia100': return 'contrast(1.1) saturate(1.15) brightness(1.08) sepia(0.1)';
+        case 'astia': return 'contrast(1.1) saturate(1.15) brightness(1.08) sepia(0.1)';
         case 'ektachrome': return 'contrast(1.3) saturate(1.6) brightness(0.88) hue-rotate(12deg)';
-        case 'delta3200': return 'grayscale(1) contrast(1.4) brightness(0.8)';
-        case 'gold200': return 'contrast(1.2) saturate(1.25) brightness(1.05) sepia(0.12)';
+        case 'delta': return 'grayscale(1) contrast(1.4) brightness(0.8)';
+        case 'gold': return 'contrast(1.2) saturate(1.25) brightness(1.05) sepia(0.12)';
         case 'scala': return 'grayscale(1) contrast(1.7) brightness(0.92)';
         case 'fp4': return 'grayscale(1) contrast(1.2) brightness(0.95)';
-        case 'tmax100': return 'grayscale(1) contrast(1.3) brightness(0.9)';
+        case 'tmax': return 'grayscale(1) contrast(1.3) brightness(0.9)';
         case 'panatomic': return 'grayscale(1) contrast(1.1) brightness(1.0)';
         default: return '';
       }
@@ -428,19 +428,19 @@ export function applyWebGLAdjustments(
   const presetId = (function(name: string){
     switch (name) {
       case 'invert': return 1;
-      case 'portra400': return 2;
-      case 'velvia50': return 3;
-      case 'trix400': return 4;
+      case 'portra': return 2;
+      case 'velvia': return 3;
+      case 'trix': return 4;
       case 'hp5': return 5;
       case 'provia': return 6;
       case 'ektar': return 7;
-      case 'astia100': return 8;
+      case 'astia': return 8;
       case 'ektachrome': return 9;
-      case 'delta3200': return 10;
-      case 'gold200': return 11;
+      case 'delta': return 10;
+      case 'gold': return 11;
       case 'scala': return 12;
       case 'fp4': return 13;
-      case 'tmax100': return 14;
+      case 'tmax': return 14;
       case 'panatomic': return 15;
       default: return 0;
     }

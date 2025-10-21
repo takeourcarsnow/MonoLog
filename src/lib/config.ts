@@ -15,7 +15,8 @@ export const CONFIG = {
   seedDemoData: false,
   dailyPostingLimit: 1,
   imageMaxSizeMB: 8,
-  imageMaxEdge: 1600,
+  // Increase max image edge to allow higher-resolution uploads (was 1600)
+  imageMaxEdge: 2500,
   enableServiceWorker: true,
 };
 

@@ -183,7 +183,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   // Local draw wrapper binds all refs/state to the lower-level drawImage helper so
   // callers can simply call draw() or draw(info).
-  function draw(info?: any, overrides?: any) {
+  function draw(info?: any, overrides?: any, targetCanvas?: HTMLCanvasElement) {
     return drawImage(
       canvasRef,
       imgRef,
@@ -208,7 +208,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       dashOffsetRef,
       computeImageLayout,
       info,
-      overrides
+      overrides,
+      targetCanvas
     );
   }
 
@@ -336,14 +337,18 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   };
 
   const handleDownload = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const dataUrl = canvas.toDataURL('image/png');
+    const img = imgRef.current;
+    if (!img) return;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = img.naturalWidth;
+    tempCanvas.height = img.naturalHeight;
+    draw(null, null, tempCanvas);
+    const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
     const link = document.createElement('a');
     link.href = dataUrl;
-    link.download = 'edited-photo.png';
+    link.download = 'edited-photo.jpg';
     link.click();
-  }, []);
+  }, [draw, imgRef]);
 
 
 

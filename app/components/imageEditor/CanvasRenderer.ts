@@ -9,19 +9,32 @@ import { generateNoiseCanvas } from "./utils";
 import { applyWebGLAdjustments } from './webglFilters';
 import { mapBasicAdjustments } from './filterUtils';
 
-export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOverrides) {
-  const canvas = params.canvasRef.current;
+export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOverrides, targetCanvas?: HTMLCanvasElement) {
+  const canvas = targetCanvas || params.canvasRef.current;
   const img = params.previewOriginalRef.current && params.originalImgRef.current ? params.originalImgRef.current : params.imgRef.current;
   if (!canvas || !img) return;
 
   const ctx = canvas.getContext("2d")!;
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = targetCanvas ? 1 : (window.devicePixelRatio || 1);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
-  const layout = computeImageLayout(params, info);
+  let layoutInfo = info;
+  if (targetCanvas && !info) {
+    // For export, create full-size layout info
+    layoutInfo = {
+      rect: { width: canvas.width, height: canvas.height, left: 0, top: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect,
+      baseScale: 1,
+      dispW: img.naturalWidth,
+      dispH: img.naturalHeight,
+      left: 0,
+      top: 0
+    };
+  }
+
+  const layout = layoutInfo || computeImageLayout(params, info);
   if (!layout) return;
 
   const { left, top, dispW, dispH } = layout;

@@ -24,9 +24,10 @@ export function drawImage(
   dashOffsetRef: React.MutableRefObject<number>,
   computeImageLayout: () => any,
   info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number },
-  overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; lightLeak: { preset: string; intensity: number }; frameEnabled: boolean; frameThickness: number; frameColor: string }>
+  overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; lightLeak: { preset: string; intensity: number }; frameEnabled: boolean; frameThickness: number; frameColor: string }>,
+  targetCanvas?: HTMLCanvasElement
 ) {
-  const canvas = canvasRef.current;
+  const canvas = targetCanvas || canvasRef.current;
   const img = previewOriginalRef.current && originalImgRef.current ? originalImgRef.current : imgRef.current;
   if (!canvas || !img) return;
   canvasDraw({
@@ -52,5 +53,5 @@ export function drawImage(
     rotationRef,
     dashOffsetRef,
     computeImageLayout
-  }, info, overrides);
+  }, info, overrides, targetCanvas);
 }

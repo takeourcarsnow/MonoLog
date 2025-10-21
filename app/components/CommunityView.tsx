@@ -291,16 +291,14 @@ export function CommunityView() {
                     const userAny = (thread.user as any) || {};
                     const avatarSrc = ((userAny.avatarUrl || userAny.avatar_url || "") + "").trim() || "/logo.svg";
                     return (
-                      <Link href={`/${thread.user.username}`}>
-                        <OptimizedImage
-                          src={avatarSrc}
-                          alt={thread.user.username}
-                          width={40}
-                          height={40}
-                          className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                          fallbackSrc="/logo.svg"
-                        />
-                      </Link>
+                      <OptimizedImage
+                        src={avatarSrc}
+                        alt={thread.user.username}
+                        width={40}
+                        height={40}
+                        className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                        fallbackSrc="/logo.svg"
+                      />
                     );
                   })()}
                 </div>

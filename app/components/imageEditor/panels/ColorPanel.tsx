@@ -27,13 +27,14 @@ export default function ColorPanel({
   filtersContainerRef,
   filterHighlight,
 }: ColorPanelProps) {
-  return (
-    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
-      {/* panel heading removed (tab already shows Filters) */}
-      <nav ref={filtersContainerRef} style={{ position: 'relative', display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: '4px 0' }}>
-        {/* animated highlight pill sits behind buttons and moves between them */}
-        <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease', pointerEvents: 'none', opacity: filterHighlight ? 0.95 : 0, boxShadow: 'none', border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)' }} />
-        {Object.keys(FILTER_PRESETS).map(f => {
+  const colorFilters = ['portra400', 'velvia50', 'provia', 'ektar', 'astia100', 'ektachrome', 'gold200'];
+  const bwFilters = ['trix400', 'hp5', 'delta3200', 'scala', 'fp4', 'tmax100', 'panatomic'];
+  const otherFilters = ['none', 'invert'];
+
+  const renderFilterGroup = (filters: string[]) => (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+        {filters.map(f => {
           const Icon = FILTER_ICONS[f] || FILTER_ICONS.default;
           return (
             <button
@@ -54,6 +55,19 @@ export default function ColorPanel({
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
+      {/* panel heading removed (tab already shows Filters) */}
+      <nav ref={filtersContainerRef} style={{ position: 'relative' }}>
+        {/* animated highlight pill sits behind buttons and moves between them */}
+        <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease', pointerEvents: 'none', opacity: filterHighlight ? 0.95 : 0, boxShadow: 'none', border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)' }} />
+        {renderFilterGroup(colorFilters)}
+        {renderFilterGroup(bwFilters)}
+        {renderFilterGroup(otherFilters)}
       </nav>
 
       <label style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4 }}>

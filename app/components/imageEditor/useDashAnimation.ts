@@ -8,10 +8,14 @@ export function useDashAnimation(
 ) {
   // Animate dashed selection while a selection exists
   useEffect(() => {
-    function step() {
+    let lastDraw = 0;
+    function step(timestamp: number) {
       dashOffsetRef.current = (dashOffsetRef.current - 0.8) % 1000;
-      // redraw only to update stroke offset (lightweight)
-      draw();
+      // Throttle draw calls to every ~50ms to reduce performance impact
+      if (timestamp - lastDraw > 50) {
+        draw();
+        lastDraw = timestamp;
+      }
       dashAnimRef.current = requestAnimationFrame(step);
     }
     if (sel) {

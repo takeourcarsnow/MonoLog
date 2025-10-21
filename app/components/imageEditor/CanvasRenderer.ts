@@ -165,11 +165,6 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
     applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
   }
   if (params.overlayRef.current) {
-    try {
-      // Debug: log overlay info to help trace rendering issues
-      // eslint-disable-next-line no-console
-      console.debug('[CanvasRenderer] applying overlay', params.overlayRef.current, { imgLeft, imgTop, imgW, imgH });
-    } catch (e) {}
     applyOverlayEffect(ctx, params.overlayRef.current, imgLeft, imgTop, imgW, imgH);
   }
 

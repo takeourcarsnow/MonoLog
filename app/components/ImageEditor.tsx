@@ -305,7 +305,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     const y = (rect.height - h) / 2;
     setSel({ x, y, w, h });
     requestAnimationFrame(() => draw());
-  }, [selectedCategory, sel, computeImageLayout, cropRatio, canvasRef, setSel, draw]);
+  }, [selectedCategory, computeImageLayout, cropRatio, canvasRef, setSel]);
 
   useEffect(() => { rotationRef.current = rotation; }, [rotation, rotationRef]);
   useEffect(() => { exposureRef.current = exposure; }, [exposure, exposureRef]);

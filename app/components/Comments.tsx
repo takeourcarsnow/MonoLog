@@ -264,13 +264,14 @@ export function Comments({ postId, onCountChange }: Props) {
       </div>
 
       <div className="comment-box" style={{ marginTop: 8 }}>
-        <input
+        <textarea
           className="input"
-          type="text"
           placeholder="Add a comment…"
           aria-label="Add a comment"
           value={text}
           maxLength={COMMENT_MAX}
+          rows={2}
+          style={{ width: '100%', paddingRight: 72, position: 'relative', resize: 'vertical', minHeight: '40px' }}
           onChange={e => {
             const v = e.target.value;
             if (v.length <= COMMENT_MAX) setText(v);
@@ -280,7 +281,7 @@ export function Comments({ postId, onCountChange }: Props) {
             }
           }}
           onKeyDown={async (e) => {
-            if (e.key === "Enter") {
+            if (e.key === "Enter" && e.shiftKey) {
               if (!text.trim()) return;
               if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
               setSending(true);
@@ -290,7 +291,6 @@ export function Comments({ postId, onCountChange }: Props) {
               setSending(false);
             }
           }}
-          style={{ width: '100%', paddingRight: 72, position: 'relative' }}
         />
         {/* character counter overlaid inside the input on the right */}
         {text.length > 0 ? (

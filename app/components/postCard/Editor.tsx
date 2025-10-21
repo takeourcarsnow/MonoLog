@@ -86,16 +86,16 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
 
   return (
     <div ref={editorRef} className="post-editor" tabIndex={-1}>
-      <input
+      <textarea
         className="edit-caption input"
-        type="text"
         placeholder="Tell your story (if you feel like it)"
-        aria-label="Edit caption"
         value={caption}
         onChange={e => setCaption(e.target.value)}
         autoFocus
+        rows={3}
+        style={{ resize: 'vertical', minHeight: '60px' }}
         onKeyDown={async (e) => {
-          if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+          if (e.key === 'Enter' && e.shiftKey) {
             e.preventDefault();
             await doSave();
           }

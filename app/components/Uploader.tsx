@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import { lazy, Suspense } from "react";
+import { preloadOverlayThumbnails } from './imageEditor/overlaysPreload';
 import { api } from "@/src/lib/api";
 import { AuthForm } from "./AuthForm";
 import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
@@ -305,7 +306,7 @@ function UploaderCore() {
           <button
             className="btn icon ghost small-min"
             aria-label="Edit photo"
-            onClick={() => { setEditingIndex(index); setEditing(true); }}
+            onClick={async () => { setEditingIndex(index); try { await preloadOverlayThumbnails(); } catch {} setEditing(true); }}
             disabled={processing}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">

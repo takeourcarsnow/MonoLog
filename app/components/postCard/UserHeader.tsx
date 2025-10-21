@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useRef, useState, useEffect } from "react";
+import { preloadOverlayThumbnails } from "../imageEditor/overlaysPreload";
 import type { HydratedPost } from "@/src/lib/types";
 import { api } from "@/src/lib/api";
 import { formatRelative } from "@/src/lib/date";
@@ -216,7 +217,7 @@ export const UserHeader = memo(function UserHeader({
                       return;
                     }
 
-                    if (!editing) {
+                      if (!editing) {
                       // Record click time so a follow-up click is ignored briefly
                       editClickLockRef.current = now;
                       setTimeout(() => { editClickLockRef.current = null; }, LOCK_MS);
@@ -224,6 +225,9 @@ export const UserHeader = memo(function UserHeader({
                       setEditExpanded(true);
                       if (editTimerRef.current) { window.clearTimeout(editTimerRef.current); editTimerRef.current = null; }
                       editTimerRef.current = window.setTimeout(() => { setEditExpanded(false); editTimerRef.current = null; }, 3500);
+                      // start preloading thumbnails first so the editor can render
+                      // overlays instantly when it mounts.
+                      try { await preloadOverlayThumbnails(); } catch {}
                       // set editing
                       setEditing(true);
                       return;

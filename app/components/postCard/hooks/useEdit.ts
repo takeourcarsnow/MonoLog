@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { preloadOverlayThumbnails } from "../../imageEditor/overlaysPreload";
 import { api } from "@/src/lib/api";
 import { useToast } from "../../Toast";
 import type { HydratedPost } from "@/src/lib/types";
@@ -27,6 +28,8 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
         window.clearTimeout(pendingCloseTimerRef.current);
         pendingCloseTimerRef.current = null;
       }
+      // start preloading overlay thumbnails; do not block UI if preload fails
+      try { preloadOverlayThumbnails().catch(() => {}); } catch {}
       _setEditing(true);
       return;
     }

@@ -24,6 +24,7 @@ import ImageEditorPanels from './imageEditor/ImageEditorPanels';
 import { useKeyboardEvents } from './imageEditor/useKeyboardEvents';
 import { useImageEditorDraw } from './imageEditor/useImageEditorDraw';
 import './imageEditor/ImageEditor.css';
+import { preloadOverlayThumbnails } from './imageEditor/overlaysPreload';
 
 type Props = {
   initialDataUrl: string;
@@ -159,6 +160,14 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     };
   }, []);
 
+  // Start preloading overlay thumbnails as soon as the editor mounts so the
+  // OverlaysPanel can show thumbnails instantly.
+  useEffect(() => {
+    // Fire-and-forget: preloadOverlayThumbnails populates a shared cache used
+    // by the OverlaysPanel and avoids duplicate re-fetches.
+    preloadOverlayThumbnails().catch(() => {});
+  }, []);
+
   const handleToggleFullscreen = useCallback(() => {
     const el = editorContainerRef.current;
     if (!el) return;
@@ -247,6 +256,58 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   );
 
   useSliderEvents(containerRef);
+
+  // When entering the Crop category, automatically create an initial
+  // crop selection if none exists. This mirrors the previous behavior
+  // (drawing by drag was removed) and ensures the overlay appears when
+  // the Crop panel is opened, including when the Free preset is active.
+  // We honor the current cropRatio (null = free) and center a selection
+  // with a small padding around the image display area.
+  useEffect(() => {
+    if (selectedCategory !== 'crop') return;
+    if (sel) return; // already have a selection
+    const pad = 0.08;
+    const info = computeImageLayout();
+    const createFromInfo = (info: any) => {
+      let w = info.dispW * (1 - pad * 2);
+      let h = info.dispH * (1 - pad * 2);
+      const ratio = cropRatio.current;
+      if (ratio) {
+        h = w / ratio;
+        if (h > info.dispH * (1 - pad * 2)) {
+          h = info.dispH * (1 - pad * 2);
+          w = h * ratio;
+        }
+      }
+      const x = info.left + (info.dispW - w) / 2;
+      const y = info.top + (info.dispH - h) / 2;
+      setSel({ x, y, w, h });
+      // ensure canvas redraw to show overlay immediately
+      requestAnimationFrame(() => draw());
+    };
+    if (info) {
+      createFromInfo(info);
+      return;
+    }
+    // fallback: use canvas bounding rect
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    let w = rect.width * (1 - pad * 2);
+    let h = rect.height * (1 - pad * 2);
+    const ratio = cropRatio.current;
+    if (ratio) {
+      h = w / ratio;
+      if (h > rect.height * (1 - pad * 2)) {
+        h = rect.height * (1 - pad * 2);
+        w = h * ratio;
+      }
+    }
+    const x = (rect.width - w) / 2;
+    const y = (rect.height - h) / 2;
+    setSel({ x, y, w, h });
+    requestAnimationFrame(() => draw());
+  }, [selectedCategory, sel, computeImageLayout, cropRatio, canvasRef, setSel, draw]);
 
   useEffect(() => { rotationRef.current = rotation; }, [rotation, rotationRef]);
   useEffect(() => { exposureRef.current = exposure; }, [exposure, exposureRef]);

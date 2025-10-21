@@ -15,7 +15,10 @@ export function useImageEditorHighlights(
     const compute = () => {
       const cont = categoriesContainerRef.current;
       if (!cont) { if (alive) setCategoryHighlight(null); return; }
-      const selKey = selectedCategory === 'basic' ? 'basic' : selectedCategory === 'color' ? 'color' : selectedCategory === 'effects' ? 'effects' : selectedCategory === 'crop' ? 'crop' : selectedCategory === 'lightleak' ? 'lightleak' : 'frame';
+      // Use the actual selectedCategory value for the data-cat selector.
+      // Previous logic accidentally mapped several categories to 'frame',
+      // which prevented 'overlays' from being selected properly.
+      const selKey = selectedCategory;
       const btn = cont.querySelector<HTMLButtonElement>(`button[data-cat="${selKey}"]`);
       if (!btn) { if (alive) setCategoryHighlight(null); return; }
       const left = Math.round((btn as HTMLElement).offsetLeft - 4);

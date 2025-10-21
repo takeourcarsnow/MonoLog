@@ -1,6 +1,7 @@
-        import { Layers, Blend, Eye } from "lucide-react";
-import { rangeBg } from "../utils";
-import { useState } from "react";
+        import { Blend, Eye } from "lucide-react";
+        import { rangeBg } from "../utils";
+        import { useState, useEffect } from "react";
+        import { overlayFiles, getThumbAvailabilityCache } from '../overlaysPreload';
 
 interface OverlaysPanelProps {
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null;
@@ -10,22 +11,7 @@ interface OverlaysPanelProps {
   resetControlToDefault: (control: string) => void;
 }
 
-const overlayFiles = [
-  'overlay (1).jpg',
-  'overlay (2).jpg',
-  'overlay (5).jpg',
-  'overlay (6).jpg',
-  'overlay (7).jpg',
-  'overlay (9).jpg',
-  'overlay (10).jpg',
-  'overlay (11).jpg',
-  'overlay (12).jpg',
-  'overlay (13).jpg',
-  'overlay (14).jpg',
-  'overlay (15).jpg',
-  'overlay (16).jpg',
-  'overlay (17).jpg',
-];
+
 
 export default function OverlaysPanel({
   overlay,
@@ -34,24 +20,81 @@ export default function OverlaysPanel({
   draw,
   resetControlToDefault,
 }: OverlaysPanelProps) {
-  const [selectedUrl, setSelectedUrl] = useState<string | null>(overlay?.img.src || null);
+  // Track the selected thumbnail by filename (e.g. 'overlay (1).jpg') instead
+  // of by a full URL. This avoids mismatches between absolute img.src values
+  // (which the browser will normalize to absolute URLs) and the relative
+  // thumbnail paths used when rendering buttons.
+  const [selectedFile, setSelectedFile] = useState<string | null>(overlay?.img?.src?.split('/').pop() || null);
+
+  // Keep selection in sync if parent updates `overlay` (for example when
+  // initial settings are provided or an external action changes the overlay).
+  useEffect(() => {
+    const fname = overlay?.img?.src?.split('/').pop() || null;
+    setSelectedFile(fname);
+  }, [overlay]);
+
+  // Map of filename -> boolean indicating if a small thumbnail exists at
+  // /overlays/thumbs/{file}. When thumbnails are present we use them for the
+  // panel buttons so the browser doesn't download the large overlay image on open.
+  const [thumbAvailability, setThumbAvailability] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const cached = getThumbAvailabilityCache();
+    if (cached) {
+      setThumbAvailability(cached);
+      return;
+    }
+
+    // If no cache exists yet, the editor-level preload will populate it when
+    // ready; but fall back to a local quick-detect so the panel is resilient if
+    // opened before the preload finishes.
+    (async () => {
+      const result: Record<string, boolean> = {};
+      await Promise.all(
+        overlayFiles.map((file) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              result[file] = true;
+              resolve();
+            };
+            img.onerror = () => {
+              result[file] = false;
+              resolve();
+            };
+            const cacheBust = (process.env.NODE_ENV === 'development') ? `?v=${Date.now()}` : '';
+            img.src = `/overlays/thumbs/${file}` + cacheBust;
+          })
+        )
+      );
+      if (!cancelled) {
+        // If the editor-level preload already wrote the cache, prefer that one
+        const editorCache = getThumbAvailabilityCache();
+        if (editorCache) setThumbAvailability(editorCache);
+        else setThumbAvailability(result);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSelectOverlay = (file: string) => {
-    const url = `/overlays/${file}`;
+    const url = `/overlays/${file}`; // full-size image (only loaded when user selects)
     // Toggle: if clicking the currently selected overlay, remove it
-    if (selectedUrl === url) {
+    if (selectedFile === file) {
       overlayRef.current = null;
       setOverlay(null);
-      setSelectedUrl(null);
+      setSelectedFile(null);
       draw();
       try { console.debug('[OverlaysPanel] toggled off overlay', url); } catch (e) {}
       return;
     }
 
-    setSelectedUrl(url);
+    setSelectedFile(file);
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = url;
+    img.src = url; // load full-size only on explicit select
     img.onload = () => {
       // default to 'screen' for black-background overlays (black behaves as transparent)
       // use a higher default opacity so effects are visible on first select
@@ -91,7 +134,10 @@ export default function OverlaysPanel({
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 8 }}>
               {overlayFiles.map((file) => {
-                const thumbUrl = `/overlays/${file}`;
+                const thumbUrl = `/overlays/thumbs/${file}`; // small thumbnail path (generated separately)
+                const fullUrl = `/overlays/${file}`;
+                // If a thumbnail isn't available we'll show a neutral placeholder here
+                const showThumb = !!thumbAvailability[file];
                 return (
                   <button
                     key={file}
@@ -100,15 +146,22 @@ export default function OverlaysPanel({
                     style={{
                       width: 60,
                       height: 60,
-                      border: selectedUrl === thumbUrl ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      border: selectedFile === file ? '2px solid var(--primary)' : '1px solid var(--border)',
                       borderRadius: 8,
-                      backgroundImage: `url("${thumbUrl}")`,
+                      backgroundImage: showThumb ? `url("${thumbUrl}")` : undefined,
                       backgroundPosition: 'center',
                       backgroundSize: 'cover',
                       cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: showThumb ? undefined : 'var(--muted-bg)'
                     }}
                     title={file}
-                  />
+                  >
+                    {/* Avoid showing filename text as a placeholder (causes flash). */}
+                    {!showThumb && <div style={{ width: '100%', height: '100%' }} aria-hidden />}
+                  </button>
                 );
               })}
             </div>
@@ -120,16 +173,35 @@ export default function OverlaysPanel({
             <fieldset>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                 <Blend size={18} style={{ marginRight: 4 }} />
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                   {['multiply', 'screen', 'overlay', 'soft-light'].map((mode) => (
                     <button
                       key={mode}
                       type="button"
-                      className={overlay.blendMode === mode ? 'btn primary' : 'btn ghost'}
+                      data-blend={mode}
+                      aria-pressed={overlay.blendMode === mode}
+                      onMouseDown={() => { /* visual press handled inline for snappy feel */ }}
                       onClick={() => handleBlendModeChange(mode)}
-                      style={{ padding: '6px 12px', fontSize: 12, textTransform: 'capitalize' }}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: 6,
+                        background: 'transparent',
+                        border: 'none',
+                        display: 'inline-flex',
+                        gap: 6,
+                        alignItems: 'center',
+                        fontSize: 12,
+                        textTransform: 'capitalize',
+                        fontWeight: overlay.blendMode === mode ? 700 : 500,
+                        color: 'var(--text)'
+                      }}
+                      onMouseDownCapture={(e)=> (e.currentTarget.style.transform = 'scale(0.96)')}
+                      onMouseUpCapture={(e)=> (e.currentTarget.style.transform = '')}
+                      onMouseLeave={(e)=> (e.currentTarget.style.transform = '')}
+                      onFocus={(e)=> (e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)')}
+                      onBlur={(e)=> (e.currentTarget.style.boxShadow = '')}
                     >
-                      {mode}
+                      <span style={{ fontSize: 11 }}>{mode}</span>
                     </button>
                   ))}
                 </div>

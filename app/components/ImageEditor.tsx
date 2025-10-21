@@ -195,6 +195,36 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   // Local draw wrapper binds all refs/state to the lower-level drawImage helper so
   // callers can simply call draw() or draw(info).
   function draw(info?: any, overrides?: any, targetCanvas?: HTMLCanvasElement) {
+    if (targetCanvas) {
+      // synchronous for export
+      return drawImage(
+        canvasRef,
+        imgRef,
+        originalImgRef,
+        previewOriginalRef,
+        offset,
+        sel,
+        exposureRef,
+        contrastRef,
+        saturationRef,
+        temperatureRef,
+        vignetteRef,
+        frameColorRef,
+        frameThicknessRef,
+        selectedFilterRef,
+        filterStrengthRef,
+        grainRef,
+        softFocusRef,
+        fadeRef,
+        overlayRef,
+        rotationRef,
+        dashOffsetRef,
+        computeImageLayout,
+        info,
+        overrides,
+        targetCanvas
+      );
+    }
     if (drawPendingRef.current) return; // skip if already pending
     drawPendingRef.current = true;
     requestAnimationFrame(() => {

@@ -8,6 +8,7 @@ import { drawRotated } from "./CanvasRendererUtils";
 import { generateNoiseCanvas } from "./utils";
 import { applyWebGLAdjustments } from './webglFilters';
 import { mapBasicAdjustments } from './filterUtils';
+import { getTempCanvas, releaseTempCanvas } from './tempCanvasPool';
 
 // Cache for WebGL processed images
 const webglCache = new Map<string, HTMLCanvasElement>();
@@ -26,14 +27,26 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
 
   let layoutInfo = info;
   if (targetCanvas && !info) {
-    // For export, create full-size layout info
+    // For export, create full-size layout info with rotation bounding box
+    const rot = params.rotationRef.current;
+    const angle = (rot * Math.PI) / 180;
+    const absCos = Math.abs(Math.cos(angle));
+    const absSin = Math.abs(Math.sin(angle));
+    const rotatedW = Math.max(1, Math.round(img.naturalWidth * absCos + img.naturalHeight * absSin));
+    const rotatedH = Math.max(1, Math.round(img.naturalWidth * absSin + img.naturalHeight * absCos));
+    // Set canvas size to bounding box
+    targetCanvas.width = rotatedW;
+    targetCanvas.height = rotatedH;
+    // Center the image in the bounding box
+    const centerX = rotatedW / 2;
+    const centerY = rotatedH / 2;
     layoutInfo = {
-      rect: { width: canvas.width, height: canvas.height, left: 0, top: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect,
+      rect: { width: rotatedW, height: rotatedH, left: 0, top: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect,
       baseScale: 1,
       dispW: img.naturalWidth,
       dispH: img.naturalHeight,
-      left: 0,
-      top: 0
+      left: centerX - img.naturalWidth / 2,
+      top: centerY - img.naturalHeight / 2
     };
   }
 
@@ -97,23 +110,23 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
         if (!tmpCanvas) {
           // use the computed filter values from computeFilterValues
           const fv: any = filterValues;
-  const m = mapBasicAdjustments({ exposure: fv.curExposure, contrast: fv.curContrast, saturation: fv.curSaturation, temperature: fv.curTemperature });
-  const brightness = m.brightness || 1;
-  const contrast = m.finalContrast || 1;
-  const saturation = m.cssSaturation || 1;
-  const hueDeg = m.hue || 0;
-  const tempTint = (m as any).tempTint || 0;
+          const m = mapBasicAdjustments({ exposure: fv.curExposure, contrast: fv.curContrast, saturation: fv.curSaturation, temperature: fv.curTemperature });
+          const brightness = m.brightness || 1;
+          const contrast = m.finalContrast || 1;
+          const saturation = m.cssSaturation || 1;
+          const hueDeg = m.hue || 0;
+          const tempTint = (m as any).tempTint || 0;
 
-          tmpCanvas = applyWebGLAdjustments(img, img.naturalWidth, img.naturalHeight, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength, tempTint });
+          tmpCanvas = applyWebGLAdjustments(img, img.naturalWidth, img.naturalHeight, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength, tempTint }) as HTMLCanvasElement | undefined;
           // Cache the result, but limit cache size
           if (webglCache.size > 10) {
             const firstKey = webglCache.keys().next().value;
             if (firstKey) webglCache.delete(firstKey);
           }
-          webglCache.set(cacheKey, tmpCanvas);
+          if (tmpCanvas) webglCache.set(cacheKey, tmpCanvas);
         }
         // draw the processed GPU canvas (snapshot) onto our main canvas, taking rotation into account
-        drawRotated(tmpCanvas, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+        if (tmpCanvas) drawRotated(tmpCanvas, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
         usedGpu = true;
       } catch (e) {
         usedGpu = false;
@@ -122,44 +135,49 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       if (!usedGpu) {
         // fallback to CPU filter path with full-res temp canvases
         if (curFilterStrength >= 0.999) {
-          const temp = document.createElement('canvas');
-          temp.width = img.naturalWidth;
-          temp.height = img.naturalHeight;
-          const tctx = temp.getContext('2d')!;
-          tctx.filter = filter;
-          tctx.drawImage(img, 0, 0);
-          tctx.filter = 'none';
-          drawRotated(temp, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          const temp = getTempCanvas(img.naturalWidth, img.naturalHeight);
+          try {
+            const tctx = (temp as HTMLCanvasElement).getContext('2d')!;
+            tctx.filter = filter;
+            tctx.drawImage(img, 0, 0);
+            tctx.filter = 'none';
+            drawRotated(temp as any, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          } finally {
+            releaseTempCanvas(temp);
+          }
         } else if (curFilterStrength <= 0.001) {
-          const temp = document.createElement('canvas');
-          temp.width = img.naturalWidth;
-          temp.height = img.naturalHeight;
-          const tctx = temp.getContext('2d')!;
-          tctx.filter = baseFilter;
-          tctx.drawImage(img, 0, 0);
-          tctx.filter = 'none';
-          drawRotated(temp, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          const temp = getTempCanvas(img.naturalWidth, img.naturalHeight);
+          try {
+            const tctx = (temp as HTMLCanvasElement).getContext('2d')!;
+            tctx.filter = baseFilter;
+            tctx.drawImage(img, 0, 0);
+            tctx.filter = 'none';
+            drawRotated(temp as any, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+          } finally {
+            releaseTempCanvas(temp);
+          }
         } else {
-          const tempBase = document.createElement('canvas');
-          tempBase.width = img.naturalWidth;
-          tempBase.height = img.naturalHeight;
-          const tctxBase = tempBase.getContext('2d')!;
-          tctxBase.filter = baseFilter;
-          tctxBase.drawImage(img, 0, 0);
-          tctxBase.filter = 'none';
-          const tempFilter = document.createElement('canvas');
-          tempFilter.width = img.naturalWidth;
-          tempFilter.height = img.naturalHeight;
-          const tctxFilter = tempFilter.getContext('2d')!;
-          tctxFilter.filter = filter;
-          tctxFilter.drawImage(img, 0, 0);
-          tctxFilter.filter = 'none';
-          // draw base
-          drawRotated(tempBase, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-          // composite filtered
-          ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
-          drawRotated(tempFilter, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
-          ctx.globalAlpha = 1;
+          const tempBase = getTempCanvas(img.naturalWidth, img.naturalHeight);
+          const tempFilter = getTempCanvas(img.naturalWidth, img.naturalHeight);
+          try {
+            const tctxBase = (tempBase as HTMLCanvasElement).getContext('2d')!;
+            tctxBase.filter = baseFilter;
+            tctxBase.drawImage(img, 0, 0);
+            tctxBase.filter = 'none';
+            const tctxFilter = (tempFilter as HTMLCanvasElement).getContext('2d')!;
+            tctxFilter.filter = filter;
+            tctxFilter.drawImage(img, 0, 0);
+            tctxFilter.filter = 'none';
+            // draw base
+            drawRotated(tempBase as any, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+            // composite filtered
+            ctx.globalAlpha = Math.min(1, Math.max(0, curFilterStrength));
+            drawRotated(tempFilter as any, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+            ctx.globalAlpha = 1;
+          } finally {
+            releaseTempCanvas(tempBase);
+            releaseTempCanvas(tempFilter);
+          }
         }
       }
     }

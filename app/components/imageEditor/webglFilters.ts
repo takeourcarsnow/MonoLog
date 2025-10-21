@@ -335,6 +335,8 @@ const texCache = new WeakMap<object, WebGLTexture | null>();
 export let enableGPU = true;
 export function setEnableGPU(v: boolean) { enableGPU = !!v; }
 
+import { getTempCanvas, releaseTempCanvas } from './tempCanvasPool';
+
 // Exposed function: renders a processed canvas sized (w,h) with given adjustments and optional preset
 export function applyWebGLAdjustments(
   img: CanvasImageSource,
@@ -346,10 +348,11 @@ export function applyWebGLAdjustments(
 
   // Build a fallback 2D processed canvas if GPU not available or disabled
   if (!shared.gl || !shared.canvas || !enableGPU) {
-    const out = document.createElement('canvas');
+    // reuse temp canvas to avoid frequent allocations
+    const out = getTempCanvas(Math.max(1, Math.round(w)), Math.max(1, Math.round(h)));
     out.width = Math.max(1, Math.round(w));
     out.height = Math.max(1, Math.round(h));
-    const ctx = out.getContext('2d')!;
+    const ctx = (out as HTMLCanvasElement).getContext('2d')!;
     // build CSS filter string matching numeric adjustments
   // Apply a subtle color tint for temperature using a tiny hue-rotate fallback
   const tempTint = adjustments.tempTint || 0;
@@ -392,7 +395,17 @@ export function applyWebGLAdjustments(
       ctx.restore();
     }
 
-    return out;
+    // Clone into a fresh canvas to avoid returning a pooled canvas that might be
+    // reused later (which would corrupt cached snapshots). This keeps callers safe
+    // while still reducing temporary allocations during intermediate processing.
+    const final = document.createElement('canvas');
+    final.width = out.width;
+    final.height = out.height;
+    const fctx = final.getContext('2d')!;
+    fctx.drawImage(out as any, 0, 0);
+    // release pooled canvas back to pool
+    releaseTempCanvas(out as any);
+    return final as any;
   }
 
   const gl = shared.gl;

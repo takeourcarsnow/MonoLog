@@ -91,6 +91,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setSoftFocus,
     fade,
     setFade,
+    lightLeak,
+    setLightLeak,
     exposureRef,
     contrastRef,
     saturationRef,
@@ -103,6 +105,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     grainRef,
     softFocusRef,
     fadeRef,
+    lightLeakRef,
     filtersContainerRef,
     filterHighlight,
     setFilterHighlight,
@@ -200,6 +203,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       grainRef,
       softFocusRef,
       fadeRef,
+      lightLeakRef,
       rotationRef,
       dashOffsetRef,
       computeImageLayout,
@@ -252,6 +256,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   useEffect(() => { grainRef.current = grain; }, [grain, grainRef]);
   useEffect(() => { softFocusRef.current = softFocus; }, [softFocus, softFocusRef]);
   useEffect(() => { fadeRef.current = fade; }, [fade, fadeRef]);
+  useEffect(() => { lightLeakRef.current = lightLeak; }, [lightLeak, lightLeakRef]);
 
   const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
     if (category === 'crop' && selectedCategory !== 'crop') {
@@ -277,6 +282,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     grain,
     softFocus,
     fade,
+    lightLeak,
     rotation,
     rotationRef,
     onApply,
@@ -304,6 +310,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     softFocusRef,
     setFade,
     fadeRef,
+    setLightLeak,
+    lightLeakRef,
     setRotation,
     setSel,
     cropRatio,
@@ -405,6 +413,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           fade={fade}
           setFade={setFade}
           fadeRef={fadeRef}
+          lightLeak={lightLeak}
+          setLightLeak={setLightLeak}
+          lightLeakRef={lightLeakRef}
           sel={sel}
           setSel={setSel}
           cropRatio={cropRatio}

@@ -21,6 +21,7 @@ export async function applyEdit(
   grain: number,
   softFocus: number,
   fade: number,
+  lightLeak: string,
   rotation: number,
   rotationRef: React.MutableRefObject<number>,
   onApply: (dataUrl: string, settings: EditorSettings) => void
@@ -219,6 +220,157 @@ export async function applyEdit(
       octx.save(); octx.globalAlpha = Math.min(0.4, curFade * 0.45); octx.fillStyle = 'rgba(245,245,240,0.3)'; octx.fillRect(padPx, padPx, srcW, srcH); octx.restore();
     }
   }
+  // Light Leak: bright spot overlay for artistic effect
+  const curLightLeak = lightLeak;
+  if (curLightLeak && curLightLeak.preset !== 'none') {
+    try {
+      octx.save();
+      octx.globalCompositeOperation = 'screen';
+      octx.globalAlpha = curLightLeak.intensity;
+
+      let cx: number, cy: number, radius: number, gradient: CanvasGradient;
+
+      switch (curLightLeak) {
+        case 'warm-top-right':
+          cx = padPx + srcW * 0.8;
+          cy = padPx + srcH * 0.2;
+          radius = Math.max(srcW, srcH) * 0.5;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(255, 255, 200, 0.8)');
+          gradient.addColorStop(0.3, 'rgba(255, 220, 150, 0.6)');
+          gradient.addColorStop(0.6, 'rgba(255, 180, 100, 0.4)');
+          gradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+          break;
+
+        case 'cool-bottom-left':
+          cx = padPx + srcW * 0.2;
+          cy = padPx + srcH * 0.8;
+          radius = Math.max(srcW, srcH) * 0.5;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(200, 220, 255, 0.8)');
+          gradient.addColorStop(0.3, 'rgba(150, 180, 255, 0.6)');
+          gradient.addColorStop(0.6, 'rgba(100, 140, 255, 0.4)');
+          gradient.addColorStop(1, 'rgba(50, 100, 255, 0)');
+          break;
+
+        case 'magenta-center':
+          cx = padPx + srcW * 0.5;
+          cy = padPx + srcH * 0.5;
+          radius = Math.max(srcW, srcH) * 0.4;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(255, 200, 255, 0.8)');
+          gradient.addColorStop(0.3, 'rgba(255, 150, 220, 0.6)');
+          gradient.addColorStop(0.6, 'rgba(255, 100, 180, 0.4)');
+          gradient.addColorStop(1, 'rgba(255, 50, 150, 0)');
+          break;
+
+        case 'blue-side':
+          cx = padPx + srcW * 0.9;
+          cy = padPx + srcH * 0.5;
+          radius = Math.max(srcW, srcH) * 0.6;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(150, 200, 255, 0.7)');
+          gradient.addColorStop(0.4, 'rgba(100, 150, 255, 0.5)');
+          gradient.addColorStop(0.7, 'rgba(50, 100, 255, 0.3)');
+          gradient.addColorStop(1, 'rgba(0, 50, 200, 0)');
+          break;
+
+        case 'golden-hour':
+          cx = padPx + srcW * 0.7;
+          cy = padPx + srcH * 0.3;
+          radius = Math.max(srcW, srcH) * 0.7;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(255, 220, 150, 0.9)');
+          gradient.addColorStop(0.2, 'rgba(255, 200, 120, 0.7)');
+          gradient.addColorStop(0.5, 'rgba(255, 180, 80, 0.5)');
+          gradient.addColorStop(0.8, 'rgba(255, 150, 50, 0.2)');
+          gradient.addColorStop(1, 'rgba(255, 120, 20, 0)');
+          break;
+
+        case 'warm-bottom-left':
+          cx = padPx + srcW * 0.2;
+          cy = padPx + srcH * 0.8;
+          radius = Math.max(srcW, srcH) * 0.6;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(255, 200, 120, 0.8)');
+          gradient.addColorStop(0.3, 'rgba(255, 180, 80, 0.6)');
+          gradient.addColorStop(0.6, 'rgba(255, 140, 40, 0.4)');
+          gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+          break;
+
+        case 'cool-top-right':
+          cx = padPx + srcW * 0.8;
+          cy = padPx + srcH * 0.2;
+          radius = Math.max(srcW, srcH) * 0.6;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(180, 220, 255, 0.8)');
+          gradient.addColorStop(0.3, 'rgba(120, 180, 255, 0.6)');
+          gradient.addColorStop(0.6, 'rgba(80, 140, 255, 0.4)');
+          gradient.addColorStop(1, 'rgba(40, 100, 255, 0)');
+          break;
+
+        case 'red-corner':
+          cx = padPx + srcW * 0.15;
+          cy = padPx + srcH * 0.15;
+          radius = Math.max(srcW, srcH) * 0.5;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(255, 100, 100, 0.8)');
+          gradient.addColorStop(0.3, 'rgba(255, 80, 80, 0.6)');
+          gradient.addColorStop(0.6, 'rgba(255, 60, 60, 0.4)');
+          gradient.addColorStop(1, 'rgba(255, 40, 40, 0)');
+          break;
+
+        case 'purple-glow':
+          cx = padPx + srcW * 0.5;
+          cy = padPx + srcH * 0.5;
+          radius = Math.max(srcW, srcH) * 0.8;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(200, 100, 255, 0.7)');
+          gradient.addColorStop(0.3, 'rgba(180, 80, 255, 0.5)');
+          gradient.addColorStop(0.6, 'rgba(150, 60, 255, 0.3)');
+          gradient.addColorStop(1, 'rgba(120, 40, 255, 0)');
+          break;
+
+        case 'sunset':
+          cx = padPx + srcW * 0.6;
+          cy = padPx + srcH * 0.4;
+          radius = Math.max(srcW, srcH) * 0.9;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(255, 150, 80, 0.9)');
+          gradient.addColorStop(0.2, 'rgba(255, 120, 60, 0.7)');
+          gradient.addColorStop(0.5, 'rgba(255, 90, 40, 0.5)');
+          gradient.addColorStop(0.8, 'rgba(255, 60, 20, 0.2)');
+          gradient.addColorStop(1, 'rgba(255, 30, 0, 0)');
+          break;
+
+        case 'moonlight':
+          cx = padPx + srcW * 0.3;
+          cy = padPx + srcH * 0.7;
+          radius = Math.max(srcW, srcH) * 0.4;
+          gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          gradient.addColorStop(0, 'rgba(220, 240, 255, 0.6)');
+          gradient.addColorStop(0.4, 'rgba(200, 220, 255, 0.4)');
+          gradient.addColorStop(0.7, 'rgba(180, 200, 255, 0.2)');
+          gradient.addColorStop(1, 'rgba(160, 180, 255, 0)');
+          break;
+
+        default:
+          octx.restore();
+          return;
+      }
+
+      octx.fillStyle = gradient;
+      octx.fillRect(padPx, padPx, srcW, srcH);
+      octx.restore();
+    } catch (e) {
+      octx.save();
+      octx.globalAlpha = 0.3;
+      octx.globalCompositeOperation = 'screen';
+      octx.fillStyle = 'rgba(255, 255, 200, 0.5)';
+      octx.fillRect(padPx, padPx, srcW, srcH);
+      octx.restore();
+    }
+  }
   // apply grain to exported image by compositing a noise canvas
   if (grain > 0) {
     const noise = generateNoiseCanvas(srcW, srcH, grain);
@@ -280,6 +432,7 @@ export async function applyEdit(
     grain,
     softFocus,
     fade,
+    lightLeak,
   };
   onApply(dataUrl, settings);
 }

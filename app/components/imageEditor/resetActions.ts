@@ -34,6 +34,8 @@ export function resetAdjustments(
   softFocusRef: React.MutableRefObject<number>,
   setFade: (v: number) => void,
   fadeRef: React.MutableRefObject<number>,
+  setLightLeak: (v: { preset: string; intensity: number }) => void,
+  lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
   setRotation: (v: number) => void,
   rotationRef: React.MutableRefObject<number>,
   setSel: (sel: null) => void,
@@ -53,6 +55,7 @@ export function resetAdjustments(
   const defGrain = 0;
   const defSoftFocus = 0;
   const defFade = 0;
+  const defLightLeak = { preset: 'none', intensity: 0.6 };
   const defRotation = 0;
 
   // Update state
@@ -68,6 +71,7 @@ export function resetAdjustments(
   setGrain(defGrain); grainRef.current = defGrain;
   setSoftFocus(defSoftFocus); softFocusRef.current = defSoftFocus;
   setFade(defFade); fadeRef.current = defFade;
+  setLightLeak(defLightLeak); lightLeakRef.current = defLightLeak;
   setRotation(defRotation); rotationRef.current = defRotation;
 
   // Also clear any crop selection/preset
@@ -96,6 +100,8 @@ export function resetControlToDefault(
   setSoftFocus: (v: number) => void,
   fadeRef: React.MutableRefObject<number>,
   setFade: (v: number) => void,
+  setLightLeak: (v: { preset: string; intensity: number }) => void,
+  lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
   setRotation: (v: number) => void,
   rotationRef: React.MutableRefObject<number>,
   frameThicknessRef: React.MutableRefObject<number>,
@@ -146,6 +152,11 @@ export function resetControlToDefault(
     case 'fade': {
       const v = 0;
       fadeRef.current = v; setFade(v); draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'lightLeak': {
+      const v = { preset: 'none', intensity: 0.6 };
+      lightLeakRef.current = v; setLightLeak(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'rotation': {

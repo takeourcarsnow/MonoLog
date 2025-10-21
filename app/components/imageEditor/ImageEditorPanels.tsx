@@ -2,11 +2,12 @@ import React from 'react';
 import BasicPanel from './panels/BasicPanel';
 import ColorPanel from './panels/ColorPanel';
 import EffectsPanel from './panels/EffectsPanel';
+import LightLeakPanel from './panels/LightLeakPanel';
 import CropPanel from './panels/CropPanel';
 import FramePanel from './panels/FramePanel';
 
 interface ImageEditorPanelsProps {
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame';
+  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak';
   // Basic panel props
   exposure: number;
   setExposure: (v: number) => void;
@@ -44,6 +45,10 @@ interface ImageEditorPanelsProps {
   fade: number;
   setFade: (v: number) => void;
   fadeRef: React.MutableRefObject<number>;
+  // Light leak panel props
+  lightLeak: { preset: string; intensity: number };
+  setLightLeak: (v: { preset: string; intensity: number }) => void;
+  lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>;
   // Crop panel props
   sel: { x: number; y: number; w: number; h: number } | null;
   setSel: (sel: { x: number; y: number; w: number; h: number } | null) => void;
@@ -159,6 +164,16 @@ export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
           frameColor={props.frameColor}
           setFrameColor={props.setFrameColor}
           frameColorRef={props.frameColorRef}
+          draw={props.draw}
+          resetControlToDefault={props.resetControlToDefault}
+        />
+      )}
+
+      {props.selectedCategory === 'lightleak' && (
+        <LightLeakPanel
+          lightLeak={props.lightLeak}
+          setLightLeak={props.setLightLeak}
+          lightLeakRef={props.lightLeakRef}
           draw={props.draw}
           resetControlToDefault={props.resetControlToDefault}
         />

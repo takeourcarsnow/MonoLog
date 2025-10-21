@@ -45,6 +45,9 @@ export function useImageEditorActions(
   softFocusRef: React.MutableRefObject<number>,
   setFade: (value: number) => void,
   fadeRef: React.MutableRefObject<number>,
+  lightLeak: { preset: string; intensity: number },
+  setLightLeak: (v: { preset: string; intensity: number }) => void,
+  lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
   setRotation: (value: number) => void,
   setSel: (value: { x: number; y: number; w: number; h: number } | null) => void,
   cropRatio: React.MutableRefObject<number | null>,
@@ -77,9 +80,10 @@ export function useImageEditorActions(
       Math.abs(filterStrength - 1) > 0.001,
       Math.abs(grain) > 0.001,
       frameThickness > 0,
+      lightLeak.preset !== 'none',
     ];
     return checks.some(Boolean);
-  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, filterStrength, grain, frameThickness, originalRef, rotation]);
+  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, filterStrength, grain, frameThickness, originalRef, rotation, lightLeak.preset]);
 
   // Action wrappers that delegate to the standalone action helpers
   function applyEdit() {
@@ -132,6 +136,8 @@ export function useImageEditorActions(
       softFocusRef,
       setFade,
       fadeRef,
+      setLightLeak,
+      lightLeakRef,
       setRotation,
       rotationRef,
       setSel,
@@ -163,6 +169,8 @@ export function useImageEditorActions(
       setSoftFocus,
       fadeRef,
       setFade,
+      setLightLeak,
+      lightLeakRef,
       setRotation,
       rotationRef,
       frameThicknessRef,

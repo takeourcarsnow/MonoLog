@@ -20,6 +20,7 @@ export interface DrawParams {
   grainRef: React.MutableRefObject<number>;
   softFocusRef: React.MutableRefObject<number>;
   fadeRef: React.MutableRefObject<number>;
+  lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>;
   rotationRef: React.MutableRefObject<number>;
   dashOffsetRef: React.MutableRefObject<number>;
   computeImageLayout: () => { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number } | null;
@@ -45,6 +46,7 @@ export interface DrawOverrides {
   grain?: number;
   softFocus?: number;
   fade?: number;
+  lightLeak?: { preset: string; intensity: number };
   frameEnabled?: boolean;
   frameThickness?: number;
   frameColor?: string;

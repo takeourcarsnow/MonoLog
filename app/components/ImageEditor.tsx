@@ -92,8 +92,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setSoftFocus,
     fade,
     setFade,
-    lightLeak,
-    setLightLeak,
     overlay,
     setOverlay,
     exposureRef,
@@ -108,7 +106,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     grainRef,
     softFocusRef,
     fadeRef,
-    lightLeakRef,
     overlayRef,
     filtersContainerRef,
     filterHighlight,
@@ -215,7 +212,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
       grainRef,
       softFocusRef,
       fadeRef,
-      lightLeakRef,
       overlayRef,
       rotationRef,
       dashOffsetRef,
@@ -323,8 +319,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   useEffect(() => { filterStrengthRef.current = filterStrength; }, [filterStrength, filterStrengthRef]);
   useEffect(() => { grainRef.current = grain; }, [grain, grainRef]);
   useEffect(() => { softFocusRef.current = softFocus; }, [softFocus, softFocusRef]);
-  useEffect(() => { fadeRef.current = fade; }, [fade, fadeRef]);
-  useEffect(() => { lightLeakRef.current = lightLeak; }, [lightLeak, lightLeakRef]);
   useEffect(() => { overlayRef.current = overlay; }, [overlay, overlayRef]);
 
   const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
@@ -378,9 +372,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     softFocusRef,
     setFade,
     fadeRef,
-    lightLeak,
-    setLightLeak,
-    lightLeakRef,
     overlay,
     setOverlay,
     overlayRef,
@@ -500,9 +491,6 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           fade={fade}
           setFade={setFade}
           fadeRef={fadeRef}
-          lightLeak={lightLeak}
-          setLightLeak={setLightLeak}
-          lightLeakRef={lightLeakRef}
           sel={sel}
           setSel={setSel}
           cropRatio={cropRatio}

@@ -10,8 +10,8 @@ interface ImageEditorToolbarProps {
   isFullscreen?: boolean;
   onDownload?: () => void;
   categoriesContainerRef: React.RefObject<HTMLDivElement>;
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays';
-  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays') => void;
+  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays';
+  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays') => void;
   categoryHighlight: { left: number; top: number; width: number; height: number } | null;
   sel: { x: number; y: number; w: number; h: number } | null;
   applyCropOnly: () => void;
@@ -324,38 +324,6 @@ function ImageEditorToolbarCategories({
       >
         <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'effects' ? CATEGORY_COLORS.effects : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Effects</span>
-      </button>
-
-      <button
-        data-cat="lightleak"
-        data-active={category === 'lightleak'}
-        type="button"
-        aria-label="Light Leak"
-        title="Light Leak"
-        className="cat-btn"
-        onClick={(e: any) => {
-          try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
-          setSelectedCategory('lightleak');
-        }}
-        style={{
-          padding: '6px 8px',
-          borderRadius: 10,
-          background: category === 'lightleak' ? 'transparent' : 'transparent',
-          color: 'var(--text)',
-          transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
-          position: 'relative',
-          zIndex: 1,
-          flex: '0 0 auto',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          border: 'none',
-          fontWeight: category === 'lightleak' ? 700 : 500,
-          overflow: 'hidden'
-        }}
-      >
-        <Sun size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'lightleak' ? '#ffd700' : undefined }} />
-        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Light Leak</span>
       </button>
 
       <button

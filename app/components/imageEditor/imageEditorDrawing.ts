@@ -19,13 +19,12 @@ export function drawImage(
   grainRef: React.MutableRefObject<number>,
   softFocusRef: React.MutableRefObject<number>,
   fadeRef: React.MutableRefObject<number>,
-  lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
   overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>,
   rotationRef: React.MutableRefObject<number>,
   dashOffsetRef: React.MutableRefObject<number>,
   computeImageLayout: () => any,
   info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number },
-  overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; lightLeak: { preset: string; intensity: number }; frameEnabled: boolean; frameThickness: number; frameColor: string }>,
+  overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; frameEnabled: boolean; frameThickness: number; frameColor: string }>,
   targetCanvas?: HTMLCanvasElement
 ) {
   const canvas = targetCanvas || canvasRef.current;
@@ -50,7 +49,6 @@ export function drawImage(
     grainRef,
     softFocusRef,
     fadeRef,
-    lightLeakRef,
     overlayRef,
     rotationRef,
     dashOffsetRef,

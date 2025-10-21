@@ -1,7 +1,7 @@
 import { DrawParams, LayoutInfo, DrawOverrides } from "./CanvasRendererCore";
 import { computeImageLayout, computeFrameAdjustedLayout } from "./CanvasRendererLayout";
 import { computeFilterValues } from "./CanvasRendererFilters";
-import { applySoftFocusEffect, applyFadeEffect, applyVignetteEffect, applyGrainEffect, applyLightLeakEffect, applyOverlayEffect } from "./CanvasRendererEffects";
+import { applySoftFocusEffect, applyFadeEffect, applyVignetteEffect, applyGrainEffect, applyOverlayEffect } from "./CanvasRendererEffects";
 import { drawFrame } from "./CanvasRendererFrame";
 import { drawSelection } from "./CanvasRendererSelection";
 import { drawRotated } from "./CanvasRendererUtils";
@@ -77,7 +77,6 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       Math.abs(filterValues.curGrain) < 0.001 &&
       Math.abs(filterValues.curSoftFocus) < 0.001 &&
       Math.abs(filterValues.curFade) < 0.001 &&
-      (filterValues.curLightLeak.preset === 'none' || !filterValues.curLightLeak.preset) &&
       !curFrameEnabled;
 
     if (hasNeutralAdjustments) {
@@ -164,9 +163,6 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   }
   if (filterValues.curGrain > 0.001) {
     applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
-  }
-  if (filterValues.curLightLeak.preset !== 'none' && filterValues.curLightLeak.preset) {
-    applyLightLeakEffect(ctx, imgLeft, imgTop, imgW, imgH, filterValues.curLightLeak);
   }
   if (params.overlayRef.current) {
     try {

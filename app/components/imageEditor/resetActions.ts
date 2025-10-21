@@ -34,8 +34,6 @@ export function resetAdjustments(
   softFocusRef: React.MutableRefObject<number>,
   setFade: (v: number) => void,
   fadeRef: React.MutableRefObject<number>,
-  setLightLeak: (v: { preset: string; intensity: number }) => void,
-  lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
   setOverlay: (v: { img: HTMLImageElement; blendMode: string; opacity: number } | null) => void,
   overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>,
   setRotation: (value: number) => void,
@@ -83,7 +81,6 @@ export function resetAdjustments(
   const defGrain = 0;
   const defSoftFocus = 0;
   const defFade = 0;
-  const defLightLeak = { preset: 'none', intensity: 0.6 };
   const defRotation = 0;
   const defOverlay = null;
 
@@ -100,7 +97,6 @@ export function resetAdjustments(
   if (typeof setGrain === 'function') { setGrain(defGrain); } grainRef.current = defGrain;
   if (typeof setSoftFocus === 'function') { setSoftFocus(defSoftFocus); } softFocusRef.current = defSoftFocus;
   if (typeof setFade === 'function') { setFade(defFade); } fadeRef.current = defFade;
-  if (typeof setLightLeak === 'function') { setLightLeak(defLightLeak); } lightLeakRef.current = defLightLeak;
   if (typeof setOverlay === 'function') { setOverlay(defOverlay); } overlayRef.current = defOverlay;
   if (typeof setRotation === 'function') { setRotation(defRotation); } rotationRef.current = defRotation;
 
@@ -130,8 +126,6 @@ export function resetControlToDefault(
   setSoftFocus: (v: number) => void,
   fadeRef: React.MutableRefObject<number>,
   setFade: (v: number) => void,
-  setLightLeak: (v: { preset: string; intensity: number }) => void,
-  lightLeakRef: React.MutableRefObject<{ preset: string; intensity: number }>,
   setRotation: (v: number) => void,
   rotationRef: React.MutableRefObject<number>,
   frameThicknessRef: React.MutableRefObject<number>,
@@ -182,11 +176,6 @@ export function resetControlToDefault(
     case 'fade': {
       const v = 0;
       fadeRef.current = v; if (typeof setFade === 'function') setFade(v); draw(); requestAnimationFrame(() => draw());
-      break;
-    }
-    case 'lightLeak': {
-      const v = { preset: 'none', intensity: 0.6 };
-      lightLeakRef.current = v; if (typeof setLightLeak === 'function') setLightLeak(v); draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'rotation': {

@@ -12,7 +12,6 @@ export type EditorSettings = {
   grain?: number;
   softFocus?: number;
   fade?: number;
-  lightLeak?: { preset: string; intensity: number };
   overlay?: { img: HTMLImageElement; blendMode: string; opacity: number };
 };
 

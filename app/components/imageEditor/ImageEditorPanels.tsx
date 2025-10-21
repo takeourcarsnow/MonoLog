@@ -73,7 +73,7 @@ interface ImageEditorPanelsProps {
   overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>;
 }
 
-export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
+export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsProps) {
   return (
     <section className="imgedit-panels" style={{
       maxWidth: 820,
@@ -180,4 +180,4 @@ export default function ImageEditorPanels(props: ImageEditorPanelsProps) {
       )}
     </section>
   );
-}
+});

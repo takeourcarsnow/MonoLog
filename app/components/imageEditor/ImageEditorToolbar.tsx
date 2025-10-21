@@ -1,5 +1,6 @@
 import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Fullscreen, Sun, Download, Layers } from "lucide-react";
 import { CATEGORY_COLORS } from './constants';
+import React from 'react';
 
 interface ImageEditorToolbarProps {
   onCancel: () => void;
@@ -68,6 +69,8 @@ function ImageEditorToolbarHeader({
     </header>
   );
 }
+
+const MemoizedImageEditorToolbarHeader = React.memo(ImageEditorToolbarHeader);
 
 function ImageEditorToolbarCategories({
   categoriesContainerRef,
@@ -423,14 +426,16 @@ function ImageEditorToolbarCategories({
       </button>
     </nav>
   );
-}// Default export: compose header + categories (backwards-compatible)
+}
+
+const MemoizedImageEditorToolbarCategories = React.memo(ImageEditorToolbarCategories);// Default export: compose header + categories (backwards-compatible)
 export default function ImageEditorToolbar(props: ImageEditorToolbarProps) {
   return (
     <>
-      <ImageEditorToolbarHeader onCancel={props.onCancel} resetAdjustments={props.resetAdjustments} applyEdit={props.applyEdit} isEdited={props.isEdited} onToggleFullscreen={props.onToggleFullscreen} isFullscreen={props.isFullscreen} onDownload={props.onDownload} />
-      <ImageEditorToolbarCategories categoriesContainerRef={props.categoriesContainerRef} selectedCategory={props.selectedCategory} setSelectedCategory={props.setSelectedCategory} categoryHighlight={props.categoryHighlight} sel={props.sel} applyCropOnly={props.applyCropOnly} resetCrop={props.resetCrop} cancelCrop={props.cancelCrop} />
+      <MemoizedImageEditorToolbarHeader onCancel={props.onCancel} resetAdjustments={props.resetAdjustments} applyEdit={props.applyEdit} isEdited={props.isEdited} onToggleFullscreen={props.onToggleFullscreen} isFullscreen={props.isFullscreen} onDownload={props.onDownload} />
+      <MemoizedImageEditorToolbarCategories categoriesContainerRef={props.categoriesContainerRef} selectedCategory={props.selectedCategory} setSelectedCategory={props.setSelectedCategory} categoryHighlight={props.categoryHighlight} sel={props.sel} applyCropOnly={props.applyCropOnly} resetCrop={props.resetCrop} cancelCrop={props.cancelCrop} />
     </>
   );
 }
 
-export { ImageEditorToolbarHeader, ImageEditorToolbarCategories };
+export { MemoizedImageEditorToolbarHeader as ImageEditorToolbarHeader, MemoizedImageEditorToolbarCategories as ImageEditorToolbarCategories };

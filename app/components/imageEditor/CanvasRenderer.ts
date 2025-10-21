@@ -9,6 +9,9 @@ import { generateNoiseCanvas } from "./utils";
 import { applyWebGLAdjustments } from './webglFilters';
 import { mapBasicAdjustments } from './filterUtils';
 
+// Cache for WebGL processed images
+const webglCache = new Map<string, HTMLCanvasElement>();
+
 export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOverrides, targetCanvas?: HTMLCanvasElement) {
   const canvas = targetCanvas || params.canvasRef.current;
   const img = params.previewOriginalRef.current && params.originalImgRef.current ? params.originalImgRef.current : params.imgRef.current;
@@ -88,8 +91,12 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       // and then composite presets/overlays on top if strength < 1.
       let usedGpu = false;
       try {
-        // use the computed filter values from computeFilterValues
-        const fv: any = filterValues;
+        // Create cache key based on image src and adjustments
+        const cacheKey = `${params.imgRef.current?.src || ''}_${filterValues.curExposure}_${filterValues.curContrast}_${filterValues.curSaturation}_${filterValues.curTemperature}_${filterValues.curSelectedFilter}_${filterValues.curFilterStrength}`;
+        let tmpCanvas = webglCache.get(cacheKey);
+        if (!tmpCanvas) {
+          // use the computed filter values from computeFilterValues
+          const fv: any = filterValues;
   const m = mapBasicAdjustments({ exposure: fv.curExposure, contrast: fv.curContrast, saturation: fv.curSaturation, temperature: fv.curTemperature });
   const brightness = m.brightness || 1;
   const contrast = m.finalContrast || 1;
@@ -97,7 +104,14 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   const hueDeg = m.hue || 0;
   const tempTint = (m as any).tempTint || 0;
 
-  const tmpCanvas = applyWebGLAdjustments(img, img.naturalWidth, img.naturalHeight, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength, tempTint });
+          tmpCanvas = applyWebGLAdjustments(img, img.naturalWidth, img.naturalHeight, { brightness, contrast, saturation, hue: hueDeg, preset: (filterValues as any).curSelectedFilter, presetStrength: (filterValues as any).curFilterStrength, tempTint });
+          // Cache the result, but limit cache size
+          if (webglCache.size > 10) {
+            const firstKey = webglCache.keys().next().value;
+            if (firstKey) webglCache.delete(firstKey);
+          }
+          webglCache.set(cacheKey, tmpCanvas);
+        }
         // draw the processed GPU canvas (snapshot) onto our main canvas, taking rotation into account
         drawRotated(tmpCanvas, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
         usedGpu = true;

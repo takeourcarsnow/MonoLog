@@ -1,4 +1,4 @@
-import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Fullscreen, Sun } from "lucide-react";
+import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Fullscreen, Sun, Download } from "lucide-react";
 import { CATEGORY_COLORS } from './constants';
 
 interface ImageEditorToolbarProps {
@@ -24,8 +24,9 @@ function ImageEditorToolbarHeader({
   applyEdit,
   isEdited,
   onToggleFullscreen,
-  isFullscreen
-}: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited' | 'onToggleFullscreen' | 'isFullscreen'>) {
+  isFullscreen,
+  onDownload
+}: Pick<ImageEditorToolbarProps, 'onCancel' | 'resetAdjustments' | 'applyEdit' | 'isEdited' | 'onToggleFullscreen' | 'isFullscreen'> & { onDownload: () => void }) {
   return (
     <header className="image-editor-header" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '0px 0' }}>
       <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
@@ -40,6 +41,11 @@ function ImageEditorToolbarHeader({
         <button type="button" className={`btn icon ghost`} onClick={applyEdit} aria-pressed={isEdited} aria-label="Confirm edits" title="Confirm edits">
           <Check size={14} aria-hidden />
           <span className="sr-only">Confirm edits</span>
+        </button>
+
+        <button type="button" className="btn icon ghost" onClick={onDownload} aria-label="Download edited photo" title="Download edited photo">
+          <Download size={14} aria-hidden />
+          <span className="sr-only">Download edited photo</span>
         </button>
 
         <button type="button" className="btn icon ghost" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">

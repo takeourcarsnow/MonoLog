@@ -335,6 +335,16 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setSelectedCategory('basic');
   };
 
+  const handleDownload = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = 'edited-photo.png';
+    link.click();
+  }, []);
+
 
 
 
@@ -367,6 +377,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         isEdited={isEdited}
         onToggleFullscreen={handleToggleFullscreen}
         isFullscreen={isFullscreen}
+        onDownload={handleDownload}
       />
 
       <figure className="image-editor-canvas-container" ref={containerRef}>

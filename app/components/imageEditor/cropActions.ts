@@ -63,7 +63,7 @@ export function resetCrop(
   imageSrc: string,
   originalRef: React.MutableRefObject<string>,
   setImageSrc: (src: string) => void,
-  setSel: (sel: null) => void,
+  setSel: (sel: { x: number; y: number; w: number; h: number } | null) => void,
   setOffset: (offset: { x: number; y: number }) => void,
   rotationRef: React.MutableRefObject<number>,
   setRotation: (v: number) => void,
@@ -73,7 +73,8 @@ export function resetCrop(
   previewPointerIdRef: React.MutableRefObject<number | null>,
   previewOriginalRef: React.MutableRefObject<boolean>,
   setPreviewOriginal: (v: boolean) => void,
-  computeImageLayout: () => any
+  computeImageLayout: () => any,
+  canvasRef: React.RefObject<HTMLCanvasElement>
 ) {
   // If the underlying working image was replaced by a baked crop, restore
   // the original (uncropped) image. Do not reset color adjustments — only
@@ -85,7 +86,20 @@ export function resetCrop(
   }
 
   cropRatio.current = null;
-  setSel(null);
+  // Instead of clearing selection, set it to the full display area to keep overlay but not crop
+  const info = computeImageLayout();
+  if (info) {
+    setSel({ x: info.left, y: info.top, w: info.dispW, h: info.dispH });
+  } else {
+    // fallback
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const rect = canvas.getBoundingClientRect();
+      setSel({ x: 0, y: 0, w: rect.width, h: rect.height });
+    } else {
+      setSel(null); // last resort
+    }
+  }
   setPresetIndex(0);
   // clear any active drag state and A/B preview
   if (dragging.current) dragging.current = null;

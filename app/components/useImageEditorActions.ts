@@ -219,7 +219,8 @@ export function useImageEditorActions(
       previewPointerIdRef,
       previewOriginalRef,
       setPreviewOriginal,
-      computeImageLayout
+      computeImageLayout,
+      canvasRef
     );
   }
 

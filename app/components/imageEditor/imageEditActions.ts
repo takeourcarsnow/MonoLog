@@ -108,21 +108,21 @@ export async function applyEdit(
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(presetCanvas, -srcW / 2 + padPx, -srcH / 2 + padPx, srcW, srcH);
+      octx.drawImage(presetCanvas, -srcW / 2, -srcH / 2, srcW, srcH);
       octx.restore();
     } else if (filterStrength <= 0.001) {
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(baseCanvas, -srcW / 2 + padPx, -srcH / 2 + padPx, srcW, srcH);
+      octx.drawImage(baseCanvas, -srcW / 2, -srcH / 2, srcW, srcH);
       octx.restore();
     } else {
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(baseCanvas, -srcW / 2 + padPx, -srcH / 2 + padPx, srcW, srcH);
+      octx.drawImage(baseCanvas, -srcW / 2, -srcH / 2, srcW, srcH);
       octx.globalAlpha = Math.min(1, Math.max(0, filterStrength));
-      octx.drawImage(presetCanvas, -srcW / 2 + padPx, -srcH / 2 + padPx, srcW, srcH);
+      octx.drawImage(presetCanvas, -srcW / 2, -srcH / 2, srcW, srcH);
       octx.restore();
       octx.globalAlpha = 1;
     }
@@ -225,7 +225,7 @@ export async function applyEdit(
     octx.save();
     octx.globalAlpha = Math.min(0.85, grain);
     octx.globalCompositeOperation = 'overlay';
-    octx.drawImage(noise, 0, 0, srcW, srcH);
+    octx.drawImage(noise, padPx, padPx, srcW, srcH);
     octx.restore();
   }
   // draw frame if thickness > 0

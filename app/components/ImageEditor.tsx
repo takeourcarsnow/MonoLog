@@ -445,7 +445,13 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
     const link = document.createElement('a');
     link.href = dataUrl;
-    link.download = 'edited-photo.jpg';
+    // Generate filename with current date: monolog_YYYYMMDD.jpg
+    const now = new Date();
+    const yyyy = String(now.getFullYear());
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const filename = `monolog_${yyyy}${mm}${dd}.jpg`;
+    link.download = filename;
     link.click();
   }, [draw, imgRef]);
 

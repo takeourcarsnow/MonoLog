@@ -74,6 +74,8 @@ export function useUserData(userId?: string) {
     let mounted = true;
 
     setLoading(true);
+    setUser(null);
+    setPosts([]);
 
     fetchUserData().finally(() => {
       if (mounted) setLoading(false);

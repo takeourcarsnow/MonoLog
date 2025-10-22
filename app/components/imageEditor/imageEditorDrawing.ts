@@ -25,7 +25,8 @@ export function drawImage(
   computeImageLayout: () => any,
   info?: { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number },
   overrides?: Partial<{ exposure: number; contrast: number; saturation: number; temperature: number; vignette: number; rotation: number; selectedFilter: string; grain: number; softFocus: number; fade: number; frameEnabled: boolean; frameThickness: number; frameColor: string }>,
-  targetCanvas?: HTMLCanvasElement
+  targetCanvas?: HTMLCanvasElement,
+  frameOverlayRef?: React.MutableRefObject<{ img: HTMLImageElement; opacity: number } | null>
 ) {
   const canvas = targetCanvas || canvasRef.current;
   const img = previewOriginalRef.current && originalImgRef.current ? originalImgRef.current : imgRef.current;
@@ -52,6 +53,7 @@ export function drawImage(
     overlayRef,
     rotationRef,
     dashOffsetRef,
-    computeImageLayout
+    computeImageLayout,
+    frameOverlayRef
   }, info, overrides, targetCanvas);
 }

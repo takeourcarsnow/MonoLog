@@ -361,3 +361,50 @@ export function applyOverlayEffect(
     // no-op if loading fails
   }
 }
+
+export function applyFrameOverlayEffect(
+  ctx: CanvasRenderingContext2D,
+  frameOverlay: { img: HTMLImageElement; opacity: number },
+  dispLeft: number,
+  dispTop: number,
+  dispW: number,
+  dispH: number
+) {
+  if (!frameOverlay) return;
+
+  const drawNow = (frameImg: HTMLImageElement) => {
+    try {
+      ctx.save();
+      ctx.globalAlpha = frameOverlay.opacity;
+      ctx.globalCompositeOperation = 'source-over'; // normal blending for frames
+      // Scale frame to fit entirely within the display area while preserving aspect ratio
+      const frameW = frameImg.naturalWidth;
+      const frameH = frameImg.naturalHeight;
+      const scale = Math.min(dispW / frameW, dispH / frameH);
+      const drawW = frameW * scale;
+      const drawH = frameH * scale;
+      const drawX = dispLeft + (dispW - drawW) / 2;
+      const drawY = dispTop + (dispH - drawH) / 2;
+      ctx.drawImage(frameImg, drawX, drawY, drawW, drawH);
+      ctx.restore();
+    } catch (e) {
+      // swallow drawing errors
+    }
+  };
+
+  // If the provided image is already loaded, draw immediately.
+  if (frameOverlay.img && frameOverlay.img.complete) {
+    drawNow(frameOverlay.img);
+    return;
+  }
+
+  // Otherwise attempt to load the image and draw when ready.
+  try {
+    const temp = new Image();
+    temp.crossOrigin = 'anonymous';
+    temp.src = frameOverlay.img?.src || '';
+    temp.onload = () => drawNow(temp);
+  } catch (e) {
+    // no-op if loading fails
+  }
+}

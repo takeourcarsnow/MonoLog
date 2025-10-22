@@ -139,7 +139,7 @@ function UploaderCore() {
   };
 
   return (
-    <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''} ${justDiscarded ? 'just-discarded' : ''}`}>
+    <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''} ${justDiscarded ? 'just-discarded' : ''} ${processing ? 'processing' : ''}`}>
   {editing && (dataUrls[editingIndex] || dataUrls[0]) && (
         <Portal className="upload-editor-fullscreen">
           <Suspense fallback={

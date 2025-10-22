@@ -25,6 +25,7 @@ import { useKeyboardEvents } from './imageEditor/useKeyboardEvents';
 import { useImageEditorDraw } from './imageEditor/useImageEditorDraw';
 import './imageEditor/ImageEditor.css';
 import { preloadOverlayThumbnails } from './imageEditor/overlaysPreload';
+import { preloadFrameThumbnails } from './imageEditor/framesPreload';
 
 type Props = {
   initialDataUrl: string;
@@ -94,6 +95,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setFade,
     overlay,
     setOverlay,
+    frameOverlay,
+    setFrameOverlay,
     exposureRef,
     contrastRef,
     saturationRef,
@@ -107,6 +110,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     softFocusRef,
     fadeRef,
     overlayRef,
+    frameOverlayRef,
     filtersContainerRef,
     filterHighlight,
     setFilterHighlight,
@@ -163,6 +167,11 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     // Fire-and-forget: preloadOverlayThumbnails populates a shared cache used
     // by the OverlaysPanel and avoids duplicate re-fetches.
     preloadOverlayThumbnails().catch(() => {});
+  }, []);
+
+  // Start preloading frame thumbnails
+  useEffect(() => {
+    preloadFrameThumbnails().catch(() => {});
   }, []);
 
   const handleToggleFullscreen = useCallback(() => {
@@ -222,7 +231,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         computeImageLayout,
         info,
         overrides,
-        targetCanvas
+        targetCanvas,
+        frameOverlayRef
       );
     }
     if (drawPendingRef.current) return; // skip if already pending
@@ -254,7 +264,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         computeImageLayout,
         info,
         overrides,
-        targetCanvas
+        targetCanvas,
+        frameOverlayRef
       );
     });
   }
@@ -357,6 +368,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   useEffect(() => { grainRef.current = grain; }, [grain, grainRef]);
   useEffect(() => { softFocusRef.current = softFocus; }, [softFocus, softFocusRef]);
   useEffect(() => { overlayRef.current = overlay; }, [overlay, overlayRef]);
+  useEffect(() => { frameOverlayRef.current = frameOverlay; }, [frameOverlay, frameOverlayRef]);
 
   const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
     if (category === 'crop' && selectedCategory !== 'crop') {
@@ -412,6 +424,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     overlay,
     setOverlay,
     overlayRef,
+    frameOverlay,
+    setFrameOverlay,
+    frameOverlayRef,
     setRotation,
     setSel,
     cropRatio,
@@ -559,6 +574,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           overlay={overlay}
           setOverlay={setOverlay}
           overlayRef={overlayRef}
+          frameOverlay={frameOverlay}
+          setFrameOverlay={setFrameOverlay}
+          frameOverlayRef={frameOverlayRef}
         />
       </aside>
       {/* debug overlay removed */}

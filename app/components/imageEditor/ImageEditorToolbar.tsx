@@ -330,38 +330,6 @@ function ImageEditorToolbarCategories({
       </button>
 
       <button
-        data-cat="crop"
-        data-active={false}
-        type="button"
-        aria-label="Crop"
-        title="Crop"
-        className="cat-btn"
-        onClick={(e: any) => {
-          try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
-          setSelectedCategory('crop');
-        }}
-        style={{
-          padding: '6px 8px',
-          borderRadius: 10,
-          background: 'transparent',
-          color: 'var(--text)',
-          transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
-          position: 'relative',
-          zIndex: 1,
-          flex: '0 0 auto',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          border: 'none',
-          fontWeight: 500,
-          overflow: 'hidden'
-        }}
-      >
-        <Scissors size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: undefined }} />
-        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Crop</span>
-      </button>
-
-      <button
         data-cat="frame"
         data-active={category === 'frame'}
         type="button"
@@ -423,6 +391,38 @@ function ImageEditorToolbarCategories({
       >
         <Layers size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'overlays' ? '#ff6b6b' : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Overlays</span>
+      </button>
+
+      <button
+        data-cat="crop"
+        data-active={false}
+        type="button"
+        aria-label="Crop"
+        title="Crop"
+        className="cat-btn"
+        onClick={(e: any) => {
+          try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+          setSelectedCategory('crop');
+        }}
+        style={{
+          padding: '6px 8px',
+          borderRadius: 10,
+          background: 'transparent',
+          color: 'var(--text)',
+          transition: 'transform 120ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
+          position: 'relative',
+          zIndex: 1,
+          flex: '0 0 auto',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          border: 'none',
+          fontWeight: 500,
+          overflow: 'hidden'
+        }}
+      >
+        <Scissors size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: undefined }} />
+        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Crop</span>
       </button>
     </nav>
   );

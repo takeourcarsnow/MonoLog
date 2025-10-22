@@ -748,15 +748,16 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 /* Subtle blur effect when discarding and returning to clean uploader view */
-.uploader.just-discarded {
+.uploader.just-discarded,
+.uploader.processing {
   filter: blur(1px);
   opacity: 0.98;
   transition: filter 0.3s ease-out, opacity 0.3s ease-out;
 }
 
 /* Ensure photos are never blurry during normal operation */
-.uploader:not(.just-discarded) .preview img,
-.uploader:not(.just-discarded) .thumb img {
+.uploader:not(.just-discarded):not(.processing) .preview img,
+.uploader:not(.just-discarded):not(.processing) .thumb img {
   filter: none !important;
 }
 

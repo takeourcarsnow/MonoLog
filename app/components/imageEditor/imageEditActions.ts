@@ -24,6 +24,7 @@ export async function applyEdit(
   rotation: number,
   rotationRef: React.MutableRefObject<number>,
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null,
+  frameOverlay: { img: HTMLImageElement; opacity: number } | null,
   onApply: (dataUrl: string, settings: EditorSettings) => void
 ) {
   const img = imgRef.current; if (!img) return;
@@ -57,6 +58,24 @@ export async function applyEdit(
   out.width = rotatedW + padPx * 2; out.height = rotatedH + padPx * 2;
   const octx = out.getContext('2d')!;
   octx.imageSmoothingQuality = 'high';
+  const centerX = out.width / 2;
+  const centerY = out.height / 2;
+  const hasFrameOverlay = !!frameOverlay;
+  let drawW = out.width;
+  let drawH = out.height;
+  let drawX = 0;
+  let drawY = 0;
+  if (hasFrameOverlay) {
+    const frameW = frameOverlay.img.naturalWidth;
+    const frameH = frameOverlay.img.naturalHeight;
+    const scale = Math.min(out.width / frameW, out.height / frameH);
+    drawW = frameW * scale;
+    drawH = frameH * scale;
+    drawX = (out.width - drawW) / 2;
+    drawY = (out.height - drawH) / 2;
+  }
+  const drawSizeW = hasFrameOverlay ? drawW : srcW;
+  const drawSizeH = hasFrameOverlay ? drawH : srcH;
   // Apply color adjustments to exported image using the shared mapping helper
   const preset = FILTER_PRESETS[selectedFilter] || '';
   const { baseFilter: baseFilterExport, tempTint: exportTempTint } = mapBasicAdjustments({ exposure, contrast, saturation, temperature });
@@ -103,27 +122,25 @@ export async function applyEdit(
     });
 
     // Draw processed result into the output canvas with rotation and optional blending
-    const centerX = out.width / 2;
-    const centerY = out.height / 2;
     if (filterStrength >= 0.999) {
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(presetCanvas, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(presetCanvas, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.restore();
     } else if (filterStrength <= 0.001) {
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(baseCanvas, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(baseCanvas, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.restore();
     } else {
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(baseCanvas, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(baseCanvas, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.globalAlpha = Math.min(1, Math.max(0, filterStrength));
-      octx.drawImage(presetCanvas, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(presetCanvas, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.restore();
       octx.globalAlpha = 1;
     }
@@ -136,14 +153,12 @@ export async function applyEdit(
   // If GPU export couldn't be used, fall back to CSS filter path (best-effort)
   if (!usedGpu) {
     // draw with rotation: translate to center of out canvas, rotate, then draw image centered
-    const centerX = out.width / 2;
-    const centerY = out.height / 2;
     if (filterStrength >= 0.999) {
       octx.filter = `${baseFilterExport} ${preset}`;
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(img, srcX, srcY, srcW, srcH, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.restore();
       octx.filter = 'none';
     } else if (filterStrength <= 0.001) {
@@ -151,7 +166,7 @@ export async function applyEdit(
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(img, srcX, srcY, srcW, srcH, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.restore();
       octx.filter = 'none';
     } else {
@@ -159,14 +174,14 @@ export async function applyEdit(
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(img, srcX, srcY, srcW, srcH, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.restore();
       octx.filter = `${baseFilterExport} ${preset}`;
       octx.globalAlpha = Math.min(1, Math.max(0, filterStrength));
       octx.save();
       octx.translate(centerX, centerY);
       octx.rotate(angle);
-      octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(img, srcX, srcY, srcW, srcH, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.restore();
       octx.globalAlpha = 1;
       octx.filter = 'none';
@@ -244,10 +259,134 @@ export async function applyEdit(
       octx.globalAlpha = Math.min(1, Math.max(0, overlay.opacity ?? 1));
       octx.globalCompositeOperation = (overlay.blendMode as GlobalCompositeOperation) || 'source-over';
       // draw overlay scaled to the photo area
-      octx.drawImage(overlay.img, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.drawImage(overlay.img, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
       octx.restore();
     } catch (e) {
       // swallow overlay errors
+    }
+  }
+  // If a frame overlay is active, first remove (mask out) any photo pixels
+  // that fall under the opaque parts of the frame image. We use
+  // 'destination-out' so drawing the frame image will erase underlying
+  // photo pixels where the frame is opaque. After masking we draw the
+  // frame normally on top so the frame artwork remains visible.
+  if (frameOverlay && frameOverlay.img) {
+    try {
+      const frameImg = frameOverlay.img;
+      if (frameImg && frameImg.complete) {
+        const frameW = frameOverlay.img.naturalWidth;
+        const frameH = frameOverlay.img.naturalHeight;
+        // scale frame to fit inside output rect (keeps same sizing as draw)
+        const scale = Math.min(out.width / frameW, out.height / frameH);
+        const drawW = frameW * scale;
+        const drawH = frameH * scale;
+        const drawX = (out.width - drawW) / 2;
+        const drawY = (out.height - drawH) / 2;
+
+        // Copy the currently-drawn photo (and any above-photo effects) into a temp canvas
+        const photoTmp = document.createElement('canvas');
+        photoTmp.width = out.width; photoTmp.height = out.height;
+        const pctx = photoTmp.getContext('2d')!;
+        // draw current out canvas content into photoTmp
+        pctx.drawImage(out, 0, 0);
+
+        // Create inner mask: opaque where inner transparent area is
+        const innerMask = document.createElement('canvas');
+        innerMask.width = frameW;
+        innerMask.height = frameH;
+        const imctx = innerMask.getContext('2d')!;
+        const frameTemp = document.createElement('canvas');
+        frameTemp.width = frameW;
+        frameTemp.height = frameH;
+        const fctx = frameTemp.getContext('2d')!;
+        fctx.drawImage(frameImg, 0, 0);
+        const frameData = fctx.getImageData(0, 0, frameW, frameH);
+        const data = frameData.data;
+
+        // Flood fill from borders to mark outside transparent areas.
+        const ALPHA_THRESHOLD = 16; // pixels with alpha <= this are treated as transparent
+        const visited = new Uint8Array(frameW * frameH);
+        const stack: number[] = [];
+        // Add border pixels
+        for (let x = 0; x < frameW; x++) {
+          stack.push(x, 0);
+          stack.push(x, frameH - 1);
+        }
+        for (let y = 1; y < frameH - 1; y++) {
+          stack.push(0, y);
+          stack.push(frameW - 1, y);
+        }
+        while (stack.length > 0) {
+          const y = stack.pop()!;
+          const x = stack.pop()!;
+          if (x < 0 || x >= frameW || y < 0 || y >= frameH) continue;
+          const idx = y * frameW + x;
+          if (visited[idx]) continue;
+          const alpha = data[(idx * 4) + 3];
+          const isTransparent = alpha <= ALPHA_THRESHOLD;
+          if (isTransparent) {
+            visited[idx] = 1; // mark as outside-transparent
+            // visit neighbors
+            if (x > 0) stack.push(x - 1, y);
+            if (x < frameW - 1) stack.push(x + 1, y);
+            if (y > 0) stack.push(x, y - 1);
+            if (y < frameH - 1) stack.push(x, y + 1);
+          }
+        }
+
+        // Create inner mask data
+        const innerData = new Uint8ClampedArray(data.length);
+        for (let i = 0; i < data.length; i += 4) {
+          const idx = i / 4;
+          const alpha = data[i + 3];
+          const isOutside = visited[idx] === 1;
+          if (alpha === 0 && !isOutside) {
+            // inner transparent area
+            innerData[i] = 255;
+            innerData[i + 1] = 255;
+            innerData[i + 2] = 255;
+            innerData[i + 3] = 255;
+          } else {
+            innerData[i + 3] = 0;
+          }
+        }
+        const innerImageData = new ImageData(innerData, frameW, frameH);
+        imctx.putImageData(innerImageData, 0, 0);
+
+        // Apply inner mask to photoTmp: keep only photo in the inner area
+        pctx.globalCompositeOperation = 'destination-in';
+        pctx.drawImage(
+          innerMask,
+          drawX,
+          drawY,
+          drawW,
+          drawH
+        );
+        pctx.globalCompositeOperation = 'source-over';
+
+        // Clear out canvas and draw the masked photo back
+        octx.clearRect(0, 0, out.width, out.height);
+        octx.drawImage(photoTmp, 0, 0);
+      }
+    } catch (e) {
+      // swallow masking errors so export still works
+    }
+
+    // draw the frame artwork on top (normal blending)
+    try {
+      octx.save();
+      octx.globalAlpha = Math.min(1, Math.max(0, frameOverlay.opacity ?? 1));
+      octx.globalCompositeOperation = 'source-over';
+      // Scale frame overlay to match the preview/export layout: fit inside the
+      // exported photo area while preserving aspect ratio. This mirrors the
+      // runtime preview logic (CanvasRenderer) which uses Math.min so the
+      // frame artwork is sized to the image display rect rather than covering
+      // the full canvas. Using Math.min keeps frame sizing consistent between
+      // confirm/apply and in-editor download.
+      octx.drawImage(frameOverlay.img, drawX, drawY, drawW, drawH);
+      octx.restore();
+    } catch (e) {
+      // swallow frame overlay errors
     }
   }
   // draw frame if thickness > 0
@@ -286,7 +425,17 @@ export async function applyEdit(
     }
     octx.restore();
   }
-  const dataUrl = out.toDataURL('image/jpeg', 0.92);
+  let dataUrl: string;
+  if (hasFrameOverlay) {
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = drawW;
+    finalCanvas.height = drawH;
+    const fctx = finalCanvas.getContext('2d')!;
+    fctx.drawImage(out, drawX, drawY, drawW, drawH, 0, 0, drawW, drawH);
+    dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
+  } else {
+    dataUrl = out.toDataURL('image/jpeg', 0.92);
+  }
   // Return both the edited image and the current settings
   const settings: EditorSettings = {
     exposure,
@@ -303,6 +452,7 @@ export async function applyEdit(
     softFocus,
     fade,
     overlay: overlay ?? undefined,
+    frameOverlay: frameOverlay ?? undefined,
   };
   onApply(dataUrl, settings);
 }

@@ -71,6 +71,10 @@ interface ImageEditorPanelsProps {
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null;
   setOverlay: (v: { img: HTMLImageElement; blendMode: string; opacity: number } | null) => void;
   overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>;
+  // Frame overlay props
+  frameOverlay: { img: HTMLImageElement; opacity: number } | null;
+  setFrameOverlay: (v: { img: HTMLImageElement; opacity: number } | null) => void;
+  frameOverlayRef: React.MutableRefObject<{ img: HTMLImageElement; opacity: number } | null>;
 }
 
 export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsProps) {
@@ -166,6 +170,9 @@ export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsPro
           frameColorRef={props.frameColorRef}
           draw={props.draw}
           resetControlToDefault={props.resetControlToDefault}
+          frameOverlay={props.frameOverlay}
+          setFrameOverlay={props.setFrameOverlay}
+          frameOverlayRef={props.frameOverlayRef}
         />
       )}
 

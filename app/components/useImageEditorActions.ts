@@ -48,6 +48,9 @@ export function useImageEditorActions(
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null,
   setOverlay: (v: { img: HTMLImageElement; blendMode: string; opacity: number } | null) => void,
   overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>,
+  frameOverlay: { img: HTMLImageElement; opacity: number } | null,
+  setFrameOverlay: (v: { img: HTMLImageElement; opacity: number } | null) => void,
+  frameOverlayRef: React.MutableRefObject<{ img: HTMLImageElement; opacity: number } | null>,
   setRotation: (value: number) => void,
   setSel: (value: { x: number; y: number; w: number; h: number } | null) => void,
   cropRatio: React.MutableRefObject<number | null>,
@@ -81,9 +84,10 @@ export function useImageEditorActions(
       Math.abs(grain) > 0.001,
       frameThickness > 0,
       !!overlay,
+      !!frameOverlay,
     ];
     return checks.some(Boolean);
-  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, filterStrength, grain, frameThickness, originalRef, rotation, overlay]);
+  }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, filterStrength, grain, frameThickness, originalRef, rotation, overlay, frameOverlay]);
 
   // Action wrappers that delegate to the standalone action helpers
   function applyEdit() {
@@ -107,6 +111,7 @@ export function useImageEditorActions(
       rotation,
       rotationRef,
       overlay,
+      frameOverlay,
       onApply
     );
   }
@@ -139,6 +144,8 @@ export function useImageEditorActions(
       fadeRef,
       setOverlay,
       overlayRef,
+      setFrameOverlay,
+      frameOverlayRef,
       setRotation,
       rotationRef,
       setSel,

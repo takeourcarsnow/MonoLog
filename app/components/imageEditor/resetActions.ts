@@ -36,6 +36,8 @@ export function resetAdjustments(
   fadeRef: React.MutableRefObject<number>,
   setOverlay: (v: { img: HTMLImageElement; blendMode: string; opacity: number } | null) => void,
   overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>,
+  setFrameOverlay: (v: { img: HTMLImageElement; opacity: number } | null) => void,
+  frameOverlayRef: React.MutableRefObject<{ img: HTMLImageElement; opacity: number } | null>,
   setRotation: (value: number) => void,
   rotationRef: React.MutableRefObject<number>,
   setSel: (sel: null) => void,
@@ -83,6 +85,7 @@ export function resetAdjustments(
   const defFade = 0;
   const defRotation = 0;
   const defOverlay = null;
+  const defFrameOverlay = null;
 
   // Update state (defensively check setters to avoid crashes if a setter is not provided)
   if (typeof setExposure === 'function') { setExposure(defExposure); } exposureRef.current = defExposure;
@@ -98,6 +101,7 @@ export function resetAdjustments(
   if (typeof setSoftFocus === 'function') { setSoftFocus(defSoftFocus); } softFocusRef.current = defSoftFocus;
   if (typeof setFade === 'function') { setFade(defFade); } fadeRef.current = defFade;
   if (typeof setOverlay === 'function') { setOverlay(defOverlay); } overlayRef.current = defOverlay;
+  if (typeof setFrameOverlay === 'function') { setFrameOverlay(defFrameOverlay); } frameOverlayRef.current = defFrameOverlay;
   if (typeof setRotation === 'function') { setRotation(defRotation); } rotationRef.current = defRotation;
 
   // Also clear any crop selection/preset

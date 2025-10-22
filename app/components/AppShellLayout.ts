@@ -2,80 +2,40 @@
 
 import { useEffect } from "react";
 
-// Measure the actual header height at runtime and publish it as a CSS
-// variable so layout padding can match the rendered header size exactly.
-export function useHeaderHeightMeasurement(ready: boolean, pathname: string) {
+// Generic hook to measure element height and set CSS variable
+function useHeightMeasurement(
+  selector: string,
+  cssVar: string,
+  deps: any[],
+  options: { fudge?: number; retry?: boolean } = {}
+) {
+  const { fudge = 0, retry = false } = options;
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const updateHeaderHeight = () => {
+    const updateHeight = () => {
       try {
-        const el = document.querySelector<HTMLElement>('.header');
-        if (!el) return;
+        const el = document.querySelector<HTMLElement>(selector);
+        if (!el) return retry ? false : undefined;
         const rect = el.getBoundingClientRect();
-        document.documentElement.style.setProperty('--header-height', `${Math.ceil(rect.height)}px`);
+        if (retry && (!rect || rect.height < 1)) return false;
+        const measured = Math.ceil(rect.height) + fudge;
+        document.documentElement.style.setProperty(cssVar, `${measured}px`);
+        return true;
       } catch (e) {
-        /* ignore */
+        return retry ? false : undefined;
       }
     };
 
     // Run once immediately to set initial value
-    updateHeaderHeight();
-
-    // Use ResizeObserver when available to react to dynamic header size changes
-    let ro: ResizeObserver | null = null;
-    try {
-      if ((window as any).ResizeObserver) {
-        const headerEl = document.querySelector<HTMLElement>('.header');
-        if (headerEl) {
-          ro = new ResizeObserver(updateHeaderHeight);
-          ro.observe(headerEl);
-        }
-      }
-    } catch (_) { ro = null; }
-
-    window.addEventListener('resize', updateHeaderHeight);
-    window.addEventListener('orientationchange', updateHeaderHeight);
-
-    return () => {
-      try { ro && ro.disconnect(); } catch (_) {}
-      window.removeEventListener('resize', updateHeaderHeight);
-      window.removeEventListener('orientationchange', updateHeaderHeight);
-    };
-  }, [ready, pathname]);
-}
-
-// Measure the actual tabbar height at runtime and publish it as a CSS
-// variable so layout padding can match the rendered tabbar size exactly.
-export function useTabbarHeightMeasurement(ready: boolean) {
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const updateTabbarHeight = () => {
-      try {
-        const el = document.querySelector<HTMLElement>('.tabbar');
-        if (!el) return false;
-        const rect = el.getBoundingClientRect();
-  if (!rect || rect.height < 1) return false;
-  // Add a conservative 1px fudge to avoid subpixel rounding gaps on some browsers
-  const measured = Math.ceil(rect.height) + 1;
-  document.documentElement.style.setProperty('--tabbar-height', `${measured}px`);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    };
-
-    // Run once immediately to set initial value. If the tabbar isn't
-    // present or has zero height yet (some webviews render slightly later),
-    // retry a few times with short backoff.
-    let measured = updateTabbarHeight();
-    if (!measured) {
+    let measured = updateHeight();
+    if (retry && !measured) {
       let attempts = 0;
       const maxAttempts = 6;
       const tryMeasure = () => {
         attempts += 1;
-        measured = updateTabbarHeight();
+        measured = updateHeight();
         if (!measured && attempts < maxAttempts) {
           setTimeout(tryMeasure, attempts * 200);
         }
@@ -83,25 +43,37 @@ export function useTabbarHeightMeasurement(ready: boolean) {
       setTimeout(tryMeasure, 120);
     }
 
-    // Use ResizeObserver when available to react to dynamic tabbar size changes
+    // Use ResizeObserver when available to react to dynamic size changes
     let ro: ResizeObserver | null = null;
     try {
       if ((window as any).ResizeObserver) {
-        const tabbarEl = document.querySelector<HTMLElement>('.tabbar');
-        if (tabbarEl) {
-          ro = new ResizeObserver(updateTabbarHeight);
-          ro.observe(tabbarEl);
+        const element = document.querySelector<HTMLElement>(selector);
+        if (element) {
+          ro = new ResizeObserver(updateHeight);
+          ro.observe(element);
         }
       }
     } catch (_) { ro = null; }
 
-    window.addEventListener('resize', updateTabbarHeight);
-    window.addEventListener('orientationchange', updateTabbarHeight);
+    window.addEventListener('resize', updateHeight);
+    window.addEventListener('orientationchange', updateHeight);
 
     return () => {
       try { ro && ro.disconnect(); } catch (_) {}
-      window.removeEventListener('resize', updateTabbarHeight);
-      window.removeEventListener('orientationchange', updateTabbarHeight);
+      window.removeEventListener('resize', updateHeight);
+      window.removeEventListener('orientationchange', updateHeight);
     };
-  }, [ready]);
+  }, deps);
+}
+
+// Measure the actual header height at runtime and publish it as a CSS
+// variable so layout padding can match the rendered header size exactly.
+export function useHeaderHeightMeasurement(ready: boolean, pathname: string) {
+  useHeightMeasurement('.header', '--header-height', [ready, pathname]);
+}
+
+// Measure the actual tabbar height at runtime and publish it as a CSS
+// variable so layout padding can match the rendered tabbar size exactly.
+export function useTabbarHeightMeasurement(ready: boolean) {
+  useHeightMeasurement('.tabbar', '--tabbar-height', [ready], { fudge: 1, retry: true });
 }

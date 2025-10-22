@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^15.5.4",
+    "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
     "@types/node": "^20.14.10",

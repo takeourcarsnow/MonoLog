@@ -50,14 +50,64 @@ export async function applyEdit(
   out.width = outWidth; out.height = outHeight;
   const octx = out.getContext('2d')!;
   octx.imageSmoothingQuality = 'high';
-  const centerX = out.width / 2;
-  const centerY = out.height / 2;
+  let centerX = out.width / 2;
+  let centerY = out.height / 2;
+  let photoDrawSizeW = drawSizeW;
+  let photoDrawSizeH = drawSizeH;
+
+  if (hasFrameOverlay) {
+    const frameImg = frameOverlay!.img;
+    const frameW = frameImg.naturalWidth;
+    const frameH = frameImg.naturalHeight;
+    const scale = drawW / frameW;
+
+    // Calculate bounds of opaque pixels in frame
+    const frameTemp = document.createElement('canvas');
+    frameTemp.width = frameW;
+    frameTemp.height = frameH;
+    const fctx = frameTemp.getContext('2d')!;
+    fctx.drawImage(frameImg, 0, 0);
+    const frameData = fctx.getImageData(0, 0, frameW, frameH);
+    const data = frameData.data;
+    let minX = frameW, minY = frameH, maxX = -1, maxY = -1;
+    for (let y = 0; y < frameH; y++) {
+      for (let x = 0; x < frameW; x++) {
+        const idx = (y * frameW + x) * 4;
+        const alpha = data[idx + 3];
+        if (alpha > 16) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    const innerW = maxX - minX + 1;
+    const innerH = maxY - minY + 1;
+    const photoAspect = srcW / srcH;
+    const innerAspect = innerW / innerH;
+    let photoScale;
+    if (photoAspect > innerAspect) {
+      photoScale = (innerH * scale) / srcH;
+    } else {
+      photoScale = (innerW * scale) / srcW;
+    }
+    const photoW = srcW * photoScale;
+    const photoH = srcH * photoScale;
+    const photoX = drawX + (minX * scale) + ((innerW * scale) - photoW) / 2;
+    const photoY = drawY + (minY * scale) + ((innerH * scale) - photoH) / 2;
+
+    centerX = photoX + photoW / 2;
+    centerY = photoY + photoH / 2;
+    photoDrawSizeW = photoW;
+    photoDrawSizeH = photoH;
+  }
 
   const rot = rotationRef.current ?? rotation;
   const angle = (rot * Math.PI) / 180;
 
   applyFiltersAndDraw(
-    img, srcX, srcY, srcW, srcH, out, octx, centerX, centerY, drawSizeW, drawSizeH, angle,
+    img, srcX, srcY, srcW, srcH, out, octx, centerX, centerY, photoDrawSizeW, photoDrawSizeH, angle,
     exposure, contrast, saturation, temperature, selectedFilter, filterStrength
   );
 
@@ -67,7 +117,7 @@ export async function applyEdit(
   applyGrain(srcW, srcH, octx, padPx, grain);
 
   // Draw overlay
-  drawOverlay(octx, centerX, centerY, angle, drawSizeW, drawSizeH, overlay);
+  drawOverlay(octx, centerX, centerY, angle, photoDrawSizeW, photoDrawSizeH, overlay);
 
   // Apply frame overlay
   applyFrameOverlay(out, octx, drawX, drawY, drawW, drawH, frameOverlay);

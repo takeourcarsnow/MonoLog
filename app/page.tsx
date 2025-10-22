@@ -3,6 +3,8 @@ import { FeedView } from "@/app/components/FeedView";
 import { ExploreView } from "@/app/components/ExploreView";
 import { useAuth } from "@/src/lib/hooks/useAuth";
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   const { me, isLoading } = useAuth();
 

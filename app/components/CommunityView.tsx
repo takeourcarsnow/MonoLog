@@ -280,7 +280,7 @@ export function CommunityView() {
       <div className="content-body space-y-6 pt-6">
         {threads.length === 0 ? (
           <div className="card">
-            <p>No threads yet. {community.isMember ? 'Be the first to create one!' : 'Join the community to start discussing!'}</p>
+            <p className="text-center">No threads yet. {community.isMember ? 'Be the first to create one!' : 'Join the community to start discussing!'}</p>
           </div>
         ) : (
           threads.map((thread, index) => (

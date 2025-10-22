@@ -9,6 +9,8 @@ import type { HydratedCommunity } from '@/src/lib/types';
 import Link from 'next/link';
 import { Button } from '@/app/components/Button';
 
+export const dynamic = 'force-dynamic';
+
 export default function CommunitiesPage() {
   const [communities, setCommunities] = useState<HydratedCommunity[]>([]);
   const [loading, setLoading] = useState(true);

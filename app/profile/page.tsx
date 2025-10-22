@@ -1,6 +1,8 @@
 "use client";
 import { ProfileView } from "@/app/components/ProfileView";
 
+export const dynamic = 'force-dynamic';
+
 export default function ProfilePage() {
   // Render the client-side ProfileView which will show the AuthForm when
   // the viewer is not signed in. Avoid redirecting unauthenticated visitors

@@ -278,7 +278,7 @@ export function ThreadView() {
         {/* Replies List */}
         {replies.length === 0 ? (
           <div className="card">
-            <p className="text-gray-500">No replies yet. Be the first to reply!</p>
+            <p className="text-gray-500 text-center">No replies yet. Be the first to reply!</p>
           </div>
         ) : (
           replies.map((reply) => (

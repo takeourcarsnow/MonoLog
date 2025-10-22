@@ -327,8 +327,15 @@ export function applyOverlayEffect(
       ctx.save();
       ctx.globalAlpha = overlay.opacity;
       ctx.globalCompositeOperation = overlay.blendMode as GlobalCompositeOperation;
-      // Scale overlay to fit the image area
-      ctx.drawImage(ovImg, imgLeft, imgTop, imgW, imgH);
+      // Scale overlay to cover the image area while preserving aspect ratio, cropping if necessary
+      const ovW = ovImg.naturalWidth;
+      const ovH = ovImg.naturalHeight;
+      const scale = Math.max(imgW / ovW, imgH / ovH);
+      const drawW = ovW * scale;
+      const drawH = ovH * scale;
+      const drawX = imgLeft + (imgW - drawW) / 2;
+      const drawY = imgTop + (imgH - drawH) / 2;
+      ctx.drawImage(ovImg, drawX, drawY, drawW, drawH);
       ctx.restore();
     } catch (e) {
       // swallow drawing errors

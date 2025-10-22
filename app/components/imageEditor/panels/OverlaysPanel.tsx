@@ -1,7 +1,7 @@
         import { Blend, Eye } from "lucide-react";
         import { rangeBg } from "../utils";
         import { useState, useEffect } from "react";
-        import { overlayFiles, getThumbAvailabilityCache } from '../overlaysPreload';
+        import { getOverlayFiles, getThumbAvailabilityCache } from '../overlaysPreload';
 
 interface OverlaysPanelProps {
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null;
@@ -37,6 +37,12 @@ export default function OverlaysPanel({
   // /overlays/thumbs/{file}. When thumbnails are present we use them for the
   // panel buttons so the browser doesn't download the large overlay image on open.
   const [thumbAvailability, setThumbAvailability] = useState<Record<string, boolean>>({});
+
+  const [overlayFiles, setOverlayFiles] = useState<string[]>([]);
+
+  useEffect(() => {
+    getOverlayFiles().then(setOverlayFiles).catch(() => setOverlayFiles([]));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +83,7 @@ export default function OverlaysPanel({
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [overlayFiles]);
 
   const handleSelectOverlay = (file: string) => {
     const url = `/overlays/${file}`; // full-size image (only loaded when user selects)

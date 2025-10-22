@@ -17,7 +17,7 @@ async function generate() {
     const out = path.join(thumbsDir, file);
     try {
       await sharp(input)
-        .resize({ width: 160 })
+        .resize(160, 160, { fit: 'inside' })
         .jpeg({ quality: 60 })
         .toFile(out);
       console.log('Generated thumbnail for', file);

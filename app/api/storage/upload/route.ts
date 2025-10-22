@@ -5,9 +5,9 @@ import sharp from 'sharp';
 
 async function generateThumbnail(imageBuffer: Buffer, mime: string): Promise<Buffer> {
   try {
-    // Generate thumbnail with max 1000px edge (sweet spot for quality vs performance), maintaining aspect ratio
+    // Generate thumbnail with max 700px edge (reduced by 30% from 1000px), maintaining aspect ratio
     const thumbnail = await sharp(imageBuffer)
-      .resize(1000, 1000, {
+      .resize(700, 700, {
         fit: 'inside',
         withoutEnlargement: true
       })

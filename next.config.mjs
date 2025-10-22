@@ -26,20 +26,6 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    // Reduce bundle size by auto-rewriting deep imports for listed packages.
-    // lucide-react tree-shakes well, but this shaves a few KB of parser/edge cases.
-    optimizePackageImports: ['lucide-react', 'react-swipeable', '@supabase/supabase-js'],
-    // Enable faster builds with turbo
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
-  },
   // Enable compression
   compress: true,
   // Optimize images

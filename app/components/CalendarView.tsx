@@ -9,6 +9,7 @@ import { ViewToggle } from "./ViewToggle";
 import { GridView } from "./GridView";
 import { Calendar } from "lucide-react";
 import type { HydratedPost } from "@/src/lib/types";
+import { MiniSlideshow } from "./MiniSlideshow";
 
 const weekdays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
@@ -24,6 +25,7 @@ export function CalendarView() {
   const feedRef = useRef<HTMLDivElement>(null);
   const [shouldScroll, setShouldScroll] = useState(false);
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("calendarView") as any)) || "list");
+  const [dayPostsCache, setDayPostsCache] = useState<Record<string, HydratedPost[]>>({});
 
   // Load stats whenever the current month/year changes. Inline the async call
   // so we don't need to include the `loadStats` function in the dependency list.
@@ -33,6 +35,18 @@ export function CalendarView() {
         setLoadingStats(true);
         const s = await api.calendarStats({ year: curYear, monthIdx: curMonth });
         setStats({ counts: s.counts, mine: s.mine });
+
+        // Fetch posts for all days with posts
+        const daysWithPosts = Object.keys(s.counts).filter(dk => s.counts[dk] > 0);
+        if (daysWithPosts.length > 0) {
+          const postPromises = daysWithPosts.map(dk => api.getPostsByDate(dk).catch(() => []));
+          const postsArrays = await Promise.all(postPromises);
+          const newCache: Record<string, HydratedPost[]> = {};
+          daysWithPosts.forEach((dk, i) => {
+            newCache[dk] = postsArrays[i];
+          });
+          setDayPostsCache(newCache);
+        }
       } finally {
         setLoadingStats(false);
       }
@@ -137,6 +151,7 @@ export function CalendarView() {
               isToday ? "today" : "",
               isMine ? "mine" : "",
               count > 0 ? "has-posts" : "",
+              count > 0 && dayPostsCache[dk] ? "has-slideshow" : "",
               // don't apply the global skeleton to the whole day element —
               // that made the date number text transparent while stats load.
               // we'll apply skeleton only to the count/dot placeholders below.
@@ -156,7 +171,16 @@ export function CalendarView() {
                 {/* date number */}
                 <div className="d" style={{ ['--date-delay' as any]: `${idx * 28}ms` } as React.CSSProperties}>{d.getDate()}</div>
                 {/* Today badge removed per user request */}
-                {count > 0 ? <div className={loadingStats ? "dot skeleton" : "dot"} aria-hidden /> : null}
+                {count > 0 ? (
+                  dayPostsCache[dk] ? (
+                    <MiniSlideshow
+                      imageUrls={dayPostsCache[dk].flatMap(p => p.thumbnailUrls || (p.thumbnailUrl ? [p.thumbnailUrl] : []) || p.imageUrls || (p.imageUrl ? [p.imageUrl] : []))}
+                      fill={true}
+                    />
+                  ) : (
+                    <div className={loadingStats ? "dot skeleton" : "dot"} aria-hidden />
+                  )
+                ) : null}
               </div>
             );
           })}

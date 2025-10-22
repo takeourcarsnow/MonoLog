@@ -1,0 +1,36 @@
+/* Fixes for ImageEditor toolbar to avoid label-triggered reflow/jump on small screens */
+.categories-scroll {
+  /* keep all category buttons on a single line and scroll horizontally when needed */
+  white-space: nowrap !important;
+  overflow-x: auto !important;
+  flex-wrap: nowrap !important;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.categories-scroll::-webkit-scrollbar { height: 0; display: none; }
+
+.cat-btn .cat-label {
+  display: inline-block;
+  transform: translateX(-6px) scaleX(0.96);
+  transform-origin: left center;
+  opacity: 0;
+  transition: transform 180ms cubic-bezier(.2,.9,.2,1), opacity 150ms ease;
+  margin-left: 0;
+}
+.cat-btn[data-active="true"] .cat-label {
+  transform: translateX(0) scaleX(1);
+  opacity: 1;
+  margin-left: 8px;
+}
+
+/* Ensure the category container doesn't collapse and cause nearby buttons to shift */
+.categories-scroll { min-width: 0; }
+
+/* Prevent the header buttons row from wrapping to a new line */
+.image-editor-header, .image-editor-buttons { flex-wrap: nowrap; }
+
+/* Small screens: reduce button paddings so items fit without wrapping */
+@media (max-width: 420px) {
+  .categories-scroll { gap: 6px; padding: 4px; }
+  .image-editor-buttons .btn.icon { width: 22px; height: 22px; padding: 2px; }
+}

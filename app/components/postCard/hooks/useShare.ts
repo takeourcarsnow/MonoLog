@@ -29,7 +29,11 @@ export function useShare(post: { id: string; user: { username?: string; id: stri
         document.body.removeChild(tmp);
       }
     } catch (e:any) {
-      toast.show(e?.message || 'Failed to share');
+      if (e?.message?.includes('document is not focused')) {
+        toast.show('Link not copied - window lost focus');
+      } else {
+        toast.show(e?.message || 'Failed to share');
+      }
     }
   };
 

@@ -22,10 +22,13 @@ import ImageEditorCanvas from './imageEditor/ImageEditorCanvas';
 import ImageEditorToolbar, { ImageEditorToolbarHeader, ImageEditorToolbarCategories } from './imageEditor/ImageEditorToolbar';
 import ImageEditorPanels from './imageEditor/ImageEditorPanels';
 import { useKeyboardEvents } from './imageEditor/useKeyboardEvents';
-import { useImageEditorDraw } from './imageEditor/useImageEditorDraw';
 import './imageEditor/ImageEditor.css';
-import { preloadOverlayThumbnails } from './imageEditor/overlaysPreload';
-import { preloadFrameThumbnails } from './imageEditor/framesPreload';
+import { useImageEditorFullscreen } from './imageEditor/ImageEditorFullscreen';
+import { useImageEditorDraw } from './imageEditor/ImageEditorDraw';
+import { useImageEditorCrop } from './imageEditor/ImageEditorCrop';
+import { useImageEditorDownload } from './imageEditor/ImageEditorDownload';
+import { useImageEditorRefs } from './imageEditor/ImageEditorRefs';
+import { useImageEditorEffects } from './imageEditor/ImageEditorEffects';
 
 type Props = {
   initialDataUrl: string;
@@ -125,66 +128,38 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     cropRatio,
   } = useImageEditorState(initialDataUrl, initialSettings);
 
-  // Fullscreen logic
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const editorContainerRef = useRef<HTMLDivElement>(null);
+  // Use modular hooks
+  useImageEditorEffects();
 
-  // While the image editor is mounted we want to make the bottom navbar non-interactive.
-  // The app loads the `wicg-inert` polyfill via `InertPolyfillClient`, so toggling the
-  // `inert` attribute here will disable pointer/keyboard interaction with the tabbar
-  // area and stop hover behaviors from generating links under the portal.
-  useEffect(() => {
-    const bar = document.querySelector('.tabbar') as HTMLElement | null;
-    // Add a body class which CSS can target immediately to disable pointer-events
-    // on the tabbar and its children. This is more reliable than depending on
-    // runtime JS-style changes to every child and works even before the inert
-    // polyfill finishes loading.
-    const body = document.body;
-    body.classList.add('imgedit-open');
+  const { isFullscreen, editorContainerRef, handleToggleFullscreen } = useImageEditorFullscreen();
 
-    let hadInert = false;
-    let prevPointer = '';
-    if (bar) {
-      hadInert = bar.hasAttribute('inert');
-      prevPointer = bar.style.pointerEvents || '';
-      if (!hadInert) bar.setAttribute('inert', '');
-      // also attempt to set style on the bar itself as a fallback
-      bar.style.pointerEvents = 'none';
-    }
+  const computeImageLayoutRef = useRef<() => any>();
 
-    return () => {
-      body.classList.remove('imgedit-open');
-      if (bar) {
-        if (!hadInert) bar.removeAttribute('inert');
-        bar.style.pointerEvents = prevPointer;
-      }
-    };
-  }, []);
-
-  // Start preloading overlay thumbnails as soon as the editor mounts so the
-  // OverlaysPanel can show thumbnails instantly.
-  useEffect(() => {
-    // Fire-and-forget: preloadOverlayThumbnails populates a shared cache used
-    // by the OverlaysPanel and avoids duplicate re-fetches.
-    preloadOverlayThumbnails().catch(() => {});
-  }, []);
-
-  // Start preloading frame thumbnails
-  useEffect(() => {
-    preloadFrameThumbnails().catch(() => {});
-  }, []);
-
-  const handleToggleFullscreen = useCallback(() => {
-    const el = editorContainerRef.current;
-    if (!el) return;
-    if (!document.fullscreenElement) {
-      el.requestFullscreen?.();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen?.();
-      setIsFullscreen(false);
-    }
-  }, []);
+  const { draw } = useImageEditorDraw(
+    canvasRef,
+    imgRef,
+    originalImgRef,
+    previewOriginalRef,
+    offset,
+    sel,
+    exposureRef,
+    contrastRef,
+    saturationRef,
+    temperatureRef,
+    vignetteRef,
+    frameColorRef,
+    frameThicknessRef,
+    selectedFilterRef,
+    filterStrengthRef,
+    grainRef,
+    softFocusRef,
+    fadeRef,
+    overlayRef,
+    rotationRef,
+    dashOffsetRef,
+    computeImageLayoutRef.current || (() => ({})),
+    frameOverlayRef
+  );
 
   const { computeImageLayout } = useImageEditorLayout(
     imageSrc,
@@ -198,77 +173,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     draw
   );
 
-
-  const drawPendingRef = useRef(false);
-
-  // Local draw wrapper binds all refs/state to the lower-level drawImage helper so
-  // callers can simply call draw() or draw(info).
-  function draw(info?: any, overrides?: any, targetCanvas?: HTMLCanvasElement) {
-    if (targetCanvas) {
-      // synchronous for export
-      return drawImage(
-        canvasRef,
-        imgRef,
-        originalImgRef,
-        previewOriginalRef,
-        offset,
-        sel,
-        exposureRef,
-        contrastRef,
-        saturationRef,
-        temperatureRef,
-        vignetteRef,
-        frameColorRef,
-        frameThicknessRef,
-        selectedFilterRef,
-        filterStrengthRef,
-        grainRef,
-        softFocusRef,
-        fadeRef,
-        overlayRef,
-        rotationRef,
-        dashOffsetRef,
-        computeImageLayout,
-        info,
-        overrides,
-        targetCanvas,
-        frameOverlayRef
-      );
-    }
-    if (drawPendingRef.current) return; // skip if already pending
-    drawPendingRef.current = true;
-    requestAnimationFrame(() => {
-      drawPendingRef.current = false;
-      return drawImage(
-        canvasRef,
-        imgRef,
-        originalImgRef,
-        previewOriginalRef,
-        offset,
-        sel,
-        exposureRef,
-        contrastRef,
-        saturationRef,
-        temperatureRef,
-        vignetteRef,
-        frameColorRef,
-        frameThicknessRef,
-        selectedFilterRef,
-        filterStrengthRef,
-        grainRef,
-        softFocusRef,
-        fadeRef,
-        overlayRef,
-        rotationRef,
-        dashOffsetRef,
-        computeImageLayout,
-        info,
-        overrides,
-        targetCanvas,
-        frameOverlayRef
-      );
-    });
-  }
+  computeImageLayoutRef.current = computeImageLayout;
 
   useImageEditorHighlights(
     selectedCategory,
@@ -303,72 +208,51 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   useSliderEvents(containerRef);
 
-  // When entering the Crop category, automatically create an initial
-  // crop selection if none exists. This mirrors the previous behavior
-  // (drawing by drag was removed) and ensures the overlay appears when
-  // the Crop panel is opened, including when the Free preset is active.
-  // We honor the current cropRatio (null = free) and center a selection
-  // with a small padding around the image display area.
-  useEffect(() => {
-    if (selectedCategory !== 'crop') return;
-    if (sel) return; // already have a selection
-    const pad = 0.08;
-    const info = computeImageLayout();
-    const createFromInfo = (info: any) => {
-      let w = info.dispW * (1 - pad * 2);
-      let h = info.dispH * (1 - pad * 2);
-      const ratio = cropRatio.current;
-      if (ratio) {
-        h = w / ratio;
-        if (h > info.dispH * (1 - pad * 2)) {
-          h = info.dispH * (1 - pad * 2);
-          w = h * ratio;
-        }
-      }
-      const x = info.left + (info.dispW - w) / 2;
-      const y = info.top + (info.dispH - h) / 2;
-      setSel({ x, y, w, h });
-      // ensure canvas redraw to show overlay immediately
-      requestAnimationFrame(() => draw());
-    };
-    if (info) {
-      createFromInfo(info);
-      return;
-    }
-    // fallback: use canvas bounding rect
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    let w = rect.width * (1 - pad * 2);
-    let h = rect.height * (1 - pad * 2);
-    const ratio = cropRatio.current;
-    if (ratio) {
-      h = w / ratio;
-      if (h > rect.height * (1 - pad * 2)) {
-        h = rect.height * (1 - pad * 2);
-        w = h * ratio;
-      }
-    }
-    const x = (rect.width - w) / 2;
-    const y = (rect.height - h) / 2;
-    setSel({ x, y, w, h });
-    requestAnimationFrame(() => draw());
-  }, [selectedCategory, computeImageLayout, cropRatio, canvasRef, setSel]);
+  const { cancelCrop } = useImageEditorCrop(
+    selectedCategory,
+    cropRatio,
+    sel,
+    setSel,
+    computeImageLayout,
+    canvasRef,
+    draw,
+    dragging,
+    previewPointerIdRef,
+    previewOriginalRef,
+    setPreviewOriginal,
+    setSelectedCategory
+  );
 
-  useEffect(() => { rotationRef.current = rotation; }, [rotation, rotationRef]);
-  useEffect(() => { exposureRef.current = exposure; }, [exposure, exposureRef]);
-  useEffect(() => { contrastRef.current = contrast; }, [contrast, contrastRef]);
-  useEffect(() => { saturationRef.current = saturation; }, [saturation, saturationRef]);
-  useEffect(() => { temperatureRef.current = temperature; }, [temperature, temperatureRef]);
-  useEffect(() => { vignetteRef.current = vignette; }, [vignette, vignetteRef]);
-  useEffect(() => { frameColorRef.current = frameColor; }, [frameColor, frameColorRef]);
-  useEffect(() => { frameThicknessRef.current = frameThickness; }, [frameThickness, frameThicknessRef]);
-  useEffect(() => { selectedFilterRef.current = selectedFilter; }, [selectedFilter, selectedFilterRef]);
-  useEffect(() => { filterStrengthRef.current = filterStrength; }, [filterStrength, filterStrengthRef]);
-  useEffect(() => { grainRef.current = grain; }, [grain, grainRef]);
-  useEffect(() => { softFocusRef.current = softFocus; }, [softFocus, softFocusRef]);
-  useEffect(() => { overlayRef.current = overlay; }, [overlay, overlayRef]);
-  useEffect(() => { frameOverlayRef.current = frameOverlay; }, [frameOverlay, frameOverlayRef]);
+  useImageEditorRefs(
+    rotation,
+    rotationRef,
+    exposure,
+    exposureRef,
+    contrast,
+    contrastRef,
+    saturation,
+    saturationRef,
+    temperature,
+    temperatureRef,
+    vignette,
+    vignetteRef,
+    frameColor,
+    frameColorRef,
+    frameThickness,
+    frameThicknessRef,
+    selectedFilter,
+    selectedFilterRef,
+    filterStrength,
+    filterStrengthRef,
+    grain,
+    grainRef,
+    softFocus,
+    softFocusRef,
+    overlay,
+    overlayRef,
+    frameOverlay,
+    frameOverlayRef
+  );
 
   const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
     if (category === 'crop' && selectedCategory !== 'crop') {
@@ -445,32 +329,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     previousCategory
   );
 
-  const cancelCrop = () => {
-    setSel(null);
-    setSelectedCategory('basic');
-  };
-
-  const handleDownload = useCallback(() => {
-    const img = imgRef.current;
-    if (!img) return;
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = img.naturalWidth;
-    tempCanvas.height = img.naturalHeight;
-    draw(null, null, tempCanvas);
-    const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    // Generate filename with current date and time: monolog_YYYYMMDDHHMM.jpg
-    const now = new Date();
-    const yyyy = String(now.getFullYear());
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    const hh = String(now.getHours()).padStart(2, '0');
-    const min = String(now.getMinutes()).padStart(2, '0');
-    const filename = `monolog_${yyyy}${mm}${dd}_${hh}${min}.jpg`;
-    link.download = filename;
-    link.click();
-  }, [draw, imgRef]);
+  const { handleDownload } = useImageEditorDownload(draw, imgRef);
 
 
 

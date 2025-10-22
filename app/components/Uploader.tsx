@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import { lazy, Suspense } from "react";
+import { Download } from 'lucide-react';
 import { preloadOverlayThumbnails } from './imageEditor/overlaysPreload';
 import { api } from "@/src/lib/api";
 import { AuthForm } from "./AuthForm";
@@ -118,6 +119,24 @@ function UploaderCore() {
     publish,
     handleFileInputChange,
   } = useUploader();
+
+  const handleDownload = () => {
+    try {
+      const url = (dataUrls[index] || originalDataUrls[index] || dataUrls[0] || originalDataUrls[0]) as string | undefined;
+      if (!url) return;
+      const link = document.createElement('a');
+      link.href = url;
+      const now = new Date();
+      const yyyy = String(now.getFullYear());
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const filename = `monolog_${yyyy}${mm}${dd}.jpg`;
+      link.download = filename;
+      link.click();
+    } catch (e) {
+      console.error('Download failed', e);
+    }
+  };
 
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''} ${justDiscarded ? 'just-discarded' : ''}`}>
@@ -313,6 +332,16 @@ function UploaderCore() {
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
+          </button>
+          <button
+            type="button"
+            className="btn icon ghost small-min"
+            aria-label="Download photo"
+            title="Download photo"
+            onClick={handleDownload}
+            disabled={processing}
+          >
+            <Download size={18} aria-hidden />
           </button>
           <button
             type="button"

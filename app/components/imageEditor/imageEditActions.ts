@@ -23,6 +23,7 @@ export async function applyEdit(
   fade: number,
   rotation: number,
   rotationRef: React.MutableRefObject<number>,
+  overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null,
   onApply: (dataUrl: string, settings: EditorSettings) => void
 ) {
   const img = imgRef.current; if (!img) return;
@@ -228,6 +229,27 @@ export async function applyEdit(
     octx.drawImage(noise, padPx, padPx, srcW, srcH);
     octx.restore();
   }
+  // Draw overlay image (if any) using same transform/rotation so it aligns
+  // with the exported image area. We draw it after grain and soft/fade effects
+  // so the overlay composes on top of the processed photo.
+  if (overlay && overlay.img) {
+    try {
+      const centerX = out.width / 2;
+      const centerY = out.height / 2;
+      octx.save();
+      octx.translate(centerX, centerY);
+      const rot = rotationRef.current ?? rotation;
+      const angle = (rot * Math.PI) / 180;
+      octx.rotate(angle);
+      octx.globalAlpha = Math.min(1, Math.max(0, overlay.opacity ?? 1));
+      octx.globalCompositeOperation = (overlay.blendMode as GlobalCompositeOperation) || 'source-over';
+      // draw overlay scaled to the photo area
+      octx.drawImage(overlay.img, -srcW / 2, -srcH / 2, srcW, srcH);
+      octx.restore();
+    } catch (e) {
+      // swallow overlay errors
+    }
+  }
   // draw frame if thickness > 0
   if (frameThickness > 0) {
     octx.save();
@@ -280,6 +302,7 @@ export async function applyEdit(
     grain,
     softFocus,
     fade,
+    overlay: overlay ?? undefined,
   };
   onApply(dataUrl, settings);
 }

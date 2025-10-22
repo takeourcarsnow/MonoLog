@@ -106,6 +106,7 @@ export function useImageEditorActions(
       fade,
       rotation,
       rotationRef,
+      overlay,
       onApply
     );
   }

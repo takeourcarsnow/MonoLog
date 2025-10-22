@@ -1,4 +1,4 @@
-import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken } from "./client";
+import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken, logSupabaseError } from "./client";
 import { mapRowToHydratedPost, selectUserFields } from "./utils";
 
 export async function favoritePost(postId: string) {
@@ -27,6 +27,7 @@ export async function isFavorite(postId: string) {
 }
 
 export async function getFavoritePosts() {
+  console.log('getFavoritePosts called');
   // Keep this read operation client-side (reads are safe with anon key)
   const sb = getClient();
   ensureAuthListener(sb);
@@ -34,10 +35,18 @@ export async function getFavoritePosts() {
   if (!me) return [];
   const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
   if (profErr || !profile) return [];
+  console.log('Profile favorites:', profile.favorites);
   const ids: string[] = profile.favorites || [];
+  console.log('Favorite IDs:', ids);
   if (!ids.length) return [];
-const { data, error } = await sb.from("posts").select("*, users!left(*), comments!left(id)").in("id", ids);
+const { data, error } = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").in("id", ids).or(`public.eq.true,user_id.eq.${me.id}`);
+  logSupabaseError("getFavoritePosts", { data, error });
   if (error) throw error;
+  console.log('Fetched favorite posts:', data?.length || 0);
+  try {
+    const ids = (data || []).map((r: any) => r.id);
+    console.log('Fetched favorite post IDs:', ids);
+  } catch (e) {}
   return (data || []).map((row: any) => mapRowToHydratedPost(row));
 }
 

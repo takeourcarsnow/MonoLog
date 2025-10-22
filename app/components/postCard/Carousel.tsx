@@ -98,7 +98,7 @@ export const Carousel = memo(function Carousel({
     }
   }, [isMultipostInFeed, index, imageDimensions]);
 
-  const { handleMediaClick } = useMediaClick({
+  const { handleMediaClick, handleMediaDblClick } = useMediaClick({
     isFavorite,
     toggleFavoriteWithAuth,
     showFavoriteFeedback,
@@ -142,6 +142,8 @@ export const Carousel = memo(function Carousel({
               className="media-link"
               draggable={false}
               onDragStart={(e: React.DragEvent) => e.preventDefault()}
+              onClick={handleMediaClick}
+              onDoubleClick={handleMediaDblClick}
               role="button"
               tabIndex={0}
             >

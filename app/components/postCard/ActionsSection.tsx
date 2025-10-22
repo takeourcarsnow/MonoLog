@@ -12,6 +12,7 @@ interface ActionsSectionProps {
   commentsRef: React.RefObject<HTMLDivElement>;
   isFavorite: boolean;
   setIsFavorite: (value: boolean) => void;
+  toggleFavoriteWithAuth: () => Promise<boolean>;
   showAuth: boolean;
   setShowAuth: (value: boolean) => void;
   sharePost: () => void;
@@ -39,6 +40,7 @@ export const ActionsSection = function ActionsSection({
   commentsRef,
   isFavorite,
   setIsFavorite,
+  toggleFavoriteWithAuth,
   showAuth,
   setShowAuth,
   sharePost,
@@ -88,24 +90,11 @@ export const ActionsSection = function ActionsSection({
         aria-pressed={isFavorite}
         title={isFavorite ? "Remove from favorites" : "Add to favorites"}
         onClick={async () => {
-          const cur = await api.getCurrentUser();
-          if (!cur) {
-            try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+          const success = await toggleFavoriteWithAuth();
+          if (!success) {
             setShowAuth(true);
-            return;
-          }
-          const prev = isFavorite;
-          setIsFavorite(!prev);
-          showFavoriteFeedback(prev ? 'removing' : 'adding');
-          try {
-            if (prev) {
-              await api.unfavoritePost(postId);
-            } else {
-              await api.favoritePost(postId);
-            }
-          } catch (e: any) {
-            setIsFavorite(prev);
-            toast.show(e?.message || "Failed to toggle favorite");
+          } else {
+            showFavoriteFeedback(isFavorite ? 'removing' : 'adding');
           }
         }}
       >

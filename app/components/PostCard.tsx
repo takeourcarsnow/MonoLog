@@ -54,6 +54,18 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
     toggleFavoriteWithAuth,
     showFavoriteFeedback
   } = useFavorite(post.id);
+  // Wrap the toggle so we can include the full post payload in an event
+  // This lets list views (like Favorites) append the post immediately
+  // without waiting for a full refetch.
+  const handleToggleFavoriteWithPost = async () => {
+    const success = await toggleFavoriteWithAuth();
+    if (success && typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('monolog:favorite_added', { detail: { post } }));
+      } catch (e) {}
+    }
+    return success;
+  };
   const {
     isFollowing,
     setIsFollowing,
@@ -150,7 +162,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         post={post}
         isFavorite={isFavorite}
         toggleFavoriteWithAuth={async () => {
-          const success = await toggleFavoriteWithAuth();
+          const success = await handleToggleFavoriteWithPost();
           if (!success) {
             setShowAuth(true);
           }
@@ -183,6 +195,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             commentsRef={commentsRef}
             isFavorite={isFavorite}
             setIsFavorite={setIsFavorite}
+            toggleFavoriteWithAuth={handleToggleFavoriteWithPost}
             showAuth={showAuth}
             setShowAuth={setShowAuth}
             sharePost={sharePost}

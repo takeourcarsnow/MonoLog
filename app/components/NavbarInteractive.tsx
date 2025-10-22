@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { navItems, isNavItemActive, type NavItem } from "./nav/navHelpers";
+import { throttle } from "@/src/lib/utils";
 
 interface NavItemRef {
   element: HTMLElement;
@@ -130,7 +131,7 @@ export function NavbarInteractive() {
     updateIndicator();
 
     // Update indicator on window resize
-    const handleResize = () => updateIndicator();
+    const handleResize = throttle(() => updateIndicator(), 100);
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
 

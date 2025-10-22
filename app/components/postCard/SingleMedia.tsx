@@ -25,7 +25,7 @@ export const SingleMedia = memo(function SingleMedia({
   openFullscreen,
   disableMediaNavigation,
 }: SingleMediaProps) {
-  const { handleMediaClick } = useMediaClick({
+  const { handleMediaClick, handleMediaDblClick } = useMediaClick({
     isFavorite,
     toggleFavoriteWithAuth,
     showFavoriteFeedback,
@@ -39,6 +39,8 @@ export const SingleMedia = memo(function SingleMedia({
       className="media-link"
       draggable={false}
       onDragStart={(e: React.DragEvent) => e.preventDefault()}
+      onClick={handleMediaClick}
+      onDoubleClick={handleMediaDblClick}
       role="button"
       tabIndex={0}
     >

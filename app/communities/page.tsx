@@ -37,15 +37,6 @@ export default function CommunitiesPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const handleFocus = () => {
-      loadCommunities();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
-
   if (loading) {
     return (
       <CommunitiesClient>
@@ -56,11 +47,6 @@ export default function CommunitiesPage() {
                 <span className="sr-only">Communities</span>
               </h1>
             </div>
-          </div>
-          <div className="content-actions my-8 flex justify-center w-full">
-            <Link href="/communities/create">
-              <Button title="Create Community">Create Community</Button>
-            </Link>
           </div>
           <div className="content-body space-y-6">
             {[...Array(3)].map((_, i) => (

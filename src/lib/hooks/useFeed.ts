@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { api } from "@/src/lib/api";
 import type { HydratedPost } from "@/src/lib/types";
 import { useEventListener } from "./useEventListener";
+import { debounce } from "../utils";
 
 // Custom hook for infinite scrolling logic
 function useInfiniteScroll(fetchFunction: (opts: { limit: number; before?: string }) => Promise<HydratedPost[]>, pageSize: number) {
@@ -101,7 +102,7 @@ function useInfiniteScroll(fetchFunction: (opts: { limit: number; before?: strin
     const obs = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          loadMorePosts();
+          debounce(() => loadMorePosts(), 100)();
         }
       });
     }, { root, rootMargin: '20%' });

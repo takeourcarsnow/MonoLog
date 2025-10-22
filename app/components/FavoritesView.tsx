@@ -19,10 +19,19 @@ export function FavoritesView() {
     () => api.getFavoritePosts(),
     []
   );
+  // Debug: log posts when changed so we can confirm UI receives API data
+  useEffect(() => {
+    try {
+      if (posts && Array.isArray(posts)) {
+        console.log('FavoritesView received posts:', posts.length, posts.map(p => p.id));
+      }
+    } catch (e) {}
+  }, [posts]);
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("favoritesView") as any)) || "list");
 
   // Handle favorite changes optimistically
   useEventListener('monolog:favorite_changed', (e: any) => {
+    console.log('Favorite changed event:', e?.detail);
     const changedPostId = e?.detail?.postId;
     const favorited = e?.detail?.favorited;
     if (!changedPostId) return;
@@ -35,6 +44,21 @@ export function FavoritesView() {
       loadFavorites();
     }
   }, [loadFavorites]);
+
+  // Listen for a direct post payload when a post is favorited so we can
+  // append without refetching the entire list.
+  useEventListener('monolog:favorite_added', (e: any) => {
+    try {
+      const p: HydratedPost | undefined = e?.detail?.post;
+      if (!p || !p.id) return;
+      // Only add if not present
+      setPosts(prev => {
+        if (!prev) return [p];
+        if (prev.some(x => x.id === p.id)) return prev;
+        return [p, ...prev];
+      });
+    } catch (e) {}
+  }, []);
 
   if (loading) {
     return (

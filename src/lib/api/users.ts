@@ -130,6 +130,7 @@ export async function updateCurrentUser(patch: Partial<User>) {
   if (patch.avatarUrl !== undefined) upsertObj.avatar_url = patch.avatarUrl;
   if (patch.bio !== undefined) upsertObj.bio = patch.bio;
   if (patch.socialLinks !== undefined) upsertObj.socialLinks = patch.socialLinks;
+  if (patch.exifPresets !== undefined) upsertObj.exifPresets = patch.exifPresets;
   const safe = (v: any) => { try { return JSON.stringify(v, null, 2); } catch (e) { try { return String(v); } catch { return "[unserializable]"; } } };
 logger.debug("users.upsert payload", safe(upsertObj));
   // Try to perform the update via the server-side endpoint which verifies the

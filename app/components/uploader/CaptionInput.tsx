@@ -4,6 +4,7 @@ import { PHRASES } from "./constants";
 import { Pen } from "lucide-react";
 import { SpotifyIcon } from "./SpotifyIcon";
 import { ExifInputs } from "./ExifInputs";
+import type { User } from "@/src/lib/types";
 
 interface CaptionInputProps {
   caption: string;
@@ -25,6 +26,7 @@ interface CaptionInputProps {
   processing: boolean;
   CAPTION_MAX: number;
   toast: any; // from useToast
+  user?: User | null;
 }
 
 export function CaptionInput({
@@ -45,7 +47,8 @@ export function CaptionInput({
   hasPreview,
   processing,
   CAPTION_MAX,
-  toast
+  toast,
+  user
 }: CaptionInputProps) {
   // keep typing animation local (placeholder only). Render a CSS-only
   // typewriter animation using the placeholder string to avoid JS-driven
@@ -241,6 +244,7 @@ export function CaptionInput({
         setFilmIso={setFilmIso}
         hasPreview={hasPreview}
         processing={processing}
+        user={user}
       />
     </div>
   );

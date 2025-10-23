@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Combobox } from "../Combobox";
 import { CameraScopeSelector } from "./CameraScopeSelector";
-import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
+import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS, getMergedExifPresets } from "@/src/lib/exifPresets";
 import { Settings, Image, Gauge } from "lucide-react";
+import type { User } from "@/src/lib/types";
+import { api } from "@/src/lib/api";
 
 interface ExifInputsProps {
   camera?: string;
@@ -15,6 +17,7 @@ interface ExifInputsProps {
   setFilmIso?: (filmIso: string) => void;
   hasPreview: boolean;
   processing: boolean;
+  user?: User | null;
 }
 
 export function ExifInputs({
@@ -27,9 +30,77 @@ export function ExifInputs({
   filmIso,
   setFilmIso,
   hasPreview,
-  processing
+  processing,
+  user
 }: ExifInputsProps) {
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
+
+  const mergedPresets = getMergedExifPresets(user);
+
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveNewPreset = async (field: 'cameras' | 'lenses' | 'filmTypes' | 'filmIsos', value: string) => {
+    if (!user || !value.trim()) return;
+    const trimmed = value.trim();
+    const defaults = {
+      cameras: CAMERA_DIGITAL_PRESETS,
+      lenses: LENS_PRESETS,
+      filmTypes: FILM_PRESETS,
+      filmIsos: ISO_PRESETS,
+    };
+    if (defaults[field].includes(trimmed)) return; // already in defaults
+    // Build clean current presets, ignoring corrupted data
+    const currentClean = {
+      cameras: Array.isArray(user.exifPresets?.cameras) ? user.exifPresets.cameras : [],
+      lenses: Array.isArray(user.exifPresets?.lenses) ? user.exifPresets.lenses : [],
+      filmTypes: Array.isArray(user.exifPresets?.filmTypes) ? user.exifPresets.filmTypes : [],
+      filmIsos: Array.isArray(user.exifPresets?.filmIsos) ? user.exifPresets.filmIsos : [],
+    };
+    const current = currentClean[field] || [];
+    if (current.includes(trimmed)) return; // already saved
+    const updated = { ...currentClean, [field]: [...current, trimmed] };
+    try {
+      await api.updateCurrentUser({ exifPresets: updated });
+    } catch (e) {
+      console.error('Failed to save EXIF preset', e);
+    }
+  };
+
+  const handleCameraChange = (value: string) => {
+    setCamera?.(value);
+  };
+
+  const handleCameraBlur = () => {
+    if (camera) saveNewPreset('cameras', camera);
+    setActiveExifField(null);
+  };
+
+  const handleLensChange = (value: string) => {
+    setLens?.(value);
+  };
+
+  const handleLensBlur = () => {
+    if (lens) saveNewPreset('lenses', lens);
+    setActiveExifField(null);
+  };
+
+  const handleFilmTypeChange = (value: string) => {
+    setFilmType?.(value);
+  };
+
+  const handleFilmTypeBlur = () => {
+    if (filmType) saveNewPreset('filmTypes', filmType);
+    setActiveExifField(null);
+  };
+
+  const handleFilmIsoChange = (value: string) => {
+    setFilmIso?.(value);
+  };
+
+  const handleFilmIsoBlur = () => {
+    if (filmIso) saveNewPreset('filmIsos', filmIso);
+    setActiveExifField(null);
+  };
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
@@ -38,46 +109,47 @@ export function ExifInputs({
         <>
           <CameraScopeSelector
             camera={camera}
-            setCamera={setCamera}
+            setCamera={handleCameraChange}
             disabled={!hasPreview || processing}
             onFocus={() => setActiveExifField('camera')}
-            onBlur={() => setActiveExifField(null)}
+            onBlur={handleCameraBlur}
+            user={user}
           />
           <Combobox
             value={lens || ''}
-            onChange={setLens || (() => {})}
-            options={LENS_PRESETS}
+            onChange={handleLensChange}
+            options={mergedPresets.lenses}
             placeholder="Lens"
             disabled={!hasPreview || processing}
             icon={Settings}
             onFocus={() => setActiveExifField('lens')}
-            onBlur={() => setActiveExifField(null)}
+            onBlur={handleLensBlur}
           />
           {!camera || !CAMERA_DIGITAL_PRESETS.includes(camera) ? (
             <>
               <Combobox
                 value={filmType || ''}
                 onChange={(value) => {
-                  setFilmType?.(value);
+                  handleFilmTypeChange(value);
                   if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
                 }}
-                options={FILM_PRESETS}
+                options={mergedPresets.filmTypes}
                 placeholder="Film"
                 disabled={!hasPreview || processing}
                 icon={Image}
                 onFocus={() => setActiveExifField('film')}
-                onBlur={() => setActiveExifField(null)}
+                onBlur={handleFilmTypeBlur}
               />
               {filmType && (
                 <Combobox
                   value={filmIso || ''}
-                  onChange={setFilmIso || (() => {})}
-                  options={ISO_PRESETS}
+                  onChange={handleFilmIsoChange}
+                  options={mergedPresets.filmIsos}
                   placeholder="ISO"
                   disabled={!hasPreview || processing}
                   icon={Gauge}
                   onFocus={() => setActiveExifField('iso')}
-                  onBlur={() => setActiveExifField(null)}
+                  onBlur={handleFilmIsoBlur}
                 />
               )}
             </>
@@ -89,23 +161,24 @@ export function ExifInputs({
           {activeExifField === 'camera' && (
             <CameraScopeSelector
               camera={camera}
-              setCamera={setCamera}
+              setCamera={handleCameraChange}
               disabled={!hasPreview || processing}
               onFocus={() => setActiveExifField('camera')}
-              onBlur={() => setActiveExifField(null)}
+              onBlur={handleCameraBlur}
               expanded={true}
+              user={user}
             />
           )}
           {activeExifField === 'lens' && (
             <Combobox
               value={lens || ''}
-              onChange={setLens || (() => {})}
-              options={LENS_PRESETS}
+              onChange={handleLensChange}
+              options={mergedPresets.lenses}
               placeholder="Lens"
               disabled={!hasPreview || processing}
               icon={Settings}
               onFocus={() => setActiveExifField('lens')}
-              onBlur={() => setActiveExifField(null)}
+              onBlur={handleLensBlur}
               expanded={true}
             />
           )}
@@ -113,28 +186,28 @@ export function ExifInputs({
             <Combobox
               value={filmType || ''}
               onChange={(value) => {
-                setFilmType?.(value);
+                handleFilmTypeChange(value);
                 if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
               }}
-              options={FILM_PRESETS}
+              options={mergedPresets.filmTypes}
               placeholder="Film"
               disabled={!hasPreview || processing}
               icon={Image}
               onFocus={() => setActiveExifField('film')}
-              onBlur={() => setActiveExifField(null)}
+              onBlur={handleFilmTypeBlur}
               expanded={true}
             />
           )}
           {activeExifField === 'iso' && filmType && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
             <Combobox
               value={filmIso || ''}
-              onChange={setFilmIso || (() => {})}
-              options={ISO_PRESETS}
+              onChange={handleFilmIsoChange}
+              options={mergedPresets.filmIsos}
               placeholder="ISO"
               disabled={!hasPreview || processing}
               icon={Gauge}
               onFocus={() => setActiveExifField('iso')}
-              onBlur={() => setActiveExifField(null)}
+              onBlur={handleFilmIsoBlur}
               expanded={true}
             />
           )}

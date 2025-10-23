@@ -36,6 +36,44 @@ export function mapProfileToUser(profile: any) {
       socialLinks = profile.social_links;
     }
   }
+  let exifPresets: any = undefined;
+  if (profile.exifPresets) {
+    if (typeof profile.exifPresets === 'string') {
+      try {
+        exifPresets = JSON.parse(profile.exifPresets);
+        // If parsing resulted in a string, it might be double-encoded
+        if (typeof exifPresets === 'string') {
+          try {
+            exifPresets = JSON.parse(exifPresets);
+          } catch (e2) {
+            // ignore
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      exifPresets = profile.exifPresets;
+    }
+  } else if (profile.exif_presets) {
+    if (typeof profile.exif_presets === 'string') {
+      try {
+        exifPresets = JSON.parse(profile.exif_presets);
+        // If parsing resulted in a string, it might be double-encoded
+        if (typeof exifPresets === 'string') {
+          try {
+            exifPresets = JSON.parse(exifPresets);
+          } catch (e2) {
+            // ignore
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      exifPresets = profile.exif_presets;
+    }
+  }
   return {
     id: profile.id,
     username: profile.username || profile.user_name || "",
@@ -54,6 +92,7 @@ export function mapProfileToUser(profile: any) {
     following: profile.following,
     favorites: profile.favorites,
     usernameChangedAt: profile.username_changed_at || profile.usernameChangedAt,
+    exifPresets,
   } as any;
 }
 

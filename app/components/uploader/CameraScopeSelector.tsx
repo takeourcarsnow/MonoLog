@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { Combobox } from "../Combobox";
-import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS } from "@/src/lib/exifPresets";
+import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, getMergedExifPresets } from "@/src/lib/exifPresets";
 import { Camera, Monitor, Film } from "lucide-react";
+import type { User } from "@/src/lib/types";
 
 // Small scoped selector component for picking between All/Digital/Film cameras
-function CameraScopeSelector({ camera, setCamera, disabled, onFocus, onBlur, expanded }: { camera?: string; setCamera?: (c: string) => void; disabled?: boolean; onFocus?: () => void; onBlur?: () => void; expanded?: boolean }) {
+function CameraScopeSelector({ camera, setCamera, disabled, onFocus, onBlur, expanded, user }: { camera?: string; setCamera?: (c: string) => void; disabled?: boolean; onFocus?: () => void; onBlur?: () => void; expanded?: boolean; user?: User | null }) {
   const [scope, setScope] = useState<'all' | 'digital' | 'film'>('all');
+  const merged = getMergedExifPresets(user);
   const getOptions = () => {
-    if (scope === 'digital') return CAMERA_DIGITAL_PRESETS;
-    if (scope === 'film') return CAMERA_FILM_PRESETS;
-    return CAMERA_PRESETS;
+    if (scope === 'digital') return merged.cameras.filter(c => CAMERA_DIGITAL_PRESETS.includes(c) || !CAMERA_FILM_PRESETS.includes(c));
+    if (scope === 'film') return merged.cameras.filter(c => CAMERA_FILM_PRESETS.includes(c) || !CAMERA_DIGITAL_PRESETS.includes(c));
+    return merged.cameras;
   };
 
   const header = (

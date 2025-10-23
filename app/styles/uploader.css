@@ -1171,17 +1171,39 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .clear-button {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
   color: var(--muted);
   pointer-events: auto;
   transition: color 160ms ease;
+  border: none;
+  background: none;
+  padding: 2px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .clear-button:hover {
-  color: var(--text);
+  color: var(--error);
+  background: var(--bg-hover);
+}
+
+.confirm-button {
+  color: var(--muted);
+  pointer-events: auto;
+  transition: color 160ms ease;
+  border: none;
+  background: none;
+  padding: 2px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-button:hover {
+  color: var(--success);
+  background: var(--bg-hover);
 }
 
 /* small helper: visually hidden but available to screen readers */

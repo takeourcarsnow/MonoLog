@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { LucideIcon, X } from "lucide-react";
+import { LucideIcon, X, Check } from "lucide-react";
 
 interface ComboboxProps {
   value: string;
@@ -136,6 +136,8 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
     if (e.key === 'Escape') {
       setIsOpen(false);
       inputRef.current?.blur();
+    } else if (e.key === 'Enter') {
+      inputRef.current?.blur();
     } else if (e.key === 'ArrowDown' && !isOpen) {
       setIsOpen(true);
     } else if (e.key === 'ArrowDown' && isOpen && filteredOptions.length > 0) {
@@ -210,17 +212,27 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
         tabIndex={disabled ? -1 : 0}
         autoComplete="off"
         onMouseDown={(e) => { if (disabled) e.preventDefault(); }}
-        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined, paddingRight: inputValue ? 32 : undefined }}
+        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined, paddingRight: inputValue ? 64 : undefined }}
       />
       {inputValue && !disabled && (
-        <button
-          type="button"
-          onClick={handleClear}
-          className="clear-button"
-          title="Clear"
-        >
-          <X size={14} />
-        </button>
+        <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 4 }}>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.blur()}
+            className="confirm-button"
+            title="Confirm"
+          >
+            <Check size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="clear-button"
+            title="Clear"
+          >
+            <X size={14} />
+          </button>
+        </div>
       )}
       {isOpen && filteredOptions.length > 0 && (
         <ul

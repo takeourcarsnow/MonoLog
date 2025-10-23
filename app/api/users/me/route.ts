@@ -26,6 +26,7 @@ export async function PATCH(req: Request) {
     const avatarUrlIncoming = body.avatarUrl ?? body.avatar_url;
     const bioIncoming = body.bio ?? body.bio;
     const socialLinksIncoming = body.socialLinks ?? body.social_links;
+    const exifPresetsIncoming = body.exifPresets ?? body.exif_presets;
 
     // If username is changing, enforce 24-hour cooldown server-side
     if (usernameIncoming !== undefined) {
@@ -60,6 +61,7 @@ export async function PATCH(req: Request) {
     if (avatarUrlIncoming !== undefined) upd.avatar_url = avatarUrlIncoming;
     if (bioIncoming !== undefined) upd.bio = bioIncoming;
   if (socialLinksIncoming !== undefined) upd.social_links = socialLinksIncoming ? JSON.stringify(socialLinksIncoming) : null;
+  if (exifPresetsIncoming !== undefined) upd.exif_presets = exifPresetsIncoming ? JSON.stringify(exifPresetsIncoming) : null;
 
   // Debug: what we're about to write to the DB
   try { console.log('[PATCH /api/users/me] computed upd', upd); } catch (_) {}
@@ -105,6 +107,7 @@ export async function PATCH(req: Request) {
     if (upd.avatar_url !== undefined) insertObj.avatar_url = upd.avatar_url;
     if (upd.bio !== undefined) insertObj.bio = upd.bio;
   if (upd.social_links !== undefined) insertObj.social_links = upd.social_links;
+  if (upd.exif_presets !== undefined) insertObj.exif_presets = upd.exif_presets;
 
     // Use upsert to create the row if it doesn't exist; conflict on primary key
     // ensures this is safe in concurrent scenarios.

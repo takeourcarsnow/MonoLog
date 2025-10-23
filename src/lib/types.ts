@@ -18,6 +18,12 @@ export type User = {
   following?: string[];
   favorites?: string[];
   usernameChangedAt?: string; // Tracks last username change for 24-hour cooldown
+  exifPresets?: {
+    cameras?: string[];
+    lenses?: string[];
+    filmTypes?: string[];
+    filmIsos?: string[];
+  };
 };
 
 export type Post = {

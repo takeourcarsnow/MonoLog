@@ -70,6 +70,11 @@ export function CommunityView() {
 
     // Prevent duplicate requests
     if (pendingJoin) return;
+    // If user is not authenticated, redirect to auth (profile page shows AuthForm)
+    if (!currentUser) {
+      router.push('/profile');
+      return;
+    }
     setPendingJoin(true);
     try {
       if (community.isMember) {

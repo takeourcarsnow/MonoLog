@@ -191,6 +191,20 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
 
   const matrix = monthMatrix(curYear, curMonth);
 
+  const renderMiniSlideshow = (dk: string) => {
+    const posts = dayPostsCache[dk];
+    if (!posts || posts.length === 0) return null;
+    const urls = posts.flatMap(p => p.thumbnailUrls || (p.thumbnailUrl ? [p.thumbnailUrl] : []) || p.imageUrls || (p.imageUrl ? [p.imageUrl] : []));
+    const allowLoad = shouldLoad || cacheAnyImageLoaded(urls);
+    return (
+      <MiniSlideshow
+        imageUrls={urls}
+        fill={true}
+        allowLoad={allowLoad}
+      />
+    );
+  };
+
   return (
     <div className="view-fade">
       <div className="calendar-page">
@@ -248,24 +262,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
                 {/* date number */}
                 <div className="d" style={{ ['--date-delay' as any]: `${idx * 28}ms` } as React.CSSProperties}>{d.getDate()}</div>
                 {/* Today badge removed per user request */}
-                {count > 0 ? (
-                  dayPostsCache[dk] ? (
-                    (() => {
-                      const urls = dayPostsCache[dk].flatMap(p => p.thumbnailUrls || (p.thumbnailUrl ? [p.thumbnailUrl] : []) || p.imageUrls || (p.imageUrl ? [p.imageUrl] : []));
-                      // Allow loading thumbnails when the calendar view is actively
-                      // shown (shouldLoad === true) or when at least one of the
-                      // thumbnails has already been loaded in this session.
-                      const allowLoad = shouldLoad || cacheAnyImageLoaded(urls);
-                      return (
-                        <MiniSlideshow
-                          imageUrls={urls}
-                          fill={true}
-                          allowLoad={allowLoad}
-                        />
-                      );
-                    })()
-                  ) : null
-                ) : null}
+                {count > 0 && renderMiniSlideshow(dk)}
               </div>
             );
           })}

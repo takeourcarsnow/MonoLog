@@ -6,7 +6,7 @@ const isProd = process.env.NODE_ENV === 'production';
 
 type LogFn = (...args: any[]) => void;
 
-function safeWrap(fn: LogFn, level: 'debug' | 'log') : LogFn {
+function safeWrap(fn: LogFn): LogFn {
   if (isProd) return () => { /* no-op in production for privacy/noise */ };
   return (...args: any[]) => {
     try { fn(...args); } catch { /* swallow */ }
@@ -14,9 +14,9 @@ function safeWrap(fn: LogFn, level: 'debug' | 'log') : LogFn {
 }
 
 export const logger = {
-  debug: safeWrap(() => {}, 'debug'),
-  info: safeWrap(() => {}, 'log'),
-  log: safeWrap(() => {}, 'log'),
+  debug: safeWrap((...a: any[]) => { try { console.debug(...a); } catch {} }),
+  info: safeWrap((...a: any[]) => { try { console.info(...a); } catch {} }),
+  log: safeWrap((...a: any[]) => { try { console.log(...a); } catch {} }),
   warn: (...a: any[]) => { try { console.warn(...a); } catch {} },
   error: (...a: any[]) => { try { console.error(...a); } catch {} },
 };

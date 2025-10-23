@@ -6,6 +6,8 @@ import { api } from "@/src/lib/api";
 import { Button } from "@/app/components/Button";
 import Link from "next/link";
 import type { HydratedCommunity } from "@/src/lib/types";
+import { AuthRequired } from "./AuthRequired";
+import { AuthForm } from "./AuthForm";
 
 export function CreateThreadView() {
   const params = useParams();
@@ -17,6 +19,11 @@ export function CreateThreadView() {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // auth state
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   useEffect(() => {
     const loadCommunity = async () => {
@@ -31,9 +38,29 @@ export function CreateThreadView() {
     loadCommunity();
   }, [communitySlug]);
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await api.getCurrentUser();
+        setCurrentUser(user);
+      } catch (e) {
+        // not authenticated
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim() || loading || !community) return;
+
+    // If not authenticated, show auth UI instead of attempting create
+    if (!currentUser) {
+      setShowAuthPrompt(true);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -44,12 +71,49 @@ export function CreateThreadView() {
         content: content.trim()
       });
       navigate.push(`/communities/${communitySlug}/thread/${thread.slug}`);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to create thread');
+    } catch (err: any) {
+      const message = err?.message || String(err);
+      // If the API reports unauthenticated, show the auth form so user can sign in
+      if (message.includes('Not authenticated') || message.includes('Unauthorized')) {
+        setShowAuthPrompt(true);
+        setError(null);
+        return;
+      }
+      setError(message || 'Failed to create thread');
     } finally {
       setLoading(false);
     }
   };
+
+  // If auth check is still pending show skeleton
+  if (authLoading) {
+    return (
+      <div className="content">
+        <div className="content-body">
+          <div className="card max-w-2xl communities">
+            <div className="animate-pulse space-y-6">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If we were prompted to sign in (or user is not signed in) show auth UI
+  if (showAuthPrompt || !currentUser) {
+    return (
+      <AuthRequired>
+        <AuthForm onClose={async () => {
+          const user = await api.getCurrentUser();
+          setCurrentUser(user);
+          setShowAuthPrompt(false);
+        }} />
+      </AuthRequired>
+    );
+  }
 
   if (!community && !error) {
     return (

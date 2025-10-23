@@ -144,14 +144,9 @@ export function AccountSwitcher() {
           // opening the auth modal while the client is initializing.
           if (me === undefined) return;
           if (current) {
-            // Navigate to username route instead of /profile
-            if (current.username) {
-              return router.push(`/${current.username}`);
-            } else if (current.id) {
-              return router.push(`/${current.id}`);
-            } else {
-              return router.push("/profile");
-            }
+            // Prefer username, fall back to id, otherwise go to /profile
+            const dest = current.username ? `/${current.username}` : (current.id ? `/${current.id}` : '/profile');
+            return router.push(dest);
           }
           // Blur active element first to dismiss native suggestion/autocomplete
           try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}

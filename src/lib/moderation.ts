@@ -29,7 +29,7 @@ function normalizeText(s: string) {
 }
 
 export function checkComment(text: string): ModerationResult {
-  const reasons: string[] = [];
+  const reasonsSet: Set<string> = new Set();
   let score = 0;
 
   if (!text || !text.trim()) {
@@ -39,12 +39,15 @@ export function checkComment(text: string): ModerationResult {
   const raw = text;
   const norm = normalizeText(raw);
 
-  // Detect banned words using normalized text
+  // Detect banned words using normalized text. Stop at first match and
+  // record the reason once to avoid inflating the score from repeated
+  // matches or duplicate pushes.
   for (const w of BANNED_WORDS) {
     const re = new RegExp(`\\b${escapeRegExp(w)}\\b`, 'i');
     if (re.test(norm)) {
-      reasons.push('banned_word');
+      reasonsSet.add('banned_word');
       score += 80;
+      break;
     }
   }
 
@@ -52,32 +55,34 @@ export function checkComment(text: string): ModerationResult {
   const urlRe = /https?:\/\/[\w\-\._~:\/?#\[\]@!$&'()*+,;=%]+/gi;
   const urls = (raw.match(urlRe) || []);
   if (urls.length >= 2) {
-    reasons.push('multiple_links'); score += 40;
+    reasonsSet.add('multiple_links'); score += 40;
   }
-  if (urls.some(u => u.length > 100)) { reasons.push('long_url'); score += 25; }
+  if (urls.some(u => u.length > 100)) { reasonsSet.add('long_url'); score += 25; }
 
   // token repetition and spammy signals
-  if (/([a-z])\1{6,}/i.test(norm)) { reasons.push('repeated_chars'); score += 40; }
+  if (/([a-z])\1{6,}/i.test(norm)) { reasonsSet.add('repeated_chars'); score += 40; }
   const tokens = norm.split(/\s+/).filter(Boolean);
   const counts: Record<string, number> = {};
   for (const t of tokens) {
     counts[t] = (counts[t] || 0) + 1;
-    if (counts[t] >= 6) { reasons.push('repetition'); score += 45; }
+    // Only add the 'repetition' reason once to avoid duplicate scoring
+    if (counts[t] >= 6 && !reasonsSet.has('repetition')) { reasonsSet.add('repetition'); score += 45; }
   }
 
   // link-only or mostly-link content
   const nonPunct = norm.replace(/[\p{P}\p{S}]/gu, '').replace(/\s+/g, '').trim();
-  if (nonPunct.length < 6 && urls.length === 1) { reasons.push('link_only'); score += 20; }
+  if (nonPunct.length < 6 && urls.length === 1) { reasonsSet.add('link_only'); score += 20; }
 
   // short messages with excessive punctuation or uppercase (shouting)
-  if (raw.length < 6 && /[!]{2,}/.test(raw)) { reasons.push('short_exclaim'); score += 10; }
-  if (raw.length < 10 && raw === raw.toUpperCase() && /[A-Z]/.test(raw)) { reasons.push('shouting'); score += 8; }
+  if (raw.length < 6 && /[!]{2,}/.test(raw)) { reasonsSet.add('short_exclaim'); score += 10; }
+  if (raw.length < 10 && raw === raw.toUpperCase() && /[A-Z]/.test(raw)) { reasonsSet.add('shouting'); score += 8; }
 
   // cheap heuristic: many characters that aren't letters/numbers -> likely spammy
   const nonAlnum = (raw.match(/[^\p{L}\p{N}\s]/gu) || []).length;
-  if (nonAlnum > Math.min(30, Math.max(5, Math.floor(raw.length / 6)))) { reasons.push('lots_symbols'); score += 12; }
+  if (nonAlnum > Math.min(30, Math.max(5, Math.floor(raw.length / 6)))) { reasonsSet.add('lots_symbols'); score += 12; }
 
   // final decision thresholds
+  const reasons = Array.from(reasonsSet);
   if (score >= 80) return { action: 'reject', score, reasons };
   if (score >= 20) return { action: 'flag', score, reasons };
   return { action: 'allow', score, reasons };

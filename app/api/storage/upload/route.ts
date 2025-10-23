@@ -37,8 +37,10 @@ export async function POST(req: Request) {
     const mime = m[1];
     const b64 = m[2];
     const buf = Buffer.from(b64, 'base64');
-  // Basic filename sanitization: strip path segments and limit length
-  if (filename) filename = filename.replace(/.*[\\/]/, '').slice(0, 240);
+  // Basic filename sanitization: strip path segments, replace any stray
+  // backslashes (which may come from Windows-style paths or malformed
+  // client input) with '_' and limit length.
+  if (filename) filename = filename.replace(/.*[\\/]/, '').replace(/\\/g, '_').slice(0, 240);
   const name = filename || `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
   const path = `${userId}/${name}`;
     const sb = getServiceSupabase();

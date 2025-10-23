@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 
 interface OptimizedImageProps {
   src: string;
@@ -43,7 +43,32 @@ export const OptimizedImage = memo(function OptimizedImage({
   disableLoadingTransition = false,
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(disableLoadingTransition ? false : true);
-  const [currentSrc, setCurrentSrc] = useState(src);
+  // Normalize incoming src to avoid invalid characters (for example
+  // backslashes in paths which can end up encoded as "%5C" and cause
+  // the Next image optimizer to reject the request with
+  // INVALID_IMAGE_OPTIMIZE_REQUEST). Keep data: and relative URLs intact.
+  const normalizeSrc = (s?: string) => {
+    if (!s) return s as any;
+    try {
+      // Don't touch data URLs or same-origin root-relative paths
+      if (s.startsWith('data:') || s.startsWith('/')) return s;
+      // Try to decode then replace backslashes with forward slashes
+      let dec = decodeURIComponent(s);
+      if (dec.indexOf('\\') !== -1) dec = dec.replace(/\\/g, '/');
+      // Return decoded (with forward slashes). next/image will re-encode as needed.
+      return dec;
+    } catch (e) {
+      // If decode fails, fall back to a simple replacement
+      return s.replace(/\\/g, '/');
+    }
+  };
+
+  const [currentSrc, setCurrentSrc] = useState(() => normalizeSrc(src));
+
+  // Keep currentSrc in sync with prop changes and normalize new values
+  useEffect(() => {
+    setCurrentSrc(normalizeSrc(src));
+  }, [src]);
 
   // For small images (<=40px), don't use placeholder for performance
   const shouldUsePlaceholder = placeholder !== 'empty' && (!width || !height || (width > 40 && height > 40));

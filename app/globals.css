@@ -29,7 +29,13 @@ html[class*="page-scroll"] {
 .content:has(.communities),
 .content:has(.community),
 .content:has(.thread),
-.content:has(.create-thread),
+.content:has(.create-thread) {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  padding-top: var(--header-height) !important;
+  -webkit-overflow-scrolling: touch;
+}
 .content:has(.week-review-page) {
   overflow: auto !important;
   height: auto !important;
@@ -47,6 +53,16 @@ html[class*="week-review-page-scroll"] .content {
   height: auto !important;
   min-height: auto !important;
   padding-top: 0 !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Specific fallback for create-thread pages */
+body[class*="create-thread-page-scroll"] .content,
+html[class*="create-thread-page-scroll"] .content {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  padding-top: var(--header-height) !important;
   -webkit-overflow-scrolling: touch;
 }
 :root {

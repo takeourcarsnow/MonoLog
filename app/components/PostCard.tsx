@@ -6,11 +6,6 @@ import type { HydratedPost } from "@/src/lib/types";
 import { AuthForm } from "./AuthForm";
 import { UserHeader } from "./postCard/UserHeader";
 import { MediaSection } from "./postCard/MediaSection";
-import { ActionsSection } from "./postCard/ActionsSection";
-import { CommentsSection } from "./postCard/CommentsSection";
-import { SpotifySection } from "./postCard/SpotifySection";
-import { ExifSection } from "./postCard/ExifSection";
-import { EditorWrap } from "./postCard/EditorWrap";
 import { usePostState } from "./postCard/hooks/usePostState";
 import { useComments } from "./postCard/hooks/useComments";
 import { useFavorite } from "./postCard/hooks/useFavorite";
@@ -26,7 +21,7 @@ import { useIsMe } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
-import { CaptionDisplay } from "./postCard/CaptionDisplay";
+import { PostCardBody } from "./PostCardBody";
 
 // Lazy load heavy components
 const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
@@ -175,108 +170,57 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         onImageIndexChange={setCurrentImageIndex}
       />
 
-      <div className="card-body">
-        {/* Caption/actions are always rendered but visually hidden when editor is entering.
-            This allows the caption/actions to fade/collapse smoothly while the editor
-            expands, avoiding a sudden jump on open. */}
-  <div className="caption-wrap" aria-hidden={editorAnim === 'enter'}>
-          <CaptionDisplay caption={post.caption} />
-          <ActionsSection
-            postId={post.id}
-            count={count}
-            commentsOpen={commentsOpen}
-            setCommentsOpen={(value: boolean) => {
-              setCommentsOpen(value);
-              if (value) setShowExif(false); // Close EXIF when opening comments
-              if (value) setShowSpotify(false); // Close Spotify when opening comments
-            }}
-            commentsMounted={commentsMounted}
-            setCommentsMounted={setCommentsMounted}
-            commentsRef={commentsRef}
-            isFavorite={isFavorite}
-            setIsFavorite={setIsFavorite}
-            toggleFavoriteWithAuth={handleToggleFavoriteWithPost}
-            showAuth={showAuth}
-            setShowAuth={setShowAuth}
-            sharePost={sharePost}
-            api={api}
-            toast={toast}
-            showFavoriteFeedback={showFavoriteFeedback}
-            showExif={showExif}
-            setShowExif={(value: boolean) => {
-              setShowExif(value);
-              if (value) {
-                setCommentsOpen(false); // Close comments when opening EXIF
-                setCommentsMounted(false);
-                setShowSpotify(false); // Close Spotify when opening EXIF
-              }
-            }}
-            showSpotify={showSpotify}
-            setShowSpotify={(value: boolean) => {
-              setShowSpotify(value);
-              if (value) {
-                setCommentsOpen(false); // Close comments when opening Spotify
-                setCommentsMounted(false);
-                setShowExif(false); // Close EXIF when opening Spotify
-              }
-            }}
-            spotifyLink={post.spotifyLink}
-            camera={post.camera}
-            lens={post.lens}
-            filmType={post.filmType}
-            openFullscreen={() => {
-              const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
-              const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
-              const images = imageUrls.map((src: string, index: number) => ({
-                src,
-                alt: alts[index] || `Photo ${index + 1}`
-              }));
-              handleOpenFullscreen(images, currentImageIndex);
-            }}
-          />
-
-          <SpotifySection
-            showSpotify={showSpotify}
-            spotifyLink={post.spotifyLink}
-            spotifyMeta={spotifyMeta}
-          />
-          <ExifSection
-            showExif={showExif}
-            camera={post.camera}
-            lens={post.lens}
-            filmType={post.filmType}
-          />
-          <CommentsSection
-            postId={post.id}
-            commentsMounted={commentsMounted}
-            commentsOpen={commentsOpen}
-            commentsRef={commentsRef}
-            setCount={setCount}
-          />
-        </div>
-
-        <EditorWrap
-          showEditor={showEditor}
-          editorAnim={editorAnim}
-          editorWrapRef={editorWrapRef}
-          handleTransitionEnd={handleTransitionEnd}
-          editorRef={editorRef}
-          post={post}
-          handleCancel={handleCancel}
-          handleSave={handleSave}
-        />
-        </div>
-      {fsOpen && fsImages.length > 0 && (
-        <Suspense fallback={null}>
-          <FullscreenViewer 
-            images={fsImages} 
-            currentIndex={fsCurrentIndex} 
-            onClose={handleCloseFullscreen}
-            onNext={handleNextImage}
-            onPrev={handlePrevImage}
-          />
-        </Suspense>
-      )}
+      <PostCardBody
+        post={post}
+        editing={editing}
+        editorAnim={editorAnim}
+        showEditor={showEditor}
+        editorWrapRef={editorWrapRef}
+        handleTransitionEnd={handleTransitionEnd}
+        editorRef={editorRef}
+        handleCancel={handleCancel}
+        handleSave={handleSave}
+        commentsOpen={commentsOpen}
+        setCommentsOpen={setCommentsOpen}
+        commentsMounted={commentsMounted}
+        setCommentsMounted={setCommentsMounted}
+        commentsRef={commentsRef}
+        count={count}
+        setCount={setCount}
+        isFavorite={isFavorite}
+        setIsFavorite={setIsFavorite}
+        toggleFavoriteWithAuth={handleToggleFavoriteWithPost}
+        showAuth={showAuth}
+        setShowAuth={setShowAuth}
+        sharePost={sharePost}
+        api={api}
+        toast={toast}
+        showFavoriteFeedback={showFavoriteFeedback}
+        showExif={showExif}
+        setShowExif={setShowExif}
+        showSpotify={showSpotify}
+        setShowSpotify={setShowSpotify}
+        spotifyLink={post.spotifyLink}
+        camera={post.camera}
+        lens={post.lens}
+        filmType={post.filmType}
+        openFullscreen={() => {
+          const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+          const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
+          const images = imageUrls.map((src: string, index: number) => ({
+            src,
+            alt: alts[index] || `Photo ${index + 1}`
+          }));
+          handleOpenFullscreen(images, currentImageIndex);
+        }}
+        spotifyMeta={spotifyMeta}
+        fsOpen={fsOpen}
+        fsImages={fsImages}
+        fsCurrentIndex={fsCurrentIndex}
+        handleCloseFullscreen={handleCloseFullscreen}
+        handleNextImage={handleNextImage}
+        handlePrevImage={handlePrevImage}
+      />
     </article>
   );
 }

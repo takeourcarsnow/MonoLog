@@ -23,65 +23,12 @@ export function useComments(postId: string, initialCount: number) {
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:comment_added', onGlobalComment as any); };
   }, [postId]);
 
-  // Only fetch comments (either to update the visible count or to prefetch/cache)
-  // when the post becomes visible (or nearly visible) to the user. This avoids
-  // hitting the DB for every post on page load/refresh.
+  // Simplified: only prefetch when comments pane is opened
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    let obs: IntersectionObserver | null = null;
-    let mounted = true;
-    const el = document.getElementById(`post-${postId}`);
-    if (!el) return;
-
-    // If comments are already cached or comments pane mounted, nothing to do.
-    if (hasCachedComments(postId) || commentsMounted) return;
-
-    const handlePrefetch = async () => {
-      try {
-        await prefetchComments(postId, api.getComments as any);
-        if (!mounted) return;
-        // If we previously had no visible count, update it from the cached list
-        const cached = getCachedComments(postId);
-        if ((count || 0) === 0 && cached) {
-          setCount(cached.length || 0);
-        }
-      } catch (_) {
-        // ignore failures; we don't want to spam errors for background prefetch
-      }
-    };
-
-    try {
-      obs = new IntersectionObserver((entries) => {
-        entries.forEach(e => {
-          if (e.isIntersecting) {
-            // When the post enters view (or is within rootMargin), prefetch/cache
-            // comments and update visible count if needed.
-            handlePrefetch();
-            if (obs) { obs.disconnect(); obs = null; }
-          }
-        });
-      }, { rootMargin: '300px' });
-      obs.observe(el);
-    } catch (e) {
-      // If IntersectionObserver isn't available, we avoid eager fetching so we
-      // don't trigger a flood of DB requests on page load. Rely on user action
-      // (hover/focus) or explicit opening of the comments pane to load comments.
+    if (commentsMounted && !hasCachedComments(postId)) {
+      prefetchComments(postId, api.getComments as any);
     }
-
-    // Also prefetch on pointer enter (hover) or focus for keyboard users
-    const onEnter = () => {
-      if (hasCachedComments(postId)) return;
-      handlePrefetch();
-    };
-    el?.addEventListener('pointerenter', onEnter);
-    el?.addEventListener('focus', onEnter);
-
-    return () => {
-      mounted = false;
-      try { el?.removeEventListener('pointerenter', onEnter); el?.removeEventListener('focus', onEnter); } catch (_) {}
-      if (obs) obs.disconnect();
-    };
-  }, [postId, commentsMounted, count]);
+  }, [commentsMounted, postId]);
 
   // helper to set animated max-height on the comments container
   const setCommentsVisible = (open: boolean) => {

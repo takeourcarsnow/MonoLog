@@ -75,8 +75,8 @@ export function FeedPage({
     return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handler as any); };
   }, [loadInitialPosts]);
 
-  // Memoize the render function to prevent unnecessary recalculations
-  const render = useMemo(() => {
+  // Simplified render - no need for memoization with complex dependencies
+  const render = useCallback(() => {
     if (loading) return <SkeletonCard height={240} />;
     if (!posts.length) {
       // Enhanced empty state: reuse the title icon if available (Feed/Explore pass icons)
@@ -169,7 +169,7 @@ export function FeedPage({
         getPullStyles={getPullStyles}
         className={`feed ${view === 'grid' ? 'grid-view' : ''}`}
       >
-        {render}
+        {render()}
       </PullToRefreshWrapper>
     </div>
   );

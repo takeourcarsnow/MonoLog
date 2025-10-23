@@ -2,29 +2,14 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { api } from "@/src/lib/api";
 import type { HydratedPost } from "@/src/lib/types";
 import { useEventListener } from "./useEventListener";
-import { debounce } from "../utils";
 
-// Custom hook for infinite scrolling logic
+// Simplified infinite scroll logic
 function useInfiniteScroll(fetchFunction: (opts: { limit: number; before?: string }) => Promise<HydratedPost[]>, pageSize: number) {
   const [posts, setPosts] = useState<HydratedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-
-  const postsRef = useRef<HydratedPost[]>([]);
-  const hasMoreRef = useRef(true);
-  const loadingMoreRef = useRef(false);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-
-  useEffect(() => {
-    postsRef.current = posts;
-  }, [posts]);
-
-  useEffect(() => {
-    hasMoreRef.current = hasMore;
-  }, [hasMore]);
 
   const loadInitialPosts = useCallback(async () => {
     setLoading(true);
@@ -34,9 +19,7 @@ function useInfiniteScroll(fetchFunction: (opts: { limit: number; before?: strin
       setPosts(page);
       setHasMore(page.length === pageSize);
     } catch (e) {
-      const error = e instanceof Error ? e : new Error('Failed to load posts');
-      setError(error);
-      console.error(e);
+      setError(e instanceof Error ? e : new Error('Failed to load posts'));
     } finally {
       setLoading(false);
     }
@@ -49,76 +32,46 @@ function useInfiniteScroll(fetchFunction: (opts: { limit: number; before?: strin
       setPosts(page);
       setHasMore(page.length === pageSize);
     } catch (e) {
-      const error = e instanceof Error ? e : new Error('Failed to refresh posts');
-      setError(error);
-      console.error(e);
-      throw e; // Re-throw to allow pull-to-refresh to handle errors
+      setError(e instanceof Error ? e : new Error('Failed to refresh posts'));
+      throw e;
     }
   }, [fetchFunction, pageSize]);
 
   const loadMorePosts = useCallback(async () => {
-    if (loadingMoreRef.current || !hasMoreRef.current) return;
+    if (loadingMore || !hasMore) return;
 
-    loadingMoreRef.current = true;
     setLoadingMore(true);
     setError(null);
 
     try {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-
-      const last = postsRef.current[postsRef.current.length - 1];
+      const last = posts[posts.length - 1];
       const before = last?.createdAt;
       const next = await fetchFunction({ limit: pageSize, before });
 
       setPosts(prev => [...prev, ...next]);
       setHasMore(next.length === pageSize);
-
-      if (next.length === pageSize && sentinelRef.current) {
-        observerRef.current?.observe(sentinelRef.current);
-      }
     } catch (e) {
-      const error = e instanceof Error ? e : new Error('Failed to load more posts');
-      setError(error);
-      console.error(e);
+      setError(e instanceof Error ? e : new Error('Failed to load more posts'));
     } finally {
       setLoadingMore(false);
-      loadingMoreRef.current = false;
     }
-  }, [fetchFunction, pageSize]);
+  }, [fetchFunction, pageSize, posts, loadingMore, hasMore]);
 
   const setSentinel = useCallback((el: HTMLDivElement | null) => {
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-      observerRef.current = null;
-    }
-
-    sentinelRef.current = el;
-
     if (!el || !hasMore) return;
 
-    const root = el.closest('.feed') as Element | null;
     const obs = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          debounce(() => loadMorePosts(), 100)();
+          loadMorePosts();
         }
       });
-    }, { root, rootMargin: '20%' });
+    }, { rootMargin: '20%' });
 
-    observerRef.current = obs;
     obs.observe(el);
-  }, [hasMore, loadMorePosts]);
 
-  // Cleanup observer on unmount
-  useEffect(() => {
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, []);
+    return () => obs.disconnect();
+  }, [hasMore, loadMorePosts]);
 
   return {
     posts,

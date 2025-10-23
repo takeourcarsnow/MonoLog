@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { api } from "@/src/lib/api";
 import { getClient, getAccessToken } from '@/src/lib/api/client';
 import { useToast } from "./Toast";
+import { getPost } from '@/src/lib/api/posts/post';
+import { getThread } from '@/src/lib/api/communities/threads';
 
 export function NotificationListener() {
   const toast = useToast();
@@ -65,16 +67,63 @@ export function NotificationListener() {
           if (seen.current[n.id]) continue;
           // Only notify for comment, thread reply, follow, and favorite notifications
           if (n.type === 'comment') {
-            toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} commented on your post`);
+            // Try to fetch post metadata to build a friendly href
+            let href: string | undefined = undefined;
+            try {
+              if (n.post_id) {
+                const p = await getPost(n.post_id as string);
+                if (p && p.user && (p.user.username || p.user.id)) {
+                  const userPiece = p.user.username || p.user.id;
+                  href = `/post/${userPiece}-${p.id.slice(0,8)}`;
+                } else {
+                  // fallback to using id only (Post page can resolve by id)
+                  href = `/post/${p?.id || (n.post_id as string)}`;
+                }
+              }
+            } catch (e) {
+              // ignore post fetch errors
+            }
+            toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} commented on your post`, href });
             newOnes.push(n.id as string);
           } else if (n.type === 'thread_reply') {
-            toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} replied to your thread`);
+            let href: string | undefined = undefined;
+            try {
+              if (n.thread_id) {
+                const t = await getThread(n.thread_id as string);
+                if (t && t.community && t.slug) {
+                  // community.slug may not be available from the client helper; use id as stable fallback.
+                  const communityPiece = (t.community as any).slug || t.community.id || t.community.name || '';
+                  href = `/communities/${communityPiece}/thread/${t.slug}`;
+                } else if (t && t.id) {
+                  // Fallback: thread view can fetch by id if slug lookup fails in client APIs
+                  const communityPiece = (t.community as any)?.slug || (t.community as any)?.id || '';
+                  href = `/communities/${communityPiece}/thread/${t.slug || t.id}`;
+                }
+              }
+            } catch (e) {
+              // ignore thread fetch errors
+            }
+            toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} replied to your thread`, href });
             newOnes.push(n.id as string);
           } else if (n.type === 'follow') {
             toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} followed you`);
             newOnes.push(n.id as string);
           } else if (n.type === 'favorite') {
-            toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} favorited your post`);
+            let href: string | undefined = undefined;
+            try {
+              if (n.post_id) {
+                const p2 = await getPost(n.post_id as string);
+                if (p2 && p2.user) {
+                  const userPiece = p2.user.username || p2.user.id;
+                  href = `/post/${userPiece}-${p2.id.slice(0,8)}`;
+                } else {
+                  href = `/post/${p2?.id || (n.post_id as string)}`;
+                }
+              }
+            } catch (e) {
+              // ignore
+            }
+            toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} favorited your post`, href });
             newOnes.push(n.id as string);
           }
           seen.current[n.id] = true;

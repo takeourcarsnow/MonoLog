@@ -8,6 +8,8 @@ export async function favoritePost(postId: string) {
   const res = await fetch('/api/posts/favorite', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to favorite');
+  // Update lightweight cache so UI checks don't trigger another fetch
+  try { addToCachedFavoriteIds(postId); } catch (e) {}
 }
 
 export async function unfavoritePost(postId: string) {
@@ -17,13 +19,18 @@ export async function unfavoritePost(postId: string) {
   const res = await fetch('/api/posts/unfavorite', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to unfavorite');
+  // Update lightweight cache so UI checks don't trigger another fetch
+  try { removeFromCachedFavoriteIds(postId); } catch (e) {}
 }
 
 export async function isFavorite(postId: string) {
-  const cur = await getCurrentUser();
-  if (!cur) return false;
-  const posts = await getFavoritePosts();
-  return posts.some(p => p.id === postId);
+  // Use a lightweight cached lookup of favorite IDs to avoid fetching full
+  // favorite posts repeatedly (many PostCard instances may call isFavorite on
+  // mount). This preserves existing logs but reduces expensive duplicate
+  // requests.
+  const ids = await getFavoriteIds();
+  if (!ids || !ids.length) return false;
+  return ids.includes(postId);
 }
 
 export async function getFavoritePosts() {
@@ -38,6 +45,10 @@ export async function getFavoritePosts() {
   console.log('Profile favorites:', profile.favorites);
   const favIds: string[] = profile.favorites || [];
   console.log('Favorite IDs:', favIds);
+  // Cache favorite ids for lightweight lookups
+  try {
+    setCachedFavoriteIds(favIds);
+  } catch (e) {}
   if (!favIds.length) return [];
   const { data, error } = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").in("id", favIds).or(`public.eq.true,user_id.eq.${me.id}`);
   logSupabaseError("getFavoritePosts", { data, error });
@@ -60,6 +71,55 @@ export async function getFavoritePosts() {
 
   return posts;
 }
+
+// ---- Lightweight caching utilities to avoid duplicate favorite lookups ----
+let cachedFavoriteIds: string[] | null = null;
+let inflightFavoriteIdsPromise: Promise<string[] | null> | null = null;
+
+function setCachedFavoriteIds(ids: string[] | null) {
+  cachedFavoriteIds = ids ? ids.slice() : null;
+}
+
+export async function getFavoriteIds(): Promise<string[] | null> {
+  // Return cached immediately when possible
+  if (cachedFavoriteIds !== null) return cachedFavoriteIds;
+  if (inflightFavoriteIdsPromise) return await inflightFavoriteIdsPromise;
+
+  const sb = getClient();
+  ensureAuthListener(sb);
+  inflightFavoriteIdsPromise = (async () => {
+    try {
+      const me = await getCachedAuthUser(sb);
+      if (!me) return null;
+      const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
+      if (profErr || !profile) return null;
+      const favIds: string[] = profile.favorites || [];
+      setCachedFavoriteIds(favIds);
+      return favIds;
+    } catch (e) {
+      return null;
+    } finally {
+      inflightFavoriteIdsPromise = null;
+    }
+  })();
+
+  return await inflightFavoriteIdsPromise;
+}
+
+// Update cached ids when toggling favorites so callers see immediate results
+function addToCachedFavoriteIds(id: string) {
+  try {
+    if (!cachedFavoriteIds) cachedFavoriteIds = [id];
+    else if (!cachedFavoriteIds.includes(id)) cachedFavoriteIds = [id, ...cachedFavoriteIds];
+  } catch (e) {}
+}
+function removeFromCachedFavoriteIds(id: string) {
+  try {
+    if (!cachedFavoriteIds) return;
+    cachedFavoriteIds = cachedFavoriteIds.filter(x => x !== id);
+  } catch (e) {}
+}
+
 
 // Helper function to get current user - needed for favorites
 async function getCurrentUser() {

@@ -84,10 +84,13 @@ async function regenerateThumbnails() {
       const mime = 'image/jpeg'; // Assume JPEG for simplicity
       const thumbBuffer = await generateThumbnail(buffer, mime);
 
-      // Determine thumbnail path
-      const fileName = path.basename(imagePath);
-      const thumbName = fileName.replace(/\.[^.]+$/, '_thumb.jpg');
-      const thumbPath = path.join(path.dirname(imagePath), thumbName);
+  // Determine thumbnail path (use POSIX joins so we always store forward
+  // slashes in Supabase storage paths even when running on Windows).
+  const fileName = path.basename(imagePath);
+  const thumbName = fileName.replace(/\.[^.]+$/, '_thumb.jpg');
+  // Use path.posix to avoid backslashes on Windows which would be encoded
+  // into the public URL and break remote fetches (\ -> %5C).
+  const thumbPath = path.posix.join(path.posix.dirname(imagePath), thumbName);
 
       // Upload new thumbnail
       const { error: uploadError } = await sb.storage

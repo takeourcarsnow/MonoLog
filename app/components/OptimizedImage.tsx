@@ -70,6 +70,29 @@ export const OptimizedImage = memo(function OptimizedImage({
     setCurrentSrc(normalizeSrc(src));
   }, [src]);
 
+  // Detect URLs that are likely to be rejected by the Next image optimizer
+  // (e.g. contain backslashes or decode failures). When detected, fall back
+  // to unoptimized mode so the browser requests the remote image directly.
+  const looksInvalidForOptimizer = (s?: string) => {
+    if (!s) return false;
+    try {
+      // data:, root-relative and blob URLs are fine for the browser
+      if (s.startsWith('data:') || s.startsWith('/') || s.startsWith('blob:')) return false;
+      // Try a decode to detect encoded backslashes or other oddities
+      const dec = decodeURIComponent(s);
+      // Backslashes (either literal or encoded) are rejected by the optimizer
+      if (dec.indexOf('\\') !== -1) return true;
+      // Unencoded spaces are problematic
+      if (/\s/.test(dec)) return true;
+      return false;
+    } catch (e) {
+      // If decodeURIComponent throws, the URL is malformed -> mark invalid
+      return true;
+    }
+  };
+
+  const effectiveUnoptimized = Boolean(unoptimized || looksInvalidForOptimizer(currentSrc));
+
   // For small images (<=40px), don't use placeholder for performance
   const shouldUsePlaceholder = placeholder !== 'empty' && (!width || !height || (width > 40 && height > 40));
 
@@ -106,7 +129,7 @@ export const OptimizedImage = memo(function OptimizedImage({
           opacity: isLoading ? 0.7 : 1,
         }),
       }}
-      unoptimized={unoptimized}
+    unoptimized={effectiveUnoptimized}
       priority={priority}
       sizes={sizes}
       loading={loading ?? (priority ? 'eager' : 'lazy')}

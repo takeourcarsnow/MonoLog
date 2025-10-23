@@ -76,11 +76,14 @@ export function NavbarInteractive() {
 
   // Update active states and indicator position
   useEffect(() => {
-    const container = indicatorRef.current?.parentElement;
+    // Prefer closest .tabbar-inner in case DOM structure shifts
+    const container = indicatorRef.current?.parentElement?.closest('.tabbar-inner') || indicatorRef.current?.parentElement;
     if (!container || navItemRefs.length === 0) return;
 
+    const indicator = indicatorRef.current;
+    if (!indicator) return;
+
     const updateIndicator = () => {
-      const indicator = indicatorRef.current;
       if (!indicator) return;
 
       // Update active classes
@@ -94,12 +97,13 @@ export function NavbarInteractive() {
       if (activeIndex >= 0) {
         const activeItem = navItemRefs[activeIndex];
         if (activeItem) {
+          // Use getBoundingClientRect but account for container scroll and rounding
           const containerRect = container.getBoundingClientRect();
           const itemRect = activeItem.element.getBoundingClientRect();
-          const left = itemRect.left - containerRect.left;
+          const left = itemRect.left - containerRect.left + (container as HTMLElement).scrollLeft;
           const itemCenter = left + itemRect.width / 2;
           const width = 28; // Fixed width for consistent centering
-          const indicatorLeft = itemCenter - width / 2;
+          const indicatorLeft = Math.round(itemCenter - width / 2);
 
           // Get color from CSS custom property or computed style
           const computedStyle = getComputedStyle(activeItem.element);
@@ -109,15 +113,16 @@ export function NavbarInteractive() {
           // Animate indicator
           const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+          // Use translate3d for more consistent GPU-backed rendering and round coordinates
           if (prefersReduced) {
             indicator.style.transition = 'none';
-            indicator.style.transform = `translateX(${indicatorLeft}px)`;
+            indicator.style.transform = `translate3d(${indicatorLeft}px,0,0)`;
             indicator.style.width = `${width}px`;
             indicator.style.backgroundColor = color;
             indicator.style.opacity = '1';
           } else {
             indicator.style.transition = 'transform 300ms cubic-bezier(.2,1.1,.25,1), width 300ms cubic-bezier(.2,1.1,.25,1), background-color 200ms ease';
-            indicator.style.transform = `translateX(${indicatorLeft}px)`;
+            indicator.style.transform = `translate3d(${indicatorLeft}px,0,0)`;
             indicator.style.width = `${width}px`;
             indicator.style.backgroundColor = color;
             indicator.style.opacity = '1';
@@ -130,14 +135,35 @@ export function NavbarInteractive() {
 
     updateIndicator();
 
-    // Update indicator on window resize
-    const handleResize = throttle(() => updateIndicator(), 100);
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
+    // Observe size changes of the container and its children. This covers rotation
+    // and any layout changes that affect positions (more reliable than orientationchange alone).
+    let ro: ResizeObserver | null = null;
+    try {
+      ro = new ResizeObserver(throttle(() => updateIndicator(), 80));
+      ro.observe(container as Element);
+      // observe each nav item too in case their size changes
+      navItemRefs.forEach(r => ro && ro.observe(r.element));
+    } catch (e) {
+      // ResizeObserver may not be available in all environments; fall back to resize/orientation listeners
+    }
+
+    // Also handle window resize + orientationchange with a small delayed re-measure; some browsers
+    // fire orientationchange before the final layout is settled.
+    const handleWindowReflow = throttle(() => {
+      // run a couple of frames after event to ensure layout has stabilized
+      requestAnimationFrame(() => requestAnimationFrame(updateIndicator));
+      setTimeout(updateIndicator, 120);
+    }, 120);
+
+    window.addEventListener('resize', handleWindowReflow);
+    window.addEventListener('orientationchange', handleWindowReflow);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
+      window.removeEventListener('resize', handleWindowReflow);
+      window.removeEventListener('orientationchange', handleWindowReflow);
+      if (ro) {
+        try { ro.disconnect(); } catch(_) {}
+      }
     };
   }, [activeIndex, navItemRefs]);
 

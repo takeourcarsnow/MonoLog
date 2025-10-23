@@ -169,6 +169,7 @@
 
 .caption-inner {
   padding-bottom: 2px; /* space so fade doesn't overlap text too harshly */
+  white-space: pre-wrap;
 }
 
 /* subtle bottom fade when collapsed to hint there's more content */

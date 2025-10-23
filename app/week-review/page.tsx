@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { api } from "@/src/lib/api";
+import { renderMentions } from "@/src/lib/mentions";
 import { Calendar, Image, Music, MessageCircle, ChevronDown } from "lucide-react";
 import type { WeekReviewStats } from "@/src/lib/types";
 
@@ -122,32 +124,30 @@ export default function WeekReviewPage() {
 
       {stats.recentPosts.length > 0 && (
         <div className="highlight-section">
-          <div className="highlight-header">
-            <Image size={20} />
-            <h2>This Week&apos;s Posts</h2>
-          </div>
           <div className="top-posts">
             {stats.recentPosts.map((post, index) => {
               const weekday = new Date(post.created_at).toLocaleDateString('en-US', { weekday: 'long' });
               return (
                 <div key={post.id} className="top-post-item">
                   <div className="post-rank">{weekday.slice(0, 3)}</div>
-                  <div className="post-thumbnail">
-                    {post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url ? (
-                      <img
-                        src={post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url}
-                        alt=""
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="no-image">📷</div>
-                    )}
-                  </div>
+                  <Link href={`/post/${post.id}`}>
+                    <div className="post-thumbnail">
+                      {post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url ? (
+                        <img
+                          src={post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url}
+                          alt=""
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="no-image">📷</div>
+                      )}
+                    </div>
+                  </Link>
                   <div className="post-info">
-                    <div className="post-caption">
+                    <div className="post-caption" onClick={(e) => e.stopPropagation()}>
                       <div className={`caption-content ${expandedCaptions.has(post.id) ? 'expanded' : 'collapsed'}`}>
                         <div className="caption-inner">
-                          {post.caption}
+                          {renderMentions(post.caption)}
                         </div>
                         {post.caption.length > 100 && (
                           <div className="caption-fade"></div>
@@ -156,7 +156,11 @@ export default function WeekReviewPage() {
                       {post.caption.length > 100 && (
                         <button
                           className="caption-read-more"
-                          onClick={() => toggleCaptionExpansion(post.id)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleCaptionExpansion(post.id);
+                          }}
                           aria-label={expandedCaptions.has(post.id) ? "Show less" : "Read more"}
                         >
                           {expandedCaptions.has(post.id) ? "Show less" : "Read more"}

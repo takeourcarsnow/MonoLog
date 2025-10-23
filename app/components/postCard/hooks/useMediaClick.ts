@@ -55,9 +55,6 @@ export function useMediaClick({
       clickTimerRef.current = null;
     }
     clickCountRef.current = 0;
-    const willAdd = !isFavorite;
-    toggleFavoriteWithAuth();
-    showFavoriteFeedback(willAdd ? 'adding' : 'removing');
     setTimeout(() => {
       dblClickDetectedRef.current = false;
     }, 400);

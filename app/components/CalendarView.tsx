@@ -35,7 +35,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
   const [dayPostsCache, setDayPostsCache] = useState<Record<string, HydratedPost[]>>({});
   // Only start loading data when the view has been active for a short time.
   // This prevents quick swipes through the calendar from triggering loads.
-  const [shouldLoad, setShouldLoad] = useState<boolean>(isActive);
+  const [shouldLoad, setShouldLoad] = useState<boolean>(false);
   const loadTimerRef = useRef<number | null>(null);
 
   // Load stats whenever the current month/year changes. Inline the async call
@@ -183,10 +183,9 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
 
   // Scroll to feed on desktop when posts are loaded
   useEffect(() => {
-    // Disabled: no longer scroll to feed on select
-    // if (shouldScroll && dayPosts && feedRef.current && window.innerWidth >= 900) {
-    //   feedRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    // }
+    if (shouldScroll && dayPosts && feedRef.current) {
+      feedRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }, [shouldScroll, dayPosts]);
 
   const matrix = monthMatrix(curYear, curMonth);
@@ -195,7 +194,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
     const posts = dayPostsCache[dk];
     if (!posts || posts.length === 0) return null;
     const urls = posts.flatMap(p => p.thumbnailUrls || (p.thumbnailUrl ? [p.thumbnailUrl] : []) || p.imageUrls || (p.imageUrl ? [p.imageUrl] : []));
-    const allowLoad = shouldLoad || cacheAnyImageLoaded(urls);
+    const allowLoad = true;
     return (
       <MiniSlideshow
         imageUrls={urls}

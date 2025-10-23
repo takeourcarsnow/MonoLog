@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { OptimizedImage } from "./OptimizedImage";
 
 interface MiniSlideshowProps {
   imageUrls: string[];
@@ -47,10 +48,15 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false }: MiniSlides
       }}
     >
       {imageUrls.map((url, index) => (
-        <img
+        <OptimizedImage
           key={url}
           src={url}
           alt=""
+          width={fill ? undefined : size}
+          height={fill ? undefined : size}
+          fill={fill}
+          unoptimized={false}
+          sizes={fill ? undefined : `${size}px`}
           style={{
             width: '100%',
             height: '100%',
@@ -61,6 +67,7 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false }: MiniSlides
             opacity: index === currentIndex ? 1 : 0,
             transition: 'opacity 0.5s ease-in-out',
           }}
+          placeholder={"empty"}
         />
       ))}
     </div>

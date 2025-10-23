@@ -55,7 +55,7 @@ export function LazyImage({
 
   if (!lazy) {
     return (
-      <img
+      <OptimizedImage
         src={src}
         alt={alt}
         className={className}
@@ -67,6 +67,14 @@ export function LazyImage({
           objectPosition: 'center center',
           borderRadius: 'inherit',
         }}
+        width={fill ? undefined : width}
+        height={fill ? undefined : height}
+        fill={fill}
+        loading={priority ? 'eager' : 'lazy'}
+        sizes={sizes}
+        placeholder={"blur"}
+        unoptimized={false}
+        priority={priority}
       />
     );
   }

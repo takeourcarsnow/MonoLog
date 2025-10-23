@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/src/lib/api";
 import { renderMentions } from "@/src/lib/mentions";
 import { Calendar, Image, MessageCircle, ChevronDown } from "lucide-react";
+import { OptimizedImage } from "@/app/components/OptimizedImage";
 import type { WeekReviewStats } from "@/src/lib/types";
 
 export default function WeekReviewPage() {
@@ -134,11 +135,16 @@ export default function WeekReviewPage() {
                   </div>
                   <Link href={`/post/${post.id}`}>
                     <div className="post-thumbnail">
-                      {post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url ? (
-                        <img
-                          src={post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url}
+                        {post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url ? (
+                        <OptimizedImage
+                          src={(post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url) || ""}
                           alt=""
+                          width={48}
+                          height={48}
+                          sizes="48px"
                           loading="lazy"
+                          placeholder="empty"
+                          unoptimized={false}
                         />
                       ) : (
                         <div className="no-image">📷</div>

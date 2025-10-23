@@ -226,7 +226,8 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
               "day",
               isToday ? "today" : "",
               isMine ? "mine" : "",
-              count > 0 ? "has-posts" : "",
+              // Note: removed "has-posts" class so days with posts no longer
+              // get a separate visual indicator (dot/background).
               count > 0 && dayPostsCache[dk] ? "has-slideshow" : "",
               // don't apply the global skeleton to the whole day element —
               // that made the date number text transparent while stats load.
@@ -263,9 +264,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
                         />
                       );
                     })()
-                  ) : (
-                    <div className={loadingStats ? "dot skeleton" : "dot"} aria-hidden />
-                  )
+                  ) : null
                 ) : null}
               </div>
             );
@@ -273,10 +272,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center', padding: '6px 2px 0' }}>
           <div className="calendar-legend" aria-hidden style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div className="legend-item" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-              <span className="legend-dot post" />
-              <span className="dim">Posts</span>
-            </div>
+            {/* Removed 'Posts' legend entry per user request; keep only 'Your posts' */}
             <div className="legend-item" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
               <span className="legend-dot mine" />
               <span className="dim">Your posts</span>

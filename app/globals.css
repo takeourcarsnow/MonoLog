@@ -58,7 +58,9 @@ html[class*="week-review-page-scroll"] .content {
 
 /* Specific fallback for create-thread pages */
 body[class*="create-thread-page-scroll"] .content,
-html[class*="create-thread-page-scroll"] .content {
+html[class*="create-thread-page-scroll"] .content,
+body[class*="thread-page-scroll"] .content,
+html[class*="thread-page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;

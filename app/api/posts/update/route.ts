@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { parseMentions } from '@/src/lib/mentions';
 import { uid } from '@/src/lib/id';
+import { clearServerCachePrefix } from '@/src/lib/serverCache';
 
 export async function POST(req: Request) {
   try {
@@ -85,6 +86,9 @@ export async function POST(req: Request) {
         }
       })();
     }
+
+  // Invalidate feed caches so updates propagate quickly
+  try { clearServerCachePrefix('explore:'); clearServerCachePrefix('following:'); } catch (_) {}
 
   // Return the updated row to the client to avoid immediate stale reads
   return NextResponse.json({ ok: true, post: updatedRows });

@@ -60,7 +60,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
   // Capture the old avatar URL before updating
   const oldAvatarUrl = userObj.avatarUrl;
   const path = `avatars/${uploaderId}/${file.name}`;
-      const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true });
+  const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true, contentType: file.type, cacheControl: 'public, max-age=31536000, immutable' });
       if (uploadErr) throw uploadErr;
       const urlRes = sb.storage.from("posts").getPublicUrl(path);
       const publicUrl = urlRes.data.publicUrl;

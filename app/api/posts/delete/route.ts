@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { clearServerCachePrefix } from '@/src/lib/serverCache';
 
 export async function POST(req: Request) {
   try {
@@ -38,9 +39,13 @@ export async function POST(req: Request) {
 
     // delete comments and post rows
     await sb.from('comments').delete().eq('post_id', id);
-    const { error } = await sb.from('posts').delete().eq('id', id);
-    if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
-    return NextResponse.json({ ok: true });
+  const { error } = await sb.from('posts').delete().eq('id', id);
+  if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
+
+  // Invalidate feed caches so deletions propagate quickly
+  try { clearServerCachePrefix('explore:'); clearServerCachePrefix('following:'); } catch (_) {}
+
+  return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

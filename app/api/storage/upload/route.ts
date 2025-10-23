@@ -52,11 +52,15 @@ export async function POST(req: Request) {
     const uploadPromises = [
       sb.storage.from('posts').upload(path, buf, { 
         upsert: true, 
-        contentType: mime as any
+        contentType: mime as any,
+        // For uploaded images that are versioned (filename contains unique id/timestamp),
+        // allow long caching in clients/CDN to avoid repeated origin downloads.
+        cacheControl: 'public, max-age=31536000, immutable'
       }),
       sb.storage.from('posts').upload(thumbPath, thumbBuf, {
         upsert: true,
-        contentType: 'image/jpeg'
+        contentType: 'image/jpeg',
+        cacheControl: 'public, max-age=31536000, immutable'
       })
     ];
     

@@ -1,10 +1,24 @@
-import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError } from "../client";
+import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, getAccessToken } from "../client";
 import { mapRowToHydratedPost } from "../utils";
 import { logger } from "../../logger";
 import { getCachedFollowingIds, dedupePostsById } from "./helpers";
 
 export async function getExploreFeed() {
   logger.debug("supabaseApi.getExploreFeed called");
+  // If running in a browser, proxy through our same-origin API route so the
+  // browser does a same-origin fetch (no CORS preflight) and we can centralize
+  // caching / throttling server-side. Fall back to direct client calls on server.
+  if (typeof window !== 'undefined') {
+    const sb = getClient();
+    let token: string | null = null;
+    try { token = await getAccessToken(sb); } catch (_) { token = null; }
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const resp = await fetch(`/api/posts/explore?limit=20`, { headers });
+    if (!resp.ok) throw new Error('Failed to fetch explore feed');
+    const json = await resp.json();
+    return (json.posts || []).map((p: any) => p);
+  }
   const sb = getClient();
   // Exclude posts created by the current authenticated user and followed users so the Explore
   // view only shows other people's public posts that you aren't following.
@@ -23,6 +37,21 @@ export async function getExploreFeed() {
 }
 
 export async function getExploreFeedPage({ limit, before }: { limit: number; before?: string }) {
+  // Use same-origin proxy when running in the browser so we avoid CORS preflights
+  if (typeof window !== 'undefined') {
+    const sb = getClient();
+    let token: string | null = null;
+    try { token = await getAccessToken(sb); } catch (_) { token = null; }
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const params = new URLSearchParams();
+    params.set('limit', String(limit));
+    if (before) params.set('before', before);
+    const resp = await fetch(`/api/posts/explore?${params.toString()}`, { headers });
+    if (!resp.ok) throw new Error('Failed to fetch explore feed page');
+    const json = await resp.json();
+    return (json.posts || []).map((p: any) => p);
+  }
   const sb = getClient();
   // Exclude current user's posts and posts from followed users from explore results.
   ensureAuthListener(sb);
@@ -41,7 +70,20 @@ export async function getExploreFeedPage({ limit, before }: { limit: number; bef
 }
 
 export async function getFollowingFeed() {
-  // Use client-side reads for feed; follow list comes from users table
+  // When running in the browser, proxy to server to avoid CORS preflight and
+  // allow server-side optimization/caching.
+  if (typeof window !== 'undefined') {
+    const sb = getClient();
+    let token: string | null = null;
+    try { token = await getAccessToken(sb); } catch (_) { token = null; }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const resp = await fetch(`/api/posts/following?limit=20`, { headers });
+    if (!resp.ok) throw new Error('Failed to fetch following feed');
+    const json = await resp.json();
+    return (json.posts || []).map((p: any) => p);
+  }
+  // Server-side fallback: query Supabase directly
   const sb = getClient();
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
@@ -55,13 +97,12 @@ export async function getFollowingFeed() {
     *,
     users!left(id, username, display_name, avatar_url),
     public_profiles!left(id, username, display_name, avatar_url)
-  `).in("user_id", allUserIds).eq("public", true).order("created_at", { ascending: false });
+  `).in("user_id", allUserIds).order("created_at", { ascending: false }).limit(50);
 
   logSupabaseError("getFollowingFeed", { data: rows, error });
   if (error) throw error;
 
   // For followed users, only include public posts; for own posts, include all
-  // Since we filtered by public=true above, we need to add back own posts
   const publicRows = rows || [];
   let ownPosts: any[] = [];
   if (me) {
@@ -84,6 +125,22 @@ export async function getFollowingFeed() {
 }
 
 export async function getFollowingFeedPage({ limit, before }: { limit: number; before?: string }) {
+  // Use same-origin proxy when in the browser to avoid preflights and leverage
+  // server-side caching/aggregation.
+  if (typeof window !== 'undefined') {
+    const sb = getClient();
+    let token: string | null = null;
+    try { token = await getAccessToken(sb); } catch (_) { token = null; }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const params = new URLSearchParams();
+    params.set('limit', String(limit));
+    if (before) params.set('before', before);
+    const resp = await fetch(`/api/posts/following?${params.toString()}`, { headers });
+    if (!resp.ok) throw new Error('Failed to fetch following feed page');
+    const json = await resp.json();
+    return (json.posts || []).map((p: any) => p);
+  }
   const sb = getClient();
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);

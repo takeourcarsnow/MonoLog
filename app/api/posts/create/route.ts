@@ -4,6 +4,7 @@ import { uid } from '@/src/lib/id';
 import { logger } from '@/src/lib/logger';
 import { parseMentions } from '@/src/lib/mentions';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { clearServerCachePrefix } from '@/src/lib/serverCache';
 import { strictRateLimiter } from '@/src/lib/rateLimiter';
 
 export async function POST(req: Request) {
@@ -261,6 +262,12 @@ export async function POST(req: Request) {
         })();
       }
     }
+
+    // Invalidate short-lived server caches for feeds so new post surfaces quickly
+    try {
+      clearServerCachePrefix('explore:');
+      clearServerCachePrefix('following:');
+    } catch (_) {}
 
     return NextResponse.json({ ok: true, post: insertData, normalizedImageUrls, normalizedThumbnailUrls });
   } catch (e: any) {

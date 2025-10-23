@@ -94,7 +94,12 @@ async function regenerateThumbnails() {
         .from('posts')
         .update(thumbPath, thumbBuffer, {
           upsert: true,
-          contentType: 'image/jpeg'
+          contentType: 'image/jpeg',
+          // Set long-lived cache headers for versioned thumbnails so CDNs/browsers
+          // can cache them aggressively and reduce origin egress.
+          // Supabase storage accepts cacheControl as a string or number depending on client;
+          // this value tells the origin to allow public caching for 1 year and mark immutable.
+          cacheControl: 'public, max-age=31536000, immutable'
         });
 
       if (uploadError) {

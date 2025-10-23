@@ -271,8 +271,8 @@ export function Comments({ postId, onCountChange }: Props) {
             aria-label="Add a comment"
             value={text}
             maxLength={COMMENT_MAX}
-            rows={2}
-            style={{ width: '100%', paddingRight: 72, resize: 'vertical', minHeight: '40px' }}
+            rows={1}
+            style={{ width: '100%', paddingRight: 72, resize: 'none', minHeight: '40px' }}
             onChange={e => {
               const v = e.target.value;
               if (v.length <= COMMENT_MAX) setText(v);
@@ -300,7 +300,7 @@ export function Comments({ postId, onCountChange }: Props) {
                 position: 'absolute',
                 right: 8,
                 top: '50%',
-                transform: 'translateY(-50%)',
+                transform: 'translateY(-55%)',
                 fontSize: 12,
                 color: commentRemaining <= 20 ? '#d9534f' : 'var(--dim)',
                 pointerEvents: 'none',

@@ -36,10 +36,10 @@ export async function getFavoritePosts() {
   const { data: profile, error: profErr } = await selectUserFields(sb, me.id, "favorites");
   if (profErr || !profile) return [];
   console.log('Profile favorites:', profile.favorites);
-  const ids: string[] = profile.favorites || [];
-  console.log('Favorite IDs:', ids);
-  if (!ids.length) return [];
-const { data, error } = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").in("id", ids).or(`public.eq.true,user_id.eq.${me.id}`);
+  const favIds: string[] = profile.favorites || [];
+  console.log('Favorite IDs:', favIds);
+  if (!favIds.length) return [];
+  const { data, error } = await sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").in("id", favIds).or(`public.eq.true,user_id.eq.${me.id}`);
   logSupabaseError("getFavoritePosts", { data, error });
   if (error) throw error;
   console.log('Fetched favorite posts:', data?.length || 0);
@@ -47,7 +47,18 @@ const { data, error } = await sb.from("posts").select("*, users!left(id, usernam
     const ids = (data || []).map((r: any) => r.id);
     console.log('Fetched favorite post IDs:', ids);
   } catch (e) {}
-  return (data || []).map((row: any) => mapRowToHydratedPost(row));
+
+  // Map rows to hydrated posts
+  const posts = (data || []).map((row: any) => mapRowToHydratedPost(row));
+
+  // profile.favorites is an array where new favorites are pushed to the end.
+  // To show newest favorites first, sort posts according to the index in favIds
+  // (higher index == more recently favorited).
+  const indexMap = new Map<string, number>();
+  for (let i = 0; i < favIds.length; i++) indexMap.set(favIds[i], i);
+  posts.sort((a: any, b: any) => (indexMap.get(b.id) ?? -1) - (indexMap.get(a.id) ?? -1));
+
+  return posts;
 }
 
 // Helper function to get current user - needed for favorites

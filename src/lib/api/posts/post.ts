@@ -48,7 +48,7 @@ export async function getPost(id: string) {
   return null;
 }
 
-export async function updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }) {
+export async function updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string }) {
   const sb = getClient();
   ensureAuthListener(sb);
   const token = await getAccessToken(sb);

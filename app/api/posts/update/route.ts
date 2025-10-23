@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     if (patch.camera !== undefined) updates.camera = patch.camera;
     if (patch.lens !== undefined) updates.lens = patch.lens;
   if (patch.filmType !== undefined) updates.film_type = patch.filmType === '' ? null : patch.filmType;
+  if (patch.spotifyLink !== undefined) updates.spotify_link = patch.spotifyLink === '' ? null : patch.spotifyLink;
   const { data: updatedRows, error } = await sb.from('posts').update(updates).eq('id', id).select('*').limit(1).single();
   if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
 

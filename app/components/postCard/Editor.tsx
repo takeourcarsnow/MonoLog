@@ -7,7 +7,7 @@ import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, LENS_PRESE
 export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   post: HydratedPost;
   onCancel: () => void;
-  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string }) => Promise<void>;
+  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string }) => Promise<void>;
 }, ref: any) {
   const [caption, setCaption] = useState(post.caption || "");
   const [camera, setCamera] = useState(post.camera || "");
@@ -15,6 +15,7 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   const [filmType, setFilmType] = useState("");
   const [filmIso, setFilmIso] = useState("");
   const [isPublic, setIsPublic] = useState(post.public);
+  const [spotifyLink, setSpotifyLink] = useState(post.spotifyLink || "");
   const [saving, setSaving] = useState(false);
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -46,12 +47,12 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
       // server will update/clear the DB value. Previously we sent `undefined`
       // which meant "do not change" and prevented clearing.
   const combinedFilmType = (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || '';
-  const patch = { caption, public: isPublic, camera, lens, filmType: combinedFilmType };
+  const patch = { caption, public: isPublic, camera, lens, filmType: combinedFilmType, spotifyLink };
   await onSave(patch);
     } finally {
       setSaving(false);
     }
-  }, [caption, camera, lens, filmType, filmIso, isPublic, onSave, saving]);
+  }, [caption, camera, lens, filmType, filmIso, isPublic, spotifyLink, onSave, saving]);
 
   useImperativeHandle(ref, () => ({
     save: doSave,
@@ -100,6 +101,14 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
             await doSave();
           }
         }}
+      />
+      <input
+        type="url"
+        className="edit-spotify input"
+        placeholder="Spotify link (optional)"
+        value={spotifyLink}
+        onChange={e => setSpotifyLink(e.target.value)}
+        style={{ marginTop: 8 }}
       />
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         {activeExifField === null ? (

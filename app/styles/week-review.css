@@ -28,7 +28,7 @@
 }
 
 .stat-icon {
-  color: var(--primary);
+  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -93,7 +93,7 @@
 
 .top-post-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 12px;
   background: var(--bg);
@@ -101,12 +101,26 @@
   border-radius: var(--radius-sm);
 }
 
+.weekday-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 24px;
+}
+
 .post-rank {
   font-size: 16px;
   font-weight: 700;
-  color: var(--primary);
-  min-width: 24px;
+  color: var(--text);
   text-align: center;
+}
+
+.post-date {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
 }
 
 .post-thumbnail {
@@ -223,14 +237,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .caption-content { transition: none !important; }
-}
-
-.post-stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--muted);
 }
 
 /* Empty State */

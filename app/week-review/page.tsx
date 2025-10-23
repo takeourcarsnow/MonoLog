@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/src/lib/api";
 import { renderMentions } from "@/src/lib/mentions";
-import { Calendar, Image, Music, MessageCircle, ChevronDown } from "lucide-react";
+import { Calendar, Image, MessageCircle, ChevronDown } from "lucide-react";
 import type { WeekReviewStats } from "@/src/lib/types";
 
 export default function WeekReviewPage() {
@@ -109,7 +109,11 @@ export default function WeekReviewPage() {
         />
 
         <StatCard
-          icon={<Music size={20} />}
+          icon={
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.6-.12-.421.18-.78.6-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.241 1.081zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.42-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.781-.18-.601.18-1.2.78-1.381 4.5-1.14 11.28-.86 15.72 1.621.479.3.599 1.02.3 1.5-.3.48-.84.599-1.32.3z" />
+            </svg>
+          }
           title="Music Links"
           value={stats.spotifyLinks}
         />
@@ -122,7 +126,12 @@ export default function WeekReviewPage() {
               const weekday = new Date(post.created_at).toLocaleDateString('en-US', { weekday: 'long' });
               return (
                 <div key={post.id} className="top-post-item">
-                  <div className="post-rank">{weekday.slice(0, 3)}</div>
+                  <div className="weekday-section">
+                    <div className="post-rank">{weekday.slice(0, 3)}</div>
+                    <div className="post-date">
+                      {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </div>
+                  </div>
                   <Link href={`/post/${post.id}`}>
                     <div className="post-thumbnail">
                       {post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url ? (
@@ -137,7 +146,11 @@ export default function WeekReviewPage() {
                     </div>
                   </Link>
                   <div className="post-info">
-                    <div className="post-caption" onClick={(e) => e.stopPropagation()}>
+                    <div 
+                      className="post-caption" 
+                      onClick={() => !expandedCaptions.has(post.id) && toggleCaptionExpansion(post.id)}
+                      style={{ cursor: !expandedCaptions.has(post.id) && post.caption.length > 100 ? 'pointer' : 'default' }}
+                    >
                       <div className={`caption-content ${expandedCaptions.has(post.id) ? 'expanded' : 'collapsed'}`}>
                         <div className="caption-inner">
                           {renderMentions(post.caption)}
@@ -146,7 +159,7 @@ export default function WeekReviewPage() {
                           <div className="caption-fade"></div>
                         )}
                       </div>
-                      {post.caption.length > 100 && (
+                      {post.caption.length > 100 && expandedCaptions.has(post.id) && (
                         <button
                           className="caption-read-more"
                           onClick={(e) => {
@@ -154,20 +167,14 @@ export default function WeekReviewPage() {
                             e.stopPropagation();
                             toggleCaptionExpansion(post.id);
                           }}
-                          aria-label={expandedCaptions.has(post.id) ? "Show less" : "Read more"}
+                          aria-label="Show less"
                         >
-                          {expandedCaptions.has(post.id) ? "Show less" : "Read more"}
                           <ChevronDown
                             size={14}
-                            className={`read-more-icon ${expandedCaptions.has(post.id) ? 'rotated' : ''}`}
+                            className={`read-more-icon rotated`}
                           />
                         </button>
                       )}
-                    </div>
-                    <div className="post-stats">
-                      <span className="date">
-                        {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </span>
                     </div>
                   </div>
                 </div>

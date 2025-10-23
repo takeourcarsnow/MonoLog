@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 import { apiRateLimiter } from '@/src/lib/rateLimiter';
+import { uid } from '@/src/lib/id';
 
 export async function POST(req: Request) {
   try {
@@ -46,6 +47,28 @@ export async function POST(req: Request) {
     } catch (e) {
       // ignore errors updating legacy array
     }
+
+    // Create a notification for the followed user. This is best-effort
+    // — if the notifications table doesn't exist or the insert fails, we
+    // shouldn't block follow creation.
+    (async () => {
+      try {
+        const notifId = uid();
+        const notif = {
+          id: notifId,
+          user_id: targetId,
+          actor_id: actorId,
+          type: 'follow',
+          text: 'Someone followed you',
+          created_at: new Date().toISOString(),
+          read: false,
+        } as any;
+        await sb.from('notifications').insert(notif);
+      } catch (e) {
+        // ignore notification errors
+      }
+    })();
+
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });

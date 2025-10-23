@@ -63,12 +63,18 @@ export function NotificationListener() {
           // defensive: skip notifications already marked read
           if (n.read) continue;
           if (seen.current[n.id]) continue;
-          // Only notify for comment and thread reply notifications
+          // Only notify for comment, thread reply, follow, and favorite notifications
           if (n.type === 'comment') {
             toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} commented on your post`);
             newOnes.push(n.id as string);
           } else if (n.type === 'thread_reply') {
             toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} replied to your thread`);
+            newOnes.push(n.id as string);
+          } else if (n.type === 'follow') {
+            toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} followed you`);
+            newOnes.push(n.id as string);
+          } else if (n.type === 'favorite') {
+            toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} favorited your post`);
             newOnes.push(n.id as string);
           }
           seen.current[n.id] = true;

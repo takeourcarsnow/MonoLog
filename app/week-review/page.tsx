@@ -2,13 +2,26 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/src/lib/api";
-import { Calendar, Image, Music, MessageCircle } from "lucide-react";
+import { Calendar, Image, Music, MessageCircle, ChevronDown } from "lucide-react";
 import type { WeekReviewStats } from "@/src/lib/types";
 
 export default function WeekReviewPage() {
   const [stats, setStats] = useState<WeekReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedCaptions, setExpandedCaptions] = useState<Set<string>>(new Set());
+
+  const toggleCaptionExpansion = (postId: string) => {
+    setExpandedCaptions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(postId)) {
+        newSet.delete(postId);
+      } else {
+        newSet.add(postId);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -132,7 +145,27 @@ export default function WeekReviewPage() {
                   </div>
                   <div className="post-info">
                     <div className="post-caption">
-                      {post.caption.length > 60 ? `${post.caption.substring(0, 60)}...` : post.caption}
+                      <div className={`caption-content ${expandedCaptions.has(post.id) ? 'expanded' : 'collapsed'}`}>
+                        <div className="caption-inner">
+                          {post.caption}
+                        </div>
+                        {post.caption.length > 100 && (
+                          <div className="caption-fade"></div>
+                        )}
+                      </div>
+                      {post.caption.length > 100 && (
+                        <button
+                          className="caption-read-more"
+                          onClick={() => toggleCaptionExpansion(post.id)}
+                          aria-label={expandedCaptions.has(post.id) ? "Show less" : "Read more"}
+                        >
+                          {expandedCaptions.has(post.id) ? "Show less" : "Read more"}
+                          <ChevronDown
+                            size={14}
+                            className={`read-more-icon ${expandedCaptions.has(post.id) ? 'rotated' : ''}`}
+                          />
+                        </button>
+                      )}
                     </div>
                     <div className="post-stats">
                       <span className="date">

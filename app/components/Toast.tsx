@@ -44,6 +44,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       if (typeof messageOrOpts.timeout === 'number') timeout = messageOrOpts.timeout;
     }
 
+    console.log('[Toast] Showing toast:', { message, href, onClick, timeout });
     setMsg(message);
     setPendingHref(href || null);
     setPendingOnClick(onClick || null);
@@ -75,6 +76,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             type="button"
             className="toast-button"
             onClick={async () => {
+              console.log('[Toast] Clicked toast:', { msg, pendingHref, pendingOnClick });
               try {
                 if (pendingOnClick) {
                   await pendingOnClick();

@@ -104,9 +104,13 @@ export async function POST(req: Request) {
     // shouldn't block comment creation.
     (async () => {
       try {
+        console.log('[addComment] Creating notification for post:', postId, 'owner:', post?.user_id, 'actor:', actorId);
         // lookup post owner
         const { data: post, error: postErr } = await sb.from('posts').select('id, user_id').eq('id', postId).limit(1).single();
-        if (!post || postErr) return;
+        if (!post || postErr) {
+          console.log('[addComment] Post lookup failed:', postErr);
+          return;
+        }
         const notifId = uid();
         const notif = {
           id: notifId,
@@ -118,8 +122,16 @@ export async function POST(req: Request) {
           created_at,
           read: false,
         } as any;
-        await sb.from('notifications').insert(notif);
+        console.log('[addComment] Inserting notification:', notif);
+        const insertResult = await sb.from('notifications').insert(notif);
+        console.log('[addComment] Notification insert result:', insertResult);
+        if (insertResult.error) {
+          console.log('[addComment] Notification insert error:', insertResult.error);
+        } else {
+          console.log('[addComment] Notification created successfully');
+        }
       } catch (e) {
+        console.log('[addComment] Notification creation error:', e);
         // ignore notification errors
       }
     })();

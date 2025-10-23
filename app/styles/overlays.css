@@ -5,7 +5,10 @@
   position: fixed;
   left: 50%;
   bottom: calc(var(--tabbar-height, 60px) + 16px);
-  transform: translateX(-50%) translateY(100px);
+  /* Keep toasts visible when animations are disabled (prefers-reduced-motion)
+     by defaulting to the final position. The keyframes still animate from the
+     offscreen position to 0 when animations are allowed. */
+  transform: translateX(-50%) translateY(0);
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -34,6 +37,21 @@
   min-width: 0;
 }
 
+.toast button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .toast.fade-out {
   animation: toastSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -42,7 +60,9 @@
   .toast {
     bottom: auto;
     top: calc(var(--header-height, 64px) + 16px);
-    transform: translateX(-50%) translateY(-100px);
+    /* Same as above: default to final (visible) position so toasts aren't
+       stuck offscreen when animations are suppressed. */
+    transform: translateX(-50%) translateY(0);
   }
 }
 

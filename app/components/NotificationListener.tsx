@@ -40,6 +40,7 @@ export function NotificationListener() {
       const key = 'monolog:notifications_checked';
       const already = sessionStorage.getItem(key);
       const shouldRun = !already || isHardReload();
+      console.log('[NotificationListener] shouldRun:', shouldRun, 'already:', already, 'isHardReload:', isHardReload());
       if (!shouldRun) return;
 
       // Mark as checked for this tab/session (will persist across SPA navs). If
@@ -51,13 +52,17 @@ export function NotificationListener() {
 
   async function poll() {
       try {
+        console.log('[NotificationListener] Starting poll...');
         const cur = await api.getCurrentUser();
+        console.log('[NotificationListener] Current user:', cur);
         if (!cur) return;
   // call server list endpoint (best-effort; server may return empty array)
   const sb = getClient();
   const token = await getAccessToken(sb);
+  console.log('[NotificationListener] Fetching notifications...');
   const res = await fetch('/api/notifications/list', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({}) });
         const json = await res.json();
+        console.log('[NotificationListener] Notifications response:', json);
         const notifs = json?.notifications || [];
         const newOnes: string[] = [];
         for (const n of notifs) {
@@ -66,6 +71,7 @@ export function NotificationListener() {
           if (n.read) continue;
           if (seen.current[n.id]) continue;
           // Only notify for comment, thread reply, follow, and favorite notifications
+          console.log('[NotificationListener] Processing notification:', n);
           if (n.type === 'comment') {
             // Try to fetch post metadata to build a friendly href
             let href: string | undefined = undefined;
@@ -83,6 +89,7 @@ export function NotificationListener() {
             } catch (e) {
               // ignore post fetch errors
             }
+            console.log('[NotificationListener] Showing comment toast:', { message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} commented on your post`, href });
             toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} commented on your post`, href });
             newOnes.push(n.id as string);
           } else if (n.type === 'thread_reply') {
@@ -103,9 +110,11 @@ export function NotificationListener() {
             } catch (e) {
               // ignore thread fetch errors
             }
+            console.log('[NotificationListener] Showing thread_reply toast:', { message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} replied to your thread`, href });
             toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} replied to your thread`, href });
             newOnes.push(n.id as string);
           } else if (n.type === 'follow') {
+            console.log('[NotificationListener] Showing follow toast:', `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} followed you`);
             toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} followed you`);
             newOnes.push(n.id as string);
           } else if (n.type === 'favorite') {
@@ -123,17 +132,20 @@ export function NotificationListener() {
             } catch (e) {
               // ignore
             }
+            console.log('[NotificationListener] Showing favorite toast:', { message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} favorited your post`, href });
             toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} favorited your post`, href });
             newOnes.push(n.id as string);
           }
           seen.current[n.id] = true;
         }
         if (newOnes.length) {
+          console.log('[NotificationListener] Marking as read:', newOnes);
           // mark them read (best-effort)
           try {
             const sb2 = getClient();
             const token2 = await getAccessToken(sb2);
             const mres = await fetch('/api/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token2 ? { Authorization: `Bearer ${token2}` } : {}) }, body: JSON.stringify({ ids: newOnes }) });
+            console.log('[NotificationListener] Mark read response:', mres.ok);
             // if server didn't accept, clear seen to try again later
             if (!mres.ok) {
               for (const id of newOnes) delete seen.current[id];
@@ -143,6 +155,7 @@ export function NotificationListener() {
           }
         }
       } catch (e) {
+        console.error('[NotificationListener] Poll error:', e);
         // ignore polling errors
       }
     }

@@ -8,12 +8,15 @@ import Link from "next/link";
 import { AuthForm } from "@/app/components/AuthForm";
 import { SkeletonCard } from "@/app/components/Skeleton";
 import { AuthRequired } from "@/app/components/AuthRequired";
+import { usePageScroll } from "@/src/lib/hooks/usePageScroll";
 
 export default function FollowingPage() {
   const [following, setFollowing] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+
+  usePageScroll('following-page-scroll');
 
   const loadData = async () => {
     const user = await api.getCurrentUser();
@@ -75,9 +78,9 @@ export default function FollowingPage() {
             </div>
           </div>
         ) : (
-          <div className="grid" style={{ gap: 16 }}>
+          <div className="grid" style={{ gap: 16, gridTemplateColumns: 'repeat(2, 1fr)' }}>
             {following.map(user => (
-              <Link key={user.id} href={`/${user.username}`} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, textDecoration: 'none', color: 'inherit' }}>
+              <Link key={user.id} href={`/${user.username}`} className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 16, textDecoration: 'none', color: 'inherit', textAlign: 'center' }}>
                 <Image
                   src={user.avatarUrl || "/logo.svg"}
                   alt={user.displayName ?? user.username}
@@ -85,7 +88,7 @@ export default function FollowingPage() {
                   width={48}
                   height={48}
                 />
-                <div style={{ flex: 1 }}>
+                <div>
                   <div style={{ fontWeight: 'bold' }}>
                     {user.displayName ?? user.username}
                   </div>

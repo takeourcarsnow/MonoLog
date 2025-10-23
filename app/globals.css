@@ -62,7 +62,9 @@ html[class*="create-thread-page-scroll"] .content,
 body[class*="thread-page-scroll"] .content,
 html[class*="thread-page-scroll"] .content,
 body[class*="community-page-scroll"] .content,
-html[class*="community-page-scroll"] .content {
+html[class*="community-page-scroll"] .content,
+body[class*="following-page-scroll"] .content,
+html[class*="following-page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;

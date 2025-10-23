@@ -264,53 +264,55 @@ export function Comments({ postId, onCountChange }: Props) {
       </div>
 
       <div className="comment-box" style={{ marginTop: 8 }}>
-        <textarea
-          className="input"
-          placeholder="Add a comment…"
-          aria-label="Add a comment"
-          value={text}
-          maxLength={COMMENT_MAX}
-          rows={2}
-          style={{ width: '100%', paddingRight: 72, position: 'relative', resize: 'vertical', minHeight: '40px' }}
-          onChange={e => {
-            const v = e.target.value;
-            if (v.length <= COMMENT_MAX) setText(v);
-            else {
-              // defensive: should be prevented by maxLength but notify user if they paste huge text
-              toast.show(`Comments are limited to ${COMMENT_MAX} characters`);
-            }
-          }}
-          onKeyDown={async (e) => {
-            if (e.key === "Enter" && e.shiftKey) {
-              if (!text.trim()) return;
-              if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
-              setSending(true);
-              const sendText = text;
-              setText("");
-              await doOptimisticAdd(sendText);
-              setSending(false);
-            }
-          }}
-        />
-        {/* character counter overlaid inside the input on the right */}
-        {text.length > 0 ? (
-          <div
-            style={{
-              position: 'absolute',
-              right: 8,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              fontSize: 12,
-              color: commentRemaining <= 20 ? '#d9534f' : 'var(--dim)',
-              pointerEvents: 'none',
-              fontVariantNumeric: 'tabular-nums'
+        <div style={{ position: 'relative', flex: 1 }}>
+          <textarea
+            className="input"
+            placeholder="Add a comment…"
+            aria-label="Add a comment"
+            value={text}
+            maxLength={COMMENT_MAX}
+            rows={2}
+            style={{ width: '100%', paddingRight: 72, resize: 'vertical', minHeight: '40px' }}
+            onChange={e => {
+              const v = e.target.value;
+              if (v.length <= COMMENT_MAX) setText(v);
+              else {
+                // defensive: should be prevented by maxLength but notify user if they paste huge text
+                toast.show(`Comments are limited to ${COMMENT_MAX} characters`);
+              }
             }}
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {text.length}/{COMMENT_MAX}
-          </div>
-        ) : null}
+            onKeyDown={async (e) => {
+              if (e.key === "Enter" && e.shiftKey) {
+                if (!text.trim()) return;
+                if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
+                setSending(true);
+                const sendText = text;
+                setText("");
+                await doOptimisticAdd(sendText);
+                setSending(false);
+              }
+            }}
+          />
+          {/* character counter overlaid inside the input on the right */}
+          {text.length > 0 ? (
+            <div
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: 12,
+                color: commentRemaining <= 20 ? '#d9534f' : 'var(--dim)',
+                pointerEvents: 'none',
+                fontVariantNumeric: 'tabular-nums'
+              }}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {text.length}/{COMMENT_MAX}
+            </div>
+          ) : null}
+        </div>
 
         <button
           ref={sendBtnRef}

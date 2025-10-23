@@ -79,11 +79,6 @@ export const metadata: Metadata = {
     follow: true,
     nocache: false,
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'MonoLog — Your day in pictures.',
-  }
 };
 
 // Move themeColor into the viewport export to satisfy Next.js metadata rules
@@ -113,6 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     */
   <html lang="en" className={`no-transitions ${patrick.variable}`} suppressHydrationWarning>
       <head>
+        <meta name="mobile-web-app-capable" content="yes" />
         <script
           id="theme-init"
           dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);}else{try{var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');document.documentElement.setAttribute('data-theme',(m&&m.matches)?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} document.documentElement.classList.add('preloader-active');}catch(e){} })();` }}
@@ -135,7 +131,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script
           id="pwa-install-prevent"
-          dangerouslySetInnerHTML={{ __html: `(function(){try{window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); window.deferredPrompt = e; });}catch(e){} })();` }}
+          dangerouslySetInnerHTML={{ __html: `(function(){try{window.addEventListener('beforeinstallprompt', function(e) { /* removed preventDefault to allow default banner */ window.deferredPrompt = e; });}catch(e){} })();` }}
         />
         {/* JSON-LD Organization structured data for better search results */}
         <script

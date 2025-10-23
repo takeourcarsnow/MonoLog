@@ -42,12 +42,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
 
   // Call onDimensionsChange when active and loaded
   useEffect(() => {
-    if (isActive && onDimensionsChange && state.containerRef.current && state.imgRef.current?.complete) {
-      const container = state.containerRef.current;
-      const rect = container.getBoundingClientRect();
-      onDimensionsChange({ width: rect.width, height: rect.height });
+    if (isActive && onDimensionsChange && state.containerRectRef.current) {
+      onDimensionsChange(state.containerRectRef.current);
     }
-  }, [isActive, onDimensionsChange, state.containerRef, state.imgRef]);
+  }, [isActive, onDimensionsChange, state.containerRectRef]);
 
   return (
     <div
@@ -113,10 +111,8 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           }}
           onLoad={(e) => {
             e.currentTarget.classList.add("loaded");
-            if (onDimensionsChange && state.containerRef.current) {
-              const container = state.containerRef.current;
-              const rect = container.getBoundingClientRect();
-              onDimensionsChange({ width: rect.width, height: rect.height });
+            if (onDimensionsChange && state.containerRectRef.current) {
+              onDimensionsChange(state.containerRectRef.current);
             }
           }}
           onError={(e) => {

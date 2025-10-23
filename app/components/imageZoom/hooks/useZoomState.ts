@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 export const useZoomState = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -28,8 +28,33 @@ export const useZoomState = () => {
   // explicitly starts a zoom (double-click or pinch). This prevents the
   // mouse wheel from initiating zoom on accidental scrolls.
   const wheelEnabledRef = useRef<boolean>(false);
+  // Cached container dimensions to avoid getBoundingClientRect during pan/zoom
+  const containerRectRef = useRef<{ width: number; height: number } | null>(null);
   // Unique id for this instance so we can ignore our own global events
   const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2));
+
+  // Update cached container dimensions on resize
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const updateRect = () => {
+      const rect = el.getBoundingClientRect();
+      containerRectRef.current = { width: rect.width, height: rect.height };
+    };
+
+    updateRect(); // initial
+
+    let ro: ResizeObserver | null = null;
+    if (typeof window !== 'undefined' && (window as any).ResizeObserver) {
+      ro = new (window as any).ResizeObserver(updateRect);
+      if (ro) ro.observe(el);
+    }
+
+    return () => {
+      if (ro) ro.disconnect();
+    };
+  }, [containerRef]);
 
   return {
     containerRef,
@@ -61,5 +86,6 @@ export const useZoomState = () => {
     pinchRef,
     wheelEnabledRef,
     instanceIdRef,
+    containerRectRef,
   };
 };

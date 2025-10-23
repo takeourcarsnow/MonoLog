@@ -60,6 +60,7 @@ interface ZoomState {
   >;
   wheelEnabledRef: React.MutableRefObject<boolean>;
   instanceIdRef: React.MutableRefObject<string>;
+  containerRectRef: React.MutableRefObject<{ width: number; height: number } | null>;
   maxScale: number;
   isFullscreen: boolean;
   isActive: boolean;
@@ -97,6 +98,7 @@ export const useZoomEvents = (state: ZoomState) => {
     pinchRef,
     wheelEnabledRef,
     instanceIdRef,
+    containerRectRef,
     maxScale,
     isFullscreen,
     isActive,
@@ -148,6 +150,7 @@ export const useZoomEvents = (state: ZoomState) => {
     containerRef,
     imgRef,
     naturalRef,
+    containerRectRef,
     scaleRef,
     txRef,
     tyRef,
@@ -187,6 +190,7 @@ export const useZoomEvents = (state: ZoomState) => {
     containerRef,
     imgRef,
     naturalRef,
+    containerRectRef,
     TAP_MOVE_THRESHOLD,
     registerTap,
   });
@@ -210,6 +214,7 @@ export const useZoomEvents = (state: ZoomState) => {
     containerRef,
     imgRef,
     naturalRef,
+    containerRectRef,
     maxScale,
     setScale,
     setTx,
@@ -232,6 +237,7 @@ export const useZoomEvents = (state: ZoomState) => {
     txRef,
     tyRef,
     naturalRef,
+    containerRectRef,
     setScale,
     setTx,
     setTy,

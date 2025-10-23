@@ -4,15 +4,25 @@ export const getBounds = (
   containerRef: React.RefObject<HTMLDivElement>,
   imgRef: React.RefObject<HTMLImageElement>,
   naturalRef: React.MutableRefObject<{ w: number; h: number }>,
-  currentScale: number
+  currentScale: number,
+  containerRectRef: React.MutableRefObject<{ width: number; height: number } | null>
 ) => {
   const c = containerRef.current;
   const img = imgRef.current;
   if (!c || !img) return { maxTx: 0, maxTy: 0 };
 
-  const rect = c.getBoundingClientRect();
-  const containerW = rect.width;
-  const containerH = rect.height;
+  let containerW: number;
+  let containerH: number;
+  if (containerRectRef.current) {
+    containerW = containerRectRef.current.width;
+    containerH = containerRectRef.current.height;
+  } else {
+    const rect = c.getBoundingClientRect();
+    containerW = rect.width;
+    containerH = rect.height;
+    containerRectRef.current = { width: containerW, height: containerH };
+  }
+
   const natW = img.naturalWidth || naturalRef.current.w || containerW;
   const natH = img.naturalHeight || naturalRef.current.h || containerH;
 

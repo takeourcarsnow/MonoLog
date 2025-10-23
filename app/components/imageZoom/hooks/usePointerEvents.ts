@@ -16,6 +16,7 @@ interface UsePointerEventsParams {
   containerRef: React.RefObject<HTMLDivElement>;
   imgRef: React.RefObject<HTMLImageElement>;
   naturalRef: React.MutableRefObject<{ w: number; h: number }>;
+  containerRectRef: React.MutableRefObject<{ width: number; height: number } | null>;
   TAP_MOVE_THRESHOLD: number;
   registerTap: (clientX: number, clientY: number) => void;
 }
@@ -35,6 +36,7 @@ export const usePointerEvents = ({
   containerRef,
   imgRef,
   naturalRef,
+  containerRectRef,
   TAP_MOVE_THRESHOLD,
   registerTap,
 }: UsePointerEventsParams) => {
@@ -84,7 +86,7 @@ export const usePointerEvents = ({
     const newTx = panStartRef.current.tx + dx;
     const newTy = panStartRef.current.ty + dy;
 
-    const bounds = getBounds(containerRef, imgRef, naturalRef, scale);
+    const bounds = getBounds(containerRef, imgRef, naturalRef, scale, containerRectRef);
     const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
     const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 

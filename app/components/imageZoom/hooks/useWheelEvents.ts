@@ -12,6 +12,7 @@ interface UseWheelEventsParams {
   txRef: React.MutableRefObject<number>;
   tyRef: React.MutableRefObject<number>;
   naturalRef: React.MutableRefObject<{ w: number; h: number }>;
+  containerRectRef: React.MutableRefObject<{ width: number; height: number } | null>;
   setScale: (scale: number) => void;
   setTx: (tx: number) => void;
   setTy: (ty: number) => void;
@@ -30,6 +31,7 @@ export const useWheelEvents = ({
   txRef,
   tyRef,
   naturalRef,
+  containerRectRef,
   setScale,
   setTx,
   setTy,
@@ -97,7 +99,7 @@ export const useWheelEvents = ({
         setTimeout(() => setIsTransitioning(false), 300);
       } else {
         // Clamp to bounds
-        const bounds = getBounds(containerRef, imgRef, naturalRef, newScale);
+        const bounds = getBounds(containerRef, imgRef, naturalRef, newScale, containerRectRef);
         const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
         const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 

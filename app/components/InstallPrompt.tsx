@@ -39,23 +39,24 @@ export function InstallPrompt() {
     const tryShowFromEvent = (e: Event) => {
       try {
         const be = e as BeforeInstallPromptEvent;
+
+        // Check if dismissed or snoozed before preventing
+        const dismissed = localStorage.getItem('pwa-install-dismissed');
+        if (dismissed) return; // Don't prevent, let default banner show if not dismissed? Wait, if dismissed, perhaps still prevent to avoid showing.
+
+        const snooze = localStorage.getItem('pwa-install-snooze');
+        if (snooze) {
+          const until = Number(snooze) || 0;
+          if (Date.now() < until) return; // Don't prevent, let default show
+          // expired snooze -> remove and allow showing again
+          localStorage.removeItem('pwa-install-snooze');
+        }
+
         // Prevent the browser from showing the default prompt; we'll show a
         // custom UI instead.
         if (typeof be.preventDefault === 'function') be.preventDefault();
         (window as any).deferredPrompt = be;
         setDeferredPrompt(be);
-
-        // Check if dismissed or snoozed before showing
-        const dismissed = localStorage.getItem('pwa-install-dismissed');
-        if (dismissed) return;
-
-        const snooze = localStorage.getItem('pwa-install-snooze');
-        if (snooze) {
-          const until = Number(snooze) || 0;
-          if (Date.now() < until) return; // still snoozed
-          // expired snooze -> remove and allow showing again
-          localStorage.removeItem('pwa-install-snooze');
-        }
 
         // Small delay so the UI doesn't interrupt the immediate task
         setTimeout(() => setShowPrompt(true), 3000);

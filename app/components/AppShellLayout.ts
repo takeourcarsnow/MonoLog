@@ -73,7 +73,7 @@ function useHeightMeasurement(
             if (process.env.NODE_ENV === 'development') {
               console.log(`[DEBUG] ResizeObserver fired for ${cssVar}`);
             }
-            updateHeight();
+            requestAnimationFrame(updateHeight);
           });
           ro.observe(element);
         }
@@ -84,7 +84,7 @@ function useHeightMeasurement(
       if (process.env.NODE_ENV === 'development') {
         console.log(`[DEBUG] Resize event fired for ${cssVar}`);
       }
-      updateHeight();
+      requestAnimationFrame(updateHeight);
     };
     const handleOrientationChange = () => {
       if (process.env.NODE_ENV === 'development') {

@@ -28,6 +28,7 @@ interface UseTouchEventsParams {
   containerRef: React.RefObject<HTMLDivElement>;
   imgRef: React.RefObject<HTMLImageElement>;
   naturalRef: React.MutableRefObject<{ w: number; h: number }>;
+  containerRectRef: React.MutableRefObject<{ width: number; height: number } | null>;
   maxScale: number;
   setScale: (scale: number) => void;
   setTx: (tx: number) => void;
@@ -54,6 +55,7 @@ export const useTouchEvents = ({
   containerRef,
   imgRef,
   naturalRef,
+  containerRectRef,
   maxScale,
   setScale,
   setTx,
@@ -174,7 +176,7 @@ export const useTouchEvents = ({
         const newTy = p.startTy * scaleRatio + dyMid * (1 - scaleRatio);
 
         // Clamp to bounds
-        const bounds = getBounds(containerRef, imgRef, naturalRef, newScale);
+        const bounds = getBounds(containerRef, imgRef, naturalRef, newScale, containerRectRef);
         const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
         const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 
@@ -206,7 +208,7 @@ export const useTouchEvents = ({
     const newTx = panStartRef.current.tx + dx;
     const newTy = panStartRef.current.ty + dy;
 
-    const bounds = getBounds(containerRef, imgRef, naturalRef, scaleRef.current);
+    const bounds = getBounds(containerRef, imgRef, naturalRef, scaleRef.current, containerRectRef);
     const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
     const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 

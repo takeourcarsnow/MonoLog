@@ -42,6 +42,7 @@ export function CarouselView({
   editing
 }: CarouselViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null); // Dummy ref for getBounds compatibility
   const [containerWidth, setContainerWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -73,6 +74,7 @@ export function CarouselView({
     pinchRef,
     wheelEnabledRef,
     instanceIdRef,
+    containerRectRef,
   } = zoomState;
 
   // Update container width on resize
@@ -246,7 +248,7 @@ export function CarouselView({
       const newTy = -(localY - containerHeight / 2) * zoomScale;
 
       // Clamp to bounds
-      const bounds = getBounds(containerRef, { current: null }, naturalRef, zoomScale);
+      const bounds = getBounds(containerRef, imgRef, naturalRef, zoomScale, containerRectRef);
       const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
       const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 
@@ -297,7 +299,7 @@ export function CarouselView({
     const newTx = panStartRef.current.tx + dx;
     const newTy = panStartRef.current.ty + dy;
 
-    const bounds = getBounds(containerRef, { current: null }, naturalRef, scale);
+    const bounds = getBounds(containerRef, imgRef, naturalRef, scale, containerRectRef);
     const clampedTx = Math.max(-bounds.maxTx, Math.min(bounds.maxTx, newTx));
     const clampedTy = Math.max(-bounds.maxTy, Math.min(bounds.maxTy, newTy));
 

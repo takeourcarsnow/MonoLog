@@ -5,6 +5,13 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 })
 
+// Derive the Supabase host from env so the image optimizer allows the
+// correct project hostname in different environments (local/dev/prod).
+// Fallback to the previously hard-coded project host if the env var is
+// not set at build time.
+const _supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gfvdnpcrscszzyicsycp.supabase.co';
+const supabaseHost = String(_supabaseUrl).replace(/^https?:\/\//, '').replace(/\/$/, '');
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
@@ -42,7 +49,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'gfvdnpcrscszzyicsycp.supabase.co',
+        hostname: supabaseHost,
         port: '',
         pathname: '/storage/v1/object/public/**',
       },

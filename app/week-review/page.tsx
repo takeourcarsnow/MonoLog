@@ -79,14 +79,11 @@ export default function WeekReviewPage() {
     return null;
   }
 
-  const StatCard = ({ icon, title, value, subtitle }: { icon: React.ReactNode; title: string; value: string | number; subtitle?: string }) => (
+  const StatCard = ({ icon, title, value }: { icon: React.ReactNode; title: string; value: string | number }) => (
     <div className="stat-card">
       <div className="stat-icon">{icon}</div>
-      <div className="stat-content">
-        <div className="stat-value">{value}</div>
-        <div className="stat-title">{title}</div>
-        {subtitle && <div className="stat-subtitle">{subtitle}</div>}
-      </div>
+      <div className="stat-value">{value}</div>
+      <div className="stat-title">{title}</div>
     </div>
   );
 
@@ -97,28 +94,24 @@ export default function WeekReviewPage() {
           icon={<Calendar size={20} />}
           title="Posts"
           value={stats.totalPosts}
-          subtitle={stats.totalPosts === 1 ? "post this week" : "posts this week"}
         />
 
         <StatCard
           icon={<Image size={20} />}
           title="Photos"
           value={stats.totalImages}
-          subtitle={stats.totalImages === 1 ? "photo captured" : "photos captured"}
         />
 
         <StatCard
           icon={<MessageCircle size={20} />}
           title="Comments Made"
           value={stats.commentsMade}
-          subtitle="comments you wrote"
         />
 
         <StatCard
           icon={<Music size={20} />}
           title="Music Links"
           value={stats.spotifyLinks}
-          subtitle="posts with Spotify tracks"
         />
       </div>
 

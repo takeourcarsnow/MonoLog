@@ -19,10 +19,12 @@
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 20px 16px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  text-align: center;
+  gap: 8px;
 }
 
 .stat-icon {
@@ -30,31 +32,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: var(--primary-weak);
-  border-radius: var(--radius-sm);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
   flex-shrink: 0;
-}
-
-.stat-content {
-  flex: 1;
-  min-width: 0;
+  margin-bottom: 4px;
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
-  margin-bottom: 4px;
 }
 
 .stat-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 2px;
 }
 
 .stat-subtitle {

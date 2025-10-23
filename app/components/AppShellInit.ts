@@ -91,7 +91,11 @@ export function useAppShellInit() {
             try {
               const height = getVisualHeight();
               const vh = height * 0.01;
-              document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
+              const vhValue = `${vh}px`;
+              document.documentElement.style.setProperty('--viewport-height', vhValue);
+              if (process.env.NODE_ENV === 'development') {
+                console.log('[DEBUG] AppShellInit viewport height updated:', vhValue, 'from height:', height, 'using visualViewport:', !!(window as any).visualViewport);
+              }
             } catch (e) {
               // non-critical
             }

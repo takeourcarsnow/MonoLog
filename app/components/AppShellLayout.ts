@@ -14,6 +14,10 @@ function useHeightMeasurement(
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Use a unique key per CSS variable to track initialization
+    const initKey = `height-measured-${cssVar}`;
+    const alreadyInitialized = (window as any)[initKey];
+
     const updateHeight = () => {
       try {
         const el = document.querySelector<HTMLElement>(selector);
@@ -22,46 +26,78 @@ function useHeightMeasurement(
         if (retry && (!rect || rect.height < 1)) return false;
         const measured = Math.ceil(rect.height) + fudge;
         document.documentElement.style.setProperty(cssVar, `${measured}px`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[DEBUG] ${cssVar} updated:`, `${measured}px`, 'from element:', selector, 'rect.height:', rect.height);
+        }
         return true;
       } catch (e) {
         return retry ? false : undefined;
       }
     };
 
-    // Run once immediately to set initial value
-    let measured = updateHeight();
-    if (retry && !measured) {
-      let attempts = 0;
-      const maxAttempts = 6;
-      const tryMeasure = () => {
-        attempts += 1;
-        measured = updateHeight();
-        if (!measured && attempts < maxAttempts) {
-          setTimeout(tryMeasure, attempts * 200);
-        }
-      };
-      setTimeout(tryMeasure, 120);
+    // Run initial measurement only once per CSS variable
+    if (!alreadyInitialized) {
+      let measured = updateHeight();
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEBUG] Initial measurement for ${cssVar}:`, measured);
+      }
+      if (retry && !measured) {
+        let attempts = 0;
+        const maxAttempts = 6;
+        const tryMeasure = () => {
+          attempts += 1;
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[DEBUG] Retry attempt ${attempts}/${maxAttempts} for ${cssVar}`);
+          }
+          measured = updateHeight();
+          if (!measured && attempts < maxAttempts) {
+            setTimeout(tryMeasure, attempts * 200);
+          }
+        };
+        setTimeout(tryMeasure, 120);
+      }
+      (window as any)[initKey] = true;
     }
 
-    // Use ResizeObserver when available to react to dynamic size changes
+    // Always set up event listeners for dynamic updates
     let ro: ResizeObserver | null = null;
     try {
       if ((window as any).ResizeObserver) {
         const element = document.querySelector<HTMLElement>(selector);
         if (element) {
-          ro = new ResizeObserver(updateHeight);
+          ro = new ResizeObserver(() => {
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`[DEBUG] ResizeObserver fired for ${cssVar}`);
+            }
+            updateHeight();
+          });
           ro.observe(element);
         }
       }
     } catch (_) { ro = null; }
 
-    window.addEventListener('resize', updateHeight);
-    window.addEventListener('orientationchange', updateHeight);
+    const handleResize = () => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEBUG] Resize event fired for ${cssVar}`);
+      }
+      updateHeight();
+    };
+    const handleOrientationChange = () => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEBUG] Orientation change event fired for ${cssVar}`);
+      }
+      // Delay measurement after orientation change to allow viewport to settle
+      // On mobile devices, orientationchange fires before viewport dimensions update
+      setTimeout(updateHeight, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
 
     return () => {
       try { ro && ro.disconnect(); } catch (_) {}
-      window.removeEventListener('resize', updateHeight);
-      window.removeEventListener('orientationchange', updateHeight);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, deps);
 }
@@ -69,7 +105,7 @@ function useHeightMeasurement(
 // Measure the actual header height at runtime and publish it as a CSS
 // variable so layout padding can match the rendered header size exactly.
 export function useHeaderHeightMeasurement(ready: boolean, pathname: string) {
-  useHeightMeasurement('.header', '--header-height', [ready, pathname]);
+  useHeightMeasurement('.header', '--header-height', [ready]);
 }
 
 // Measure the actual tabbar height at runtime and publish it as a CSS

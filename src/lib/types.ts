@@ -109,6 +109,25 @@ export type HydratedThreadReply = ThreadReply & {
 
 export type CalendarStats = { counts: Record<string, number>, mine: Set<string> };
 
+export type WeekReviewStats = {
+  totalPosts: number;
+  totalImages: number;
+  commentsMade: number;
+  spotifyLinks: number;
+  recentPosts: Array<{
+    id: string;
+    created_at: string;
+    caption: string;
+    image_urls?: string[];
+    image_url?: string;
+    thumbnail_urls?: string[];
+    thumbnail_url?: string;
+  }>;
+  postsByDay: Record<string, number>;
+  weekStart: string;
+  weekEnd: string;
+};
+
 export interface Api {
   init(): Promise<void>;
   seed(data: { users: User[]; posts: Post[]; comments: Comment[] }): Promise<void>;
@@ -188,6 +207,9 @@ export interface Api {
   signOut(): Promise<void>;
 
   calendarStats(opts: { year: number; monthIdx: number }): Promise<CalendarStats>;
+
+  // Week review statistics
+  weekReviewStats(): Promise<WeekReviewStats>;
 }
 
 // Reserved route names that should not be treated as usernames
@@ -196,5 +218,6 @@ export const RESERVED_ROUTES = [
   'feed', 'post', 'profile', 'upload', 'admin',
   'settings', 'help', 'terms', 'privacy', 'login',
   'register', 'signup', 'signin', 'logout', 'auth',
+  'week-review',
   '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
 ];

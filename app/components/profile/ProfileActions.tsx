@@ -6,6 +6,7 @@ import { DeleteAccountButton } from "@/app/components/DeleteAccount";
 import Link from "next/link";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import type { User as UserType } from "@/src/lib/types";
 
 interface ProfileActionsProps {
@@ -180,6 +181,11 @@ export function ProfileActions({
             <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following">
               <span className="icon" aria-hidden>
                 <User size={16} strokeWidth={1.2} />
+              </span>
+            </Link>
+            <Link className="btn icon week-review-link no-effects" href="/week-review" aria-label="Week in Review">
+              <span className="icon" aria-hidden>
+                <BarChart3 size={16} strokeWidth={1.2} />
               </span>
             </Link>
             <button

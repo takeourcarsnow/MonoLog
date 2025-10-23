@@ -29,7 +29,8 @@ html[class*="page-scroll"] {
 .content:has(.communities),
 .content:has(.community),
 .content:has(.thread),
-.content:has(.create-thread) {
+.content:has(.create-thread),
+.content:has(.week-review-page) {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
@@ -39,10 +40,13 @@ html[class*="page-scroll"] {
 /* Fallback: older browsers that don't support :has can rely on the
    body/html class added by the page JS. */
 body[class*="page-scroll"] .content,
-html[class*="page-scroll"] .content {
+html[class*="page-scroll"] .content,
+body[class*="week-review-page-scroll"] .content,
+html[class*="week-review-page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
+  padding-top: 0 !important;
   -webkit-overflow-scrolling: touch;
 }
 :root {
@@ -199,6 +203,8 @@ html[class*="page-scroll"] .content {
 @import './styles/buttons.css';
 @import './styles/layout.css';
 @import './styles/cards.css';
+@import './styles/calendar.css';
+@import './styles/week-review.css';
 @import './styles/carousel.css';
 @import './styles/comments.css';
 @import './styles/uploader.css';

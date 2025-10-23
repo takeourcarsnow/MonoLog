@@ -400,4 +400,63 @@ export const localApi: Api = {
   async deleteCommunity() { throw new Error('Communities not supported in local mode'); },
   async deleteThreadReply() { throw new Error('Thread replies not supported in local mode'); },
   async hasNewThreads() { return false; },
+
+  // Week review statistics - stub implementation for local mode
+  async weekReviewStats() {
+    const me = getUserById(cache.currentUserId);
+    if (!me) throw new Error("Not logged in");
+
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 7);
+
+    const weekPosts = cache.posts.filter(p =>
+      p.userId === me.id &&
+      new Date(p.createdAt) >= weekStart
+    );
+
+    const commentsMade = cache.comments.filter(c =>
+      c.userId === me.id &&
+      new Date(c.createdAt) >= weekStart
+    ).length;
+
+    const totalImages = weekPosts.reduce((sum, post) => {
+      const imageCount = Array.isArray((post as any).imageUrls) ? (post as any).imageUrls.length :
+                        (post as any).imageUrl ? 1 : 0;
+      return sum + imageCount;
+    }, 0);
+
+    const spotifyLinks = weekPosts.filter(p => (p as any).spotifyLink).length;
+
+    // Group posts by weekday
+    const postsByWeekday: Record<string, any> = {};
+    weekPosts.forEach(post => {
+      const date = new Date(post.createdAt);
+      const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+      if (!postsByWeekday[weekday] || new Date(post.createdAt) > new Date(postsByWeekday[weekday].createdAt)) {
+        postsByWeekday[weekday] = post;
+      }
+    });
+
+    const weekdayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const recentPosts = weekdayOrder
+      .filter(day => postsByWeekday[day])
+      .map(day => postsByWeekday[day])
+      .slice(0, 7);
+
+    return {
+      totalPosts: weekPosts.length,
+      totalImages,
+      commentsMade,
+      spotifyLinks,
+      recentPosts,
+      postsByDay: weekPosts.reduce((acc, post) => {
+        const day = new Date(post.createdAt).toDateString();
+        acc[day] = (acc[day] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      weekStart: weekStart.toISOString(),
+      weekEnd: now.toISOString()
+    };
+  },
 };

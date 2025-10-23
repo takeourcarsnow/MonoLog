@@ -277,3 +277,13 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
   filter: invert(1);
 }
 
+/* Utility: temporarily disable transitions/animations during layout updates
+   (useful during orientationchange/resize to prevent slow animated adjustments)
+   The JS toggles `monolog-disable-transitions` on the root element briefly. */
+.monolog-disable-transitions *,
+.monolog-disable-transitions *::before,
+.monolog-disable-transitions *::after {
+  transition: none !important;
+  animation: none !important;
+}
+

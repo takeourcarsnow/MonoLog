@@ -137,13 +137,20 @@ export function useAppShellInit() {
           };
 
           setViewportVar();
-          // run again after short delay to catch late chrome transitions
-          setTimeout(setViewportVar, 600);
-          // and a slightly longer retry for flaky webviews
-          setTimeout(setViewportVar, 1500);
+          // run again after short delay to catch late chrome transitions.
+          // Reduced delays improve responsiveness while still catching most cases.
+          setTimeout(setViewportVar, 120);
+          // a slightly longer, but small, retry for flaky webviews
+          setTimeout(setViewportVar, 380);
 
           const onResize = () => { setViewportVar(); if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); } };
-          const onOrientation = () => { setViewportVar(); if (debugEnabled) { setTimeout(debugLog, 160); } };
+          const onOrientation = () => {
+            // Temporarily disable transitions to avoid slow animated layout changes
+            try { document.documentElement.classList.add('monolog-disable-transitions'); } catch(_) {}
+            setViewportVar();
+            try { requestAnimationFrame(() => document.documentElement.classList.remove('monolog-disable-transitions')); } catch(_) { setTimeout(() => { try { document.documentElement.classList.remove('monolog-disable-transitions'); } catch(_) {} }, 160); }
+            if (debugEnabled) { setTimeout(debugLog, 160); }
+          };
           window.addEventListener('resize', onResize, { passive: true });
           window.addEventListener('orientationchange', onOrientation);
           if ((window as any).visualViewport && (window as any).visualViewport.addEventListener) {

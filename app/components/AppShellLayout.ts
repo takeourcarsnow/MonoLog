@@ -42,8 +42,11 @@ function useHeightMeasurement(
         console.log(`[DEBUG] Initial measurement for ${cssVar}:`, measured);
       }
       if (retry && !measured) {
+        // Shorter, bounded retry/backoff: fewer attempts and lower delays to
+        // avoid long waits on orientation changes while still catching
+        // transient layout timing issues.
         let attempts = 0;
-        const maxAttempts = 6;
+        const maxAttempts = 3; // reduced from 6
         const tryMeasure = () => {
           attempts += 1;
           if (process.env.NODE_ENV === 'development') {
@@ -51,10 +54,11 @@ function useHeightMeasurement(
           }
           measured = updateHeight();
           if (!measured && attempts < maxAttempts) {
-            setTimeout(tryMeasure, attempts * 200);
+            // smaller incremental delay: 60ms, 120ms, ...
+            setTimeout(tryMeasure, attempts * 60);
           }
         };
-        setTimeout(tryMeasure, 120);
+        setTimeout(tryMeasure, 40);
       }
       (window as any)[initKey] = true;
     }
@@ -86,9 +90,15 @@ function useHeightMeasurement(
       if (process.env.NODE_ENV === 'development') {
         console.log(`[DEBUG] Orientation change event fired for ${cssVar}`);
       }
-      // Delay measurement after orientation change to allow viewport to settle
-      // On mobile devices, orientationchange fires before viewport dimensions update
-      setTimeout(updateHeight, 150);
+      // Use double rAF to schedule measurement after the browser has applied
+      // layout changes. This is typically faster and more reliable than a
+      // fixed 150ms timeout and improves perceived responsiveness.
+      try {
+        requestAnimationFrame(() => requestAnimationFrame(updateHeight));
+      } catch (e) {
+        // Fallback to a short timeout
+        setTimeout(updateHeight, 80);
+      }
     };
 
     window.addEventListener('resize', handleResize);

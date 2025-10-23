@@ -19,7 +19,7 @@ const securityHeaders = [
   // Adjust `connect-src`/`img-src` as needed for Supabase or other remote hosts.
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self';"
+    value: "default-src 'self'; script-src 'self' https://storage.googleapis.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self';"
   }
 ];
 
@@ -144,6 +144,8 @@ const nextConfig = {
         source: '/_next/static/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+          // Ensure correct MIME sniffing behavior is enforced by the browser
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
         ],
       },
       {

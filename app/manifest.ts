@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
-  return {
+  const manifestObj = {
     name: 'MonoLog — Your day in pictures.',
     short_name: 'MonoLog',
     description: 'MonoLog — Your day in pictures. A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
@@ -74,34 +74,31 @@ export default function manifest(): MetadataRoute.Manifest {
       // client_mode: 'focus-existing',
     },
     // handle_links: 'preferred',
+    // File handlers must be an array of objects with an 'accept' mapping of media types to extensions
     file_handlers: [
       {
         action: '/upload',
-        accept: [
-          {
-            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'],
-          },
-        ],
+        accept: {
+          'image/png': ['.png'],
+          'image/jpeg': ['.jpg', '.jpeg'],
+          'image/gif': ['.gif'],
+          'image/webp': ['.webp'],
+          'image/svg+xml': ['.svg'],
+        },
       },
     ],
+    // share_target expects params as an object mapping names to form field names
     share_target: {
       action: '/?share=true',
-      method: 'post',
+      method: 'POST',
       enctype: 'multipart/form-data',
-      params: [
-        {
-          name: 'title',
-          value: 'title',
-        },
-        {
-          name: 'text',
-          value: 'text',
-        },
-        {
-          name: 'url',
-          value: 'url',
-        },
-      ],
+      params: {
+        title: 'title',
+        text: 'text',
+        url: 'url',
+      },
     },
   };
+
+  return manifestObj as unknown as MetadataRoute.Manifest;
 }

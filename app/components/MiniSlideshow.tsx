@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { OptimizedImage } from "./OptimizedImage";
+import { isImageLoaded as cacheIsImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/src/lib/cache/calendarCache";
 
 interface MiniSlideshowProps {
   imageUrls: string[];
   size?: number;
   fill?: boolean;
+  // If false, MiniSlideshow will avoid rendering/loading images that
+  // haven't previously been marked as loaded in the session cache.
+  allowLoad?: boolean;
 }
 
-export function MiniSlideshow({ imageUrls, size = 30, fill = false }: MiniSlideshowProps) {
+export function MiniSlideshow({ imageUrls, size = 30, fill = false, allowLoad = true }: MiniSlideshowProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -23,6 +27,9 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false }: MiniSlides
   }, [imageUrls.length]);
 
   if (imageUrls.length === 0) return null;
+
+  const currentUrl = imageUrls[currentIndex];
+  const isLoaded = cacheIsImageLoaded(currentUrl);
 
   return (
     <div
@@ -47,10 +54,12 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false }: MiniSlides
         border: '1px solid var(--border)',
       }}
     >
-      {imageUrls.map((url, index) => (
+      {/* Render only the current image to avoid mounting multiple images at once.
+          This reduces concurrent network requests for tiny calendar thumbnails. */}
+      {allowLoad && (isLoaded || allowLoad) ? (
         <OptimizedImage
-          key={url}
-          src={url}
+          key={currentUrl}
+          src={currentUrl}
           alt=""
           width={fill ? undefined : size}
           height={fill ? undefined : size}
@@ -64,12 +73,16 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false }: MiniSlides
             position: 'absolute',
             top: 0,
             left: 0,
-            opacity: index === currentIndex ? 1 : 0,
+            opacity: 1,
             transition: 'opacity 0.5s ease-in-out',
           }}
           placeholder={"empty"}
+          loading={"lazy"}
+          onLoad={() => { try { cacheMarkImageLoaded(currentUrl); } catch (e) {} }}
         />
-      ))}
+      ) : (
+        <div style={{ width: '100%', height: '100%', background: 'var(--bg-elev)' }} aria-hidden />
+      )}
     </div>
   );
 }

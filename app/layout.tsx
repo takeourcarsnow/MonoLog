@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Patrick_Hand } from "next/font/google";
 import React from "react";
 import dynamic from "next/dynamic";
+import { Header } from '@/app/components/Header';
 import { CONFIG } from '@/src/lib/config';
 import ClientErrorBoundary from '@/app/components/ClientErrorBoundary';
 import { isInAppBrowser } from '@/src/lib/detectWebview';
@@ -36,8 +37,10 @@ const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfill
 const PWAAnalytics = dynamic(() => import('@/app/components/PWAAnalytics').then(mod => mod.PWAAnalytics), { ssr: false });
 const PWAHealthCheck = dynamic(() => import('@/app/components/PWAAnalytics').then(mod => mod.PWAHealthCheck), { ssr: false });
 
-// Render Header at root so fixed positioning is relative to the viewport.
-const Header = dynamic(() => import('@/app/components/Header').then(mod => mod.Header), { ssr: false });
+// Render Header at root. Header is a server component that itself will
+// dynamically load the interactive portion (`HeaderInteractive`) on the
+// client. Importing it statically here keeps static markup server-rendered
+// and reduces client-side bundle and parse/compile time.
 
 // Toast provider for the entire app
 const ToastProvider = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastProvider), { ssr: false });

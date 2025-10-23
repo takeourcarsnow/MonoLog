@@ -57,28 +57,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             resistanceRatio={0.85}
             style={{ height: '100%', touchAction: 'none' }}
           >
-            {views.map((view, index) => (
-              <SwiperSlide key={view.path} className={view.path === '/feed' ? 'slide-feed' : undefined}>
-                <div>
-                  <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
-                    {view.path === '/profile' ? (
-                      (() => {
-                        const pathSegments = pathname.split('/').filter(Boolean);
-                        if (pathSegments.length === 1) {
-                          const segment = pathSegments[0];
-                          if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-                            return <view.component userId={segment} />;
+              {views.map((view, index) => (
+                <SwiperSlide key={view.path} className={view.path === '/feed' ? 'slide-feed' : undefined}>
+                  <div>
+                    {/* Only mount the active slide and its immediate neighbours to avoid
+                        mounting all views (which causes their images to load even when
+                        off-screen). Mounting neighbors preserves swipe UX while reducing
+                        unnecessary network requests. */}
+                    <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
+                      {(() => {
+                        const Comp: any = view.component as any;
+                        // Special-case the calendar view: it can be expensive (many
+                        // thumbnails), so only mount it when it's the active slide.
+                        const shouldMount = view.path === '/calendar' ? (activeIndex === index) : (Math.abs(index - activeIndex) <= 1);
+                        if (shouldMount) {
+                          if (view.path === '/profile') {
+                            const pathSegments = pathname.split('/').filter(Boolean);
+                            if (pathSegments.length === 1) {
+                              const segment = pathSegments[0];
+                              if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
+                                return <Comp userId={segment} isActive={activeIndex === index} />;
+                              }
+                            }
+                            return <Comp isActive={activeIndex === index} />;
                           }
+                          return <Comp isActive={activeIndex === index} />;
                         }
-                        return <view.component />;
-                      })()
-                    ) : (
-                      <view.component />
-                    )}
-                  </Suspense>
-                </div>
-              </SwiperSlide>
-            ))}
+                        // lightweight placeholder for off-screen slides
+                        return <div style={{ height: '100%' }} />;
+                      })()}
+                    </Suspense>
+                  </div>
+                </SwiperSlide>
+              ))}
           </Swiper>
         ) : children}
       </main>

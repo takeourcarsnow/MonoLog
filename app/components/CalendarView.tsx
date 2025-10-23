@@ -10,10 +10,17 @@ import { GridView } from "./GridView";
 import { Calendar } from "lucide-react";
 import type { HydratedPost } from "@/src/lib/types";
 import { MiniSlideshow } from "./MiniSlideshow";
+import { getStats as cacheGetStats, setStats as cacheSetStats, getPosts as cacheGetPosts, setPosts as cacheSetPosts, anyImageLoaded as cacheAnyImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/src/lib/cache/calendarCache";
 
 const weekdays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-export function CalendarView() {
+interface CalendarViewProps {
+  // Whether the calendar view is currently the active app view. When false,
+  // the calendar will avoid making network requests or loading images.
+  isActive?: boolean;
+}
+
+export function CalendarView({ isActive = true }: CalendarViewProps) {
   const now = new Date();
   const [curYear, setYear] = useState(now.getFullYear());
   const [curMonth, setMonth] = useState(now.getMonth());
@@ -26,32 +33,66 @@ export function CalendarView() {
   const [shouldScroll, setShouldScroll] = useState(false);
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("calendarView") as any)) || "list");
   const [dayPostsCache, setDayPostsCache] = useState<Record<string, HydratedPost[]>>({});
+  // Only start loading data when the view has been active for a short time.
+  // This prevents quick swipes through the calendar from triggering loads.
+  const [shouldLoad, setShouldLoad] = useState<boolean>(isActive);
+  const loadTimerRef = useRef<number | null>(null);
 
   // Load stats whenever the current month/year changes. Inline the async call
   // so we don't need to include the `loadStats` function in the dependency list.
+  // Only load stats/posts when shouldLoad is true. This gate prevents
+  // eager network requests when this component is merely mounted briefly
+  // (for example, during a swipe across views).
   useEffect(() => {
+    if (!shouldLoad) return;
+    let cancelled = false;
+
+    const cacheKey = `${curYear}-${curMonth}`;
+
     (async () => {
       try {
         setLoadingStats(true);
-        const s = await api.calendarStats({ year: curYear, monthIdx: curMonth });
-        setStats({ counts: s.counts, mine: s.mine });
 
-        // Fetch posts for all days with posts
-        const daysWithPosts = Object.keys(s.counts).filter(dk => s.counts[dk] > 0);
+        // Use cached stats if present
+  const cachedStats = cacheGetStats(cacheKey);
+        if (cachedStats) {
+          setStats({ counts: cachedStats.counts, mine: cachedStats.mine });
+        } else {
+          const s = await api.calendarStats({ year: curYear, monthIdx: curMonth });
+          if (cancelled) return;
+          setStats({ counts: s.counts, mine: s.mine });
+          // store in module cache
+          cacheSetStats(cacheKey, { counts: s.counts, mine: s.mine });
+        }
+
+        // Fetch posts for all days with posts (but check module cache first)
+  const statsObj = cacheGetStats(cacheKey) || { counts: {} };
+        const daysWithPosts = Object.keys(statsObj.counts).filter(dk => (statsObj.counts[dk] || 0) > 0);
         if (daysWithPosts.length > 0) {
-          const postPromises = daysWithPosts.map(dk => api.getPostsByDate(dk).catch(() => []));
-          const postsArrays = await Promise.all(postPromises);
+          const missing = daysWithPosts.filter(dk => !cacheGetPosts(dk));
+          if (missing.length > 0) {
+            const postPromises = missing.map(dk => api.getPostsByDate(dk).catch(() => []));
+            const postsArrays = await Promise.all(postPromises);
+            if (cancelled) return;
+            missing.forEach((dk, i) => {
+              cacheSetPosts(dk, postsArrays[i]);
+            });
+          }
+
+          // create a view-local cache object composed from module cache
           const newCache: Record<string, HydratedPost[]> = {};
-          daysWithPosts.forEach((dk, i) => {
-            newCache[dk] = postsArrays[i];
+          daysWithPosts.forEach((dk) => {
+            newCache[dk] = cacheGetPosts(dk) || [];
           });
           setDayPostsCache(newCache);
         }
       } finally {
-        setLoadingStats(false);
+        if (!cancelled) setLoadingStats(false);
       }
     })();
-  }, [curYear, curMonth]);
+
+    return () => { cancelled = true; };
+  }, [curYear, curMonth, shouldLoad]);
 
   const showDay = useCallback(async (dk: string) => {
     // toggle selection: clicking the same day again will close the feed
@@ -66,8 +107,18 @@ export function CalendarView() {
     setSelectedDay(dk);
     setLoadingDay(true);
     try {
-      const posts = await api.getPostsByDate(dk);
-      setDayPosts(posts);
+      // Prefer module-level cache -> view cache -> network
+  const cached = cacheGetPosts(dk);
+      if (cached) {
+        setDayPosts(cached);
+      } else if (dayPostsCache[dk]) {
+        setDayPosts(dayPostsCache[dk]);
+      } else {
+        const posts = await api.getPostsByDate(dk);
+        // populate module cache for future navigations
+  cacheSetPosts(dk, posts);
+        setDayPosts(posts);
+      }
     } finally {
       setLoadingDay(false);
     }
@@ -97,13 +148,38 @@ export function CalendarView() {
       const nowYear = new Date().getFullYear();
       const nowMonth = new Date().getMonth();
       // only auto-open if calendar is showing this month/year and nothing is selected
-      if (curYear === nowYear && curMonth === nowMonth && selectedDay == null) {
+      if (curYear === nowYear && curMonth === nowMonth && selectedDay == null && shouldLoad) {
         // fire-and-forget; showDay will set loading state and fetch
         void showDay(todayKey);
       }
     } catch (e) { /* ignore */ }
     // run only when month/year changes or selectedDay updates
-  }, [curYear, curMonth, selectedDay, showDay]);
+  }, [curYear, curMonth, selectedDay, showDay, shouldLoad]);
+
+  // When the parent marks this view as active, wait a short debounce before
+  // enabling loading. This avoids loads when the view is only briefly shown
+  // during a fast swipe across the AppShell slides.
+  useEffect(() => {
+    try {
+      if (isActive) {
+        // small debounce (ms)
+        const t = window.setTimeout(() => setShouldLoad(true), 300);
+        loadTimerRef.current = t;
+      } else {
+        // immediate cancel when view becomes inactive. We keep cached data
+        // so returning to the calendar doesn't require refetching unless
+        // the month changed while inactive.
+        if (loadTimerRef.current) {
+          window.clearTimeout(loadTimerRef.current);
+          loadTimerRef.current = null;
+        }
+        setShouldLoad(false);
+      }
+    } catch (e) {}
+    return () => {
+      if (loadTimerRef.current) { window.clearTimeout(loadTimerRef.current); loadTimerRef.current = null; }
+    };
+  }, [isActive]);
 
   // Scroll to feed on desktop when posts are loaded
   useEffect(() => {
@@ -173,10 +249,20 @@ export function CalendarView() {
                 {/* Today badge removed per user request */}
                 {count > 0 ? (
                   dayPostsCache[dk] ? (
-                    <MiniSlideshow
-                      imageUrls={dayPostsCache[dk].flatMap(p => p.thumbnailUrls || (p.thumbnailUrl ? [p.thumbnailUrl] : []) || p.imageUrls || (p.imageUrl ? [p.imageUrl] : []))}
-                      fill={true}
-                    />
+                    (() => {
+                      const urls = dayPostsCache[dk].flatMap(p => p.thumbnailUrls || (p.thumbnailUrl ? [p.thumbnailUrl] : []) || p.imageUrls || (p.imageUrl ? [p.imageUrl] : []));
+                      // Allow loading thumbnails when the calendar view is actively
+                      // shown (shouldLoad === true) or when at least one of the
+                      // thumbnails has already been loaded in this session.
+                      const allowLoad = shouldLoad || cacheAnyImageLoaded(urls);
+                      return (
+                        <MiniSlideshow
+                          imageUrls={urls}
+                          fill={true}
+                          allowLoad={allowLoad}
+                        />
+                      );
+                    })()
                   ) : (
                     <div className={loadingStats ? "dot skeleton" : "dot"} aria-hidden />
                   )

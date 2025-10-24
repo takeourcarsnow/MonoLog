@@ -9,6 +9,7 @@ import { Users } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/src/lib/api";
 import { useToast } from "./Toast";
+import { useAuth } from "@/src/lib/hooks/useAuth";
 
 // Non-critical header components loaded dynamically
 const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { ssr: false });
@@ -21,11 +22,16 @@ export function HeaderInteractive() {
   const [hasNewThreads, setHasNewThreads] = useState(false);
   const prevHasNewThreadsRef = useRef(false);
   const { show } = useToast();
+  const { me } = useAuth();
 
   const { toggle: toggleFavorites, isActive: favIsActive } = usePrevPathToggle('/favorites', 'monolog:prev-path-before-favorites');
 
   // Define checkForNewThreads function outside useEffect so it can be exposed globally
   const checkForNewThreads = useCallback(async (forceToast = false) => {
+    if (!me) {
+      setHasNewThreads(false);
+      return;
+    }
     try {
       let lastChecked = localStorage.getItem('communitiesLastChecked');
       if (!lastChecked) {
@@ -47,7 +53,7 @@ export function HeaderInteractive() {
       // Ignore errors - user might not be authenticated or API might be down
       setHasNewThreads(false);
     }
-  }, [show]);
+  }, [show, me]);
 
   // Expose for console testing
   useEffect(() => {
@@ -121,8 +127,15 @@ export function HeaderInteractive() {
     };
   }, []);
 
-  // Check for new threads periodically
+  // Reset hasNewThreads when authentication changes
   useEffect(() => {
+    setHasNewThreads(false);
+  }, [me]);
+
+  // Check for new threads periodically when authenticated
+  useEffect(() => {
+    if (!me) return;
+
     // Check immediately
     checkForNewThreads();
 
@@ -131,12 +144,8 @@ export function HeaderInteractive() {
 
     return () => {
       clearInterval(interval);
-      // Clean up global function
-      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-        delete (window as any).checkCommunities;
-      }
     };
-  }, [checkForNewThreads]);
+  }, [checkForNewThreads, me]);
 
   // Show toast when new threads are detected
   useEffect(() => {

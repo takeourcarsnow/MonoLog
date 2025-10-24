@@ -175,7 +175,12 @@ export const UserHeader = memo(function UserHeader({
                       return;
                     }
 
-                      if (!editing) {
+                    if (!editing) {
+                      // Stop the click reaching parent handlers and causing other
+                      // side-effects (navigation, etc.) so the editor can open
+                      // immediately.
+                      try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
+
                       // Record click time so a follow-up click is ignored briefly
                       editClickLockRef.current = now;
                       setTimeout(() => { editClickLockRef.current = null; }, LOCK_MS);
@@ -183,9 +188,10 @@ export const UserHeader = memo(function UserHeader({
                       setEditExpanded(true);
                       if (editTimerRef.current) { window.clearTimeout(editTimerRef.current); editTimerRef.current = null; }
                       editTimerRef.current = window.setTimeout(() => { setEditExpanded(false); editTimerRef.current = null; }, 3500);
-                      // start preloading thumbnails first so the editor can render
-                      // overlays instantly when it mounts.
-                      try { await preloadOverlayThumbnails(); } catch {}
+                      // Start preloading thumbnails but don't await — we want the
+                      // editor to open immediately on first click. The preload
+                      // can continue in the background.
+                      try { preloadOverlayThumbnails().catch(() => {}); } catch {}
                       // set editing
                       setEditing(true);
                       return;

@@ -13,6 +13,7 @@ import { useAppShellNavigation } from "./AppShellNavigation";
 import { RESERVED_ROUTES } from "@/src/lib/types";
 import { getUsernameFromRoute } from "@/src/lib/routeUtils";
 import { SlideWrapper } from "./SlideWrapper";
+import { useAuth } from "@/src/lib/hooks/useAuth";
 
 const NotificationListener = dynamic(() => import("./NotificationListener").then(mod => mod.NotificationListener), { ssr: false });
 const InstallPrompt = dynamic(() => import("./InstallPrompt").then(mod => mod.InstallPrompt), { ssr: false });
@@ -24,6 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { ready, isTouchDevice, forceTouch } = useAppShellInit();
   const { currentIndex, activeIndex, setActiveIndex, isMainView } = useAppShellViews();
   const { swiperRef, handleSlideChange } = useAppShellNavigation(currentIndex, activeIndex, setActiveIndex, isTouchDevice);
+  const { me } = useAuth();
 
   useHeaderHeightMeasurement(ready, pathname);
   useTabbarHeightMeasurement(ready);
@@ -44,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             }}
             spaceBetween={0}
             slidesPerView={1}
-            initialSlide={currentIndex}
+            initialSlide={pathname === "/" && !me ? 1 : currentIndex}
             onSlideChange={handleSlideChange}
             // Basic touch support
             simulateTouch={true}

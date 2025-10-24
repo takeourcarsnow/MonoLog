@@ -463,4 +463,19 @@ export const localApi: Api = {
       weekEnd: now.toISOString()
     };
   },
+
+  // Search - basic implementation for local mode
+  async search(query: string) {
+    const lowerQuery = query.toLowerCase();
+    const posts = cache.posts
+      .filter(p => p.public && (p.caption?.toLowerCase().includes(lowerQuery) || (p as any).hashtags?.some((h: string) => h.toLowerCase().includes(lowerQuery))))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 20)
+      .map(hydratePost);
+    const users = cache.users
+      .filter(u => u.username.toLowerCase().includes(lowerQuery) || (u.displayName && u.displayName.toLowerCase().includes(lowerQuery)))
+      .slice(0, 10);
+    const communities: any[] = []; // Communities not supported in local mode
+    return { posts, users, communities };
+  },
 };

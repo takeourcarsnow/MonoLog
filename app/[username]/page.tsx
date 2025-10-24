@@ -4,6 +4,7 @@ import { ProfileView } from "@/app/components/ProfileView";
 import { supabaseApi } from "@/src/lib/api/supabase";
 import { notFound } from "next/navigation";
 import { SkeletonCard, SkeletonTile } from "@/app/components/Skeleton";
+import { RESERVED_ROUTES } from "@/src/lib/types";
 
 export const dynamic = 'force-dynamic';
 
@@ -11,14 +12,6 @@ function looksLikeUuid(s: string) {
   // loose check: UUIDs usually contain hyphens and are long
   return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);
 }
-
-// Reserved route names that should not be treated as usernames
-const RESERVED_ROUTES = [
-  'about', 'api', 'calendar', 'explore', 'favorites', 
-  'feed', 'post', 'profile', 'upload', 'admin', 
-  'settings', 'help', 'terms', 'privacy', 'login', 
-  'register', 'signup', 'signin', 'logout', 'auth'
-];
 
 export default function UsernamePage({ params }: { params: { username: string } }) {
   const [resolvedId, setResolvedId] = useState<string | null>(null);

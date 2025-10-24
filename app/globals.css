@@ -30,7 +30,8 @@ html[class*="page-scroll"] {
 .content:has(.community),
 .content:has(.thread),
 .content:has(.create-thread),
-.content:has(.feed) {
+.content:has(.feed),
+.content:has(.search-page) {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
@@ -65,7 +66,9 @@ html[class*="thread-page-scroll"] .content,
 body[class*="community-page-scroll"] .content,
 html[class*="community-page-scroll"] .content,
 body[class*="following-page-scroll"] .content,
-html[class*="following-page-scroll"] .content {
+html[class*="following-page-scroll"] .content,
+body[class*="search-page-scroll"] .content,
+html[class*="search-page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
@@ -314,5 +317,106 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
 .monolog-disable-transitions *::after {
   transition: none !important;
   animation: none !important;
+}
+
+/* Search page styles */
+.search-page {
+  padding: 20px;
+}
+
+.search-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 16px;
+}
+
+.search-btn {
+  padding: 10px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-tabs button {
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+
+.search-tabs button.active {
+  background: var(--primary);
+  color: white;
+}
+
+.posts-list, .users-list, .communities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.post-item, .user-item, .community-item {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+
+.post-item a, .user-item a, .community-item a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.post-thumbnail, .user-avatar, .community-image {
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.post-info {
+  flex: 1;
+}
+
+.post-info p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Caption styling for search and other condensed lists: limit to 2 lines */
+.post-caption {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-info small {
+  color: var(--muted);
 }
 

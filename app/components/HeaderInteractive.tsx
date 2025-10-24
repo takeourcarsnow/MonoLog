@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, Dispatch, SetStateAction } from "react";
 import dynamic from "next/dynamic";
 import { usePrevPathToggle } from "./usePrevPathToggle";
-import { Info, Star } from "lucide-react";
+import { Info, Star, Search } from "lucide-react";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/src/lib/api";
@@ -115,8 +115,11 @@ export function HeaderInteractive() {
   };
 
   const navigateFallbackRef = useRef<number | undefined>(undefined);
-  const logoRef = useRef<HTMLDivElement | null>(null);
+    const logoRef = useRef<HTMLDivElement | null>(null);
+    const logoTextRef = useRef<HTMLHeadingElement | null>(null);
   const animationRef = useRef<Animation | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
+  const [hideLogoText, setHideLogoText] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -155,6 +158,12 @@ export function HeaderInteractive() {
     prevHasNewThreadsRef.current = hasNewThreads;
   }, [hasNewThreads, show]);
 
+  // Detect overlap between logo text and header actions and hide the text
+  // when they approach each other to avoid visual overlap. Uses the logo
+  // icon's position + the measured text width so hiding the text doesn't
+  // change the measurement and cause a feedback loop (flicker).
+  useLogoOverlapDetection(logoRef, logoTextRef, actionsRef, setHideLogoText);
+
   return (
     <>
       <button
@@ -165,12 +174,12 @@ export function HeaderInteractive() {
         disabled={isLogoAnimating}
       >
         <div ref={logoRef} className="logo" aria-hidden="true"></div>
-        <h1>
+        <h1 ref={logoTextRef} className={hideLogoText ? 'logo-text-hidden' : ''}>
           MonoLog
-          <span className="sr-only"> 14 Your day in pictures.</span>
+          <span className="sr-only">  14 Your day in pictures.</span>
         </h1>
       </button>
-      <div className="header-actions" id="header-actions">
+      <div className="header-actions" id="header-actions" ref={actionsRef}>
         <button
           className={`btn icon about-btn no-tap-effects ${pathname === '/about' ? 'active' : ''}`}
           title="About MonoLog"
@@ -184,7 +193,7 @@ export function HeaderInteractive() {
         <div className="theme-toggle-shell" aria-hidden>
           <ThemeToggle />
         </div>
-        {/* Favorites button now sits to the right of ThemeToggle */}
+        {/* Favorites button */}
         <button
           className={`btn icon favorites-btn no-tap-effects ${favIsActive ? 'active' : ''}`}
           title="Favorites"
@@ -194,7 +203,11 @@ export function HeaderInteractive() {
         >
           <Star size={20} strokeWidth={2} />
         </button>
-        {/* Communities button (now to the right of Favorites) */}
+        {/* Search button */}
+        <Link href="/search" className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
+          <Search size={20} strokeWidth={2} />
+        </Link>
+        {/* Communities button */}
         <Link href="/communities" className={`btn icon about-btn no-tap-effects ${pathname === '/communities' ? 'active' : ''} ${hasNewThreads ? 'communities-pulse' : ''}`} aria-label="Communities">
           <Users size={20} strokeWidth={2} />
         </Link>
@@ -208,3 +221,97 @@ export function HeaderInteractive() {
     </>
   );
 }
+
+// Small client-side hook like behavior lives in this file: detect when the
+// header actions overlap the logo text and collapse the text to avoid visual
+// overlap. Uses ResizeObserver and window resize for robustness.
+function useLogoOverlapDetection(
+  logoRef: React.RefObject<HTMLElement>,
+  logoTextRef: React.RefObject<HTMLElement>,
+  actionsRef: React.RefObject<HTMLElement>,
+  setHidden: Dispatch<SetStateAction<boolean>>
+) {
+  useEffect(() => {
+    if (!logoRef.current || !actionsRef.current) return;
+
+    let raf = 0;
+    let mounted = true;
+
+    // Measure the full text width once (or whenever the text changes).
+    let textWidth = 0;
+    if (logoTextRef.current) {
+      // scrollWidth gives the full measured width even if overflow/clip is set
+      textWidth = logoTextRef.current.scrollWidth || logoTextRef.current.offsetWidth || 0;
+    }
+
+    const threshold = 6; // start hiding slightly before actual collision
+    const hysteresis = 10; // px - require extra space before un-hiding
+
+    function check() {
+      if (!mounted) return;
+      if (!logoRef.current || !actionsRef.current) return;
+      const logoRect = logoRef.current.getBoundingClientRect();
+      const actionsRect = actionsRef.current.getBoundingClientRect();
+
+      // Compute where the right edge of the visible text would be based on
+      // the logo icon right edge plus the measured text width. This prevents
+      // the measured element changing size from flipping the decision.
+      const textRightIfVisible = logoRect.right + (textWidth || 0);
+
+      const collideNow = textRightIfVisible + threshold >= actionsRect.left;
+
+      // Hysteresis: when currently hidden, require extra space to unhide.
+      setHidden((prev: boolean) => {
+        if (prev) {
+          // currently hidden -> only unhide if we're well clear
+          if (textRightIfVisible + threshold + hysteresis < actionsRect.left) {
+            return false;
+          }
+          return true;
+        } else {
+          // currently visible -> hide if collision
+          return collideNow;
+        }
+      });
+    }
+
+    const ro = new ResizeObserver(() => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(check);
+    });
+
+    // Observe things that affect layout: the icon and the actions group
+    ro.observe(logoRef.current);
+    ro.observe(actionsRef.current);
+
+    // Also observe text resize so we can re-measure width if it changes
+    if (logoTextRef.current) ro.observe(logoTextRef.current);
+
+    window.addEventListener('resize', () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(check);
+    }, { passive: true });
+
+    // Initial check (measure text width before checking)
+    if (logoTextRef.current) textWidth = logoTextRef.current.scrollWidth || textWidth;
+    check();
+
+    return () => {
+      mounted = false;
+      try { ro.disconnect(); } catch (_) {}
+      window.removeEventListener('resize', check);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [logoRef, logoTextRef, actionsRef, setHidden]);
+}
+
+// Hook invocation (kept at bottom to keep main component tidy)
+// Note: this is placed outside component scope intentionally and wired up
+// below after the component declaration to keep top-level component logic
+// focused. We need to call the hook inside the module so React rules are
+// satisfied (it's invoked in the same render pass as component creation via
+// direct call in the module). To keep it simple, call it via a small wrapper
+// when the module loads in client.
+// However, React hooks must be called from React components; instead we call
+// the helper inside the component using the refs/state above. To avoid
+// duplicating logic we export nothing here.

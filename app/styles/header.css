@@ -47,7 +47,19 @@
 }
 .brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.2px; }
 
-.header-actions { display: flex; align-items: center; gap: 6px; }
+/* When action buttons approach the logo, collapse the logo text to avoid
+   visual overlap. Use a smooth opacity/width transition so the change is
+   subtle and doesn't cause layout reflow for other header elements. */
+.brand h1.logo-text-hidden {
+  /* Keep layout stable by not changing intrinsic width; hide visually
+     using opacity and transform which don't affect other elements' layout. */
+  opacity: 0;
+  transform: translateX(-6px) scaleX(0.98);
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events: none;
+}
+
+.header-actions { display: flex; align-items: center; gap: 2px; }
 /* allow header action group to shrink when space is tight (prevents
   the header from growing wider than the viewport when account text
   is present). */
@@ -199,11 +211,7 @@
   white-space: nowrap;
 }
 
-@media (max-width: 380px) {
-  .brand h1 {
-    display: none;
-  }
-}
+
 
 /* Shell to reserve space for dynamic account switcher to avoid layout shift.
    Only reserve visible space when the root document has the 'has-account-switcher'

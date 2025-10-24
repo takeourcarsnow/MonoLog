@@ -212,6 +212,9 @@ export interface Api {
 
   // Week review statistics
   weekReviewStats(): Promise<WeekReviewStats>;
+
+  // Search
+  search(query: string): Promise<{ posts: HydratedPost[]; users: User[]; communities: HydratedCommunity[] }>;
 }
 
 // Reserved route names that should not be treated as usernames
@@ -220,6 +223,6 @@ export const RESERVED_ROUTES = [
   'feed', 'post', 'profile', 'upload', 'admin',
   'settings', 'help', 'terms', 'privacy', 'login',
   'register', 'signup', 'signin', 'logout', 'auth',
-  'week-review', 'hashtags',
+  'week-review', 'hashtags', 'search',
   '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
 ];

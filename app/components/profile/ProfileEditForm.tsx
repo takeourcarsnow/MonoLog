@@ -6,6 +6,7 @@ import { SpotifyIcon } from "../uploader/SpotifyIcon";
 import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import type { User } from "@/src/lib/types";
+import { RESERVED_ROUTES } from "@/src/lib/types";
 
 interface ProfileEditFormProps {
   user: User;
@@ -45,13 +46,6 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
       if (!uname) { toast.show('Username cannot be empty'); return; }
 
       // Check for reserved route names
-      const RESERVED_ROUTES = [
-        'about', 'api', 'calendar', 'explore', 'favorites',
-        'feed', 'post', 'profile', 'upload', 'admin',
-        'settings', 'help', 'terms', 'privacy', 'login',
-        'register', 'signup', 'signin', 'logout', 'auth'
-      ];
-
       if (RESERVED_ROUTES.includes(uname.toLowerCase())) {
         toast.show('This username is reserved. Please choose a different one.');
         return;

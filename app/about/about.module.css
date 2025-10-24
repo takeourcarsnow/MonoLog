@@ -13,13 +13,13 @@
   background: transparent;
   border: none;
   box-shadow: none;
-  padding: 24px 20px 32px 20px; /* More generous padding */
+  padding: var(--header-height, 56px) 20px 32px 20px; /* More generous padding, added top padding for header */
 }
 
 /* Small screens (phones) */
 @media (max-width: 480px) {
   .aboutCard {
-    padding: 16px 16px 24px 16px;
+    padding: var(--header-height, 56px) 16px 24px 16px;
   }
 }
 
@@ -27,7 +27,7 @@
 @media (min-width: 768px) {
   .aboutCard {
     max-width: 800px;
-    padding: 40px 32px 48px 32px;
+    padding: var(--header-height, 56px) 32px 48px 32px;
   }
 }
 
@@ -35,7 +35,7 @@
 @media (min-width: 1024px) {
   .aboutCard {
     max-width: 900px;
-    padding: 56px 40px 64px 40px;
+    padding: var(--header-height, 56px) 40px 64px 40px;
   }
 }
   /* Reveal animation utility (used by JS IntersectionObserver) */

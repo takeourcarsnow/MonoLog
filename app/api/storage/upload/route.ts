@@ -11,7 +11,7 @@ async function generateThumbnail(imageBuffer: Buffer, mime: string): Promise<Buf
         fit: 'inside',
         withoutEnlargement: true
       })
-      .jpeg({ quality: 80 })
+      .webp({ quality: 80 })
       .toBuffer();
     
     return thumbnail;
@@ -37,11 +37,13 @@ export async function POST(req: Request) {
     const mime = m[1];
     const b64 = m[2];
     const buf = Buffer.from(b64, 'base64');
+    // Convert to WebP for better compression
+    const convertedBuf = await sharp(buf).webp({ quality: 80 }).toBuffer();
   // Basic filename sanitization: strip path segments, replace any stray
   // backslashes (which may come from Windows-style paths or malformed
   // client input) with '_' and limit length.
   if (filename) filename = filename.replace(/.*[\\/]/, '').replace(/\\/g, '_').slice(0, 240);
-  const name = filename || `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+  const name = filename ? filename.replace(/\.[^.]+$/, '.webp') : `${Date.now()}_${Math.random().toString(36).slice(2)}.webp`;
   const path = `${userId}/${name}`;
     const sb = getServiceSupabase();
     
@@ -52,16 +54,16 @@ export async function POST(req: Request) {
     
     // Upload both full image and thumbnail
     const uploadPromises = [
-      sb.storage.from('posts').upload(path, buf, { 
+      sb.storage.from('posts').upload(path, convertedBuf, { 
         upsert: true, 
-        contentType: mime as any,
+        contentType: 'image/webp',
         // For uploaded images that are versioned (filename contains unique id/timestamp),
         // allow long caching in clients/CDN to avoid repeated origin downloads.
         cacheControl: 'public, max-age=31536000, immutable'
       }),
       sb.storage.from('posts').upload(thumbPath, thumbBuf, {
         upsert: true,
-        contentType: 'image/jpeg',
+        contentType: 'image/webp',
         cacheControl: 'public, max-age=31536000, immutable'
       })
     ];

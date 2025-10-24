@@ -14,6 +14,7 @@
     "check-perf": "node ./scripts/check-performance.js",
     "convert-logo": "node ./scripts/convert-logo.js",
     "convert-png-to-svg": "node ./scripts/convert-png-to-svg.js",
+    "convert-posts-to-webp": "node ./scripts/convert-posts-to-webp.js",
     "generate-icons": "node ./scripts/generate-icons.js",
     "generate-overlay-thumbs": "node ./scripts/generate-overlay-thumbs.js"
   },

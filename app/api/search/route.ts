@@ -65,6 +65,21 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: communitiesError.message }, { status: 500 });
     }
 
+    // Fetch member counts
+    const communityIds = (communitiesData || []).map(c => c.id);
+    let memberCounts: Record<string, number> = {};
+    if (communityIds.length > 0) {
+      const { data: membersData, error: membersError } = await sb
+        .from('community_members')
+        .select('community_id')
+        .in('community_id', communityIds);
+      if (!membersError && membersData) {
+        for (const m of membersData) {
+          memberCounts[m.community_id] = (memberCounts[m.community_id] || 0) + 1;
+        }
+      }
+    }
+
     const communities = (communitiesData || []).map((row: any) => ({
       id: row.id,
       name: row.name,
@@ -74,7 +89,7 @@ export async function GET(req: Request) {
       createdAt: row.created_at,
       imageUrl: row.image_url,
       creator: row.users || { id: '', username: '', displayName: '', avatarUrl: '' },
-      memberCount: 0, // TODO: fetch member count
+      memberCount: memberCounts[row.id] || 0,
     }));
 
     return NextResponse.json({

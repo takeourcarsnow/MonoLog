@@ -1,7 +1,28 @@
 import { getSupabaseClient } from "./client";
 
-export async function search(query: string) {
+interface SearchOptions {
+  minLength?: number; // minimum query length to execute a DB search
+  limit?: number; // per-entity limit
+}
+
+function sanitizeQuery(q: string) {
+  // Basic sanitization: trim and remove wildcard characters that could
+  // lead to unexpected matches. We avoid complex escaping here because
+  // Supabase client builds queries for us; keep this light-weight.
+  return q.replace(/[%_]/g, ' ').trim();
+}
+
+export async function search(query: string, options: SearchOptions = {}) {
   const sb = getSupabaseClient();
+  const minLength = options.minLength ?? 2;
+  const limit = options.limit ?? 20;
+
+  const q = (query || '').toString().trim();
+  if (!q || q.length < minLength) {
+    return { posts: [], users: [], communities: [] };
+  }
+
+  const safeQuery = sanitizeQuery(q);
 
   // Search posts
   const { data: postsData, error: postsError } = await sb
@@ -12,9 +33,9 @@ export async function search(query: string) {
       public_profiles!left(id, username, display_name, avatar_url)
     `)
     .eq('public', true)
-    .or(`caption.ilike.%${query}%`)
+    .or(`caption.ilike.%${safeQuery}%`)
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(limit);
 
   if (postsError) throw postsError;
 
@@ -27,9 +48,6 @@ export async function search(query: string) {
     thumbnailUrls: row.thumbnail_urls,
     thumbnailUrl: row.thumbnail_url,
     alt: row.alt,
-    // The posts table may store the text in `caption` or `content` depending
-    // on migration/history. Prefer `caption` (used in queries) and fall back
-    // to `content` for older rows to ensure we surface the real text.
     caption: row.caption || row.content || "",
     hashtags: row.hashtags,
     spotifyLink: row.spotify_link,
@@ -46,8 +64,8 @@ export async function search(query: string) {
   const { data: usersData, error: usersError } = await sb
     .from('public_profiles')
     .select('id, username, display_name, avatar_url, bio')
-    .or(`username.ilike.%${query}%,display_name.ilike.%${query}%,bio.ilike.%${query}%`)
-    .limit(20);
+    .or(`username.ilike.%${safeQuery}%,display_name.ilike.%${safeQuery}%,bio.ilike.%${safeQuery}%`)
+    .limit(limit);
 
   if (usersError) throw usersError;
 
@@ -57,10 +75,6 @@ export async function search(query: string) {
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     bio: row.bio,
-    // joined_at is stored on the `users` table in some setups — avoid
-    // selecting it from `public_profiles` because that column may not exist
-    // in all schemas. If you need `joinedAt`, fetch it separately from
-    // `users` by joining on the appropriate key.
     joinedAt: row.joined_at || null,
   }));
 
@@ -71,10 +85,25 @@ export async function search(query: string) {
       *,
       users!communities_creator_id_fkey(id, username, display_name, avatar_url)
     `)
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-    .limit(20);
+    .or(`name.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`)
+    .limit(limit);
 
   if (communitiesError) throw communitiesError;
+
+  // Fetch member counts
+  const communityIds = (communitiesData || []).map(c => c.id);
+  let memberCounts: Record<string, number> = {};
+  if (communityIds.length > 0) {
+    const { data: membersData, error: membersError } = await sb
+      .from('community_members')
+      .select('community_id')
+      .in('community_id', communityIds);
+    if (!membersError && membersData) {
+      for (const m of membersData) {
+        memberCounts[m.community_id] = (memberCounts[m.community_id] || 0) + 1;
+      }
+    }
+  }
 
   const communities = (communitiesData || []).map((row: any) => ({
     id: row.id,
@@ -85,7 +114,7 @@ export async function search(query: string) {
     createdAt: row.created_at,
     imageUrl: row.image_url,
     creator: row.users || { id: '', username: '', displayName: '', avatarUrl: '' },
-    memberCount: 0, // TODO: fetch member count if needed
+    memberCount: memberCounts[row.id] || 0,
   }));
 
   return { posts, users, communities };

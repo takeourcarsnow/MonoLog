@@ -2,6 +2,7 @@ import { api } from '@/src/lib/api';
 import { redirect } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { SearchClient } from '@/app/components/SearchClient';
+import { SearchLive } from '@/app/components/SearchLive';
 
 interface SearchResult {
   posts: any[];
@@ -37,18 +38,8 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
     <SearchClient>
       <div className="search-page">
         <div className="search-header">
-          <form action={performSearch} className="search-form">
-            <input
-              type="text"
-              name="q"
-              defaultValue={query}
-              placeholder="Search posts, users, communities..."
-              className="search-input"
-            />
-            <button type="submit" className="search-btn" aria-label="Search">
-              <Search size={20} strokeWidth={2} />
-            </button>
-          </form>
+          {/* Client-side live search — replaces server form for interactive searches. */}
+          <SearchLive initialQuery={query} initialResults={results} />
         </div>
 
         {results && (

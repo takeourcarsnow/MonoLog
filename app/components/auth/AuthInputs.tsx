@@ -84,10 +84,10 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               aria-label="Password"
             />
             {mode === "signin" && onForgotPassword && (
-              <div style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)' }}>
+              <div style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(calc(-50% - 2px))' }}>
                 <button
                   type="button"
-                  className="btn small dim"
+                  className="btn small dim no-effects"
                   onClick={onForgotPassword}
                   style={{ fontSize: 12, padding: '2px 6px' }}
                 >

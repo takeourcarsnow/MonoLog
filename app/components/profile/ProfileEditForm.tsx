@@ -144,16 +144,16 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
       await saveEdits();
     };
 
-    // close social collapsible on Escape for accessibility
+    // close edit panel on Escape for accessibility
     useEffect(() => {
       const onKey = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          // No longer needed since social links are always visible
+        if (e.key === 'Escape' && isEditingProfile) {
+          setIsEditingProfile(false);
         }
       };
       window.addEventListener('keydown', onKey);
       return () => window.removeEventListener('keydown', onKey);
-    }, []);
+    }, [isEditingProfile]);
 
     // focus the first social input when the drawer opens
     useEffect(() => {

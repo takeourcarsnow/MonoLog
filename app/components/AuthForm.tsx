@@ -7,6 +7,7 @@ import { AuthInputs } from "./auth/AuthInputs";
 import { AuthButton } from "./auth/AuthButton";
 import { AuthMessage } from "./auth/AuthMessage";
 import { useAuthForm } from "./auth/useAuthForm";
+import { useEffect } from "react";
 
 export function AuthForm({ onClose }: { onClose?: () => void }) {
   const {
@@ -29,6 +30,17 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
     submit,
     generateUsername,
   } = useAuthForm(onClose);
+
+  // close on Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && onClose) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
     <form

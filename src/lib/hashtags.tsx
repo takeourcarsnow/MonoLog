@@ -4,11 +4,11 @@ import React from 'react';
  * Parse hashtags from text and return array of tags
  */
 export function parseHashtags(text: string): string[] {
-  const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
+  const hashtagRegex = /#([a-zA-Z0-9_-]+)/g;
   const hashtags: string[] = [];
   let match;
   while ((match = hashtagRegex.exec(text)) !== null) {
-    hashtags.push(match[1]);
+    hashtags.push(match[1].toLowerCase());
   }
   return [...new Set(hashtags)]; // deduplicate
 }
@@ -17,7 +17,7 @@ export function parseHashtags(text: string): string[] {
  * Render text with hashtags and mentions as links
  */
 export function renderCaption(text: string): React.ReactNode {
-  const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
+  const hashtagRegex = /#([a-zA-Z0-9_-]+)/g;
   const mentionRegex = /@([a-zA-Z0-9_]+)/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
@@ -26,7 +26,7 @@ export function renderCaption(text: string): React.ReactNode {
   // Collect all matches
   let match;
   while ((match = hashtagRegex.exec(text)) !== null) {
-    matches.push({ index: match.index, end: match.index + match[0].length, type: 'hashtag', value: match[1] });
+    matches.push({ index: match.index, end: match.index + match[0].length, type: 'hashtag', value: match[1].toLowerCase() });
   }
   hashtagRegex.lastIndex = 0; // reset
   while ((match = mentionRegex.exec(text)) !== null) {
@@ -46,11 +46,12 @@ export function renderCaption(text: string): React.ReactNode {
       parts.push(
         <a
           key={`${m.type}-${m.index}`}
-          href={`/hashtags/${m.value}`}
+          href={`/hashtags/${encodeURIComponent(m.value)}`}
           className="hashtag-link"
           onClick={(e) => {
             e.stopPropagation();
           }}
+          aria-label={`View posts tagged with #${m.value}`}
         >
           #{m.value}
         </a>
@@ -64,6 +65,7 @@ export function renderCaption(text: string): React.ReactNode {
           onClick={(e) => {
             e.stopPropagation();
           }}
+          aria-label={`View profile of @${m.value}`}
         >
           @{m.value}
         </a>

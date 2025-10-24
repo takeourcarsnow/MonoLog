@@ -5,13 +5,13 @@ import { getServerCache, setServerCache } from '@/src/lib/serverCache';
 
 export async function GET(req: Request, { params }: { params: { tag: string } }) {
   try {
-    const tag = params.tag;
-    if (!tag) {
-      return NextResponse.json({ error: 'Tag required' }, { status: 400 });
+    const tag = params.tag?.toLowerCase();
+    if (!tag || tag.trim() === '') {
+      return NextResponse.json({ error: 'Valid tag required' }, { status: 400 });
     }
 
     const url = new URL(req.url);
-    const limit = Number(url.searchParams.get('limit') || '10') || 10;
+    const limit = Math.min(Number(url.searchParams.get('limit') || '10') || 10, 50); // cap at 50
     const before = url.searchParams.get('before') || undefined;
 
     const sb = getServiceSupabase();

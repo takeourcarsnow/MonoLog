@@ -203,13 +203,13 @@ export async function getHashtagFeedPage(tag: string, { limit, before }: { limit
     const params = new URLSearchParams();
     params.set('limit', String(limit));
     if (before) params.set('before', before);
-    const resp = await fetch(`/api/posts/hashtag/${encodeURIComponent(tag)}?${params.toString()}`, { headers });
+    const resp = await fetch(`/api/posts/hashtag/${encodeURIComponent(tag.toLowerCase())}?${params.toString()}`, { headers });
     if (!resp.ok) throw new Error('Failed to fetch hashtag feed page');
     const json = await resp.json();
     return (json.posts || []).map((p: any) => p);
   }
   const sb = getClient();
-  let q: any = sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("public", true).contains("hashtags", [tag]).order("created_at", { ascending: false }).limit(limit);
+  let q: any = sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("public", true).contains("hashtags", [tag.toLowerCase()]).order("created_at", { ascending: false }).limit(limit);
   if (before) q = q.lt("created_at", before);
   const { data, error } = await q;
   logSupabaseError("getHashtagFeedPage", { data, error });

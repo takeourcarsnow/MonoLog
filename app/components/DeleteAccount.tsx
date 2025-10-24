@@ -4,7 +4,7 @@ import { api } from "@/src/lib/api";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
-export function DeleteAccountButton() {
+export function DeleteAccountButton({ isEditing }: { isEditing?: boolean } = {}) {
   const router = useRouter();
   const [confirmArm, setConfirmArm] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -41,7 +41,7 @@ export function DeleteAccountButton() {
 
   return (
     <>
-      <div className="delete-account-btn-wrapper">
+      <div className={`delete-account-btn-wrapper ${isEditing ? 'editing' : ''}`}>
         <button
           className={`btn icon delete-account-btn no-effects ${confirmArm ? "confirm" : ""}`}
           title={confirmArm ? "Confirm deletion" : "Delete account"}

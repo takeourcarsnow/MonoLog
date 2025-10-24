@@ -172,7 +172,7 @@ export function ProfileActions({
           <span className="reveal label">{displayText}</span>
         </button>
       ) : null}
-      <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 8 }}>
+      <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 12 }}>
         {/* Show owner actions when the signed-in user is viewing their own profile.
             This handles both /profile (no param) and /profile/[id] when the id
             matches the current user. */}
@@ -209,7 +209,7 @@ export function ProfileActions({
             {/* show sign out only when the viewed profile belongs to the signed-in user */}
             {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
             {/* show delete account only when the viewed profile belongs to the signed-in user */}
-            {currentUserId && user?.id === currentUserId ? <DeleteAccountButton /> : null}
+            {currentUserId && user?.id === currentUserId ? <DeleteAccountButton isEditing={isEditingProfile} /> : null}
           </>
         ) : null}
       </div>

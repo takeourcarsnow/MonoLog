@@ -91,32 +91,46 @@
   position: absolute;
   right: 8px;
   top: calc(100% + 10px);
+  bottom: auto;
   background: var(--bg);
   border: 1px solid var(--border);
   padding: 8px;
   border-radius: 12px;
-  z-index: 60;
+  z-index: 10000;
   width: min(320px, 86vw);
   transform-origin: top right;
   animation: popConfirm 200ms var(--transition-mid) both;
 }
+.delete-account-btn-wrapper.editing .confirm-popover {
+  top: auto;
+  bottom: calc(100% + 10px);
+  transform-origin: bottom right;
+}
 .confirm-popover-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 9999;
   background: transparent;
 }
 .confirm-popover-arrow {
   position: absolute;
   top: -8px;
+  bottom: auto;
   right: 18px;
   width: 14px;
   height: 14px;
   background: var(--bg);
   border-left: 1px solid var(--border);
   border-top: 1px solid var(--border);
+  border-bottom: none;
   transform: rotate(45deg);
   z-index: -1;
+}
+.delete-account-btn-wrapper.editing .confirm-popover-arrow {
+  top: auto;
+  bottom: -8px;
+  border-top: none;
+  border-bottom: 1px solid var(--border);
 }
 .confirm-popover-body { display: grid; gap: 4px; text-align: center; }
 .confirm-popover .input { text-align: center; caret-color: transparent; }

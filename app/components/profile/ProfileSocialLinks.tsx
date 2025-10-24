@@ -55,7 +55,7 @@ export function ProfileSocialLinks({ user }: { user: User }) {
           transform: scale(0.95);
         }
       `}</style>
-      <div style={{ display: 'flex', gap: 8, marginTop: 8 }} aria-label="Social links">
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }} aria-label="Social links">
         {items.map(it => {
           const IconComponent = it.icon;
           return (

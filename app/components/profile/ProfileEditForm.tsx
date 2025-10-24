@@ -220,7 +220,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
     return (
       <>
         {!isEditingProfile && !isClosing && (
-          <div className="profile-static-info">
+          <div className="profile-static-info" style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
             <div className="username">@{user.username}</div>
             {user.displayName && <div className="dim">{user.displayName}</div>}
             <div className="dim">{postCount} {postCount === 1 ? 'post' : 'posts'}</div>
@@ -233,14 +233,18 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
           <div className="muted-label sr-only">@Username</div>
           <div className="input-container">
             <input ref={usernameRef} className="input" placeholder="@Username" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
-            {user.usernameChangedAt && (() => {
+            {editUsername !== user.username && (() => {
+              if (!user.usernameChangedAt) {
+                return <div className="input-indicator" title="You can only change your username once every 24 hours">⚠️ Once every 24h</div>;
+              }
               const lastChanged = new Date(user.usernameChangedAt).getTime();
               const hoursSince = (Date.now() - lastChanged) / (1000 * 60 * 60);
               if (hoursSince < 24) {
                 const hoursRemaining = Math.ceil(24 - hoursSince);
                 return <div className="input-indicator" title="You can only change your username once every 24 hours">🔒 {hoursRemaining}h</div>;
+              } else {
+                return <div className="input-indicator" title="You can only change your username once every 24 hours">⚠️ Once every 24h</div>;
               }
-              return null;
             })()}
           </div>
         </label>

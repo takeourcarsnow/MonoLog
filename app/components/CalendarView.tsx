@@ -94,7 +94,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
     return () => { cancelled = true; };
   }, [curYear, curMonth, shouldLoad]);
 
-  const showDay = useCallback(async (dk: string) => {
+  const showDay = useCallback(async (dk: string, scroll: boolean = true) => {
     // toggle selection: clicking the same day again will close the feed
     if (selectedDay === dk) {
       setSelectedDay(null);
@@ -103,7 +103,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
       return;
     }
 
-    setShouldScroll(true);
+    setShouldScroll(scroll);
     setSelectedDay(dk);
     setLoadingDay(true);
     try {
@@ -150,7 +150,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
       // only auto-open if calendar is showing this month/year and nothing is selected
       if (curYear === nowYear && curMonth === nowMonth && selectedDay == null && shouldLoad) {
         // fire-and-forget; showDay will set loading state and fetch
-        void showDay(todayKey);
+        void showDay(todayKey, false);
       }
     } catch (e) { /* ignore */ }
     // run only when month/year changes or selectedDay updates
@@ -255,8 +255,8 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
                 role="button" tabIndex={0}
                 aria-pressed={isSelected}
                 aria-label={`${d.getDate()} ${new Date(dk).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })} — ${count} post${count===1? '' : 's'}${isMine ? ', includes your posts' : ''}`}
-                onClick={() => showDay(dk)}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && showDay(dk)}
+                onClick={() => showDay(dk, true)}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && showDay(dk, true)}
               >
                 {/* date number */}
                 <div className="d" style={{ ['--date-delay' as any]: `${idx * 28}ms` } as React.CSSProperties}>{d.getDate()}</div>

@@ -93,6 +93,7 @@ export function ProfileView({ userId }: { userId?: string }) {
         following={following}
         setFollowing={setFollowing}
         setUser={setUser}
+        postCount={posts.length}
         onAvatarChange={() => {
           // The ProfileHeader handles avatar changes internally
         }}

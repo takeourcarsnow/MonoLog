@@ -12,12 +12,13 @@ interface ProfileHeaderProps {
   following: boolean | null;
   setFollowing: (following: boolean | null) => void;
   setUser: (user: User | null) => void;
+  postCount: number;
   onAvatarChange: () => void;
   // callback when follow is clicked but user is not logged in
   onAuthRequired?: () => void;
 }
 
-export function ProfileHeader({ user, currentUserId, isOtherParam, following, setFollowing, setUser, onAvatarChange, onAuthRequired }: ProfileHeaderProps) {
+export function ProfileHeader({ user, currentUserId, isOtherParam, following, setFollowing, setUser, postCount, onAvatarChange, onAuthRequired }: ProfileHeaderProps) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const editFormRef = useRef<ProfileEditFormRef>(null);
 
@@ -36,6 +37,7 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
             isEditingProfile={isEditingProfile}
             setIsEditingProfile={setIsEditingProfile}
             setUser={setUser}
+            postCount={postCount}
           />
           {/* show social links when not editing */}
           {!isEditingProfile ? <ProfileSocialLinks user={user} /> : null}

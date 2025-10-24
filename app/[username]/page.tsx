@@ -5,6 +5,8 @@ import { supabaseApi } from "@/src/lib/api/supabase";
 import { notFound } from "next/navigation";
 import { SkeletonCard, SkeletonTile } from "@/app/components/Skeleton";
 
+export const dynamic = 'force-dynamic';
+
 function looksLikeUuid(s: string) {
   // loose check: UUIDs usually contain hyphens and are long
   return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);

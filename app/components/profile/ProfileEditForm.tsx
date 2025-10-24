@@ -12,6 +12,7 @@ interface ProfileEditFormProps {
   isEditingProfile: boolean;
   setIsEditingProfile: (editing: boolean) => void;
   setUser: (user: User | null) => void;
+  postCount: number;
 }
 
 export interface ProfileEditFormRef {
@@ -19,7 +20,7 @@ export interface ProfileEditFormRef {
 }
 
 export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormProps>(
-  ({ user, isEditingProfile, setIsEditingProfile, setUser }, ref) => {
+  ({ user, isEditingProfile, setIsEditingProfile, setUser, postCount }, ref) => {
     const router = useRouter();
     const toast = useToast();
     const displayNameRef = useRef<HTMLInputElement | null>(null);
@@ -222,7 +223,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
           <div className="profile-static-info">
             <div className="username">@{user.username}</div>
             {user.displayName && <div className="dim">{user.displayName}</div>}
-            <div className="dim">joined {new Date(user.joinedAt).toLocaleDateString()}</div>
+            <div className="dim">{postCount} {postCount === 1 ? 'post' : 'posts'}</div>
             {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
           </div>
         )}

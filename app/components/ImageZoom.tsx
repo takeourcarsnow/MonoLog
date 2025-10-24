@@ -40,6 +40,26 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     return () => observer.disconnect();
   }, [lazy, isVisible, rootMargin, state.containerRef]);
 
+  // Ensure loaded class is added even if onLoad doesn't fire (e.g., cached images)
+  useEffect(() => {
+    const img = state.imgRef.current;
+    if (!img) return;
+
+    const checkLoaded = () => {
+      if (img.complete && img.naturalWidth > 0) {
+        img.classList.add("loaded");
+      }
+    };
+
+    // Check immediately in case image is already cached
+    checkLoaded();
+
+    // Also check after a short delay in case load event is delayed
+    const timeout = setTimeout(checkLoaded, 100);
+
+    return () => clearTimeout(timeout);
+  }, [state.imgRef.current]);
+
   // Call onDimensionsChange when active and loaded
   useEffect(() => {
     if (isActive && onDimensionsChange && state.containerRectRef.current) {

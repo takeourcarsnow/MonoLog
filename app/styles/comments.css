@@ -72,8 +72,9 @@
 
 .comment-list { display: grid; gap: 10px; }
 .comment-item { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 10px; background: color-mix(in srgb, var(--bg-elev), transparent 6%); border: 1px solid var(--border); }
-.comment-row { display: flex; gap: 10px; align-items: center; }
-.comment-avatar { position: relative; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex: 0 0 40px; }
+.comment-row { display: flex; gap: 4px; align-items: center; }
+.comment-avatar { position: relative; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex: 0 0 30px; }
+.comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .comment-avatar-link:hover .comment-avatar { transform: scale(1.05); transition: transform 0.2s ease; }
 .comment-body { display: block; min-width: 0; }
 .comment-head { display:flex; gap:12px; align-items:center; margin-bottom:4px; }

@@ -174,7 +174,7 @@ export function Comments({ postId, onCountChange }: Props) {
                     className="comment-author-link"
                     style={{ textDecoration: 'none', color: 'inherit' }}
                   >
-                    <span className="author">{c.user?.username || c.user?.displayName || "User"}</span>
+                    <span className="author">{c.user?.username ? `@${c.user?.username}` : (c.user?.displayName || "User")}</span>
                   </Link>
                   <TimeDisplay date={c.createdAt} className="dim" />
                   {currentUser && currentUser.id === c.user?.id ? (

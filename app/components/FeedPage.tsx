@@ -61,6 +61,12 @@ export function FeedPage({
     return () => { mounted = false; };
   }, [loadInitialPosts, scrollStateKey]);
 
+  // Enable page scrolling for feed-like pages
+  useEffect(() => {
+    document.body.classList.add('page-scroll');
+    return () => document.body.classList.remove('page-scroll');
+  }, []);
+
   // Persist scroll position when FeedView unmounts
   useEffect(() => {
     return () => {

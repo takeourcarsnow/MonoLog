@@ -29,7 +29,8 @@ html[class*="page-scroll"] {
 .content:has(.communities),
 .content:has(.community),
 .content:has(.thread),
-.content:has(.create-thread) {
+.content:has(.create-thread),
+.content:has(.feed) {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;

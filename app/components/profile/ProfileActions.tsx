@@ -158,6 +158,23 @@ export function ProfileActions({
 
   return (
     <>
+      <style>{`
+        .profile-actions .btn:hover .icon svg {
+          color: lightblue !important;
+        }
+        .profile-actions .delete-account-btn:hover .icon svg {
+          color: red !important;
+        }
+        .profile-actions .btn:hover {
+          background: transparent !important;
+        }
+        .profile-actions .btn:hover::before {
+          display: none !important;
+        }
+        .delete-account-btn-wrapper {
+          margin-top: -2px;
+        }
+      `}</style>
       {/* Follow button moved outside profile-actions div */}
       {currentUserId && user?.id !== currentUserId ? (
         <button
@@ -167,7 +184,7 @@ export function ProfileActions({
           onClick={handleFollowToggle}
         >
           <span className="icon" aria-hidden="true">
-            {following ? <UserCheck size={16} /> : <UserPlus size={16} />}
+            {following ? <UserCheck size={18} /> : <UserPlus size={18} />}
           </span>
           <span className="reveal label">{displayText}</span>
         </button>
@@ -180,12 +197,12 @@ export function ProfileActions({
           <>
             <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following">
               <span className="icon" aria-hidden>
-                <User size={16} strokeWidth={1.2} />
+                <User size={18} strokeWidth={1.2} />
               </span>
             </Link>
             <Link className="btn icon week-review-link no-effects" href="/week-review" aria-label="Week in Review">
               <span className="icon" aria-hidden>
-                <BarChart3 size={16} strokeWidth={1.2} />
+                <BarChart3 size={18} strokeWidth={1.2} />
               </span>
             </Link>
             <button
@@ -198,10 +215,10 @@ export function ProfileActions({
               <span className="icon" aria-hidden>
                 {isEditingProfile ? (
                   // save icon
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 ) : (
                   // edit/profile icon
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 )}
               </span>
             </button>

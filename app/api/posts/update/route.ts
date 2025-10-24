@@ -19,7 +19,15 @@ export async function POST(req: Request) {
     if (patch.lens !== undefined) updates.lens = patch.lens;
   if (patch.filmType !== undefined) updates.film_type = patch.filmType === '' ? null : patch.filmType;
   if (patch.spotifyLink !== undefined) updates.spotify_link = patch.spotifyLink === '' ? null : patch.spotifyLink;
-  const { data: updatedRows, error } = await sb.from('posts').update(updates).eq('id', id).select('*').limit(1).single();
+  // Return the updated post row along with the related user/profile fields
+  // so the client can hydrate the post.user properly (username, avatar).
+  const { data: updatedRows, error } = await sb
+    .from('posts')
+    .update(updates)
+    .eq('id', id)
+    .select('*, users(id, username, display_name, avatar_url)')
+    .limit(1)
+    .single();
   if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
 
     // Handle mentions if caption was updated

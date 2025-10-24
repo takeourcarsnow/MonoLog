@@ -169,6 +169,36 @@
   color: inherit;
 }
 
+/* In card headers, keep username and time on a single baseline and center-aligned */
+.card-head .user-line {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.card-head .user-line .username {
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.card-head .user-line .dim {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+/* Wrapper for avatar + username + date in the card header */
+.card-head .user-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 /* Subtle, card-scoped button micro-interactions (used on About and other card actions) */
 .card .btn {
   transition: transform 160ms var(--transition-mid), box-shadow 200ms var(--transition-mid), background 140ms ease;
@@ -267,6 +297,16 @@
   flex: 1; /* Take available space */
   /* allow lines to wrap so long usernames and times don't get clipped */
   overflow: visible;
+}
+
+/* Ensure headers keep username and time on one line inside card heads
+   (this overrides the default column layout used elsewhere). */
+.card-head .user-line {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: initial !important;
 }
 .username { 
   font-weight: 700; 

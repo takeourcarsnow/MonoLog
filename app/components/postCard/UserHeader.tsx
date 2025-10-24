@@ -89,11 +89,16 @@ export const UserHeader = memo(function UserHeader({
   const editClickLockRef = useRef<number | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const [showFullDate, setShowFullDate] = useState(false);
   const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
   const userLine = (
-    <>
-      {formatRelative(post.createdAt)} {lockIcon}
-    </>
+    <span 
+      onClick={() => setShowFullDate(!showFullDate)}
+      style={{ cursor: 'pointer' }}
+      title={showFullDate ? 'Click to show relative time' : 'Click to show full date'}
+    >
+      {showFullDate ? new Date(post.createdAt).toLocaleDateString() : formatRelative(post.createdAt)}
+    </span>
   );
 
   // Two-step confirm state for deleting this post (click once to arm, click again to confirm)
@@ -139,12 +144,16 @@ export const UserHeader = memo(function UserHeader({
 
   return (
     <div className="card-head">
-      <Link className="user-link" href={`/${post.user.username || post.user.id}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
-  <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
-        <div className="user-line">
-          <span className="username">@{post.user.username} <span className="dim">{userLine}</span></span>
-        </div>
-      </Link>
+      <div className="user-meta">
+        <Link className="user-link" href={`/${post.user.username || post.user.id}`}>
+          <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
+          <div className="user-line">
+            <span className="username">@{post.user.username}</span>
+          </div>
+        </Link>
+        <span className="user-sep" aria-hidden>•</span>
+        <span className="dim">{userLine} {lockIcon}</span>
+      </div>
       <div style={{ marginLeft: "auto", position: "relative", display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
         {!authLoading && (
           <>

@@ -34,5 +34,13 @@ export function formatRelative(date: string | number | Date) {
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   if (diff < 86400 * 7) return `${Math.floor(diff / 86400)}d`;
-  return new Date(date).toLocaleDateString();
+  
+  // For older posts, show weeks and remaining days
+  const weeks = Math.floor(diff / (86400 * 7));
+  const remainingDays = Math.floor((diff % (86400 * 7)) / 86400);
+  
+  if (weeks === 1 && remainingDays === 0) return "1w";
+  if (weeks === 1) return `1w ${remainingDays}d`;
+  if (remainingDays === 0) return `${weeks}w`;
+  return `${weeks}w ${remainingDays}d`;
 }

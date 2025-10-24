@@ -94,22 +94,33 @@ export function DeleteAccountButton({ isEditing }: { isEditing?: boolean } = {})
               <div className="confirm-popover-body">
                 <h3 id="delete-account-title">Permanently delete your account</h3>
 
-                <input
-                  ref={inputRef}
-                  className="input"
-                  aria-label="Type delete to confirm account deletion"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  onKeyDown={async (e) => {
-                    if (e.key === "Enter") {
-                      if (confirmText.trim().toLowerCase() === "delete") {
-                        e.preventDefault();
-                        await performDelete();
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={inputRef}
+                    className="input flex-1 text-center"
+                    aria-label="Type delete to confirm account deletion"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter") {
+                        if (confirmText.trim().toLowerCase() === "delete") {
+                          e.preventDefault();
+                          await performDelete();
+                        }
                       }
-                    }
-                  }}
-                  placeholder="Type delete to confirm"
-                />
+                    }}
+                    placeholder="Type delete to confirm"
+                  />
+                  <button
+                    className={`btn no-effects ${confirmText.trim().toLowerCase() === "delete" ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+                    disabled={loading || confirmText.trim().toLowerCase() !== "delete"}
+                    onClick={performDelete}
+                    title="Confirm deletion"
+                    style={{ transform: 'none' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                </div>
 
                 {error ? <p className="error">{error}</p> : null}
               </div>

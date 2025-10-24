@@ -2,6 +2,7 @@ import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { uid } from '@/src/lib/id';
 import { logger } from '@/src/lib/logger';
 import { parseMentions } from '@/src/lib/mentions';
+import { parseHashtags } from '@/src/lib/hashtags';
 import { clearServerCachePrefix } from '@/src/lib/serverCache';
 
 export async function ensureUserExists(userId: string) {
@@ -59,6 +60,12 @@ export async function insertPost(sb: any, userId: string, imageUrls: any, thumbn
   if (lens) insertObj.lens = lens;
   if (filmType) insertObj.film_type = filmType;
 
+  // Parse hashtags from caption
+  const hashtags = parseHashtags(caption || '');
+  if (hashtags.length > 0) {
+    insertObj.hashtags = hashtags;
+  }
+
   // Handle image URLs - prefer array format when multiple images
   if (imageUrls && imageUrls.length > 0) {
     insertObj.image_url = imageUrls[0]; // Always set primary for compatibility
@@ -85,7 +92,8 @@ export async function insertPost(sb: any, userId: string, imageUrls: any, thumbn
           res.error.message?.toLowerCase().includes('image_urls') ||
           res.error.message?.toLowerCase().includes('camera') ||
           res.error.message?.toLowerCase().includes('lens') ||
-          res.error.message?.toLowerCase().includes('film_type')) {
+          res.error.message?.toLowerCase().includes('film_type') ||
+          res.error.message?.toLowerCase().includes('hashtags')) {
         const fallbackObj = { ...insertObj };
         // Remove potentially problematic columns
         delete fallbackObj.image_urls;
@@ -94,6 +102,7 @@ export async function insertPost(sb: any, userId: string, imageUrls: any, thumbn
         if (fallbackObj.camera) delete fallbackObj.camera;
         if (fallbackObj.lens) delete fallbackObj.lens;
         if (fallbackObj.film_type) delete fallbackObj.film_type;
+        if (fallbackObj.hashtags) delete fallbackObj.hashtags;
         const fallbackRes = await sb.from('posts').insert(fallbackObj).select('*').limit(1).single();
         if (fallbackRes.error) {
           throw new Error(`Database schema error: ${fallbackRes.error.message}`);

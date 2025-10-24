@@ -191,3 +191,28 @@ export async function getFollowingFeedPage({ limit, before }: { limit: number; b
     commentsCount: commentCounts[row.id] || 0
   }));
 }
+
+export async function getHashtagFeedPage(tag: string, { limit, before }: { limit: number; before?: string }) {
+  // Use same-origin proxy when running in the browser
+  if (typeof window !== 'undefined') {
+    const sb = getClient();
+    let token: string | null = null;
+    try { token = await getAccessToken(sb); } catch (_) { token = null; }
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const params = new URLSearchParams();
+    params.set('limit', String(limit));
+    if (before) params.set('before', before);
+    const resp = await fetch(`/api/posts/hashtag/${encodeURIComponent(tag)}?${params.toString()}`, { headers });
+    if (!resp.ok) throw new Error('Failed to fetch hashtag feed page');
+    const json = await resp.json();
+    return (json.posts || []).map((p: any) => p);
+  }
+  const sb = getClient();
+  let q: any = sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("public", true).contains("hashtags", [tag]).order("created_at", { ascending: false }).limit(limit);
+  if (before) q = q.lt("created_at", before);
+  const { data, error } = await q;
+  logSupabaseError("getHashtagFeedPage", { data, error });
+  if (error) throw error;
+  return (data || []).map((row: any) => mapRowToHydratedPost(row));
+}

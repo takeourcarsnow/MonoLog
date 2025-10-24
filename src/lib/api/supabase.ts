@@ -1,4 +1,4 @@
-import { getExploreFeed, getExploreFeedPage, getFollowingFeed, getFollowingFeedPage, getUserPosts, getPostsByDate, getPost, updatePost, deletePost, canPostToday, createOrReplaceToday } from "./posts";
+import { getExploreFeed, getExploreFeedPage, getFollowingFeed, getFollowingFeedPage, getHashtagFeedPage, getUserPosts, getPostsByDate, getPost, updatePost, deletePost, canPostToday, createOrReplaceToday } from "./posts";
 import { getSupabaseClient, getSupabaseClientRaw } from "./client";
 import { getUsers, getCurrentUser, loginAs, getUser, getUserByUsername, updateUser, updateCurrentUser, signOut, deleteCurrentUser } from "./users";
 import { follow, unfollow, isFollowing, getFollowingUsers } from "./follows";
@@ -33,6 +33,7 @@ export const supabaseApi: Api = {
   getFollowingFeed,
   getExploreFeedPage,
   getFollowingFeedPage,
+  getHashtagFeedPage,
   getUserPosts,
   getUser,
   getUserByUsername,

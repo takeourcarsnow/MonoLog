@@ -39,6 +39,7 @@ export type Post = {
   // For accessibility: either a single alt for the primary image or an array matching imageUrls
   alt?: string | string[];
   caption: string;
+  hashtags?: string[];
   spotifyLink?: string;
   createdAt: string;
   public: boolean;
@@ -152,6 +153,7 @@ export interface Api {
   // Paginated variants (return newest posts before an optional timestamp).
   getExploreFeedPage(opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
   getFollowingFeedPage(opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
+  getHashtagFeedPage(tag: string, opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
   getUserPosts(userId: string): Promise<HydratedPost[]>;
   getUser(id: string): Promise<User | null>;
   getUserByUsername?(username: string): Promise<User | null>;
@@ -218,6 +220,6 @@ export const RESERVED_ROUTES = [
   'feed', 'post', 'profile', 'upload', 'admin',
   'settings', 'help', 'terms', 'privacy', 'login',
   'register', 'signup', 'signin', 'logout', 'auth',
-  'week-review',
+  'week-review', 'hashtags',
   '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
 ];

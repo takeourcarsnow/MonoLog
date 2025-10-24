@@ -572,6 +572,18 @@
   text-decoration: underline;
 }
 
+.hashtag-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.hashtag-link:hover {
+  color: var(--primary-hover, color-mix(in srgb, var(--primary), black 10%));
+  text-decoration: underline;
+}
+
 /* Edit panel enter/exit: animate height and opacity so card borders expand smoothly */
 .post-editor-wrap {
   overflow: hidden; /* contain the editor for max-height animation */

@@ -172,6 +172,16 @@ export const localApi: Api = {
     const slice = posts.slice(0, limit);
     return slice.map(hydratePost);
   },
+  async getHashtagFeedPage(tag: string, { limit, before }: { limit: number; before?: string }) {
+    let posts = cache.posts
+      .filter(p => p.public && (p as any).hashtags?.includes(tag))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (before) {
+      posts = posts.filter(p => new Date(p.createdAt).getTime() < new Date(before).getTime());
+    }
+    const slice = posts.slice(0, limit);
+    return slice.map(hydratePost);
+  },
   async getUserPosts(userId: string) {
     const me = getUserById(cache.currentUserId);
     return cache.posts

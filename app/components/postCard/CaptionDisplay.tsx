@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { renderMentions } from "@/src/lib/mentions";
+import { renderCaption } from "@/src/lib/hashtags";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface CaptionDisplayProps {
@@ -28,7 +28,7 @@ export function CaptionDisplay({ caption, maxLength = 50 }: CaptionDisplayProps)
       style={{ cursor: shouldTruncate ? 'pointer' : 'default' }}
     >
       <div className={`caption-content ${isExpanded ? 'expanded' : 'collapsed'}`}>
-        <div className="caption-inner">{renderMentions(caption)}</div>
+        <div className="caption-inner">{renderCaption(caption)}</div>
         {/* subtle gradient hint at the bottom when collapsed */}
         {shouldTruncate && <div className="caption-fade" aria-hidden="true" />}
       </div>

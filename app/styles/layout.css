@@ -10,7 +10,10 @@
   -webkit-overflow-scrolling: touch;
   /* Reserve top space for fixed header and use consistent side padding */
   /* add a 1px buffer to bottom padding to avoid hairline gaps from rounding */
-  padding: var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) var(--page-side-padding) calc(var(--tabbar-height, 64px) + 29px);
+  /* Add a small extra buffer to the bottom padding to avoid content
+    being momentarily obscured by the fixed tabbar (covers cases where
+    the runtime measurement of --tabbar-height hasn't been applied yet). */
+  padding: var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) var(--page-side-padding) calc(var(--tabbar-height, 64px) + 36px);
 }
 .upload-empty .content { padding-bottom: calc(28px + var(--safe-bottom)); }
 *** End Patch
@@ -72,7 +75,9 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
     -webkit-overflow-scrolling: touch;
     padding-left: var(--page-side-padding-mobile);
     padding-right: var(--page-side-padding-mobile);
-    padding-bottom: var(--about-bottom-gap, calc(var(--tabbar-height, 64px) + 28px));
+   /* Keep a slightly larger bottom gap on mobile so rounded cards and
+     other bottom content don't get clipped behind the tabbar. */
+   padding-bottom: var(--about-bottom-gap, calc(var(--tabbar-height, 64px) + 36px));
   }
   /* Push the server-rendered about-card above the fixed tabbar on phones.
      Uses --about-bottom-gap set by the About page (falls back to --tabbar-height). */

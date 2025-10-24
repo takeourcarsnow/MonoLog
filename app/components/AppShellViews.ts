@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { lazy } from "react";
 import { RESERVED_ROUTES } from "@/src/lib/types";
+import { isUsernameRoute } from "@/src/lib/routeUtils";
 
 // Lazy load view components to reduce initial bundle size
 const FeedView = lazy(() => import("./FeedView").then(mod => ({ default: mod.FeedView })));
@@ -29,12 +30,8 @@ export function useAppShellViews() {
     if (idx !== -1) return idx;
 
     // Check if we're on a username route - if so, treat it as profile view
-    const pathSegments = pathname.split('/').filter(Boolean);
-    if (pathSegments.length === 1) {
-      const segment = pathSegments[0];
-      if (!RESERVED_ROUTES.includes(segment.toLowerCase())) {
-        return 4; // profile view index
-      }
+    if (isUsernameRoute(pathname)) {
+      return 4; // profile view index
     }
 
     return 0; // default to feed
@@ -53,15 +50,7 @@ export function useAppShellViews() {
   // as the explicit /feed route. This keeps the caption, view toggle and
   // other layout elements positioned identically between / and /feed.
   // Also treat username routes (e.g., /${username}) as profile view for swipe support.
-  const isMainView = pathname === "/" || views.some(v => v.path === pathname) || (() => {
-    // Check if we're on a username route (not one of the reserved routes)
-    const pathSegments = pathname.split('/').filter(Boolean);
-    if (pathSegments.length === 1) {
-      const segment = pathSegments[0];
-      return !RESERVED_ROUTES.includes(segment.toLowerCase());
-    }
-    return false;
-  })();
+  const isMainView = pathname === "/" || views.some(v => v.path === pathname) || isUsernameRoute(pathname);
 
   return { currentIndex, activeIndex, setActiveIndex, isMainView };
 }

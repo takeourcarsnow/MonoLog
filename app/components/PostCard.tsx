@@ -78,12 +78,6 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
     setDeleteExpanded,
     showConfirmText,
     deleteExpandTimerRef,
-    isPressingDelete,
-    setIsPressingDelete,
-    overlayEnabled,
-    setOverlayEnabled,
-    deleteBtnRef,
-    deleteHandlerRef,
     handleDeleteActivation
   } = useDelete(post.id);
   const {
@@ -124,24 +118,18 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         setIsFollowing={setIsFollowing}
         showAuth={showAuth}
         setShowAuth={setShowAuth}
-  editing={editing}
+        editing={editing}
         setEditing={setEditing}
         editExpanded={editExpanded}
         setEditExpanded={setEditExpanded}
         editTimerRef={editTimerRef}
-  editorSaving={editorSaving}
-  editorRef={editorRef}
-  editorOpeningRef={editorOpeningRef}
+        editorSaving={editorSaving}
+        editorRef={editorRef}
+        editorOpeningRef={editorOpeningRef}
         deleteExpanded={deleteExpanded}
         setDeleteExpanded={setDeleteExpanded}
         showConfirmText={showConfirmText}
         deleteExpandTimerRef={deleteExpandTimerRef}
-        isPressingDelete={isPressingDelete}
-        setIsPressingDelete={setIsPressingDelete}
-        overlayEnabled={overlayEnabled}
-        setOverlayEnabled={setOverlayEnabled}
-        deleteBtnRef={deleteBtnRef}
-        deleteHandlerRef={deleteHandlerRef}
         followBtnRef={followBtnRef}
         followAnim={followAnim}
         setFollowAnim={setFollowAnim}
@@ -150,6 +138,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         followExpandTimerRef={followExpandTimerRef}
         followAnimTimerRef={followAnimTimerRef}
         followInFlightRef={followInFlightRef}
+        handleDeleteActivation={handleDeleteActivation}
         toast={toast}
       />
 

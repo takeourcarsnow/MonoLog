@@ -31,14 +31,6 @@ interface UserHeaderProps {
   setDeleteExpanded: (value: boolean) => void;
   showConfirmText: boolean;
   deleteExpandTimerRef: React.MutableRefObject<number | null>;
-  isPressingDelete: boolean;
-  setIsPressingDelete: (value: boolean) => void;
-  overlayEnabled: boolean;
-  setOverlayEnabled: (value: boolean) => void;
-  deleteBtnRef: React.RefObject<HTMLButtonElement>;
-  deleteHandlerRef: React.MutableRefObject<(() => void) | null>;
-  editorRef?: React.MutableRefObject<{ save?: () => Promise<void>; cancel?: () => void } | null>;
-  editorOpeningRef?: React.MutableRefObject<boolean | null>;
   followBtnRef: React.RefObject<HTMLButtonElement>;
   followAnim: 'following-anim' | 'unfollow-anim' | null;
   setFollowAnim: (value: 'following-anim' | 'unfollow-anim' | null) => void;
@@ -47,6 +39,9 @@ interface UserHeaderProps {
   followExpandTimerRef: React.MutableRefObject<number | null>;
   followAnimTimerRef: React.MutableRefObject<number | null>;
   followInFlightRef: React.MutableRefObject<boolean>;
+  handleDeleteActivation: () => void;
+  editorRef?: React.MutableRefObject<{ save?: () => Promise<void>; cancel?: () => void } | null>;
+  editorOpeningRef?: React.MutableRefObject<boolean | null>;
   toast: ReturnType<typeof useToast>;
 }
 
@@ -68,12 +63,6 @@ export const UserHeader = memo(function UserHeader({
   setDeleteExpanded,
   showConfirmText,
   deleteExpandTimerRef,
-  isPressingDelete,
-  setIsPressingDelete,
-  overlayEnabled,
-  setOverlayEnabled,
-  deleteBtnRef,
-  deleteHandlerRef,
   followBtnRef,
   followAnim,
   setFollowAnim,
@@ -82,6 +71,7 @@ export const UserHeader = memo(function UserHeader({
   followExpandTimerRef,
   followAnimTimerRef,
   followInFlightRef,
+  handleDeleteActivation,
   editorRef,
   editorOpeningRef,
   toast,
@@ -100,47 +90,6 @@ export const UserHeader = memo(function UserHeader({
       {showFullDate ? new Date(post.createdAt).toLocaleDateString() : formatRelative(post.createdAt)}
     </span>
   );
-
-  // Two-step confirm state for deleting this post (click once to arm, click again to confirm)
-  const [postDeleteArmed, setPostDeleteArmed] = useState(false);
-  const postDeleteTimeoutRef = useRef<number | null>(null);
-
-  const handleArmOrDeletePost = async () => {
-    // First click arms
-    if (!postDeleteArmed) {
-      setPostDeleteArmed(true);
-      if (deleteExpandTimerRef && deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
-      deleteExpandTimerRef.current = window.setTimeout(() => {
-        setPostDeleteArmed(false);
-        if (deleteExpandTimerRef) deleteExpandTimerRef.current = null;
-      }, 6000);
-      // mirror parent's expanded state for visual consistency
-      try { setDeleteExpanded(true); } catch (_) {}
-      return;
-    }
-
-    // Confirmed: perform delete
-    try {
-      if (postDeleteTimeoutRef.current) window.clearTimeout(postDeleteTimeoutRef.current);
-      // optimistic remove DOM element like original
-      (document.getElementById(`post-${post.id}`)?.remove?.());
-      await api.deletePost(post.id);
-      window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId: post.id } }));
-      if (pathname?.startsWith("/post/")) router.push("/");
-    } catch (e: any) {
-      toast.show(e?.message || "Failed to delete post");
-    } finally {
-      setPostDeleteArmed(false);
-      try { setDeleteExpanded(false); } catch (_) {}
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (postDeleteTimeoutRef.current) window.clearTimeout(postDeleteTimeoutRef.current);
-      if (deleteExpandTimerRef && deleteExpandTimerRef.current) { window.clearTimeout(deleteExpandTimerRef.current); deleteExpandTimerRef.current = null; }
-    };
-  }, []);
 
   return (
     <div className="card-head">
@@ -264,42 +213,13 @@ export const UserHeader = memo(function UserHeader({
                 </button>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <button
-                    className={`btn ghost small-min delete-btn ${isPressingDelete ? "pressing-delete" : ""} ${postDeleteArmed || deleteExpanded ? 'confirm' : ''}`}
-                    aria-label={postDeleteArmed || deleteExpanded ? 'Confirm delete post' : 'Delete post'}
-                    onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => { try { e.preventDefault(); } catch (_) {} setIsPressingDelete(true); }}
-                    onMouseUp={() => setIsPressingDelete(false)}
-                    onMouseLeave={() => setIsPressingDelete(false)}
-                    onTouchStart={() => { setIsPressingDelete(true); }}
-                    onTouchEnd={() => setIsPressingDelete(false)}
-                    onClick={async () => { await handleArmOrDeletePost(); }}
+                    className={`btn ghost small-min delete-btn ${deleteExpanded ? 'confirm' : ''}`}
+                    aria-label={deleteExpanded ? 'Confirm delete post' : 'Delete post'}
+                    onClick={handleDeleteActivation}
                     style={{ position: 'relative' }}
                   >
                     <span aria-hidden><Trash size={16} /></span>
                   </button>
-
-                  {overlayEnabled && (
-                    <div
-                      ref={deleteBtnRef as any}
-                      style={{ position: 'absolute', inset: 0, cursor: 'pointer', background: 'transparent', WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
-                      onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => { try { e.preventDefault(); } catch (_) {} setIsPressingDelete(true); }}
-                      onMouseUp={() => setIsPressingDelete(false)}
-                      onMouseLeave={() => setIsPressingDelete(false)}
-                      onTouchStart={() => { setIsPressingDelete(true); }}
-                      onTouchEnd={() => setIsPressingDelete(false)}
-                      onClick={async () => {
-                        await handleArmOrDeletePost();
-                      }}
-                    />
-                  )}
-
-                  <button
-                    aria-label={postDeleteArmed ? 'Confirm delete post' : 'Delete post'}
-                    onClick={async () => { 
-                      await handleArmOrDeletePost();
-                    }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (async () => { await handleArmOrDeletePost(); })(); } }}
-                    style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
-                  />
                 </div>
               </>
             )}

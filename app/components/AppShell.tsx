@@ -27,8 +27,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { swiperRef, handleSlideChange } = useAppShellNavigation(currentIndex, activeIndex, setActiveIndex, isTouchDevice);
   const { me } = useAuth();
 
-  useHeaderHeightMeasurement(ready, pathname);
-  useTabbarHeightMeasurement(ready);
+  useEffect(() => {
+    const handleViewportChanged = () => {
+      if (swiperRef.current) {
+        swiperRef.current.update();
+      }
+    };
+    window.addEventListener('monolog-viewport-changed', handleViewportChanged);
+    return () => window.removeEventListener('monolog-viewport-changed', handleViewportChanged);
+  }, []);
 
   return (
     <div className="app-content">
@@ -58,6 +65,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             threshold={0}
             resistance={true}
             resistanceRatio={0.85}
+            observer={true}
+            observeParents={true}
             style={{ height: '100%', touchAction: 'none' }}
           >
               {views.map((view, index) => {

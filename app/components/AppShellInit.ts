@@ -146,6 +146,8 @@ export function useAppShellInit() {
             try { document.documentElement.classList.add('monolog-disable-transitions'); } catch(_) {}
             setViewportVar();
             try { requestAnimationFrame(() => document.documentElement.classList.remove('monolog-disable-transitions')); } catch(_) { setTimeout(() => { try { document.documentElement.classList.remove('monolog-disable-transitions'); } catch(_) {} }, 160); }
+            // Notify other components that viewport changed
+            try { window.dispatchEvent(new CustomEvent('monolog-viewport-changed')); } catch(_) {}
             if (debugEnabled) { setTimeout(debugLog, 160); }
           };
           window.addEventListener('resize', onResize, { passive: true });

@@ -78,6 +78,7 @@
 .comment-avatar-link:hover .comment-avatar { transform: scale(1.05); transition: transform 0.2s ease; }
 .comment-body { display: block; min-width: 0; }
 .comment-head { display:flex; gap:12px; align-items:center; margin-bottom:4px; }
+.comment-action-slot { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
 .comment-author-link:hover .author { color: var(--primary); transition: color 0.2s ease; }
 .comment-text { 
   font-size: 14px; 

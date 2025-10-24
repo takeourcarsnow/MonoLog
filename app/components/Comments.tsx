@@ -177,77 +177,78 @@ export function Comments({ postId, onCountChange }: Props) {
                     <span className="author">{c.user?.username ? `@${c.user?.username}` : (c.user?.displayName || "User")}</span>
                   </Link>
                   <TimeDisplay date={c.createdAt} className="dim" />
-                  {currentUser && currentUser.id === c.user?.id ? (
-                    <button
-                      className={`comment-badge ${confirmingIds.has(c.id) ? 'confirming' : ''}`}
-                      title={confirmingIds.has(c.id) ? 'Confirm delete' : 'Delete comment'}
-                      aria-pressed={confirmingIds.has(c.id) ? 'true' : 'false'}
-                      onClick={async () => {
-                        if (confirmingIds.has(c.id)) {
-                          const t = confirmTimers.current.get(c.id);
-                          if (t) { clearTimeout(t); confirmTimers.current.delete(c.id); }
+                  <div className="comment-action-slot">
+                    {currentUser && currentUser.id === c.user?.id ? (
+                      <button
+                        className={`comment-badge ${confirmingIds.has(c.id) ? 'confirming' : ''}`}
+                        title={confirmingIds.has(c.id) ? 'Confirm delete' : 'Delete comment'}
+                        aria-pressed={confirmingIds.has(c.id) ? 'true' : 'false'}
+                        onClick={async () => {
+                          if (confirmingIds.has(c.id)) {
+                            const t = confirmTimers.current.get(c.id);
+                            if (t) { clearTimeout(t); confirmTimers.current.delete(c.id); }
 
-                          const backup = comments.slice();
-                          setComments(prev => {
-                            const next = prev.filter(x => x.id !== c.id);
-                            try { setCachedComments(postId, next); } catch (_) {}
-                            notifyCount(next.length);
-                            return next;
-                          });
+                            const backup = comments.slice();
+                            setComments(prev => {
+                              const next = prev.filter(x => x.id !== c.id);
+                              try { setCachedComments(postId, next); } catch (_) {}
+                              notifyCount(next.length);
+                              return next;
+                            });
 
-                          setConfirmingIds(prev => {
-                            const n = new Set(prev);
-                            n.delete(c.id);
-                            return n;
-                          });
+                            setConfirmingIds(prev => {
+                              const n = new Set(prev);
+                              n.delete(c.id);
+                              return n;
+                            });
 
-                          setRemovingIds(prev => new Set(prev).add(c.id));
+                            setRemovingIds(prev => new Set(prev).add(c.id));
 
-                          setTimeout(async () => {
-                            try {
-                              const sb = getClient();
-                              const token = await getAccessToken(sb);
-                              const res = await fetch('/api/comments/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ commentId: c.id }) });
-                              const json = await res.json();
-                              if (!res.ok) throw new Error(json?.error || 'Failed');
-                              await load(true);
-                            } catch (e: any) {
-                              setComments(backup);
-                              try { setCachedComments(postId, backup); } catch (_) {}
-                              notifyCount(backup.length);
-                              toast.show(e?.message || 'Failed to delete comment');
-                            } finally {
-                              setRemovingIds(prev => {
-                                const n = new Set(prev);
-                                n.delete(c.id);
-                                return n;
-                              });
-                            }
-                          }, 320);
+                            setTimeout(async () => {
+                              try {
+                                const sb = getClient();
+                                const token = await getAccessToken(sb);
+                                const res = await fetch('/api/comments/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ commentId: c.id }) });
+                                const json = await res.json();
+                                if (!res.ok) throw new Error(json?.error || 'Failed');
+                                await load(true);
+                              } catch (e: any) {
+                                setComments(backup);
+                                try { setCachedComments(postId, backup); } catch (_) {}
+                                notifyCount(backup.length);
+                                toast.show(e?.message || 'Failed to delete comment');
+                              } finally {
+                                setRemovingIds(prev => {
+                                  const n = new Set(prev);
+                                  n.delete(c.id);
+                                  return n;
+                                });
+                              }
+                            }, 320);
 
-                          return;
-                        }
+                            return;
+                          }
 
-                        setConfirmingIds(prev => new Set(prev).add(c.id));
-                        const timer = window.setTimeout(() => {
-                          setConfirmingIds(prev => {
-                            const n = new Set(prev);
-                            n.delete(c.id);
-                            return n;
-                          });
-                          confirmTimers.current.delete(c.id);
-                        }, 3500);
-                        confirmTimers.current.set(c.id, timer);
-                      }}
-                    >
-                      <Suspense fallback={<span>×</span>}>
-                        <Trash2 size={14} />
-                      </Suspense>
-                    </button>
-                  ) : null}
-                  {currentUser && currentUser.id !== c.user?.id ? (
-                    <ReportButton commentId={c.id} />
-                  ) : null}
+                          setConfirmingIds(prev => new Set(prev).add(c.id));
+                          const timer = window.setTimeout(() => {
+                            setConfirmingIds(prev => {
+                              const n = new Set(prev);
+                              n.delete(c.id);
+                              return n;
+                            });
+                            confirmTimers.current.delete(c.id);
+                          }, 3500);
+                          confirmTimers.current.set(c.id, timer);
+                        }}
+                      >
+                        <Suspense fallback={<span>×</span>}>
+                          <Trash2 size={14} />
+                        </Suspense>
+                      </button>
+                    ) : currentUser ? (
+                      <ReportButton commentId={c.id} />
+                    ) : null}
+                  </div>
                 </div>
               </div>
               <div className="comment-body">

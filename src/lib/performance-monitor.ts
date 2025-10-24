@@ -75,10 +75,7 @@ class PerformanceMonitor {
       this.metrics = this.metrics.slice(-100);
     }
 
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Performance] ${name}: ${value}`);
-    }
+    // Log to console in development (removed)
   }
 
   getMetrics(name?: string): PerformanceMetric[] {

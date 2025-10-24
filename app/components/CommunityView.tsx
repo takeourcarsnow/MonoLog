@@ -192,6 +192,13 @@ export function CommunityView() {
     );
   }
 
+  // Small helpers to keep JSX markup simple and readable
+  const getCommunityImageSrc = () => (((community?.imageUrl || "") + "").trim() || "/logo.svg");
+  const getAvatarSrc = (thread: HydratedThread) => {
+    const userAny = (thread.user as any) || {};
+    return ((userAny.avatarUrl || userAny.avatar_url || "") + "").trim() || "/logo.svg";
+  };
+
   return (
     <div className="community">
   {/* Back Navigation */}
@@ -205,20 +212,15 @@ export function CommunityView() {
       {/* Community Header - centered stacked layout */}
       <div className="card">
         <div className="flex flex-col items-center text-center gap-4 py-4">
-          {/* Compute community image src explicitly and log helpful identifiers for debugging */}
-          {(() => {
-            const imageSrc = ((community.imageUrl || "") + "").trim() || "/logo.svg";
-            return (
-              <OptimizedImage
-                src={imageSrc}
-                alt={community.name}
-                width={80}
-                height={80}
-                className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
-                fallbackSrc="/logo.svg"
-              />
-            );
-          })()}
+          {/* Community image */}
+          <OptimizedImage
+            src={getCommunityImageSrc()}
+            alt={community.name}
+            width={80}
+            height={80}
+            className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
+            fallbackSrc="/logo.svg"
+          />
 
           <h1 className="text-2xl font-bold break-words">{community.name}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1 break-words max-w-[60ch]">
@@ -292,20 +294,14 @@ export function CommunityView() {
             <Link key={thread.id} href={`/communities/${community.slug}/thread/${thread.slug}`} className="card block thread-card" style={{ animationDelay: `${index * 0.15}s` }}>
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  {(() => {
-                    const userAny = (thread.user as any) || {};
-                    const avatarSrc = ((userAny.avatarUrl || userAny.avatar_url || "") + "").trim() || "/logo.svg";
-                    return (
-                      <OptimizedImage
-                        src={avatarSrc}
-                        alt={thread.user.username}
-                        width={40}
-                        height={40}
-                        className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                        fallbackSrc="/logo.svg"
-                      />
-                    );
-                  })()}
+                  <OptimizedImage
+                    src={getAvatarSrc(thread)}
+                    alt={thread.user.username}
+                    width={40}
+                    height={40}
+                    className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                    fallbackSrc="/logo.svg"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">

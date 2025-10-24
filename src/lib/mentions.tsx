@@ -49,5 +49,8 @@ export function renderMentions(text: string): React.ReactNode {
     parts.push(text.slice(lastIndex));
   }
 
-  return parts.length > 0 ? <>{parts}</> : text;
+  // Return a React node: if we built any parts (with links) return them,
+  // otherwise return the original text. Wrapping both branches in a
+  // fragment keeps the return type consistent as ReactNode.
+  return <>{parts.length > 0 ? parts : text}</>;
 }

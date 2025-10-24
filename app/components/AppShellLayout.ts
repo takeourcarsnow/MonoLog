@@ -26,9 +26,6 @@ function useHeightMeasurement(
         if (retry && (!rect || rect.height < 1)) return false;
         const measured = Math.ceil(rect.height) + fudge;
         document.documentElement.style.setProperty(cssVar, `${measured}px`);
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[DEBUG] ${cssVar} updated:`, `${measured}px`, 'from element:', selector, 'rect.height:', rect.height);
-        }
         return true;
       } catch (e) {
         return retry ? false : undefined;
@@ -38,9 +35,6 @@ function useHeightMeasurement(
     // Run initial measurement only once per CSS variable
     if (!alreadyInitialized) {
       let measured = updateHeight();
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[DEBUG] Initial measurement for ${cssVar}:`, measured);
-      }
       if (retry && !measured) {
         // Shorter, bounded retry/backoff: fewer attempts and lower delays to
         // avoid long waits on orientation changes while still catching
@@ -49,9 +43,6 @@ function useHeightMeasurement(
         const maxAttempts = 3; // reduced from 6
         const tryMeasure = () => {
           attempts += 1;
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`[DEBUG] Retry attempt ${attempts}/${maxAttempts} for ${cssVar}`);
-          }
           measured = updateHeight();
           if (!measured && attempts < maxAttempts) {
             // smaller incremental delay: 60ms, 120ms, ...
@@ -70,9 +61,6 @@ function useHeightMeasurement(
         const element = document.querySelector<HTMLElement>(selector);
         if (element) {
           ro = new ResizeObserver(() => {
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`[DEBUG] ResizeObserver fired for ${cssVar}`);
-            }
             requestAnimationFrame(updateHeight);
           });
           ro.observe(element);
@@ -81,15 +69,9 @@ function useHeightMeasurement(
     } catch (_) { ro = null; }
 
     const handleResize = () => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[DEBUG] Resize event fired for ${cssVar}`);
-      }
       requestAnimationFrame(updateHeight);
     };
     const handleOrientationChange = () => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[DEBUG] Orientation change event fired for ${cssVar}`);
-      }
       // Use double rAF to schedule measurement after the browser has applied
       // layout changes. This is typically faster and more reliable than a
       // fixed 150ms timeout and improves perceived responsiveness.

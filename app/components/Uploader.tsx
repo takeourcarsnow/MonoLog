@@ -217,7 +217,7 @@ function UploaderCore() {
         processing={processing}
         compressedSize={compressedSize}
         CONFIG={CONFIG}
-        onPublish={() => publish(false)}
+        onPublish={() => publish()}
         confirmCancel={confirmCancel}
         setConfirmCancel={setConfirmCancel}
         confirmCancelTimerRef={confirmCancelTimerRef}

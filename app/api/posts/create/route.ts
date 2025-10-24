@@ -5,7 +5,6 @@ import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 import { strictRateLimiter } from '@/src/lib/rateLimiter';
 import {
   ensureUserExists,
-  handleReplaceLogic,
   checkCalendarRule,
   insertPost,
   normalizeImageUrls,
@@ -31,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { imageUrls, thumbnailUrls, caption, alt, replace = false, public: isPublic = true, spotifyLink, camera, lens, filmType } = body;
+    const { imageUrls, thumbnailUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType } = body;
     const authUser = await getUserFromAuthHeader(req);
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const userId = authUser.id;
@@ -51,13 +50,8 @@ export async function POST(req: Request) {
     // Ensure user exists
     await ensureUserExists(userId);
 
-    // Handle replace logic
-    if (replace) {
-      await handleReplaceLogic(userId, sb);
-    }
-
     // Check calendar rule
-    const calendarError = await checkCalendarRule(userId, replace, sb);
+    const calendarError = await checkCalendarRule(userId, sb);
     if (calendarError) {
       return NextResponse.json(calendarError, { status: 409 });
     }

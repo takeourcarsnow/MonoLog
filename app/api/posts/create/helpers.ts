@@ -28,43 +28,9 @@ export async function ensureUserExists(userId: string) {
   }
 }
 
-export async function handleReplaceLogic(userId: string, sb: any) {
-  // Use UTC-based date boundaries to match database timestamps
-  const now = new Date();
-  const startOfDayUTC = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000);
-  const { data: todays } = await sb.from('posts').select('*').eq('user_id', userId).gte('created_at', startOfDayUTC.toISOString()).lt('created_at', endOfDayUTC.toISOString());
-  if ((todays || []).length) {
-    const ids = (todays || []).map((p: any) => p.id);
-    // delete comments
-    await sb.from('comments').delete().in('post_id', ids);
-    // remove storage objects as best-effort
-    try {
-      const base = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '') + '/storage/v1/object/public/posts/';
-      const toRemove: string[] = [];
-      for (const p of (todays || [])) {
-        const existingUrls: string[] = [];
-        if (p.image_urls && Array.isArray(p.image_urls)) existingUrls.push(...p.image_urls);
-        else if (p.image_url) existingUrls.push(p.image_url);
-        if (p.thumbnail_urls && Array.isArray(p.thumbnail_urls)) existingUrls.push(...p.thumbnail_urls);
-        else if (p.thumbnail_url) existingUrls.push(p.thumbnail_url);
-        for (const u of existingUrls) {
-          if (typeof u === 'string' && u.startsWith(base)) {
-            toRemove.push(decodeURIComponent(u.slice(base.length)));
-          }
-        }
-      }
-      if (toRemove.length) await sb.storage.from('posts').remove(toRemove);
-    } catch (e) {
-      logger.warn('storage removal failed', e);
-    }
-    await sb.from('posts').delete().in('id', ids);
-  }
-}
-
-export async function checkCalendarRule(userId: string, replace: boolean, sb: any) {
+export async function checkCalendarRule(userId: string, sb: any) {
   const DISABLE_UPLOAD_LIMIT = (process.env.NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT === '1' || process.env.NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT === 'true');
-  if (!replace && !DISABLE_UPLOAD_LIMIT) {
+  if (!DISABLE_UPLOAD_LIMIT) {
     // Use UTC-based date boundaries to match database timestamps
     const now = new Date();
     const startOfDayUTC = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -78,7 +44,7 @@ export async function checkCalendarRule(userId: string, replace: boolean, sb: an
       }
       return { error: 'You already posted today', nextAllowedAt: endOfDayUTC.getTime(), lastPostedAt: lastMs || null };
     }
-  } else if (!replace && DISABLE_UPLOAD_LIMIT) {
+  } else {
     try { logger.debug('[posts.create] upload limit disabled by NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT'); } catch (e) {}
   }
   return null;

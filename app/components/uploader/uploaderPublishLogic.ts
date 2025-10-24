@@ -21,7 +21,7 @@ export function createPublishHandler(
   filmType: string,
   filmIso: string
 ) {
-  async function publish(replace: boolean) {
+  async function publish() {
     const images = dataUrls.length ? dataUrls : [];
     if (!images.length) return toast.show("Please select at least one image");
     const maxBytes = CONFIG.imageMaxSizeMB * 1024 * 1024;
@@ -35,7 +35,6 @@ export function createPublishHandler(
         caption,
         spotifyLink: spotifyLink || undefined,
         alt: alt || caption || "Photo from today's entry",
-        replace,
         public: visibility === "public",
         camera: camera || undefined,
         lens: lens || undefined,
@@ -43,14 +42,14 @@ export function createPublishHandler(
       });
       try {
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('monolog:post_created', { detail: { replaced: replace } }));
+          window.dispatchEvent(new CustomEvent('monolog:post_created', { detail: { replaced: false } }));
         }
       } catch (_) { /* ignore */ }
       resetDraft();
       router.push("/");
     } catch (e: any) {
       if (e?.code === "LIMIT") {
-        toast.show("You already posted today. Tap 'Replace today's post' to replace it.");
+        toast.show("You already posted today.");
       } else {
         toast.show(e?.message || "Failed to publish");
       }

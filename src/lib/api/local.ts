@@ -237,22 +237,16 @@ export const localApi: Api = {
     return { allowed: true };
   },
 
-  async createOrReplaceToday({ imageUrl, imageUrls, caption, alt, spotifyLink, replace = false, public: isPublic = true }: any) {
+  async createOrReplaceToday({ imageUrl, imageUrls, caption, alt, spotifyLink, public: isPublic = true }: any) {
     const me = getUserById(cache.currentUserId);
     if (!me) throw new Error("Not logged in");
     const now = new Date();
     const todayKey = toDateKey(now);
     const todays = cache.posts.filter(p => p.userId === me.id && toDateKey(p.createdAt) === todayKey);
-    if (todays.length && !replace) {
+    if (todays.length) {
       const err: any = new Error("Already posted today");
       err.code = "LIMIT";
       throw err;
-    }
-    if (todays.length && replace) {
-      for (const p of todays) {
-        cache.comments = cache.comments.filter(c => c.postId !== p.id);
-      }
-      cache.posts = cache.posts.filter(p => !(p.userId === me.id && toDateKey(p.createdAt) === todayKey));
     }
     const post: Post = {
       id: uid(),

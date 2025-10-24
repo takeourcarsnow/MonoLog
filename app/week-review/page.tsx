@@ -31,6 +31,8 @@ export default function WeekReviewPage() {
       try {
         setLoading(true);
         const weekStats = await api.weekReviewStats();
+        // Sort recent posts by creation date ascending
+        weekStats.recentPosts.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         setStats(weekStats);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load week review');

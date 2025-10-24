@@ -151,7 +151,7 @@ export const Carousel = memo(function Carousel({
                 src={u}
                 alt={alts[idx] || `Photo ${idx + 1}`}
                 isActive={idx === index}
-                lazy={!disableMediaNavigation}
+                lazy={false}
                 // Always pass a stable callback; we only apply the height
                 // when we detect multipost layout. This lets ImageZoom
                 // report dimensions early while avoiding unstable inline

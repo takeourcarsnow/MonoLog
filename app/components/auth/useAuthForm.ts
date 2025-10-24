@@ -82,7 +82,7 @@ export function useAuthForm(onClose?: () => void) {
         const chosen = username.trim().toLowerCase();
         if (!validUsername(chosen)) {
           setLoading(false);
-          showHeaderNotice({ title: 'Username too short', subtitle: "3–32 chars; letters, numbers, '-' or '_'.", variant: 'warn' }, 4500);
+          showHeaderNotice({ title: 'Invalid username', subtitle: "3–32 chars; letters, numbers, '-', '_', or '.'.", variant: 'warn' }, 4500);
           return;
         }
 

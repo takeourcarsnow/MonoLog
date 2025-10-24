@@ -5,7 +5,7 @@ export function normalizeUsername(v: string) {
 
 export function validUsername(v: string) {
   const s = normalizeUsername(v);
-  return /^[a-z0-9_-]{3,32}$/.test(s);
+  return /^[a-z0-9_.-]{3,32}$/.test(s);
 }
 
 export function isTempEmail(email: string): boolean {

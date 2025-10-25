@@ -156,6 +156,82 @@ async function getBucketFiles() {
   }
 }
 
+async function checkMissingImages(usedPaths, bucketFiles) {
+  const bucketPaths = new Set(bucketFiles);
+  const missingPaths = [];
+
+  for (const path of usedPaths) {
+    if (!bucketPaths.has(path)) {
+      missingPaths.push(path);
+    }
+  }
+
+  if (missingPaths.length > 0) {
+    console.log(`\n⚠️  Found ${missingPaths.length} images referenced in database but missing from storage:`);
+    missingPaths.forEach(path => console.log(`   ${path}`));
+    console.log('\nThese images need to be restored. You can:');
+    console.log('1. Re-upload them via the profile page');
+    console.log('2. Restore from a backup if available');
+    console.log('3. Contact Supabase support if recently deleted');
+  } else {
+    console.log('\n✅ All referenced images are present in storage');
+  }
+
+  return missingPaths;
+}
+
+async function restoreMissingAvatars(missingPaths) {
+  if (missingPaths.length === 0) return;
+
+  console.log('\n🔄 Restoring missing avatars by setting them to default...');
+
+  // Extract user IDs from avatar paths
+  const userIds = missingPaths
+    .filter(path => path.startsWith('avatars/'))
+    .map(path => {
+      const parts = path.split('/');
+      return parts[1]; // userId is the second part
+    })
+    .filter(id => id); // remove empty
+
+  if (userIds.length === 0) {
+    console.log('No avatar paths found to restore');
+    return;
+  }
+
+  console.log(`Found ${userIds.length} users with missing avatars`);
+
+  // Update each user's avatar_url to default
+  let updated = 0;
+  let errors = 0;
+
+  for (const userId of userIds) {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ avatar_url: '/logo.svg' })
+        .eq('id', userId);
+
+      if (error) {
+        console.error(`❌ Error updating user ${userId}:`, error.message);
+        errors++;
+      } else {
+        updated++;
+        if (verbose) console.log(`✅ Updated user ${userId} to default avatar`);
+      }
+    } catch (error) {
+      console.error(`❌ Error updating user ${userId}:`, error.message);
+      errors++;
+    }
+  }
+
+  console.log(`\n📈 Restore Results:`);
+  console.log(`   Successfully updated: ${updated} users`);
+  if (errors > 0) {
+    console.log(`   Errors: ${errors} users failed`);
+  }
+}
+
 async function deleteUnusedImages(usedPaths, bucketFiles) {
   const unusedFiles = bucketFiles.filter(file => !usedPaths.has(file));
 
@@ -221,6 +297,12 @@ async function main() {
       getUsedImagePaths(),
       getBucketFiles()
     ]);
+
+    const missingPaths = await checkMissingImages(usedPaths, bucketFiles);
+
+    if (!dryRun && missingPaths.length > 0) {
+      await restoreMissingAvatars(missingPaths);
+    }
 
     await deleteUnusedImages(usedPaths, bucketFiles);
 

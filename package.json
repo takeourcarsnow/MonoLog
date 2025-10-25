@@ -16,7 +16,8 @@
     "convert-png-to-svg": "node ./scripts/convert-png-to-svg.js",
     "convert-posts-to-webp": "node ./scripts/convert-posts-to-webp.js",
     "generate-icons": "node ./scripts/generate-icons.js",
-    "generate-overlay-thumbs": "node ./scripts/generate-overlay-thumbs.js"
+    "generate-overlay-thumbs": "node ./scripts/generate-overlay-thumbs.js",
+    "remove-unused-images": "node ./scripts/remove-unused-images.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.35.0",

@@ -6,7 +6,7 @@ import { CONFIG } from '@/src/lib/config';
 // recent public posts. This runs on the server and uses the server-side API
 // adapter to query the database (Supabase) when available.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol';
+  const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.ink';
 
   const now = new Date();
   // Static routes

@@ -5,4 +5,4 @@ Allow: /
 Disallow: /api/
 
 # Sitemap: production sitemap
-Sitemap: https://monolog.lol/sitemap.xml
+Sitemap: https://monolog.ink/sitemap.xml

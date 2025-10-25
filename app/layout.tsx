@@ -61,10 +61,10 @@ export const metadata: Metadata = {
     description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
     siteName: 'MonoLog',
     type: 'website',
-    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.ink',
     images: [
       {
-        url: (process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol') + '/logo.svg',
+        url: (process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.ink') + '/logo.svg',
         width: 1200,
         height: 630,
         alt: 'MonoLog',
@@ -143,8 +143,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             "@context": "https://schema.org",
             "@type": "Organization",
             name: process.env.NEXT_PUBLIC_SITE_NAME || 'MonoLog',
-            url: process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol',
-            logo: (process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol') + '/logo.svg',
+            url: process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.ink',
+            logo: (process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.ink') + '/logo.svg',
             sameAs: [],
             description: 'MonoLog — Your day in pictures. A focused daily photo journal.'
           }) }}

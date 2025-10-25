@@ -24,6 +24,8 @@ interface FeedPageProps {
   emptyMessage?: string;
   /** When true, follow changes won't remove posts from this view until it unmounts */
   deferFollowChanges?: boolean;
+  /** Force-show the view toggle regardless of post count (opt-in) */
+  showToggle?: boolean;
 }
 
 export function FeedPage({
@@ -34,6 +36,7 @@ export function FeedPage({
   scrollStateKey = 'feed',
   emptyMessage = "Follow people to see their posts in your feed. Start by exploring creators, friends, and topics you like.",
   deferFollowChanges = false,
+  showToggle = false,
 }: FeedPageProps) {
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
 
@@ -65,10 +68,22 @@ export function FeedPage({
   }, [loadInitialPosts, scrollStateKey]);
 
   // Enable page scrolling for feed-like pages
-  // useEffect(() => {
-  //   document.body.classList.add('page-scroll');
-  //   return () => document.body.classList.remove('page-scroll');
-  // }, []);
+  // Ensure pages that rely on the legacy `page-scroll` body class get it.
+  // Historically we toggled this globally; newer CSS uses :has() but some
+  // environments/browsers may not support it. Add the class only for the
+  // hashtag view to avoid affecting other pages.
+  useEffect(() => {
+    // Add a scoped body class for hashtag pages so we can apply a CSS
+    // fallback (for browsers that don't support :has()). Using a specific
+    // class avoids any unintended layout changes on other pages.
+    try {
+      if (typeof window !== 'undefined' && viewStorageKey === 'hashtagView') {
+        document.body.classList.add('hashtag-page-scroll');
+        return () => { document.body.classList.remove('hashtag-page-scroll'); };
+      }
+    } catch (_) { }
+    return () => {};
+  }, [viewStorageKey]);
 
   // Persist scroll position when FeedView unmounts
   useEffect(() => {
@@ -171,7 +186,7 @@ export function FeedPage({
 
   return (
     <div className="view-fade">
-      {posts.length > 0 && (
+      {(posts.length > 0 || viewStorageKey === 'hashtagView' || showToggle) && (
         <ViewToggle title={title} subtitle={subtitle} selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v); }} />
       )}
       <PullToRefreshWrapper

@@ -58,6 +58,17 @@ html[class*="week-review-page-scroll"] .content {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Scoped fallback for hashtag pages when :has() isn't available. We keep
+   the header padding so elements like the view toggle aren't obscured. */
+body[class*="hashtag-page-scroll"] .content,
+html[class*="hashtag-page-scroll"] .content {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  padding-top: var(--header-height) !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Specific fallback for create-thread pages */
 body[class*="create-thread-page-scroll"] .content,
 html[class*="create-thread-page-scroll"] .content,

@@ -20,6 +20,7 @@ export const HashtagView = memo(function HashtagView({ tag }: HashtagViewProps) 
       subtitle={`Posts tagged with #${tag}`}
       viewStorageKey="hashtagView"
       scrollStateKey="hashtag"
+      showToggle={true}
       deferFollowChanges={false}
     />
   );

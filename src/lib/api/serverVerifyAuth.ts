@@ -26,3 +26,8 @@ export async function getUserFromAuthHeader(req: Request) {
     return null;
   }
 }
+
+export function getTokenFromAuthHeader(req: Request) {
+  const auth = req.headers.get('authorization') || '';
+  return auth.startsWith('Bearer ') ? auth.slice(7) : null;
+}

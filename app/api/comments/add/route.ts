@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getServiceSupabase, getUserSupabase } from '@/src/lib/api/serverSupabase';
 import { uid } from '@/src/lib/id';
-import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { getUserFromAuthHeader, getTokenFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 import { checkComment } from '@/src/lib/moderation';
 import { apiRateLimiter } from '@/src/lib/rateLimiter';
 
@@ -29,6 +29,10 @@ export async function POST(req: Request) {
     const authUser = await getUserFromAuthHeader(req);
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const actorId = authUser.id;
+    const token = getTokenFromAuthHeader(req);
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const userSb = await getUserSupabase(token);
+    const sb = getServiceSupabase();
     const COMMENT_MAX = 500;
     if (typeof text === 'string' && text.trim().length > COMMENT_MAX) return NextResponse.json({ error: `Comment exceeds ${COMMENT_MAX} characters` }, { status: 400 });
     // run automod checks
@@ -47,7 +51,6 @@ export async function POST(req: Request) {
       // If moderation util throws for unexpected reason, allow the comment
       // to avoid blocking users. Moderation should be best-effort.
     }
-    const sb = getServiceSupabase();
 
   const id = uid();
     const created_at = new Date().toISOString();
@@ -97,7 +100,7 @@ export async function POST(req: Request) {
     // Insert using the correct snake_case column names that match the database schema
     const insertData = { id, post_id: postId, user_id: actorId, text: text.trim(), created_at };
     
-    const res = await sb.from('comments').insert(insertData);
+    const res = await userSb.from('comments').insert(insertData);
     if (res.error) return NextResponse.json({ error: String(res.error.message || res.error) }, { status: 500 });
     // Try to create a notification for the post owner. This is best-effort
     // — if the notifications table doesn't exist or the insert fails, we

@@ -35,3 +35,26 @@ export function getServiceSupabase() {
   });
   return svc;
 }
+
+export async function getUserSupabase(token: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new Error("Supabase not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+  }
+  const supabase = createClient(url, anonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-application-name': 'monolog-server-user',
+      },
+    },
+  });
+  // Set the session to ensure auth.uid() is available in RLS
+  await supabase.auth.setSession({ access_token: token, refresh_token: null });
+  return supabase;
+}

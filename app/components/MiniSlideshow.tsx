@@ -119,7 +119,7 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false, allowLoad = 
           height={fill ? undefined : size}
           fill={fill}
           unoptimized={false}
-          sizes={fill ? undefined : `${size}px`}
+          sizes={fill ? "(max-width: 640px) 86px, 153px" : `${size}px`}
           style={{
             width: '100%',
             height: '100%',
@@ -145,7 +145,7 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false, allowLoad = 
           height={fill ? undefined : size}
           fill={fill}
           unoptimized={false}
-          sizes={fill ? undefined : `${size}px`}
+          sizes={fill ? "(max-width: 640px) 86px, 153px" : `${size}px`}
           style={{
             width: '100%',
             height: '100%',

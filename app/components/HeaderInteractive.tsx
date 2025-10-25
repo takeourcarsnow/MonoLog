@@ -190,7 +190,7 @@ export function HeaderInteractive() {
           <Info size={20} strokeWidth={2} />
         </button>
         {/* Shell reserves space for ThemeToggle while the dynamic chunk loads */}
-        <div className="theme-toggle-shell" aria-hidden>
+        <div className="theme-toggle-shell">
           <ThemeToggle />
         </div>
         {/* Favorites button */}
@@ -214,7 +214,7 @@ export function HeaderInteractive() {
         {/* Shell reserves space for the account switcher so the header doesn't
             reflow when the dynamic AccountSwitcher chunk loads or when the
             avatar appears. */}
-        <div className="account-switcher-shell" aria-hidden>
+        <div className="account-switcher-shell">
           <AccountSwitcher />
         </div>
       </div>

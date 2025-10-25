@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-
-# Disallow Next.js build output and API routes from indexing
-Disallow: /api/
-
-# Sitemap: production sitemap
-Sitemap: https://monolog.lol/sitemap.xml

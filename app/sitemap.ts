@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { headers } from 'next/headers';
 import { api } from '@/src/lib/api';
 import { CONFIG } from '@/src/lib/config';
 
@@ -6,7 +7,8 @@ import { CONFIG } from '@/src/lib/config';
 // recent public posts. This runs on the server and uses the server-side API
 // adapter to query the database (Supabase) when available.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol';
+  const host = headers().get('host');
+  const base = process.env.NEXT_PUBLIC_SITE_URL || `https://${host}`;
 
   const now = new Date();
   // Static routes

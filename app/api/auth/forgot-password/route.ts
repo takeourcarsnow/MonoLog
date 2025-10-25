@@ -9,11 +9,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Valid email address required' }, { status: 400 });
     }
 
+    const host = req.headers.get('host');
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${host}`;
+
     const sb = getServiceSupabase();
 
     // Use Supabase's built-in password reset functionality
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-  redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol'}/reset-password`,
+  redirectTo: `${siteUrl}/reset-password`,
     });
 
     if (error) {

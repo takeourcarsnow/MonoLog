@@ -100,7 +100,6 @@ export const UserHeader = memo(function UserHeader({
             <span className="username">@{post.user.username}</span>
           </div>
         </Link>
-        <span className="user-sep" aria-hidden>•</span>
         <span className="dim">{userLine} {lockIcon}</span>
       </div>
       <div style={{ marginLeft: "auto", position: "relative", display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>

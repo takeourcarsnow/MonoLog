@@ -194,6 +194,10 @@
 /* Wrapper for avatar + username + date in the card header */
 .card-head .user-meta {
   display: inline-flex;
+  /* Center the avatar and the text block vertically. Using `center` here
+     is preferable to `baseline` because both the username and the time
+     should be visually centered relative to the avatar, and baseline
+     alignment can look off when using different font weights/sizes. */
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -326,6 +330,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+    /* Small optical nudge: make the time an inline-block and shift it slightly
+      so it visually centers with the bold username. This is a tiny, intentional
+      transform used solely for optical alignment (non-destructive). Use a
+      downward nudge so the time sits on the same visual line as the username. */
+    display: inline-block;
+    line-height: 1;
+    transform: translateY(1px);
 }
 
 .card-media img {

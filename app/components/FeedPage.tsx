@@ -56,21 +56,28 @@ export function FeedPage({
     // restore scroll position if cached
     const cached = getSlideState<{ scrollY?: number }>(scrollStateKey);
     if (cached?.scrollY && typeof window !== 'undefined') {
-      try { window.scrollTo(0, cached.scrollY); } catch (_) {}
+      try {
+        const scrollable = document.querySelector('.content') as HTMLElement;
+        if (scrollable) scrollable.scrollTo(0, cached.scrollY);
+      } catch (_) {}
     }
     return () => { mounted = false; };
   }, [loadInitialPosts, scrollStateKey]);
 
   // Enable page scrolling for feed-like pages
-  useEffect(() => {
-    document.body.classList.add('page-scroll');
-    return () => document.body.classList.remove('page-scroll');
-  }, []);
+  // useEffect(() => {
+  //   document.body.classList.add('page-scroll');
+  //   return () => document.body.classList.remove('page-scroll');
+  // }, []);
 
   // Persist scroll position when FeedView unmounts
   useEffect(() => {
     return () => {
-      try { setSlideState(scrollStateKey, { scrollY: typeof window !== 'undefined' ? window.scrollY : 0 }); } catch (_) {}
+      try {
+        const scrollable = document.querySelector('.content') as HTMLElement;
+        const scrollY = scrollable ? scrollable.scrollTop : 0;
+        setSlideState(scrollStateKey, { scrollY });
+      } catch (_) {}
     };
   }, [scrollStateKey]);
 

@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   const manifestObj = {
-    name: 'MonoLog — Your day in pictures.',
+    name: 'MonoLog — Your day in pictures',
     short_name: 'MonoLog',
     description: 'MonoLog — Your day in pictures. A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
     start_url: '/',

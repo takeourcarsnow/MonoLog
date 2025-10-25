@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useDebouncedValue } from '@/src/lib/hooks/useDebouncedValue';
-import { Image, User, Users as UsersIcon } from 'lucide-react';
+import { Image as ImageIcon, User, Users as UsersIcon, Search } from 'lucide-react';
+import Image from 'next/image';
 
 interface SearchResult {
   posts: any[];
@@ -55,9 +56,13 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
     }
   };
 
+  const showTabs = !loading && results;
+  const inputPaddingRight = showTabs ? '120px' : '16px';
+
   return (
     <div className="search-live" style={{ width: '100%' }}>
       <div className="search-input-wrap" style={{ position: 'relative', display: 'flex', width: '100%' }}>
+        <Search size={16} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
         <input
           type="text"
           value={value}
@@ -65,11 +70,11 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
           onKeyDown={handleKeyDown}
           placeholder="Search posts, users, communities..."
           className="search-input"
-          style={{ flex: 1, width: '100%', paddingRight: '120px' }}
+          style={{ flex: 1, width: '100%', paddingLeft: '32px', paddingRight: inputPaddingRight }}
           aria-label="Search"
           autoComplete="off"
         />
-        {results && (
+        {showTabs && (
           <div
             className="search-tabs"
             style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 0, alignItems: 'center', color: 'var(--muted)', flexWrap: 'nowrap', flexDirection: 'row', whiteSpace: 'nowrap' }}
@@ -80,9 +85,9 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
               className="tab-item"
               role="button"
               aria-label={`Posts ${results.posts.length}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 12, flexDirection: 'row' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 14, flexDirection: 'row' }}
             >
-              <Image size={8} />
+              <ImageIcon size={12} />
               <span style={{ opacity: 0.9 }}>{results.posts.length}</span>
             </div>
 
@@ -90,9 +95,9 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
               className="tab-item"
               role="button"
               aria-label={`Users ${results.users.length}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 12, flexDirection: 'row' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 14, flexDirection: 'row' }}
             >
-              <User size={8} />
+              <User size={12} />
               <span style={{ opacity: 0.9 }}>{results.users.length}</span>
             </div>
 
@@ -100,9 +105,9 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
               className="tab-item"
               role="button"
               aria-label={`Communities ${results.communities.length}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 12, flexDirection: 'row' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 14, flexDirection: 'row' }}
             >
-              <UsersIcon size={8} />
+              <UsersIcon size={12} />
               <span style={{ opacity: 0.9 }}>{results.communities.length}</span>
             </div>
           </div>
@@ -114,7 +119,22 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
         ) : null}
       </div>
 
-      {results && (
+      {loading ? (
+        <div className="search-results" style={{ width: '100%', marginTop: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes subtleSpin {
+              0% { transform: rotate(0deg) scale(1); }
+              50% { transform: rotate(180deg) scale(1.1); }
+              100% { transform: rotate(360deg) scale(1); }
+            }
+          `}</style>
+          <Image src="/logo.svg" alt="loading" width={32} height={32} className="w-8 h-8" style={{ animation: 'fadeIn 50ms forwards, subtleSpin 1.5s infinite' }} />
+        </div>
+      ) : results && (
         <div className="search-results" style={{ width: '100%', marginTop: '16px' }}>
 
           <div className="search-content">

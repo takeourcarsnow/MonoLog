@@ -49,7 +49,7 @@ const ToastHost = dynamic(() => import('@/app/components/Toast').then(mod => mod
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 
 export const metadata: Metadata = {
-  title: "MonoLog — Your day in pictures.",
+  title: "MonoLog — Your day in pictures",
   description: "MonoLog — Your day in pictures. A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.",
   // themeColor must be placed in the `viewport` export in Next.js 14+
   manifest: '/manifest.webmanifest',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   // SEO helpers
   keywords: ['photo journal', 'daily photos', 'photo diary', 'MonoLog', 'photo sharing', 'visual diary'],
   openGraph: {
-    title: 'MonoLog — Your day in pictures.',
+    title: 'MonoLog — Your day in pictures',
     description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
     siteName: 'MonoLog',
     type: 'website',
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MonoLog — Your day in pictures.',
+    title: 'MonoLog — Your day in pictures',
     description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
     site: '@MonoLog',
   },

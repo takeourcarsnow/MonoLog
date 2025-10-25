@@ -176,7 +176,7 @@ export function HeaderInteractive() {
         <div ref={logoRef} className="logo" aria-hidden="true"></div>
         <h1 ref={logoTextRef} className={hideLogoText ? 'logo-text-hidden' : ''}>
           MonoLog
-          <span className="sr-only">  14 Your day in pictures.</span>
+          <span className="sr-only">  14 Your day in pictures</span>
         </h1>
       </button>
       <div className="header-actions" id="header-actions" ref={actionsRef}>
@@ -203,13 +203,13 @@ export function HeaderInteractive() {
         >
           <Star size={20} strokeWidth={2} />
         </button>
-        {/* Search button */}
-        <Link href="/search" className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
-          <Search size={20} strokeWidth={2} />
-        </Link>
         {/* Communities button */}
         <Link href="/communities" className={`btn icon about-btn no-tap-effects ${pathname === '/communities' ? 'active' : ''} ${hasNewThreads ? 'communities-pulse' : ''}`} aria-label="Communities">
           <Users size={20} strokeWidth={2} />
+        </Link>
+        {/* Search button */}
+        <Link href="/search" className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
+          <Search size={20} strokeWidth={2} />
         </Link>
         {/* Shell reserves space for the account switcher so the header doesn't
             reflow when the dynamic AccountSwitcher chunk loads or when the

@@ -33,7 +33,7 @@ export function isNavItemActive(pathname: string, itemPath: string) {
     const reserved = [
       'about', 'api', 'calendar', 'communities', 'explore', 'favorites',
       'feed', 'post', 'upload', 'admin', 'settings', 'help',
-      'terms', 'privacy', 'login', 'register', 'signup', 'signin', 'logout', 'auth'
+      'terms', 'privacy', 'login', 'register', 'signup', 'signin', 'logout', 'auth', 'search'
     ];
 
     return pathname === '/profile' || (pathSegments.length === 1 && !reserved.includes(pathSegments[0]?.toLowerCase()));

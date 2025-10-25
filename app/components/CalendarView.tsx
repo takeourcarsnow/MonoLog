@@ -47,7 +47,8 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
     if (!shouldLoad) return;
     let cancelled = false;
 
-    const cacheKey = `${curYear}-${curMonth}`;
+    const offset = new Date().getTimezoneOffset();
+    const cacheKey = `${curYear}-${curMonth}-${offset}`;
 
     (async () => {
       try {
@@ -56,11 +57,11 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
         // Use cached stats if present
   const cachedStats = cacheGetStats(cacheKey);
         if (cachedStats) {
-          setStats({ counts: cachedStats.counts, mine: cachedStats.mine });
+          setStats({ counts: cachedStats.counts, mine: new Set(cachedStats.mine) });
         } else {
-          const s = await api.calendarStats({ year: curYear, monthIdx: curMonth });
+          const s = await api.calendarStats({ year: curYear, monthIdx: curMonth, offset });
           if (cancelled) return;
-          setStats({ counts: s.counts, mine: s.mine });
+          setStats({ counts: s.counts, mine: new Set(s.mine) });
           // store in module cache
           cacheSetStats(cacheKey, { counts: s.counts, mine: s.mine });
         }

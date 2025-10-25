@@ -108,7 +108,7 @@ export type HydratedThreadReply = ThreadReply & {
   user: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
 };
 
-export type CalendarStats = { counts: Record<string, number>, mine: Set<string> };
+export type CalendarStats = { counts: Record<string, number>, mine: string[] };
 
 export type WeekReviewStats = {
   totalPosts: number;
@@ -208,7 +208,7 @@ export interface Api {
   // sign out the current user (client-side)
   signOut(): Promise<void>;
 
-  calendarStats(opts: { year: number; monthIdx: number }): Promise<CalendarStats>;
+  calendarStats(opts: { year: number; monthIdx: number; offset: number }): Promise<CalendarStats>;
 
   // Week review statistics
   weekReviewStats(): Promise<WeekReviewStats>;

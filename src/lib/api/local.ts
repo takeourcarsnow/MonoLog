@@ -315,22 +315,23 @@ export const localApi: Api = {
     return { ...comment, user: me };
   },
 
-  async calendarStats({ year, monthIdx }) {
+  async calendarStats({ year, monthIdx, offset }) {
     const map: Record<string, number> = {};
+    const mine = new Set<string>();
     for (const p of cache.posts) {
-      const d = new Date(p.createdAt);
-      if (d.getUTCFullYear() === year && d.getUTCMonth() === monthIdx) {
-        const dk = toUTCDateKey(d);
+      const created = new Date(p.createdAt);
+      const localTimestamp = created.getTime() - offset * 60 * 1000;
+      const localDate = new Date(localTimestamp);
+      const dk = toDateKey(localDate);
+      if (localDate.getFullYear() === year && localDate.getMonth() === monthIdx) {
         map[dk] = (map[dk] || 0) + 1;
+        const me = getUserById(cache.currentUserId);
+        if (me && p.userId === me.id) {
+          mine.add(dk);
+        }
       }
     }
-    const me = getUserById(cache.currentUserId);
-    const myKeys = new Set(
-      cache.posts
-        .filter(p => p.userId === me?.id && new Date(p.createdAt).getUTCMonth() === monthIdx && new Date(p.createdAt).getUTCFullYear() === year)
-        .map(p => toUTCDateKey(p.createdAt))
-    );
-    return { counts: map, mine: myKeys };
+    return { counts: map, mine: Array.from(mine) };
   },
   async signOut() {
     cache.currentUserId = null;

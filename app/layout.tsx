@@ -1,6 +1,5 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 // dynamic already imported above
 import { Patrick_Hand } from "next/font/google";
 import React from "react";
@@ -49,45 +48,40 @@ const ToastHost = dynamic(() => import('@/app/components/Toast').then(mod => mod
 
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 
-export const metadata = async (): Promise<Metadata> => {
-  const host = headers().get('host');
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${host}`;
-
-  return {
-    title: "MonoLog — Your day in pictures",
-    description: "MonoLog — Your day in pictures. A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.",
-    // themeColor must be placed in the `viewport` export in Next.js 14+
-    manifest: '/manifest.webmanifest',
-    icons: '/logo.svg',
-    // SEO helpers
-    keywords: ['photo journal', 'daily photos', 'photo diary', 'MonoLog', 'photo sharing', 'visual diary'],
-    openGraph: {
-      title: 'MonoLog — Your day in pictures',
-      description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
-      siteName: 'MonoLog',
-      type: 'website',
-      url: siteUrl,
-      images: [
-        {
-          url: siteUrl + '/logo.svg',
-          width: 1200,
-          height: 630,
-          alt: 'MonoLog',
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: 'MonoLog — Your day in pictures',
-      description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
-      site: '@MonoLog',
-    },
-    robots: {
-      index: true,
-      follow: true,
-      nocache: false,
-    },
-  };
+export const metadata: Metadata = {
+  title: "MonoLog — Your day in pictures",
+  description: "MonoLog — Your day in pictures. A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.",
+  // themeColor must be placed in the `viewport` export in Next.js 14+
+  manifest: '/manifest.webmanifest',
+  icons: '/logo.svg',
+  // SEO helpers
+  keywords: ['photo journal', 'daily photos', 'photo diary', 'MonoLog', 'photo sharing', 'visual diary'],
+  openGraph: {
+    title: 'MonoLog — Your day in pictures',
+    description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
+    siteName: 'MonoLog',
+    type: 'website',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol',
+    images: [
+      {
+        url: (process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol') + '/logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'MonoLog',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MonoLog — Your day in pictures',
+    description: 'A focused daily photo journal: create one post each day and attach multiple images to tell a fuller story.',
+    site: '@MonoLog',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+  },
 };
 
 // Move themeColor into the viewport export to satisfy Next.js metadata rules
@@ -103,9 +97,6 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const host = headers().get('host');
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${host}`;
-
   return (
     // Render with a temporary `no-transitions` class so styles/transitions are
     // suppressed on the server-rendered page. The inline script removes the
@@ -152,8 +143,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             "@context": "https://schema.org",
             "@type": "Organization",
             name: process.env.NEXT_PUBLIC_SITE_NAME || 'MonoLog',
-            url: siteUrl,
-            logo: siteUrl + '/logo.svg',
+            url: process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol',
+            logo: (process.env.NEXT_PUBLIC_SITE_URL || 'https://monolog.lol') + '/logo.svg',
             sameAs: [],
             description: 'MonoLog — Your day in pictures. A focused daily photo journal.'
           }) }}

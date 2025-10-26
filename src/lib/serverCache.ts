@@ -13,7 +13,7 @@ export function getServerCache(key: string) {
   return e.value;
 }
 
-export function setServerCache(key: string, value: any, ttl = 10000) {
+export function setServerCache(key: string, value: any, ttl = 30000) {
   try {
     cache.set(key, { value, expires: Date.now() + ttl });
   } catch (_) {

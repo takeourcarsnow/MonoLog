@@ -38,8 +38,8 @@ export async function GET(req: Request) {
     }
 
   const rows = (data || []).map((r: any) => mapRowToHydratedPost(r));
-  // Cache the result for a short time to reduce repeated DB/egress hits
-  try { setServerCache(cacheKey, rows, 10000); } catch (_) {}
+  // Cache the result for a longer time to reduce repeated DB/egress hits
+  try { setServerCache(cacheKey, rows, 30000); } catch (_) {}  // 30 seconds
   return NextResponse.json({ ok: true, posts: rows });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });

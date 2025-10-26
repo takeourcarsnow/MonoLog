@@ -104,7 +104,7 @@ export function FeedPage({
   }, [loadInitialPosts]);
 
   // Simplified render - no need for memoization with complex dependencies
-  const render = useCallback(() => {
+  const renderContent = useMemo(() => {
     if (loading) return <SkeletonCard height={240} />;
     if (!posts.length) {
       // Enhanced empty state: reuse the title icon if available (Feed/Explore pass icons)
@@ -197,7 +197,7 @@ export function FeedPage({
         getPullStyles={getPullStyles}
         className={`feed ${view === 'grid' ? 'grid-view' : ''}`}
       >
-        {render()}
+        {renderContent}
       </PullToRefreshWrapper>
     </div>
   );

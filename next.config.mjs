@@ -75,6 +75,10 @@ const nextConfig = {
   },
   // Enable SWC minification for better performance
   swcMinify: true,
+  // Optimize package imports
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@supabase/supabase-js', '@supabase/ssr'],
+  },
   // Production optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {

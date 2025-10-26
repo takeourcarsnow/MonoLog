@@ -38,6 +38,9 @@ const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfill
 const PWAAnalytics = dynamic(() => import('@/app/components/PWAAnalytics').then(mod => mod.PWAAnalytics), { ssr: false });
 const PWAHealthCheck = dynamic(() => import('@/app/components/PWAAnalytics').then(mod => mod.PWAHealthCheck), { ssr: false });
 
+// Route prefetcher for better navigation performance
+const RoutePrefetcher = dynamic(() => import('@/app/components/RoutePrefetcher'), { ssr: false });
+
 // Render Header at root. Header is a server component that itself will
 // dynamically load the interactive portion (`HeaderInteractive`) on the
 // client. Importing it statically here keeps static markup server-rendered
@@ -155,7 +158,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SWRConfig value={{
           revalidateOnFocus: false,
           revalidateOnReconnect: true,
+          revalidateOnMount: true,
           dedupingInterval: 5000,
+          focusThrottleInterval: 10000,
+          errorRetryInterval: 5000,
         }}>
           <ToastProvider>
             <a href="#view" className="skip-link">Skip to content</a>
@@ -170,6 +176,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <InertPolyfillClient />
             <PWAAnalytics />
             <PWAHealthCheck />
+            <RoutePrefetcher />
             <ToastHost />
           </ToastProvider>
         </SWRConfig>

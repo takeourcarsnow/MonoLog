@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
+    "analyze-bundle": "node ./scripts/analyze-bundle.js",
     "check-env": "node ./scripts/check-env.js",
     "check-perf": "node ./scripts/check-performance.js",
     "convert-logo": "node ./scripts/convert-logo.js",

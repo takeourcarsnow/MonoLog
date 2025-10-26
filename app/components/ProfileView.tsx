@@ -18,6 +18,7 @@ import { AuthRequired } from "./AuthRequired";
 import { ViewToggle } from "./ViewToggle";
 import { PostCard } from "./PostCard";
 import { User as UserIcon } from "lucide-react";
+import { InviteSection } from "./InviteSection";
 
 export function ProfileView({ userId }: { userId?: string }) {
   const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam, setUser } = useUserData(userId);
@@ -99,6 +100,7 @@ export function ProfileView({ userId }: { userId?: string }) {
         }}
         onAuthRequired={handleAuthRequired}
       />
+      {currentUserId && user && currentUserId === user.id && <InviteSection />}
       {posts.length > 0 && (
         (() => {
           const subtitle = (currentUserId && user && currentUserId === user.id) ? 'Your posts' : `${user?.username || 'User'}'s posts`;

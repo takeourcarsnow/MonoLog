@@ -42,7 +42,7 @@ export function InviteSection() {
   };
 
   return (
-    <div style={{ margin: '20px auto', maxWidth: 600, padding: '16px', background: 'var(--card-bg)', borderRadius: 12, border: '1px solid var(--border)' }}>
+    <div style={{ margin: '20px auto', maxWidth: 600, padding: '16px', background: 'var(--card-bg)', borderRadius: 12, border: '1px solid var(--border)', textAlign: 'center' }}>
       <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>Invite Friends</h3>
       <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
         Generate an invite code to share with friends who want to join MonoLog.
@@ -52,7 +52,7 @@ export function InviteSection() {
           Generate Invite Code
         </Button>
       ) : (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
           <input
             value={inviteCode}
             readOnly
@@ -64,6 +64,7 @@ export function InviteSection() {
               background: 'var(--bg)',
               color: 'var(--text)',
               fontFamily: 'monospace',
+              textAlign: 'center',
             }}
           />
           <Button onClick={copyToClipboard} variant="ghost" style={{ padding: '8px 12px' }}>

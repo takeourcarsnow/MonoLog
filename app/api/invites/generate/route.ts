@@ -23,17 +23,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if user already has an invite for today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfDay = today.toISOString();
+
+    const { data: todaysInvite, error: todaysError } = await sb
+      .from('invites')
+      .select('code')
+      .eq('created_by', user.id)
+      .gte('created_at', startOfDay)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (todaysError) {
+      console.error('Error checking todays invite:', todaysError);
+      return NextResponse.json({ error: 'Failed to check todays invite' }, { status: 500 });
+    }
+
+    if (todaysInvite && todaysInvite.length > 0) {
+      return NextResponse.json({ code: todaysInvite[0].code });
+    }
+
     // Generate a unique invite code
-    const code = 'EARLYADOPTER';
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     // Check if invite already exists
     const { data: existing, error: selectError } = await sb
       .from('invites')
       .select('code')
-      .eq('code', code)
-      .single();
+      .eq('code', code);
 
-    if (existing) {
+    if (selectError) {
+      console.error('Error checking invite:', selectError);
+      return NextResponse.json({ error: 'Failed to check invite' }, { status: 500 });
+    }
+
+    if (existing && existing.length > 0) {
       return NextResponse.json({ code });
     }
 

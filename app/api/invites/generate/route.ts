@@ -24,7 +24,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate a unique invite code
-    const code = `invite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const code = 'EARLYADOPTER';
+
+    // Check if invite already exists
+    const { data: existing, error: selectError } = await sb
+      .from('invites')
+      .select('code')
+      .eq('code', code)
+      .single();
+
+    if (existing) {
+      return NextResponse.json({ code });
+    }
 
     // Insert into invites table
     const { data, error } = await sb
@@ -33,7 +44,7 @@ export async function POST(req: NextRequest) {
         code,
         created_by: user.id,
         created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        expires_at: new Date('2100-01-01').toISOString(), // Never expires
       })
       .select()
       .single();

@@ -58,8 +58,8 @@ export async function signUp(email: string, password: string, username: string, 
   if (userId && sessionPresent) {
     try {
       await sb.from('users').upsert({ id: userId, username: chosen, display_name: null, avatar_url: "/logo.svg" });
-      // Mark invite as used
-      if (inviteCode) {
+      // Mark invite as used (except for EARLYADOPTER which is reusable)
+      if (inviteCode && inviteCode !== 'EARLYADOPTER') {
         await sb.from('invites').update({ used_by: userId }).eq('code', inviteCode);
       }
     } catch (e) { /* ignore upsert errors for now */ }

@@ -10,6 +10,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid code' }, { status: 400 });
     }
 
+    // Special case for EARLYADOPTER - always valid
+    if (code.trim() === 'EARLYADOPTER') {
+      return NextResponse.json({ valid: true });
+    }
+
     const cookieStore = cookies();
     const sb = createServerClient(SUPABASE.url, SUPABASE.anonKey, {
       cookies: {

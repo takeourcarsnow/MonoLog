@@ -8,6 +8,7 @@ import { Header } from '@/app/components/Header';
 import { CONFIG } from '@/src/lib/config';
 import ClientErrorBoundary from '@/app/components/ClientErrorBoundary';
 import { isInAppBrowser } from '@/src/lib/detectWebview';
+import { SWRConfig } from 'swr';
 
 // Self-host the previously imported Google Font for better performance & privacy.
 const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
@@ -151,21 +152,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <ToastProvider>
-          <a href="#view" className="skip-link">Skip to content</a>
-          <AppPreloader />
-          <Header />
-          <div id="app-root">
-            <ClientErrorBoundary>
-              <AppShell>{children}</AppShell>
-            </ClientErrorBoundary>
-          </div>
-          <Navbar />
-          <InertPolyfillClient />
-          <PWAAnalytics />
-          <PWAHealthCheck />
-          <ToastHost />
-        </ToastProvider>
+        <SWRConfig value={{
+          revalidateOnFocus: false,
+          revalidateOnReconnect: true,
+          dedupingInterval: 5000,
+        }}>
+          <ToastProvider>
+            <a href="#view" className="skip-link">Skip to content</a>
+            <AppPreloader />
+            <Header />
+            <div id="app-root">
+              <ClientErrorBoundary>
+                <AppShell>{children}</AppShell>
+              </ClientErrorBoundary>
+            </div>
+            <Navbar />
+            <InertPolyfillClient />
+            <PWAAnalytics />
+            <PWAHealthCheck />
+            <ToastHost />
+          </ToastProvider>
+        </SWRConfig>
   <noscript>MonoLog — Your day in pictures. Requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}
         {process.env.NODE_ENV === 'production' ? <WebVitalsScript /> : null}

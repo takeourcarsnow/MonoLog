@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/src/lib/api";
 import type { User } from "@/src/lib/types";
 import { storage } from "@/src/lib/storage";
+import { useCurrentUser } from "@/lib/hooks";
 
 export function useAuth() {
   // Try to pre-populate from synchronous client storage so ownership checks
@@ -14,32 +15,19 @@ export function useAuth() {
   // If we have a cached id, treat as not loading so UI can render immediately
   const [isLoading, setIsLoading] = useState(initialCachedId ? false : true);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const u = await api.getCurrentUser();
-        if (mounted) {
-          setMe(u);
-          try { if (typeof window !== 'undefined') storage.set('currentUserId', u?.id || null); } catch (_) {}
-        }
-      } catch {
-        if (mounted) setMe(null);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    })();
+  const { data: currentUser, mutate } = useCurrentUser();
 
-    const onAuth = async () => {
-      try {
-        const u = await api.getCurrentUser();
-        if (mounted) {
-          setMe(u);
-          try { if (typeof window !== 'undefined') storage.set('currentUserId', u?.id || null); } catch (_) {}
-        }
-      } catch {
-        if (mounted) setMe(null);
-      }
+  useEffect(() => {
+    if (currentUser !== undefined) {
+      setMe(currentUser);
+      setIsLoading(false);
+      try { if (typeof window !== 'undefined') storage.set('currentUserId', currentUser?.id || null); } catch (_) {}
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    const onAuth = () => {
+      mutate();
     };
 
     if (typeof window !== 'undefined') {
@@ -47,12 +35,11 @@ export function useAuth() {
     }
 
     return () => {
-      mounted = false;
       if (typeof window !== 'undefined') {
         window.removeEventListener('auth:changed', onAuth);
       }
     };
-  }, []);
+  }, [mutate]);
 
   return { me, setMe, isLoading, currentUserId: me?.id || null };
 }

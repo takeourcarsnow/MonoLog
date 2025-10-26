@@ -7,17 +7,14 @@ import type { HydratedCommunity } from "@/src/lib/types";
 import { Button } from "./Button";
 import Link from "next/link";
 import { useAuth } from "@/src/lib/hooks/useAuth";
-import { useDataFetch } from "@/src/lib/hooks/useDataFetch";
+import { useCommunities } from "@/lib/hooks";
 import CommunityCard from "./CommunityCard";
 import LazyMount from "./LazyMount";
 import SkeletonCard from "./SkeletonCard";
 
 export function CommunitiesView() {
   const { me } = useAuth();
-  const { data: communities, setData: setCommunities, loading, error: fetchError, refetch: loadCommunities } = useDataFetch(
-    () => api.getCommunities(),
-    []
-  );
+  const { data: communities, mutate: mutateCommunities, isLoading: loading, error: fetchError } = useCommunities();
   const [pendingJoin, setPendingJoin] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
@@ -48,14 +45,17 @@ export function CommunitiesView() {
     if (pendingJoin.has(communityId)) return;
     // Optimistic update: flip isMember locally and adjust counts
     setPendingJoin((s) => new Set(s).add(communityId));
-    setCommunities((prev) => prev.map(c => {
-      if (c.id !== communityId) return c;
-      return {
-        ...c,
-        isMember: !isMember,
-        memberCount: isMember ? Math.max(0, (c.memberCount || 1) - 1) : (c.memberCount || 0) + 1
-      };
-    }));
+    mutateCommunities(
+      (prev) => prev?.map(c => {
+        if (c.id !== communityId) return c;
+        return {
+          ...c,
+          isMember: !isMember,
+          memberCount: isMember ? Math.max(0, (c.memberCount || 1) - 1) : (c.memberCount || 0) + 1
+        };
+      }),
+      false // don't revalidate
+    );
 
     try {
       if (isMember) {
@@ -63,10 +63,14 @@ export function CommunitiesView() {
       } else {
         await api.joinCommunity(communityId);
       }
-      // Success: nothing else to do because UI already reflects change
+      // Success: revalidate to get fresh data
+      mutateCommunities();
     } catch (e: any) {
       // Revert optimistic update on error
-      setCommunities((prev) => prev.map(c => c.id === communityId ? { ...c, isMember, memberCount: isMember ? (c.memberCount || 0) + 1 : Math.max(0, (c.memberCount || 1) - 1) } : c));
+      mutateCommunities(
+        (prev) => prev?.map(c => c.id === communityId ? { ...c, isMember, memberCount: isMember ? (c.memberCount || 0) + 1 : Math.max(0, (c.memberCount || 1) - 1) } : c),
+        false
+      );
       setError(e?.message || 'Failed to update membership');
     } finally {
       setPendingJoin((s) => {
@@ -75,7 +79,7 @@ export function CommunitiesView() {
         return next;
       });
     }
-  }, [pendingJoin]);
+  }, [pendingJoin, mutateCommunities]);
 
   if (loading) {
     return (
@@ -111,7 +115,7 @@ export function CommunitiesView() {
         <div className="content-body">
           <div className="card">
             <p className="text-red-500">{error || fetchError}</p>
-            <Button onClick={loadCommunities}>Try Again</Button>
+            <Button onClick={() => mutateCommunities()}>Try Again</Button>
           </div>
         </div>
       </div>
@@ -134,7 +138,7 @@ export function CommunitiesView() {
         </div>
       </div>
       <div className="content-body space-y-6">
-        {communities.length === 0 ? (
+        {(!communities || communities.length === 0) ? (
           <div className="card">
             <p>No communities yet. Be the first to create one!</p>
           </div>

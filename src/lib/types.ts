@@ -223,6 +223,6 @@ export const RESERVED_ROUTES = [
   'feed', 'post', 'profile', 'upload', 'admin',
   'settings', 'help', 'terms', 'privacy', 'login',
   'register', 'signup', 'signin', 'logout', 'auth',
-  'week-review', 'hashtags', 'search',
+  'week-review', 'hashtags', 'search', 'reset-password', 'offline', 'styles',
   '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
 ];

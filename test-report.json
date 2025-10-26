@@ -1,0 +1,272 @@
+{
+  "passed": 34,
+  "failed": 0,
+  "tests": [
+    {
+      "name": "Home Page - Page Load",
+      "passed": true,
+      "details": "127ms",
+      "duration": 127,
+      "timestamp": 1761515584898
+    },
+    {
+      "name": "Home Page - Redirect",
+      "passed": true,
+      "details": "Redirected to: http://localhost:3000/explore",
+      "duration": 0,
+      "timestamp": 1761515585433
+    },
+    {
+      "name": "Home Page - Header Present",
+      "passed": true,
+      "details": "",
+      "duration": 0,
+      "timestamp": 1761515585494
+    },
+    {
+      "name": "Home Page - Navigation Present",
+      "passed": true,
+      "details": "",
+      "duration": 0,
+      "timestamp": 1761515585504
+    },
+    {
+      "name": "Home Page - Main Content Present",
+      "passed": true,
+      "details": "",
+      "duration": 0,
+      "timestamp": 1761515585509
+    },
+    {
+      "name": "Explore Page Navigation",
+      "passed": true,
+      "details": "72ms",
+      "duration": 72,
+      "timestamp": 1761515585660
+    },
+    {
+      "name": "Explore Page - Back Navigation",
+      "passed": true,
+      "details": "",
+      "duration": 0,
+      "timestamp": 1761515585676
+    },
+    {
+      "name": "Feed Page Navigation",
+      "passed": true,
+      "details": "73ms",
+      "duration": 73,
+      "timestamp": 1761515585801
+    },
+    {
+      "name": "Feed Page - Back Navigation",
+      "passed": true,
+      "details": "",
+      "duration": 0,
+      "timestamp": 1761515585884
+    },
+    {
+      "name": "Profile Page Navigation",
+      "passed": true,
+      "details": "71ms",
+      "duration": 71,
+      "timestamp": 1761515586016
+    },
+    {
+      "name": "Profile Page - Back Navigation",
+      "passed": true,
+      "details": "",
+      "duration": 0,
+      "timestamp": 1761515586072
+    },
+    {
+      "name": "Communities Page Navigation",
+      "passed": true,
+      "details": "52ms",
+      "duration": 52,
+      "timestamp": 1761515586170
+    },
+    {
+      "name": "Communities Page - Back Navigation",
+      "passed": true,
+      "details": "",
+      "duration": 0,
+      "timestamp": 1761515586228
+    },
+    {
+      "name": "View Toggle Interaction",
+      "passed": true,
+      "details": "Successfully toggled view",
+      "duration": 0,
+      "timestamp": 1761515593479
+    },
+    {
+      "name": "Post Interaction",
+      "passed": true,
+      "details": "No posts available (valid for explore feed)",
+      "duration": 0,
+      "timestamp": 1761515593958
+    },
+    {
+      "name": "/ - DOM Content Loaded",
+      "passed": true,
+      "details": "0.20000001788139343ms",
+      "duration": 0,
+      "timestamp": 1761515594092
+    },
+    {
+      "name": "/ - Load Complete",
+      "passed": true,
+      "details": "0ms",
+      "duration": 0,
+      "timestamp": 1761515594092
+    },
+    {
+      "name": "/explore - DOM Content Loaded",
+      "passed": true,
+      "details": "0.19999998807907104ms",
+      "duration": 0,
+      "timestamp": 1761515594169
+    },
+    {
+      "name": "/explore - Load Complete",
+      "passed": true,
+      "details": "0ms",
+      "duration": 0,
+      "timestamp": 1761515594169
+    },
+    {
+      "name": "/feed - DOM Content Loaded",
+      "passed": true,
+      "details": "0.09999999403953552ms",
+      "duration": 0,
+      "timestamp": 1761515594254
+    },
+    {
+      "name": "/feed - Load Complete",
+      "passed": true,
+      "details": "0ms",
+      "duration": 0,
+      "timestamp": 1761515594254
+    },
+    {
+      "name": "/profile - DOM Content Loaded",
+      "passed": true,
+      "details": "0.09999999403953552ms",
+      "duration": 0,
+      "timestamp": 1761515594350
+    },
+    {
+      "name": "/profile - Load Complete",
+      "passed": true,
+      "details": "0ms",
+      "duration": 0,
+      "timestamp": 1761515594350
+    },
+    {
+      "name": "Page Reload Caching",
+      "passed": true,
+      "details": "48ms",
+      "duration": 48,
+      "timestamp": 1761515596456
+    },
+    {
+      "name": "Device - iPhone SE",
+      "passed": true,
+      "details": "375x667",
+      "duration": 0,
+      "timestamp": 1761515596551
+    },
+    {
+      "name": "Device - iPhone 12 Pro",
+      "passed": true,
+      "details": "390x844",
+      "duration": 0,
+      "timestamp": 1761515596606
+    },
+    {
+      "name": "Device - Samsung Galaxy S21",
+      "passed": true,
+      "details": "360x640",
+      "duration": 0,
+      "timestamp": 1761515596679
+    },
+    {
+      "name": "Device - Pixel 5",
+      "passed": true,
+      "details": "393x851",
+      "duration": 0,
+      "timestamp": 1761515596741
+    },
+    {
+      "name": "Device - iPad Mini",
+      "passed": true,
+      "details": "768x1024",
+      "duration": 0,
+      "timestamp": 1761515596888
+    },
+    {
+      "name": "Device - iPad Pro",
+      "passed": true,
+      "details": "1024x1366",
+      "duration": 0,
+      "timestamp": 1761515597006
+    },
+    {
+      "name": "Device - Samsung Galaxy Tab S7",
+      "passed": true,
+      "details": "800x1280",
+      "duration": 0,
+      "timestamp": 1761515597174
+    },
+    {
+      "name": "Device - Desktop 1080p",
+      "passed": true,
+      "details": "1920x1080",
+      "duration": 0,
+      "timestamp": 1761515597292
+    },
+    {
+      "name": "Device - Desktop 4K",
+      "passed": true,
+      "details": "3840x2160",
+      "duration": 0,
+      "timestamp": 1761515597374
+    },
+    {
+      "name": "Device - MacBook Pro 13\"",
+      "passed": true,
+      "details": "1280x800",
+      "duration": 0,
+      "timestamp": 1761515597463
+    }
+  ],
+  "performance": {
+    "/": {
+      "domContentLoaded": 0.20000001788139343,
+      "loadComplete": 0,
+      "firstPaint": 0,
+      "firstContentfulPaint": 0
+    },
+    "/explore": {
+      "domContentLoaded": 0.19999998807907104,
+      "loadComplete": 0,
+      "firstPaint": 0,
+      "firstContentfulPaint": 0
+    },
+    "/feed": {
+      "domContentLoaded": 0.09999999403953552,
+      "loadComplete": 0,
+      "firstPaint": 0,
+      "firstContentfulPaint": 0
+    },
+    "/profile": {
+      "domContentLoaded": 0.09999999403953552,
+      "loadComplete": 0,
+      "firstPaint": 0,
+      "firstContentfulPaint": 0
+    }
+  },
+  "browsers": {},
+  "errors": []
+}

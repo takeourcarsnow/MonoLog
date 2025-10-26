@@ -1,6 +1,5 @@
 import { memo, useEffect, useRef, useState, useCallback } from "react";
-import dynamic from 'next/dynamic';
-const ImageZoom = dynamic(() => import('../ImageZoom'), { ssr: false });
+import { ImageZoom } from '../ImageZoom';
 import { useCarousel } from "./hooks/useCarousel";
 import { useMediaClick } from "./hooks/useMediaClick";
 

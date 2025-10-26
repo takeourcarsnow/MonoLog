@@ -13,15 +13,45 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const accessToken = searchParams.get('access_token');
-  const refreshToken = searchParams.get('refresh_token');
+  const accessTokenFromQuery = searchParams.get('access_token');
+  const refreshTokenFromQuery = searchParams.get('refresh_token');
+  const [accessToken, setAccessToken] = useState<string | null>(accessTokenFromQuery);
+  const [refreshToken, setRefreshToken] = useState<string | null>(refreshTokenFromQuery);
 
   useEffect(() => {
-    if (accessToken && refreshToken) {
-      // Set the session with the tokens from the URL
+    // If tokens already available from query params, set session. Otherwise try parsing URL fragment (#access_token=...)
+    const tryParseFragment = () => {
+      try {
+        if (typeof window === 'undefined') return;
+        const hash = window.location.hash || '';
+        if (!hash) return;
+        // Convert the hash into a query-like string so URLSearchParams can parse it
+        const params = new URLSearchParams(hash.replace(/^#/, ''));
+        const at = params.get('access_token');
+        const rt = params.get('refresh_token');
+        if (at) setAccessToken(at);
+        if (rt) setRefreshToken(rt);
+        // Clear the hash so tokens aren't left in the URL
+        if (at || rt) {
+          try {
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+          } catch (e) {
+            // ignore
+          }
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+    };
+
+    // If we already have tokens from query use them; otherwise try fragment
+    if (accessToken || refreshToken) {
       const sb = getSupabaseClient();
-      sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      sb.auth.setSession({ access_token: accessToken || '', refresh_token: refreshToken || '' });
+    } else {
+      tryParseFragment();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, refreshToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -28,6 +28,8 @@ export async function POST(req: Request) {
 
     const sb = getServiceSupabase();
 
+    let tempClaim = '';
+
     // Check if username is available
     const { data: existingUser } = await sb
       .from('users')
@@ -40,32 +42,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
     }
 
-    // Validate and mark invite as used in a transaction-like manner
+    // Validate and claim invite as used in a transaction-like manner
     if (inviteCode !== 'EARLYADOPTER') {
-      // Check if invite exists and is unused
-      const { data: invite, error: inviteError } = await sb
+      // First, try to claim the invite by setting used_by to a temp value
+      tempClaim = `temp-${Date.now()}-${Math.random()}`;
+      const { data: claimedInvite, error: claimError } = await sb
         .from('invites')
-        .select('id, used_by, expires_at')
+        .update({ used_by: tempClaim })
         .eq('code', inviteCode)
+        .eq('used_by', null)
+        .select('id, expires_at')
         .single();
 
-      if (inviteError || !invite) {
-        return NextResponse.json({ error: 'Invalid invite code' }, { status: 400 });
-      }
-
-      if (invite.used_by) {
-        return NextResponse.json({ error: 'Invite code already used' }, { status: 400 });
+      if (claimError || !claimedInvite) {
+        return NextResponse.json({ error: 'Invalid invite code or already used' }, { status: 400 });
       }
 
       const now = new Date();
-      const expiresAt = new Date(invite.expires_at);
+      const expiresAt = new Date(claimedInvite.expires_at);
       if (expiresAt < now) {
+        // Revert the claim since it's expired
+        await sb
+          .from('invites')
+          .update({ used_by: null })
+          .eq('code', inviteCode)
+          .eq('used_by', tempClaim);
         return NextResponse.json({ error: 'Invite code expired' }, { status: 400 });
       }
 
-      // Note: We can't do this in a true transaction with Supabase auth signup,
-      // but since this is server-side and sequential, it should be fine.
-      // If signup fails, the invite won't be marked, but that's acceptable.
+      // Note: If signup fails later, we'll revert the claim
     }
 
     // Perform signup
@@ -76,11 +81,27 @@ export async function POST(req: Request) {
     });
 
     if (error) {
+      // Revert the invite claim if signup failed
+      if (inviteCode !== 'EARLYADOPTER') {
+        await sb
+          .from('invites')
+          .update({ used_by: null })
+          .eq('code', inviteCode)
+          .eq('used_by', tempClaim);
+      }
       return NextResponse.json({ error: error.message || error }, { status: 400 });
     }
 
     const userId = (data as any)?.user?.id;
     if (!userId) {
+      // Revert the invite claim
+      if (inviteCode !== 'EARLYADOPTER') {
+        await sb
+          .from('invites')
+          .update({ used_by: null })
+          .eq('code', inviteCode)
+          .eq('used_by', tempClaim);
+      }
       return NextResponse.json({ error: 'Signup failed: no user ID returned' }, { status: 500 });
     }
 
@@ -90,7 +111,7 @@ export async function POST(req: Request) {
         .from('invites')
         .update({ used_by: userId })
         .eq('code', inviteCode)
-        .eq('used_by', null);
+        .eq('used_by', tempClaim);
     }
 
     // Create user profile

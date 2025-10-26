@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "../Toast";
 import { useHeaderNotice } from "./authHooks";
-import { validUsername, isTempEmail, isAllowedEmailDomain } from "./authUtils";
+import { validUsername, isTempEmail } from "./authUtils";
+import { isAllowedEmailDomain } from "@/src/lib/utils";
 import { signIn, signUp, checkUsernameAvailability, resetPassword } from "./authActions";
 
 export function useAuthForm(onClose?: () => void) {

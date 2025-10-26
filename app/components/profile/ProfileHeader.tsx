@@ -16,9 +16,11 @@ interface ProfileHeaderProps {
   onAvatarChange: () => void;
   // callback when follow is clicked but user is not logged in
   onAuthRequired?: () => void;
+  showInvites: boolean;
+  setShowInvites: (show: boolean) => void;
 }
 
-export function ProfileHeader({ user, currentUserId, isOtherParam, following, setFollowing, setUser, postCount, onAvatarChange, onAuthRequired }: ProfileHeaderProps) {
+export function ProfileHeader({ user, currentUserId, isOtherParam, following, setFollowing, setUser, postCount, onAvatarChange, onAuthRequired, showInvites, setShowInvites }: ProfileHeaderProps) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const editFormRef = useRef<ProfileEditFormRef>(null);
 
@@ -51,6 +53,8 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
         isEditingProfile={isEditingProfile}
         onEditToggle={handleEditToggle}
         onAuthRequired={onAuthRequired}
+        showInvites={showInvites}
+        setShowInvites={setShowInvites}
       />
     </div>
   );

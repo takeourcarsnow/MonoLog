@@ -7,6 +7,7 @@ import Link from "next/link";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
 import { BarChart3 } from "lucide-react";
+import { Share } from "lucide-react";
 import type { User as UserType } from "@/src/lib/types";
 
 interface ProfileActionsProps {
@@ -18,6 +19,8 @@ interface ProfileActionsProps {
   onEditToggle: () => void;
   // callback when follow is clicked but user is not logged in
   onAuthRequired?: () => void;
+  showInvites: boolean;
+  setShowInvites: (show: boolean) => void;
 }
 
 export function ProfileActions({
@@ -27,7 +30,9 @@ export function ProfileActions({
   setFollowing,
   isEditingProfile,
   onEditToggle,
-  onAuthRequired
+  onAuthRequired,
+  showInvites,
+  setShowInvites
 }: ProfileActionsProps) {
   const toast = useToast();
   const followInFlightRef = useRef(false);
@@ -205,6 +210,17 @@ export function ProfileActions({
                 <BarChart3 size={18} strokeWidth={1.2} />
               </span>
             </Link>
+            <button
+              className={`btn icon invite-btn ${showInvites ? 'bg-blue-50 border-blue-500 text-blue-700' : 'no-effects'}`}
+              onClick={() => setShowInvites(!showInvites)}
+              aria-expanded={showInvites}
+              aria-label="Invite friends"
+              type="button"
+            >
+              <span className="icon" aria-hidden>
+                <Share size={18} strokeWidth={1.2} />
+              </span>
+            </button>
             <button
               className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 edit-confirm-glow' : 'btn edit-profile-btn no-effects'}`}
               onClick={(e) => { onEditToggle(); (e.target as HTMLButtonElement).blur(); }}

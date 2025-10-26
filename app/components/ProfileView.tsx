@@ -24,6 +24,7 @@ export function ProfileView({ userId }: { userId?: string }) {
   const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam, setUser } = useUserData(userId);
   const router = useRouter();
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("profileView") as any)) || "grid");
+  const [showInvites, setShowInvites] = useState(false);
 
   const handleAuthRequired = () => {
     router.push('/profile');
@@ -99,8 +100,10 @@ export function ProfileView({ userId }: { userId?: string }) {
           // The ProfileHeader handles avatar changes internally
         }}
         onAuthRequired={handleAuthRequired}
+        showInvites={showInvites}
+        setShowInvites={setShowInvites}
       />
-      {currentUserId && user && currentUserId === user.id && <InviteSection />}
+      {showInvites && currentUserId && user && currentUserId === user.id && <InviteSection />}
       {posts.length > 0 && (
         (() => {
           const subtitle = (currentUserId && user && currentUserId === user.id) ? 'Your posts' : `${user?.username || 'User'}'s posts`;

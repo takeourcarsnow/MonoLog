@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { isAllowedEmailDomain } from '@/src/lib/utils';
 
 export async function POST(req: Request) {
   try {
@@ -7,6 +8,9 @@ export async function POST(req: Request) {
     const email = (body?.email || '').toString().trim();
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       return NextResponse.json({ error: 'Valid email address required' }, { status: 400 });
+    }
+    if (!isAllowedEmailDomain(email)) {
+      return NextResponse.json({ error: 'Email domain not allowed' }, { status: 400 });
     }
 
     const sb = getServiceSupabase();

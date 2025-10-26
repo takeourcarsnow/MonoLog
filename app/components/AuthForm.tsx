@@ -28,6 +28,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
     setMode,
     headerNotice,
     headerNoticePhase,
+    emailWarning,
     generatingUsername,
     submit,
     generateUsername,
@@ -78,6 +79,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         generateUsername={generateUsername}
         generating={generatingUsername}
         onForgotPassword={() => setMode("forgot")}
+        emailWarning={emailWarning}
       />
 
       {mode === "forgot" && (

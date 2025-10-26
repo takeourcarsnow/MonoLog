@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "../Toast";
 import { useHeaderNotice } from "./authHooks";
-import { validUsername, isTempEmail } from "./authUtils";
+import { validUsername, isTempEmail, isAllowedEmailDomain } from "./authUtils";
 import { signIn, signUp, checkUsernameAvailability, resetPassword } from "./authActions";
 
 export function useAuthForm(onClose?: () => void) {
@@ -20,6 +20,8 @@ export function useAuthForm(onClose?: () => void) {
   const router = useRouter();
   const toast = useToast();
   const { headerNotice, headerNoticePhase, showHeaderNotice, setHeaderNotice } = useHeaderNotice();
+
+  const [emailWarning, setEmailWarning] = useState<string | null>(null);
 
   const isUsernameValid = validUsername(username || "");
 
@@ -46,12 +48,11 @@ export function useAuthForm(onClose?: () => void) {
           showHeaderNotice({ title: 'Invalid email', subtitle: 'Please enter a valid email address.', variant: 'warn' }, 4000);
           return;
         }
-        if (isTempEmail(email)) {
+        if (!isAllowedEmailDomain(email)) {
           setLoading(false);
-          showHeaderNotice({ title: 'Temporary emails not allowed', subtitle: 'Please use a permanent email address.', variant: 'warn' }, 4000);
+          showHeaderNotice({ title: 'Email domain not allowed', subtitle: 'Please use an email from allowed providers like gmail.com, yahoo.com, outlook.com, or icloud.com.', variant: 'warn' }, 4000);
           return;
         }
-        // Call forgot password API
         await resetPassword(email);
         showHeaderNotice({ title: 'Reset email sent', subtitle: 'Check your email for password reset instructions.', variant: 'info' }, 5000);
         setMode("signin");
@@ -64,9 +65,9 @@ export function useAuthForm(onClose?: () => void) {
           showHeaderNotice({ title: 'Invalid email', subtitle: 'Please enter a valid email address.', variant: 'warn' }, 4000);
           return;
         }
-        if (isTempEmail(email)) {
+        if (!isAllowedEmailDomain(email)) {
           setLoading(false);
-          showHeaderNotice({ title: 'Temporary emails not allowed', subtitle: 'Please use a permanent email address.', variant: 'warn' }, 4000);
+          showHeaderNotice({ title: 'Email domain not allowed', subtitle: 'Please use an email from allowed providers like gmail.com, yahoo.com, outlook.com, or icloud.com.', variant: 'warn' }, 4000);
           return;
         }
         if (!password || password.length < 8) {
@@ -171,6 +172,15 @@ export function useAuthForm(onClose?: () => void) {
     if (headerNotice) setHeaderNotice(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, password, username, inviteCode]);
+
+  // Set email warning if domain not allowed
+  useEffect(() => {
+    if (email && /\S+@\S+\.\S+/.test(email) && !isAllowedEmailDomain(email)) {
+      setEmailWarning('This email domain is not allowed. Please use an email from allowed providers like gmail.com, yahoo.com, outlook.com, or icloud.com.');
+    } else {
+      setEmailWarning(null);
+    }
+  }, [email]);
 
   // Generate a random username and ensure it's available (retry a few times)
   async function generateUsername() {
@@ -334,6 +344,7 @@ export function useAuthForm(onClose?: () => void) {
     setMode,
     headerNotice,
     headerNoticePhase,
+    emailWarning,
     isUsernameValid,
     generatingUsername,
     submit,

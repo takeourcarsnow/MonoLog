@@ -17,9 +17,10 @@ interface AuthInputsProps {
   generateUsername?: () => Promise<string | null>;
   generating?: boolean;
   onForgotPassword?: () => void;
+  emailWarning?: string | null;
 }
 
-export function AuthInputs({ email, setEmail, password, setPassword, username, setUsername, inviteCode, setInviteCode, mode, generateUsername, generating, onForgotPassword }: AuthInputsProps) {
+export function AuthInputs({ email, setEmail, password, setPassword, username, setUsername, inviteCode, setInviteCode, mode, generateUsername, generating, onForgotPassword, emailWarning }: AuthInputsProps) {
   // validate against lowercased username (backend rules are lowercase); allow display capitalization
   const isUsernameValid = validUsername((username || "").toLowerCase());
 
@@ -63,7 +64,7 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
       <div className="field-group flex flex-col gap-2 w-full">
         <input
           className="input fancy-input"
-          placeholder={mode === "forgot" ? "Email address" : "Email or username"}
+          placeholder={mode === "forgot" ? "Email address" : "Email"}
           value={email}
           name="email"
           autoComplete="email"
@@ -73,6 +74,11 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
           autoCorrect="off"
           autoCapitalize="none"
         />
+        {emailWarning && (
+          <div className="dim help error" style={{ color: '#ff6b6b', fontSize: 14 }}>
+            {emailWarning}
+          </div>
+        )}
         {mode !== "forgot" && (
           <div className="relative">
             <input

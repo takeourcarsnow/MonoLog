@@ -7,7 +7,6 @@ import Link from "next/link";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
 import { BarChart3 } from "lucide-react";
-import { Share } from "lucide-react";
 import type { User as UserType } from "@/src/lib/types";
 
 interface ProfileActionsProps {
@@ -218,7 +217,7 @@ export function ProfileActions({
               type="button"
             >
               <span className="icon" aria-hidden>
-                <Share size={18} strokeWidth={1.2} />
+                <UserPlus size={18} strokeWidth={1.2} />
               </span>
             </button>
             <button

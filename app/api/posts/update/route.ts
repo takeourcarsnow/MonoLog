@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { parseMentions } from '@/src/lib/mentions';
+import { parseHashtags } from '@/src/lib/hashtags';
 import { uid } from '@/src/lib/id';
 import { clearServerCachePrefix } from '@/src/lib/serverCache';
 
@@ -12,7 +13,12 @@ export async function POST(req: Request) {
   if (patch.caption !== undefined && typeof patch.caption === 'string' && patch.caption.length > CAPTION_MAX) return NextResponse.json({ error: `Caption exceeds ${CAPTION_MAX} characters` }, { status: 400 });
     const sb = getServiceSupabase();
     const updates: any = {};
-    if (patch.caption !== undefined) updates.caption = patch.caption;
+    if (patch.caption !== undefined) {
+      updates.caption = patch.caption;
+      // Update hashtags when caption changes
+      const hashtags = parseHashtags(patch.caption || '');
+      updates.hashtags = hashtags.length > 0 ? hashtags : null;
+    }
     if (patch.alt !== undefined) updates.alt = patch.alt;
     if (patch.public !== undefined) updates.public = patch.public;
     if (patch.camera !== undefined) updates.camera = patch.camera;
@@ -96,7 +102,7 @@ export async function POST(req: Request) {
     }
 
   // Invalidate feed caches so updates propagate quickly
-  try { clearServerCachePrefix('explore:'); clearServerCachePrefix('following:'); } catch (_) {}
+  try { clearServerCachePrefix('explore:'); clearServerCachePrefix('following:'); clearServerCachePrefix('hashtag:'); } catch (_) {}
 
   // Return the updated row to the client to avoid immediate stale reads
   return NextResponse.json({ ok: true, post: updatedRows });

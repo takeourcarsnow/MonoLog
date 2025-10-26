@@ -94,6 +94,10 @@
 .auth-form .username-wrap .check.pending { opacity: .5; transform: scale(.8); color: var(--danger); }
 .auth-form .username-wrap .check.ok { opacity: 1; transform: scale(1) rotate(0); color: var(--accent); }
 
+/* Invite code wrap styles, similar to username wrap */
+.auth-form .invite-code-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }
+.auth-form .invite-code-wrap.open { overflow: visible; max-height: 60px; opacity: 1; transform: translateY(0); }
+
 /* Toggle pill improvements */
 .auth-toggle {
   --auth-toggle-transition: 260ms cubic-bezier(.2,.8,.2,1);
@@ -481,6 +485,7 @@
     inputs spacing intact while allowing the confirm button to sit close. */
   .auth-form.mode-signup .inputs-wrap { padding-bottom: 0; margin-bottom: -10px; }
   .auth-form.mode-signup .username-wrap.open { margin-top: 0; }
+  .auth-form.mode-signup .invite-code-wrap.open { margin-top: 0; }
   /* stronger pull-up for the actions so the button is noticeably closer */
   .auth-form.mode-signup .auth-actions { margin-top: -12px; gap: 6px; }
 }

@@ -20,6 +20,7 @@
     "remove-unused-images": "node ./scripts/remove-unused-images.js"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.35.0",
     "exifr": "^7.1.3",
     "lucide-react": "^0.544.0",

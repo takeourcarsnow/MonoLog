@@ -17,6 +17,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
     setPassword,
     username,
     setUsername,
+    inviteCode,
+    setInviteCode,
     signupSent,
     loading,
     hasError,
@@ -70,6 +72,8 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         setPassword={setPassword}
         username={username}
         setUsername={setUsername}
+        inviteCode={inviteCode}
+        setInviteCode={setInviteCode}
         mode={mode}
         generateUsername={generateUsername}
         generating={generatingUsername}

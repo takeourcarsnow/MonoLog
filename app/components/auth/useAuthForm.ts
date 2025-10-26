@@ -10,6 +10,7 @@ export function useAuthForm(onClose?: () => void) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [signupSent, setSignupSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -93,7 +94,25 @@ export function useAuthForm(onClose?: () => void) {
           return;
         }
 
-        await signUp(email, password, chosen);
+        // Validate invite code
+        if (!inviteCode || inviteCode.trim() === '') {
+          setLoading(false);
+          showHeaderNotice({ title: 'Invite code required', subtitle: 'Please enter a valid invite code to sign up.', variant: 'warn' }, 4500);
+          return;
+        }
+        const validateResp = await fetch('/api/invites/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: inviteCode.trim() }),
+        });
+        const validateData = await validateResp.json();
+        if (!validateData.valid) {
+          setLoading(false);
+          showHeaderNotice({ title: 'Invalid invite code', subtitle: 'Please enter a valid invite code to sign up.', variant: 'warn' }, 4500);
+          return;
+        }
+
+        await signUp(email, password, chosen, inviteCode.trim());
         setSignupSent(true);
         setMode("signin");
         const elapsedSignup = Date.now() - start;
@@ -151,7 +170,7 @@ export function useAuthForm(onClose?: () => void) {
   useEffect(() => {
     if (headerNotice) setHeaderNotice(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, password, username]);
+  }, [email, password, username, inviteCode]);
 
   // Generate a random username and ensure it's available (retry a few times)
   async function generateUsername() {
@@ -304,6 +323,8 @@ export function useAuthForm(onClose?: () => void) {
     setPassword,
     username,
     setUsername,
+    inviteCode,
+    setInviteCode,
     signupSent,
     loading,
     hasError,

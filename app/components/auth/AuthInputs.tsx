@@ -11,13 +11,15 @@ interface AuthInputsProps {
   setPassword: (password: string) => void;
   username: string;
   setUsername: (username: string) => void;
+  inviteCode: string;
+  setInviteCode: (inviteCode: string) => void;
   mode: "signin" | "signup" | "forgot";
   generateUsername?: () => Promise<string | null>;
   generating?: boolean;
   onForgotPassword?: () => void;
 }
 
-export function AuthInputs({ email, setEmail, password, setPassword, username, setUsername, mode, generateUsername, generating, onForgotPassword }: AuthInputsProps) {
+export function AuthInputs({ email, setEmail, password, setPassword, username, setUsername, inviteCode, setInviteCode, mode, generateUsername, generating, onForgotPassword }: AuthInputsProps) {
   // validate against lowercased username (backend rules are lowercase); allow display capitalization
   const isUsernameValid = validUsername((username || "").toLowerCase());
 
@@ -146,6 +148,20 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
             <div id="username-help" className="dim help" aria-live="polite">
             3–32 chars: letters, numbers, &#39;-&#39; or &#39;_&#39;. 
           </div>
+        </div>
+        <div
+          className={`invite-code-wrap transition-all duration-300 ease-out ${mode === 'signup' ? 'open' : 'closed'}`}
+          aria-hidden={mode !== 'signup'}
+        >
+          <input
+            className="input fancy-input"
+            placeholder="Invite code"
+            value={inviteCode}
+            name="inviteCode"
+            autoComplete="off"
+            onChange={e => setInviteCode(e.target.value)}
+            aria-label="Invite code"
+          />
         </div>
       </div>
     </div>

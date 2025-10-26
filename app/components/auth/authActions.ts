@@ -43,7 +43,7 @@ export async function signIn(identifier: string, password: string) {
   })();
 }
 
-export async function signUp(email: string, password: string, username: string) {
+export async function signUp(email: string, password: string, username: string, inviteCode?: string) {
   const sb = getSupabaseClient();
   const chosen = username.trim().toLowerCase();
   const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username: chosen, name: null } } });
@@ -58,6 +58,10 @@ export async function signUp(email: string, password: string, username: string) 
   if (userId && sessionPresent) {
     try {
       await sb.from('users').upsert({ id: userId, username: chosen, display_name: null, avatar_url: "/logo.svg" });
+      // Mark invite as used
+      if (inviteCode) {
+        await sb.from('invites').update({ used_by: userId }).eq('code', inviteCode);
+      }
     } catch (e) { /* ignore upsert errors for now */ }
   }
 }

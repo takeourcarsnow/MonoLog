@@ -17,6 +17,7 @@ import { SkeletonAvatar, SkeletonText, SkeletonTile } from "./Skeleton";
 import { AuthRequired } from "./AuthRequired";
 import { ViewToggle } from "./ViewToggle";
 import { PostCard } from "./PostCard";
+import { InviteSection } from "./InviteSection";
 import { User as UserIcon } from "lucide-react";
 
 export function ProfileView({ userId }: { userId?: string }) {
@@ -99,6 +100,9 @@ export function ProfileView({ userId }: { userId?: string }) {
         }}
         onAuthRequired={handleAuthRequired}
       />
+      {currentUserId && user && currentUserId === user.id && (
+        <InviteSection />
+      )}
       {posts.length > 0 && (
         (() => {
           const subtitle = (currentUserId && user && currentUserId === user.id) ? 'Your posts' : `${user?.username || 'User'}'s posts`;

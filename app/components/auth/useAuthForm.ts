@@ -102,17 +102,6 @@ export function useAuthForm(onClose?: () => void) {
           showHeaderNotice({ title: 'Invite code required', subtitle: 'Please enter a valid invite code to sign up.', variant: 'warn' }, 4500);
           return;
         }
-        const validateResp = await fetch('/api/invites/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: inviteCode.trim() }),
-        });
-        const validateData = await validateResp.json();
-        if (!validateData.valid) {
-          setLoading(false);
-          showHeaderNotice({ title: 'Invalid invite code', subtitle: 'Please enter a valid invite code to sign up.', variant: 'warn' }, 4500);
-          return;
-        }
 
         await signUp(email, password, chosen, inviteCode.trim());
         setSignupSent(true);
@@ -139,8 +128,14 @@ export function useAuthForm(onClose?: () => void) {
           showHeaderNotice({ title: 'Invalid login credentials', variant: 'error' }, 3500);
         }
       } else {
-        try { setMode('signin'); } catch (_) {}
-        showHeaderNotice({ title: 'Next steps', subtitle: 'If approved, we\'ll email setup instructions.', variant: 'info' }, 4000);
+        // Check if it's a validation error that should be shown
+        const isValidationError = lower.includes('invite') || lower.includes('username') || lower.includes('email') || lower.includes('password');
+        if (isValidationError) {
+          showHeaderNotice({ title: 'Sign up failed', subtitle: raw, variant: 'error' }, 5000);
+        } else {
+          try { setMode('signin'); } catch (_) {}
+          showHeaderNotice({ title: 'Next steps', subtitle: 'If approved, we\'ll email setup instructions.', variant: 'info' }, 4000);
+        }
       }
     } finally {
       const elapsed = Date.now() - start;
@@ -177,7 +172,7 @@ export function useAuthForm(onClose?: () => void) {
   // Set email warning if domain not allowed
   useEffect(() => {
     if (email && /\S+@\S+\.\S+/.test(email) && !isAllowedEmailDomain(email)) {
-      setEmailWarning('This email domain is not allowed. Please use an email from allowed providers like gmail.com, yahoo.com, outlook.com, or icloud.com.');
+      setEmailWarning('This email domain is not allowed.');
     } else {
       setEmailWarning(null);
     }

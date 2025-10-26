@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     const { data: todaysInvite, error: todaysError } = await sb
       .from('invites')
-      .select('code')
+      .select('code, used_by')
       .eq('created_by', user.id)
       .gte('created_at', startOfDay)
       .order('created_at', { ascending: false })
@@ -41,27 +41,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to check todays invite' }, { status: 500 });
     }
 
-    if (todaysInvite && todaysInvite.length > 0) {
+    if (todaysInvite && todaysInvite.length > 0 && todaysInvite[0].used_by == null) {
       return NextResponse.json({ code: todaysInvite[0].code });
     }
 
-    // Generate a unique invite code
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Generate a unique invite code that hasn't been used
+    let code;
+    let attempts = 0;
+    const maxAttempts = 20; // Prevent infinite loop
+    do {
+      code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { data: existing, error: checkError } = await sb
+        .from('invites')
+        .select('used_by')
+        .eq('code', code);
 
-    // Check if invite already exists
-    const { data: existing, error: selectError } = await sb
-      .from('invites')
-      .select('code')
-      .eq('code', code);
+      if (checkError) {
+        console.error('Error checking invite:', checkError);
+        return NextResponse.json({ error: 'Failed to check invite' }, { status: 500 });
+      }
 
-    if (selectError) {
-      console.error('Error checking invite:', selectError);
-      return NextResponse.json({ error: 'Failed to check invite' }, { status: 500 });
-    }
+      // If no existing invite with this code, or it exists but is unused, use it
+      if (!existing || existing.length === 0 || existing[0].used_by == null) {
+        break;
+      }
 
-    if (existing && existing.length > 0) {
-      return NextResponse.json({ code });
-    }
+      attempts++;
+      if (attempts >= maxAttempts) {
+        return NextResponse.json({ error: 'Failed to generate unique invite code' }, { status: 500 });
+      }
+    } while (true);
 
     // Insert into invites table
     const { data, error } = await sb

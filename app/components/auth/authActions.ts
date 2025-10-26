@@ -44,26 +44,21 @@ export async function signIn(identifier: string, password: string) {
 }
 
 export async function signUp(email: string, password: string, username: string, inviteCode?: string) {
-  const sb = getSupabaseClient();
-  const chosen = username.trim().toLowerCase();
-  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username: chosen, name: null } } });
-  if (error) throw error;
-  // when signing up, only create a users profile row client-side if the
-  // signup returned an active session (some flows require email
-  // confirmation and don't provide a session; in that case the client
-  // is still anon and RLS will block INSERTs). If no session is present
-  // skip creation here and rely on the sign-in flow to create the row.
-  const userId = (data as any)?.user?.id;
-  const sessionPresent = (data as any)?.session ?? false;
-  if (userId && sessionPresent) {
-    try {
-      await sb.from('users').upsert({ id: userId, username: chosen, display_name: null, avatar_url: "/logo.svg" });
-      // Mark invite as used (except for EARLYADOPTER which is reusable)
-      if (inviteCode && inviteCode !== 'EARLYADOPTER') {
-        await sb.from('invites').update({ used_by: userId }).eq('code', inviteCode).eq('used_by', null);
-      }
-    } catch (e) { /* ignore upsert errors for now */ }
+  const resp = await fetch('/api/auth/signup-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, username, inviteCode })
+  });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => ({}));
+    throw new Error(body?.error || `Sign-up failed (${resp.status})`);
   }
+  const body = await resp.json();
+  const data = body?.data ?? null;
+  if (!data) {
+    throw new Error('Sign-up failed: no data returned');
+  }
+  // The server-side signup handles invite marking and profile creation
 }
 
 export async function resetPassword(email: string) {

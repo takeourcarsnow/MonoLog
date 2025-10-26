@@ -9,6 +9,7 @@ import { useImageSizing } from "./imageZoom/hooks/useImageSizing";
 
 export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive = true, isFullscreen = false, instanceId, lazy = false, rootMargin = "50px", onDimensionsChange, ...rest }: Props) {
   const [isVisible, setIsVisible] = useState(!lazy);
+  const [hasError, setHasError] = useState(false);
   const state = useZoomState();
   const { handlePointerDown, handlePointerMove, handlePointerUp, registerTap } = useZoomEvents({
     ...state,
@@ -137,6 +138,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           }}
           onError={(e) => {
             e.currentTarget.classList.add("loaded");
+            setHasError(true);
           }}
           onClick={(e) => {
             e.preventDefault();
@@ -158,6 +160,26 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
             borderRadius: 0,
           }}
         />
+      )}
+      {hasError && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "var(--bg-elev)",
+            color: "var(--text-secondary)",
+            fontSize: "14px",
+            borderRadius: "inherit",
+          }}
+        >
+          Failed to load image
+        </div>
       )}
     </div>
   );

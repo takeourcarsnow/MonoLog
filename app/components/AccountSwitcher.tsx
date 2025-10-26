@@ -166,7 +166,7 @@ export function AccountSwitcher() {
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             {/* Avatar first in the DOM; CSS will use row-reverse so the avatar stays at the far right
                 and the account name expands to the left pushing other header items. */}
-            <OptimizedImage src={(current as User).avatarUrl} alt={(current as User).displayName || 'Account avatar'} className="avatar" width={32} height={32} />
+            <OptimizedImage key={(current as User).avatarUrl} src={(current as User).avatarUrl} alt={(current as User).displayName || 'Account avatar'} className="avatar" width={32} height={32} />
             <span className="account-name" aria-hidden style={{ opacity: isMounted ? undefined : 0, maxWidth: isMounted ? undefined : 0 }}>
               {(current as User).username || (current as User).displayName || (current as User).id}
             </span>

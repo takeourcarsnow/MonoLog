@@ -48,6 +48,16 @@ export function isAllowedEmailDomain(email: string): boolean {
   const domain = email.split('@')[1]?.toLowerCase();
   if (!domain) return false;
 
-  // For testing, allow any email domain
-  return true;
+  const allowedDomains = [
+    'gmail.com',
+    'yahoo.com',
+    'outlook.com',
+    'icloud.com',
+    'gmail.lt',
+    'yahoo.lt',
+    'outlook.lt',
+    'icloud.lt'
+  ];
+
+  return allowedDomains.includes(domain);
 }

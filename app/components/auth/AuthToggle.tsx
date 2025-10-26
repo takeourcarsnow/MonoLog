@@ -13,6 +13,8 @@ export function AuthToggle({ mode, setMode }: AuthToggleProps) {
   const [indicator, setIndicator] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
 
   useEffect(() => {
+    let raf = 0;
+
     function measure() {
       const c = containerRef.current;
       const a = btnSigninRef.current;
@@ -25,19 +27,49 @@ export function AuthToggle({ mode, setMode }: AuthToggleProps) {
       const leftB = Math.round(brect.left - crect.left);
       const widthA = Math.round(arect.width);
       const widthB = Math.round(brect.width);
-      setIndicator(mode === 'signin' ? { left: leftA, width: widthA } : { left: leftB, width: widthB });
+      const next = mode === 'signin' ? { left: leftA, width: widthA } : { left: leftB, width: widthB };
+      // Only update when values changed to avoid churn inside RO callbacks
+      setIndicator((prev) => {
+        if (prev.left === next.left && prev.width === next.width) return prev;
+        return next;
+      });
     }
-    measure();
-    window.addEventListener('resize', measure);
+
+    // Debounced initial measurement + window resize handler uses rAF to avoid
+    // making style writes directly inside ResizeObserver callbacks which can
+    // lead to the "ResizeObserver loop completed with undelivered
+    // notifications" message in some browsers.
+    function scheduleMeasure() {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        measure();
+      });
+    }
+
+    // Run initial measurement
+    scheduleMeasure();
+    const onResize = scheduleMeasure;
+    window.addEventListener('resize', onResize, { passive: true });
+
     // watch for font/load/layout changes
-    const ro = new ResizeObserver(() => measure());
+    const ro = new ResizeObserver(() => {
+      scheduleMeasure();
+    });
     if (containerRef.current) ro.observe(containerRef.current);
     if (btnSigninRef.current) ro.observe(btnSigninRef.current);
     if (btnSignupRef.current) ro.observe(btnSignupRef.current);
+
     // also ensure we re-measure when DOM subtree mutates
-    const mo = new MutationObserver(measure);
+    const mo = new MutationObserver(() => scheduleMeasure());
     if (containerRef.current) mo.observe(containerRef.current, { childList: true, subtree: true, attributes: true });
-    return () => { window.removeEventListener('resize', measure); ro.disconnect(); mo.disconnect(); };
+
+    return () => {
+      try { if (raf) cancelAnimationFrame(raf); } catch (_) {}
+      window.removeEventListener('resize', onResize);
+      try { ro.disconnect(); } catch (_) {}
+      try { mo.disconnect(); } catch (_) {}
+    };
   }, [mode]);
 
   return (

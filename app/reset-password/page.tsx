@@ -90,8 +90,8 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="view-fade" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{ textAlign: 'center', maxWidth: 400 }}>
+      <div className="view-fade" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', minHeight: '100vh', paddingTop: '15vh' }}>
+        <div style={{ textAlign: 'center', maxWidth: 400, padding: 24, background: 'var(--bg)', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', border: '1px solid var(--border)' }}>
           <h1 style={{ marginBottom: 16 }}>Password Reset Successful</h1>
           <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
             Your password has been updated. You will be redirected shortly.
@@ -103,8 +103,8 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="view-fade" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 400, width: '100%', padding: 24 }}>
+    <div className="view-fade" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', minHeight: '100vh', paddingTop: '15vh' }}>
+      <div style={{ maxWidth: 400, width: '100%', padding: 24, background: 'var(--bg)', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', border: '1px solid var(--border)' }}>
         <h1 style={{ textAlign: 'center', marginBottom: 24 }}>Reset Your Password</h1>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

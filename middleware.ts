@@ -4,7 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 import { RESERVED_ROUTES } from './src/lib/types';
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
+  let response = NextResponse.next({
     request,
   });
 
@@ -18,13 +18,7 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value, options)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            response.cookies.set(name, value, options)
           );
         },
       },
@@ -39,23 +33,23 @@ export async function middleware(request: NextRequest) {
   
   // Only process single-segment paths (potential usernames)
   if (segments.length !== 1) {
-    return supabaseResponse;
+    return response;
   }
   
   const segment = segments[0];
   
   // If it's a reserved route, let Next.js handle it normally
   if (RESERVED_ROUTES.includes(segment.toLowerCase())) {
-    return supabaseResponse;
+    return response;
   }
   
   // If it looks like a static file, let it through
   if (segment.includes('.')) {
-    return supabaseResponse;
+    return response;
   }
   
   // Otherwise, it might be a username - let the [username] route handle it
-  return supabaseResponse;
+  return response;
 }
 
 export const config = {

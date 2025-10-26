@@ -1,4 +1,5 @@
-import { createBrowserClient, SupabaseClient } from "@supabase/ssr";
+import { createBrowserClient } from "@supabase/ssr";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE } from "../config";
 
 let supabase: SupabaseClient | null = null;
@@ -33,7 +34,7 @@ export function getClient() {
   supabase = createBrowserClient(url, anonKey, {
     cookieOptions: {
       name: 'sb-gfvdnpcrscszzyicsycp-auth-token',
-      lifetime: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7, // 7 days
       domain: '',
       path: '/',
       sameSite: 'lax',

@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { Button } from "./Button";
 
-export function InviteSection() {
+interface InviteSectionProps {
+  isVisible?: boolean;
+}
+
+export function InviteSection({ isVisible = true }: InviteSectionProps) {
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -41,7 +45,7 @@ export function InviteSection() {
   };
 
   return (
-    <div style={{ margin: '20px auto', maxWidth: 600, padding: '16px', background: 'var(--card-bg)', borderRadius: 12, border: '1px solid var(--border)', textAlign: 'center' }}>
+    <div className="invite-panel invite-panel-enter">
       <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>Invite Friends</h3>
       <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
         Generate a unique invite code to share with friends. You get one code per day that stays valid until someone uses it.

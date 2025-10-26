@@ -103,7 +103,7 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
           className={`username-wrap transition-all duration-300 ease-out ${mode === 'signup' ? 'open' : 'closed'}`}
           aria-hidden={mode !== 'signup'}
         >
-          <div className="relative">
+          <div className="relative mb-1.5">
             <input
               className="input fancy-input pl-12"
               placeholder="Choose a username"
@@ -145,23 +145,23 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               ) : null}
             </div>
           </div>
-            <div id="username-help" className="dim help" aria-live="polite">
+          <div
+            className={`invite-code-wrap transition-all duration-300 ease-out ${mode === 'signup' ? 'open' : 'closed'}`}
+            aria-hidden={mode !== 'signup'}
+          >
+            <input
+              className="input fancy-input"
+              placeholder="Invite code"
+              value={inviteCode}
+              name="inviteCode"
+              autoComplete="off"
+              onChange={e => setInviteCode(e.target.value)}
+              aria-label="Invite code"
+            />
+          </div>
+          <div id="username-help" className="dim help" aria-live="polite">
             3–32 chars: letters, numbers, &#39;-&#39; or &#39;_&#39;. 
           </div>
-        </div>
-        <div
-          className={`invite-code-wrap transition-all duration-300 ease-out ${mode === 'signup' ? 'open' : 'closed'}`}
-          aria-hidden={mode !== 'signup'}
-        >
-          <input
-            className="input fancy-input"
-            placeholder="Invite code"
-            value={inviteCode}
-            name="inviteCode"
-            autoComplete="off"
-            onChange={e => setInviteCode(e.target.value)}
-            aria-label="Invite code"
-          />
         </div>
       </div>
     </div>

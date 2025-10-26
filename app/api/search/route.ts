@@ -65,7 +65,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: communitiesError.message }, { status: 500 });
     }
 
-    // Fetch member counts
+    // Fetch member counts in a single batched query
     const communityIds = (communitiesData || []).map(c => c.id);
     let memberCounts: Record<string, number> = {};
     if (communityIds.length > 0) {
@@ -74,6 +74,7 @@ export async function GET(req: Request) {
         .select('community_id')
         .in('community_id', communityIds);
       if (!membersError && membersData) {
+        // Count members per community
         for (const m of membersData) {
           memberCounts[m.community_id] = (memberCounts[m.community_id] || 0) + 1;
         }

@@ -188,9 +188,7 @@ function WebVitalsScript() {
         getTTFB(console.log);
 
         // Register service worker for caching
-        // Temporarily disabled for debugging
-        /*
-  if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production' && !isInAppBrowser()) {
+        if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production' && !isInAppBrowser()) {
           navigator.serviceWorker.register('/sw.js').then((registration) => {
             // Check for updates when the page becomes visible
             document.addEventListener('visibilitychange', () => {
@@ -230,7 +228,6 @@ function WebVitalsScript() {
             console.warn('Service worker registration failed:', error);
           });
         }
-        */
       } catch (e) {
         // ignore
       }

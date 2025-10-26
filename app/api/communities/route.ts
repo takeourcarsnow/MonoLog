@@ -94,21 +94,43 @@ export async function GET(req: Request) {
       let totalCount = 0;
 
       if (error) {
-        // Fallback case: get counts for each community
-        communitiesWithCounts = await Promise.all(
-          communities.map(async (community) => {
-            const [memberCountResult, threadCountResult] = await Promise.all([
-              sb.from('community_members').select('*', { count: 'exact', head: true }).eq('community_id', community.id),
-              sb.from('threads').select('*', { count: 'exact', head: true }).eq('community_id', community.id)
-            ]);
+        // Fallback case: get counts for each community using batched queries
+        const communityIds = communities.map(c => c.id);
+        
+        // Batch member counts
+        const memberCounts: Record<string, number> = {};
+        if (communityIds.length > 0) {
+          const { data: membersData } = await sb
+            .from('community_members')
+            .select('community_id')
+            .in('community_id', communityIds);
+          if (membersData) {
+            for (const m of membersData) {
+              memberCounts[m.community_id] = (memberCounts[m.community_id] || 0) + 1;
+            }
+          }
+        }
 
-            return {
-              ...community,
-              memberCount: memberCountResult.count || 0,
-              threadCount: threadCountResult.count || 0,
-            };
-          })
-        );
+        // Batch thread counts
+        const threadCounts: Record<string, number> = {};
+        if (communityIds.length > 0) {
+          const { data: threadsData } = await sb
+            .from('threads')
+            .select('community_id')
+            .in('community_id', communityIds);
+          if (threadsData) {
+            for (const t of threadsData) {
+              threadCounts[t.community_id] = (threadCounts[t.community_id] || 0) + 1;
+            }
+          }
+        }
+
+        communitiesWithCounts = communities.map((community) => ({
+          ...community,
+          memberCount: memberCounts[community.id] || 0,
+          threadCount: threadCounts[community.id] || 0,
+        }));
+
         // For fallback (we used .range), compute total count separately
         const { count } = await sb.from('communities').select('id', { count: 'exact', head: true });
         totalCount = count || 0;

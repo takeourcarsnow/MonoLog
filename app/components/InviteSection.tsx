@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "./Button";
-import { Copy, Check } from "lucide-react";
 
 export function InviteSection() {
   const [inviteCode, setInviteCode] = useState<string | null>(null);
@@ -53,28 +52,23 @@ export function InviteSection() {
         </Button>
       ) : (
         <>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-            <input
-              value={inviteCode}
-              readOnly
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: 6,
-                background: 'var(--bg)',
-                color: 'var(--text)',
-                fontFamily: 'monospace',
-                textAlign: 'center',
-              }}
-            />
-            <Button onClick={copyToClipboard} variant="ghost" style={{ padding: '8px 12px' }}>
-              {copied ? <Check size={16} /> : <Copy size={16} />}
-            </Button>
-          </div>
-          <p style={{ margin: '0', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-            This code stays valid until someone uses it. Generate a new one after it&apos;s claimed.
-          </p>
+          <input
+            value={copied ? "Copied to clipboard!" : inviteCode}
+            readOnly
+            onClick={copyToClipboard}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              border: '1px solid var(--border)',
+              borderRadius: 6,
+              background: 'var(--bg)',
+              color: 'var(--text)',
+              fontFamily: 'monospace',
+              textAlign: 'center',
+              cursor: 'pointer',
+              marginBottom: '12px',
+            }}
+          />
         </>
       )}
     </div>

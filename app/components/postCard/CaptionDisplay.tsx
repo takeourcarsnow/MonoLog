@@ -50,7 +50,7 @@ export function CaptionDisplay({ caption, maxLength = 50, isAuthed = true, onSig
           aria-expanded={isAuthed ? isExpanded : undefined}
           aria-label={isAuthed ? (isExpanded ? "Show less" : "Read more") : "Sign in to read more"}
         >
-          {isAuthed ? (isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />) : "Sign in to read more"}
+          {isAuthed ? (isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />) : <ChevronDown size={16} />}
         </button>
       )}
     </div>

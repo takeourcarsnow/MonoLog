@@ -112,6 +112,47 @@ export async function deleteThreadReply(id: string): Promise<boolean> {
   return true;
 }
 
+export async function editThreadReply(replyId: string, content: string): Promise<HydratedThreadReply> {
+  const sb = getSupabaseClient();
+  const token = await getAccessToken(sb);
+  const resp = await fetch('/api/threads/replies', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ replyId, content }),
+    credentials: 'include',
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to edit reply');
+  }
+
+  const data = await resp.json();
+
+  // Map user profile
+  const rawUser = data.user;
+  const mappedUser = mapProfileToUser(rawUser) || rawUser;
+
+  return {
+    ...data,
+    createdAt: data.created_at,
+    user: mappedUser ? {
+      id: mappedUser.id,
+      username: mappedUser.username,
+      displayName: mappedUser.displayName,
+      avatarUrl: mappedUser.avatarUrl,
+    } : {
+      id: 'deleted',
+      username: 'deleted-user',
+      displayName: null,
+      avatarUrl: '/logo.svg',
+    }
+  };
+}
+
 // Import isCommunityMember from communities module to avoid circular dependency
 async function isCommunityMember(communityId: string): Promise<boolean> {
   const sb = getSupabaseClient();

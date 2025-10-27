@@ -201,6 +201,7 @@ export interface Api {
   getThreadReplies(threadId: string): Promise<HydratedThreadReply[]>;
   addThreadReply(threadId: string, content: string): Promise<HydratedThreadReply>;
   deleteThreadReply(id: string): Promise<boolean>;
+  editThreadReply(replyId: string, content: string): Promise<HydratedThreadReply>;
 
   // Check for new threads since timestamp
   hasNewThreads(since: string): Promise<boolean>;

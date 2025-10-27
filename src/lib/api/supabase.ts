@@ -6,7 +6,7 @@ import { favoritePost, unfavoritePost, isFavorite, getFavoritePosts } from "./fa
 import { getComments, addComment } from "./comments";
 import { calendarStats } from "./calendar";
 import { weekReviewStats } from "./weekReview";
-import { getCommunities, getCommunity, createCommunity, updateCommunity, joinCommunity, leaveCommunity, deleteCommunity, isCommunityMember, getCommunityThreads, getThread, getThreadBySlug, createThread, updateThread, deleteThread, getThreadReplies, addThreadReply, deleteThreadReply, hasNewThreads } from "./communities";
+import { getCommunities, getCommunity, createCommunity, updateCommunity, joinCommunity, leaveCommunity, deleteCommunity, isCommunityMember, getCommunityThreads, getThread, getThreadBySlug, createThread, updateThread, deleteThread, getThreadReplies, addThreadReply, deleteThreadReply, editThreadReply, hasNewThreads } from "./communities";
 import { search } from "./search";
 import type { Api } from "../types";
 
@@ -69,6 +69,7 @@ export const supabaseApi: Api = {
   getThreadReplies,
   addThreadReply,
   deleteThreadReply,
+  editThreadReply,
   hasNewThreads,
   search,
 };

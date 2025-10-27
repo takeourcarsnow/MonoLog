@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useRef } from "react";
 import { api } from "@/src/lib/api";
-import { MessageSquare, ArrowLeft, Trash2 } from "lucide-react";
+import { MessageSquare, ArrowLeft, Trash2, Edit3, Check, X } from "lucide-react";
 import type { HydratedThread, HydratedThreadReply } from "@/src/lib/types";
 import { Button } from "./Button";
 import TimeDisplay from "./TimeDisplay";
@@ -29,6 +29,9 @@ export function ThreadView() {
   const threadDeleteTimeoutRef = useRef<number | null>(null);
   const [replyArmedSet, setReplyArmedSet] = useState<Set<string>>(new Set());
   const replyDeleteTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Redirect unauthenticated users to auth
   useEffect(() => {
@@ -158,6 +161,32 @@ export function ThreadView() {
     } catch (e: any) {
       setError(e?.message || 'Failed to delete reply');
     }
+  };
+
+  const handleEditReply = (replyId: string, currentContent: string) => {
+    setEditingReplyId(replyId);
+    setEditingContent(currentContent);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingReplyId || !editingContent.trim()) return;
+
+    try {
+      setSavingEdit(true);
+      const updatedReply = await api.editThreadReply(editingReplyId, editingContent.trim());
+      setReplies(prev => prev.map(r => r.id === editingReplyId ? updatedReply : r));
+      setEditingReplyId(null);
+      setEditingContent("");
+    } catch (e: any) {
+      setError(e?.message || 'Failed to edit reply');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReplyId(null);
+    setEditingContent("");
   };
 
   if (loading) {
@@ -309,22 +338,72 @@ export function ThreadView() {
                     <TimeDisplay date={reply.createdAt} />
                   </div>
                   {currentUser && reply.user.id === currentUser.id && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`small-min ${replyArmedSet.has(reply.id) ? 'confirm' : ''}`}
-                      onClick={async () => {
-                        await handleDeleteReply(reply.id);
-                      }}
-                      aria-label={replyArmedSet.has(reply.id) ? 'Confirm delete reply' : 'Delete reply'}
-                    >
-                      <Trash2 size={14} />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="small-min"
+                        onClick={() => handleEditReply(reply.id, reply.content)}
+                        disabled={editingReplyId === reply.id}
+                        aria-label="Edit reply"
+                      >
+                        <Edit3 size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`small-min ${replyArmedSet.has(reply.id) ? 'confirm' : ''}`}
+                        onClick={async () => {
+                          await handleDeleteReply(reply.id);
+                        }}
+                        aria-label={replyArmedSet.has(reply.id) ? 'Confirm delete reply' : 'Delete reply'}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
                   )}
                 </div>
-                <div className="mt-2 prose dark:prose-invert max-w-none">
-                  <p className="whitespace-pre-wrap">{renderCaption(reply.content)}</p>
-                </div>
+                {editingReplyId === reply.id ? (
+                  <div className="mt-3 space-y-3">
+                    <textarea
+                      value={editingContent}
+                      onChange={(e) => setEditingContent(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                      rows={3}
+                      maxLength={5000}
+                      disabled={savingEdit}
+                    />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">
+                        {editingContent.length}/5000 characters
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCancelEdit}
+                          disabled={savingEdit}
+                        >
+                          <X size={14} className="mr-1" />
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveEdit}
+                          disabled={!editingContent.trim() || savingEdit}
+                          loading={savingEdit}
+                        >
+                          <Check size={14} className="mr-1" />
+                          Save
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 prose dark:prose-invert max-w-none">
+                    <p className="whitespace-pre-wrap">{renderCaption(reply.content)}</p>
+                  </div>
+                )}
               </div>
             </div>
           ))

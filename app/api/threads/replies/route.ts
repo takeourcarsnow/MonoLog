@@ -124,3 +124,60 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }
 }
+
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+    const { replyId, content } = body;
+    const authUser = await getUserFromAuthHeader(req);
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const userId = authUser.id;
+
+    if (!replyId || !content) {
+      return NextResponse.json({ error: 'Reply ID and content are required' }, { status: 400 });
+    }
+
+    if (content.length < 1 || content.length > 5000) {
+      return NextResponse.json({ error: 'Reply content must be between 1 and 5,000 characters' }, { status: 400 });
+    }
+
+    const sb = getServiceSupabase();
+
+    // Check if reply exists and belongs to the user
+    const { data: existingReply } = await sb
+      .from('thread_replies')
+      .select('id, user_id')
+      .eq('id', replyId)
+      .single();
+
+    if (!existingReply) {
+      return NextResponse.json({ error: 'Reply not found' }, { status: 404 });
+    }
+
+    if (existingReply.user_id !== userId) {
+      return NextResponse.json({ error: 'You can only edit your own replies' }, { status: 403 });
+    }
+
+    // Update reply
+    const { data: reply, error } = await sb
+      .from('thread_replies')
+      .update({
+        content
+      })
+      .eq('id', replyId)
+      .select(`
+        *,
+        user:users!thread_replies_user_id_fkey(id, username, display_name, avatar_url)
+      `)
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(reply);
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+  }
+}

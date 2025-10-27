@@ -14,14 +14,14 @@ export function useComments(postId: string, initialCount: number) {
       try {
         const pid = e?.detail?.postId;
         if (!pid) return;
-        if (pid === postId) setCount(c => c + 1);
+        if (pid === postId && !commentsMounted) setCount(c => c + 1);
       } catch (err) { /* ignore */ }
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('monolog:comment_added', onGlobalComment as any);
     }
     return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:comment_added', onGlobalComment as any); };
-  }, [postId]);
+  }, [postId, commentsMounted]);
 
   // Simplified: only prefetch when comments pane is opened
   useEffect(() => {

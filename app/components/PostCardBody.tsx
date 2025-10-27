@@ -52,6 +52,8 @@ interface PostCardBodyProps {
   handleCloseFullscreen: () => void;
   handleNextImage: () => void;
   handlePrevImage: () => void;
+  isAuthed?: boolean;
+  onSignIn?: () => void;
 }
 
 export function PostCardBody({
@@ -96,6 +98,8 @@ export function PostCardBody({
   handleCloseFullscreen,
   handleNextImage,
   handlePrevImage,
+  isAuthed,
+  onSignIn,
 }: PostCardBodyProps) {
   return (
     <div className="card-body">
@@ -103,7 +107,7 @@ export function PostCardBody({
           This allows the caption/actions to fade/collapse smoothly while the editor
           expands, avoiding a sudden jump on open. */}
       <div className="caption-wrap" aria-hidden={editorAnim === 'enter'}>
-        <CaptionDisplay caption={post.caption} />
+        <CaptionDisplay caption={post.caption} isAuthed={isAuthed} onSignIn={onSignIn} />
         <ActionsSection
           postId={post.id}
           count={count}

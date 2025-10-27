@@ -17,7 +17,7 @@ import { useSpotifyMeta } from "./postCard/hooks/useSpotifyMeta";
 import { useEditorAnimation } from "./postCard/hooks/useEditorAnimation";
 import { useFullscreen } from "./postCard/hooks/useFullscreen";
 import { useCardNavigation } from "./postCard/hooks/useCardNavigation";
-import { useIsMe } from "@/src/lib/hooks/useAuth";
+import { useIsMe, useAuth } from "@/src/lib/hooks/useAuth";
 import { useToast } from "./Toast";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
@@ -105,6 +105,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   const [showSpotify, setShowSpotify] = useState(false);
   const pathname = usePathname();
   const { isMe, isLoading: authLoading } = useIsMe(post.userId);
+  const { me } = useAuth();
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
   const toast = useToast();
 
@@ -209,6 +210,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         handleCloseFullscreen={handleCloseFullscreen}
         handleNextImage={handleNextImage}
         handlePrevImage={handlePrevImage}
+        isAuthed={!!me}
+        onSignIn={() => setShowAuth(true)}
       />
     </article>
   );

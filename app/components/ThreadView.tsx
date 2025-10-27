@@ -26,50 +26,29 @@ export function ThreadView() {
   const [submitting, setSubmitting] = useState(false);
   const [threadDeleteArmed, setThreadDeleteArmed] = useState(false);
   const threadDeleteTimeoutRef = useRef<number | null>(null);
-
   const [replyArmedSet, setReplyArmedSet] = useState<Set<string>>(new Set());
   const replyDeleteTimeoutsRef = useRef<Map<string, number>>(new Map());
 
-  const loadThread = useCallback(async () => {
-    if (!threadSlug) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      let threadData = await api.getThreadBySlug(threadSlug);
-      
-      // If slug lookup failed, try to find by ID (for backward compatibility)
-      if (!threadData) {
-        // Check if threadSlug looks like a UUID
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (uuidRegex.test(threadSlug)) {
-          threadData = await api.getThread(threadSlug);
-        }
-      }
-      
-      if (!threadData) {
-        setError('Thread not found');
-        setLoading(false);
-        return;
-      }
-      const repliesData = await api.getThreadReplies(threadData.id);
-      setThread(threadData);
-      setReplies(repliesData);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load thread');
-    } finally {
-      setLoading(false);
+  // Redirect unauthenticated users to auth
+  useEffect(() => {
+    if (!currentUser) { // undefined or null means not authenticated
+      router.replace('/profile');
     }
-  }, [threadSlug]);
+  }, [currentUser, router]);
 
-  useEffect(() => {
-    loadThread();
-  }, [loadThread]);
+  // Show loading while determining auth status
+  if (currentUser === undefined) {
+    return (
+      <div className="content">
+        <div className="card skeleton" style={{ height: 200 }} />
+      </div>
+    );
+  }
 
-  // Update last checked time when component mounts
-  useEffect(() => {
-    localStorage.setItem('communitiesLastChecked', new Date().toISOString());
-  }, []);
+  // Don't render anything if not authenticated (redirecting)
+  if (!currentUser) {
+    return null;
+  }
 
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();

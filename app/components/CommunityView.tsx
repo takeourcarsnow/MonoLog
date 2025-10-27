@@ -65,6 +65,36 @@ export function CommunityView() {
     }
   }, [currentUser, community]);
 
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (deleteTimeoutRef.current) window.clearTimeout(deleteTimeoutRef.current);
+      threadDeleteTimeoutsRef.current.forEach((t) => window.clearTimeout(t));
+      threadDeleteTimeoutsRef.current.clear();
+    };
+  }, []);
+
+  // Redirect unauthenticated users to auth
+  useEffect(() => {
+    if (!currentUser) { // undefined or null means not authenticated
+      router.replace('/profile');
+    }
+  }, [currentUser, router]);
+
+  // Show loading while determining auth status
+  if (currentUser === undefined) {
+    return (
+      <div className="community pt-0 md:pt-20">
+        <div className="card skeleton" style={{ height: 200 }} />
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (redirecting)
+  if (!currentUser) {
+    return null;
+  }
+
   const handleJoinLeave = async () => {
     if (!community) return;
 
@@ -154,15 +184,6 @@ export function CommunityView() {
       setThreadDeleteArmedSet(s);
     }
   };
-
-  // Cleanup timeouts on unmount
-  useEffect(() => {
-    return () => {
-      if (deleteTimeoutRef.current) window.clearTimeout(deleteTimeoutRef.current);
-      threadDeleteTimeoutsRef.current.forEach((t) => window.clearTimeout(t));
-      threadDeleteTimeoutsRef.current.clear();
-    };
-  }, []);
 
   if (loading) {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -17,10 +17,12 @@ import { useAuth } from "@/src/lib/hooks/useAuth";
 
 const NotificationListener = dynamic(() => import("./NotificationListener").then(mod => mod.NotificationListener), { ssr: false });
 const InstallPrompt = dynamic(() => import("./InstallPrompt").then(mod => mod.InstallPrompt), { ssr: false });
+const AuthForm = dynamic(() => import("./AuthForm").then(mod => mod.AuthForm), { ssr: false });
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const mainRef = useRef<HTMLElement>(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   const { ready, isTouchDevice, forceTouch } = useAppShellInit();
   const { currentIndex, activeIndex, setActiveIndex, isMainView } = useAppShellViews();
@@ -35,6 +37,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener('monolog-viewport-changed', handleViewportChanged);
     return () => window.removeEventListener('monolog-viewport-changed', handleViewportChanged);
+  }, []);
+
+  useEffect(() => {
+    const handleAuthOpen = () => setShowAuth(true);
+    window.addEventListener('auth:open', handleAuthOpen);
+    return () => window.removeEventListener('auth:open', handleAuthOpen);
   }, []);
 
   return (
@@ -104,6 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
       <NotificationListener />
       <InstallPrompt />
+      {showAuth && <AuthForm onClose={() => setShowAuth(false)} />}
     </div>
   );
 }

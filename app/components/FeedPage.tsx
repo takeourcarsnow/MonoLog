@@ -14,6 +14,8 @@ import { User as UserIcon } from "lucide-react";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
 import { SkeletonCard } from "./Skeleton";
 import { GridView } from "./GridView";
+import { useAuth } from "@/src/lib/hooks/useAuth";
+import dynamic from "next/dynamic";
 
 interface FeedPageProps {
   fetchFunction: (opts: { limit: number; before?: string }) => Promise<HydratedPost[]>;
@@ -39,6 +41,8 @@ export function FeedPage({
   showToggle = false,
 }: FeedPageProps) {
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
+
+  const { me } = useAuth();
 
   const { posts, loading, loadingMore, hasMore, error, loadInitialPosts, refresh, setSentinel, setPosts } = useFeed(
     fetchFunction,
@@ -106,7 +110,13 @@ export function FeedPage({
   // Simplified render - no need for memoization with complex dependencies
   const renderContent = useMemo(() => {
     if (loading) return <SkeletonCard height={240} />;
-    if (!posts.length) {
+    
+    // Limit posts for unauthenticated users in explore view
+    const isExploreUnauthed = viewStorageKey === 'exploreView' && !me;
+    const limitedPosts = isExploreUnauthed ? posts.slice(0, 3) : posts;
+    const limitedHasMore = isExploreUnauthed ? false : hasMore;
+    
+    if (!limitedPosts.length) {
       // Enhanced empty state: reuse the title icon if available (Feed/Explore pass icons)
       let iconNode: React.ReactNode = null;
       if (isValidElement(title)) {
@@ -144,7 +154,7 @@ export function FeedPage({
     }
 
     const gridView = (
-      <GridView posts={posts} hasMore={hasMore} setSentinel={setSentinel} loadingMore={loadingMore} active={view === 'grid'} onRetry={() => {
+      <GridView posts={limitedPosts} hasMore={limitedHasMore} setSentinel={setSentinel} loadingMore={loadingMore} active={view === 'grid'} onRetry={() => {
         const sentinel = document.querySelector('.feed-sentinel');
         if (sentinel) {
           setSentinel(sentinel as HTMLDivElement);
@@ -154,10 +164,16 @@ export function FeedPage({
 
     const listView = (
       <>
-        {posts.map(p => <PostCard key={p.id} post={p} disableCardNavigation={true} />)}
+        {limitedPosts.map(p => <PostCard key={p.id} post={p} disableCardNavigation={true} />)}
+        {isExploreUnauthed && limitedPosts.length >= 3 && (
+          <div className="feed-cta" style={{ textAlign: 'center', padding: '20px', margin: '20px 0' }}>
+            <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)' }}>Enjoying the content? Sign in to see more posts and unlock the full experience.</p>
+            <Link href="/profile" className="btn primary no-effects">Sign In</Link>
+          </div>
+        )}
         <InfiniteScrollLoader
           loading={loadingMore}
-          hasMore={hasMore}
+          hasMore={limitedHasMore}
           error={error}
           setSentinel={setSentinel}
           active={view === 'list'}
@@ -182,7 +198,7 @@ export function FeedPage({
         </div>
       </>
     );
-  }, [loading, posts, view, hasMore, loadingMore, setSentinel, error, emptyMessage, title, viewStorageKey]);
+  }, [loading, posts, view, hasMore, loadingMore, setSentinel, error, emptyMessage, title, viewStorageKey, me]);
 
   return (
     <div className="view-fade">

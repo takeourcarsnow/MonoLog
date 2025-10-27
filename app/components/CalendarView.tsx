@@ -11,6 +11,7 @@ import { Calendar } from "lucide-react";
 import type { HydratedPost } from "@/src/lib/types";
 import { MiniSlideshow } from "./MiniSlideshow";
 import { getStats as cacheGetStats, setStats as cacheSetStats, getPosts as cacheGetPosts, setPosts as cacheSetPosts, anyImageLoaded as cacheAnyImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/src/lib/cache/calendarCache";
+import { useAuth } from "@/src/lib/hooks/useAuth";
 
 const weekdays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
@@ -37,6 +38,8 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
   // This prevents quick swipes through the calendar from triggering loads.
   const [shouldLoad, setShouldLoad] = useState<boolean>(false);
   const loadTimerRef = useRef<number | null>(null);
+
+  const { me } = useAuth();
 
   // Load stats whenever the current month/year changes. Inline the async call
   // so we don't need to include the `loadStats` function in the dependency list.
@@ -207,6 +210,17 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
 
   return (
     <div className="view-fade">
+      {!me ? (
+        <div className="empty feed-empty" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+          <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
+              <Calendar size={56} strokeWidth={1.5} />
+            </div>
+            <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>Calendar View</h2>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Sign in to view your personal calendar and see posts organized by date.</p>
+          </div>
+        </div>
+      ) : (
       <div className="calendar-page">
       <div className="calendar">
         <div className="header">
@@ -303,6 +317,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
   )}
       </div>
       </div>
+      )}
     </div>
   );
 }

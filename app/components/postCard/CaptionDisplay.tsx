@@ -7,14 +7,17 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 interface CaptionDisplayProps {
   caption: string;
   maxLength?: number;
+  isAuthed?: boolean;
+  onSignIn?: () => void;
 }
 
-export function CaptionDisplay({ caption, maxLength = 50 }: CaptionDisplayProps) {
+export function CaptionDisplay({ caption, maxLength = 50, isAuthed = true, onSignIn }: CaptionDisplayProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!caption) return null;
 
-  const shouldTruncate = caption.length > maxLength;
+  const effectiveMaxLength = isAuthed ? maxLength : Math.min(maxLength, 30);
+  const shouldTruncate = caption.length > effectiveMaxLength;
 
   // Always render the full caption content. Use CSS to visually clamp when
   // collapsed. Swapping the text content (short vs full) can interrupt the
@@ -24,7 +27,7 @@ export function CaptionDisplay({ caption, maxLength = 50 }: CaptionDisplayProps)
     <div 
       className="caption" 
       aria-live="polite"
-      onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
+      onClick={() => shouldTruncate && (isAuthed ? setIsExpanded(!isExpanded) : onSignIn?.())}
       style={{ cursor: shouldTruncate ? 'pointer' : 'default' }}
     >
       <div className={`caption-content ${isExpanded ? 'expanded' : 'collapsed'}`}>
@@ -38,12 +41,16 @@ export function CaptionDisplay({ caption, maxLength = 50 }: CaptionDisplayProps)
           className="caption-read-more"
           onClick={(e) => {
             e.stopPropagation();
-            setIsExpanded(!isExpanded);
+            if (isAuthed) {
+              setIsExpanded(!isExpanded);
+            } else {
+              onSignIn?.();
+            }
           }}
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? "Show less" : "Read more"}
+          aria-expanded={isAuthed ? isExpanded : undefined}
+          aria-label={isAuthed ? (isExpanded ? "Show less" : "Read more") : "Sign in to read more"}
         >
-          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {isAuthed ? (isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />) : "Sign in to read more"}
         </button>
       )}
     </div>

@@ -49,11 +49,11 @@ export function useAuthForm(onClose?: () => void) {
           showHeaderNotice({ title: 'Invalid email', subtitle: 'Please enter a valid email address.', variant: 'warn' }, 4000);
           return;
         }
-        if (!isAllowedEmailDomain(email)) {
-          setLoading(false);
-          showHeaderNotice({ title: 'Email domain not allowed', subtitle: 'Please use an email from allowed providers like gmail.com, yahoo.com, outlook.com, or icloud.com.', variant: 'warn' }, 4000);
-          return;
-        }
+        // if (!isAllowedEmailDomain(email)) {
+        //   setLoading(false);
+        //   showHeaderNotice({ title: 'Email domain not allowed', subtitle: 'Please use an email from allowed providers like gmail.com, yahoo.com, outlook.com, or icloud.com.', variant: 'warn' }, 4000);
+        //   return;
+        // }
         await resetPassword(email);
         showHeaderNotice({ title: 'Reset email sent', subtitle: 'Check your email for password reset instructions.', variant: 'info' }, 5000);
         setMode("signin");
@@ -66,11 +66,11 @@ export function useAuthForm(onClose?: () => void) {
           showHeaderNotice({ title: 'Invalid email', subtitle: 'Please enter a valid email address.', variant: 'warn' }, 4000);
           return;
         }
-        if (!isAllowedEmailDomain(email)) {
-          setLoading(false);
-          showHeaderNotice({ title: 'Email domain not allowed', subtitle: 'Please use an email from allowed providers like gmail.com, yahoo.com, outlook.com, or icloud.com.', variant: 'warn' }, 4000);
-          return;
-        }
+        // if (!isAllowedEmailDomain(email)) {
+        //   setLoading(false);
+        //   showHeaderNotice({ title: 'Email domain not allowed', subtitle: 'Please use an email from allowed providers like gmail.com, yahoo.com, outlook.com, or icloud.com.', variant: 'warn' }, 4000);
+        //   return;
+        // }
         if (!password || password.length < 8) {
           setLoading(false);
           showHeaderNotice({ title: 'Password too short', subtitle: 'Password must be at least 8 characters.', variant: 'warn' }, 4500);
@@ -171,11 +171,11 @@ export function useAuthForm(onClose?: () => void) {
 
   // Set email warning if domain not allowed
   useEffect(() => {
-    if (email && /\S+@\S+\.\S+/.test(email) && !isAllowedEmailDomain(email)) {
-      setEmailWarning('This email domain is not allowed.');
-    } else {
-      setEmailWarning(null);
-    }
+    // if (email && /\S+@\S+\.\S+/.test(email) && !isAllowedEmailDomain(email)) {
+    //   setEmailWarning('This email domain is not allowed.');
+    // } else {
+    //   setEmailWarning(null);
+    // }
   }, [email]);
 
   // Generate a random username and ensure it's available (retry a few times)

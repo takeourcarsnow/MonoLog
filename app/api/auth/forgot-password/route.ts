@@ -9,9 +9,9 @@ export async function POST(req: Request) {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       return NextResponse.json({ error: 'Valid email address required' }, { status: 400 });
     }
-    if (!isAllowedEmailDomain(email)) {
-      return NextResponse.json({ error: 'Email domain not allowed' }, { status: 400 });
-    }
+    // if (!isAllowedEmailDomain(email)) {
+    //   return NextResponse.json({ error: 'Email domain not allowed' }, { status: 400 });
+    // }
 
     const sb = getServiceSupabase();
 

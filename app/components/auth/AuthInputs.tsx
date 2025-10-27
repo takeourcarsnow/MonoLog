@@ -23,6 +23,8 @@ interface AuthInputsProps {
 export function AuthInputs({ email, setEmail, password, setPassword, username, setUsername, inviteCode, setInviteCode, mode, generateUsername, generating, onForgotPassword, emailWarning }: AuthInputsProps) {
   // validate against lowercased username (backend rules are lowercase); allow display capitalization
   const isUsernameValid = validUsername((username || "").toLowerCase());
+  const isPasswordValid = password && password.length >= 8;
+  const isEmailValid = email && /\S+@\S+\.\S+/.test(email);
 
   // local spinning state so the dice icon can finish its rotation after generating flips to false
   const [spinning, setSpinning] = useState(false);
@@ -62,18 +64,32 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
   return (
     <div className="w-full flex flex-col gap-2 inputs-wrap" style={{ maxWidth: 400 }}>
       <div className="field-group flex flex-col gap-2 w-full">
-        <input
-          className="input fancy-input"
-          placeholder={mode === "forgot" ? "Email address" : "Email"}
-          value={email}
-          name="email"
-          autoComplete="email"
-          inputMode="email"
-          onChange={e => setEmail(e.target.value)}
-          aria-label={mode === "forgot" ? "Email address" : "Email or username"}
-          autoCorrect="off"
-          autoCapitalize="none"
-        />
+        <div className="relative">
+          <input
+            className="input fancy-input"
+            placeholder={mode === "forgot" ? "Email address" : "Email"}
+            value={email}
+            name="email"
+            autoComplete="email"
+            inputMode="email"
+            onChange={e => setEmail(e.target.value)}
+            aria-label={mode === "forgot" ? "Email address" : "Email or username"}
+            autoCorrect="off"
+            autoCapitalize="none"
+          />
+          {mode === 'signup' && (
+            <div className="validity-indicator" aria-hidden>
+              <svg
+                className={`check ${isEmailValid ? 'ok' : (email ? 'pending' : '')}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          )}
+        </div>
         {emailWarning && mode === 'signup' && (
           <div className="dim help error" style={{ color: '#ff6b6b', fontSize: 14 }}>
             {emailWarning}
@@ -91,6 +107,18 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               onChange={e => setPassword(e.target.value)}
               aria-label="Password"
             />
+            {mode === 'signup' && (
+              <div className="validity-indicator password-indicator" aria-hidden>
+                <svg
+                  className={`check ${isPasswordValid ? 'ok' : (password ? 'pending' : '')}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            )}
             {mode === "signin" && onForgotPassword && (
               <div style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(calc(-50% - 2px))' }}>
                 <button
@@ -117,7 +145,6 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               name="username"
               autoComplete="username"
               onChange={e => setUsername(e.target.value)}
-              aria-describedby="username-help"
               aria-invalid={username ? !isUsernameValid : undefined}
             />
             <div className="validity-indicator" aria-hidden>
@@ -164,9 +191,6 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               onChange={e => setInviteCode(e.target.value)}
               aria-label="Invite code"
             />
-          </div>
-          <div id="username-help" className="dim help" aria-live="polite">
-            3–32 chars: letters, numbers, &#39;-&#39; or &#39;_&#39;. 
           </div>
         </div>
       </div>

@@ -59,40 +59,20 @@
 
 .auth-form .username-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }
 .auth-form .username-wrap.open { overflow: visible; max-height: 160px; opacity: 1; transform: translateY(0); }
-.auth-form .username-wrap .help { margin-top: 4px; }
-
-/* Subtle reveal for the username help only when the user focuses or starts
-   typing in the username input. Uses :not(:placeholder-shown) to detect
-   non-empty input in supporting browsers. */
-.auth-form .username-wrap .help {
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 260ms var(--transition-mid), transform 320ms var(--transition-mid);
-  will-change: opacity, transform;
-}
-
-.auth-form .username-wrap input:focus ~ .help,
-.auth-form .username-wrap input:not(:placeholder-shown) ~ .help {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* For browsers without :placeholder-shown support, also reveal on focus-within */
-.auth-form .username-wrap:focus-within .help { opacity: 1; transform: translateY(0); }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-form .username-wrap .help,
-  .auth-form .username-wrap input:focus ~ .help,
-  .auth-form .username-wrap input:not(:placeholder-shown) ~ .help,
-  .auth-form .username-wrap:focus-within .help {
+  .auth-form .check,
+  .auth-form .check.pending,
+  .auth-form .check.ok {
     transition: none !important;
     transform: none !important;
   }
 }
-.auth-form .username-wrap .validity-indicator { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; pointer-events: none; }
-.auth-form .username-wrap .check { width: 22px; height: 22px; opacity: 0; transform: scale(.6) rotate(-12deg); transition: opacity 200ms var(--transition-fast), transform 260ms var(--transition-mid), color 260ms var(--transition-fast); color: var(--muted); }
-.auth-form .username-wrap .check.pending { opacity: .5; transform: scale(.8); color: var(--danger); }
-.auth-form .username-wrap .check.ok { opacity: 1; transform: scale(1) rotate(0); color: var(--accent); }
+.auth-form .validity-indicator { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; pointer-events: none; }
+.auth-form .password-indicator { justify-content: flex-end; padding-left: 0; padding-right: 10px; }
+.auth-form .check { width: 22px; height: 22px; opacity: 0; transform: scale(.6) rotate(-12deg); transition: opacity 200ms var(--transition-fast), transform 260ms var(--transition-mid), color 260ms var(--transition-fast); color: var(--muted); }
+.auth-form .check.pending { opacity: .5; transform: scale(.8); color: var(--danger); }
+.auth-form .check.ok { opacity: 1; transform: scale(1) rotate(0); color: var(--accent); }
 
 /* Invite code wrap styles, similar to username wrap */
 .auth-form .invite-code-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }

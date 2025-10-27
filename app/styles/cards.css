@@ -26,8 +26,13 @@
      of contained media at certain desktop zoom levels due to fractional
      rounding between image height and card box. Media-specific clipping
      still handled inside .card-media which retains overflow hidden. */
-  overflow: visible;
-  transform: translateY(4px); opacity: 0; animation: in 460ms var(--transition-mid) forwards;
+    overflow: visible;
+    /* Ensure cards are visible by default. The entrance animation caused
+      some users to see blank feeds when animations didn't run (resource
+      constraints, CSS race conditions, or reduced-motion settings). Keep
+      the subtle lift on hover but render posts at full opacity by default. */
+    transform: translateY(0);
+    opacity: 1;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 
   width: 100%;

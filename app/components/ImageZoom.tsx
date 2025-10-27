@@ -135,6 +135,10 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
             if (onDimensionsChange && state.containerRectRef.current) {
               onDimensionsChange(state.containerRectRef.current);
             }
+            // Call the passed onLoad prop if provided
+            if (rest.onLoad) {
+              rest.onLoad(e);
+            }
           }}
           onError={(e) => {
             e.currentTarget.classList.add("loaded");

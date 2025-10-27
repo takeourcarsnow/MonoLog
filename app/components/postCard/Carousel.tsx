@@ -97,6 +97,17 @@ export const Carousel = memo(function Carousel({
     }
   }, [isMultipostInFeed, index, imageDimensions]);
 
+  // Preload images to ensure they load reliably
+  useEffect(() => {
+    imageUrls.forEach(url => {
+      if (url) {
+        const img = new Image();
+        img.src = url;
+        // Note: We don't need to track load state here since ImageZoom handles it
+      }
+    });
+  }, [imageUrls]);
+
   const { handleMediaClick, handleMediaDblClick } = useMediaClick({
     isFavorite,
     toggleFavoriteWithAuth,

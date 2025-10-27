@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/src/lib/api";
-import { renderMentions } from "@/src/lib/mentions";
+import { renderCaption } from "@/src/lib/hashtags";
 import { Calendar, Image, MessageCircle, ChevronDown } from "lucide-react";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import type { WeekReviewStats } from "@/src/lib/types";
@@ -161,7 +161,7 @@ export default function WeekReviewPage() {
                     >
                       <div className={`caption-content ${expandedCaptions.has(post.id) ? 'expanded' : 'collapsed'}`}>
                         <div className="caption-inner">
-                          {renderMentions(post.caption)}
+                          {renderCaption(post.caption)}
                         </div>
                         {post.caption.length > 100 && (
                           <div className="caption-fade"></div>

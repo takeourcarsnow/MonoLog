@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session if expired - required for Server Components
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
   const segments = pathname.split('/').filter(Boolean);
@@ -46,6 +46,11 @@ export async function middleware(request: NextRequest) {
   // If it looks like a static file, let it through
   if (segment.includes('.')) {
     return response;
+  }
+  
+  // If user is not authenticated, redirect to profile (auth page)
+  if (!user) {
+    return NextResponse.redirect(new URL('/profile', request.url));
   }
   
   // Otherwise, it might be a username - let the [username] route handle it

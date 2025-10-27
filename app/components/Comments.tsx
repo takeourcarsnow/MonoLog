@@ -11,7 +11,7 @@ import { useToast } from "./Toast";
 import { ReportButton } from "./ReportButton";
 import TimeDisplay from "./TimeDisplay";
 import Link from "next/link";
-import { renderMentions } from "@/src/lib/mentions";
+import { renderCaption } from "@/src/lib/hashtags";
 
 // Lazy load icons to reduce initial bundle size
 const Send = lazy(() => import("lucide-react").then(mod => ({ default: mod.Send })));
@@ -257,7 +257,7 @@ export function Comments({ postId, onCountChange }: Props) {
                   className="comment-text"
                   style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'break-word' }}
                 >
-                  {renderMentions(c.text)}
+                  {renderCaption(c.text)}
                 </div>
               </div>
             </div>

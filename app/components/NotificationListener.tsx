@@ -1,11 +1,10 @@
-"use client";
-
 import { useEffect, useRef } from "react";
 import { api } from "@/src/lib/api";
 import { getClient, getAccessToken } from '@/src/lib/api/client';
 import { useToast } from "./Toast";
 import { getPost } from '@/src/lib/api/posts/post';
 import { getThread } from '@/src/lib/api/communities/threads';
+import { getUser } from '@/src/lib/api/users';
 
 export function NotificationListener() {
   const toast = useToast();
@@ -83,7 +82,19 @@ export function NotificationListener() {
             } catch (e) {
               // ignore post fetch errors
             }
-            toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} commented on your post`, href });
+            // Fetch actor username
+            let actorUsername = 'Someone';
+            try {
+              if (n.actor_id) {
+                const actor = await getUser(n.actor_id as string);
+                if (actor && actor.username) {
+                  actorUsername = '@' + actor.username;
+                }
+              }
+            } catch (e) {
+              // ignore user fetch errors
+            }
+            toast.show({ message: `${actorUsername} commented on your post`, href });
             newOnes.push(n.id as string);
           } else if (n.type === 'thread_reply') {
             let href: string | undefined = undefined;
@@ -103,10 +114,34 @@ export function NotificationListener() {
             } catch (e) {
               // ignore thread fetch errors
             }
-            toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} replied to your thread`, href });
+            // Fetch actor username
+            let actorUsername = 'Someone';
+            try {
+              if (n.actor_id) {
+                const actor = await getUser(n.actor_id as string);
+                if (actor && actor.username) {
+                  actorUsername = '@' + actor.username;
+                }
+              }
+            } catch (e) {
+              // ignore user fetch errors
+            }
+            toast.show({ message: `${actorUsername} replied to your thread`, href });
             newOnes.push(n.id as string);
           } else if (n.type === 'follow') {
-            toast.show(`${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} followed you`);
+            // Fetch actor username
+            let actorUsername = 'Someone';
+            try {
+              if (n.actor_id) {
+                const actor = await getUser(n.actor_id as string);
+                if (actor && actor.username) {
+                  actorUsername = '@' + actor.username;
+                }
+              }
+            } catch (e) {
+              // ignore user fetch errors
+            }
+            toast.show(`${actorUsername} followed you`);
             newOnes.push(n.id as string);
           } else if (n.type === 'favorite') {
             let href: string | undefined = undefined;
@@ -123,7 +158,19 @@ export function NotificationListener() {
             } catch (e) {
               // ignore
             }
-            toast.show({ message: `${n.actor_id ? '@' + (n.actor_id.slice(0,6)) : 'Someone'} favorited your post`, href });
+            // Fetch actor username
+            let actorUsername = 'Someone';
+            try {
+              if (n.actor_id) {
+                const actor = await getUser(n.actor_id as string);
+                if (actor && actor.username) {
+                  actorUsername = '@' + actor.username;
+                }
+              }
+            } catch (e) {
+              // ignore user fetch errors
+            }
+            toast.show({ message: `${actorUsername} favorited your post`, href });
             newOnes.push(n.id as string);
           }
           seen.current[n.id] = true;

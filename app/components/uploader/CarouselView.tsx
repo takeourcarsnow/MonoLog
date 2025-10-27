@@ -90,6 +90,16 @@ export function CarouselView({
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
+  // Preload all images to force loading
+  useEffect(() => {
+    dataUrls.forEach(url => {
+      if (url) {
+        const img = document.createElement('img');
+        img.src = url;
+      }
+    });
+  }, [dataUrls]);
+
   // Listen to slider drag events
   useEffect(() => {
     // We ignore events that originate from this component instance by
@@ -369,7 +379,7 @@ export function CarouselView({
                 fill
                 sizes="100%"
                 style={{ objectFit: 'contain' }}
-                priority={idx === index}
+                priority={true}
                 onLoadingComplete={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}
                 onClick={idx === index ? (e) => {

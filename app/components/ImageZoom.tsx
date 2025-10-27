@@ -66,11 +66,14 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const img = state.imgRef.current;
     if (!img) return;
 
+    // Add loaded class immediately to ensure visibility
+    img.classList.add("loaded");
+
     const forceLoadedTimer = setTimeout(() => {
       if (!img.classList.contains("loaded")) {
         img.classList.add("loaded");
       }
-    }, 3000); // 3 seconds
+    }, 1000); // Reduced to 1 second
 
     return () => clearTimeout(forceLoadedTimer);
   }, []);

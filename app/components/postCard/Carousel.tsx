@@ -99,31 +99,14 @@ export const Carousel = memo(function Carousel({
     }
   }, [isMultipostInFeed, index, imageDimensions]);
 
-  // Preload images sequentially to ensure they load reliably without hitting concurrent load limits
+  // Preload all images concurrently to force loading
   useEffect(() => {
-    let index = 0;
-    const loadNext = () => {
-      if (index >= imageUrls.length) return;
-      const url = imageUrls[index];
+    imageUrls.forEach(url => {
       if (url) {
-        const img = new Image();
-        img.onload = () => {
-          console.log('Preloaded', url);
-          index++;
-          loadNext();
-        };
-        img.onerror = () => {
-          console.error('Preload failed', url);
-          index++;
-          loadNext();
-        };
+        const img = document.createElement('img');
         img.src = url;
-      } else {
-        index++;
-        loadNext();
       }
-    };
-    loadNext();
+    });
   }, [imageUrls]);
 
   const { handleMediaClick, handleMediaDblClick } = useMediaClick({
@@ -145,6 +128,7 @@ export const Carousel = memo(function Carousel({
         if (e.key === "ArrowRight") next();
       }}
       tabIndex={0}
+      style={{ minHeight: isMultipostInFeed ? '200px' : undefined }}
     >
       <div className="edge-area left" />
       <div className="edge-area right" />

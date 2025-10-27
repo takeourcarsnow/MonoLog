@@ -34,7 +34,7 @@ export const MediaSection = memo(function MediaSection({
   const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
 
   // Lazy load images for posts below the fold (index >= 3)
-  const lazy = (index ?? 0) >= 3;
+  const lazy = false; // Force load all images
 
   return (
     <div className="card-media" style={{ position: 'relative' }}>

@@ -53,7 +53,7 @@ export function isAllowedEmailDomain(email: string): boolean {
     'yahoo.com',
     'outlook.com',
     'icloud.com',
-    'gmail.lt',
+    'osxofulk.com',
     'yahoo.lt',
     'outlook.lt',
     'icloud.lt'

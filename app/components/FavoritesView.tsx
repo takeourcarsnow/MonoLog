@@ -72,7 +72,7 @@ export function FavoritesView() {
   }
   if (!posts.length) {
     return (
-      <div className="view-fade" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="view-fade" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - var(--header-height))' }}>
         <div className="empty feed-empty" style={{ textAlign: 'center' }}>
           <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>

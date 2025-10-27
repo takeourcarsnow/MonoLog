@@ -53,10 +53,31 @@ export function isAllowedEmailDomain(email: string): boolean {
     'yahoo.com',
     'outlook.com',
     'icloud.com',
-    'osxofulk.com',
+    'hotmail.com',
+    'aol.com',
+    'protonmail.com',
+    'proton.me',
+    'zoho.com',
+    'yandex.com',
+    'mail.com',
+    'gmx.com',
+    'live.com',
+    'me.com',
+    'comcast.net',
+    'verizon.net',
+    'att.net',
+    'gmail.lt',
     'yahoo.lt',
     'outlook.lt',
-    'icloud.lt'
+    'icloud.lt',
+    'one.lt',
+    'takas.lt',
+    'post.lt',
+    'centras.lt',
+    'mail.lt',
+    'inbox.lt',
+    'delfi.lt',
+    'lrytas.lt'
   ];
 
   return allowedDomains.includes(domain);

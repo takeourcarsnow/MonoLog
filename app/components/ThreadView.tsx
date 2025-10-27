@@ -10,6 +10,7 @@ import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/hooks/useAuth";
+import { renderCaption } from "@/src/lib/hashtags";
 
 export function ThreadView() {
   const params = useParams();
@@ -247,7 +248,7 @@ export function ThreadView() {
         </div>
 
         <div className="mt-4 prose dark:prose-invert max-w-none">
-          <p className="whitespace-pre-wrap text-center">{thread.content}</p>
+          <p className="whitespace-pre-wrap text-center">{renderCaption(thread.content)}</p>
         </div>
       </div>
 
@@ -322,7 +323,7 @@ export function ThreadView() {
                   )}
                 </div>
                 <div className="mt-2 prose dark:prose-invert max-w-none">
-                  <p className="whitespace-pre-wrap">{reply.content}</p>
+                  <p className="whitespace-pre-wrap">{renderCaption(reply.content)}</p>
                 </div>
               </div>
             </div>

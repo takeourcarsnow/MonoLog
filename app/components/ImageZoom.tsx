@@ -104,6 +104,12 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           ref={state.imgRef}
           src={src}
           alt={alt}
+          // Honor the component's lazy prop but explicitly set the
+          // native loading attribute so browsers start fetching images
+          // for carousels / single media immediately when lazy is false.
+          loading={lazy ? 'lazy' : 'eager'}
+          // Async decoding to avoid blocking the main thread during decode
+          decoding="async"
           style={{
             // Use a 3D transform to encourage GPU compositing which prevents
             // the browser from temporarily rasterizing the image at lower

@@ -74,7 +74,7 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
           autoCorrect="off"
           autoCapitalize="none"
         />
-        {emailWarning && (
+        {emailWarning && mode === 'signup' && (
           <div className="dim help error" style={{ color: '#ff6b6b', fontSize: 14 }}>
             {emailWarning}
           </div>

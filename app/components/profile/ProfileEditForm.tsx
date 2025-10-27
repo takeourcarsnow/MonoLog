@@ -7,6 +7,7 @@ import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import type { User } from "@/src/lib/types";
 import { RESERVED_ROUTES } from "@/src/lib/types";
+import { DeleteAccountButton } from "@/app/components/DeleteAccount";
 
 interface ProfileEditFormProps {
   user: User;
@@ -223,6 +224,32 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
         )}
         {(isEditingProfile || isClosing) && (
           <form className={`inline-edit-card ${animateIn && !isClosing ? 'visible' : isClosing ? 'closing' : ''}`} style={{ width: '100%', maxWidth: 720 }} onSubmit={(e: FormEvent) => saveEdits(e)}>
+        <style>{`
+          .account-options-dropdown {
+            margin-top: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card-bg);
+          }
+          .account-options-summary {
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 500;
+            color: var(--text);
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .account-options-dropdown > div {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+          }
+        `}</style>
         <label className="label-group">
           <div className="muted-label sr-only">@Username</div>
           <div className="input-container">
@@ -245,7 +272,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
 
         <label className="label-group">
           <div className="muted-label sr-only">Display name</div>
-          <input ref={displayNameRef} className="input" placeholder="Display name" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
+          <input ref={displayNameRef} className="input" placeholder="Name (optional)" value={editDisplayName} onChange={e => setEditDisplayName(e.target.value)} />
         </label>
 
         <label className="bio-col label-group">
@@ -296,6 +323,13 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
             </label>
           </div>
         </div>
+
+        <details className="account-options-dropdown">
+          <summary className="account-options-summary">Want to Delete Your Account?</summary>
+          <div>
+            <DeleteAccountButton isEditing={true} />
+          </div>
+        </details>
 
       </form>
         )}

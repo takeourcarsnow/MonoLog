@@ -2,7 +2,6 @@ import { useRef, useState, useEffect } from "react";
 import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
 import { SignOutButton } from "@/app/components/SignOut";
-import { DeleteAccountButton } from "@/app/components/DeleteAccount";
 import Link from "next/link";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
@@ -186,6 +185,7 @@ export function ProfileActions({
           className={`btn follow-btn ${following ? 'following' : 'not-following'} expanded ${followAnim || ''}`}
           aria-pressed={!!following || false}
           onClick={handleFollowToggle}
+          title={following ? "Unfollow" : "Follow"}
         >
           <span className="icon" aria-hidden="true">
             {following ? <UserCheck size={18} /> : <UserPlus size={18} />}
@@ -199,32 +199,22 @@ export function ProfileActions({
             matches the current user. */}
         {currentUserId && user?.id === currentUserId ? (
           <>
-            <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following">
+            <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following" title="View following list">
               <span className="icon" aria-hidden>
                 <User size={18} strokeWidth={1.2} />
               </span>
             </Link>
-            <Link className="btn icon week-review-link no-effects" href="/week-review" aria-label="Week in Review">
+            <Link className="btn icon week-review-link no-effects" href="/week-review" aria-label="Week in Review" title="View week in review">
               <span className="icon" aria-hidden>
                 <BarChart3 size={18} strokeWidth={1.2} />
               </span>
             </Link>
             <button
-              className={`btn icon invite-btn ${showInvites ? 'bg-blue-50 border-blue-500 text-blue-700' : 'no-effects'}`}
-              onClick={() => setShowInvites(!showInvites)}
-              aria-expanded={showInvites}
-              aria-label="Invite friends"
-              type="button"
-            >
-              <span className="icon" aria-hidden>
-                <UserPlus size={18} strokeWidth={1.2} />
-              </span>
-            </button>
-            <button
               className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 edit-confirm-glow' : 'btn edit-profile-btn no-effects'}`}
               onClick={(e) => { onEditToggle(); (e.target as HTMLButtonElement).blur(); }}
               aria-expanded={isEditingProfile}
               aria-label={isEditingProfile ? 'Save profile changes' : 'Edit profile'}
+              title={isEditingProfile ? 'Save profile changes' : 'Edit profile'}
               type="button"
             >
               <span className="icon" aria-hidden>
@@ -237,11 +227,22 @@ export function ProfileActions({
                 )}
               </span>
             </button>
+            <button
+              className={`btn icon invite-btn ${showInvites ? 'bg-blue-50 border-blue-500 text-blue-700' : 'no-effects'}`}
+              onClick={() => setShowInvites(!showInvites)}
+              aria-expanded={showInvites}
+              aria-label="Invite friends"
+              title="Invite friends"
+              type="button"
+            >
+              <span className="icon" aria-hidden>
+                <UserPlus size={18} strokeWidth={1.2} />
+              </span>
+            </button>
             {/* New Post button removed from profile actions */}
             {/* show sign out only when the viewed profile belongs to the signed-in user */}
             {currentUserId && user?.id === currentUserId ? <SignOutButton /> : null}
             {/* show delete account only when the viewed profile belongs to the signed-in user */}
-            {currentUserId && user?.id === currentUserId ? <DeleteAccountButton isEditing={isEditingProfile} /> : null}
           </>
         ) : null}
       </div>

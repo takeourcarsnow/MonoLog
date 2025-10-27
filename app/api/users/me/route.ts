@@ -207,6 +207,83 @@ export async function DELETE(req: Request) {
       console.log('DELETE /api/users/me: follows table may not exist, skipping');
     }
 
+    // Delete all user's communities (this should cascade to threads and replies if FKs are set)
+    try {
+      const { error: communitiesError } = await sb.from('communities').delete().eq('creator_id', actorId);
+      if (communitiesError) {
+        console.error('DELETE /api/users/me: error deleting communities', communitiesError);
+        return NextResponse.json({ error: communitiesError.message || communitiesError }, { status: 500 });
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: communities table may not exist, skipping');
+    }
+
+    // Delete all community memberships
+    try {
+      const { error: membershipsError } = await sb.from('community_members').delete().eq('user_id', actorId);
+      if (membershipsError) {
+        console.error('DELETE /api/users/me: error deleting community memberships', membershipsError);
+        return NextResponse.json({ error: membershipsError.message || membershipsError }, { status: 500 });
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: community_members table may not exist, skipping');
+    }
+
+    // Delete all user's threads
+    try {
+      const { error: threadsError } = await sb.from('threads').delete().eq('user_id', actorId);
+      if (threadsError) {
+        console.error('DELETE /api/users/me: error deleting threads', threadsError);
+        return NextResponse.json({ error: threadsError.message || threadsError }, { status: 500 });
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: threads table may not exist, skipping');
+    }
+
+    // Delete all user's thread replies
+    try {
+      const { error: repliesError } = await sb.from('thread_replies').delete().eq('user_id', actorId);
+      if (repliesError) {
+        console.error('DELETE /api/users/me: error deleting thread replies', repliesError);
+        return NextResponse.json({ error: repliesError.message || repliesError }, { status: 500 });
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: thread_replies table may not exist, skipping');
+    }
+
+    // Delete all user's invites
+    try {
+      const { error: invitesError } = await sb.from('invites').delete().eq('created_by', actorId);
+      if (invitesError) {
+        console.error('DELETE /api/users/me: error deleting invites', invitesError);
+        return NextResponse.json({ error: invitesError.message || invitesError }, { status: 500 });
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: invites table may not exist, skipping');
+    }
+
+    // Delete all user's reports
+    try {
+      const { error: reportsError } = await sb.from('reports').delete().eq('reporter_id', actorId);
+      if (reportsError) {
+        console.error('DELETE /api/users/me: error deleting reports', reportsError);
+        return NextResponse.json({ error: reportsError.message || reportsError }, { status: 500 });
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: reports table may not exist, skipping');
+    }
+
+    // Delete all user's notifications
+    try {
+      const { error: notificationsError } = await sb.from('notifications').delete().eq('user_id', actorId);
+      if (notificationsError) {
+        console.error('DELETE /api/users/me: error deleting notifications', notificationsError);
+        return NextResponse.json({ error: notificationsError.message || notificationsError }, { status: 500 });
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: notifications table may not exist, skipping');
+    }
+
     // Note: Favorites are stored as an array in the users table, so they will be deleted with the user profile
 
     // Delete the user profile

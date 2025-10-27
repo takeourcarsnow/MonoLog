@@ -217,7 +217,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
               <Calendar size={56} strokeWidth={1.5} />
             </div>
             <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>Calendar View</h2>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Sign in to view your personal calendar and see posts organized by date.</p>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Sign in to explore posts organized by date.</p>
           </div>
         </div>
       ) : (

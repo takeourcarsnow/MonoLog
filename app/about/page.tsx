@@ -3,7 +3,7 @@ import Link from "next/link";
 import { InstallButton } from "../components/InstallButton";
 import styles from './about.module.css';
 import { useEffect, useRef } from 'react';
-import { Brain, Lock, Archive, Sparkles } from "lucide-react";
+import { Brain, Lock, Archive, Sparkles, Music } from "lucide-react";
 import { LogoIcon } from "../components/nav/LogoIcon";
 
 export default function AboutPage() {
@@ -95,6 +95,9 @@ export default function AboutPage() {
         <InstallButton />
         <a className={styles.authorLink} href="https://nefas.tv" target="_blank" rel="noopener noreferrer" aria-label="Author">
           <Sparkles size={14} />
+        </a>
+        <a className={styles.authorLink} href="https://open.spotify.com/playlist/636w2DFH8yvdTRFhC5e5Ey" target="_blank" rel="noopener noreferrer" aria-label="Spotify Playlist">
+          <Music size={14} />
         </a>
       </div>
     </div>

@@ -1,5 +1,6 @@
 // AuthToggle.tsx
 import { useState, useRef, useEffect } from "react";
+import { throttle } from "@/src/lib/utils";
 
 interface AuthToggleProps {
   mode: "signin" | "signup";
@@ -53,9 +54,9 @@ export function AuthToggle({ mode, setMode }: AuthToggleProps) {
     window.addEventListener('resize', onResize, { passive: true });
 
     // watch for font/load/layout changes
-    const ro = new ResizeObserver(() => {
+    const ro = new ResizeObserver(throttle(() => {
       scheduleMeasure();
-    });
+    }, 80));
     if (containerRef.current) ro.observe(containerRef.current);
     if (btnSigninRef.current) ro.observe(btnSigninRef.current);
     if (btnSignupRef.current) ro.observe(btnSignupRef.current);

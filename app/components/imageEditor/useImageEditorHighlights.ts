@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { throttle } from '@/src/lib/utils';
 
 export function useImageEditorHighlights(
   selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays',
@@ -28,7 +29,7 @@ export function useImageEditorHighlights(
       if (alive) setCategoryHighlight({ left, top, width, height });
     };
     const raf = requestAnimationFrame(() => setTimeout(() => compute(), 16));
-    const ro = new ResizeObserver(() => compute());
+    const ro = new ResizeObserver(throttle(() => compute(), 80));
     if (categoriesContainerRef.current) {
       ro.observe(categoriesContainerRef.current);
       // Also observe all category buttons for size changes (hover effects)
@@ -57,7 +58,7 @@ export function useImageEditorHighlights(
     };
     // measure on next frame to ensure layout has settled (useful when panel animates open)
     const raf = requestAnimationFrame(() => setTimeout(() => compute(), 20));
-    const ro = new ResizeObserver(() => compute());
+    const ro = new ResizeObserver(throttle(() => compute(), 80));
     if (filtersContainerRef.current) ro.observe(filtersContainerRef.current);
     window.addEventListener('resize', compute);
     return () => {

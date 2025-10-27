@@ -167,8 +167,8 @@ export function FeedPage({
         {limitedPosts.map(p => <PostCard key={p.id} post={p} disableCardNavigation={true} />)}
         {isExploreUnauthed && limitedPosts.length >= 3 && (
           <div className="feed-cta" style={{ textAlign: 'center', padding: '20px', margin: '20px 0' }}>
-            <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)' }}>Enjoying the content? Sign in to see more posts and unlock the full experience.</p>
-            <Link href="/profile" className="btn primary no-effects">Sign In</Link>
+            <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)' }}>Want to keep scrolling?</p>
+            <Link href="/profile" className="btn primary no-effects">Join the Community</Link>
           </div>
         )}
         <InfiniteScrollLoader
@@ -177,6 +177,7 @@ export function FeedPage({
           error={error}
           setSentinel={setSentinel}
           active={view === 'list'}
+          showEndMessage={!isExploreUnauthed}
           onRetry={() => {
             // Retry loading more posts
             const sentinel = document.querySelector('.feed-sentinel');

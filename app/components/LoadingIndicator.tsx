@@ -65,6 +65,7 @@ interface InfiniteScrollLoaderProps {
   className?: string;
   setSentinel?: (el: HTMLDivElement | null) => void;
   active?: boolean;
+  showEndMessage?: boolean;
 }
 
 export function InfiniteScrollLoader({
@@ -74,7 +75,8 @@ export function InfiniteScrollLoader({
   onRetry,
   className = '',
   setSentinel,
-  active = true
+  active = true,
+  showEndMessage = true
 }: InfiniteScrollLoaderProps) {
   if (error) {
     return (
@@ -118,6 +120,7 @@ export function InfiniteScrollLoader({
   }
 
   if (!hasMore) {
+    if (!showEndMessage) return null;
     return (
       <div className={`text-center py-8 text-gray-500 text-sm ${className}`}>
         You&apos;ve reached the end!

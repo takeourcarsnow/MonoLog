@@ -16,6 +16,10 @@ export async function GET(req: Request) {
     const sb = getServiceSupabase();
     const authUser = await getUserFromAuthHeader(req);
 
+    if (!authUser) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     // Search posts
     let postsQuery = sb
       .from('posts')

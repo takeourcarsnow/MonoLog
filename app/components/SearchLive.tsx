@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useDebouncedValue } from '@/src/lib/hooks/useDebouncedValue';
 import { Image as ImageIcon, User, Users as UsersIcon, Search } from 'lucide-react';
 import Image from 'next/image';
+import { useCurrentUser } from '@/lib/hooks';
 
 interface SearchResult {
   posts: any[];
@@ -16,8 +17,13 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
   const debounced = useDebouncedValue(value, 300);
   const [results, setResults] = useState<SearchResult | null>(initialResults || null);
   const [loading, setLoading] = useState(false);
+  const { data: currentUser } = useCurrentUser();
 
   const doFetch = useCallback(async (q: string) => {
+    if (!currentUser) {
+      window.location.href = '/profile';
+      return;
+    }
     if (!q || q.trim().length < 2) {
       setResults(initialResults || { posts: [], users: [], communities: [] });
       return;
@@ -36,7 +42,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
     } finally {
       setLoading(false);
     }
-  }, [initialResults]);
+  }, [initialResults, currentUser]);
 
   // Do debounced fetch when the debounced value changes
   useEffect(() => {

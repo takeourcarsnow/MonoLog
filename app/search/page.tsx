@@ -4,6 +4,8 @@ import { Search } from 'lucide-react';
 import { SearchClient } from '@/app/components/SearchClient';
 import { SearchLive } from '@/app/components/SearchLive';
 import Image from 'next/image';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 interface SearchResult {
   posts: any[];
@@ -12,6 +14,26 @@ interface SearchResult {
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
+  const cookieStore = cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/profile');
+  }
+
   const query = searchParams.q?.trim() || '';
 
   let results: SearchResult | null = null;

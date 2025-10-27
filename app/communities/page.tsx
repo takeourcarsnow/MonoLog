@@ -116,6 +116,7 @@ export default function CommunitiesPage() {
                   memberCount={c.memberCount}
                   threadCount={c.threadCount}
                   creator={c.creator}
+                  showCreator={false}
                 >
                   <CommunityCardClient
                     communityId={c.id}

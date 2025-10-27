@@ -12,9 +12,10 @@ type Props = {
   threadCount?: number | null;
   creator?: any;
   children?: React.ReactNode;
+  showCreator?: boolean;
 };
 
-export default function CommunityCardServer({ id, name, slug, description, imageUrl, memberCount, threadCount, creator, children }: Props) {
+export default function CommunityCardServer({ id, name, slug, description, imageUrl, memberCount, threadCount, creator, children, showCreator = true }: Props) {
   return (
     <div className="card mb-8">
       <div className="flex flex-col items-center text-center gap-3 py-4">
@@ -39,7 +40,7 @@ export default function CommunityCardServer({ id, name, slug, description, image
         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
           <span>{memberCount || 0} members</span>
           <span>{threadCount || 0} threads</span>
-          <span>by @{creator?.username}</span>
+          {showCreator && <span>by @{creator?.username}</span>}
         </div>
 
         {/* Render any client-side children (eg. join/leave button) inside the card */}

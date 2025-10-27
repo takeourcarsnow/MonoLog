@@ -14,9 +14,10 @@ type Props = {
   meId?: string | null;
   pending?: boolean;
   onJoinLeave: (communityId: string, isMember: boolean) => void;
+  showCreator?: boolean;
 };
 
-function CommunityCardInner({ community, meId, pending, onJoinLeave }: Props) {
+function CommunityCardInner({ community, meId, pending, onJoinLeave, showCreator = true }: Props) {
   return (
     <Link href={`/communities/${community.slug}`} className="card mb-8 block">
       <div className="flex flex-col items-center text-center gap-3 py-4">
@@ -40,7 +41,7 @@ function CommunityCardInner({ community, meId, pending, onJoinLeave }: Props) {
         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
           <span>{community.memberCount || 0} members</span>
           <span>{community.threadCount || 0} threads</span>
-          <span>by @{community.creator?.username}</span>
+          {showCreator && <span>by @{community.creator?.username}</span>}
         </div>
 
         <div className="mt-3">
@@ -71,7 +72,8 @@ export const CommunityCard = React.memo(CommunityCardInner, (prev, next) => {
     (prev.community.memberCount || 0) === (next.community.memberCount || 0) &&
     (prev.community.threadCount || 0) === (next.community.threadCount || 0) &&
     !!prev.pending === !!next.pending &&
-    prev.meId === next.meId
+    prev.meId === next.meId &&
+    prev.showCreator === next.showCreator
   );
 });
 

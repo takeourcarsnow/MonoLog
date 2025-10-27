@@ -164,7 +164,7 @@ export function FeedPage({
 
     const listView = (
       <>
-        {limitedPosts.map(p => <PostCard key={p.id} post={p} disableCardNavigation={true} />)}
+        {limitedPosts.map((p, index) => <PostCard key={p.id} post={p} disableCardNavigation={true} index={index} />)}
         {isExploreUnauthed && limitedPosts.length >= 3 && (
           <div className="feed-cta" style={{ textAlign: 'center', padding: '20px', margin: '20px 0' }}>
             <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)' }}>Want to keep scrolling?</p>

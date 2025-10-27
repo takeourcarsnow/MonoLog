@@ -309,7 +309,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
       view === "grid" ? (
         <GridView posts={dayPosts} hasMore={false} setSentinel={() => {}} loadingMore={false} />
       ) : (
-        dayPosts.map(p => <PostCard key={p.id} post={p} disableMediaNavigation={true} />)
+        dayPosts.map((p, index) => <PostCard key={p.id} post={p} disableMediaNavigation={true} index={index} />)
       )
     )
       : <div className="empty">No posts for that day.</div>)

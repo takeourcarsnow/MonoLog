@@ -15,6 +15,7 @@ interface CarouselProps {
   openFullscreen?: (src: string) => void;
   onImageIndexChange?: (index: number) => void;
   disableMediaNavigation?: boolean;
+  lazy?: boolean;
 }
 
 export const Carousel = memo(function Carousel({
@@ -29,6 +30,7 @@ export const Carousel = memo(function Carousel({
   openFullscreen,
   onImageIndexChange,
   disableMediaNavigation,
+  lazy = false,
 }: CarouselProps) {
   const { index, setIndex, trackRef, prev, next, carouselTouchProps } = useCarousel({
     imageUrls,
@@ -97,15 +99,31 @@ export const Carousel = memo(function Carousel({
     }
   }, [isMultipostInFeed, index, imageDimensions]);
 
-  // Preload images to ensure they load reliably
+  // Preload images sequentially to ensure they load reliably without hitting concurrent load limits
   useEffect(() => {
-    imageUrls.forEach(url => {
+    let index = 0;
+    const loadNext = () => {
+      if (index >= imageUrls.length) return;
+      const url = imageUrls[index];
       if (url) {
         const img = new Image();
+        img.onload = () => {
+          console.log('Preloaded', url);
+          index++;
+          loadNext();
+        };
+        img.onerror = () => {
+          console.error('Preload failed', url);
+          index++;
+          loadNext();
+        };
         img.src = url;
-        // Note: We don't need to track load state here since ImageZoom handles it
+      } else {
+        index++;
+        loadNext();
       }
-    });
+    };
+    loadNext();
   }, [imageUrls]);
 
   const { handleMediaClick, handleMediaDblClick } = useMediaClick({
@@ -161,7 +179,7 @@ export const Carousel = memo(function Carousel({
                 src={u}
                 alt={alts[idx] || `Photo ${idx + 1}`}
                 isActive={idx === index}
-                lazy={false}
+                lazy={lazy}
                 // Always pass a stable callback; we only apply the height
                 // when we detect multipost layout. This lets ImageZoom
                 // report dimensions early while avoiding unstable inline

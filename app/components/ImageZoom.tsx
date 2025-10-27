@@ -59,7 +59,21 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const timeout = setTimeout(checkLoaded, 100);
 
     return () => clearTimeout(timeout);
-  }, [state.imgRef.current]);
+  }, []);
+
+  // Force add loaded class after a timeout to prevent images from staying invisible
+  useEffect(() => {
+    const img = state.imgRef.current;
+    if (!img) return;
+
+    const forceLoadedTimer = setTimeout(() => {
+      if (!img.classList.contains("loaded")) {
+        img.classList.add("loaded");
+      }
+    }, 3000); // 3 seconds
+
+    return () => clearTimeout(forceLoadedTimer);
+  }, []);
 
   // Call onDimensionsChange when active and loaded
   useEffect(() => {
@@ -109,7 +123,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           // for carousels / single media immediately when lazy is false.
           loading={lazy ? 'lazy' : 'eager'}
           // Async decoding to avoid blocking the main thread during decode
-          decoding="async"
+          decoding="sync"
           style={{
             // Use a 3D transform to encourage GPU compositing which prevents
             // the browser from temporarily rasterizing the image at lower

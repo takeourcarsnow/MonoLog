@@ -12,6 +12,7 @@ interface SingleMediaProps {
   pathname: string;
   openFullscreen?: (src: string) => void;
   disableMediaNavigation?: boolean;
+  lazy?: boolean;
 }
 
 export const SingleMedia = memo(function SingleMedia({
@@ -24,6 +25,7 @@ export const SingleMedia = memo(function SingleMedia({
   pathname,
   openFullscreen,
   disableMediaNavigation,
+  lazy = false,
 }: SingleMediaProps) {
   const { handleMediaClick, handleMediaDblClick } = useMediaClick({
     isFavorite,
@@ -47,7 +49,7 @@ export const SingleMedia = memo(function SingleMedia({
       <ImageZoom
         src={imageUrl}
         alt={alt || "Photo"}
-        lazy={false}
+        lazy={lazy}
         onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => (e.currentTarget.classList.add("loaded"))}
       />
     </div>

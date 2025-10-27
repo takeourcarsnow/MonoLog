@@ -13,6 +13,7 @@ interface MediaSectionProps {
   allowCarouselTouch?: boolean;
   onImageIndexChange?: (index: number) => void;
   disableMediaNavigation?: boolean;
+  index?: number;
 }
 
 export const MediaSection = memo(function MediaSection({
@@ -25,11 +26,15 @@ export const MediaSection = memo(function MediaSection({
   allowCarouselTouch,
   onImageIndexChange,
   disableMediaNavigation,
+  index,
 }: MediaSectionProps) {
   const imageUrls: string[] = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
   const alts: string[] = Array.isArray(post.alt) ? post.alt : [post.alt || ""];
 
   const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
+
+  // Lazy load images for posts below the fold (index >= 3)
+  const lazy = (index ?? 0) >= 3;
 
   return (
     <div className="card-media" style={{ position: 'relative' }}>
@@ -50,6 +55,7 @@ export const MediaSection = memo(function MediaSection({
           disableMediaNavigation={disableMediaNavigation}
           allowCarouselTouch={allowCarouselTouch}
           onImageIndexChange={onImageIndexChange}
+          lazy={false}
         />
       ) : (
         <SingleMedia
@@ -61,6 +67,7 @@ export const MediaSection = memo(function MediaSection({
           showFavoriteFeedback={showFavoriteFeedback}
           pathname={pathname}
           disableMediaNavigation={disableMediaNavigation}
+          lazy={lazy}
         />
       )}
     </div>

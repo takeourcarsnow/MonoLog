@@ -369,6 +369,7 @@ export function CarouselView({
                 fill
                 sizes="100%"
                 style={{ objectFit: 'contain' }}
+                priority={idx === index}
                 onLoadingComplete={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}
                 onClick={idx === index ? (e) => {

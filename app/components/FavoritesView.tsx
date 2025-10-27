@@ -97,7 +97,7 @@ export function FavoritesView() {
       )}
       <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
         {view === 'list' ? (
-          posts.map(p => <PostCard key={p.id} post={p} />)
+          posts.map((p, index) => <PostCard key={p.id} post={p} index={index} />)
         ) : (
           <GridView posts={posts} hasMore={false} setSentinel={() => {}} />
         )}

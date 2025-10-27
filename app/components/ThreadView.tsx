@@ -36,6 +36,33 @@ export function ThreadView() {
     }
   }, [currentUser, router]);
 
+  const loadThread = useCallback(async () => {
+    if (!threadSlug || !communitySlug) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const threadData = await api.getThreadBySlug(threadSlug);
+      if (!threadData) {
+        setError('Thread not found');
+        return;
+      }
+      setThread(threadData);
+
+      // Load replies
+      const repliesData = await api.getThreadReplies(threadData.id);
+      setReplies(repliesData);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to load thread');
+    } finally {
+      setLoading(false);
+    }
+  }, [threadSlug, communitySlug]);
+
+  useEffect(() => {
+    loadThread();
+  }, [loadThread]);
+
   // Show loading while determining auth status
   if (currentUser === undefined) {
     return (

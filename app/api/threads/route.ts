@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { slugify } from '@/src/lib/utils';
 
 export async function GET(req: Request) {
   try {
@@ -33,6 +34,7 @@ export async function GET(req: Request) {
 
       return NextResponse.json({
         ...thread,
+        slug: thread.slug || slugify(thread.title),
         replyCount: replyCount || 0
       });
     } else if (slug) {
@@ -59,6 +61,7 @@ export async function GET(req: Request) {
 
       return NextResponse.json({
         ...thread,
+        slug: thread.slug || slugify(thread.title),
         replyCount: replyCount || 0
       });
     } else if (communityId) {
@@ -92,6 +95,7 @@ export async function GET(req: Request) {
               .eq('thread_id', thread.id);
             return {
               ...thread,
+              slug: thread.slug || slugify(thread.title),
               replyCount: replyCount || 0,
             };
           })

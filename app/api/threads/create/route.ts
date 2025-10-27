@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { uid } from '@/src/lib/id';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { slugify } from '@/src/lib/utils';
 
 export async function POST(req: Request) {
   try {
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
         user_id: userId,
         title,
         content,
+        slug: slugify(title),
         created_at,
         updated_at: created_at
       })

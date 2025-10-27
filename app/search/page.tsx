@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { SearchClient } from '@/app/components/SearchClient';
 import { SearchLive } from '@/app/components/SearchLive';
+import Image from 'next/image';
 
 interface SearchResult {
   posts: any[];
@@ -56,7 +57,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                   <div key={post.id} className="post-item">
                     <a href={`/post/${post.id}`}>
                       {post.thumbnailUrls?.[0] || post.thumbnailUrl ? (
-                        <img
+                        <Image
                           src={post.thumbnailUrls?.[0] || post.thumbnailUrl}
                           alt={post.alt || ''}
                           width={100}
@@ -76,7 +77,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                 {results.users.map((user) => (
                   <div key={user.id} className="user-item">
                     <a href={`/${user.username}`}>
-                      <img
+                      <Image
                         src={user.avatarUrl}
                         alt={user.displayName || user.username}
                         width={50}
@@ -96,7 +97,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                   <div key={community.id} className="community-item">
                     <a href={`/communities/${community.slug}`}>
                       {community.imageUrl && (
-                        <img
+                        <Image
                           src={community.imageUrl}
                           alt={community.name}
                           width={50}

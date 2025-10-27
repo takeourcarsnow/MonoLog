@@ -140,7 +140,7 @@ export default function WeekReviewPage() {
                         {post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url ? (
                         <OptimizedImage
                           src={(post.thumbnail_urls?.[0] || post.thumbnail_url || post.image_urls?.[0] || post.image_url) || ""}
-                          alt=""
+                          alt="Post thumbnail"
                           width={48}
                           height={48}
                           sizes="48px"

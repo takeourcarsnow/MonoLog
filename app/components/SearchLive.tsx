@@ -143,7 +143,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
                 <div key={post.id} className="post-item" style={{ marginBottom: '8px' }}>
                   <a href={`/post/${post.id}`}>
                     {post.thumbnailUrls?.[0] || post.thumbnailUrl ? (
-                      <img src={post.thumbnailUrls?.[0] || post.thumbnailUrl} alt={post.alt || ''} width={100} height={100} />
+                      <Image src={post.thumbnailUrls?.[0] || post.thumbnailUrl} alt={post.alt || ''} width={100} height={100} />
                     ) : null}
                     <div className="post-info">
                       <p className="post-caption">{post.caption?.trim() || '(no caption)'}</p>
@@ -158,7 +158,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
               {results.users.slice(0, 10).map((user) => (
                 <div key={user.id} className="user-item" style={{ marginBottom: '8px' }}>
                   <a href={`/${user.username}`}>
-                    {user.avatarUrl && <img src={user.avatarUrl} alt={user.displayName || user.username} width={50} height={50} />}
+                    {user.avatarUrl && <Image src={user.avatarUrl} alt={user.displayName || user.username} width={50} height={50} />}
                     <div>
                       <h3>{user.displayName || user.username}</h3>
                       <p>@{user.username}</p>
@@ -172,7 +172,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
               {results.communities.slice(0, 10).map((community) => (
                 <div key={community.id} className="community-item" style={{ marginBottom: '8px' }}>
                   <a href={`/communities/${community.slug}`}>
-                    {community.imageUrl && <img src={community.imageUrl} alt={community.name} width={50} height={50} />}
+                    {community.imageUrl && <Image src={community.imageUrl} alt={community.name} width={50} height={50} />}
                     <div>
                       <h3>{community.name}</h3>
                       <p>{community.description}</p>

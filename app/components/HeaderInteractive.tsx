@@ -208,7 +208,7 @@ export function HeaderInteractive() {
           <Users size={20} strokeWidth={2} />
         </Link>
         {/* Search button */}
-        <Link href="/search" className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
+        <Link href={me ? "/search" : "/profile"} className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
           <Search size={20} strokeWidth={2} />
         </Link>
         {/* Shell reserves space for the account switcher so the header doesn't

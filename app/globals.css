@@ -9,6 +9,7 @@
 html, body {
   overflow: hidden;
   height: 100%;
+  background: var(--bg);
 }
 
 /* Allow body scrolling on pages that need it */

@@ -11,12 +11,13 @@ import { useCommunities } from "@/lib/hooks";
 import CommunityCard from "./CommunityCard";
 import LazyMount from "./LazyMount";
 import SkeletonCard from "./SkeletonCard";
+import { useErrorState } from "@/lib/hooks/useErrorState";
 
 export function CommunitiesView() {
   const { me } = useAuth();
   const { data: communities, mutate: mutateCommunities, isLoading: loading, error: fetchError } = useCommunities();
   const [pendingJoin, setPendingJoin] = useState<Set<string>>(new Set());
-  const [error, setError] = useState<string | null>(null);
+  const { error, setError, handleError } = useErrorState();
 
   // Update last checked time when component mounts
   useEffect(() => {
@@ -71,7 +72,7 @@ export function CommunitiesView() {
         (prev) => prev?.map(c => c.id === communityId ? { ...c, isMember, memberCount: isMember ? (c.memberCount || 0) + 1 : Math.max(0, (c.memberCount || 1) - 1) } : c),
         false
       );
-      setError(e?.message || 'Failed to update membership');
+      handleError(e);
     } finally {
       setPendingJoin((s) => {
         const next = new Set(s);

@@ -11,6 +11,7 @@ import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/hooks/useAuth";
+import { useErrorState } from "@/lib/hooks/useErrorState";
 
 export function CommunityView() {
   const params = useParams();
@@ -21,7 +22,7 @@ export function CommunityView() {
   const [community, setCommunity] = useState<HydratedCommunity | null>(null);
   const [threads, setThreads] = useState<HydratedThread[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { error, setError, handleError } = useErrorState();
   const [deleteArmed, setDeleteArmed] = useState(false);
   const [pendingJoin, setPendingJoin] = useState(false);
   const deleteTimeoutRef = useRef<number | null>(null);
@@ -44,7 +45,7 @@ export function CommunityView() {
       setCommunity(communityData);
       setThreads(threadsData);
     } catch (e: any) {
-      setError(e?.message || 'Failed to load community');
+      handleError(e);
     } finally {
       setLoading(false);
     }

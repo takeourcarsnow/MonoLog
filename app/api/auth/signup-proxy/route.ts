@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { apiError, apiSuccess } from '@/lib/apiResponse';
 
 export async function POST(req: Request) {
   try {
@@ -10,20 +11,20 @@ export async function POST(req: Request) {
     const inviteCode = (body?.inviteCode || '').toString().trim();
 
     if (!email || !password || !username || !inviteCode) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return apiError('Missing required fields', 400);
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
+      return apiError('Invalid email', 400);
     }
 
     if (password.length < 8) {
-      return NextResponse.json({ error: 'Password too short' }, { status: 400 });
+      return apiError('Password too short', 400);
     }
 
     // Validate username format
     if (username.length < 3 || username.length > 32 || !/^[a-z0-9._-]+$/.test(username)) {
-      return NextResponse.json({ error: 'Invalid username' }, { status: 400 });
+      return apiError('Invalid username', 400);
     }
 
     const sb = getServiceSupabase();
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (existingUser) {
-      return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
+      return apiError('Username already taken', 400);
     }
 
     // Validate and claim invite as used in a transaction-like manner
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
         .single();
 
       if (claimError || !claimedInvite) {
-        return NextResponse.json({ error: 'Invalid invite code or already used' }, { status: 400 });
+        return apiError('Invalid invite code or already used', 400);
       }
 
       const now = new Date();
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
           .update({ used_by: null })
           .eq('code', inviteCode)
           .eq('used_by', tempClaim);
-        return NextResponse.json({ error: 'Invite code expired' }, { status: 400 });
+        return apiError('Invite code expired', 400);
       }
 
       // Note: If signup fails later, we'll revert the claim
@@ -89,7 +90,7 @@ export async function POST(req: Request) {
           .eq('code', inviteCode)
           .eq('used_by', tempClaim);
       }
-      return NextResponse.json({ error: error.message || error }, { status: 400 });
+      return apiError(error.message || String(error), 400);
     }
 
     const userId = (data as any)?.user?.id;
@@ -102,7 +103,7 @@ export async function POST(req: Request) {
           .eq('code', inviteCode)
           .eq('used_by', tempClaim);
       }
-      return NextResponse.json({ error: 'Signup failed: no user ID returned' }, { status: 500 });
+      return apiError('Signup failed: no user ID returned', 500);
     }
 
     // Mark invite as used (skip for EARLYADOPTER)
@@ -122,8 +123,8 @@ export async function POST(req: Request) {
       avatar_url: '/logo.svg'
     });
 
-    return NextResponse.json({ data }, { status: 200 });
+    return apiSuccess({ data }, 200);
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+    return apiError(e?.message || String(e), 500);
   }
 }

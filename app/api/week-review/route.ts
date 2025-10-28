@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { apiError, apiSuccess } from '@/lib/apiResponse';
 
 export async function GET(req: Request) {
   try {
     const authUser = await getUserFromAuthHeader(req);
     if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiError('Unauthorized', 401);
     }
 
     const sb = getServiceSupabase();
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
 
     if (error) {
       console.error('Week review API error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
     // Fetch comments made by the user in the past week
@@ -98,9 +99,9 @@ export async function GET(req: Request) {
       weekEnd: new Date().toISOString()
     };
 
-    return NextResponse.json(weekReview);
+    return apiSuccess(weekReview);
   } catch (e: any) {
     console.error('Week review API exception:', e);
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+    return apiError(e?.message || String(e), 500);
   }
 }

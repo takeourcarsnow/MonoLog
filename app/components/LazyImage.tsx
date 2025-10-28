@@ -53,6 +53,25 @@ export function LazyImage({
     return () => observer.disconnect();
   }, [isVisible, priority, lazy, rootMargin]);
 
+  // If there is no source, render a neutral placeholder to avoid
+  // passing an empty string to next/image which can show a broken
+  // image icon. Hooks must be called before this conditional return
+  // to comply with React's rules of hooks.
+  if (!src || src.trim() === "") {
+    return (
+      <div
+        className={className}
+        style={{
+          ...(style || {}),
+          width: fill ? '100%' : width,
+          height: fill ? '100%' : height,
+          backgroundColor: 'var(--bg-elev)',
+          borderRadius: 'inherit',
+        }}
+      />
+    );
+  }
+
   if (!lazy) {
     return (
       <OptimizedImage

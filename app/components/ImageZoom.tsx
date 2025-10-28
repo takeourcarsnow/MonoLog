@@ -155,8 +155,23 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
           }}
           onLoad={(e) => {
             e.currentTarget.classList.add("loaded");
-            if (onDimensionsChange && state.containerRectRef.current) {
-              onDimensionsChange(state.containerRectRef.current);
+            // Try to provide fresh container dimensions to the parent.
+            // Prefer the cached containerRectRef, but fall back to measuring
+            // the container element directly because the ResizeObserver that
+            // populates containerRectRef may not have run yet on first load
+            // (this caused the carousel panel to not resize until navigating
+            // to the next image).
+            try {
+              let rect = state.containerRectRef.current;
+              if ((!rect || !rect.width || !rect.height) && state.containerRef.current) {
+                const r = state.containerRef.current.getBoundingClientRect();
+                rect = { width: Math.round(r.width), height: Math.round(r.height) };
+              }
+              if (onDimensionsChange && rect) {
+                onDimensionsChange(rect);
+              }
+            } catch (_) {
+              // ignore measurement errors
             }
             // Call the passed onLoad prop if provided
             if (rest.onLoad) {

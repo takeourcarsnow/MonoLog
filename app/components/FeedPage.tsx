@@ -47,9 +47,15 @@ export function FeedPage({
   // Number of posts to show to unauthenticated users in explore view
   const UNAUTH_LIMIT = 8;
 
+  // If this is the explore view and the user is unauthenticated, fetch up to
+  // UNAUTH_LIMIT posts on the initial load so we can show that many before
+  // prompting them to sign up. Otherwise default to the standard page size.
+  const isExploreUnauthedEarly = viewStorageKey === 'exploreView' && !me;
+  const initialPageSize = isExploreUnauthedEarly ? UNAUTH_LIMIT : 5;
+
   const { posts, loading, loadingMore, hasMore, error, loadInitialPosts, refresh, setSentinel, setPosts } = useFeed(
     fetchFunction,
-    { pageSize: 5, applyFollowChangesOnUnmount: !!deferFollowChanges }
+    { pageSize: initialPageSize, applyFollowChangesOnUnmount: !!deferFollowChanges }
   );
 
   const { isRefreshing, pullDistance, isPulling, containerRef, getPullStyles } = usePullToRefresh({

@@ -6,6 +6,7 @@ import { api, getSupabaseClient } from "@/src/lib/api";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import type { User } from "@/src/lib/types";
 import { useRouter } from "next/navigation";
+import AvatarReminderModal from "./AvatarReminderModal";
 
 export function ProfileButton() {
   // use `undefined` as the initial state to represent "loading" so the
@@ -14,6 +15,17 @@ export function ProfileButton() {
   const [me, setMe] = useState<User | null | undefined>(undefined);
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+  const [showAvatarReminder, setShowAvatarReminder] = useState(false);
+
+  const handleChangeNow = () => {
+    setShowAvatarReminder(false);
+    router.push('/profile?changeAvatar=true');
+  };
+
+  const handleRemindLater = () => {
+    setShowAvatarReminder(false);
+    localStorage.setItem('avatarReminderShown', 'true');
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -98,26 +110,12 @@ export function ProfileButton() {
   // Auto-close delay in milliseconds. Tweak as desired (2.5s chosen as a small delay).
   const AUTO_CLOSE_DELAY = 2500;
 
-  // Sync avatar preload + root class for shell reservation. When signed in
-  // we persist the avatar URL so the layout preload helper can use it; when
-  // signed out we clear it and remove the class so the shell doesn't reserve
-  // visible space.
+  // Check for avatar reminder
   useEffect(() => {
-    try {
-      if (current && (current as User).avatarUrl) {
-        try { localStorage.setItem('monolog_avatar_preload', (current as User).avatarUrl); } catch (e) {}
-        try { (window as any).__MONOLOG_AVATAR_PRELOAD__ = (current as User).avatarUrl; } catch (e) {}
-        try { document.documentElement.classList.add('has-profile-button'); } catch (e) {}
-      } else if (current === null) {
-        // signed out
-        try { localStorage.removeItem('monolog_avatar_preload'); } catch (e) {}
-        try { delete (window as any).__MONOLOG_AVATAR_PRELOAD__; } catch (e) {}
-        try { document.documentElement.classList.remove('has-profile-button'); } catch (e) {}
-      }
-    } catch (e) {
-      // ignore
+    if (me && me.avatarUrl === "/logo.svg" && localStorage.getItem('avatarReminderShown') !== 'true') {
+      setShowAvatarReminder(true);
     }
-  }, [current]);
+  }, [me]);
 
   return (
     <div className={`profile-button ${isMounted ? 'mounted' : ''}`} style={{ position: "relative" }}>
@@ -177,7 +175,11 @@ export function ProfileButton() {
         )}
       </button>
 
-      
+      <AvatarReminderModal
+        open={showAvatarReminder}
+        onChangeNow={handleChangeNow}
+        onRemindLater={handleRemindLater}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { compressImage } from "@/src/lib/image";
 import { uid } from "@/src/lib/id";
 import { useToast } from "../Toast";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@/src/lib/types";
 
 interface ProfileAvatarProps {
@@ -18,6 +19,8 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
   const [avatarUploading, setAvatarUploading] = useState(false);
   // expanded controls in-place scale animation of avatar
   const [expanded, setExpanded] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!expanded) return;
@@ -27,6 +30,15 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
+
+  useEffect(() => {
+    if (searchParams.get('changeAvatar') === 'true') {
+      setTimeout(() => {
+        avatarInputRef.current?.click();
+        router.replace('/profile'); // remove the param
+      }, 100);
+    }
+  }, [searchParams, router]);
 
   const handleAvatarChange = async () => {
     if (avatarUploading) return;

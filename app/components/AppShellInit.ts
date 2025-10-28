@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { initTheme } from "@/src/lib/theme";
 import { api } from "@/src/lib/api";
-import { CONFIG } from "@/src/lib/config";
-import { seedIfNeeded } from "@/src/lib/seed";
 
 export function useAppShellInit() {
   const [ready, setReady] = useState(false);
@@ -28,9 +26,6 @@ export function useAppShellInit() {
     (async () => {
       try {
         await api.init();
-        if (CONFIG.mode === "local" && CONFIG.seedDemoData) {
-          await seedIfNeeded(api);
-        }
       } catch (e) {
         console.error(e);
       } finally {

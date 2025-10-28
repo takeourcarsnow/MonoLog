@@ -13,7 +13,7 @@ import { useAuth } from "@/src/lib/hooks/useAuth";
 
 // Non-critical header components loaded dynamically
 const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { ssr: false });
-const AccountSwitcher = dynamic(() => import("./AccountSwitcher").then(mod => mod.AccountSwitcher), { ssr: false });
+const ProfileButton = dynamic(() => import("./ProfileButton").then(mod => mod.ProfileButton), { ssr: false });
 
 export function HeaderInteractive() {
   const router = useRouter();
@@ -211,11 +211,11 @@ export function HeaderInteractive() {
         <Link href={me ? "/search" : "/profile"} className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
           <Search size={20} strokeWidth={2} />
         </Link>
-        {/* Shell reserves space for the account switcher so the header doesn't
-            reflow when the dynamic AccountSwitcher chunk loads or when the
+        {/* Shell reserves space for the profile button so the header doesn't
+            reflow when the dynamic ProfileButton chunk loads or when the
             avatar appears. */}
-        <div className="account-switcher-shell">
-          <AccountSwitcher />
+        <div className="profile-button-shell">
+          <ProfileButton />
         </div>
       </div>
     </>

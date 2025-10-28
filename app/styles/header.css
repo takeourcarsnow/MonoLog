@@ -77,21 +77,21 @@
   transform: translateY(-50%);
 }
 
-/* We render the account switcher avatar and name in DOM order (avatar then name)
+/* We render the profile button avatar and name in DOM order (avatar then name)
    but visually keep the avatar at the far right by reversing the row for
-   the account-switcher container. This lets the account label expand to the
+   the profile-button container. This lets the account label expand to the
    left and push other header items when revealed. */
 /* Keep normal order for header actions so the action group order remains
   left-to-right. We only reverse the inner order of the account button so
   the avatar visually stays at the far right while the label expands left. */
 
 /* Limit how much the account label can grow while allowing a smooth reveal. */
-.account-switcher { display: inline-flex; align-items: center; flex: 0 0 auto; }
-/* Reverse only the contents of the account switcher button: DOM keeps
+.profile-button { display: inline-flex; align-items: center; flex: 0 0 auto; }
+/* Reverse only the contents of the profile button button: DOM keeps
   avatar first but visually avatar sits to the right. This prevents all
   header buttons from being reordered. */
-.account-switcher .btn { display: inline-flex; align-items: center; gap: 8px; flex-direction: row-reverse; }
-.account-switcher .btn .account-name {
+.profile-button .btn { display: inline-flex; align-items: center; gap: 8px; flex-direction: row-reverse; }
+.profile-button .btn .account-name {
   display: inline-block;
   max-width: 0; /* collapsed by default */
   overflow: hidden;
@@ -103,22 +103,22 @@
 }
 
 /* Only apply transition after component has mounted to prevent flash on refresh */
-.account-switcher.mounted .btn .account-name {
+.profile-button.mounted .btn .account-name {
   transition: max-width 220ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms ease;
 }
 
-/* On hover or focus of the account button, expand the account name to the left.
+/* On hover or focus of the profile button, expand the account name to the left.
    Because .header-actions uses row-reverse, expanding the inline element increases
    the space to the left and effectively pushes the other header controls. */
-.account-switcher.mounted .btn:hover .account-name,
-.account-switcher.mounted .btn:focus .account-name {
+.profile-button.mounted .btn:hover .account-name,
+.profile-button.mounted .btn:focus .account-name {
   max-width: 160px; /* reasonable visible length */
   opacity: 1;
 }
 
 /* Reduce motion preference: use instant reveal without animation */
 @media (prefers-reduced-motion: reduce) {
-  .account-switcher.mounted .btn .account-name { transition: none; }
+  .profile-button.mounted .btn .account-name { transition: none; }
 }
 
 /* Normalize header action button heights so icon-only and text buttons match */
@@ -191,19 +191,19 @@
   stroke: #f59e0b !important;
 }
 
-/* Account switcher button: prevent long usernames from expanding the header.
+/* Profile button button: prevent long usernames from expanding the header.
    Keep avatar fixed size and clamp the label with ellipsis. */
-.account-switcher .btn {
+.profile-button .btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-width: 0; /* allow truncation */
   padding: 6px 6px; /* slightly smaller touch target for header */
 }
-.account-switcher .btn img.avatar {
+.profile-button .btn img.avatar {
   width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;
 }
-.account-switcher .btn span {
+.profile-button .btn span {
   display: inline-block;
   max-width: 110px;
   overflow: hidden;
@@ -213,24 +213,24 @@
 
 
 
-/* Shell to reserve space for dynamic account switcher to avoid layout shift.
-   Only reserve visible space when the root document has the 'has-account-switcher'
+/* Shell to reserve space for dynamic profile button to avoid layout shift.
+   Only reserve visible space when the root document has the 'has-profile-button'
    class which the client toggles when a signed-in account exists. This
    prevents showing a placeholder after sign-out. */
-:root.has-account-switcher .account-switcher-shell {
+:root.has-profile-button .profile-button-shell {
   display: inline-flex;
   align-items: center;
   min-width: 56px; /* space for avatar + small gap */
   justify-content: center;
 }
-:root:not(.has-account-switcher) .account-switcher-shell {
+:root:not(.has-profile-button) .profile-button-shell {
   /* Keep the shell present for layout but don't reserve visible space */
   display: inline-flex;
   align-items: center;
   min-width: 0;
   justify-content: center;
 }
-.account-switcher-shell .account-switcher { width: 100%; }
+.profile-button-shell .profile-button { width: 100%; }
 
 /* Reserve the same square space as other header icon buttons for the theme toggle
    so it can't push other action buttons when the dynamic component loads. */

@@ -7,7 +7,7 @@ import { OptimizedImage } from "@/app/components/OptimizedImage";
 import type { User } from "@/src/lib/types";
 import { useRouter } from "next/navigation";
 
-export function AccountSwitcher() {
+export function ProfileButton() {
   // use `undefined` as the initial state to represent "loading" so the
   // UI doesn't prematurely render the unauthenticated variant while we
   // probe the client-side auth state (fixes refresh/hydration flicker).
@@ -107,12 +107,12 @@ export function AccountSwitcher() {
       if (current && (current as User).avatarUrl) {
         try { localStorage.setItem('monolog_avatar_preload', (current as User).avatarUrl); } catch (e) {}
         try { (window as any).__MONOLOG_AVATAR_PRELOAD__ = (current as User).avatarUrl; } catch (e) {}
-        try { document.documentElement.classList.add('has-account-switcher'); } catch (e) {}
+        try { document.documentElement.classList.add('has-profile-button'); } catch (e) {}
       } else if (current === null) {
         // signed out
         try { localStorage.removeItem('monolog_avatar_preload'); } catch (e) {}
         try { delete (window as any).__MONOLOG_AVATAR_PRELOAD__; } catch (e) {}
-        try { document.documentElement.classList.remove('has-account-switcher'); } catch (e) {}
+        try { document.documentElement.classList.remove('has-profile-button'); } catch (e) {}
       }
     } catch (e) {
       // ignore
@@ -120,7 +120,7 @@ export function AccountSwitcher() {
   }, [current]);
 
   return (
-    <div className={`account-switcher ${isMounted ? 'mounted' : ''}`} style={{ position: "relative" }}>
+    <div className={`profile-button ${isMounted ? 'mounted' : ''}`} style={{ position: "relative" }}>
       <button
         ref={btnRef}
         className="btn"

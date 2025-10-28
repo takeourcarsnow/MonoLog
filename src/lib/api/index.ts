@@ -1,28 +1,21 @@
 import { CONFIG } from "../config";
-import { localApi } from "./local";
 import { supabaseApi, getSupabaseClientRaw } from "./supabase";
 import { logger } from "../logger";
 import type { Api } from "../types";
 
-// Start with the adapter the bundle picked at build time.
-let currentApi: Api = CONFIG.mode === "local" ? localApi : supabaseApi;
+// Start with the supabase adapter.
+let currentApi: Api = supabaseApi;
 
 // re-export the raw client accessor under a stable name
 export const getSupabaseClient = getSupabaseClientRaw;
 
-// Development/runtime helper: if the client bundle thinks it's running in
-// local mode but the server reports supabase (for example because .env.local
-// was added after the client bundle was built or due to caching), perform a
-// runtime check and switch to the supabase adapter so the UI can use the
-// remote backend without needing a full rebuild.
-// If the client bundle was built for `local` but the server is actually
-// configured for Supabase, perform a runtime check and switch adapters.
-// Important: create a promise so early API calls can wait for this decision
-// and avoid using the empty `local` adapter before the override finishes.
+// Development/runtime helper: if the server is configured for Supabase,
+// perform a runtime check and set the client config.
+// Important: create a promise so early API calls can wait for this decision.
 let __runtimeInitResolve: any = null;
 let __runtimeInitPromise: Promise<void> | null = new Promise<void>((res: () => void) => { __runtimeInitResolve = res; });
 
-if (typeof window !== 'undefined' && CONFIG.mode === 'local') {
+if (typeof window !== 'undefined') {
 	(async () => {
 		try {
 			const resp = await fetch('/api/debug/env?public=1');
@@ -33,17 +26,13 @@ if (typeof window !== 'undefined' && CONFIG.mode === 'local') {
 				return;
 			}
 			const json = await resp.json();
-			if (json?.nextPublicMode === 'supabase' || json?.hasNextPublicSupabaseUrl) {
+			if (json?.nextPublicSupabaseUrl || json?.nextPublicSupabaseAnonKey) {
 				try {
-					if (json.nextPublicSupabaseUrl || json.nextPublicSupabaseAnonKey) {
-						(window as any).__MONOLOG_RUNTIME_SUPABASE__ = {
-							url: json.nextPublicSupabaseUrl || null,
-							anonKey: json.nextPublicSupabaseAnonKey || null,
-						};
-					}
+					(window as any).__MONOLOG_RUNTIME_SUPABASE__ = {
+						url: json.nextPublicSupabaseUrl || null,
+						anonKey: json.nextPublicSupabaseAnonKey || null,
+					};
 				} catch (e) {}
-				currentApi = supabaseApi;
-				logger.info('[api] runtime override -> supabase');
 			}
 		} catch (e) {
 			// ignore network/debug failures

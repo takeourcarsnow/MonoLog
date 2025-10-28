@@ -5,7 +5,7 @@ import { Camera, Monitor, Film } from "lucide-react";
 import type { User } from "@/src/lib/types";
 
 // Small scoped selector component for picking between All/Digital/Film cameras
-function CameraScopeSelector({ camera, setCamera, disabled, onFocus, onBlur, expanded, user }: { camera?: string; setCamera?: (c: string) => void; disabled?: boolean; onFocus?: () => void; onBlur?: () => void; expanded?: boolean; user?: User | null }) {
+function CameraScopeSelector({ camera, setCamera, disabled, onFocus, onBlur, expanded, user, removableOptions, onRemoveOption, inputRef }: { camera?: string; setCamera?: (c: string) => void; disabled?: boolean; onFocus?: () => void; onBlur?: () => void; expanded?: boolean; user?: User | null; removableOptions?: string[]; onRemoveOption?: (option: string) => void; inputRef?: React.RefObject<HTMLInputElement> }) {
   const [scope, setScope] = useState<'all' | 'digital' | 'film'>('all');
   const merged = getMergedExifPresets(user);
   const getOptions = () => {
@@ -36,10 +36,12 @@ function CameraScopeSelector({ camera, setCamera, disabled, onFocus, onBlur, exp
       placeholder="Camera"
       disabled={disabled}
       icon={Camera}
-      header={header}
       onFocus={onFocus}
       onBlur={onBlur}
       expanded={expanded}
+      removableOptions={removableOptions}
+      onRemoveOption={onRemoveOption}
+      inputRef={inputRef}
     />
   );
 }

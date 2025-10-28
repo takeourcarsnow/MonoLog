@@ -15,13 +15,17 @@ interface ComboboxProps {
   onFocus?: () => void;
   onBlur?: () => void;
   expanded?: boolean;
+  removableOptions?: string[];
+  onRemoveOption?: (option: string) => void;
+  inputRef?: React.RefObject<HTMLInputElement>;
 }
 
-export function Combobox({ value, onChange, options, placeholder, disabled, className, icon: Icon, header, onFocus, onBlur, expanded }: ComboboxProps) {
+export function Combobox({ value, onChange, options, placeholder, disabled, className, icon: Icon, header, onFocus, onBlur, expanded, removableOptions = [], onRemoveOption, inputRef: externalInputRef }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const [filteredOptions, setFilteredOptions] = useState<string[]>(options);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = externalInputRef || internalInputRef;
   const listRef = useRef<HTMLUListElement>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const suppressOpenRef = useRef(false);
@@ -39,6 +43,10 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
 
   // Update filtered options when the available options or input value changes.
   useEffect(() => {
+    if (expanded) {
+      setFilteredOptions(options || []);
+      return;
+    }
     const q = (inputValue || '').trim().toLowerCase();
     if (!q) {
       setFilteredOptions(options || []);
@@ -60,7 +68,7 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
     
     // Include separators and matching options
     setFilteredOptions([...separators, ...starts, ...contains]);
-  }, [inputValue, options]);
+  }, [inputValue, options, expanded]);
 
   useEffect(() => {
     const restore: Array<() => void> = [];
@@ -212,7 +220,7 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
         tabIndex={disabled ? -1 : 0}
         autoComplete="off"
         onMouseDown={(e) => { if (disabled) e.preventDefault(); }}
-        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined, paddingRight: 72 }}
+        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined, paddingRight: (inputValue && !disabled) ? 72 : 32 }}
       />
       {inputValue && !disabled && (
         <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 4 }}>
@@ -309,7 +317,31 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
                   }
                 }}
               >
-                {option}
+                {isSeparator ? option : (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>{option}</span>
+                    {removableOptions.includes(option) && onRemoveOption && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveOption(option);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--error)',
+                          cursor: 'pointer',
+                          padding: '2px',
+                          borderRadius: '2px'
+                        }}
+                        title="Remove preset"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                )}
               </li>
             );
           })}

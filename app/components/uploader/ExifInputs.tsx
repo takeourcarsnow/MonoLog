@@ -34,10 +34,34 @@ export function ExifInputs({
   user
 }: ExifInputsProps) {
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (activeExifField && inputRef.current) {
+      inputRef.current.focus();
+      // Select all text for easy replacement
+      setTimeout(() => inputRef.current?.select(), 0);
+    }
+  }, [activeExifField]);
 
   const mergedPresets = getMergedExifPresets(user);
 
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handleRemovePreset = async (field: 'cameras' | 'lenses' | 'filmTypes' | 'filmIsos', value: string) => {
+    if (!user) return;
+    const currentClean = {
+      cameras: Array.isArray(user.exifPresets?.cameras) ? user.exifPresets.cameras : [],
+      lenses: Array.isArray(user.exifPresets?.lenses) ? user.exifPresets.lenses : [],
+      filmTypes: Array.isArray(user.exifPresets?.filmTypes) ? user.exifPresets.filmTypes : [],
+      filmIsos: Array.isArray(user.exifPresets?.filmIsos) ? user.exifPresets.filmIsos : [],
+    };
+    const current = currentClean[field] || [];
+    const updated = { ...currentClean, [field]: current.filter(o => o !== value) };
+    try {
+      await api.updateCurrentUser({ exifPresets: updated });
+    } catch (e) {
+      console.error('Failed to remove EXIF preset', e);
+    }
+  };
 
   const saveNewPreset = async (field: 'cameras' | 'lenses' | 'filmTypes' | 'filmIsos', value: string) => {
     if (!user || !value.trim()) return;
@@ -114,6 +138,8 @@ export function ExifInputs({
             onFocus={() => setActiveExifField('camera')}
             onBlur={handleCameraBlur}
             user={user}
+            removableOptions={user?.exifPresets?.cameras || []}
+            onRemoveOption={(option) => handleRemovePreset('cameras', option)}
           />
           <Combobox
             value={lens || ''}
@@ -124,6 +150,8 @@ export function ExifInputs({
             icon={Settings}
             onFocus={() => setActiveExifField('lens')}
             onBlur={handleLensBlur}
+            removableOptions={user?.exifPresets?.lenses || []}
+            onRemoveOption={(option) => handleRemovePreset('lenses', option)}
           />
           {!camera || !CAMERA_DIGITAL_PRESETS.includes(camera) ? (
             <>
@@ -139,6 +167,8 @@ export function ExifInputs({
                 icon={Image}
                 onFocus={() => setActiveExifField('film')}
                 onBlur={handleFilmTypeBlur}
+                removableOptions={user?.exifPresets?.filmTypes || []}
+                onRemoveOption={(option) => handleRemovePreset('filmTypes', option)}
               />
               {filmType && (
                 <Combobox
@@ -150,6 +180,8 @@ export function ExifInputs({
                   icon={Gauge}
                   onFocus={() => setActiveExifField('iso')}
                   onBlur={handleFilmIsoBlur}
+                  removableOptions={user?.exifPresets?.filmIsos || []}
+                  onRemoveOption={(option) => handleRemovePreset('filmIsos', option)}
                 />
               )}
             </>
@@ -167,6 +199,9 @@ export function ExifInputs({
               onBlur={handleCameraBlur}
               expanded={true}
               user={user}
+              removableOptions={user?.exifPresets?.cameras || []}
+              onRemoveOption={(option) => handleRemovePreset('cameras', option)}
+              inputRef={inputRef}
             />
           )}
           {activeExifField === 'lens' && (
@@ -180,6 +215,9 @@ export function ExifInputs({
               onFocus={() => setActiveExifField('lens')}
               onBlur={handleLensBlur}
               expanded={true}
+              removableOptions={user?.exifPresets?.lenses || []}
+              onRemoveOption={(option) => handleRemovePreset('lenses', option)}
+              inputRef={inputRef}
             />
           )}
           {activeExifField === 'film' && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
@@ -196,6 +234,9 @@ export function ExifInputs({
               onFocus={() => setActiveExifField('film')}
               onBlur={handleFilmTypeBlur}
               expanded={true}
+              removableOptions={user?.exifPresets?.filmTypes || []}
+              onRemoveOption={(option) => handleRemovePreset('filmTypes', option)}
+              inputRef={inputRef}
             />
           )}
           {activeExifField === 'iso' && filmType && (!camera || !CAMERA_DIGITAL_PRESETS.includes(camera)) && (
@@ -209,6 +250,9 @@ export function ExifInputs({
               onFocus={() => setActiveExifField('iso')}
               onBlur={handleFilmIsoBlur}
               expanded={true}
+              removableOptions={user?.exifPresets?.filmIsos || []}
+              onRemoveOption={(option) => handleRemovePreset('filmIsos', option)}
+              inputRef={inputRef}
             />
           )}
         </div>

@@ -1,10 +1,8 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import type { HydratedCommunity } from "@/src/lib/types";
-import { OptimizedImage } from "./OptimizedImage";
-import SkeletonCard from "./SkeletonCard";
+import CommunityCardBase from "./CommunityCardBase";
 import LazyMount from "./LazyMount";
 import { Button } from "./Button";
 import { UserMinus, UserPlus } from "lucide-react";
@@ -18,49 +16,45 @@ type Props = {
 };
 
 function CommunityCardInner({ community, meId, pending, onJoinLeave, showCreator = true }: Props) {
+  const imageNode = (
+    <LazyMount rootMargin="150px">
+      <img
+        src={community.imageUrl || "/logo.svg"}
+        alt={community.name}
+        width={80}
+        height={80}
+        className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
+      />
+    </LazyMount>
+  );
+
   return (
-    <Link href={`/communities/${community.slug}`} className="card mb-8 block">
-      <div className="flex flex-col items-center text-center gap-3 py-4">
-        <LazyMount rootMargin="150px">
-          <OptimizedImage
-            src={community.imageUrl || "/logo.svg"}
-            alt={community.name}
-            width={80}
-            height={80}
-            className="rounded-full cursor-pointer hover:opacity-80 transition-opacity mx-auto"
-            fallbackSrc="/logo.svg"
-          />
-        </LazyMount>
-
-        <h3 className="font-semibold text-lg hover:underline">{community.name}</h3>
-
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 max-w-[40ch]">
-          {community.description}
-        </p>
-
-        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
-          <span>{community.memberCount || 0} members</span>
-          <span>{community.threadCount || 0} threads</span>
-          {showCreator && <span>by @{community.creator?.username}</span>}
-        </div>
-
-        <div className="mt-3">
-          {meId !== community.creator?.id && (
-            <Button
-              variant={community.isMember ? "ghost" : "default"}
-              size="sm"
-              className="small-min"
-              onClick={() => onJoinLeave(community.id, community.isMember || false)}
-              aria-label={community.isMember ? 'Leave community' : 'Join community'}
-              title={community.isMember ? 'Leave community' : 'Join community'}
-              disabled={!!pending}
-            >
-              {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
-            </Button>
-          )}
-        </div>
+    <CommunityCardBase
+      name={community.name}
+      slug={community.slug}
+      description={community.description}
+      imageNode={imageNode}
+      memberCount={community.memberCount}
+      threadCount={community.threadCount}
+      creator={community.creator}
+      showCreator={showCreator}
+    >
+      <div className="mt-3">
+        {meId !== community.creator?.id && (
+          <Button
+            variant={community.isMember ? "ghost" : "default"}
+            size="sm"
+            className="small-min"
+            onClick={() => onJoinLeave(community.id, community.isMember || false)}
+            aria-label={community.isMember ? 'Leave community' : 'Join community'}
+            title={community.isMember ? 'Leave community' : 'Join community'}
+            disabled={!!pending}
+          >
+            {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
+          </Button>
+        )}
       </div>
-    </Link>
+    </CommunityCardBase>
   );
 }
 

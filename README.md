@@ -1,4 +1,4 @@
-# MonoLog
+# MonoLog v0.3.0
 
 MonoLog — Your day in pictures.
 
@@ -20,14 +20,16 @@ A modern, performant daily photo journal built with Next.js. Create a single pos
 
 ## 🚀 Tech Stack
 
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
+- **Framework**: Next.js 14.2.33 with App Router
+- **Language**: TypeScript 5.5.3
+- **Styling**: Tailwind CSS 3.4.10
 - **Backend**: Supabase (PostgreSQL + Storage)
-- **State Management**: SWR for server state
-- **Icons**: Lucide React
-- **Image Processing**: Sharp for optimization
-- **PWA**: Service Worker with offline support
+- **State Management**: SWR 2.2.0 for server state
+- **Icons**: Lucide React 0.544.0
+- **Image Processing**: Sharp 0.34.4 for optimization
+- **PWA**: Service Worker with Workbox
+- **Testing**: Jest 29.7.0, Playwright 1.56.1
+- **Linting**: ESLint 8.57.0 with TypeScript rules
 
 ## 📦 Installation
 
@@ -98,6 +100,20 @@ npm run analyze
 npm run check-perf
 ```
 
+### Deployment
+
+MonoLog is optimized for deployment on Vercel, the platform built by the creators of Next.js.
+
+1. **Connect your repository** to Vercel
+2. **Set environment variables** in Vercel dashboard:
+   - `NEXT_PUBLIC_MODE=supabase`
+   - `NEXT_PUBLIC_SUPABASE_URL=your_supabase_url`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key`
+   - `SUPABASE_SERVICE_ROLE_KEY=your_service_role_key`
+3. **Deploy** - Vercel will automatically build and deploy your app
+
+For other platforms, ensure they support Next.js 14+ with Node.js runtime.
+
 ## 📱 Progressive Web App
 
 MonoLog is a fully-featured PWA that can be installed on mobile devices and desktops. Key PWA features:
@@ -137,15 +153,60 @@ MonoLog is a fully-featured PWA that can be installed on mobile devices and desk
 
 ```
 ├── app/                    # Next.js App Router
-│   ├── api/               # API routes
+│   ├── api/               # API routes (auth, comments, communities, etc.)
 │   ├── components/        # React components
-│   ├── styles/           # CSS stylesheets
-│   └── globals.css       # Global styles
-├── public/               # Static assets
-├── scripts/              # Build and utility scripts
+│   ├── [username]/        # Dynamic user pages
+│   ├── about/             # About page
+│   ├── calendar/          # Calendar view
+│   ├── communities/       # Communities pages
+│   ├── explore/           # Explore page
+│   ├── favorites/         # Favorites page
+│   ├── feed/              # Feed page
+│   ├── hashtags/          # Hashtags page
+│   ├── offline/           # Offline page
+│   ├── post/              # Post pages
+│   ├── profile/           # Profile pages
+│   ├── reset-password/    # Password reset
+│   ├── search/            # Search page
+│   ├── styles/            # CSS stylesheets
+│   ├── upload/            # Upload page
+│   ├── week-review/       # Week review page
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Home page
+│   └── ...
+├── lib/                   # Core utilities and types
+├── public/                # Static assets
+├── scripts/               # Build and utility scripts
 └── src/
-    └── lib/              # Core utilities and types
+    └── lib/               # Additional utilities
 ```
+
+## 🏗️ Architecture Highlights
+
+### Core Components
+- **AppShell**: Main navigation component using Swiper for touch-friendly interface
+- **ImageZoom**: Advanced image viewing with pinch-to-zoom, pan, and double-tap
+- **CalendarView**: Interactive calendar for browsing posts by date
+- **CommunitiesView**: Social features for user communities and threads
+- **FeedView**: Main feed with infinite scrolling and post interactions
+
+### Key Features Implementation
+- **PWA Support**: Service worker for offline functionality, install prompts
+- **Image Processing**: Client-side image editing with filters, cropping, and optimization
+- **Spotify Integration**: Link songs to posts via Spotify API
+- **Real-time Notifications**: WebSocket-based notifications for social interactions
+- **Advanced Search**: Full-text search across posts, users, and hashtags
+- **Security**: Rate limiting, content moderation, secure token handling
+
+### API Routes
+- **Authentication**: Sign up, sign in, password reset
+- **Posts**: CRUD operations, favorites, hashtags, explore feed
+- **Users**: Profiles, following/followers, avatar management
+- **Communities**: Creation, joining, thread discussions
+- **Comments & Threads**: Nested discussions and replies
+- **Storage**: Image upload and optimization
+- **Spotify**: Metadata fetching and token management
 
 ## 🧪 Testing
 
@@ -165,11 +226,38 @@ The app includes comprehensive performance monitoring:
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
 4. Run performance checks: `npm run check-perf`
-5. Test your changes: `npm test`
-6. Submit a pull request
+5. Run tests: `npm test`
+6. Run linting: `npm run lint`
+7. Commit your changes (`git commit -m 'Add some amazing feature'`)
+8. Push to the branch (`git push origin feature/amazing-feature`)
+9. Submit a pull request
+
+## 🐛 Troubleshooting
+
+### Build Issues
+- Ensure Node.js version is 18+ and npm is up to date
+- Clear `.next` cache: `rm -rf .next`
+- Reinstall dependencies: `rm -rf node_modules && npm install`
+
+### Common Warnings
+The build may show React Hook dependency warnings. These are typically safe to ignore as they relate to complex state management in image handling components, but ensure hooks are used correctly.
+
+### Performance
+If performance checks fail, review:
+- Bundle size with `npm run analyze`
+- Image optimizations
+- Unused imports and code
+
+### Environment
+- For local development, ensure `.env.local` exists with `NEXT_PUBLIC_MODE=local`
+- For production, set Supabase environment variables correctly
+
+### Known Issues
+- Search results may not show accurate comment counts (optimization pending)
+- Some React Hook warnings in development (safe to ignore, related to image zoom complexity)
 
 ## 📄 License
 

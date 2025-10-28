@@ -4,6 +4,7 @@ import { compressImage } from "@/src/lib/image";
 import { uid } from "@/src/lib/id";
 import { useToast } from "../Toast";
 import Image from "next/image";
+import { OptimizedImage } from "../OptimizedImage";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@/src/lib/types";
 
@@ -212,7 +213,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
             type="button"
           >
             <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 160, height: 160 }}>
-              <Image key={user.avatarUrl} className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} />
+              <OptimizedImage key={user.avatarUrl} className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} />
             </div>
           </button>
           <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} disabled={avatarUploading} />
@@ -248,7 +249,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
                 justifyContent: 'center',
               }}
             >
-              <Image
+              <OptimizedImage
                 key={user.avatarUrl}
                 className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`}
                 src={user.avatarUrl || "/logo.svg"}

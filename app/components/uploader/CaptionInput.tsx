@@ -129,7 +129,7 @@ export function CaptionInput({
         .caption-counter.visible { opacity: 1; transform: translateY(-50%) scale(1); }
         .caption-counter.near { color: #c47700; }
         .caption-counter.limit { color: #b91c1c; }
-        .input-ghost-placeholder { left: 32px !important; }
+        .input-ghost-placeholder { left: 32px !important; right: 72px !important; }
       `}</style>
       <div className="input-wrapper" style={{ flex: 1, position: 'relative', width: '100%' }}>
         {/** keep the ghost/typewriter visible even before a photo is selected,

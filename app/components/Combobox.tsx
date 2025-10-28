@@ -212,7 +212,7 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
         tabIndex={disabled ? -1 : 0}
         autoComplete="off"
         onMouseDown={(e) => { if (disabled) e.preventDefault(); }}
-        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined, paddingRight: inputValue ? 64 : undefined }}
+        style={{ width: '100%', cursor: disabled ? 'not-allowed' : 'text', paddingLeft: Icon ? 32 : undefined, paddingRight: 72 }}
       />
       {inputValue && !disabled && (
         <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 4 }}>

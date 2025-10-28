@@ -88,6 +88,13 @@ export function PublishButton({
             ? `Next in ${displayTime}`
             : 'On cooldown'
       }
+      title={
+        canPost
+          ? 'Publish today\u2019s post'
+          : remaining
+            ? `Next in ${displayTime}`
+            : 'On cooldown'
+      }
     >
       {!canPost && countdownTotalMs != null && remainingMs != null && (
         <span className="cooldown-bar" aria-hidden>

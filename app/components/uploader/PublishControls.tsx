@@ -55,6 +55,7 @@ export function PublishControls({
             e.stopPropagation();
             setVisibility(v => v === 'public' ? 'private' : 'public');
           }}
+          title={visibility === 'private' ? 'Make post public' : 'Make post private'}
         >
           <span className="vis-icon" aria-hidden>
             <svg className="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
@@ -106,6 +107,7 @@ export function PublishControls({
         }}
         disabled={processing}
         aria-label={confirmCancel ? 'Click again to discard draft' : 'Discard draft'}
+        title={confirmCancel ? 'Click again to discard draft' : 'Discard draft'}
       >
         <Trash size={16} aria-hidden="true" />
         {confirmCancel ? 'Confirm' : 'Discard'}

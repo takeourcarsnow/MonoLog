@@ -35,6 +35,7 @@ export function DropZone({
           aria-label="Take photo with camera"
           onClick={() => { if (!processing) onCameraSelect(); }}
           disabled={processing}
+          title="Take photo with camera"
         >
           <div className="drop-zone-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -55,6 +56,7 @@ export function DropZone({
           aria-label="Select photo from device"
           onClick={() => { if (!processing) onFileSelect(); }}
           disabled={processing}
+          title="Select photo from device"
         >
           <div className="drop-zone-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

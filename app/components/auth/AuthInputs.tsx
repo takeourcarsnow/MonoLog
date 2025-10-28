@@ -143,7 +143,7 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               placeholder="Choose a username"
               value={username}
               name="username"
-              autoComplete="username"
+              autoComplete="off"
               onChange={e => setUsername(e.target.value)}
               aria-invalid={username ? !isUsernameValid : undefined}
             />

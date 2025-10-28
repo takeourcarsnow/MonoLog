@@ -44,6 +44,9 @@ export function FeedPage({
 
   const { me } = useAuth();
 
+  // Number of posts to show to unauthenticated users in explore view
+  const UNAUTH_LIMIT = 8;
+
   const { posts, loading, loadingMore, hasMore, error, loadInitialPosts, refresh, setSentinel, setPosts } = useFeed(
     fetchFunction,
     { pageSize: 5, applyFollowChangesOnUnmount: !!deferFollowChanges }
@@ -113,7 +116,7 @@ export function FeedPage({
     
     // Limit posts for unauthenticated users in explore view
     const isExploreUnauthed = viewStorageKey === 'exploreView' && !me;
-    const limitedPosts = isExploreUnauthed ? posts.slice(0, 3) : posts;
+    const limitedPosts = isExploreUnauthed ? posts.slice(0, UNAUTH_LIMIT) : posts;
     const limitedHasMore = isExploreUnauthed ? false : hasMore;
     
     if (!limitedPosts.length) {
@@ -154,18 +157,28 @@ export function FeedPage({
     }
 
     const gridView = (
-      <GridView posts={limitedPosts} hasMore={limitedHasMore} setSentinel={setSentinel} loadingMore={loadingMore} active={view === 'grid'} onRetry={() => {
-        const sentinel = document.querySelector('.feed-sentinel');
-        if (sentinel) {
-          setSentinel(sentinel as HTMLDivElement);
-        }
-      }} error={error} />
+      <>
+        <GridView posts={limitedPosts} hasMore={limitedHasMore} setSentinel={setSentinel} loadingMore={loadingMore} active={view === 'grid'} showEndMessage={!isExploreUnauthed} onRetry={() => {
+          const sentinel = document.querySelector('.feed-sentinel');
+          if (sentinel) {
+            setSentinel(sentinel as HTMLDivElement);
+          }
+        }} error={error} />
+
+        {/* Show the same unauthenticated CTA in grid view as we do in list view */}
+        {isExploreUnauthed && limitedPosts.length >= UNAUTH_LIMIT && (
+          <div className="feed-cta" style={{ textAlign: 'center', padding: '20px', margin: '20px 0' }}>
+            <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)' }}>Want to keep scrolling?</p>
+            <Link href="/profile" className="btn primary no-effects">Join the Community</Link>
+          </div>
+        )}
+      </>
     );
 
     const listView = (
       <>
         {limitedPosts.map((p, index) => <PostCard key={p.id} post={p} disableCardNavigation={true} index={index} />)}
-        {isExploreUnauthed && limitedPosts.length >= 3 && (
+        {isExploreUnauthed && limitedPosts.length >= UNAUTH_LIMIT && (
           <div className="feed-cta" style={{ textAlign: 'center', padding: '20px', margin: '20px 0' }}>
             <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)' }}>Want to keep scrolling?</p>
             <Link href="/profile" className="btn primary no-effects">Join the Community</Link>

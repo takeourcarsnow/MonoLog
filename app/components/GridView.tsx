@@ -13,9 +13,10 @@ interface GridViewProps {
   onRetry?: () => void;
   error?: Error | null;
   active?: boolean;
+  showEndMessage?: boolean;
 }
 
-export const GridView = memo(function GridView({ posts, hasMore, setSentinel, loadingMore = false, onRetry, error, active = true }: GridViewProps) {
+export const GridView = memo(function GridView({ posts, hasMore, setSentinel, loadingMore = false, onRetry, error, active = true, showEndMessage = true }: GridViewProps) {
   const router = useRouter();
 
   const handleTileClick = (e: React.MouseEvent, post: HydratedPost) => {
@@ -61,6 +62,7 @@ export const GridView = memo(function GridView({ posts, hasMore, setSentinel, lo
         error={error}
         setSentinel={setSentinel}
         active={active}
+        showEndMessage={showEndMessage}
         onRetry={onRetry}
       />
     </>

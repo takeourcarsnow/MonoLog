@@ -31,7 +31,7 @@ export async function applyEdit(
   rotationRef: React.MutableRefObject<number>,
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null,
   frameOverlay: { img: HTMLImageElement; opacity: number } | null,
-  onApply: (dataUrl: string, settings: EditorSettings) => void
+  onApply: (dataUrl: string, settings: EditorSettings) => Promise<void>
 ) {
   const img = imgRef.current; if (!img) return;
   const canvas = canvasRef.current;
@@ -132,5 +132,5 @@ export async function applyEdit(
     selectedFilter, filterStrength, grain, softFocus, fade, overlay, frameOverlay
   );
 
-  onApply(dataUrl, settings);
+  await onApply(dataUrl, settings);
 }

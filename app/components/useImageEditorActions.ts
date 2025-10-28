@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { applyEdit as applyEditAction, resetAdjustments as resetAdjustmentsAction, resetControlToDefault as resetControlToDefaultAction, bakeRotate90 as bakeRotate90Action, bakeRotateMinus90 as bakeRotateMinus90Action, applyCropOnly as applyCropOnlyAction, resetCrop as resetCropAction } from './imageEditor/imageEditorActions';
 
 export function useImageEditorActions(
+  setIsProcessing: (value: boolean) => void,
   imgRef: React.RefObject<HTMLImageElement>,
   canvasRef: React.RefObject<HTMLCanvasElement>,
   offset: { x: number; y: number },
@@ -20,7 +21,7 @@ export function useImageEditorActions(
   fade: number,
   rotation: number,
   rotationRef: React.MutableRefObject<number>,
-  onApply: (dataUrl: string, settings: any) => void,
+  onApply: (dataUrl: string, settings: any) => Promise<void>,
   setExposure: (value: number) => void,
   exposureRef: React.MutableRefObject<number>,
   setContrast: (value: number) => void,
@@ -90,8 +91,9 @@ export function useImageEditorActions(
   }, [imageSrc, sel, exposure, contrast, saturation, temperature, vignette, selectedFilter, filterStrength, grain, frameThickness, originalRef, rotation, overlay, frameOverlay]);
 
   // Action wrappers that delegate to the standalone action helpers
-  function applyEdit() {
-    applyEditAction(
+  async function applyEdit() {
+    setIsProcessing(true);
+    await applyEditAction(
       imgRef,
       canvasRef,
       offset,
@@ -114,6 +116,7 @@ export function useImageEditorActions(
       frameOverlay,
       onApply
     );
+    setIsProcessing(false);
   }
 
   function resetAdjustments() {

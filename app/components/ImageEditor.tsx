@@ -34,7 +34,7 @@ type Props = {
   initialDataUrl: string;
   initialSettings?: EditorSettings;
   onCancel: () => void;
-  onApply: (dataUrl: string, settings: EditorSettings) => void;
+  onApply: (dataUrl: string, settings: EditorSettings) => Promise<void>;
 };
 
 
@@ -43,6 +43,7 @@ import { useState } from "react";
 import { Fullscreen } from "lucide-react";
 
 export default function ImageEditor({ initialDataUrl, initialSettings, onCancel, onApply }: Props) {
+  const [isProcessing, setIsProcessing] = useState(false);
   const {
     canvasRef,
     containerRef,
@@ -262,6 +263,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
   }, [selectedCategory, setSelectedCategory, setPreviousCategory]);
 
   const { isEdited, applyEdit, resetAdjustments, resetControlToDefault, bakeRotate90, bakeRotateMinus90, applyCropOnly, resetCrop } = useImageEditorActions(
+    setIsProcessing,
     imgRef,
     canvasRef,
     offset,
@@ -439,6 +441,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         />
       </aside>
       {/* debug overlay removed */}
+      {isProcessing && <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backdropFilter: 'blur(5px)', zIndex: 9999, pointerEvents: 'none'}}></div>}
     </main>
   );
 }

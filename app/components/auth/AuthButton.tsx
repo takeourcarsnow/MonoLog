@@ -12,7 +12,7 @@ interface AuthButtonProps {
 export function AuthButton({ mode, loading, hasError, hasSuccess, justSignedIn, signupSent, onSubmit }: AuthButtonProps) {
   // Derive a single button state to simplify rendering and avoid mixed flags
   const buttonState: 'idle' | 'loading' | 'success' | 'error' | 'signup-sent' = (
-    signupSent ? 'signup-sent' : (justSignedIn ? 'success' : (loading ? 'loading' : (hasError ? 'error' : 'idle')))
+    loading ? 'loading' : (signupSent ? 'signup-sent' : (justSignedIn ? 'success' : (hasError ? 'error' : 'idle')))
   );
   // Do not add a visual "error" class to the button on failure; keep error
   // state for inline messages/toasts but avoid turning the button red.

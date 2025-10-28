@@ -48,7 +48,7 @@ export function Uploader() {
 function UploaderCore() {
   // Dev helper to trace focus events; no-op in production
   initFocusDebug();
-  const { me } = useAuth();
+  const { me, setMe } = useAuth();
   const {
     // State
     dataUrls,
@@ -391,6 +391,7 @@ function UploaderCore() {
           CAPTION_MAX={CAPTION_MAX}
           toast={toast}
           user={me}
+          setUser={setMe}
         />
       )}
 

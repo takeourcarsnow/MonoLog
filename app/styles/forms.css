@@ -56,15 +56,15 @@
 @keyframes typeReveal {
   /*
     0%   -> start closed
-    60%  -> fully typed
-    80%  -> hold fully typed (pause)
+    30%  -> fully typed
+    90%  -> hold fully typed (pause)
     100% -> erased (shrink back to 0)
     The steps() timing function gives a per-character jump for both
     the typing and backspacing phases.
   */
   0% { width: 0ch; }
-  60% { width: calc(var(--len, 20) * 1ch); }
-  80% { width: calc(var(--len, 20) * 1ch); }
+  30% { width: calc(var(--len, 20) * 1ch); }
+  90% { width: calc(var(--len, 20) * 1ch); }
   100% { width: 0ch; }
 }
 .input-ghost-placeholder .caret {

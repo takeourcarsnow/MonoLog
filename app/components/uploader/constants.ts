@@ -13,6 +13,20 @@ export const PHRASES = [
   "Let these frames sit together—quiet, patient, and honest.",
 ];
 
+// Spotify link prompts
+export const PHRASES_SPOTIFY = [
+  "Link to the song that captured your day.",
+  "Share the soundtrack to your moment.",
+  "What music was playing in your head?",
+  "Add the tune that sums it up.",
+  "Connect the song that inspired this.",
+  "What melody defined today?",
+  "Share the track on repeat.",
+  "Link the song stuck in your mind.",
+  "What was the background music?",
+  "Add the audio to your visual story.",
+];
+
 // sessionStorage key used to remember an open editor across route hops
 export const EDITING_SESSION_KEY = 'monolog:upload_editor_open';
 

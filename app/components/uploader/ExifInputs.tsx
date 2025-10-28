@@ -18,6 +18,7 @@ interface ExifInputsProps {
   hasPreview: boolean;
   processing: boolean;
   user?: User | null;
+  setUser?: (user: User) => void;
 }
 
 export function ExifInputs({
@@ -31,7 +32,8 @@ export function ExifInputs({
   setFilmIso,
   hasPreview,
   processing,
-  user
+  user,
+  setUser
 }: ExifInputsProps) {
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,7 +59,8 @@ export function ExifInputs({
     const current = currentClean[field] || [];
     const updated = { ...currentClean, [field]: current.filter(o => o !== value) };
     try {
-      await api.updateCurrentUser({ exifPresets: updated });
+      const updatedUser = await api.updateCurrentUser({ exifPresets: updated });
+      setUser?.(updatedUser);
     } catch (e) {
       console.error('Failed to remove EXIF preset', e);
     }
@@ -84,7 +87,8 @@ export function ExifInputs({
     if (current.includes(trimmed)) return; // already saved
     const updated = { ...currentClean, [field]: [...current, trimmed] };
     try {
-      await api.updateCurrentUser({ exifPresets: updated });
+      const updatedUser = await api.updateCurrentUser({ exifPresets: updated });
+      setUser?.(updatedUser);
     } catch (e) {
       console.error('Failed to save EXIF preset', e);
     }

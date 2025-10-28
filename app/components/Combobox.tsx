@@ -259,7 +259,8 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
             zIndex: 1000,
             margin: 0,
             padding: 0,
-            listStyle: 'none'
+            listStyle: 'none',
+            marginTop: 6
           }}
           onMouseDown={(e) => e.preventDefault()} // Prevent blur when clicking inside dropdown
         >

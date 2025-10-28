@@ -38,7 +38,7 @@ export default function AvatarReminderModal({ open, onChangeNow, onRemindLater }
         <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", width: "100%" }}>
           <h3 style={{ margin: 0, textAlign: "center" }}>Update Your Avatar</h3>
           <div className="confirm-message" style={{ textAlign: "center" }}>
-            You're currently using the default avatar. Personalize your profile by uploading a custom one!
+            You&apos;re currently using the default avatar. Personalize your profile by uploading a custom one!
           </div>
           <div className="confirm-actions" style={{ justifyContent: "center !important" }}>
             <Button onClick={onRemindLater} aria-label="Remind me later">

@@ -15,8 +15,15 @@ export function drawOverlay(
     octx.rotate(angle);
     octx.globalAlpha = Math.min(1, Math.max(0, overlay.opacity ?? 1));
     octx.globalCompositeOperation = (overlay.blendMode as GlobalCompositeOperation) || 'source-over';
-    // draw overlay scaled to the photo area
-    octx.drawImage(overlay.img, -drawSizeW / 2, -drawSizeH / 2, drawSizeW, drawSizeH);
+    // Scale overlay to cover the photo area while preserving aspect ratio, cropping if necessary
+    const ovW = overlay.img.naturalWidth;
+    const ovH = overlay.img.naturalHeight;
+    const scale = Math.max(drawSizeW / ovW, drawSizeH / ovH);
+    const scaledW = ovW * scale;
+    const scaledH = ovH * scale;
+    const drawX = -scaledW / 2;
+    const drawY = -scaledH / 2;
+    octx.drawImage(overlay.img, drawX, drawY, scaledW, scaledH);
     octx.restore();
   } catch (e) {
     // swallow overlay errors

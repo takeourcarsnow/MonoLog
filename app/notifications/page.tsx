@@ -263,7 +263,25 @@ function NotificationItem({
         <span style={{ color: 'var(--muted)' }}>
           <TimeDisplay date={notification.created_at} className="text-sm mb-2" />
         </span>
-        <p className="mb-3" style={{ color: 'var(--text)' }}>{messageData?.message}</p>
+        <div className="mb-3" style={{ color: 'var(--text)' }}>
+          {(() => {
+            const parts = messageData?.message.split(' ') || [];
+            if (parts[0]?.startsWith('@')) {
+              const username = parts[0].slice(1);
+              const rest = parts.slice(1).join(' ');
+              return (
+                <>
+                  <Link href={`/${username}`} className="hover:underline" style={{ color: 'var(--primary)' }}>
+                    {parts[0]}
+                  </Link>{' '}
+                  {rest}
+                </>
+              );
+            } else {
+              return <p>{messageData?.message}</p>;
+            }
+          })()}
+        </div>
         {messageData?.href && (
           <Link
             href={messageData.href}

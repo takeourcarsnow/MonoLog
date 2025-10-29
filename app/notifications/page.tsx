@@ -123,6 +123,7 @@ export default function NotificationsPage() {
         case 'comment': {
           let href: string | undefined = undefined;
           let imageUrl: string | undefined = undefined;
+          let isOwnPost = false;
           if (notification.post_id) {
             try {
               const p = await getPost(notification.post_id);
@@ -135,13 +136,18 @@ export default function NotificationsPage() {
               if (p && p.imageUrls && p.imageUrls.length > 0) {
                 imageUrl = p.imageUrls[0];
               }
+              // Check if this is the user's own post
+              if (p && p.userId) {
+                const currentUser = await api.getCurrentUser();
+                isOwnPost = !!(currentUser && currentUser.id === p.userId);
+              }
             } catch (e) {
               // Fallback to basic post link
               href = `/post/${notification.post_id}`;
             }
           }
           return {
-            message: `${actorUsername} commented on your post${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
+            message: `${actorUsername} commented on ${isOwnPost ? 'your' : 'a'} post${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
             href,
             imageUrl,
             actorAvatarUrl
@@ -170,6 +176,7 @@ export default function NotificationsPage() {
         case 'favorite': {
           let href: string | undefined = undefined;
           let imageUrl: string | undefined = undefined;
+          let isOwnPost = false;
           if (notification.post_id) {
             try {
               const p = await getPost(notification.post_id);
@@ -182,13 +189,18 @@ export default function NotificationsPage() {
               if (p && p.imageUrls && p.imageUrls.length > 0) {
                 imageUrl = p.imageUrls[0];
               }
+              // Check if this is the user's own post
+              if (p && p.userId) {
+                const currentUser = await api.getCurrentUser();
+                isOwnPost = !!(currentUser && currentUser.id === p.userId);
+              }
             } catch (e) {
               // Fallback to basic post link
               href = `/post/${notification.post_id}`;
             }
           }
           return {
-            message: `${actorUsername} favorited your post`,
+            message: `${actorUsername} favorited ${isOwnPost ? 'your' : 'a'} post`,
             href,
             imageUrl,
             actorAvatarUrl

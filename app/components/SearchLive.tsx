@@ -5,12 +5,7 @@ import { useDebouncedValue } from '@/src/lib/hooks/useDebouncedValue';
 import { Image as ImageIcon, User, Users as UsersIcon, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useCurrentUser } from '@/lib/hooks';
-
-interface SearchResult {
-  posts: any[];
-  users: any[];
-  communities: any[];
-}
+import { getAccessToken, getSupabaseClient } from '@/src/lib/api/client';
 
 export function SearchLive({ initialQuery = '', initialResults = null as any, showButton = false }: { initialQuery?: string; initialResults?: SearchResult | null; showButton?: boolean }) {
   const [value, setValue] = useState(initialQuery || '');
@@ -30,7 +25,13 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
     }
     setLoading(true);
     try {
-      const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const sb = getSupabaseClient();
+      const token = await getAccessToken(sb);
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { headers });
       if (!resp.ok) {
         setResults({ posts: [], users: [], communities: [] });
         return;
@@ -66,7 +67,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
   const inputPaddingRight = showTabs ? '120px' : '16px';
 
   return (
-    <div className="search-live" style={{ width: '100%' }}>
+    <div className="search-live" style={{ width: '100%', marginTop: '2rem' }}>
       <div className="search-input-wrap" style={{ position: 'relative', display: 'flex', width: '100%' }}>
         <Search size={16} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
         <input

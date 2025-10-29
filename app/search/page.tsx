@@ -1,4 +1,3 @@
-import { api } from '@/src/lib/api';
 import { redirect } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { SearchClient } from '@/app/components/SearchClient';
@@ -40,7 +39,21 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
 
   if (query && query.length >= 2) {
     try {
-      results = await api.search(query);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/api/search?q=${encodeURIComponent(query)}`, {
+        headers,
+      });
+      if (resp.ok) {
+        const json = await resp.json();
+        results = json;
+      } else {
+        results = { posts: [], users: [], communities: [] };
+      }
     } catch (error) {
       console.error('Search error:', error);
       results = { posts: [], users: [], communities: [] };

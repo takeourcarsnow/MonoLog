@@ -8,13 +8,24 @@ export async function POST(req: Request) {
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const actorId = authUser.id;
     const sb = getServiceSupabase();
+
+    const body = await req.json().catch(() => ({}));
+    const limit = Math.min(Number(body.limit) || 20, 50); // Default 20, max 50
+    const before = body.before;
+
     try {
       // Return all notifications, not just unread, so users can see history
-      const { data, error } = await sb.from('notifications')
+      let query = sb.from('notifications')
         .select('*')
         .eq('user_id', actorId)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(limit);
+
+      if (before) {
+        query = query.lt('created_at', before);
+      }
+
+      const { data, error } = await query;
       if (error) return NextResponse.json({ notifications: [] });
       return NextResponse.json({ notifications: data || [] });
     } catch (e) {

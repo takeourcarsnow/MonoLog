@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "@/src/lib/api";
 import type { Notification } from "@/src/lib/types";
 import { AuthRequired } from "@/app/components/AuthRequired";
@@ -12,7 +12,62 @@ import TimeDisplay from "@/app/components/TimeDisplay";
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const pageSize = 10; // Load 10 notifications at a time
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const loadInitialNotifications = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const notifs = await api.getNotifications({ limit: pageSize });
+      setNotifications(notifs);
+      setHasMore(notifs.length === pageSize);
+    } catch (e: any) {
+      setError(e.message || "Failed to load notifications");
+    } finally {
+      setLoading(false);
+    }
+  }, [pageSize]);
+
+  const loadMoreNotifications = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const last = notifications[notifications.length - 1];
+      const before = last?.created_at;
+      const next = await api.getNotifications({ limit: pageSize, before });
+
+      setNotifications(prev => [...prev, ...next]);
+      setHasMore(next.length === pageSize);
+    } catch (e: any) {
+      setError(e instanceof Error ? e.message : "Failed to load more notifications");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [notifications, loadingMore, hasMore, pageSize]);
+
+  const setSentinel = useCallback((el: HTMLDivElement | null) => {
+    if (!el || !hasMore) return;
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadMoreNotifications();
+        }
+      });
+    }, { rootMargin: '20%' });
+
+    obs.observe(el);
+
+    return () => obs.disconnect();
+  }, [hasMore, loadMoreNotifications]);
 
   useEffect(() => {
     // Add body class for scrolling
@@ -27,19 +82,12 @@ export default function NotificationsPage() {
   }, []);
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const notifs = await api.getNotifications();
-        setNotifications(notifs);
-      } catch (e: any) {
-        setError(e.message || "Failed to load notifications");
-      } finally {
-        setLoading(false);
-      }
-    };
+    loadInitialNotifications();
+  }, [loadInitialNotifications]);
 
-    fetchNotifications();
-  }, []);
+  useEffect(() => {
+    setSentinel(sentinelRef.current);
+  }, [setSentinel]);
 
   const markAsRead = async (ids: string[]) => {
     try {
@@ -213,6 +261,24 @@ export default function NotificationsPage() {
                   getMessage={getNotificationMessage}
                 />
               ))}
+              {hasMore && (
+                <div ref={sentinelRef} className="flex justify-center py-4">
+                  {loadingMore ? (
+                    <div className="animate-pulse text-sm" style={{ color: 'var(--muted)' }}>
+                      Loading more notifications...
+                    </div>
+                  ) : (
+                    <div className="text-sm" style={{ color: 'var(--muted)' }}>
+                      Scroll for more
+                    </div>
+                  )}
+                </div>
+              )}
+              {!hasMore && notifications.length > 0 && (
+                <div className="text-center py-4 text-sm" style={{ color: 'var(--muted)' }}>
+                  No more notifications
+                </div>
+              )}
             </div>
           )}
         </div>

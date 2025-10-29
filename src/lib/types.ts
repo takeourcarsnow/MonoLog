@@ -228,7 +228,7 @@ export interface Api {
   weekReviewStats(): Promise<WeekReviewStats>;
 
   // Notifications
-  getNotifications(): Promise<Notification[]>;
+  getNotifications(options?: { limit?: number; before?: string }): Promise<Notification[]>;
   markNotificationsRead(notificationIds: string[]): Promise<void>;
 
   // Search

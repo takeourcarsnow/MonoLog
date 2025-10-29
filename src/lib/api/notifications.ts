@@ -1,7 +1,7 @@
 import { getClient, getAccessToken } from "./client";
 import type { Notification } from "../types";
 
-export async function getNotifications(): Promise<Notification[]> {
+export async function getNotifications(options?: { limit?: number; before?: string }): Promise<Notification[]> {
   try {
     const sb = getClient();
     const token = await getAccessToken(sb);
@@ -15,7 +15,7 @@ export async function getNotifications(): Promise<Notification[]> {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify(options || {}),
     });
     if (!resp.ok) {
       throw new Error(`Failed to fetch notifications: ${resp.status}`);

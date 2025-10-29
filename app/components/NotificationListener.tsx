@@ -66,14 +66,18 @@ export function NotificationListener() {
           if (seen.current[n.id]) continue;
           // Only notify for comment, thread reply, follow, and favorite notifications
           if (n.type === 'comment') {
-            // Try to fetch post metadata to build a friendly href
+            // Try to fetch post metadata to build a friendly href and determine message
             let href: string | undefined = undefined;
+            let isOnYourPost = false;
             try {
               if (n.post_id) {
                 const p = await getPost(n.post_id as string);
                 if (p && p.user && (p.user.username || p.user.id)) {
                   const userPiece = p.user.username || p.user.id;
                   href = `/post/${userPiece}-${p.id.slice(0,8)}`;
+                  if (p.user.id === cur.id) {
+                    isOnYourPost = true;
+                  }
                 } else {
                   // fallback to using id only (Post page can resolve by id)
                   href = `/post/${p?.id || (n.post_id as string)}`;
@@ -94,7 +98,8 @@ export function NotificationListener() {
             } catch (e) {
               // ignore user fetch errors
             }
-            toast.show({ message: `${actorUsername} commented on your post`, href });
+            const message = isOnYourPost ? `${actorUsername} commented on your post` : `${actorUsername} commented on a post you commented on`;
+            toast.show({ message, href });
             newOnes.push(n.id as string);
           } else if (n.type === 'thread_reply') {
             let href: string | undefined = undefined;

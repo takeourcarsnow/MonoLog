@@ -115,7 +115,7 @@ export async function POST(req: Request) {
     
     const res = await userSb.from('comments').insert(insertData);
     if (res.error) return NextResponse.json({ error: String(res.error.message || res.error) }, { status: 500 });
-    // Try to create a notification for the post owner. This is best-effort
+    // Try to create a notification for the post owner and all previous commenters. This is best-effort
     // — if the notifications table doesn't exist or the insert fails, we
     // shouldn't block comment creation.
     (async () => {
@@ -126,25 +126,37 @@ export async function POST(req: Request) {
           console.log('[addComment] Post lookup failed:', postErr);
           return;
         }
-        console.log('[addComment] Creating notification for post:', postId, 'owner:', post.user_id, 'actor:', actorId);
-        const notifId = uid();
-        const notif = {
-          id: notifId,
-          user_id: post.user_id,
-          actor_id: actorId,
-          post_id: postId,
-          type: 'comment',
-          text: text.trim().slice(0, 240),
-          created_at,
-          read: false,
-        } as any;
-        console.log('[addComment] Inserting notification:', notif);
-        const insertResult = await sb.from('notifications').insert(notif);
-        console.log('[addComment] Notification insert result:', insertResult);
-        if (insertResult.error) {
-          console.log('[addComment] Notification insert error:', insertResult.error);
-        } else {
-          console.log('[addComment] Notification created successfully');
+        // get all previous commenters except actor
+        const { data: prevComments, error: commErr } = await sb.from('comments').select('user_id').eq('post_id', postId).neq('user_id', actorId);
+        const notifyUsers = new Set<string>();
+        notifyUsers.add(post.user_id); // always notify post owner
+        if (!commErr && prevComments) {
+          for (const c of prevComments) {
+            notifyUsers.add(c.user_id);
+          }
+        }
+        // remove actor if somehow included
+        notifyUsers.delete(actorId);
+        console.log('[addComment] Notifying users:', Array.from(notifyUsers), 'for post:', postId, 'actor:', actorId);
+        for (const userId of notifyUsers) {
+          const notifId = uid();
+          const notif = {
+            id: notifId,
+            user_id: userId,
+            actor_id: actorId,
+            post_id: postId,
+            type: 'comment',
+            text: text.trim().slice(0, 240),
+            created_at,
+            read: false,
+          } as any;
+          console.log('[addComment] Inserting notification for user:', userId, notif);
+          const insertResult = await sb.from('notifications').insert(notif);
+          if (insertResult.error) {
+            console.log('[addComment] Notification insert error for user:', userId, insertResult.error);
+          } else {
+            console.log('[addComment] Notification created for user:', userId);
+          }
         }
       } catch (e) {
         console.log('[addComment] Notification creation error:', e);

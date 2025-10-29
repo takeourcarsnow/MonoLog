@@ -8,14 +8,17 @@ import Link from "next/link";
 import { getPost } from '@/src/lib/api/posts/post';
 import { getUser } from '@/src/lib/api/users';
 import TimeDisplay from "@/app/components/TimeDisplay";
+import NextImage from 'next/image';
 import { OptimizedImage } from "@/app/components/OptimizedImage";
+import { currentTheme } from "@/src/lib/theme";
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loadedNotifications, setLoadedNotifications] = useState<Array<{ notification: Notification; messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string } }>>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">(currentTheme());
 
   const pageSize = 10; // Load 10 notifications at a time
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -25,7 +28,15 @@ export default function NotificationsPage() {
     setError(null);
     try {
       const notifs = await api.getNotifications({ limit: pageSize });
-      setNotifications(notifs);
+      const loaded = await Promise.all(notifs.map(async (notification) => {
+        try {
+          const messageData = await getNotificationMessage(notification);
+          return { notification, messageData };
+        } catch (e) {
+          return { notification, messageData: { message: `You have a new ${notification.type} notification` } };
+        }
+      }));
+      setLoadedNotifications(loaded);
       setHasMore(notifs.length === pageSize);
     } catch (e: any) {
       setError(e.message || "Failed to load notifications");
@@ -41,18 +52,25 @@ export default function NotificationsPage() {
     setError(null);
 
     try {
-      const last = notifications[notifications.length - 1];
-      const before = last?.created_at;
+      const last = loadedNotifications[loadedNotifications.length - 1];
+      const before = last?.notification.created_at;
       const next = await api.getNotifications({ limit: pageSize, before });
-
-      setNotifications(prev => [...prev, ...next]);
+      const loaded = await Promise.all(next.map(async (notification) => {
+        try {
+          const messageData = await getNotificationMessage(notification);
+          return { notification, messageData };
+        } catch (e) {
+          return { notification, messageData: { message: `You have a new ${notification.type} notification` } };
+        }
+      }));
+      setLoadedNotifications(prev => [...prev, ...loaded]);
       setHasMore(next.length === pageSize);
     } catch (e: any) {
       setError(e instanceof Error ? e.message : "Failed to load more notifications");
     } finally {
       setLoadingMore(false);
     }
-  }, [notifications, loadingMore, hasMore, pageSize]);
+  }, [loadedNotifications, loadingMore, hasMore, pageSize]);
 
   const setSentinel = useCallback((el: HTMLDivElement | null) => {
     if (!el || !hasMore) return;
@@ -87,20 +105,22 @@ export default function NotificationsPage() {
   }, [loadInitialNotifications]);
 
   useEffect(() => {
-    setSentinel(sentinelRef.current);
-  }, [setSentinel]);
+    const handleThemeChange = () => setTheme(currentTheme());
+    window.addEventListener('theme:changed', handleThemeChange);
+    return () => window.removeEventListener('theme:changed', handleThemeChange);
+  }, []);
 
   const markAsRead = async (ids: string[]) => {
     try {
       await api.markNotificationsRead(ids);
-      setNotifications(prev => prev.map(n => ids.includes(n.id) ? { ...n, read: true } : n));
+      setLoadedNotifications(prev => prev.map(item => ids.includes(item.notification.id) ? { ...item, notification: { ...item.notification, read: true } } : item));
     } catch (e: any) {
       console.error("Failed to mark notifications as read", e);
     }
   };
 
   const markAllAsRead = () => {
-    const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+    const unreadIds = loadedNotifications.filter(item => !item.notification.read).map(item => item.notification.id);
     if (unreadIds.length > 0) {
       markAsRead(unreadIds);
     }
@@ -220,14 +240,15 @@ export default function NotificationsPage() {
     return (
       <main className="p-6 notifications">
         <div className="view-fade">
-          <h1 className="text-2xl font-bold mb-4">Notifications</h1>
-          <div className="space-y-4">
-            {Array.from({ length: 5 }, (_, i) => (
-              <div key={i} className="p-4 border rounded-lg animate-pulse" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elev)' }}>
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2" style={{ backgroundColor: 'var(--muted)' }}></div>
-              </div>
-            ))}
+          <div className="text-center py-12">
+            <style>{`
+              @keyframes subtleSpin {
+                0% { transform: rotate(0deg) scale(1); }
+                50% { transform: rotate(180deg) scale(1.1); }
+                100% { transform: rotate(360deg) scale(1); }
+              }
+            `}</style>
+            <NextImage src="/logo.svg" alt="loading" width={24} height={24} className="mx-auto" style={{ animation: 'subtleSpin 1.5s infinite', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
           </div>
         </div>
       </main>
@@ -238,7 +259,6 @@ export default function NotificationsPage() {
     return (
       <main className="p-6 notifications">
         <div className="view-fade">
-          <h1 className="text-2xl font-bold mb-4">Notifications</h1>
           <div className="text-center" style={{ color: 'var(--danger)' }}>{error}</div>
         </div>
       </main>
@@ -250,11 +270,7 @@ export default function NotificationsPage() {
       <main className="p-6 notifications">
         <div className="view-fade">
         <div className="flex flex-col items-center mb-6">
-          <h1 className="text-2xl font-bold flex items-center gap-2 mb-4">
-            <Bell size={24} />
-            Notifications
-          </h1>
-          {notifications.some(n => !n.read) && (
+          {loadedNotifications.some(item => !item.notification.read) && (
             <button
               onClick={markAllAsRead}
               className="btn"
@@ -264,19 +280,19 @@ export default function NotificationsPage() {
           )}
         </div>
 
-          {notifications.length === 0 ? (
+          {loadedNotifications.length === 0 ? (
             <div className="text-center py-12">
               <Bell size={48} className="mx-auto mb-4" style={{ color: 'var(--muted)' }} />
               <p style={{ color: 'var(--muted)' }}>No notifications yet</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {notifications.map(notification => (
+              {loadedNotifications.map(item => (
                 <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={() => markAsRead([notification.id])}
-                  getMessage={getNotificationMessage}
+                  key={item.notification.id}
+                  notification={item.notification}
+                  messageData={item.messageData}
+                  onMarkAsRead={() => markAsRead([item.notification.id])}
                 />
               ))}
               {hasMore && (
@@ -292,7 +308,7 @@ export default function NotificationsPage() {
                   )}
                 </div>
               )}
-              {!hasMore && notifications.length > 0 && (
+              {!hasMore && loadedNotifications.length > 0 && (
                 <div className="text-center py-4 text-sm" style={{ color: 'var(--muted)' }}>
                   No more notifications
                 </div>
@@ -307,41 +323,13 @@ export default function NotificationsPage() {
 
 function NotificationItem({
   notification,
-  onMarkAsRead,
-  getMessage
+  messageData,
+  onMarkAsRead
 }: {
   notification: Notification;
+  messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string };
   onMarkAsRead: () => void;
-  getMessage: (notification: Notification) => Promise<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string }>;
 }) {
-  const [messageData, setMessageData] = useState<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string } | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadMessage = async () => {
-      try {
-        const data = await getMessage(notification);
-        setMessageData(data);
-      } catch (e) {
-        setMessageData({ message: `You have a new ${notification.type} notification` });
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadMessage();
-  }, [notification, getMessage]);
-
-  if (loading) {
-    return (
-      <div className="p-4 border rounded-lg animate-pulse" style={{ borderColor: 'var(--border)' }}>
-        <div className="flex flex-col items-center text-center">
-          <div className="h-4 rounded w-3/4 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
-          <div className="h-4 rounded w-1/2 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
-          <div className="h-3 rounded w-2/3" style={{ backgroundColor: 'var(--muted)' }}></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div

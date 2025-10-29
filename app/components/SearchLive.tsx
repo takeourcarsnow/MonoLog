@@ -7,6 +7,12 @@ import Image from 'next/image';
 import { useCurrentUser } from '@/lib/hooks';
 import { getAccessToken, getSupabaseClient } from '@/src/lib/api/client';
 
+interface SearchResult {
+  posts: any[];
+  users: any[];
+  communities: any[];
+}
+
 export function SearchLive({ initialQuery = '', initialResults = null as any, showButton = false }: { initialQuery?: string; initialResults?: SearchResult | null; showButton?: boolean }) {
   const [value, setValue] = useState(initialQuery || '');
   const debounced = useDebouncedValue(value, 300);

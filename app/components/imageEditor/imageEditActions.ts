@@ -30,7 +30,7 @@ export async function applyEdit(
   rotation: number,
   rotationRef: React.MutableRefObject<number>,
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null,
-  frameOverlay: { img: HTMLImageElement; opacity: number } | null,
+  frameOverlay: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null,
   onApply: (dataUrl: string, settings: EditorSettings) => Promise<void>
 ) {
   const img = imgRef.current; if (!img) return;
@@ -61,24 +61,30 @@ export async function applyEdit(
     const frameH = frameImg.naturalHeight;
     const scale = drawW / frameW;
 
-    // Calculate bounds of opaque pixels in frame
-    const frameTemp = document.createElement('canvas');
-    frameTemp.width = frameW;
-    frameTemp.height = frameH;
-    const fctx = frameTemp.getContext('2d')!;
-    fctx.drawImage(frameImg, 0, 0);
-    const frameData = fctx.getImageData(0, 0, frameW, frameH);
-    const data = frameData.data;
-    let minX = frameW, minY = frameH, maxX = -1, maxY = -1;
-    for (let y = 0; y < frameH; y++) {
-      for (let x = 0; x < frameW; x++) {
-        const idx = (y * frameW + x) * 4;
-        const alpha = data[idx + 3];
-        if (alpha > 16) {
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
+    // Use precomputed bounds if available, otherwise calculate
+    let minX: number, minY: number, maxX: number, maxY: number;
+    if (frameOverlay!.bounds) {
+      ({ minX, minY, maxX, maxY } = frameOverlay!.bounds);
+    } else {
+      // Calculate bounds of opaque pixels in frame
+      const frameTemp = document.createElement('canvas');
+      frameTemp.width = frameW;
+      frameTemp.height = frameH;
+      const fctx = frameTemp.getContext('2d')!;
+      fctx.drawImage(frameImg, 0, 0);
+      const frameData = fctx.getImageData(0, 0, frameW, frameH);
+      const data = frameData.data;
+      minX = frameW; minY = frameH; maxX = -1; maxY = -1;
+      for (let y = 0; y < frameH; y++) {
+        for (let x = 0; x < frameW; x++) {
+          const idx = (y * frameW + x) * 4;
+          const alpha = data[idx + 3];
+          if (alpha > 16) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
         }
       }
     }

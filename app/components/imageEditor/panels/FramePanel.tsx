@@ -1,5 +1,5 @@
 import { Ruler } from "lucide-react";
-import { rangeBg } from "../utils";
+import { rangeBg, computeFrameBounds } from "../utils";
 import { useState, useEffect } from "react";
 import { getFrameFiles, getThumbAvailabilityCache } from '../framesPreload';
 
@@ -12,9 +12,9 @@ interface FramePanelProps {
   frameColorRef: React.MutableRefObject<'white' | 'black'>;
   draw: () => void;
   resetControlToDefault: (control: string) => void;
-  frameOverlay: { img: HTMLImageElement; opacity: number } | null;
-  setFrameOverlay: (v: { img: HTMLImageElement; opacity: number } | null) => void;
-  frameOverlayRef: React.MutableRefObject<{ img: HTMLImageElement; opacity: number } | null>;
+  frameOverlay: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null;
+  setFrameOverlay: (v: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null) => void;
+  frameOverlayRef: React.MutableRefObject<{ img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null>;
 }
 
 export default function FramePanel({
@@ -94,7 +94,8 @@ export default function FramePanel({
     img.crossOrigin = 'anonymous';
     img.src = url;
     img.onload = () => {
-      const newFrameOverlay = frameOverlay ? { ...frameOverlay, img } : { img, opacity: 1 };
+      const bounds = computeFrameBounds(img);
+      const newFrameOverlay = frameOverlay ? { ...frameOverlay, img, bounds } : { img, opacity: 1, bounds };
       frameOverlayRef.current = newFrameOverlay;
       setFrameOverlay(newFrameOverlay);
       draw();

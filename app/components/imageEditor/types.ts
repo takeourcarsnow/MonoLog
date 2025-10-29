@@ -13,7 +13,7 @@ export type EditorSettings = {
   softFocus?: number;
   fade?: number;
   overlay?: { img: HTMLImageElement; blendMode: string; opacity: number };
-  frameOverlay?: { img: HTMLImageElement; opacity: number };
+  frameOverlay?: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } };
 };
 
 export type ImageEditorProps = {

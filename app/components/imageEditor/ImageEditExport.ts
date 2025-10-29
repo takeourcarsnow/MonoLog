@@ -35,7 +35,7 @@ export function createSettings(
   softFocus: number,
   fade: number,
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null,
-  frameOverlay: { img: HTMLImageElement; opacity: number } | null
+  frameOverlay: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null
 ): EditorSettings {
   return {
     exposure,

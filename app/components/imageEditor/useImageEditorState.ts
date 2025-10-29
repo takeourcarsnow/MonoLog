@@ -51,7 +51,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [softFocus, setSoftFocus] = useState<number>(initialSettings?.softFocus ?? 0); // gentle blur overlay
   const [fade, setFade] = useState<number>(initialSettings?.fade ?? 0); // faded look
   const [overlay, setOverlay] = useState<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>(initialSettings?.overlay ?? null);
-  const [frameOverlay, setFrameOverlay] = useState<{ img: HTMLImageElement; opacity: number } | null>(initialSettings?.frameOverlay ?? null);
+  const [frameOverlay, setFrameOverlay] = useState<{ img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null>(initialSettings?.frameOverlay ?? null);
   // refs mirror state for immediate reads inside draw() to avoid stale-state draws
   const exposureRef = useRef<number>(exposure);
   const contrastRef = useRef<number>(contrast);
@@ -66,7 +66,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const softFocusRef = useRef<number>(softFocus);
   const fadeRef = useRef<number>(fade);
   const overlayRef = useRef<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>(overlay);
-  const frameOverlayRef = useRef<{ img: HTMLImageElement; opacity: number } | null>(frameOverlay);
+  const frameOverlayRef = useRef<{ img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null>(frameOverlay);
   const filtersContainerRef = useRef<HTMLDivElement | null>(null);
   const [filterHighlight, setFilterHighlight] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const suppressFilterTransitionRef = useRef<boolean>(false);

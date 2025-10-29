@@ -72,9 +72,9 @@ interface ImageEditorPanelsProps {
   setOverlay: (v: { img: HTMLImageElement; blendMode: string; opacity: number } | null) => void;
   overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>;
   // Frame overlay props
-  frameOverlay: { img: HTMLImageElement; opacity: number } | null;
-  setFrameOverlay: (v: { img: HTMLImageElement; opacity: number } | null) => void;
-  frameOverlayRef: React.MutableRefObject<{ img: HTMLImageElement; opacity: number } | null>;
+  frameOverlay: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null;
+  setFrameOverlay: (v: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null) => void;
+  frameOverlayRef: React.MutableRefObject<{ img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null>;
 }
 
 export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsProps) {

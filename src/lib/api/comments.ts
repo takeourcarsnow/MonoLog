@@ -9,13 +9,13 @@ export async function getComments(postId: string) {
   return json;
 }
 
-export async function addComment(postId: string, text: string) {
+export async function addComment(postId: string, text: string, parentId?: string) {
   const cur = await getCurrentUser();
   if (!cur) throw new Error('Not logged in');
   if (!text?.trim()) throw new Error('Empty');
   const sb = getClient();
   const token = await getAccessToken(sb);
-  const res = await fetch('/api/comments/add', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId, text }) });
+  const res = await fetch('/api/comments/add', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ postId, text, parentId }) });
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || 'Failed to add comment');
   // refresh current user's profile from users table so we return the up-to-date displayName / avatarUrl
@@ -30,7 +30,7 @@ export async function addComment(postId: string, text: string) {
   } catch (e) {
     // ignore event dispatch failures
   }
-  return { id: json.id, postId, userId: cur.id, text: text.trim(), createdAt: json.created_at, user: { id: profile.id, username: profile.username || '', displayName: profile.displayName || '', avatarUrl: profile.avatarUrl || '' } } as any;
+  return { id: json.id, postId, userId: cur.id, text: text.trim(), createdAt: json.created_at, parentId, user: { id: profile.id, username: profile.username || '', displayName: profile.displayName || '', avatarUrl: profile.avatarUrl || '' } } as any;
 }
 
 // Helper function to get current user - needed for comments

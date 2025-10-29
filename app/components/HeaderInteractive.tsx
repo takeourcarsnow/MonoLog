@@ -24,6 +24,7 @@ export function HeaderInteractive() {
   const prevHasNewThreadsRef = useRef(false);
   const { show } = useToast();
   const { me } = useAuth();
+  const [mounted, setMounted] = useState(false);
 
   // Define checkForNewThreads function outside useEffect so it can be exposed globally
   const checkForNewThreads = useCallback(async (forceToast = false) => {
@@ -134,6 +135,10 @@ export function HeaderInteractive() {
     setHasNewThreads(false);
   }, [me]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Check for new threads periodically when authenticated
   useEffect(() => {
     if (!me) return;
@@ -197,11 +202,11 @@ export function HeaderInteractive() {
           <Users size={20} strokeWidth={2} />
         </Link>
         {/* Notifications button */}
-        <Link href={me ? "/notifications" : "/profile"} className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`} aria-label="Notifications">
+        <Link href={mounted && me ? "/notifications" : "/profile"} className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`} aria-label="Notifications">
           <Bell size={20} strokeWidth={2} />
         </Link>
         {/* Search button */}
-        <Link href={me ? "/search" : "/profile"} className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
+        <Link href={mounted && me ? "/search" : "/profile"} className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
           <Search size={20} strokeWidth={2} />
         </Link>
         {/* Shell reserves space for the profile button so the header doesn't

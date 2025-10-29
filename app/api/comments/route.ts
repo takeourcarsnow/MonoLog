@@ -38,6 +38,7 @@ export async function GET(req: Request) {
         userId: c.user_id,
         text: c.text,
         createdAt: c.created_at,
+        parentId: c.parent_id || undefined,
         user: {
           id: urow?.id || c.user_id,
           username: urow?.username || urow?.user_name || '',

@@ -44,6 +44,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const postId = body.postId;
     const text = body.text;
+    const parentId = body.parentId;
     if (!postId || !text) return NextResponse.json({ error: 'Missing postId or text' }, { status: 400 });
     const authUser = await getUserFromAuthHeader(req);
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -112,9 +113,15 @@ export async function POST(req: Request) {
 
     // Insert using the correct snake_case column names that match the database schema
     const insertData = { id, post_id: postId, user_id: actorId, text: text.trim(), created_at };
+    if (parentId) insertData.parent_id = parentId;
     
-    const res = await userSb.from('comments').insert(insertData);
-    if (res.error) return NextResponse.json({ error: String(res.error.message || res.error) }, { status: 500 });
+    console.log('Inserting comment:', insertData);
+    const res = await sb.from('comments').insert(insertData);
+    console.log('Insert result:', res);
+    if (res.error) {
+      console.log('Insert error:', res.error);
+      return NextResponse.json({ error: String(res.error.message || res.error) }, { status: 500 });
+    }
     // Try to create a notification for the post owner and all previous commenters. This is best-effort
     // — if the notifications table doesn't exist or the insert fails, we
     // shouldn't block comment creation.

@@ -60,6 +60,7 @@ export type Comment = {
   userId: string;
   text: string;
   createdAt: string;
+  parentId?: string;
 };
 
 export type Community = {
@@ -189,7 +190,7 @@ export interface Api {
   deletePost(id: string): Promise<boolean>;
 
   getComments(postId: string): Promise<(Comment & { user: User | {} })[]>;
-  addComment(postId: string, text: string): Promise<Comment & { user: User }>;
+  addComment(postId: string, text: string, parentId?: string): Promise<Comment & { user: User }>;
 
   // Communities
   getCommunities(): Promise<HydratedCommunity[]>;

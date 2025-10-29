@@ -106,6 +106,7 @@
 }
 
 .comment-box { display:flex; gap:8px; align-items:center; }
+.reply-box { display:flex; gap:8px; align-items:center; }
 .comment-box .input { flex: 1 1 auto; border-radius: 999px; padding: 10px 14px; }
 .comment-box .btn.primary { border-radius: 999px; padding: 8px 12px; }
 

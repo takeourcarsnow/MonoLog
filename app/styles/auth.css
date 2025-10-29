@@ -27,7 +27,7 @@
 .auth-form.enhanced { max-width: 480px; width: 100%; margin: 0 auto; }
 .auth-form.enhanced .field-group { width: 100%; }
 .auth-form.enhanced .fancy-input { 
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-elev), transparent 4%), color-mix(in srgb, var(--bg-elev), transparent 14%));
+  background: var(--bg);
   border: 1px solid color-mix(in srgb, var(--border), transparent 10%);
   backdrop-filter: saturate(140%) blur(4px);
   transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform 160ms var(--transition-fast);
@@ -47,7 +47,7 @@
 .auth-header-area {
   perspective: 600px;
   transform-style: preserve-3d;
-  margin-bottom: 8px;
+  margin-bottom: 1px;
 }
 
 .auth-message {
@@ -83,7 +83,7 @@
   --auth-toggle-transition: 260ms cubic-bezier(.2,.8,.2,1);
   position: relative;
   padding: 6px 8px;
-  background: color-mix(in srgb, var(--bg-elev), transparent 12%);
+  background: var(--bg);
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--border), transparent 40%);
   display: inline-flex;

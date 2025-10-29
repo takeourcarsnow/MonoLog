@@ -12,6 +12,7 @@ import NextImage from 'next/image';
 import { currentTheme } from '@/src/lib/theme';
 import { LoadingIndicator } from '@/app/components/LoadingIndicator';
 import { Plus } from 'lucide-react';
+import SkeletonCard from '@/app/components/SkeletonCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,24 +55,23 @@ export default function CommunitiesPage() {
     return (
       <CommunitiesClient>
         <div className="communities">
+          <div className="content-actions my-8 flex justify-center w-full">
+            <Button variant="icon" title="Create Community" className="no-effects">
+              <Plus size={16} />
+            </Button>
+          </div>
           <div className="content-header mt-8 mb-6">
             <div className="text-center w-full">
               <h1 className="content-title inline-flex items-center justify-center gap-2">
                 <span className="sr-only">Communities</span>
+                <span className="dim">Communities and threads with latest activity are displayed first</span>
               </h1>
             </div>
           </div>
-          <div className="content-body space-y-8">
-            <div className="text-center py-6">
-              <style>{`
-                @keyframes subtleSpin {
-                  0% { transform: rotate(0deg) scale(1); }
-                  50% { transform: rotate(180deg) scale(1.1); }
-                  100% { transform: rotate(360deg) scale(1); }
-                }
-              `}</style>
-              <NextImage src="/logo.svg" alt="loading" width={24} height={24} className="mx-auto" style={{ animation: 'subtleSpin 1.5s infinite', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
-            </div>
+          <div className="content-body space-y-6">
+            {[...Array(6)].map((_, i) => (
+              <SkeletonCard key={i} height={180} />
+            ))}
           </div>
         </div>
       </CommunitiesClient>

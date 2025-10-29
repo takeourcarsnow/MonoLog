@@ -13,6 +13,7 @@ import Link from "next/link";
 import { User as UserIcon } from "lucide-react";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
 import { SkeletonCard } from "./Skeleton";
+import { PostCardSkeleton } from "./SkeletonCard";
 import { GridView } from "./GridView";
 import { useAuth } from "@/src/lib/hooks/useAuth";
 import dynamic from "next/dynamic";
@@ -84,7 +85,15 @@ export function FeedPage({
 
   // Simplified render - no need for memoization with complex dependencies
   const renderContent = () => {
-    if (loading) return <SkeletonCard height={240} />;
+    if (loading) {
+      return (
+        <div className="space-y-6">
+          {[...Array(initialPageSize)].map((_, i) => (
+            <PostCardSkeleton key={i} />
+          ))}
+        </div>
+      );
+    }
     
     // Limit posts for unauthenticated users in explore view
     const isExploreUnauthed = viewStorageKey === 'exploreView' && !me;

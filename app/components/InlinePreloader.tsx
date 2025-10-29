@@ -1,11 +1,13 @@
 "use client";
 
+import { PostCardSkeleton } from "./SkeletonCard";
+
 export default function InlinePreloader() {
   return (
-    <div aria-hidden>
-      <div className="card skeleton" style={{ height: 120, marginBottom: 12 }} />
-      <div className="card skeleton" style={{ height: 120, marginBottom: 12 }} />
-      <div className="card skeleton" style={{ height: 120, marginBottom: 12 }} />
+    <div aria-hidden className="space-y-6">
+      <PostCardSkeleton />
+      <PostCardSkeleton />
+      <PostCardSkeleton />
     </div>
   );
 }

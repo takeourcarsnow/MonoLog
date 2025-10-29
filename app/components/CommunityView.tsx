@@ -12,6 +12,7 @@ import { OptimizedImage } from "./OptimizedImage";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/hooks/useAuth";
 import { useErrorState } from "@/lib/hooks/useErrorState";
+import { CommunityHeaderSkeleton, ThreadCardSkeleton } from "./SkeletonCard";
 
 export function CommunityView() {
   const params = useParams();
@@ -85,8 +86,21 @@ export function CommunityView() {
   // Show loading while determining auth status
   if (currentUser === undefined) {
     return (
-      <div className="community pt-0 md:pt-20">
-        <div className="card skeleton" style={{ height: 200 }} />
+      <div className="community pt-0 md:pt-20 space-y-8">
+        {/* Back Navigation Skeleton */}
+        <div className="mt-8 mb-4 animate-pulse">
+          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+        
+        {/* Community Header Skeleton */}
+        <CommunityHeaderSkeleton />
+        
+        {/* Thread Skeletons */}
+        <div className="content-body space-y-6 pt-6">
+          <ThreadCardSkeleton />
+          <ThreadCardSkeleton />
+          <ThreadCardSkeleton />
+        </div>
       </div>
     );
   }
@@ -190,10 +204,20 @@ export function CommunityView() {
     return (
       // add top padding on md+ to avoid header overlap on desktop
       <div className="community pt-0 md:pt-20 space-y-8">
-        <div className="card skeleton" style={{ height: 200 }} />
-        <div className="card skeleton" style={{ height: 120 }} />
-        <div className="card skeleton" style={{ height: 120 }} />
-        <div className="card skeleton" style={{ height: 120 }} />
+        {/* Back Navigation Skeleton */}
+        <div className="mt-8 mb-4 animate-pulse">
+          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+        
+        {/* Community Header Skeleton */}
+        <CommunityHeaderSkeleton />
+        
+        {/* Thread Skeletons */}
+        <div className="content-body space-y-6 pt-6">
+          <ThreadCardSkeleton />
+          <ThreadCardSkeleton />
+          <ThreadCardSkeleton />
+        </div>
       </div>
     );
   }

@@ -4,7 +4,6 @@
   left: 50%;
   top: calc(100% + 8px);
   transform: translateX(-50%) translateY(-6px) scale(.995);
-  background: var(--bg);
   border: 1px solid var(--border);
   padding: 12px;
   border-radius: 10px;
@@ -103,7 +102,6 @@
   max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
    overflow: auto;
    border: 1px solid var(--border);
-   background: var(--bg);
    padding: 12px;
    border-radius: 12px;
    z-index: 99999;
@@ -162,7 +160,6 @@
 /* Simplified inline edit card - always single column */
 .inline-edit-card {
   position: relative;
-  background: var(--bg-elev);
   border: 1px solid var(--border);
   padding: 14px;
   border-radius: 12px;

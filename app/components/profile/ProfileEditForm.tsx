@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
 import type { FormEvent } from 'react';
 import { useRouter } from "next/navigation";
-import { Twitter, Instagram, Facebook, Globe } from "lucide-react";
+import { Twitter, Instagram, Facebook, Globe, Check, X } from "lucide-react";
 import { SpotifyIcon } from "../uploader/SpotifyIcon";
 import { api } from "@/src/lib/api";
 import { useToast } from "../Toast";
@@ -327,9 +327,12 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <button type="submit" className="btn" disabled={editProcessing}>
-            {editProcessing ? 'Saving...' : 'Save Changes'}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 16 }}>
+          <button type="button" className="btn secondary" onClick={() => setIsEditingProfile(false)} aria-label="Cancel changes" style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} />
+          </button>
+          <button type="submit" className="btn primary" disabled={editProcessing} aria-label={editProcessing ? 'Saving changes' : 'Save changes'} style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Check size={16} style={{ color: 'var(--text)' }} />
           </button>
         </div>
 

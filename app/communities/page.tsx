@@ -11,6 +11,7 @@ import { Button } from '@/app/components/Button';
 import NextImage from 'next/image';
 import { currentTheme } from '@/src/lib/theme';
 import { LoadingIndicator } from '@/app/components/LoadingIndicator';
+import { Plus } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,6 +103,13 @@ export default function CommunitiesPage() {
   return (
     <CommunitiesClient>
       <div className="communities">
+        <div className="content-actions my-8 flex justify-center w-full">
+          <Link href="/communities/create">
+            <Button variant="icon" title="Create Community">
+              <Plus size={16} />
+            </Button>
+          </Link>
+        </div>
         <div className="content-header mt-8 mb-6">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
@@ -109,11 +117,6 @@ export default function CommunitiesPage() {
               <span className={`dim transition-opacity duration-1000 ${showMessage ? 'opacity-100' : 'opacity-0'}`}>Communities and threads with latest activity are displayed first</span>
             </h1>
           </div>
-        </div>
-        <div className="content-actions my-8 flex justify-center w-full">
-          <Link href="/communities/create">
-            <Button title="Create Community">Create Community</Button>
-          </Link>
         </div>
 
         <div className="content-body space-y-6">
@@ -134,6 +137,7 @@ export default function CommunitiesPage() {
                   threadCount={c.threadCount}
                   creator={c.creator}
                   showCreator={false}
+                  lastActivity={(c as any).lastActivity || (c as any).last_activity}
                 >
                   <CommunityCardClient
                     communityId={c.id}

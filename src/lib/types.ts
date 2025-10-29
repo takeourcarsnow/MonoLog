@@ -78,6 +78,7 @@ export type Community = {
 export type HydratedCommunity = Community & {
   creator: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
   isMember?: boolean;
+  lastActivity?: string;
 };
 
 export type Thread = {

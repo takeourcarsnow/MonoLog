@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
+import { formatRelative } from "@/src/lib/date";
 
 type Props = {
   id?: string;
@@ -15,6 +16,7 @@ type Props = {
   // Allow consumer to fully control image rendering (e.g. LazyMount + OptimizedImage)
   imageNode?: React.ReactNode;
   children?: React.ReactNode;
+  lastActivity?: string | null;
 };
 
 export default function CommunityCardBase({
@@ -28,6 +30,7 @@ export default function CommunityCardBase({
   showCreator = true,
   imageNode,
   children,
+  lastActivity,
 }: Props) {
   return (
     <div className="card mb-8">
@@ -53,6 +56,7 @@ export default function CommunityCardBase({
         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
           <span>{memberCount || 0} members</span>
           <span>{threadCount || 0} threads</span>
+          {lastActivity && <span>last reply {formatRelative(lastActivity)} ago</span>}
           {showCreator && <span>by @{creator?.username}</span>}
         </div>
 

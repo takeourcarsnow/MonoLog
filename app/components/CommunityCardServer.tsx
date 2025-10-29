@@ -12,9 +12,10 @@ type Props = {
   creator?: any;
   children?: React.ReactNode;
   showCreator?: boolean;
+  lastActivity?: string | null;
 };
 
-export default function CommunityCardServer({ id, name, slug, description, imageUrl, memberCount, threadCount, creator, children, showCreator = true }: Props) {
+export default function CommunityCardServer({ id, name, slug, description, imageUrl, memberCount, threadCount, creator, children, showCreator = true, lastActivity }: Props) {
   return (
     <CommunityCardBase
       name={name}
@@ -25,6 +26,7 @@ export default function CommunityCardServer({ id, name, slug, description, image
       threadCount={threadCount}
       creator={creator}
       showCreator={showCreator}
+      lastActivity={lastActivity}
     >
       {children}
     </CommunityCardBase>

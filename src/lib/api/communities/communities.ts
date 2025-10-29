@@ -30,6 +30,7 @@ export async function getCommunities(): Promise<HydratedCommunity[]> {
     return {
       ...community,
       imageUrl: community.image_url,
+      lastActivity: community.last_activity || community.lastActivity,
       creator: {
         id: mappedCreator.id,
         username: mappedCreator.username,

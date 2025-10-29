@@ -9,13 +9,10 @@ export async function POST(req: Request) {
     const actorId = authUser.id;
     const sb = getServiceSupabase();
     try {
-      // Only return unread notifications so clients don't re-notify on each
-      // page load. The `mark-read` endpoint sets `read: true` when a client
-      // acknowledges notifications.
+      // Return all notifications, not just unread, so users can see history
       const { data, error } = await sb.from('notifications')
         .select('*')
         .eq('user_id', actorId)
-        .eq('read', false)
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) return NextResponse.json({ notifications: [] });

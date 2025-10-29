@@ -129,6 +129,18 @@ export type WeekReviewStats = {
   weekEnd: string;
 };
 
+export type Notification = {
+  id: string;
+  user_id: string;
+  actor_id?: string;
+  post_id?: string;
+  thread_id?: string;
+  type: string;
+  text?: string;
+  read: boolean;
+  created_at: string;
+};
+
 export interface Api {
   init(): Promise<void>;
   seed(data: { users: User[]; posts: Post[]; comments: Comment[] }): Promise<void>;
@@ -214,6 +226,10 @@ export interface Api {
   // Week review statistics
   weekReviewStats(): Promise<WeekReviewStats>;
 
+  // Notifications
+  getNotifications(): Promise<Notification[]>;
+  markNotificationsRead(notificationIds: string[]): Promise<void>;
+
   // Search
   search(query: string): Promise<{ posts: HydratedPost[]; users: User[]; communities: HydratedCommunity[] }>;
 }
@@ -225,5 +241,6 @@ export const RESERVED_ROUTES = [
   'settings', 'help', 'terms', 'privacy', 'login',
   'register', 'signup', 'signin', 'logout', 'auth',
   'week-review', 'hashtags', 'search', 'reset-password', 'offline', 'styles',
+  'notifications',
   '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
 ];

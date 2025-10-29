@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     }
 
     // Insert using the correct snake_case column names that match the database schema
-    const insertData = { id, post_id: postId, user_id: actorId, text: text.trim(), created_at };
+    let insertData: { id: string; post_id: string; user_id: string; text: string; created_at: string; parent_id?: string } = { id, post_id: postId, user_id: actorId, text: text.trim(), created_at };
     if (parentId) insertData.parent_id = parentId;
     
     console.log('Inserting comment:', insertData);

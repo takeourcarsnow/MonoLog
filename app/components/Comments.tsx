@@ -18,42 +18,44 @@ const Send = lazy(() => import("lucide-react").then(mod => ({ default: mod.Send 
 const Trash2 = lazy(() => import("lucide-react").then(mod => ({ default: mod.Trash2 })));
 const MessageCircle = lazy(() => import("lucide-react").then(mod => ({ default: mod.MessageCircle })));
 
+const COMMENT_MAX = 500;
+
+type CommentContext = {
+  comments: any[];
+  newCommentId: string | null;
+  removingIds: Set<string>;
+  currentUser: any | null;
+  replyingTo: string | null;
+  replyText: string;
+  commentRemaining: number;
+  sendAnim: 'following-anim' | null;
+  toast: any;
+  postId: string;
+  load: (force?: boolean) => Promise<void>;
+  doOptimisticAdd: (bodyText: string, parentId?: string) => Promise<void>;
+  setReplyingTo: (id: string | null) => void;
+  setReplyText: (text: string) => void;
+  setSending: (sending: boolean) => void;
+  setSendAnim: (anim: 'following-anim' | null) => void;
+  setConfirmingIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+  confirmTimers: React.MutableRefObject<Map<string, number>>;
+  setComments: React.Dispatch<React.SetStateAction<any[]>>;
+  setCachedComments: (postId: string, comments: any[]) => void;
+  notifyCount: (n: number) => void;
+  setRemovingIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+  sending: boolean;
+  confirmingIds: Set<string>;
+};
+
 type Props = {
   postId: string;
   onCountChange?: (n: number) => void;
 };
 
-const COMMENT_MAX = 500;
-
 function renderComment(
   comment: any,
   isReply: boolean,
-  context: {
-    comments: any[];
-    newCommentId: string | null;
-    removingIds: Set<string>;
-    currentUser: any;
-    replyingTo: string | null;
-    replyText: string;
-    commentRemaining: number;
-    sendAnim: string | null;
-    toast: any;
-    postId: string;
-    load: () => Promise<void>;
-    doOptimisticAdd: (text: string, parentId?: string) => Promise<void>;
-    setReplyingTo: (id: string | null) => void;
-    setReplyText: (text: string) => void;
-    setSending: (sending: boolean) => void;
-    setSendAnim: (anim: string | null) => void;
-    setConfirmingIds: React.Dispatch<React.SetStateAction<Set<string>>>;
-    confirmTimers: React.MutableRefObject<Map<string, number>>;
-    setComments: React.Dispatch<React.SetStateAction<any[]>>;
-    setCachedComments: (postId: string, comments: any[]) => void;
-    notifyCount: (n: number) => void;
-    setRemovingIds: React.Dispatch<React.SetStateAction<Set<string>>>;
-    sending: boolean;
-    confirmingIds: Set<string>;
-  }
+  context: CommentContext
 ) {
   const replies = context.comments.filter(c => c.parentId === comment.id);
   return (

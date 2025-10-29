@@ -927,6 +927,18 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .form-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 6px; }
+
+/* Keep the publish controls visually stable: center them and prevent
+   children from flexing so small text/visibility changes don't shift the
+   neighboring buttons. This prevents the visibility toggle from moving
+   the publish/discard buttons when its label or icon changes state. */
+.uploader .publish-controls-row {
+  justify-content: center; /* center the row instead of space-between */
+  gap: 12px;
+}
+.uploader .publish-controls-row > * {
+  flex: 0 0 auto; /* prevent items from growing/shrinking */
+}
 .form-row .vis-label { display: flex; justify-content: center; align-items: center; gap: 6px; }
 .visibility-select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
 

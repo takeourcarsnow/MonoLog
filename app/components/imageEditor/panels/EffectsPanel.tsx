@@ -55,7 +55,7 @@ export default function EffectsPanel({
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('vignette')}
-          style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#1a1a1a', '#000000') }}
+          style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#001122', '#66d1ff') }}
         />
       </label>
       <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -77,7 +77,7 @@ export default function EffectsPanel({
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('grain')}
-          style={{ flex: 1, background: rangeBg(grain, 0, 1, '#e8d5b7', '#8b7355') }}
+          style={{ flex: 1, background: rangeBg(grain, 0, 1, '#8b7355', '#ff9f43') }}
         />
       </label>
 

@@ -126,8 +126,11 @@
 }
 
 .uploader .publish-controls-row > * {
-  flex: 0 1 auto !important; /* allow shrinking */
-  min-width: 72px !important; /* avoid collapsing too small */
+  /* Make publish control children stable: do not grow or shrink when a
+     sibling changes label/content. Use !important because forms.css is
+     intentionally specific/late in the cascade. */
+  flex: 0 0 auto !important; /* prevent items from growing/shrinking */
+  min-width: 96px !important; /* slightly larger minimum to avoid micro-shifts */
   white-space: nowrap !important;
 }
 

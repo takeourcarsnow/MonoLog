@@ -229,7 +229,7 @@ export default function CropPanel({
             <span className="sr-only">Straighten</span>
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
-            <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')} style={{ flex: 1, background: rangeBg(rotation, -30, 30, 'var(--slider-rotation-start)', 'var(--slider-rotation-end)') }} />
+            <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')}             style={{ flex: 1, background: rangeBg(rotation, -30, 30, '#ef4444', '#f87171') }} />
           </div>
         </label>
       </fieldset>

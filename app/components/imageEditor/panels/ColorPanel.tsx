@@ -71,9 +71,8 @@ export default function ColorPanel({
       </nav>
 
       <label style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 2 }}>
-        <span style={{ width: 100, display: 'flex', gap: 6, alignItems: 'center', fontSize: 13, fontWeight: 600 }}>
+        <span style={{ width: 24, display: 'flex', alignItems: 'center' }}>
           <Sliders size={16} strokeWidth={2} aria-hidden />
-          <span>Strength</span>
         </span>
         <input
           className="imgedit-range"
@@ -89,7 +88,7 @@ export default function ColorPanel({
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('filterStrength')}
-          style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#e0e0e0', '#404040') }}
+          style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#2d9cff', '#ffd166') }}
         />
       </label>
     </section>

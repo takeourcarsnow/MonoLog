@@ -231,7 +231,7 @@ export default function OverlaysPanel({
                 value={overlay.opacity}
                 onInput={(e: any) => handleOpacityChange(Number(e.target.value))}
                 onDoubleClick={() => resetControlToDefault('overlayOpacity')}
-                style={{ flex: 1, background: rangeBg(overlay.opacity, 0, 1, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
+                style={{ flex: 1, background: rangeBg(overlay.opacity, 0, 1, '#10b981', '#34d399') }}
               />
             </label>
           )}

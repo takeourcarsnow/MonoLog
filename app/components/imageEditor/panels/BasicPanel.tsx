@@ -57,7 +57,7 @@ export default function BasicPanel({
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('exposure')}
-            style={{ flex: 1, background: rangeBg(exposure, -2, 2, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
+            style={{ flex: 1, background: rangeBg(exposure, -2, 2, '#fff6db', '#ffd166') }}
           />
         </span>
       </label>
@@ -82,7 +82,7 @@ export default function BasicPanel({
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('contrast')}
-            style={{ flex: 1, background: rangeBg(contrast, -1, 1, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
+            style={{ flex: 1, background: rangeBg(contrast, -1, 1, '#fff3e6', '#ff9f43') }}
           />
         </span>
       </label>
@@ -107,7 +107,7 @@ export default function BasicPanel({
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('saturation')}
-            style={{ flex: 1, background: rangeBg(saturation, -1, 1, 'var(--slider-heat-start)', 'var(--slider-heat-end)') }}
+            style={{ flex: 1, background: rangeBg(saturation, -1, 1, '#ffe9e9', '#ff6b6b') }}
           />
         </span>
       </label>
@@ -132,7 +132,7 @@ export default function BasicPanel({
               requestAnimationFrame(() => draw());
             }}
             onDoubleClick={() => resetControlToDefault('temperature')}
-            style={{ flex: 1, background: rangeBg(temperature, -100, 100, 'var(--slider-temperature-cold)', 'var(--slider-temperature-warm)') }}
+            style={{ flex: 1, background: rangeBg(temperature, -100, 100, '#66d1ff', '#ffb86b') }}
           />
         </span>
       </label>

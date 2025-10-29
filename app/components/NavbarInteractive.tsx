@@ -21,6 +21,14 @@ export function NavbarInteractive() {
   // Update active index when pathname changes
   useEffect(() => {
     const currentPath = pathname || '/';
+    // If we're on the notifications page, intentionally clear the active
+    // nav item so no tab is highlighted (notifications is not part of the
+    // bottom nav). This ensures the indicator/pill is hidden too.
+    if (currentPath.startsWith('/notifications')) {
+      setActiveIndex(-1);
+      return;
+    }
+
     const index = navItems.findIndex(item => isNavItemActive(currentPath, item.path));
     setActiveIndex(index);
   }, [pathname]);

@@ -36,6 +36,11 @@ export function isNavItemActive(pathname: string, itemPath: string) {
       'terms', 'privacy', 'login', 'register', 'signup', 'signin', 'logout', 'auth', 'search'
     ];
 
+    // Prevent certain single-segment routes (like /notifications) from being
+    // interpreted as a username/profile route. Add 'notifications' to the
+    // reserved list so the profile nav item won't be active on that page.
+    reserved.push('notifications');
+
     return pathname === '/profile' || (pathSegments.length === 1 && !reserved.includes(pathSegments[0]?.toLowerCase()));
   }
 

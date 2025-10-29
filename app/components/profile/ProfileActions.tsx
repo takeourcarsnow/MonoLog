@@ -16,7 +16,6 @@ interface ProfileActionsProps {
   following: boolean | null;
   setFollowing: (following: boolean | null) => void;
   isEditingProfile: boolean;
-  onEditToggle: () => void;
   // callback when follow is clicked but user is not logged in
   onAuthRequired?: () => void;
   showInvites: boolean;
@@ -29,7 +28,6 @@ export function ProfileActions({
   following,
   setFollowing,
   isEditingProfile,
-  onEditToggle,
   onAuthRequired,
   showInvites,
   setShowInvites
@@ -216,24 +214,7 @@ export function ProfileActions({
                 <Star size={18} strokeWidth={1.2} />
               </span>
             </Link>
-            <button
-              className={`${isEditingProfile ? 'btn bg-green-50 border-green-500 text-green-700 edit-confirm-glow' : 'btn edit-profile-btn no-effects'}`}
-              onClick={(e) => { onEditToggle(); (e.target as HTMLButtonElement).blur(); }}
-              aria-expanded={isEditingProfile}
-              aria-label={isEditingProfile ? 'Save profile changes' : 'Edit profile'}
-              title={isEditingProfile ? 'Save profile changes' : 'Edit profile'}
-              type="button"
-            >
-              <span className="icon" aria-hidden>
-                {isEditingProfile ? (
-                  // save icon
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                ) : (
-                  // edit/profile icon
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                )}
-              </span>
-            </button>
+
             <button
               className={`btn icon invite-btn ${showInvites ? 'bg-blue-50 border-blue-500 text-blue-700' : 'no-effects'}`}
               onClick={() => setShowInvites(!showInvites)}

@@ -15,6 +15,7 @@ interface ProfileEditFormProps {
   setIsEditingProfile: (editing: boolean) => void;
   setUser: (user: User | null) => void;
   postCount: number;
+  currentUserId: string | null;
 }
 
 export interface ProfileEditFormRef {
@@ -22,7 +23,7 @@ export interface ProfileEditFormRef {
 }
 
 export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormProps>(
-  ({ user, isEditingProfile, setIsEditingProfile, setUser, postCount }, ref) => {
+  ({ user, isEditingProfile, setIsEditingProfile, setUser, postCount, currentUserId }, ref) => {
     const router = useRouter();
     const toast = useToast();
     const displayNameRef = useRef<HTMLInputElement | null>(null);
@@ -166,6 +167,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
 
     useImperativeHandle(ref, () => ({ toggleEdit }));
 
+    const isOwnProfile = currentUserId === user.id;
+
     // Simple heuristics to detect a valid-looking link/handle for each platform.
     const looksLikeTwitter = (v?: string) => {
       if (!v) return false;
@@ -216,10 +219,10 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
       <>
         {!isEditingProfile && !isClosing && (
           <div className="profile-static-info" style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
-            <div className="username">@{user.username}</div>
-            {user.displayName && <div className="dim">{user.displayName}</div>}
+            <div className="username" style={isOwnProfile ? { cursor: 'pointer' } : undefined} onClick={isOwnProfile ? toggleEdit : undefined}>@{user.username}</div>
+            {user.displayName && <div className="dim" style={isOwnProfile ? { cursor: 'pointer' } : undefined} onClick={isOwnProfile ? toggleEdit : undefined}>{user.displayName}</div>}
             <div className="dim">{postCount} {postCount === 1 ? 'post' : 'posts'}</div>
-            {user.bio ? <div className="dim profile-bio">{user.bio}</div> : null}
+            {user.bio ? <div className="dim profile-bio" style={isOwnProfile ? { cursor: 'pointer' } : undefined} onClick={isOwnProfile ? toggleEdit : undefined}>{user.bio}</div> : null}
           </div>
         )}
         {(isEditingProfile || isClosing) && (
@@ -322,6 +325,12 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
               </div>
             </label>
           </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+          <button type="submit" className="btn" disabled={editProcessing}>
+            {editProcessing ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
 
         <details className="account-options-dropdown">

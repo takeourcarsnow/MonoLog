@@ -24,10 +24,6 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const editFormRef = useRef<ProfileEditFormRef>(null);
 
-  const handleEditToggle = () => {
-    editFormRef.current?.toggleEdit();
-  };
-
   return (
     <div className="profile-header toolbar">
       <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center", width: "100%" }}>
@@ -40,6 +36,7 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
             setIsEditingProfile={setIsEditingProfile}
             setUser={setUser}
             postCount={postCount}
+            currentUserId={currentUserId}
           />
           {/* show social links when not editing */}
           {!isEditingProfile ? <ProfileSocialLinks user={user} /> : null}
@@ -51,7 +48,6 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
         following={following}
         setFollowing={setFollowing}
         isEditingProfile={isEditingProfile}
-        onEditToggle={handleEditToggle}
         onAuthRequired={onAuthRequired}
         showInvites={showInvites}
         setShowInvites={setShowInvites}

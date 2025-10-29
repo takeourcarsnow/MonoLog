@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { Button } from "@/app/components/Button";
 import Link from "next/link";
-import { compressImage } from "@/src/lib/image";
+import { compressImage, fileToDataURL } from "@/src/lib/image";
 import { getSupabaseClient, getAccessToken } from "@/src/lib/api/client";
 import { AuthRequired } from "./AuthRequired";
 import { AuthForm } from "./AuthForm";
@@ -68,10 +68,10 @@ export function CreateCommunityView() {
     if (!file) return;
 
     try {
-      // Compress the image
-      const compressed = await compressImage(file);
+      // Convert to data URL without compression for now
+      const dataUrl = await fileToDataURL(file);
       setImageFile(file);
-      setImagePreview(compressed);
+      setImagePreview(dataUrl);
     } catch (err) {
       setError("Failed to process image");
     }

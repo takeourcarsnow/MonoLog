@@ -35,6 +35,12 @@ const nextConfig = {
   reactStrictMode: true,
   // Enable compression
   compress: true,
+  // Increase API body size limit for image uploads
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
   // Optimize images
   images: {
     unoptimized: true,

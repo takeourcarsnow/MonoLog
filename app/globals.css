@@ -80,11 +80,13 @@ html[class*="community-page-scroll"] .content,
 body[class*="following-page-scroll"] .content,
 html[class*="following-page-scroll"] .content,
 body[class*="search-page-scroll"] .content,
-html[class*="search-page-scroll"] .content {
+html[class*="search-page-scroll"] .content,
+body[class*="communities-page-scroll"] .content,
+html[class*="communities-page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
-  padding-top: var(--header-height) !important;
+  padding-top: 50px !important;
   -webkit-overflow-scrolling: touch;
 }
 :root {

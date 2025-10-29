@@ -11,6 +11,7 @@ import TimeDisplay from "@/app/components/TimeDisplay";
 import NextImage from 'next/image';
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { currentTheme } from "@/src/lib/theme";
+import { LoadingIndicator } from "@/app/components/LoadingIndicator";
 
 export default function NotificationsPage() {
   const [loadedNotifications, setLoadedNotifications] = useState<Array<{ notification: Notification; messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string } }>>([]);

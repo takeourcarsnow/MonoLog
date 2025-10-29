@@ -8,6 +8,9 @@ import CommunitiesClient from './CommunitiesClient';
 import type { HydratedCommunity } from '@/src/lib/types';
 import Link from 'next/link';
 import { Button } from '@/app/components/Button';
+import NextImage from 'next/image';
+import { currentTheme } from '@/src/lib/theme';
+import { LoadingIndicator } from '@/app/components/LoadingIndicator';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +19,7 @@ export default function CommunitiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showMessage, setShowMessage] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(currentTheme());
 
   const loadCommunities = async () => {
     try {
@@ -39,6 +43,12 @@ export default function CommunitiesPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const handleThemeChange = () => setTheme(currentTheme());
+    window.addEventListener('theme:changed', handleThemeChange);
+    return () => window.removeEventListener('theme:changed', handleThemeChange);
+  }, []);
+
   if (loading) {
     return (
       <CommunitiesClient>
@@ -51,9 +61,16 @@ export default function CommunitiesPage() {
             </div>
           </div>
           <div className="content-body space-y-8">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="card skeleton" style={{ height: 200 }} />
-            ))}
+            <div className="text-center py-6">
+              <style>{`
+                @keyframes subtleSpin {
+                  0% { transform: rotate(0deg) scale(1); }
+                  50% { transform: rotate(180deg) scale(1.1); }
+                  100% { transform: rotate(360deg) scale(1); }
+                }
+              `}</style>
+              <NextImage src="/logo.svg" alt="loading" width={24} height={24} className="mx-auto" style={{ animation: 'subtleSpin 1.5s infinite', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
+            </div>
           </div>
         </div>
       </CommunitiesClient>

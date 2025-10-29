@@ -49,6 +49,23 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     const checkLoaded = () => {
       if (img.complete && img.naturalWidth > 0) {
         img.classList.add("loaded");
+        // If the image was already loaded (cache) and the parent
+        // expects dimensions (e.g. carousel wrapper sizing), ensure
+        // we notify the parent now. This covers cases where the
+        // native onLoad handler doesn't fire because the image was
+        // cached and ResizeObservers haven't run yet.
+        try {
+          if (onDimensionsChange && state.containerRectRef) {
+            let rect = state.containerRectRef.current;
+            if ((!rect || !rect.width || !rect.height) && state.containerRef.current) {
+              const r = state.containerRef.current.getBoundingClientRect();
+              rect = { width: Math.round(r.width), height: Math.round(r.height) };
+            }
+            if (rect) onDimensionsChange(rect);
+          }
+        } catch (_) {
+          // ignore measurement errors
+        }
       }
     };
 

@@ -7,6 +7,7 @@ import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
 import { BarChart3 } from "lucide-react";
 import { Bell } from "lucide-react";
+import { Star } from "lucide-react";
 import type { User as UserType } from "@/src/lib/types";
 
 interface ProfileActionsProps {
@@ -210,9 +211,9 @@ export function ProfileActions({
                 <BarChart3 size={18} strokeWidth={1.2} />
               </span>
             </Link>
-            <Link className="btn icon notifications-link no-effects" href="/notifications" aria-label="Notifications" title="View notifications">
+            <Link className="btn icon favorites-link no-effects" href="/favorites" aria-label="Favorites" title="View favorites">
               <span className="icon" aria-hidden>
-                <Bell size={18} strokeWidth={1.2} />
+                <Star size={18} strokeWidth={1.2} />
               </span>
             </Link>
             <button

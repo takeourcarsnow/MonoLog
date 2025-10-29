@@ -129,14 +129,14 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <main className="p-6">
+      <main className="p-6 notifications">
         <div className="view-fade">
           <h1 className="text-2xl font-bold mb-4">Notifications</h1>
           <div className="space-y-4">
             {Array.from({ length: 5 }, (_, i) => (
-              <div key={i} className="p-4 border rounded-lg animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div key={i} className="p-4 border rounded-lg animate-pulse" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elev)' }}>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2" style={{ backgroundColor: 'var(--muted)' }}></div>
               </div>
             ))}
           </div>
@@ -147,10 +147,10 @@ export default function NotificationsPage() {
 
   if (error) {
     return (
-      <main className="p-6">
+      <main className="p-6 notifications">
         <div className="view-fade">
           <h1 className="text-2xl font-bold mb-4">Notifications</h1>
-          <div className="text-center text-red-500">{error}</div>
+          <div className="text-center" style={{ color: 'var(--danger)' }}>{error}</div>
         </div>
       </main>
     );
@@ -158,7 +158,7 @@ export default function NotificationsPage() {
 
   return (
     <AuthRequired>
-      <main className="p-6">
+      <main className="p-6 notifications">
         <div className="view-fade">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -177,8 +177,8 @@ export default function NotificationsPage() {
 
           {notifications.length === 0 ? (
             <div className="text-center py-12">
-              <Bell size={48} className="mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500">No notifications yet</p>
+              <Bell size={48} className="mx-auto mb-4" style={{ color: 'var(--muted)' }} />
+              <p style={{ color: 'var(--muted)' }}>No notifications yet</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -226,10 +226,10 @@ function NotificationItem({
 
   if (loading) {
     return (
-      <div className={`p-4 border rounded-lg ${!notification.read ? 'bg-blue-50 border-blue-200' : 'bg-white'}`}>
+      <div className="p-4 border rounded-lg animate-pulse" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elev)' }}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-4 rounded w-3/4 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
+          <div className="h-3 rounded w-1/2" style={{ backgroundColor: 'var(--muted)' }}></div>
         </div>
       </div>
     );
@@ -237,20 +237,25 @@ function NotificationItem({
 
   return (
     <div
-      className={`p-4 border rounded-lg ${
-        !notification.read ? 'bg-blue-50 border-blue-200' : 'bg-white'
-      }`}
+      className="p-4 border rounded-lg"
+      style={{
+        borderColor: 'var(--border)',
+        backgroundColor: notification.read ? 'var(--bg-elev)' : 'color-mix(in srgb, var(--primary), transparent 95%)',
+        borderLeftColor: notification.read ? 'var(--border)' : 'var(--primary)',
+        borderLeftWidth: notification.read ? '1px' : '4px'
+      }}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm text-gray-600 mb-1">
+          <p className="text-sm mb-1" style={{ color: 'var(--muted)' }}>
             {new Date(notification.created_at).toLocaleString()}
           </p>
-          <p className="text-gray-900">{messageData?.message}</p>
+          <p style={{ color: 'var(--text)' }}>{messageData?.message}</p>
           {messageData?.href && (
             <Link
               href={messageData.href}
-              className="text-blue-600 hover:underline text-sm"
+              className="hover:underline text-sm"
+              style={{ color: 'var(--primary)' }}
             >
               View related content
             </Link>
@@ -259,7 +264,8 @@ function NotificationItem({
         {!notification.read && (
           <button
             onClick={onMarkAsRead}
-            className="text-blue-600 hover:underline text-sm ml-4"
+            className="hover:underline text-sm ml-4"
+            style={{ color: 'var(--primary)' }}
           >
             Mark as read
           </button>

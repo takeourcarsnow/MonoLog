@@ -32,7 +32,8 @@ html[class*="page-scroll"] {
 .content:has(.thread),
 .content:has(.create-thread),
 .content:has(.feed),
-.content:has(.search-page) {
+.content:has(.search-page),
+.content:has(.notifications) {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
@@ -82,7 +83,9 @@ html[class*="following-page-scroll"] .content,
 body[class*="search-page-scroll"] .content,
 html[class*="search-page-scroll"] .content,
 body[class*="communities-page-scroll"] .content,
-html[class*="communities-page-scroll"] .content {
+html[class*="communities-page-scroll"] .content,
+body[class*="notifications-page-scroll"] .content,
+html[class*="notifications-page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
@@ -159,7 +162,8 @@ html[class*="communities-page-scroll"] .content {
 
 /* Minimal active state indicator for navigation buttons */
 .header .about-btn.active::after,
-.header .favorites-btn.active::after {
+.header .favorites-btn.active::after,
+.header .notifications-btn.active::after {
   content: '';
   position: absolute;
   bottom: 2px;
@@ -173,7 +177,8 @@ html[class*="communities-page-scroll"] .content {
 
 /* Dark theme active indicator */
 :root[data-theme="dark"] .header .about-btn.active::after,
-:root[data-theme="dark"] .header .favorites-btn.active::after {
+:root[data-theme="dark"] .header .favorites-btn.active::after,
+:root[data-theme="dark"] .header .notifications-btn.active::after {
   background-color: var(--primary);
 }
 

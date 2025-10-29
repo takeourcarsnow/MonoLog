@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { usePrevPathToggle } from "./usePrevPathToggle";
 import { Info, Star, Search } from "lucide-react";
 import { Users } from "lucide-react";
+import { Bell } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/src/lib/api";
 import { useToast } from "./Toast";
@@ -23,8 +24,6 @@ export function HeaderInteractive() {
   const prevHasNewThreadsRef = useRef(false);
   const { show } = useToast();
   const { me } = useAuth();
-
-  const { toggle: toggleFavorites, isActive: favIsActive } = usePrevPathToggle('/favorites', 'monolog:prev-path-before-favorites');
 
   // Define checkForNewThreads function outside useEffect so it can be exposed globally
   const checkForNewThreads = useCallback(async (forceToast = false) => {
@@ -193,19 +192,13 @@ export function HeaderInteractive() {
         <div className="theme-toggle-shell">
           <ThemeToggle />
         </div>
-        {/* Favorites button */}
-        <button
-          className={`btn icon favorites-btn no-tap-effects ${favIsActive ? 'active' : ''}`}
-          title="Favorites"
-          aria-label="Favorites"
-          aria-current={favIsActive ? 'page' : undefined}
-          onClick={toggleFavorites}
-        >
-          <Star size={20} strokeWidth={2} />
-        </button>
         {/* Communities button */}
         <Link href="/communities" className={`btn icon about-btn no-tap-effects ${pathname === '/communities' ? 'active' : ''} ${hasNewThreads ? 'communities-pulse' : ''}`} aria-label="Communities">
           <Users size={20} strokeWidth={2} />
+        </Link>
+        {/* Notifications button */}
+        <Link href="/notifications" className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`} aria-label="Notifications">
+          <Bell size={20} strokeWidth={2} />
         </Link>
         {/* Search button */}
         <Link href={me ? "/search" : "/profile"} className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">

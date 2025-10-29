@@ -92,7 +92,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  viewportFit: 'cover',
+  viewportFit: 'contain',
   // themeColor supports an array with media queries
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#0f0f10" },

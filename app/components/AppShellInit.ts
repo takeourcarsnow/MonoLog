@@ -145,17 +145,23 @@ export function useAppShellInit() {
             try { window.dispatchEvent(new CustomEvent('monolog-viewport-changed')); } catch(_) {}
             if (debugEnabled) { setTimeout(debugLog, 160); }
           };
+          const onVisualViewportResize = () => {
+            // On zoom, don't update --viewport-height to avoid layout shifts that cause bars
+            // But notify components like swiper to update
+            try { window.dispatchEvent(new CustomEvent('monolog-viewport-changed')); } catch(_) {}
+            if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); }
+          };
           window.addEventListener('resize', onResize, { passive: true });
           window.addEventListener('orientationchange', onOrientation);
           if ((window as any).visualViewport && (window as any).visualViewport.addEventListener) {
-            (window as any).visualViewport.addEventListener('resize', onResize);
+            (window as any).visualViewport.addEventListener('resize', onVisualViewportResize);
           }
 
           // Remove listeners on unmount to prevent leaks or duplicate handlers during HMR
           removeListeners = () => {
             try { window.removeEventListener('resize', onResize); } catch(_) {}
             try { window.removeEventListener('orientationchange', onOrientation); } catch(_) {}
-            try { if ((window as any).visualViewport && (window as any).visualViewport.removeEventListener) (window as any).visualViewport.removeEventListener('resize', onResize); } catch(_) {}
+            try { if ((window as any).visualViewport && (window as any).visualViewport.removeEventListener) (window as any).visualViewport.removeEventListener('resize', onVisualViewportResize); } catch(_) {}
           };
 
           // Ensure we remove listeners when the module is unloaded/reloaded

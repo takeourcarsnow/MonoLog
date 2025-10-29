@@ -57,7 +57,7 @@ export default function NotificationsPage() {
     }
   };
 
-  const getNotificationMessage = async (notification: Notification): Promise<{ message: string; href?: string }> => {
+  const getNotificationMessage = async (notification: Notification): Promise<{ message: string; href?: string; imageUrl?: string }> => {
     try {
       // Fetch actor username
       let actorUsername = 'Someone';
@@ -71,6 +71,7 @@ export default function NotificationsPage() {
       switch (notification.type) {
         case 'comment': {
           let href: string | undefined = undefined;
+          let imageUrl: string | undefined = undefined;
           if (notification.post_id) {
             try {
               const p = await getPost(notification.post_id);
@@ -80,6 +81,9 @@ export default function NotificationsPage() {
               } else {
                 href = `/post/${p?.id || notification.post_id}`;
               }
+              if (p && p.imageUrls && p.imageUrls.length > 0) {
+                imageUrl = p.imageUrls[0];
+              }
             } catch (e) {
               // Fallback to basic post link
               href = `/post/${notification.post_id}`;
@@ -87,7 +91,8 @@ export default function NotificationsPage() {
           }
           return {
             message: `${actorUsername} commented on your post${notification.text ? `: "${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}"` : ''}`,
-            href
+            href,
+            imageUrl
           };
         }
         case 'thread_reply': {
@@ -111,6 +116,7 @@ export default function NotificationsPage() {
         }
         case 'favorite': {
           let href: string | undefined = undefined;
+          let imageUrl: string | undefined = undefined;
           if (notification.post_id) {
             try {
               const p = await getPost(notification.post_id);
@@ -120,6 +126,9 @@ export default function NotificationsPage() {
               } else {
                 href = `/post/${p?.id || notification.post_id}`;
               }
+              if (p && p.imageUrls && p.imageUrls.length > 0) {
+                imageUrl = p.imageUrls[0];
+              }
             } catch (e) {
               // Fallback to basic post link
               href = `/post/${notification.post_id}`;
@@ -127,7 +136,8 @@ export default function NotificationsPage() {
           }
           return {
             message: `${actorUsername} favorited your post`,
-            href
+            href,
+            imageUrl
           };
         }
         default: {
@@ -218,9 +228,9 @@ function NotificationItem({
 }: {
   notification: Notification;
   onMarkAsRead: () => void;
-  getMessage: (notification: Notification) => Promise<{ message: string; href?: string }>;
+  getMessage: (notification: Notification) => Promise<{ message: string; href?: string; imageUrl?: string }>;
 }) {
-  const [messageData, setMessageData] = useState<{ message: string; href?: string } | null>(null);
+  const [messageData, setMessageData] = useState<{ message: string; href?: string; imageUrl?: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -282,7 +292,18 @@ function NotificationItem({
             }
           })()}
         </div>
-        {messageData?.href && (
+        {messageData?.imageUrl && (
+          <div className="mb-3">
+            {messageData.href ? (
+              <Link href={messageData.href}>
+                <img src={messageData.imageUrl} alt="Post image" className="max-w-full h-auto rounded cursor-pointer" style={{ maxHeight: '200px' }} />
+              </Link>
+            ) : (
+              <img src={messageData.imageUrl} alt="Post image" className="max-w-full h-auto rounded" style={{ maxHeight: '200px' }} />
+            )}
+          </div>
+        )}
+        {messageData?.href && !messageData?.imageUrl && (
           <Link
             href={messageData.href}
             className="hover:underline text-sm mb-3 block"

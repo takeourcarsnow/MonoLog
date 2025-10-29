@@ -197,7 +197,7 @@ export function HeaderInteractive() {
           <Users size={20} strokeWidth={2} />
         </Link>
         {/* Notifications button */}
-        <Link href="/notifications" className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`} aria-label="Notifications">
+        <Link href={me ? "/notifications" : "/profile"} className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`} aria-label="Notifications">
           <Bell size={20} strokeWidth={2} />
         </Link>
         {/* Search button */}

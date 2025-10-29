@@ -60,7 +60,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         {headerNotice ? (
           <AuthHeaderNotice headerNotice={headerNotice} headerNoticePhase={headerNoticePhase} />
         ) : (
-          <AuthMessage mode={mode} />
+          <AuthMessage mode={mode} signupSent={signupSent} />
         )}
       </div>
 

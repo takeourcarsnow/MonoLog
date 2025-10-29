@@ -5,6 +5,25 @@ import { getUserFromAuthHeader, getTokenFromAuthHeader } from '@/src/lib/api/ser
 import { checkComment } from '@/src/lib/moderation';
 import { apiRateLimiter } from '@/src/lib/rateLimiter';
 
+function extractUserProfileFromAuth(authUser: any) {
+  let username = String(authUser.id || 'unknown').slice(0, 8);
+  let displayName = 'User';
+  let avatarUrl: string | undefined = undefined;
+
+  const md = authUser.user_metadata || authUser.raw_user_meta_data || authUser.raw_app_meta_data || {};
+  if (md.username) username = md.username;
+  if (md.name) displayName = md.name;
+  if (md.avatar_url) avatarUrl = md.avatar_url;
+  if (md.avatarUrl) avatarUrl = avatarUrl || md.avatarUrl;
+
+  // Fallback to email-based username
+  if ((!md || !md.username) && authUser.email) {
+    username = authUser.email.split('@')[0];
+  }
+
+  return { username, displayName, avatarUrl };
+}
+
 export async function POST(req: Request) {
   try {
     // Rate limiting: moderate limits for comment creation
@@ -71,27 +90,21 @@ export async function POST(req: Request) {
           const maybe = await (sb as any).auth?.admin?.getUserById?.(actorId);
           const authUser = maybe?.data?.user || maybe?.data || null;
           if (authUser) {
-            // Try common metadata paths
-            const md = authUser.user_metadata || authUser.raw_user_meta_data || authUser.raw_app_meta_data || {};
-            if (md) {
-              if (md.username) username = md.username;
-              if (md.name) displayName = md.name;
-              if (md.avatar_url) avatarUrl = md.avatar_url;
-              if (md.avatarUrl) avatarUrl = avatarUrl || md.avatarUrl;
-            }
-            // fallback to email-based username
-            if ((!md || !md.username) && authUser.email) username = authUser.email.split('@')[0];
+            const profile = extractUserProfileFromAuth(authUser);
+            username = profile.username;
+            displayName = profile.displayName;
+            avatarUrl = profile.avatarUrl;
           }
         } catch (e) {
           // ignore admin fetch errors
         }
 
-  const up: any = { id: actorId, username, display_name: null };
-  if (avatarUrl) up.avatar_url = avatarUrl;
-  // only create the minimal profile when missing. Use insert rather
-  // than upsert to avoid overwriting an existing row if the earlier
-  // select failed due to schema cache issues.
-  try { await sb.from('users').insert(up); } catch (e) { /* ignore */ }
+        const up: any = { id: actorId, username, display_name: null };
+        if (avatarUrl) up.avatar_url = avatarUrl;
+        // only create the minimal profile when missing. Use insert rather
+        // than upsert to avoid overwriting an existing row if the earlier
+        // select failed due to schema cache issues.
+        try { await sb.from('users').insert(up); } catch (e) { /* ignore */ }
       }
     } catch (e) {
       // ignore

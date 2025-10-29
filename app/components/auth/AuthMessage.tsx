@@ -1,11 +1,17 @@
 // AuthMessage.tsx
 interface AuthMessageProps {
   mode: "signin" | "signup" | "forgot";
+  signupSent?: boolean;
 }
 
-export function AuthMessage({ mode }: AuthMessageProps) {
+export function AuthMessage({ mode, signupSent }: AuthMessageProps) {
   const getMessage = () => {
-    if (mode === "signin") {
+    if (mode === "signin" && signupSent) {
+      return {
+        title: "Check your email",
+        subtitle: "We've sent you a confirmation link"
+      };
+    } else if (mode === "signin") {
       return {
         title: "Welcome back",
         subtitle: "Your memories are waiting"

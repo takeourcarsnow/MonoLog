@@ -48,14 +48,16 @@ export function ExifInputs({
 
   const mergedPresets = getMergedExifPresets(user);
 
+  const getSafeExifPresets = (user: User | null) => ({
+    cameras: Array.isArray(user?.exifPresets?.cameras) ? user.exifPresets.cameras : [],
+    lenses: Array.isArray(user?.exifPresets?.lenses) ? user.exifPresets.lenses : [],
+    filmTypes: Array.isArray(user?.exifPresets?.filmTypes) ? user.exifPresets.filmTypes : [],
+    filmIsos: Array.isArray(user?.exifPresets?.filmIsos) ? user.exifPresets.filmIsos : [],
+  });
+
   const handleRemovePreset = async (field: 'cameras' | 'lenses' | 'filmTypes' | 'filmIsos', value: string) => {
     if (!user) return;
-    const currentClean = {
-      cameras: Array.isArray(user.exifPresets?.cameras) ? user.exifPresets.cameras : [],
-      lenses: Array.isArray(user.exifPresets?.lenses) ? user.exifPresets.lenses : [],
-      filmTypes: Array.isArray(user.exifPresets?.filmTypes) ? user.exifPresets.filmTypes : [],
-      filmIsos: Array.isArray(user.exifPresets?.filmIsos) ? user.exifPresets.filmIsos : [],
-    };
+    const currentClean = getSafeExifPresets(user);
     const current = currentClean[field] || [];
     const updated = { ...currentClean, [field]: current.filter(o => o !== value) };
     try {
@@ -77,12 +79,7 @@ export function ExifInputs({
     };
     if (defaults[field].includes(trimmed)) return; // already in defaults
     // Build clean current presets, ignoring corrupted data
-    const currentClean = {
-      cameras: Array.isArray(user.exifPresets?.cameras) ? user.exifPresets.cameras : [],
-      lenses: Array.isArray(user.exifPresets?.lenses) ? user.exifPresets.lenses : [],
-      filmTypes: Array.isArray(user.exifPresets?.filmTypes) ? user.exifPresets.filmTypes : [],
-      filmIsos: Array.isArray(user.exifPresets?.filmIsos) ? user.exifPresets.filmIsos : [],
-    };
+    const currentClean = getSafeExifPresets(user);
     const current = currentClean[field] || [];
     if (current.includes(trimmed)) return; // already saved
     const updated = { ...currentClean, [field]: [...current, trimmed] };

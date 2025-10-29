@@ -38,6 +38,7 @@ export function useAuthForm(onClose?: () => void) {
     try {
       if (mode === "signin") {
         await signIn(email, password);
+        setSignupSent(false); // Reset after successful signin
         shouldCloseAndRefresh = true;
         setHasSuccess(true);
         setJustSignedIn(true);
@@ -202,12 +203,12 @@ export function useAuthForm(onClose?: () => void) {
     ];
 
     const separators = ['', '-', '_', '.'];
-    const maxAttempts = 200; // increase attempts for more variety
+    const maxAttempts = 200;
 
-    // helper to pick random element
+    // Helper to pick random element
     const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
-    // helper to produce a leetspeak-ish variant sometimes
+    // Helper to apply leetspeak variant sometimes
     const maybeLeet = (s: string) => {
       if (Math.random() < 0.08) {
         return s.replace(/a/g, '4').replace(/e/g, '3').replace(/i/g, '1').replace(/o/g, '0').replace(/s/g, '5');
@@ -215,102 +216,125 @@ export function useAuthForm(onClose?: () => void) {
       return s;
     };
 
+    // Normalize candidate: collapse separators, remove illegal chars, lowercase
+    const normalizeCandidate = (candidate: string) => {
+      candidate = candidate.replace(/\.+/g, '-');
+      candidate = candidate.replace(/[-_]{2,}/g, (m) => m.charAt(0));
+      candidate = candidate.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      candidate = candidate.replace(/[-_]{2,}/g, (m) => m.charAt(0));
+      candidate = candidate.replace(/^[-_]+|[-_]+$/g, '');
+      return candidate;
+    };
+
+    // Pattern generators
+    const generateSingleNickname = () => {
+      const nick = pick(nicknames);
+      const useNum = Math.random() < 0.5;
+      const num = useNum ? String(Math.floor(Math.random() * 90) + 10) : '';
+      return `${nick}${num}`;
+    };
+
+    const generateAdjectiveNoun = () => {
+      const parts = [maybeLeet(pick(adjectives)), maybeLeet(pick(nouns))];
+      if (Math.random() < 0.3) parts.splice(1, 0, maybeLeet(pick(adjectives)));
+      const sep = pick(separators);
+      return parts.join(sep);
+    };
+
+    const generateNounNoun = () => {
+      let n1 = maybeLeet(pick(nouns));
+      let n2 = maybeLeet(pick(nouns));
+      if (n1 === n2) n2 = maybeLeet(pick(nouns));
+      const sep = pick(separators);
+      const useNum = Math.random() < 0.25;
+      const num = useNum ? String(Math.floor(Math.random() * 900) + 10) : '';
+      return `${n1}${sep}${n2}${num}`;
+    };
+
+    const generateNicknameAdjective = () => {
+      const nick = maybeLeet(pick(nicknames));
+      if (Math.random() < 0.5) {
+        return `${nick}${pick(separators)}${maybeLeet(pick(adjectives))}`;
+      } else {
+        return `${nick}${pick(separators)}${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(nouns))}`;
+      }
+    };
+
+    const generateRandomMash = () => {
+      const pool = [...nicknames, ...adjectives, ...nouns];
+      const count = 2 + Math.floor(Math.random() * 3);
+      const parts: string[] = [];
+      for (let j = 0; j < count; j++) {
+        parts.push(maybeLeet(pick(pool)));
+      }
+      const sep = pick(separators);
+      if (sep === '') {
+        return parts.map((p, idx) => idx === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1)).join('');
+      } else {
+        return parts.join(sep);
+      }
+    };
+
+    const generateAdjectiveNumber = () => {
+      const a = maybeLeet(pick(adjectives));
+      const n = maybeLeet(pick(nouns));
+      if (Math.random() < 0.5) return `${a}${String(Math.floor(Math.random() * 900) + 100)}`;
+      else return `${n}${String(Math.floor(Math.random() * 90) + 10)}`;
+    };
+
+    const generatePlayfulCombo = () => {
+      if (Math.random() < 0.5) {
+        return `${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(nouns))}`;
+      } else {
+        return `${maybeLeet(pick(nicknames))}${pick(separators)}${maybeLeet(pick(nouns))}`;
+      }
+    };
+
+    const patterns = [
+      { weight: 0.12, generator: generateSingleNickname },
+      { weight: 0.16, generator: generateAdjectiveNoun }, // 0.28 - 0.12
+      { weight: 0.14, generator: generateNounNoun }, // 0.42 - 0.28
+      { weight: 0.13, generator: generateNicknameAdjective }, // 0.55 - 0.42
+      { weight: 0.15, generator: generateRandomMash }, // 0.7 - 0.55
+      { weight: 0.15, generator: generateAdjectiveNumber }, // 0.85 - 0.7
+      { weight: 0.15, generator: generatePlayfulCombo }, // 1.0 - 0.85
+    ];
+
+    // Cumulative weights for selection
+    let cumulative = 0;
+    const weightedPatterns = patterns.map(p => ({ ...p, cumulative: cumulative += p.weight }));
+
+    // Helper to create display version
+    function createDisplayVersion(candidate: string) {
+      if (candidate.includes('-') || candidate.includes('_')) {
+        return candidate.split(/[-_]/).map(s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '').join(candidate.includes('-') ? '-' : '_');
+      } else {
+        return candidate.charAt(0).toUpperCase() + candidate.slice(1);
+      }
+    }
+
     try {
       for (let i = 0; i < maxAttempts; i++) {
-        const patternType = Math.random();
-        let candidate = '';
+        // Select pattern based on weights
+        const rand = Math.random();
+        const selected = weightedPatterns.find(p => rand <= p.cumulative);
+        if (!selected) continue;
+        let candidate = selected.generator();
 
-        if (patternType < 0.12) {
-          // single nickname + optional 2-digit suffix
-          const nick = pick(nicknames);
-          const useNum = Math.random() < 0.5;
-          const num = useNum ? String(Math.floor(Math.random() * 90) + 10) : '';
-          candidate = `${nick}${num}`;
-        } else if (patternType < 0.28) {
-          // adjective + noun or adjective.adj.noun (2-3 parts)
-          const parts = [maybeLeet(pick(adjectives)), maybeLeet(pick(nouns))];
-          if (Math.random() < 0.3) parts.splice(1, 0, maybeLeet(pick(adjectives)));
-          const sep = pick(separators);
-          candidate = parts.join(sep);
-        } else if (patternType < 0.42) {
-          // noun + noun (compound) with optional sep and optional number
-          const n1 = maybeLeet(pick(nouns));
-          let n2 = maybeLeet(pick(nouns));
-          // avoid identical pair
-          if (n1 === n2) n2 = maybeLeet(pick(nouns));
-          const sep = pick(separators);
-          const useNum = Math.random() < 0.25;
-          const num = useNum ? String(Math.floor(Math.random() * 900) + 10) : '';
-          candidate = `${n1}${sep}${n2}${num}`;
-        } else if (patternType < 0.55) {
-          // nickname + adjective or nickname-adj-noun
-          const nick = maybeLeet(pick(nicknames));
-          if (Math.random() < 0.5) {
-            candidate = `${nick}${pick(separators)}${maybeLeet(pick(adjectives))}`;
-          } else {
-            candidate = `${nick}${pick(separators)}${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(nouns))}`;
-          }
-        } else if (patternType < 0.7) {
-          // random 2-4 word mash from mixed pools, joined by separator or camelCase
-          const pool = [...nicknames, ...adjectives, ...nouns];
-          const count = 2 + Math.floor(Math.random() * 3); // 2-4
-          const parts: string[] = [];
-          for (let j = 0; j < count; j++) {
-            parts.push(maybeLeet(pick(pool)));
-          }
-          const sep = pick(separators);
-          if (sep === '') {
-            // sometimes use camelcase for visual variety
-            candidate = parts.map((p, idx) => idx === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1)).join('');
-          } else {
-            candidate = parts.join(sep);
-          }
-        } else if (patternType < 0.85) {
-          // adjective + number (3 digits) or noun + short number
-          const a = maybeLeet(pick(adjectives));
-          const n = maybeLeet(pick(nouns));
-          if (Math.random() < 0.5) candidate = `${a}${String(Math.floor(Math.random() * 900) + 100)}`;
-          else candidate = `${n}${String(Math.floor(Math.random() * 90) + 10)}`;
-        } else {
-          // more playful combos: adjective + adjective + noun or nickname + noun
-          if (Math.random() < 0.5) {
-            candidate = `${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(adjectives))}${pick(separators)}${maybeLeet(pick(nouns))}`;
-          } else {
-            candidate = `${maybeLeet(pick(nicknames))}${pick(separators)}${maybeLeet(pick(nouns))}`;
-          }
-        }
+        candidate = normalizeCandidate(candidate);
 
-  // normalize: collapse multiple separators, remove illegal chars, and lowercase for checks
-  // allow dot in generation but replace with separator-friendly char if needed
-  candidate = candidate.replace(/\.+/g, '-');
-  candidate = candidate.replace(/[-_]{2,}/g, (m) => m.charAt(0));
-  candidate = candidate.toLowerCase().replace(/[^a-z0-9_-]/g, '');
-        // collapse consecutive separators to a single instance
-        candidate = candidate.replace(/[-_]{2,}/g, (m) => m.charAt(0));
-        // strip leading/trailing separators
-        candidate = candidate.replace(/^[-_]+|[-_]+$/g, '');
-
-        // enforce length rules
+        // Enforce length rules
         if (candidate.length < 3 || candidate.length > 32) continue;
         if (!validUsername(candidate)) continue;
 
         try {
           const ok = await checkUsernameAvailability(candidate);
           if (ok) {
-            // create a friendlier display version with some capitalization
-            let display = candidate;
-            if (candidate.includes('-') || candidate.includes('_')) {
-              display = candidate.split(/[-_]/).map(s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '').join(candidate.includes('-') ? '-' : '_');
-            } else {
-              display = candidate.charAt(0).toUpperCase() + candidate.slice(1);
-            }
-
-            setUsername(display);
-            showHeaderNotice({ title: 'Generated username', subtitle: `Using "${display}". You can change it before continuing.`, variant: 'info' }, 5000);
+            setUsername(createDisplayVersion(candidate));
+            showHeaderNotice({ title: 'Generated username', subtitle: `Using "${createDisplayVersion(candidate)}". You can change it before continuing.`, variant: 'info' }, 5000);
             return candidate;
           }
         } catch (e) {
-          // availability check failed — try again next attempt
           continue;
         }
       }

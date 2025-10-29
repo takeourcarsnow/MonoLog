@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { OptimizedImage } from "./OptimizedImage";
 import { isImageLoaded as cacheIsImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/src/lib/cache/calendarCache";
 
@@ -15,76 +15,67 @@ interface MiniSlideshowProps {
 
 export function MiniSlideshow({ imageUrls, size = 30, fill = false, allowLoad = true }: MiniSlideshowProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [prevIndex, setPrevIndex] = useState<number | null>(null);
-  const [isFading, setIsFading] = useState(false);
-  const [initialFadeDone, setInitialFadeDone] = useState(false);
-  // Duration (ms) for the cross-fade between slides
-  const transitionDuration = 600;
+  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [previousOpacity, setPreviousOpacity] = useState(1);
+  const [currentOpacity, setCurrentOpacity] = useState(1);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
-  // Preload images and mark them in the session cache so they render fast.
+  // Preload images and track when they're loaded
   useEffect(() => {
     imageUrls.forEach(url => {
-      if (!cacheIsImageLoaded(url)) {
+      if (!loadedImages.has(url)) {
         const img = new Image();
         img.src = url;
-        img.onload = () => cacheMarkImageLoaded(url);
+        img.onload = () => {
+          setLoadedImages(prev => new Set(prev).add(url));
+          cacheMarkImageLoaded(url);
+        };
       }
     });
-  }, [imageUrls]);
+  }, [imageUrls, loadedImages]);
 
-  // Slide interval with cross-fade: when advancing, keep the previous
-  // index mounted and toggle `isFading` to animate the opacity.
+  // Handle fade transition
+  useLayoutEffect(() => {
+    if (isTransitioning) {
+      setPreviousOpacity(1);
+      setCurrentOpacity(0);
+      const timer = setTimeout(() => {
+        setPreviousOpacity(0);
+        setCurrentOpacity(1);
+      }, 0);
+      const endTimer = setTimeout(() => setIsTransitioning(false), 500);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(endTimer);
+      };
+    }
+  }, [isTransitioning]);
+
+  // Slide interval - change image with fade transition
   useEffect(() => {
     if (imageUrls.length <= 1) return;
 
     const interval = setInterval(() => {
-      setPrevIndex((prev) => {
-        // store the current index as previous for the fade
-        return (typeof prev === 'number') ? null : currentIndex;
-      });
-
-      // compute next index and start transition
-      const next = (currentIndex + 1) % imageUrls.length;
-      setPrevIndex(currentIndex);
-      setCurrentIndex(next);
-      setIsFading(false);
-      // start fade on next frame to ensure CSS transition runs
-      requestAnimationFrame(() => requestAnimationFrame(() => setIsFading(true)));
-      // clear prev after transition completes
-      const t = window.setTimeout(() => {
-        setPrevIndex(null);
-        setIsFading(false);
-      }, transitionDuration);
-
-      // store timeout id to clear if effect re-runs
-      return () => window.clearTimeout(t);
-    }, 8000); // Change every 8 seconds
+      if (isTransitioning) return; // Prevent overlapping transitions
+      const nextIndex = (currentIndex + 1) % imageUrls.length;
+      const nextUrl = imageUrls[nextIndex];
+      if (loadedImages.has(nextUrl) || cacheIsImageLoaded(nextUrl)) {
+        setPreviousIndex(currentIndex);
+        setCurrentIndex(nextIndex);
+        setIsTransitioning(true);
+      }
+    }, 8000);
 
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageUrls.length, currentIndex]);
-
-  // Initial mount fade so the slideshow doesn't pop instantly when the
-  // calendar view is shown. We only run this once per component mount.
-  useEffect(() => {
-    if (!initialFadeDone && imageUrls.length > 0) {
-      // start from invisible -> fade in
-      setIsFading(false);
-      // ensure the browser has applied the initial styles
-      requestAnimationFrame(() => requestAnimationFrame(() => setIsFading(true)));
-      const t = window.setTimeout(() => {
-        setIsFading(false);
-        setInitialFadeDone(true);
-      }, transitionDuration);
-      return () => window.clearTimeout(t);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [imageUrls.length, currentIndex, loadedImages, isTransitioning]);
 
   if (imageUrls.length === 0) return null;
 
   const currentUrl = imageUrls[currentIndex];
-  const isLoaded = cacheIsImageLoaded(currentUrl);
+  const previousUrl = previousIndex !== null ? imageUrls[previousIndex] : null;
+  const isCurrentLoaded = loadedImages.has(currentUrl) || cacheIsImageLoaded(currentUrl);
+  const isPreviousLoaded = previousUrl && (loadedImages.has(previousUrl) || cacheIsImageLoaded(previousUrl));
 
   return (
     <div
@@ -109,43 +100,11 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false, allowLoad = 
         border: '1px solid var(--border)',
       }}
     >
-      {/* Layer previous and current images to cross-fade between slides. */}
-      {prevIndex != null && allowLoad ? (
-        <OptimizedImage
-          key={`prev-${prevIndex}`}
-          src={imageUrls[prevIndex]}
-          alt=""
-          width={fill ? undefined : size}
-          height={fill ? undefined : size}
-          fill={fill}
-          unoptimized={false}
-          sizes={fill ? "(max-width: 640px) 86px, 153px" : `${size}px`}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            opacity: isFading ? 0 : 1,
-            transition: `opacity ${transitionDuration}ms ease-in-out`,
-          }}
-          placeholder={"empty"}
-          loading={"eager"}
-          disableLoadingTransition={true}
-        />
-      ) : null}
-
-      {allowLoad ? (
-        <OptimizedImage
-          key={`curr-${currentIndex}`}
+      {/* Current image */}
+      {allowLoad && isCurrentLoaded && (
+        <img
           src={currentUrl}
           alt=""
-          width={fill ? undefined : size}
-          height={fill ? undefined : size}
-          fill={fill}
-          unoptimized={false}
-          sizes={fill ? "(max-width: 640px) 86px, 153px" : `${size}px`}
           style={{
             width: '100%',
             height: '100%',
@@ -153,15 +112,32 @@ export function MiniSlideshow({ imageUrls, size = 30, fill = false, allowLoad = 
             position: 'absolute',
             top: 0,
             left: 0,
-            opacity: prevIndex != null ? (isFading ? 1 : 0) : (!initialFadeDone ? (isFading ? 1 : 0) : 1),
-            transition: `opacity ${transitionDuration}ms ease-in-out`,
+            opacity: currentOpacity,
+            transition: 'opacity 0.5s ease-in-out',
           }}
-          placeholder={"empty"}
-          loading={"eager"}
-          disableLoadingTransition={true}
-          onLoad={() => { try { cacheMarkImageLoaded(currentUrl); } catch (e) {} }}
         />
-      ) : (
+      )}
+
+      {/* Previous image (fading out) */}
+      {allowLoad && isTransitioning && isPreviousLoaded && (
+        <img
+          src={previousUrl!}
+          alt=""
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            opacity: previousOpacity,
+            transition: 'opacity 0.5s ease-in-out',
+          }}
+        />
+      )}
+
+      {/* Loading placeholder */}
+      {!isCurrentLoaded && !isTransitioning && (
         <div style={{ width: '100%', height: '100%', background: 'var(--bg-elev)' }} aria-hidden />
       )}
     </div>

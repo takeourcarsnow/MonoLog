@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { Button } from "@/app/components/Button";
@@ -21,6 +21,7 @@ export function CreateCommunityView() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -136,10 +137,10 @@ export function CreateCommunityView() {
 
   return (
     <div className="content">
-      <div className="content-body">
+      <div className="content-body flex justify-center">
         <div className="card max-w-2xl communities">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+            <div className="relative">
               <label htmlFor="name" className="sr-only">
                 Community Name *
               </label>
@@ -148,15 +149,17 @@ export function CreateCommunityView() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                className="w-full p-3 pr-16 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 placeholder="Enter community name"
                 maxLength={50}
                 required
               />
-              <p className="text-sm text-gray-500 mt-1">{name.length}/50 characters</p>
+              <div className="absolute right-3 top-3 text-sm text-gray-500 dark:text-gray-400">
+                {name.length}/50
+              </div>
             </div>
 
-            <div>
+            <div className="relative">
               <label htmlFor="description" className="sr-only">
                 Description *
               </label>
@@ -164,42 +167,59 @@ export function CreateCommunityView() {
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md resize-none bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                className="w-full p-3 pr-16 border border-gray-300 rounded-md resize-none bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 placeholder="Describe what this community is about"
                 rows={4}
                 maxLength={500}
                 required
               />
-              <p className="text-sm text-gray-500 mt-1">{description.length}/500 characters</p>
+              <div className="absolute right-3 bottom-3 text-sm text-gray-500 dark:text-gray-400">
+                {description.length}/500
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Community Image (optional)
+            <div className="text-center">
+              <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">
+                Community Image
               </label>
+              {!imagePreview && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                >
+                  Choose File
+                </button>
+              )}
               <input
                 type="file"
                 id="image"
                 accept="image/*"
                 onChange={handleImageSelect}
-                className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                ref={fileInputRef}
+                className="hidden"
               />
               {imagePreview && (
-                <div className="mt-3">
-                  <Image
-                    src={imagePreview}
-                    alt="Community preview"
-                    width={128}
-                    height={128}
-                    className="w-32 h-32 object-cover rounded-md border"
-                  />
+                <div className="mt-3 flex flex-col items-center">
+                  <div
+                    className="cursor-pointer inline-block"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Image
+                      src={imagePreview}
+                      alt="Community preview"
+                      width={128}
+                      height={128}
+                      className="w-32 h-32 object-cover rounded-md border"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       setImageFile(null);
                       setImagePreview(null);
                     }}
-                    className="ml-2 text-red-500 hover:text-red-700 text-sm"
+                    className="mt-2 text-red-500 hover:text-red-700 text-sm"
                   >
                     Remove
                   </button>
@@ -208,10 +228,10 @@ export function CreateCommunityView() {
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm">{error}</div>
+              <div className="text-red-500 text-sm text-center">{error}</div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 justify-center">
               <Button type="submit" disabled={!name.trim() || !description.trim() || loading} loading={loading}>
                 Create Community
               </Button>

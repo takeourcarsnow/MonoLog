@@ -143,39 +143,43 @@ export function CreateThreadView() {
       <div className="content-body">
         <div className="card max-w-4xl">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+            <div className="relative">
               <input
                 type="text"
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                className="w-full p-3 pr-16 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 placeholder="Enter thread title"
                 maxLength={200}
                 required
               />
-              <p className="text-sm text-gray-500 mt-1">{title.length}/200 characters</p>
+              <div className="absolute right-3 top-3 text-sm text-gray-500 dark:text-gray-400">
+                {title.length}/200
+              </div>
             </div>
 
-            <div>
+            <div className="relative">
               <textarea
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                className="w-full p-3 pr-16 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 placeholder="Write your thread content here..."
                 rows={8}
                 maxLength={10000}
                 required
               />
-              <p className="text-sm text-gray-500 mt-1">{content.length}/10,000 characters</p>
+              <div className="absolute right-3 bottom-3 text-sm text-gray-500 dark:text-gray-400">
+                {content.length}/10,000
+              </div>
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm">{error}</div>
+              <div className="text-red-500 text-sm text-center">{error}</div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 justify-center">
               <Button type="submit" disabled={!title.trim() || !content.trim() || loading} loading={loading}>
                 Create Thread
               </Button>

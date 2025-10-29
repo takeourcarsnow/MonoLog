@@ -191,13 +191,11 @@ export function ThreadView() {
 
   if (loading) {
     return (
-      <div className="content thread">
+      <div className="content thread space-y-8">
         <div className="card skeleton" style={{ height: 200 }} />
-        <div className="content-body">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="card skeleton" style={{ height: 100 }} />
-          ))}
-        </div>
+        <div className="card skeleton" style={{ height: 100 }} />
+        <div className="card skeleton" style={{ height: 100 }} />
+        <div className="card skeleton" style={{ height: 100 }} />
       </div>
     );
   }

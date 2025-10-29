@@ -189,13 +189,11 @@ export function CommunityView() {
   if (loading) {
     return (
       // add top padding on md+ to avoid header overlap on desktop
-      <div className="community pt-0 md:pt-20">
+      <div className="community pt-0 md:pt-20 space-y-8">
         <div className="card skeleton" style={{ height: 200 }} />
-        <div className="content-body">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="card skeleton" style={{ height: 120 }} />
-          ))}
-        </div>
+        <div className="card skeleton" style={{ height: 120 }} />
+        <div className="card skeleton" style={{ height: 120 }} />
+        <div className="card skeleton" style={{ height: 120 }} />
       </div>
     );
   }

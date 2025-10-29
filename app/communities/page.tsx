@@ -50,7 +50,7 @@ export default function CommunitiesPage() {
               </h1>
             </div>
           </div>
-          <div className="content-body space-y-6">
+          <div className="content-body space-y-8">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="card skeleton" style={{ height: 200 }} />
             ))}

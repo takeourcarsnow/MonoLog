@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getPost } from '@/src/lib/api/posts/post';
 import { getUser } from '@/src/lib/api/users';
 import TimeDisplay from "@/app/components/TimeDisplay";
+import { OptimizedImage } from "@/app/components/OptimizedImage";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -105,14 +106,16 @@ export default function NotificationsPage() {
     }
   };
 
-  const getNotificationMessage = async (notification: Notification): Promise<{ message: string; href?: string; imageUrl?: string }> => {
+  const getNotificationMessage = async (notification: Notification): Promise<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string }> => {
     try {
-      // Fetch actor username
+      // Fetch actor username and avatar
       let actorUsername = 'Someone';
+      let actorAvatarUrl: string | undefined = undefined;
       if (notification.actor_id) {
         const actor = await getUser(notification.actor_id);
         if (actor && actor.username) {
           actorUsername = '@' + actor.username;
+          actorAvatarUrl = actor.avatarUrl;
         }
       }
 
@@ -138,9 +141,10 @@ export default function NotificationsPage() {
             }
           }
           return {
-            message: `${actorUsername} commented on your post${notification.text ? `: "${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}"` : ''}`,
+            message: `${actorUsername} commented on your post${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
             href,
-            imageUrl
+            imageUrl,
+            actorAvatarUrl
           };
         }
         case 'thread_reply': {
@@ -155,12 +159,13 @@ export default function NotificationsPage() {
           //   }
           // }
           return {
-            message: `${actorUsername} replied to your thread${notification.text ? `: "${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}"` : ''}`,
-            href
+            message: `${actorUsername} replied to your thread${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
+            href,
+            actorAvatarUrl
           };
         }
         case 'follow': {
-          return { message: `${actorUsername} followed you` };
+          return { message: `${actorUsername} followed you`, actorAvatarUrl };
         }
         case 'favorite': {
           let href: string | undefined = undefined;
@@ -185,11 +190,12 @@ export default function NotificationsPage() {
           return {
             message: `${actorUsername} favorited your post`,
             href,
-            imageUrl
+            imageUrl,
+            actorAvatarUrl
           };
         }
         default: {
-          return { message: `You have a new ${notification.type} notification` };
+          return { message: `You have a new ${notification.type} notification`, actorAvatarUrl };
         }
       }
     } catch (e) {
@@ -294,9 +300,9 @@ function NotificationItem({
 }: {
   notification: Notification;
   onMarkAsRead: () => void;
-  getMessage: (notification: Notification) => Promise<{ message: string; href?: string; imageUrl?: string }>;
+  getMessage: (notification: Notification) => Promise<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string }>;
 }) {
-  const [messageData, setMessageData] = useState<{ message: string; href?: string; imageUrl?: string } | null>(null);
+  const [messageData, setMessageData] = useState<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -339,7 +345,38 @@ function NotificationItem({
         <span style={{ color: 'var(--muted)' }}>
           <TimeDisplay date={notification.created_at} className="text-sm mb-2" />
         </span>
-        <div className="mb-3" style={{ color: 'var(--text)' }}>
+        {messageData?.actorAvatarUrl && (() => {
+          const parts = messageData?.message.split(' ') || [];
+          const username = parts[0]?.startsWith('@') ? parts[0].slice(1) : null;
+          return username ? (
+            <div className="mt-3 mb-3">
+              <Link href={`/${username}`}>
+                <OptimizedImage
+                  src={messageData.actorAvatarUrl}
+                  alt={`${username}'s avatar`}
+                  width={32}
+                  height={32}
+                  className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                  loading="lazy"
+                  sizes="32px"
+                />
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-3 mb-3">
+              <OptimizedImage
+                src={messageData.actorAvatarUrl}
+                alt="User's avatar"
+                width={32}
+                height={32}
+                className="rounded-full"
+                loading="lazy"
+                sizes="32px"
+              />
+            </div>
+          );
+        })()}
+        <div className="mb-3" style={{ color: 'var(--text)', whiteSpace: 'pre-line' }}>
           {(() => {
             const parts = messageData?.message.split(' ') || [];
             if (parts[0]?.startsWith('@')) {
@@ -350,7 +387,7 @@ function NotificationItem({
                   <Link href={`/${username}`} className="hover:underline" style={{ color: 'var(--primary)' }}>
                     {parts[0]}
                   </Link>{' '}
-                  {rest}
+                  <span>{rest}</span>
                 </>
               );
             } else {

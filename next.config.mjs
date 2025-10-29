@@ -36,11 +36,8 @@ const nextConfig = {
   // Enable compression
   compress: true,
   // Increase API body size limit for image uploads
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
+  // Note: Next.js no longer accepts a top-level `api` key in next.config.
+  // Configure body parser limits per-route inside API route handlers when needed.
   // Optimize images
   images: {
     unoptimized: true,

@@ -333,7 +333,7 @@ function NotificationItem({
 
   if (loading) {
     return (
-      <div className="p-4 border rounded-lg animate-pulse" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elev)' }}>
+      <div className="p-4 border rounded-lg animate-pulse" style={{ borderColor: 'var(--border)' }}>
         <div className="flex flex-col items-center text-center">
           <div className="h-4 rounded w-3/4 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
           <div className="h-4 rounded w-1/2 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
@@ -348,7 +348,6 @@ function NotificationItem({
       className="p-4 border rounded-lg"
       style={{
         borderColor: 'var(--border)',
-        backgroundColor: notification.read ? 'var(--bg-elev)' : 'color-mix(in srgb, var(--primary), transparent 95%)',
         borderLeftColor: notification.read ? 'var(--border)' : 'var(--primary)',
         borderLeftWidth: notification.read ? '1px' : '4px'
       }}

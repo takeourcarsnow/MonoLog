@@ -34,15 +34,10 @@
     "next": "14.2.33",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-swipeable": "^7.0.2",
-    "react-window": "^2.2.0",
-    "react-window-infinite-loader": "^2.0.0",
     "swiper": "^12.0.2",
     "swr": "^2.2.0",
     "web-vitals": "^3.5.2",
-    "wicg-inert": "^3.1.1",
-    "workbox-background-sync": "^7.3.0",
-    "workbox-expiration": "^7.3.0"
+    "wicg-inert": "^3.1.1"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.12.0",

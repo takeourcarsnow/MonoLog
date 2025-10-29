@@ -25,7 +25,12 @@ export function useDelete(postId: string) {
     if (deleteExpanded) {
       // Proceed with deletion
       try {
-        (document.getElementById(`post-${postId}`)?.remove?.());
+        // Do NOT remove the DOM node manually. Removing DOM elements
+        // outside of React's render cycle can cause React to attempt to
+        // remove the same node again and throw "Failed to execute
+        // 'removeChild' on 'Node'". Instead, perform the deletion via
+        // the API and notify the app; the feed's event listener will
+        // update React state and remove the post safely.
         await api.deletePost(postId);
         // Dispatch event to notify other components (e.g., feed) that post was deleted
         window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId } }));

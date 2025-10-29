@@ -47,8 +47,8 @@ const RoutePrefetcher = dynamic(() => import('@/app/components/RoutePrefetcher')
 // and reduces client-side bundle and parse/compile time.
 
 // Toast provider for the entire app
-const ToastProvider = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastProvider), { ssr: false });
-const ToastHost = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastHost), { ssr: false });
+// const ToastProvider = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastProvider), { ssr: false });
+// const ToastHost = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastHost), { ssr: false });
 
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 
@@ -163,7 +163,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           focusThrottleInterval: 10000,
           errorRetryInterval: 5000,
         }}>
-          <ToastProvider>
             <a href="#view" className="skip-link">Skip to content</a>
             <AppPreloader />
             <Header />
@@ -177,8 +176,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PWAAnalytics />
             <PWAHealthCheck />
             <RoutePrefetcher />
-            <ToastHost />
-          </ToastProvider>
+            {/* <ToastHost /> */}
         </SWRConfig>
   <noscript>MonoLog — Your day in pictures. Requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}

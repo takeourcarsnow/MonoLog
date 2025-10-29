@@ -21,7 +21,7 @@ export default function TimeDisplay({ date, className = '' }: TimeDisplayProps) 
         day: 'numeric', 
         hour: 'numeric', 
         minute: '2-digit' 
-      }) : formatRelative(date)}
+      }) : `${formatRelative(date)} ago`}
     </span>
   );
 }

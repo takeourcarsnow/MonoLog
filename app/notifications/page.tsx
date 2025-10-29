@@ -7,11 +7,24 @@ import { Bell } from "lucide-react";
 import Link from "next/link";
 import { getPost } from '@/src/lib/api/posts/post';
 import { getUser } from '@/src/lib/api/users';
+import TimeDisplay from "@/app/components/TimeDisplay";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Add body class for scrolling
+    document.body.classList.add('notifications-page-scroll');
+    document.documentElement.classList.add('notifications-page-scroll');
+
+    return () => {
+      // Clean up on unmount
+      document.body.classList.remove('notifications-page-scroll');
+      document.documentElement.classList.remove('notifications-page-scroll');
+    };
+  }, []);
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -160,20 +173,20 @@ export default function NotificationsPage() {
     <AuthRequired>
       <main className="p-6 notifications">
         <div className="view-fade">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Bell size={24} />
-              Notifications
-            </h1>
-            {notifications.some(n => !n.read) && (
-              <button
-                onClick={markAllAsRead}
-                className="btn"
-              >
-                Mark all as read
-              </button>
-            )}
-          </div>
+        <div className="flex flex-col items-center mb-6">
+          <h1 className="text-2xl font-bold flex items-center gap-2 mb-4">
+            <Bell size={24} />
+            Notifications
+          </h1>
+          {notifications.some(n => !n.read) && (
+            <button
+              onClick={markAllAsRead}
+              className="btn"
+            >
+              Mark all as read
+            </button>
+          )}
+        </div>
 
           {notifications.length === 0 ? (
             <div className="text-center py-12">
@@ -227,9 +240,10 @@ function NotificationItem({
   if (loading) {
     return (
       <div className="p-4 border rounded-lg animate-pulse" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elev)' }}>
-        <div className="animate-pulse">
+        <div className="flex flex-col items-center text-center">
           <div className="h-4 rounded w-3/4 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
-          <div className="h-3 rounded w-1/2" style={{ backgroundColor: 'var(--muted)' }}></div>
+          <div className="h-4 rounded w-1/2 mb-2" style={{ backgroundColor: 'var(--muted)' }}></div>
+          <div className="h-3 rounded w-2/3" style={{ backgroundColor: 'var(--muted)' }}></div>
         </div>
       </div>
     );
@@ -245,26 +259,24 @@ function NotificationItem({
         borderLeftWidth: notification.read ? '1px' : '4px'
       }}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm mb-1" style={{ color: 'var(--muted)' }}>
-            {new Date(notification.created_at).toLocaleString()}
-          </p>
-          <p style={{ color: 'var(--text)' }}>{messageData?.message}</p>
-          {messageData?.href && (
-            <Link
-              href={messageData.href}
-              className="hover:underline text-sm"
-              style={{ color: 'var(--primary)' }}
-            >
-              View related content
-            </Link>
-          )}
-        </div>
+      <div className="flex flex-col items-center text-center">
+        <span style={{ color: 'var(--muted)' }}>
+          <TimeDisplay date={notification.created_at} className="text-sm mb-2" />
+        </span>
+        <p className="mb-3" style={{ color: 'var(--text)' }}>{messageData?.message}</p>
+        {messageData?.href && (
+          <Link
+            href={messageData.href}
+            className="hover:underline text-sm mb-3 block"
+            style={{ color: 'var(--primary)' }}
+          >
+            View related content
+          </Link>
+        )}
         {!notification.read && (
           <button
             onClick={onMarkAsRead}
-            className="hover:underline text-sm ml-4"
+            className="hover:underline text-sm"
             style={{ color: 'var(--primary)' }}
           >
             Mark as read

@@ -22,6 +22,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   const dragging = useRef(false);
   const locked = useRef(false); // locked to horizontal
   const rafRef = useRef<number | null>(null);
+  const pointerTypeRef = useRef<string>('');
 
   useEffect(() => { if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1)); }, [imageUrls.length, setIndex]);
   useEffect(() => { indexRef.current = index; }, [index]);
@@ -55,7 +56,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     });
   };
 
-  const startDrag = (x: number, y: number, multi = false) => {
+  const startDrag = (x: number, y: number, multi = false, pointerType = '') => {
     if (isZoomingRef.current || multi) return;
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start')); } catch (_) {}
     startX.current = x;
@@ -63,6 +64,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     deltaX.current = 0;
     dragging.current = true;
     locked.current = false;
+    pointerTypeRef.current = pointerType;
     // hint to the browser
     const el = trackRef.current;
     if (el) el.style.willChange = 'transform';
@@ -103,8 +105,9 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     const el = trackRef.current;
     const containerWidth = el ? el.getBoundingClientRect().width : 0;
     const ratio = containerWidth ? Math.abs(dx) / containerWidth : 0;
-    const pxThreshold = 40;
-    const ratioThreshold = 0.18; // swipe fraction
+    const isMouse = pointerTypeRef.current === 'mouse';
+    const pxThreshold = isMouse ? 20 : 40; // lower pixel threshold for mouse
+    const ratioThreshold = isMouse ? 0.1 : 0.18; // lower ratio threshold for mouse
     let target = indexRef.current;
     if ((Math.abs(dx) > pxThreshold) && (ratio > ratioThreshold || Math.abs(dx) > containerWidth * 0.35)) {
       if (dx > 0) target = Math.max(0, indexRef.current - 1);
@@ -119,6 +122,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     }
     deltaX.current = 0;
     startX.current = null;
+    pointerTypeRef.current = '';
     try { document.body.style.userSelect = ''; document.body.style.cursor = ''; } catch (_) {}
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_end')); } catch (_) {}
     setIndex(target);
@@ -128,7 +132,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   const onTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length >= 2) {
       // multi-touch -> let zoom handlers take over
-      startDrag(0, 0, true);
+      startDrag(0, 0, true, 'touch');
       setIsZooming(true);
       isZoomingRef.current = true;
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:zoom_start', { detail: { id: Math.random().toString(36).slice(2) } })); } catch (_) {}
@@ -141,7 +145,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     // carousel captures horizontal swipes; ImageZoom still handles taps
     // and pinch gestures via its own listeners.
     const t = e.touches[0];
-    startDrag(t.clientX, t.clientY, false);
+    startDrag(t.clientX, t.clientY, false, 'touch');
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
@@ -170,7 +174,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     // ignore non-primary button
     if ((e as any).button && (e as any).button !== 0) return;
     // pointerType touch handled here too
-    startDrag(e.clientX, e.clientY, false);
+    startDrag(e.clientX, e.clientY, false, e.pointerType);
     // Do not call setPointerCapture here — capturing the pointer on the
     // carousel track prevents child elements (like the image) from
     // receiving native mouse dblclick events. We avoid capturing to let
@@ -195,7 +199,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     if (e.button !== 0) return;
     // Allow mouse drags starting on images as well so desktop horizontal
     // dragging doesn't accidentally change the outer view.
-    startDrag(e.clientX, e.clientY, false);
+    startDrag(e.clientX, e.clientY, false, 'mouse');
     // attach doc move/up to support dragging outside element
     const move = (ev: MouseEvent) => moveDrag(ev.clientX, ev.clientY);
     const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); endDrag(); };

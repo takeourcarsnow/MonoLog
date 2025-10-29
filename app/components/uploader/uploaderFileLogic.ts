@@ -42,10 +42,23 @@ export function createFileHandlers(
 
   // Helper: Set state for multiple files (append mode)
   function setStateForMultipleAppend(newUrls: string[], files: File[]) {
-    setDataUrls(d => [...d, ...newUrls].slice(0, 5));
-    setOriginalDataUrls(d => [...d, ...newUrls].slice(0, 5));
-    setEditorSettings(s => [...s, ...newUrls.map(() => ({}))].slice(0, 5));
-    setIndex(Math.min(dataUrls.length + newUrls.length - 1, 4));
+    // Update data urls and derive the new index from the resulting array length
+    setDataUrls(d => {
+      const next = [...d, ...newUrls].slice(0, 5);
+      setIndex(Math.min(next.length - 1, 4));
+      return next;
+    });
+
+    setOriginalDataUrls(d => {
+      const next = [...d, ...newUrls].slice(0, 5);
+      return next;
+    });
+
+    setEditorSettings(s => {
+      const next = [...s, ...newUrls.map(() => ({}))].slice(0, 5);
+      return next;
+    });
+
     setPreviewLoaded(false);
     try { setCompressedSize(approxDataUrlBytes(newUrls[0])); } catch (_) {}
     try { setOriginalSize(files[0].size); } catch (_) {}
@@ -53,10 +66,13 @@ export function createFileHandlers(
 
   // Helper: Set state for multiple files (replace mode)
   function setStateForMultipleReplace(newUrls: string[], files: File[]) {
-    setDataUrls(newUrls);
-    setOriginalDataUrls(newUrls.slice());
-    setEditorSettings(newUrls.map(() => ({})));
-    try { setCompressedSize(approxDataUrlBytes(newUrls[0])); } catch (_) {}
+    // Replace full state with the new urls; select last as active
+    const capped = newUrls.slice(0, 5);
+    setDataUrls(capped);
+    setOriginalDataUrls(capped.slice());
+    setEditorSettings(capped.map(() => ({})));
+    setIndex(Math.min(capped.length - 1, 4));
+    try { setCompressedSize(approxDataUrlBytes(capped[0])); } catch (_) {}
     try { setOriginalSize(files[0].size); } catch (_) {}
   }
 
@@ -64,30 +80,38 @@ export function createFileHandlers(
   async function setStateForSingleReplace(url: string, file: File, replaceAt: number) {
     const bytes = approxDataUrlBytes(url);
     setCompressedSize(bytes);
-    if (dataUrls.length) {
-      const safeReplaceAt = Math.min(replaceAt, dataUrls.length - 1);
-      setDataUrls(d => {
+    setDataUrls(d => {
+      if (d.length) {
+        const safeReplaceAt = Math.min(replaceAt, d.length - 1);
+        const copy = [...d];
+        copy[safeReplaceAt] = url;
+        if (safeReplaceAt === 0) setPreviewLoaded(false);
+        return copy;
+      }
+      setPreviewLoaded(false);
+      return [url];
+    });
+
+    setOriginalDataUrls(d => {
+      if (d.length) {
+        const safeReplaceAt = Math.min(replaceAt, d.length - 1);
         const copy = [...d];
         copy[safeReplaceAt] = url;
         return copy;
-      });
-      setOriginalDataUrls(d => {
-        const copy = [...d];
-        copy[safeReplaceAt] = url;
-        return copy;
-      });
-      setEditorSettings(s => {
+      }
+      return [url];
+    });
+
+    setEditorSettings(s => {
+      if (s.length) {
+        const safeReplaceAt = Math.min(replaceAt, s.length - 1);
         const copy = [...s];
         copy[safeReplaceAt] = {};
         return copy;
-      });
-      if (safeReplaceAt === 0) setPreviewLoaded(false);
-    } else {
-      setDataUrls([url]);
-      setOriginalDataUrls([url]);
-      setEditorSettings([{}]);
-      setPreviewLoaded(false);
-    }
+      }
+      return [{}];
+    });
+
     setOriginalSize(approxDataUrlBytes(file as any));
   }
 
@@ -106,17 +130,20 @@ export function createFileHandlers(
       setCompressedSize(bytes);
       setDataUrls(d => {
         const next = [...d, url].slice(0, 5);
+        // Auto-select the newly added photo based on resulting array
+        setIndex(Math.min(next.length - 1, 4));
         return next;
       });
+
       setOriginalDataUrls(d => {
         const next = [...d, url].slice(0, 5);
         return next;
       });
+
       setEditorSettings(s => {
         const next = [...s, {}].slice(0, 5);
         return next;
       });
-      setIndex(dataUrls.length); // Auto-select the newly added photo
       setEditing(false);
       try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
       if (!alt && caption) setAlt(caption);

@@ -3,6 +3,8 @@ import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { logger } from '@/src/lib/logger';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 import { strictRateLimiter } from '@/src/lib/rateLimiter';
+import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { z } from 'zod';
 import {
   ensureUserExists,
   checkCalendarRule,
@@ -12,38 +14,43 @@ import {
   clearCaches
 } from './helpers';
 
+const createPostSchema = z.object({
+  imageUrls: z.array(z.string()).optional(),
+  thumbnailUrls: z.array(z.string()).optional(),
+  caption: z.string().max(1000).optional(),
+  alt: z.string().optional(),
+  public: z.boolean().optional().default(true),
+  spotifyLink: z.string().optional(),
+  camera: z.string().optional(),
+  lens: z.string().optional(),
+  filmType: z.string().optional(),
+});
+
 export async function POST(req: Request) {
   try {
     // Rate limiting: strict limits for post creation
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const rateLimit = strictRateLimiter.checkLimit(ip);
     if (!rateLimit.allowed) {
-      return NextResponse.json({
-        error: 'Too many requests. Please try again later.',
+      return apiError('Too many requests. Please try again later.', 429, {
         retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000)
-      }, {
-        status: 429,
-        headers: {
-          'Retry-After': Math.ceil((rateLimit.resetTime - Date.now()) / 1000).toString()
-        }
       });
     }
 
     const body = await req.json();
-    const { imageUrls, thumbnailUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType } = body;
+    const validation = createPostSchema.safeParse(body);
+    if (!validation.success) {
+      return apiError('Invalid input', 400);
+    }
+    const { imageUrls, thumbnailUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType } = validation.data;
     const authUser = await getUserFromAuthHeader(req);
-    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!authUser) return apiError('Unauthorized', 401);
     const userId = authUser.id;
 
     // Debug: log incoming payload so we can verify client is sending multiple images
     try { logger.debug('[posts.create] incoming', { userId, imageUrlsLen: Array.isArray(imageUrls) ? imageUrls.length : (imageUrls ? 1 : 0) }); } catch (e) {}
 
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const CAPTION_MAX = 1000;
-    if (caption && typeof caption === 'string' && caption.length > CAPTION_MAX) {
-      return NextResponse.json({ error: `Caption exceeds ${CAPTION_MAX} characters` }, { status: 400 });
-    }
+    if (!userId) return apiError('Unauthorized', 401);
 
     const sb = getServiceSupabase();
 
@@ -53,11 +60,11 @@ export async function POST(req: Request) {
     // Check calendar rule
     const calendarError = await checkCalendarRule(userId, sb);
     if (calendarError) {
-      return NextResponse.json(calendarError, { status: 409 });
+      return apiError(calendarError.error, 409, { nextAllowedAt: calendarError.nextAllowedAt, lastPostedAt: calendarError.lastPostedAt });
     }
 
     // Insert post
-    const { id, insertData } = await insertPost(sb, userId, imageUrls, thumbnailUrls, caption, alt, isPublic, spotifyLink, camera, lens, filmType);
+    const { id, insertData } = await insertPost(sb, userId, imageUrls, thumbnailUrls, caption || '', alt || '', isPublic, spotifyLink || '', camera || '', lens || '', filmType || '');
 
     // Normalize URLs
     const { normalizedImageUrls, normalizedThumbnailUrls } = normalizeImageUrls(insertData);
@@ -72,13 +79,13 @@ export async function POST(req: Request) {
     try { logger.debug('[posts.create] inserted', { id: insertData?.id, imageCount: normalizedImageUrls.length }); } catch (e) {}
 
     // Process mentions
-    processMentions(sb, caption, id, userId, insertData.created_at);
+    processMentions(sb, caption || '', id, userId, insertData.created_at);
 
     // Clear caches
     clearCaches();
 
-    return NextResponse.json({ ok: true, post: insertData, normalizedImageUrls, normalizedThumbnailUrls });
+    return apiSuccess({ ok: true, post: insertData, normalizedImageUrls, normalizedThumbnailUrls });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+    return apiError(e?.message || String(e), 500);
   }
 }

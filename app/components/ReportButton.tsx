@@ -161,13 +161,14 @@ function ReportModal({ onClose, onSubmit, isSubmitting, type }: ReportModalProps
         }
 
         .report-modal {
-          background: var(--bg-color);
+          background: #1a1a1a;
           border-radius: 8px;
           padding: 20px;
           max-width: 400px;
           width: 90%;
           max-height: 80vh;
           overflow-y: auto;
+          color: white;
         }
 
         .report-modal h3 {
@@ -186,17 +187,42 @@ function ReportModal({ onClose, onSubmit, isSubmitting, type }: ReportModalProps
           cursor: pointer;
         }
 
-        .report-reason input {
+        .report-reason input[type="radio"] {
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border: 2px solid #444;
+          border-radius: 50%;
+          background: #1a1a1a;
+          position: relative;
           margin-right: 8px;
+          vertical-align: middle;
+        }
+
+        .report-reason input[type="radio"]:checked {
+          background: var(--primary);
+          border-color: var(--primary);
+        }
+
+        .report-reason input[type="radio"]:checked::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 6px;
+          height: 6px;
+          background: white;
+          border-radius: 50%;
         }
 
         .report-modal textarea {
           width: 100%;
           padding: 8px;
-          border: 1px solid var(--border-color);
+          border: 1px solid #444;
           border-radius: 4px;
-          background: var(--input-bg);
-          color: var(--text-color);
+          background: #2a2a2a;
+          color: white;
           resize: none;
         }
 
@@ -217,7 +243,7 @@ function ReportModal({ onClose, onSubmit, isSubmitting, type }: ReportModalProps
 
         .report-actions button:first-child {
           background: var(--button-secondary-bg);
-          color: var(--button-secondary-text);
+          color: white;
         }
 
         .report-actions button:last-child {

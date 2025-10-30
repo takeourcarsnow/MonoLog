@@ -18,7 +18,7 @@ const createPostSchema = z.object({
   imageUrls: z.array(z.string()).optional(),
   thumbnailUrls: z.array(z.string()).optional(),
   caption: z.string().max(1000).optional(),
-  alt: z.string().optional(),
+  alt: z.union([z.string(), z.array(z.string())]).optional(),
   public: z.boolean().optional().default(true),
   spotifyLink: z.string().optional(),
   camera: z.string().optional(),

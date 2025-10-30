@@ -108,20 +108,11 @@ function ReportModal({ onClose, onSubmit, isSubmitting, type }: ReportModalProps
   return (
     <div className="report-modal-overlay" onClick={onClose}>
       <div className="report-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Report {type}</h3>
         <form onSubmit={handleSubmit}>
           <div className="report-reasons">
             {reasons.map((r) => (
-              <label key={r.value} className="report-reason">
-                <input
-                  type="radio"
-                  name="reason"
-                  value={r.value}
-                  checked={reason === r.value}
-                  onChange={(e) => setReason(e.target.value)}
-                  required
-                />
-                <span>{r.label}</span>
+              <label key={r.value} className="report-reason" onClick={() => setReason(r.value)}>
+                <span className={reason === r.value ? 'selected' : ''}>{r.label}</span>
               </label>
             ))}
           </div>
@@ -169,12 +160,7 @@ function ReportModal({ onClose, onSubmit, isSubmitting, type }: ReportModalProps
           max-height: 80vh;
           overflow-y: auto;
           color: white;
-        }
-
-        .report-modal h3 {
-          margin: 0 0 16px 0;
-          font-size: 18px;
-          font-weight: 600;
+          text-align: center;
         }
 
         .report-reasons {
@@ -187,33 +173,9 @@ function ReportModal({ onClose, onSubmit, isSubmitting, type }: ReportModalProps
           cursor: pointer;
         }
 
-        .report-reason input[type="radio"] {
-          appearance: none;
-          width: 16px;
-          height: 16px;
-          border: 2px solid #444;
-          border-radius: 50%;
-          background: #1a1a1a;
-          position: relative;
-          margin-right: 8px;
-          vertical-align: middle;
-        }
-
-        .report-reason input[type="radio"]:checked {
-          background: var(--primary);
-          border-color: var(--primary);
-        }
-
-        .report-reason input[type="radio"]:checked::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 6px;
-          height: 6px;
-          background: white;
-          border-radius: 50%;
+        .report-reason span.selected {
+          text-decoration: underline;
+          text-decoration-color: var(--primary);
         }
 
         .report-modal textarea {
@@ -229,26 +191,18 @@ function ReportModal({ onClose, onSubmit, isSubmitting, type }: ReportModalProps
         .report-actions {
           display: flex;
           gap: 8px;
-          justify-content: flex-end;
+          justify-content: center;
           margin-top: 16px;
         }
 
         .report-actions button {
           padding: 8px 16px;
-          border: none;
+          border: 1px solid #444;
           border-radius: 4px;
+          background: transparent;
+          color: white;
           cursor: pointer;
           font-size: 14px;
-        }
-
-        .report-actions button:first-child {
-          background: var(--button-secondary-bg);
-          color: white;
-        }
-
-        .report-actions button:last-child {
-          background: var(--accent-color);
-          color: white;
         }
 
         .report-actions button:disabled {

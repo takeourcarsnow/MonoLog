@@ -271,117 +271,183 @@ export function WeatherLocationInputs({
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <button
-          type="button"
-          className="btn ghost small-min"
-          onClick={fetchWeatherForCurrentLocation}
-          disabled={!hasPreview || processing || fetchingWeather}
-          title="Fetch current weather for this location"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-        >
-          <Cloud size={14} />
-        </button>
-        <button
-          type="button"
-          className="btn ghost small-min"
-          onClick={fetchLocationForCurrentCoords}
-          disabled={!hasPreview || processing || fetchingLocation}
-          title="Fetch current location/address"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-        >
-          <MapPin size={14} />
-        </button>
-      </div>
       {activeField === null ? (
         // Show all fields when none is active
         <>
-          <input
-            type="text"
-            placeholder="Weather (e.g., Sunny 25°C)"
-            value={combinedWeather}
-            onChange={(e) => handleCombinedWeatherChange(e.target.value)}
-            disabled={!hasPreview || processing}
-            onFocus={() => setActiveField('combinedWeather')}
-            onBlur={handleCombinedWeatherBlur}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              border: '1px solid var(--border)',
-              borderRadius: '6px',
-              background: 'var(--bg)',
-              color: 'var(--text)',
-              fontSize: '14px',
-              cursor: (!hasPreview || processing) ? 'not-allowed' : 'text'
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Weather location"
-            value={weatherLocation || ''}
-            onChange={(e) => handleWeatherLocationChange(e.target.value)}
-            disabled={!hasPreview || processing}
-            onFocus={() => setActiveField('weatherLocation')}
-            onBlur={handleWeatherLocationBlur}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              border: '1px solid var(--border)',
-              borderRadius: '6px',
-              background: 'var(--bg)',
-              color: 'var(--text)',
-              fontSize: '14px',
-              cursor: (!hasPreview || processing) ? 'not-allowed' : 'text'
-            }}
-          />
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Weather (e.g., Sunny 25°C)"
+              value={combinedWeather}
+              onChange={(e) => handleCombinedWeatherChange(e.target.value)}
+              disabled={!hasPreview || processing}
+              onFocus={() => setActiveField('combinedWeather')}
+              onBlur={handleCombinedWeatherBlur}
+              style={{
+                width: '100%',
+                padding: '8px 40px 8px 12px',
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                background: 'var(--bg)',
+                color: 'var(--text)',
+                fontSize: '14px',
+                cursor: (!hasPreview || processing) ? 'not-allowed' : 'text'
+              }}
+            />
+            <button
+              type="button"
+              onClick={fetchWeatherForCurrentLocation}
+              disabled={!hasPreview || processing || fetchingWeather}
+              title="Fetch current weather for this location"
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 4,
+                border: 'none',
+                background: 'transparent',
+                cursor: (!hasPreview || processing || fetchingWeather) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <Cloud size={14} />
+            </button>
+          </div>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Weather location"
+              value={weatherLocation || ''}
+              onChange={(e) => handleWeatherLocationChange(e.target.value)}
+              disabled={!hasPreview || processing}
+              onFocus={() => setActiveField('weatherLocation')}
+              onBlur={handleWeatherLocationBlur}
+              style={{
+                width: '100%',
+                padding: '8px 40px 8px 12px',
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                background: 'var(--bg)',
+                color: 'var(--text)',
+                fontSize: '14px',
+                cursor: (!hasPreview || processing) ? 'not-allowed' : 'text'
+              }}
+            />
+            <button
+              type="button"
+              onClick={fetchLocationForCurrentCoords}
+              disabled={!hasPreview || processing || fetchingLocation}
+              title="Fetch current location/address"
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 4,
+                border: 'none',
+                background: 'transparent',
+                cursor: (!hasPreview || processing || fetchingLocation) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <MapPin size={14} />
+            </button>
+          </div>
         </>
       ) : (
         // Show only the active field in full width
         <div style={{ width: '100%' }}>
           {activeField === 'combinedWeather' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-              <Cloud size={16} style={{ color: 'var(--dim)' }} />
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Weather condition and temperature (e.g., Sunny 25°C)"
-                value={combinedWeather}
-                onChange={(e) => handleCombinedWeatherChange(e.target.value)}
-                disabled={!hasPreview || processing}
-                onBlur={handleCombinedWeatherBlur}
+            <div style={{ position: 'relative', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                <Cloud size={16} style={{ color: 'var(--dim)' }} />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Weather condition and temperature (e.g., Sunny 25°C)"
+                  value={combinedWeather}
+                  onChange={(e) => handleCombinedWeatherChange(e.target.value)}
+                  disabled={!hasPreview || processing}
+                  onBlur={handleCombinedWeatherBlur}
+                  style={{
+                    flex: 1,
+                    padding: '8px 40px 8px 12px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    background: 'var(--bg)',
+                    color: 'var(--text)',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={fetchWeatherForCurrentLocation}
+                disabled={!hasPreview || processing || fetchingWeather}
+                title="Fetch current weather for this location"
                 style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  border: '1px solid var(--border)',
-                  borderRadius: '6px',
-                  background: 'var(--bg)',
-                  color: 'var(--text)',
-                  fontSize: '14px'
+                  position: 'absolute',
+                  right: 8,
+                  top: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 4,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: (!hasPreview || processing || fetchingWeather) ? 'not-allowed' : 'pointer'
                 }}
-              />
+              >
+                <Cloud size={14} />
+              </button>
             </div>
           )}
           {activeField === 'weatherLocation' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-              <MapPin size={16} style={{ color: 'var(--dim)' }} />
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Weather location (e.g., New York, NY)"
-                value={weatherLocation || ''}
-                onChange={(e) => handleWeatherLocationChange(e.target.value)}
-                disabled={!hasPreview || processing}
-                onBlur={handleWeatherLocationBlur}
+            <div style={{ position: 'relative', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                <MapPin size={16} style={{ color: 'var(--dim)' }} />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Weather location (e.g., New York, NY)"
+                  value={weatherLocation || ''}
+                  onChange={(e) => handleWeatherLocationChange(e.target.value)}
+                  disabled={!hasPreview || processing}
+                  onBlur={handleWeatherLocationBlur}
+                  style={{
+                    flex: 1,
+                    padding: '8px 40px 8px 12px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    background: 'var(--bg)',
+                    color: 'var(--text)',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={fetchLocationForCurrentCoords}
+                disabled={!hasPreview || processing || fetchingLocation}
+                title="Fetch current location/address"
                 style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  border: '1px solid var(--border)',
-                  borderRadius: '6px',
-                  background: 'var(--bg)',
-                  color: 'var(--text)',
-                  fontSize: '14px'
+                  position: 'absolute',
+                  right: 8,
+                  top: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 4,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: (!hasPreview || processing || fetchingLocation) ? 'not-allowed' : 'pointer'
                 }}
-              />
+              >
+                <MapPin size={14} />
+              </button>
             </div>
           )}
         </div>

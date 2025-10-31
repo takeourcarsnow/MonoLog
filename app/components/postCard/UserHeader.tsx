@@ -8,10 +8,21 @@ import { formatRelative } from "@/src/lib/date";
 import Link from "next/link";
 import Image from "next/image";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
-import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin } from "lucide-react";
+import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
 import { AuthForm } from "../AuthForm";
 import { useToast } from "../Toast";
 import { usePathname, useRouter } from "next/navigation";
+
+function getWeatherIcon(condition: string) {
+  const lower = condition.toLowerCase();
+  if (lower.includes('clear') || lower.includes('sunny')) return Sun;
+  if (lower.includes('rain') || lower.includes('shower')) return CloudRain;
+  if (lower.includes('snow') || lower.includes('freezing')) return CloudSnow;
+  if (lower.includes('thunder') || lower.includes('storm')) return CloudLightning;
+  if (lower.includes('drizzle')) return CloudDrizzle;
+  if (lower.includes('fog') || lower.includes('overcast') || lower.includes('cloud')) return Cloud;
+  return Cloud; // default
+}
 
 interface UserHeaderProps {
   post: HydratedPost;
@@ -103,10 +114,13 @@ export const UserHeader = memo(function UserHeader({
         <span className="dim">{userLine} {lockIcon}</span>
         {(post.weatherCondition || post.weatherTemperature || post.weatherLocation) && (
           <div className="post-meta dim" style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 8 }}>
-            {post.weatherCondition && (
+            {post.weatherTemperature !== undefined && (
               <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
-                <Cloud size={14} aria-hidden />
-                {post.weatherTemperature !== undefined ? `${post.weatherCondition} ${Math.round(post.weatherTemperature)}°C` : post.weatherCondition}
+                {(() => {
+                  const IconComponent = getWeatherIcon(post.weatherCondition || '');
+                  return <IconComponent size={14} aria-hidden />;
+                })()}
+                {Math.round(post.weatherTemperature)}°C
               </span>
             )}
             {post.weatherLocation && (

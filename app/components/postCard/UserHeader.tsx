@@ -8,7 +8,7 @@ import { formatRelative } from "@/src/lib/date";
 import Link from "next/link";
 import Image from "next/image";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
-import { Lock, UserPlus, UserCheck, Edit, Trash } from "lucide-react";
+import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin } from "lucide-react";
 import { AuthForm } from "../AuthForm";
 import { useToast } from "../Toast";
 import { usePathname, useRouter } from "next/navigation";
@@ -101,6 +101,22 @@ export const UserHeader = memo(function UserHeader({
           </div>
         </Link>
         <span className="dim">{userLine} {lockIcon}</span>
+        {(post.weatherCondition || post.weatherTemperature || post.weatherLocation) && (
+          <div className="post-meta dim" style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 8 }}>
+            {post.weatherCondition && (
+              <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+                <Cloud size={14} aria-hidden />
+                {post.weatherTemperature !== undefined ? `${post.weatherCondition} ${Math.round(post.weatherTemperature)}°C` : post.weatherCondition}
+              </span>
+            )}
+            {post.weatherLocation && (
+              <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+                <MapPin size={14} aria-hidden />
+                {post.weatherLocation}
+              </span>
+            )}
+          </div>
+        )}
       </div>
       <div style={{ marginLeft: "auto", position: "relative", display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
         {!authLoading && (

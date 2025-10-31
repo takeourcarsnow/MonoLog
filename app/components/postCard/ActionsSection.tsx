@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Info as InfoIcon, Camera } from "lucide-react";
+import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Camera } from "lucide-react";
 import { ReportButton } from "../ReportButton";
 
 interface ActionsSectionProps {
@@ -24,10 +24,20 @@ interface ActionsSectionProps {
   setShowExif?: (value: boolean) => void;
   showSpotify?: boolean;
   setShowSpotify?: (value: boolean) => void;
+  showWeather?: boolean;
+  setShowWeather?: (value: boolean) => void;
+  showLocation?: boolean;
+  setShowLocation?: (value: boolean) => void;
   spotifyLink?: string;
   camera?: string;
   lens?: string;
   filmType?: string;
+  weatherCondition?: string;
+  weatherTemperature?: number;
+  weatherLocation?: string;
+  locationLatitude?: number;
+  locationLongitude?: number;
+  locationAddress?: string;
 }
 
 export const ActionsSection = function ActionsSection({
@@ -52,10 +62,20 @@ export const ActionsSection = function ActionsSection({
   setShowExif,
   showSpotify,
   setShowSpotify,
+  showWeather,
+  setShowWeather,
+  showLocation,
+  setShowLocation,
   spotifyLink,
   camera,
   lens,
   filmType,
+  weatherCondition,
+  weatherTemperature,
+  weatherLocation,
+  locationLatitude,
+  locationLongitude,
+  locationAddress,
 }: ActionsSectionProps) {
   return (
     <div className="actions">
@@ -148,6 +168,7 @@ export const ActionsSection = function ActionsSection({
           </svg>
         </button>
       )}
+      {/* Weather & Location buttons intentionally removed — info is shown in header */}
       <button
         className="action fullscreen"
         title="View photo"

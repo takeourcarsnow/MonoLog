@@ -47,6 +47,14 @@ export type Post = {
   camera?: string;
   lens?: string;
   filmType?: string;
+  // Weather data
+  weatherCondition?: string;
+  weatherTemperature?: number;
+  weatherLocation?: string;
+  // Location data
+  locationLatitude?: number;
+  locationLongitude?: number;
+  locationAddress?: string;
 };
 
 export type HydratedPost = Post & {
@@ -185,7 +193,7 @@ export interface Api {
   // from the last post until when the next calendar day begins.
   canPostToday(): Promise<{ allowed: boolean; reason?: string; nextAllowedAt?: number; lastPostedAt?: number }>;
   // Accept either a single `imageUrl` (legacy) or `imageUrls` (array up to 5 urls).
-  createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; spotifyLink?: string; public?: boolean; camera?: string; lens?: string; filmType?: string }): Promise<HydratedPost>;
+  createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; spotifyLink?: string; public?: boolean; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; weatherLocation?: string; locationLatitude?: number; locationLongitude?: number; locationAddress?: string }): Promise<HydratedPost>;
 
   updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }): Promise<HydratedPost>;
   deletePost(id: string): Promise<boolean>;

@@ -13,6 +13,12 @@ export function createDraftHandlers(
   setLens: (lens: string) => void,
   setFilmType: (type: string) => void,
   setFilmIso: (iso: string) => void,
+  setWeatherCondition: (condition: string) => void,
+  setWeatherTemperature: (temperature: number | undefined) => void,
+  setWeatherLocation: (location: string) => void,
+  setLocationLatitude: (latitude: number | undefined) => void,
+  setLocationLongitude: (longitude: number | undefined) => void,
+  setLocationAddress: (address: string) => void,
   setAlt: (alt: string | string[]) => void,
   setVisibility: (visibility: "public" | "private") => void,
   setCompressedSize: (size: number | null) => void,
@@ -45,6 +51,12 @@ export function createDraftHandlers(
       setLens("");
       setFilmType("");
       setFilmIso("");
+      setWeatherCondition("");
+      setWeatherTemperature(undefined);
+      setWeatherLocation("");
+      setLocationLatitude(undefined);
+      setLocationLongitude(undefined);
+      setLocationAddress("");
       setAlt("");
       setVisibility("public");
       setCompressedSize(null);
@@ -85,6 +97,12 @@ export function createDraftHandlers(
       setLens("");
       setFilmType("");
       setFilmIso("");
+      setWeatherCondition("");
+      setWeatherTemperature(undefined);
+      setWeatherLocation("");
+      setLocationLatitude(undefined);
+      setLocationLongitude(undefined);
+      setLocationAddress("");
       setAlt("");
       setIndex(0);
     } else {

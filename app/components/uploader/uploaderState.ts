@@ -10,12 +10,18 @@ export function useUploaderState() {
   const [editorSettings, setEditorSettings] = useState<any[]>([]);
   const [alt, setAlt] = useState<string | string[]>("");
   const [caption, setCaption] = useState("");
+  const [captionFocused, setCaptionFocused] = useState(false);
   const [spotifyLink, setSpotifyLink] = useState("");
   const [camera, setCamera] = useState("");
   const [lens, setLens] = useState("");
   const [filmType, setFilmType] = useState("");
   const [filmIso, setFilmIso] = useState("");
-  const [captionFocused, setCaptionFocused] = useState(false);
+  const [weatherCondition, setWeatherCondition] = useState("");
+  const [weatherTemperature, setWeatherTemperature] = useState<number | undefined>(undefined);
+  const [weatherLocation, setWeatherLocation] = useState("");
+  const [locationLatitude, setLocationLatitude] = useState<number | undefined>(undefined);
+  const [locationLongitude, setLocationLongitude] = useState<number | undefined>(undefined);
+  const [locationAddress, setLocationAddress] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [previewLoaded, setPreviewLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -46,6 +52,12 @@ export function useUploaderState() {
     lens,
     filmType,
     filmIso,
+    weatherCondition,
+    weatherTemperature,
+    weatherLocation,
+    locationLatitude,
+    locationLongitude,
+    locationAddress,
     captionFocused,
     visibility,
     previewLoaded,
@@ -68,6 +80,12 @@ export function useUploaderState() {
     setLens,
     setFilmType,
     setFilmIso,
+    setWeatherCondition,
+    setWeatherTemperature,
+    setWeatherLocation,
+    setLocationLatitude,
+    setLocationLongitude,
+    setLocationAddress,
     setCaptionFocused,
     setVisibility,
     setPreviewLoaded,

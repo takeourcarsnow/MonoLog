@@ -14,6 +14,29 @@ import {
   clearCaches
 } from './helpers';
 
+async function fetchWeather(ip: string) {
+  try {
+    // First, get location from IP
+    const locationRes = await fetch(`http://ip-api.com/json/${ip}`);
+    const locationData = await locationRes.json();
+    if (locationData.status !== 'success') return null;
+    const { city, country, lat, lon } = locationData;
+    const location = `${city}, ${country}`;
+
+    // Fetch weather from wttr.in
+    const weatherRes = await fetch(`https://wttr.in/${city}?format=j1`);
+    const weatherData = await weatherRes.json();
+    const current = weatherData.current_condition[0];
+    const condition = current.weatherDesc[0].value;
+    const temperature = parseFloat(current.temp_C);
+
+    return { condition, temperature, location, latitude: lat, longitude: lon, address: location };
+  } catch (e) {
+    try { logger.debug('[fetchWeather] error', { error: String(e) }); } catch (e) {}
+    return null;
+  }
+}
+
 const createPostSchema = z.object({
   imageUrls: z.array(z.string()).optional(),
   thumbnailUrls: z.array(z.string()).optional(),
@@ -24,6 +47,16 @@ const createPostSchema = z.object({
   camera: z.string().optional(),
   lens: z.string().optional(),
   filmType: z.string().optional(),
+  weather: z.object({
+    condition: z.string().optional(),
+    temperature: z.number().optional(),
+    location: z.string().optional(),
+  }).optional(),
+  location: z.object({
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    address: z.string().optional(),
+  }).optional(),
 });
 
 export async function POST(req: Request) {
@@ -42,7 +75,7 @@ export async function POST(req: Request) {
     if (!validation.success) {
       return apiError('Invalid input', 400);
     }
-    const { imageUrls, thumbnailUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType } = validation.data;
+    const { imageUrls, thumbnailUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType, weather: providedWeather, location: providedLocation } = validation.data;
     const authUser = await getUserFromAuthHeader(req);
     if (!authUser) return apiError('Unauthorized', 401);
     const userId = authUser.id;
@@ -63,8 +96,19 @@ export async function POST(req: Request) {
       return apiError(calendarError.error, 409, { nextAllowedAt: calendarError.nextAllowedAt, lastPostedAt: calendarError.lastPostedAt });
     }
 
+    // Fetch weather and location if not provided
+    let weather = providedWeather;
+    let location = providedLocation;
+    if (!weather || !location) {
+      const fetched = await fetchWeather(ip);
+      if (fetched) {
+        weather = weather || { condition: fetched.condition, temperature: fetched.temperature, location: fetched.location };
+        location = location || { latitude: fetched.latitude, longitude: fetched.longitude, address: fetched.address };
+      }
+    }
+
     // Insert post
-    const { id, insertData } = await insertPost(sb, userId, imageUrls, thumbnailUrls, caption || '', alt || '', isPublic, spotifyLink || '', camera || '', lens || '', filmType || '');
+    const { id, insertData } = await insertPost(sb, userId, imageUrls, thumbnailUrls, caption || '', alt || '', isPublic, spotifyLink || '', camera || '', lens || '', filmType || '', weather, location);
 
     // Normalize URLs
     const { normalizedImageUrls, normalizedThumbnailUrls } = normalizeImageUrls(insertData);

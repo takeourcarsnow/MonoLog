@@ -51,7 +51,7 @@ export async function checkCalendarRule(userId: string, sb: any) {
   return null;
 }
 
-export async function insertPost(sb: any, userId: string, imageUrls: any, thumbnailUrls: any, caption: string, alt: any, isPublic: boolean, spotifyLink: string, camera: string, lens: string, filmType: string) {
+export async function insertPost(sb: any, userId: string, imageUrls: any, thumbnailUrls: any, caption: string, alt: any, isPublic: boolean, spotifyLink: string, camera: string, lens: string, filmType: string, weather?: { condition?: string; temperature?: number; location?: string }, location?: { latitude?: number; longitude?: number; address?: string }) {
   const id = uid();
   const created_at = new Date().toISOString();
   const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: !!isPublic };
@@ -59,6 +59,16 @@ export async function insertPost(sb: any, userId: string, imageUrls: any, thumbn
   if (camera) insertObj.camera = camera;
   if (lens) insertObj.lens = lens;
   if (filmType) insertObj.film_type = filmType;
+  if (weather) {
+    if (weather.condition) insertObj.weather_condition = weather.condition;
+    if (weather.temperature !== undefined) insertObj.weather_temperature = weather.temperature;
+    if (weather.location) insertObj.weather_location = weather.location;
+  }
+  if (location) {
+    if (location.latitude !== undefined) insertObj.location_latitude = location.latitude;
+    if (location.longitude !== undefined) insertObj.location_longitude = location.longitude;
+    if (location.address) insertObj.location_address = location.address;
+  }
 
   // Parse hashtags from caption
   const hashtags = parseHashtags(caption || '');
@@ -103,6 +113,12 @@ export async function insertPost(sb: any, userId: string, imageUrls: any, thumbn
         if (fallbackObj.lens) delete fallbackObj.lens;
         if (fallbackObj.film_type) delete fallbackObj.film_type;
         if (fallbackObj.hashtags) delete fallbackObj.hashtags;
+        if (fallbackObj.weather_condition) delete fallbackObj.weather_condition;
+        if (fallbackObj.weather_temperature) delete fallbackObj.weather_temperature;
+        if (fallbackObj.weather_location) delete fallbackObj.weather_location;
+        if (fallbackObj.location_latitude) delete fallbackObj.location_latitude;
+        if (fallbackObj.location_longitude) delete fallbackObj.location_longitude;
+        if (fallbackObj.location_address) delete fallbackObj.location_address;
         const fallbackRes = await sb.from('posts').insert(fallbackObj).select('*').limit(1).single();
         if (fallbackRes.error) {
           throw new Error(`Database schema error: ${fallbackRes.error.message}`);

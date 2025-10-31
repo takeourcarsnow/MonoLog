@@ -159,6 +159,12 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
     camera: row.camera || undefined,
     lens: row.lens || undefined,
     filmType: row.film_type || row.filmType || undefined,
+    weatherCondition: row.weather_condition || row.weatherCondition || undefined,
+    weatherTemperature: row.weather_temperature || row.weatherTemperature || undefined,
+    weatherLocation: row.weather_location || row.weatherLocation || undefined,
+    locationLatitude: row.location_latitude || row.locationLatitude || undefined,
+    locationLongitude: row.location_longitude || row.locationLongitude || undefined,
+    locationAddress: row.location_address || row.locationAddress || undefined,
     user: {
       id: (row.users || row.public_profiles)?.id || row.user_id,
       username: (row.users || row.public_profiles)?.username || "",

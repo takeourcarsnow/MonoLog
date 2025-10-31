@@ -4,6 +4,7 @@ import { PHRASES, PHRASES_SPOTIFY } from "./constants";
 import { Pen } from "lucide-react";
 import { SpotifyIcon } from "./SpotifyIcon";
 import { ExifInputs } from "./ExifInputs";
+import { WeatherLocationInputs } from "./WeatherLocationInputs";
 import type { User } from "@/src/lib/types";
 
 interface CaptionInputProps {
@@ -19,6 +20,18 @@ interface CaptionInputProps {
   setFilmType?: (filmType: string) => void;
   filmIso?: string;
   setFilmIso?: (filmIso: string) => void;
+  weatherCondition?: string;
+  setWeatherCondition?: (condition: string) => void;
+  weatherTemperature?: number;
+  setWeatherTemperature?: (temperature: number | undefined) => void;
+  weatherLocation?: string;
+  setWeatherLocation?: (location: string) => void;
+  locationLatitude?: number;
+  setLocationLatitude?: (latitude: number | undefined) => void;
+  locationLongitude?: number;
+  setLocationLongitude?: (longitude: number | undefined) => void;
+  locationAddress?: string;
+  setLocationAddress?: (address: string) => void;
   // typed removed - this component now owns the typing animation internally
   captionFocused: boolean;
   setCaptionFocused: (focused: boolean) => void;
@@ -45,6 +58,18 @@ export function CaptionInput({
   setFilmType,
   filmIso,
   setFilmIso,
+  weatherCondition,
+  setWeatherCondition,
+  weatherTemperature,
+  setWeatherTemperature,
+  weatherLocation,
+  setWeatherLocation,
+  locationLatitude,
+  setLocationLatitude,
+  locationLongitude,
+  setLocationLongitude,
+  locationAddress,
+  setLocationAddress,
   hasPreview,
   processing,
   CAPTION_MAX,
@@ -281,6 +306,23 @@ export function CaptionInput({
         processing={processing}
         user={user}
         setUser={setUser}
+      />
+      {/* Weather and location inputs - optional */}
+      <WeatherLocationInputs
+        weatherCondition={weatherCondition}
+        setWeatherCondition={setWeatherCondition}
+        weatherTemperature={weatherTemperature}
+        setWeatherTemperature={setWeatherTemperature}
+        weatherLocation={weatherLocation}
+        setWeatherLocation={setWeatherLocation}
+        locationLatitude={locationLatitude}
+        setLocationLatitude={setLocationLatitude}
+        locationLongitude={locationLongitude}
+        setLocationLongitude={setLocationLongitude}
+        locationAddress={locationAddress}
+        setLocationAddress={setLocationAddress}
+        hasPreview={hasPreview}
+        processing={processing}
       />
     </div>
   );

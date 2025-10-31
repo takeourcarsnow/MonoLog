@@ -19,7 +19,13 @@ export function createPublishHandler(
   camera: string,
   lens: string,
   filmType: string,
-  filmIso: string
+  filmIso: string,
+  weatherCondition: string,
+  weatherTemperature: number | undefined,
+  weatherLocation: string,
+  locationLatitude: number | undefined,
+  locationLongitude: number | undefined,
+  locationAddress: string
 ) {
   async function publish() {
     const images = dataUrls.length ? dataUrls : [];
@@ -39,6 +45,12 @@ export function createPublishHandler(
         camera: camera || undefined,
         lens: lens || undefined,
         filmType: (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || undefined,
+        weatherCondition: weatherCondition || undefined,
+        weatherTemperature: weatherTemperature ?? undefined,
+        weatherLocation: weatherLocation || undefined,
+        locationLatitude: locationLatitude ?? undefined,
+        locationLongitude: locationLongitude ?? undefined,
+        locationAddress: locationAddress || undefined,
       });
       try {
         if (typeof window !== 'undefined') {

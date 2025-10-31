@@ -40,10 +40,20 @@ interface PostCardBodyProps {
   setShowExif: (show: boolean) => void;
   showSpotify: boolean;
   setShowSpotify: (show: boolean) => void;
+  showWeather: boolean;
+  setShowWeather: (show: boolean) => void;
+  showLocation: boolean;
+  setShowLocation: (show: boolean) => void;
   spotifyLink?: string;
   camera?: string;
   lens?: string;
   filmType?: string;
+  weatherCondition?: string;
+  weatherTemperature?: number;
+  weatherLocation?: string;
+  locationLatitude?: number;
+  locationLongitude?: number;
+  locationAddress?: string;
   openFullscreen: () => void;
   spotifyMeta: any;
   fsOpen: boolean;
@@ -86,10 +96,20 @@ export function PostCardBody({
   setShowExif,
   showSpotify,
   setShowSpotify,
+  showWeather,
+  setShowWeather,
+  showLocation,
+  setShowLocation,
   spotifyLink,
   camera,
   lens,
   filmType,
+  weatherCondition,
+  weatherTemperature,
+  weatherLocation,
+  locationLatitude,
+  locationLongitude,
+  locationAddress,
   openFullscreen,
   spotifyMeta,
   fsOpen,
@@ -116,6 +136,8 @@ export function PostCardBody({
             setCommentsOpen(value);
             if (value) setShowExif(false); // Close EXIF when opening comments
             if (value) setShowSpotify(false); // Close Spotify when opening comments
+            if (value) setShowWeather(false); // Close Weather when opening comments
+            if (value) setShowLocation(false); // Close Location when opening comments
           }}
           commentsMounted={commentsMounted}
           setCommentsMounted={setCommentsMounted}
@@ -136,6 +158,8 @@ export function PostCardBody({
               setCommentsOpen(false); // Close comments when opening EXIF
               setCommentsMounted(false);
               setShowSpotify(false); // Close Spotify when opening EXIF
+              setShowWeather(false); // Close Weather when opening EXIF
+              setShowLocation(false); // Close Location when opening EXIF
             }
           }}
           showSpotify={showSpotify}
@@ -145,12 +169,42 @@ export function PostCardBody({
               setCommentsOpen(false); // Close comments when opening Spotify
               setCommentsMounted(false);
               setShowExif(false); // Close EXIF when opening Spotify
+              setShowWeather(false); // Close Weather when opening Spotify
+              setShowLocation(false); // Close Location when opening Spotify
+            }
+          }}
+          showWeather={showWeather}
+          setShowWeather={(value: boolean) => {
+            setShowWeather(value);
+            if (value) {
+              setCommentsOpen(false); // Close comments when opening Weather
+              setCommentsMounted(false);
+              setShowExif(false); // Close EXIF when opening Weather
+              setShowSpotify(false); // Close Spotify when opening Weather
+              setShowLocation(false); // Close Location when opening Weather
+            }
+          }}
+          showLocation={showLocation}
+          setShowLocation={(value: boolean) => {
+            setShowLocation(value);
+            if (value) {
+              setCommentsOpen(false); // Close comments when opening Location
+              setCommentsMounted(false);
+              setShowExif(false); // Close EXIF when opening Location
+              setShowSpotify(false); // Close Spotify when opening Location
+              setShowWeather(false); // Close Weather when opening Location
             }
           }}
           spotifyLink={spotifyLink}
           camera={camera}
           lens={lens}
           filmType={filmType}
+          weatherCondition={weatherCondition}
+          weatherTemperature={weatherTemperature}
+          weatherLocation={weatherLocation}
+          locationLatitude={locationLatitude}
+          locationLongitude={locationLongitude}
+          locationAddress={locationAddress}
           openFullscreen={openFullscreen}
         />
 
@@ -165,6 +219,8 @@ export function PostCardBody({
           lens={lens}
           filmType={filmType}
         />
+        {/* Weather and Location are shown in the header (UserHeader);
+            keep action buttons but do not render the expanded sections here. */}
         <CommentsSection
           postId={post.id}
           commentsMounted={commentsMounted}

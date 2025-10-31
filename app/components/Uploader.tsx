@@ -56,11 +56,17 @@ function UploaderCore() {
     editorSettings,
     alt,
     caption,
-  spotifyLink,
+    spotifyLink,
   camera,
   lens,
   filmType,
   filmIso,
+  weatherCondition,
+  weatherTemperature,
+  weatherLocation,
+  locationLatitude,
+  locationLongitude,
+  locationAddress,
     captionFocused,
     visibility,
     previewLoaded,
@@ -99,6 +105,12 @@ function UploaderCore() {
   setLens,
   setFilmType,
   setFilmIso,
+  setWeatherCondition,
+  setWeatherTemperature,
+  setWeatherLocation,
+  setLocationLatitude,
+  setLocationLongitude,
+  setLocationAddress,
     setCaptionFocused,
     setVisibility,
     setPreviewLoaded,
@@ -384,6 +396,18 @@ function UploaderCore() {
           setFilmType={setFilmType}
           filmIso={filmIso}
           setFilmIso={setFilmIso}
+          weatherCondition={weatherCondition}
+          setWeatherCondition={setWeatherCondition}
+          weatherTemperature={weatherTemperature}
+          setWeatherTemperature={setWeatherTemperature}
+          weatherLocation={weatherLocation}
+          setWeatherLocation={setWeatherLocation}
+          locationLatitude={locationLatitude}
+          setLocationLatitude={setLocationLatitude}
+          locationLongitude={locationLongitude}
+          setLocationLongitude={setLocationLongitude}
+          locationAddress={locationAddress}
+          setLocationAddress={setLocationAddress}
           captionFocused={captionFocused}
           setCaptionFocused={setCaptionFocused}
           hasPreview={hasPreview}

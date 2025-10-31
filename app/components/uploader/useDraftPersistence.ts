@@ -29,7 +29,19 @@ export function useDraftPersistence(
   filmType: string,
   setFilmType: (filmType: string) => void,
   filmIso: string,
-  setFilmIso: (filmIso: string) => void
+  setFilmIso: (filmIso: string) => void,
+  weatherCondition: string,
+  setWeatherCondition: (condition: string) => void,
+  weatherTemperature: number | undefined,
+  setWeatherTemperature: (temperature: number | undefined) => void,
+  weatherLocation: string,
+  setWeatherLocation: (location: string) => void,
+  locationLatitude: number | undefined,
+  setLocationLatitude: (latitude: number | undefined) => void,
+  locationLongitude: number | undefined,
+  setLocationLongitude: (longitude: number | undefined) => void,
+  locationAddress: string,
+  setLocationAddress: (address: string) => void
 ) {
   const captionDebounceRef = useRef<NodeJS.Timeout | null>(null);
   // restore draft on mount
@@ -61,10 +73,16 @@ export function useDraftPersistence(
       if (parsed.lens !== undefined) setLens(parsed.lens);
       if (parsed.filmType !== undefined) setFilmType(parsed.filmType);
       if (parsed.filmIso !== undefined) setFilmIso(parsed.filmIso);
+      if (parsed.weatherCondition !== undefined) setWeatherCondition(parsed.weatherCondition);
+      if (parsed.weatherTemperature !== undefined) setWeatherTemperature(parsed.weatherTemperature);
+      if (parsed.weatherLocation !== undefined) setWeatherLocation(parsed.weatherLocation);
+      if (parsed.locationLatitude !== undefined) setLocationLatitude(parsed.locationLatitude);
+      if (parsed.locationLongitude !== undefined) setLocationLongitude(parsed.locationLongitude);
+      if (parsed.locationAddress !== undefined) setLocationAddress(parsed.locationAddress);
     } catch (e) {
       // ignore parse errors
     }
-  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType, setFilmIso]);
+  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType, setFilmIso, setWeatherCondition, setWeatherTemperature, setWeatherLocation, setLocationLatitude, setLocationLongitude, setLocationAddress]);
 
   // Persist draft whenever key pieces of state change (excluding caption for performance)
   useEffect(() => {
@@ -84,6 +102,12 @@ export function useDraftPersistence(
         lens: lens || undefined,
         filmType: filmType || undefined,
         filmIso: filmIso || undefined,
+        weatherCondition: weatherCondition || undefined,
+        weatherTemperature: weatherTemperature ?? undefined,
+        weatherLocation: weatherLocation || undefined,
+        locationLatitude: locationLatitude ?? undefined,
+        locationLongitude: locationLongitude ?? undefined,
+        locationAddress: locationAddress || undefined,
         savedAt: Date.now(),
       };
 
@@ -98,6 +122,12 @@ export function useDraftPersistence(
           if (existing.lens && !payload.lens) payload.lens = existing.lens;
           if (existing.filmType && !payload.filmType) payload.filmType = existing.filmType;
           if (existing.filmIso && !payload.filmIso) payload.filmIso = existing.filmIso;
+          if (existing.weatherCondition && !payload.weatherCondition) payload.weatherCondition = existing.weatherCondition;
+          if (existing.weatherTemperature !== undefined && payload.weatherTemperature === undefined) payload.weatherTemperature = existing.weatherTemperature;
+          if (existing.weatherLocation && !payload.weatherLocation) payload.weatherLocation = existing.weatherLocation;
+          if (existing.locationLatitude !== undefined && payload.locationLatitude === undefined) payload.locationLatitude = existing.locationLatitude;
+          if (existing.locationLongitude !== undefined && payload.locationLongitude === undefined) payload.locationLongitude = existing.locationLongitude;
+          if (existing.locationAddress && !payload.locationAddress) payload.locationAddress = existing.locationAddress;
         }
       } catch (e) {
         // ignore parse errors and fall back to writing payload as-is
@@ -107,7 +137,7 @@ export function useDraftPersistence(
     } catch (e) {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [dataUrls, originalDataUrls, editorSettings, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType, filmIso]);
+  }, [dataUrls, originalDataUrls, editorSettings, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType, filmIso, weatherCondition, weatherTemperature, weatherLocation, locationLatitude, locationLongitude, locationAddress]);
 
   // Debounced persistence for caption to avoid lag on mobile typing
   useEffect(() => {

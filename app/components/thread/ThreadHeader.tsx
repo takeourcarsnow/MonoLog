@@ -1,0 +1,81 @@
+"use client";
+
+import { ArrowLeft, Trash2, MessageSquare } from "lucide-react";
+import type { HydratedThread } from "@/src/lib/types";
+import { Button } from "../Button";
+import TimeDisplay from "../TimeDisplay";
+import Link from "next/link";
+import { OptimizedImage } from "../OptimizedImage";
+import { renderCaption } from "@/src/lib/hashtags";
+
+interface ThreadHeaderProps {
+  thread: HydratedThread;
+  communitySlug: string;
+  currentUserId?: string;
+  onDelete: () => void;
+  deleteArmed: boolean;
+}
+
+export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, deleteArmed }: ThreadHeaderProps) {
+  return (
+    <>
+      {/* Back Navigation */}
+      <div className="mb-4">
+        <Link href={`/communities/${communitySlug}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+          <ArrowLeft size={16} />
+          Back to {thread.community.name}
+        </Link>
+      </div>
+
+      {/* Thread Header - centered stacked layout */}
+      <div className="card relative">
+        {/* Delete button in corner for thread owner */}
+        {currentUserId && thread.user.id === currentUserId && (
+          <div className="absolute right-3 top-3">
+            <Button
+              variant="danger"
+              size="sm"
+              className={`small-min ${deleteArmed ? 'confirm' : ''}`}
+              onClick={onDelete}
+              aria-label={deleteArmed ? 'Confirm delete thread' : 'Delete thread'}
+            >
+              <Trash2 size={16} />
+            </Button>
+          </div>
+        )}
+
+        <div className="flex flex-col items-center text-center gap-4 py-4">
+          <h1 className="text-2xl font-bold">{thread.title}</h1>
+
+          <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 justify-center">
+            <div className="flex items-center gap-2">
+              <div className="flex-shrink-0">
+                <Link href={`/${thread.user.username}`}>
+                  <OptimizedImage
+                    src={(thread.user.avatarUrl || "").trim() || "/logo.svg"}
+                    alt={thread.user.username}
+                    width={24}
+                    height={24}
+                    className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                  />
+                </Link>
+              </div>
+              <span>by @{thread.user.username}</span>
+            </div>
+            <span>•</span>
+            <TimeDisplay date={thread.createdAt} />
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <MessageSquare size={14} />
+              {thread.replyCount || 0} replies
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 prose dark:prose-invert max-w-none">
+          <p className="whitespace-pre-wrap text-center">{renderCaption(thread.content)}</p>
+        </div>
+      </div>
+    </>
+  );
+}

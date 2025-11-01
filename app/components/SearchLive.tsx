@@ -40,7 +40,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
       }
       const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { headers });
       if (!resp.ok) {
-        setResults({ posts: [], users: [], communities: [] });
+        setResults({ posts: [], users: [], communities: [], locations: 0 });
         return;
       }
       const json = await resp.json();

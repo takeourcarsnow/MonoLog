@@ -209,26 +209,9 @@ export function WeatherLocationInputs({
         const code = typeof cw.weathercode === 'number' ? cw.weathercode : undefined;
         if (temp !== undefined) setWeatherTemperature?.(temp);
         if (code !== undefined) setWeatherCondition?.(WEATHER_CODE_MAP[code] || `Weather ${code}`);
-        // Also set coordinates so publish includes them
-        setLocationLatitude?.(lat);
-        setLocationLongitude?.(lon);
-        // Try reverse geocoding to obtain a friendly place name/address
-        try {
-          const addr = await reverseGeocode(lat, lon);
-          if (addr) {
-            setLocationAddress?.(addr.display_name || addr.name || '');
-            // Try to set a short weather location label
-            if (addr.address) {
-              const city = addr.address.city || addr.address.town || addr.address.village || addr.address.county || addr.address.state;
-              if (city) setWeatherLocation?.(city);
-            }
-          }
-        } catch (_) {
-          // ignore reverse geocode failures
-        }
       }
     } catch (e: any) {
-      console.warn('Failed to fetch weather/location', e);
+      console.warn('Failed to fetch weather', e);
       try { alert('Unable to fetch weather: ' + (e?.message || e)); } catch (_) {}
     } finally {
       setFetchingWeather(false);
@@ -277,15 +260,21 @@ export function WeatherLocationInputs({
           <div style={{ position: 'relative', flex: 1 }}>
             <input
               type="text"
-              placeholder="Weather (e.g., Sunny 25°C)"
+              placeholder="Tap to add Weather"
               value={combinedWeather}
               onChange={(e) => handleCombinedWeatherChange(e.target.value)}
               disabled={!hasPreview || processing}
-              onFocus={() => setActiveField('combinedWeather')}
+              onFocus={() => {
+                if (!combinedWeather.trim()) {
+                  fetchWeatherForCurrentLocation();
+                } else {
+                  setActiveField('combinedWeather');
+                }
+              }}
               onBlur={handleCombinedWeatherBlur}
               style={{
                 width: '100%',
-                padding: '8px 40px 8px 12px',
+                padding: '8px 12px 8px 40px',
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
                 background: 'var(--bg)',
@@ -301,7 +290,7 @@ export function WeatherLocationInputs({
               title="Fetch current weather for this location"
               style={{
                 position: 'absolute',
-                right: 8,
+                left: 8,
                 top: 8,
                 display: 'flex',
                 alignItems: 'center',
@@ -318,15 +307,21 @@ export function WeatherLocationInputs({
           <div style={{ position: 'relative', flex: 1 }}>
             <input
               type="text"
-              placeholder="Weather location"
+              placeholder="Tap to add Location"
               value={weatherLocation || ''}
               onChange={(e) => handleWeatherLocationChange(e.target.value)}
               disabled={!hasPreview || processing}
-              onFocus={() => setActiveField('weatherLocation')}
+              onFocus={() => {
+                if (!weatherLocation?.trim()) {
+                  fetchLocationForCurrentCoords();
+                } else {
+                  setActiveField('weatherLocation');
+                }
+              }}
               onBlur={handleWeatherLocationBlur}
               style={{
                 width: '100%',
-                padding: '8px 40px 8px 12px',
+                padding: '8px 12px 8px 40px',
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
                 background: 'var(--bg)',
@@ -342,7 +337,7 @@ export function WeatherLocationInputs({
               title="Fetch current location/address"
               style={{
                 position: 'absolute',
-                right: 8,
+                left: 8,
                 top: 8,
                 display: 'flex',
                 alignItems: 'center',
@@ -374,7 +369,7 @@ export function WeatherLocationInputs({
                   onBlur={handleCombinedWeatherBlur}
                   style={{
                     flex: 1,
-                    padding: '8px 40px 8px 12px',
+                    padding: '8px 12px 8px 40px',
                     border: '1px solid var(--border)',
                     borderRadius: '6px',
                     background: 'var(--bg)',
@@ -390,7 +385,7 @@ export function WeatherLocationInputs({
                 title="Fetch current weather for this location"
                 style={{
                   position: 'absolute',
-                  right: 8,
+                  left: 8,
                   top: 8,
                   display: 'flex',
                   alignItems: 'center',
@@ -412,14 +407,14 @@ export function WeatherLocationInputs({
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Weather location (e.g., New York, NY)"
+                  placeholder="Tap to add Location"
                   value={weatherLocation || ''}
                   onChange={(e) => handleWeatherLocationChange(e.target.value)}
                   disabled={!hasPreview || processing}
                   onBlur={handleWeatherLocationBlur}
                   style={{
                     flex: 1,
-                    padding: '8px 40px 8px 12px',
+                    padding: '8px 12px 8px 40px',
                     border: '1px solid var(--border)',
                     borderRadius: '6px',
                     background: 'var(--bg)',
@@ -435,7 +430,7 @@ export function WeatherLocationInputs({
                 title="Fetch current location/address"
                 style={{
                   position: 'absolute',
-                  right: 8,
+                  left: 8,
                   top: 8,
                   display: 'flex',
                   alignItems: 'center',

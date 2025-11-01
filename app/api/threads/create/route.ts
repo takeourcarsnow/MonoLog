@@ -66,6 +66,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Create notifications for all community members except the creator. This is best-effort
+    // — if the notifications table doesn't exist or the insert fails, we
+    // shouldn't block thread creation.
+    (async () => {
+      try {
+        // Get all community members except the creator
+        const { data: members } = await sb
+          .from('community_members')
+          .select('user_id')
+          .eq('community_id', communityId)
+          .neq('user_id', userId);
+
+        if (members && members.length > 0) {
+          const notifInserts = members.map(member => ({
+            id: uid(),
+            user_id: member.user_id,
+            actor_id: userId,
+            thread_id: id,
+            type: 'thread_created',
+            text: `Created a new thread: ${title}`,
+            created_at,
+            read: false,
+          }));
+
+          await sb.from('notifications').insert(notifInserts);
+        }
+      } catch (e) {
+        // ignore notification errors
+      }
+    })();
+
     return NextResponse.json({
       ...thread,
       replyCount: 0

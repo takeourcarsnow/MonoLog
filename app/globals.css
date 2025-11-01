@@ -89,7 +89,7 @@ html[class*="notifications-page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
-  padding-top: 50px !important;
+  padding-top: var(--header-height) !important;
   -webkit-overflow-scrolling: touch;
 }
 :root {

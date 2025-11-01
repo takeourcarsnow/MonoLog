@@ -102,6 +102,7 @@ export async function getThread(id: string): Promise<HydratedThread | null> {
     community: {
       id: rawCommunity.id,
       name: rawCommunity.name,
+      slug: rawCommunity.slug,
     },
     replyCount: data.replyCount || 0
   };
@@ -152,6 +153,7 @@ export async function getThreadBySlug(slug: string): Promise<HydratedThread | nu
     community: {
       id: rawCommunity.id,
       name: rawCommunity.name,
+      slug: rawCommunity.slug,
     },
     replyCount: replyCount
   };
@@ -185,7 +187,7 @@ export async function createThread(input: { communityId: string; title: string; 
     .select(`
       *,
       user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-      community:communities!threads_community_id_fkey(id, name)
+      community:communities!threads_community_id_fkey(id, name, slug)
     `)
     .single();
 
@@ -209,7 +211,7 @@ export async function updateThread(id: string, patch: { title?: string; content?
     .select(`
       *,
       user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-      community:communities!threads_community_id_fkey(id, name)
+      community:communities!threads_community_id_fkey(id, name, slug)
     `)
     .single();
 

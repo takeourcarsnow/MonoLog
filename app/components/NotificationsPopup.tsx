@@ -1,29 +1,34 @@
 "use client";
-import { useEffect, useState, useCallback, useRef } from "react";
+
+import { useEffect, useState, useCallback } from "react";
+import Portal from "./Portal";
 import { api } from "@/src/lib/api";
 import type { Notification } from "@/src/lib/types";
-import { AuthRequired } from "@/app/components/AuthRequired";
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import Link from "next/link";
 import { getPost } from '@/src/lib/api/posts/post';
 import { getUser } from '@/src/lib/api/users';
 import { getThread } from '@/src/lib/api/communities/threads';
-import TimeDisplay from "@/app/components/TimeDisplay";
-import NextImage from 'next/image';
-import { OptimizedImage } from "@/app/components/OptimizedImage";
+import TimeDisplay from "./TimeDisplay";
+import { OptimizedImage } from "./OptimizedImage";
 import { currentTheme } from "@/src/lib/theme";
 import { LoadingIndicator } from "@/app/components/LoadingIndicator";
+import NextImage from 'next/image';
 
-export default function NotificationsPage() {
+type Props = {
+  open: boolean;
+  onClose: () => void;
+};
+
+export function NotificationsPopup({ open, onClose }: Props) {
   const [loadedNotifications, setLoadedNotifications] = useState<Array<{ notification: Notification; messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string } }>>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">(currentTheme());
 
-  const pageSize = 10; // Load 10 notifications at a time
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const pageSize = 10;
 
   const loadInitialNotifications = useCallback(async () => {
     setLoading(true);
@@ -91,20 +96,10 @@ export default function NotificationsPage() {
   }, [hasMore, loadMoreNotifications]);
 
   useEffect(() => {
-    // Add body class for scrolling
-    document.body.classList.add('notifications-page-scroll');
-    document.documentElement.classList.add('notifications-page-scroll');
-
-    return () => {
-      // Clean up on unmount
-      document.body.classList.remove('notifications-page-scroll');
-      document.documentElement.classList.remove('notifications-page-scroll');
-    };
-  }, []);
-
-  useEffect(() => {
-    loadInitialNotifications();
-  }, [loadInitialNotifications]);
+    if (open) {
+      loadInitialNotifications();
+    }
+  }, [open, loadInitialNotifications]);
 
   useEffect(() => {
     const handleThemeChange = () => setTheme(currentTheme());
@@ -130,7 +125,6 @@ export default function NotificationsPage() {
 
   const getNotificationMessage = async (notification: Notification): Promise<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string }> => {
     try {
-      // Fetch actor username and avatar
       let actorUsername = 'Someone';
       let actorAvatarUrl: string | undefined = undefined;
       if (notification.actor_id) {
@@ -158,13 +152,11 @@ export default function NotificationsPage() {
               if (p && p.imageUrls && p.imageUrls.length > 0) {
                 imageUrl = p.imageUrls[0];
               }
-              // Check if this is the user's own post
               if (p && p.userId) {
                 const currentUser = await api.getCurrentUser();
                 isOwnPost = !!(currentUser && currentUser.id === p.userId);
               }
             } catch (e) {
-              // Fallback to basic post link
               href = `/post/${notification.post_id}`;
             }
           }
@@ -176,19 +168,8 @@ export default function NotificationsPage() {
           };
         }
         case 'thread_reply': {
-          let href: string | undefined = undefined;
-          // For now, don't try to fetch thread info since getThread may not be implemented
-          // if (notification.thread_id) {
-          //   try {
-          //     const t = await getThread(notification.thread_id);
-          //     // ... construct href
-          //   } catch (e) {
-          //     // ignore
-          //   }
-          // }
           return {
             message: `${actorUsername} replied to your thread${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
-            href,
             actorAvatarUrl
           };
         }
@@ -211,13 +192,11 @@ export default function NotificationsPage() {
               if (p && p.imageUrls && p.imageUrls.length > 0) {
                 imageUrl = p.imageUrls[0];
               }
-              // Check if this is the user's own post
               if (p && p.userId) {
                 const currentUser = await api.getCurrentUser();
                 isOwnPost = !!(currentUser && currentUser.id === p.userId);
               }
             } catch (e) {
-              // Fallback to basic post link
               href = `/post/${notification.post_id}`;
             }
           }
@@ -243,7 +222,6 @@ export default function NotificationsPage() {
                 href = `/communities/${thread.community.slug}/thread/${thread.slug}`;
               }
             } catch (e) {
-              // Fallback to basic thread link
               href = `/communities/thread/${notification.thread_id}`;
             }
           }
@@ -269,7 +247,6 @@ export default function NotificationsPage() {
                 imageUrl = p.imageUrls[0];
               }
             } catch (e) {
-              // Fallback to basic post link
               href = `/post/${notification.post_id}`;
             }
           }
@@ -296,7 +273,6 @@ export default function NotificationsPage() {
                 imageUrl = p.imageUrls[0];
               }
             } catch (e) {
-              // Fallback to basic post link
               href = `/post/${notification.post_id}`;
             }
           }
@@ -312,16 +288,39 @@ export default function NotificationsPage() {
         }
       }
     } catch (e) {
-      // Fallback to basic message if fetching additional data fails
       return { message: `You have a new ${notification.type} notification` };
     }
   };
 
-  if (loading) {
-    return (
-      <main className="p-6 notifications">
-        <div className="view-fade mt-[10px]">
-          <div className="text-center py-12">
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <Portal>
+      <div className="notifications-popup-backdrop" onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Notifications"
+        className="notifications-popup"
+      >
+        <div className="notifications-popup-header">
+          <h3>Notifications</h3>
+          <button onClick={onClose} className="notifications-popup-close" aria-label="Close notifications">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="notifications-popup-content">
+          {loading ? (
+            <div className="text-center py-8">
               <style>{`
                 @keyframes subtleSpin {
                   0% { transform: rotate(0deg) scale(1); }
@@ -331,56 +330,37 @@ export default function NotificationsPage() {
               `}</style>
               <NextImage src="/logo.svg" alt="loading" width={24} height={24} className="mx-auto" style={{ animation: 'subtleSpin 1.5s infinite', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
             </div>
-          </div>
-        </main>
-    );
-  }
-
-  if (error) {
-    return (
-      <main className="p-6 notifications">
-        <div className="view-fade mt-[10px]">
-          <div className="text-center" style={{ color: 'var(--danger)' }}>{error}</div>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <AuthRequired>
-      <main className="p-6 notifications">
-        <div className="view-fade mt-[10px]">
-          <div className="flex flex-col items-center mb-6">
-            {loadedNotifications.some(item => !item.notification.read) && (
-              <button
-                onClick={markAllAsRead}
-                className="btn"
-              >
-                Mark all as read
-              </button>
-            )}
-          </div>
-
-            {loadedNotifications.length === 0 ? (
-              <div className="text-center py-12">
-                <Bell size={48} className="mx-auto mb-4" style={{ color: 'var(--muted)' }} />
-                <p style={{ color: 'var(--muted)' }}>No notifications yet</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
+          ) : error ? (
+            <div className="text-center py-8" style={{ color: 'var(--danger)' }}>{error}</div>
+          ) : loadedNotifications.length === 0 ? (
+            <div className="text-center py-8">
+              <Bell size={48} style={{ color: 'var(--muted)' }} />
+              <p style={{ color: 'var(--muted)' }}>No notifications yet</p>
+            </div>
+          ) : (
+            <>
+              {loadedNotifications.some(item => !item.notification.read) && (
+                <div className="notifications-popup-actions">
+                  <button onClick={markAllAsRead} className="btn">
+                    Mark all as read
+                  </button>
+                </div>
+              )}
+              <div className="notifications-popup-list">
                 {loadedNotifications.map(item => (
                   <NotificationItem
                     key={item.notification.id}
                     notification={item.notification}
                     messageData={item.messageData}
                     onMarkAsRead={() => markAsRead([item.notification.id])}
+                    onClose={onClose}
                   />
                 ))}
                 {hasMore && (
-                  <div ref={sentinelRef} className="flex justify-center py-4">
+                  <div ref={setSentinel} className="text-center py-4">
                     {loadingMore ? (
                       <div className="animate-pulse text-sm" style={{ color: 'var(--muted)' }}>
-                        Loading more notifications...
+                        Loading more...
                       </div>
                     ) : (
                       <div className="text-sm" style={{ color: 'var(--muted)' }}>
@@ -395,42 +375,46 @@ export default function NotificationsPage() {
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        </main>
-      </AuthRequired>
-    );
+            </>
+          )}
+        </div>
+      </div>
+    </Portal>
+  );
 }
 
 function NotificationItem({
   notification,
   messageData,
-  onMarkAsRead
+  onMarkAsRead,
+  onClose
 }: {
   notification: Notification;
   messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string };
   onMarkAsRead: () => void;
+  onClose: () => void;
 }) {
+  const handleLinkClick = () => {
+    onClose(); // Close the popup when navigating
+  };
 
   return (
     <div
-      className="p-4 border rounded-lg"
+      className="notification-item"
       style={{
         borderColor: 'var(--border)',
         borderLeftColor: notification.read ? 'var(--border)' : 'var(--primary)',
         borderLeftWidth: notification.read ? '1px' : '4px'
       }}
     >
-      <div className="flex flex-col items-center text-center">
-        <span style={{ color: 'var(--muted)' }}>
-          <TimeDisplay date={notification.created_at} className="text-sm mb-2" />
-        </span>
+      <div className="notification-content">
+        <TimeDisplay date={notification.created_at} className="notification-time" />
         {messageData?.actorAvatarUrl && (() => {
           const parts = messageData?.message.split(' ') || [];
           const username = parts[0]?.startsWith('@') ? parts[0].slice(1) : null;
           return username ? (
-            <div className="mt-3 mb-3">
-              <Link href={`/${username}`}>
+            <div className="notification-avatar">
+              <Link href={`/${username}`} onClick={handleLinkClick}>
                 <OptimizedImage
                   src={messageData.actorAvatarUrl}
                   alt={`${username}'s avatar`}
@@ -443,7 +427,7 @@ function NotificationItem({
               </Link>
             </div>
           ) : (
-            <div className="mt-3 mb-3">
+            <div className="notification-avatar">
               <OptimizedImage
                 src={messageData.actorAvatarUrl}
                 alt="User's avatar"
@@ -456,7 +440,7 @@ function NotificationItem({
             </div>
           );
         })()}
-        <div className="mb-3" style={{ color: 'var(--text)', whiteSpace: 'pre-line' }}>
+        <div className="notification-message">
           {(() => {
             const parts = messageData?.message.split(' ') || [];
             if (parts[0]?.startsWith('@')) {
@@ -464,7 +448,7 @@ function NotificationItem({
               const rest = parts.slice(1).join(' ');
               return (
                 <>
-                  <Link href={`/${username}`} className="hover:underline" style={{ color: 'var(--primary)' }}>
+                  <Link href={`/${username}`} onClick={handleLinkClick} className="hover:underline" style={{ color: 'var(--primary)' }}>
                     {parts[0]}
                   </Link>{' '}
                   <span>{rest}</span>
@@ -476,9 +460,9 @@ function NotificationItem({
           })()}
         </div>
         {messageData?.imageUrl && (
-          <div className="mb-3">
+          <div className="notification-image">
             {messageData.href ? (
-              <Link href={messageData.href}>
+              <Link href={messageData.href} onClick={handleLinkClick}>
                 <img src={messageData.imageUrl} alt="Post image" className="max-w-full h-auto rounded cursor-pointer" style={{ maxHeight: '200px' }} />
               </Link>
             ) : (
@@ -489,7 +473,8 @@ function NotificationItem({
         {messageData?.href && !messageData?.imageUrl && (
           <Link
             href={messageData.href}
-            className="hover:underline text-sm mb-3 block"
+            onClick={handleLinkClick}
+            className="hover:underline text-sm block notification-link"
             style={{ color: 'var(--primary)' }}
           >
             View related content
@@ -498,7 +483,7 @@ function NotificationItem({
         {!notification.read && (
           <button
             onClick={onMarkAsRead}
-            className="hover:underline text-sm"
+            className="hover:underline text-sm notification-action"
             style={{ color: 'var(--primary)' }}
           >
             Mark as read

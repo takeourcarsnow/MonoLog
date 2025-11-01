@@ -17,7 +17,7 @@ export async function GET(req: Request) {
         .select(`
           *,
           user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-          community:communities!threads_community_id_fkey(id, name)
+          community:communities!threads_community_id_fkey(id, name, slug)
         `)
         .eq('id', id)
         .single();
@@ -44,7 +44,7 @@ export async function GET(req: Request) {
         .select(`
           *,
           user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-          community:communities!threads_community_id_fkey(id, name)
+          community:communities!threads_community_id_fkey(id, name, slug)
         `)
         .eq('slug', slug)
         .single();
@@ -77,7 +77,7 @@ export async function GET(req: Request) {
           .select(`
             *,
             user:users!threads_user_id_fkey(id, username, display_name, avatar_url),
-            community:communities!threads_community_id_fkey(id, name)
+            community:communities!threads_community_id_fkey(id, name, slug)
           `)
           .eq('community_id', communityId)
           .order('created_at', { ascending: false });

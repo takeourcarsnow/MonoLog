@@ -11,6 +11,7 @@ import Link from "next/link";
 import { api } from "@/src/lib/api";
 import { useToast } from "./Toast";
 import { useAuth } from "@/src/lib/hooks/useAuth";
+import { NotificationsPopup } from "./NotificationsPopup";
 
 // Non-critical header components loaded dynamically
 const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { ssr: false });
@@ -25,6 +26,7 @@ export function HeaderInteractive() {
   const { show } = useToast();
   const { me } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [showNotificationsPopup, setShowNotificationsPopup] = useState(false);
 
   // Define checkForNewThreads function outside useEffect so it can be exposed globally
   const checkForNewThreads = useCallback(async (forceToast = false) => {
@@ -202,9 +204,20 @@ export function HeaderInteractive() {
           <Users size={20} strokeWidth={2} />
         </Link>
         {/* Notifications button */}
-        <Link href={mounted && me ? "/notifications" : "/profile"} className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`} aria-label="Notifications">
-          <Bell size={20} strokeWidth={2} />
-        </Link>
+        {mounted && me ? (
+          <button
+            className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`}
+            title="Notifications"
+            aria-label="Notifications"
+            onClick={() => setShowNotificationsPopup(true)}
+          >
+            <Bell size={20} strokeWidth={2} />
+          </button>
+        ) : (
+          <Link href="/profile" className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`} aria-label="Notifications">
+            <Bell size={20} strokeWidth={2} />
+          </Link>
+        )}
         {/* Search button */}
         <Link href={mounted && me ? "/search" : "/profile"} className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
           <Search size={20} strokeWidth={2} />
@@ -216,6 +229,10 @@ export function HeaderInteractive() {
           <ProfileButton />
         </div>
       </div>
+      <NotificationsPopup
+        open={showNotificationsPopup}
+        onClose={() => setShowNotificationsPopup(false)}
+      />
     </>
   );
 }

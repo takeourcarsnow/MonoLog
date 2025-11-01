@@ -86,6 +86,35 @@ export async function POST(req: Request) {
         joined_at: created_at
       });
 
+    // Create notifications for followers. This is best-effort
+    // — if the notifications table doesn't exist or the insert fails, we
+    // shouldn't block community creation.
+    (async () => {
+      try {
+        // Get all followers
+        const { data: followers } = await sb
+          .from('follows')
+          .select('follower_id')
+          .eq('following_id', userId);
+
+        if (followers && followers.length > 0) {
+          const notifInserts = followers.map(follower => ({
+            id: uid(),
+            user_id: follower.follower_id,
+            actor_id: userId,
+            type: 'community_created',
+            text: `Created a new community: ${name}`,
+            created_at,
+            read: false,
+          }));
+
+          await sb.from('notifications').insert(notifInserts);
+        }
+      } catch (e) {
+        // ignore notification errors
+      }
+    })();
+
     return NextResponse.json({
       ...community,
       memberCount: 1,

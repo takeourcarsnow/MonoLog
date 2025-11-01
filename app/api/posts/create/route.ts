@@ -11,6 +11,7 @@ import {
   insertPost,
   normalizeImageUrls,
   processMentions,
+  processPostAfterBreak,
   clearCaches
 } from './helpers';
 
@@ -124,6 +125,9 @@ export async function POST(req: Request) {
 
     // Process mentions
     processMentions(sb, caption || '', id, userId, insertData.created_at);
+
+    // Process post after break notifications
+    processPostAfterBreak(sb, userId, id, insertData.created_at);
 
     // Clear caches
     clearCaches();

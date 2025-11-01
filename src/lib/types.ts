@@ -103,7 +103,7 @@ export type Thread = {
 
 export type HydratedThread = Thread & {
   user: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
-  community: Pick<Community, "id" | "name">;
+  community: Pick<Community, "id" | "name" | "slug">;
 };
 
 export type ThreadReply = {

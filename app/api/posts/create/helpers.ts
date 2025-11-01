@@ -218,6 +218,52 @@ export async function processMentions(sb: any, caption: string, id: string, user
   }
 }
 
+export async function processPostAfterBreak(sb: any, userId: string, postId: string, created_at: string) {
+  // Check if user hasn't posted in the last 7 days
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  
+  try {
+    const { data: recentPosts, error } = await sb
+      .from('posts')
+      .select('id')
+      .eq('user_id', userId)
+      .gte('created_at', sevenDaysAgo)
+      .neq('id', postId) // Exclude the current post
+      .limit(1);
+
+    if (error) {
+      // If there's an error checking, just skip the notification
+      return;
+    }
+
+    // If no recent posts (other than this one), this is posting after a break
+    if (!recentPosts || recentPosts.length === 0) {
+      // Get all followers and notify them
+      const { data: followers } = await sb
+        .from('follows')
+        .select('follower_id')
+        .eq('following_id', userId);
+
+      if (followers && followers.length > 0) {
+        const notifInserts = followers.map((follower: any) => ({
+          id: uid(),
+          user_id: follower.follower_id,
+          actor_id: userId,
+          post_id: postId,
+          type: 'post_after_break',
+          text: `Resumed posting after a break`,
+          created_at: created_at,
+          read: false,
+        }));
+
+        await sb.from('notifications').insert(notifInserts);
+      }
+    }
+  } catch (e) {
+    // Ignore notification errors
+  }
+}
+
 export function clearCaches() {
   // Invalidate short-lived server caches for feeds so new post surfaces quickly
   try {

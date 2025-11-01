@@ -493,6 +493,7 @@ body.notifications-popup-open .tabbar {
   position: fixed;
   left: 50%;
   top: 60px;
+  bottom: 20px;
   transform: translateX(-50%);
   z-index: 10001;
   background: var(--bg);
@@ -501,10 +502,10 @@ body.notifications-popup-open .tabbar {
   border: 1px solid var(--border);
   width: 360px;
   max-width: calc(100vw - 40px);
-  max-height: calc(100vh - 80px);
   animation: notificationsPopupIn 200ms var(--transition-mid) both;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 @keyframes notificationsPopupIn {
@@ -548,7 +549,6 @@ body.notifications-popup-open .tabbar {
 .notifications-popup-content {
   flex: 1;
   overflow-y: auto;
-  max-height: 500px;
 }
 
 .notifications-popup-actions {
@@ -625,6 +625,7 @@ body.notifications-popup-open .tabbar {
   .notifications-popup {
     /* Position the popup at the top on mobile, centered horizontally */
     top: 70px;
+    bottom: 20px;
     /* Center the popup while keeping a consistent horizontal gap on
        small screens. Use left:50% + translateX(-50%) so it remains
        centered even if the viewport width changes (avoids left-only
@@ -635,5 +636,13 @@ body.notifications-popup-open .tabbar {
     transform: translateX(-50%);
     width: min(360px, calc(100vw - 20px));
     box-sizing: border-box;
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 641px) {
+  .notifications-popup {
+    width: 340px;
+    max-width: 340px;
   }
 }

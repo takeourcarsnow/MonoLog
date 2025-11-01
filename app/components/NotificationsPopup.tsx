@@ -81,7 +81,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
   if (!open) return null;
 
   return (
-    <Portal>
+    <Portal wrapperId="notifications-root" className="notifications-portal">
       <div className="notifications-popup-backdrop" onClick={onClose} />
       <div
         role="dialog"

@@ -481,10 +481,29 @@ body.notifications-popup-open .tabbar {
   pointer-events: none; /* keep background non-interactive while popup is open */
 }
 
+/* When notifications popup is open, hide the navbar hairline/mask pseudo
+   element which can sit above overlays in some stacking contexts and cause
+   a visible seam. This ensures the tabbar blurs cleanly. */
+body.notifications-popup-open .tabbar::before {
+  display: none !important;
+}
+
+/* Remove transform-based stacking context from the tabbar while popup is
+   open. Some transform/translateZ rules create stacking contexts which can
+   prevent backdrop-filter/backdrop overlays from blurring them correctly. */
+body.notifications-popup-open .tabbar {
+  transform: none !important;
+  -webkit-transform: none !important;
+  will-change: auto !important;
+}
+
 .notifications-popup-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  /* Raise above most UI to guarantee it sits above header/tabbar in all
+     stacking contexts. Use a large value to avoid clashes with other
+     components that set high z-index values. */
+  z-index: 2147483000;
   background: rgba(0,0,0,0.4);
   backdrop-filter: blur(4px);
 }
@@ -495,7 +514,8 @@ body.notifications-popup-open .tabbar {
   top: 60px;
   bottom: 20px;
   transform: translateX(-50%);
-  z-index: 10001;
+  /* Keep popup above the backdrop */
+  z-index: 2147483001;
   background: var(--bg);
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);

@@ -83,7 +83,9 @@
   height: 1px;
   /* fully-opaque 1px strip matching the elevated background to mask the hairline */
   background: var(--bg-elev);
-  z-index: 10000; /* above the tabbar children but below interactive elements if needed */
+  /* ensure this masking strip doesn't unintentionally sit above global overlays
+     (notifications/backdrop etc). Keep it just below common overlay z-indices. */
+  z-index: 9998; /* above the tabbar children but below overlay/backdrop */
   pointer-events: none;
 }
 

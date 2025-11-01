@@ -625,7 +625,15 @@ body.notifications-popup-open .tabbar {
   .notifications-popup {
     /* Position the popup at the top on mobile, centered horizontally */
     top: 70px;
+    /* Center the popup while keeping a consistent horizontal gap on
+       small screens. Use left:50% + translateX(-50%) so it remains
+       centered even if the viewport width changes (avoids left-only
+       inset issues). Use a width limited by the viewport minus 20px
+       to maintain ~10px gutters on each side. */
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
     width: min(360px, calc(100vw - 20px));
-    max-width: none;
+    box-sizing: border-box;
   }
 }

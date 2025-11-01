@@ -38,10 +38,6 @@ export function Navbar({ activeIndex }: NavbarProps) {
 
   useEffect(() => {
     const currentPath = pathname || '/';
-    if (currentPath.startsWith('/notifications')) {
-      setActiveIndexState(-1);
-      return;
-    }
     const index = navItems.findIndex(item => isNavItemActive(currentPath, item.path));
     setActiveIndexState(index);
   }, [pathname]);

@@ -206,7 +206,7 @@ export function HeaderInteractive() {
         {/* Notifications button */}
         {mounted && me ? (
           <button
-            className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`}
+            className="btn icon notifications-btn no-tap-effects"
             title="Notifications"
             aria-label="Notifications"
             onClick={() => setShowNotificationsPopup(true)}
@@ -214,7 +214,7 @@ export function HeaderInteractive() {
             <Bell size={20} strokeWidth={2} />
           </button>
         ) : (
-          <Link href="/profile" className={`btn icon notifications-btn no-tap-effects ${pathname === '/notifications' ? 'active' : ''}`} aria-label="Notifications">
+          <Link href="/profile" className="btn icon notifications-btn no-tap-effects" aria-label="Notifications">
             <Bell size={20} strokeWidth={2} />
           </Link>
         )}

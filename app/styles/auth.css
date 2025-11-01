@@ -481,10 +481,19 @@ body.notifications-popup-open .tabbar {
   pointer-events: none; /* keep background non-interactive while popup is open */
 }
 
+.notifications-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+}
+
 .notifications-popup {
   position: fixed;
-  right: 20px;
+  left: 50%;
   top: 60px;
+  transform: translateX(-50%);
   z-index: 10001;
   background: var(--bg);
   border-radius: 12px;
@@ -499,10 +508,7 @@ body.notifications-popup-open .tabbar {
 }
 
 @keyframes notificationsPopupIn {
-  /* Preserve any horizontal translate (centering) during the entrance
-     animation by including translateX(-50%) in the keyframes. This avoids
-     the animation overwriting the centering transform and leaving the
-     popup offset to the right. */
+  /* Preserve the horizontal centering during the entrance animation */
   from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.95); }
   to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
@@ -617,15 +623,8 @@ body.notifications-popup-open .tabbar {
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .notifications-popup {
-    /* Center the popup horizontally and constrain its width so the
-       right side won't be clipped on narrow viewports. Use left:50%+
-       translateX(-50%) for robust centering even when other layout
-       rules are present. Keep a small top offset to sit below the
-       header/tabbar area. */
-    left: 50%;
+    /* Position the popup at the top on mobile, centered horizontally */
     top: 70px;
-    transform: translateX(-50%);
-    right: auto;
     width: min(360px, calc(100vw - 20px));
     max-width: none;
   }

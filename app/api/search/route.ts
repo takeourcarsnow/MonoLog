@@ -49,6 +49,9 @@ export async function GET(req: Request) {
 
     const posts = (postsData || []).map(mapRowToHydratedPost);
 
+    // Count locations (posts with weather_location matching query)
+    const locationsCount = (postsData || []).filter((post: any) => post.weather_location && post.weather_location.toLowerCase().includes(q.toLowerCase())).length;
+
     // Search users
     const { data: usersData, error: usersError } = await sb
       .from('public_profiles')
@@ -114,7 +117,8 @@ export async function GET(req: Request) {
       ok: true,
       posts,
       users,
-      communities
+      communities,
+      locations: locationsCount
     });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });

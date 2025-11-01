@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useDebouncedValue } from '@/src/lib/hooks/useDebouncedValue';
-import { Image as ImageIcon, User, Users as UsersIcon, Search } from 'lucide-react';
+import { Image as ImageIcon, User, Users as UsersIcon, Search, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { useCurrentUser } from '@/lib/hooks';
 import { getAccessToken, getSupabaseClient } from '@/src/lib/api/client';
@@ -11,6 +11,7 @@ interface SearchResult {
   posts: any[];
   users: any[];
   communities: any[];
+  locations: number;
 }
 
 export function SearchLive({ initialQuery = '', initialResults = null as any, showButton = false }: { initialQuery?: string; initialResults?: SearchResult | null; showButton?: boolean }) {
@@ -26,7 +27,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
       return;
     }
     if (!q || q.trim().length < 2) {
-      setResults(initialResults || { posts: [], users: [], communities: [] });
+      setResults(initialResults || { posts: [], users: [], communities: [], locations: 0 });
       return;
     }
     setLoading(true);
@@ -43,9 +44,9 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
         return;
       }
       const json = await resp.json();
-      setResults({ posts: json.posts || [], users: json.users || [], communities: json.communities || [] });
+      setResults({ posts: json.posts || [], users: json.users || [], communities: json.communities || [], locations: json.locations || 0 });
     } catch (e) {
-      setResults({ posts: [], users: [], communities: [] });
+      setResults({ posts: [], users: [], communities: [], locations: 0 });
     } finally {
       setLoading(false);
     }
@@ -122,6 +123,16 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
             >
               <UsersIcon size={12} />
               <span style={{ opacity: 0.9 }}>{results.communities.length}</span>
+            </div>
+
+            <div
+              className="tab-item"
+              role="button"
+              aria-label={`Locations ${results.locations}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 14, flexDirection: 'row' }}
+            >
+              <MapPin size={12} />
+              <span style={{ opacity: 0.9 }}>{results.locations}</span>
             </div>
           </div>
         )}

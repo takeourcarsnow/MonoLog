@@ -10,6 +10,7 @@ interface SearchResult {
   posts: any[];
   users: any[];
   communities: any[];
+  locations: number;
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
@@ -52,11 +53,11 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
         const json = await resp.json();
         results = json;
       } else {
-        results = { posts: [], users: [], communities: [] };
+        results = { posts: [], users: [], communities: [], locations: 0 };
       }
     } catch (error) {
       console.error('Search error:', error);
-      results = { posts: [], users: [], communities: [] };
+      results = { posts: [], users: [], communities: [], locations: 0 };
     }
   }
 

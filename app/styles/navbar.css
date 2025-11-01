@@ -6,7 +6,7 @@
   justify-content: center;
   padding: 10px 8px;
   border-radius: 12px;
-  transition: background-color 220ms ease, color 260ms cubic-bezier(.2,.9,.2,1), transform 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background-color 220ms ease, color 260ms ease;
   position: relative;
   min-width: 60px;
   cursor: pointer;
@@ -14,25 +14,17 @@
   -webkit-tap-highlight-color: transparent;
   color: var(--muted);
   overflow: hidden;
-  /* Optimize for performance */
-  will-change: transform, color;
-  contain: layout style paint;
 }
 
 .tab-item-static.active {
   color: var(--tab-color);
-  transform: translateY(-4px) scale(1.08);
 }
 
 .tab-item-static .tab-icon {
   margin-bottom: 4px;
-  transition: transform 360ms cubic-bezier(.2,.9,.2,1), color 260ms cubic-bezier(.2,.9,.2,1);
+  transition: color 260ms ease;
   position: relative;
   z-index: 1;
-}
-
-.tab-item-static.active .tab-icon {
-  transform: scale(1.15);
 }
 
 .tab-item-static .tab-label {
@@ -41,32 +33,27 @@
   text-align: center;
   line-height: 1;
   opacity: 0.7;
-  transition: opacity 220ms ease, transform 260ms cubic-bezier(.2,.9,.2,1), color 260ms cubic-bezier(.2,.9,.2,1);
+  transition: opacity 220ms ease, color 260ms ease;
   z-index: 1;
   position: relative;
 }
 
 .tab-item-static.active .tab-label {
   opacity: 1;
-  transform: translateY(-2px);
-}
-
-.tab-item-static:not(.active) .tab-label {
-  transform: translateY(0);
 }
 
 /* Bottom navigation bar styles */
 
 .tabbar {
   position: fixed;
-  /* Anchor flush to the viewport bottom. Some Android Chrome versions
-     show a tiny hairline when the element is nudged below 0; making the
-     tabbar sit at `bottom: 0` prevents that visual gap. */
-  bottom: 0;
-  left: 0;
-  right: 0;
-  /* expose the effective tabbar height so other layout rules can
-     reserve appropriate bottom spacing (JS may overwrite this at runtime) */
+  /* Use logical inset properties to ensure the bar is flush to the viewport
+     bottom on all writing modes and platforms. */
+  inset-inline: 0;
+  inset-block-end: 0;
+  margin-bottom: 0;
+  /* Respect the device safe-area inset (iOS home indicator) so the visual
+     surface extends under system UI while keeping content readable. */
+  padding-bottom: env(safe-area-inset-bottom, 0);
   --tabbar-height: 56px;
   background: color-mix(in srgb, var(--bg-elev), transparent 15%);
   backdrop-filter: blur(20px);
@@ -74,10 +61,30 @@
   z-index: 9999;
   transform: translateZ(0);
   transition: opacity 0.15s ease;
-  /* Ensure the tabbar fills the measured tabbar height to avoid
-     tiny gaps caused by subpixel rounding in some browsers. */
   min-height: var(--tabbar-height);
   box-sizing: border-box;
+  overflow: visible; /* allow pseudo-element to extend above the bar */
+  /* Explicitly remove any thin separators or shadows above the tabbar
+     (some platforms or components may add a hairline border). */
+  border-top: none !important;
+  box-shadow: none !important;
+}
+
+/* Cover any thin hairline coming from content beneath the tabbar by adding
+   a small solid backing that overlaps the content edge. This is a minimal,
+   non-invasive visual fix that doesn't change card styles. */
+.tabbar::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* keep this tiny so it masks only the hairline and doesn't create a visible gap */
+  top: -1px;
+  height: 1px;
+  /* fully-opaque 1px strip matching the elevated background to mask the hairline */
+  background: var(--bg-elev);
+  z-index: 10000; /* above the tabbar children but below interactive elements if needed */
+  pointer-events: none;
 }
 
 .tabbar-inner {
@@ -88,104 +95,31 @@
   position: relative;
   max-width: var(--maxw);
   margin: 0 auto;
-  /* Ensure interactive content sits above the decorative pseudo element */
   z-index: 1;
 }
 
-.tab-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 8px;
-  border-radius: 12px;
-  transition: background-color 220ms ease, color 260ms cubic-bezier(.2,.9,.2,1), transform 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
-  min-width: 60px;
-  cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  color: var(--muted);
-  overflow: hidden;
-}
-
-.tab-item.active {
-  color: var(--tab-color);
-  transform: translateY(-4px) scale(1.08);
-}
-
-.tab-icon {
-  margin-bottom: 4px;
-  transition: transform 360ms cubic-bezier(.2,.9,.2,1), color 260ms cubic-bezier(.2,.9,.2,1);
-  position: relative;
-  z-index: 1;
-}
-
-.tab-item.active .tab-icon {
-  transform: scale(1.15);
-}
-
-.tab-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1;
-  opacity: 0.7;
-  transition: opacity 220ms ease, transform 260ms cubic-bezier(.2,.9,.2,1), color 260ms cubic-bezier(.2,.9,.2,1);
-  z-index: 1;
-  position: relative;
-}
-
-/* Make SVG icons inherit color and animate stroke/fill */
+/* Make SVG icons inherit color */
 .tab-icon svg,
 .tab-icon svg * {
   stroke: currentColor !important;
-  transition: stroke 260ms cubic-bezier(.2,.9,.2,1), fill 260ms cubic-bezier(.2,.9,.2,1), color 260ms cubic-bezier(.2,.9,.2,1);
+  transition: stroke 260ms ease, fill 260ms ease, color 260ms ease;
 }
 
 /* Handle img elements (like the logo icon) for theming */
 .tab-icon img {
-  transition: filter 260ms cubic-bezier(.2,.9,.2,1);
+  transition: filter 260ms ease;
 }
 
 :root[data-theme="dark"] .tab-icon img {
   filter: invert(1);
 }
 
-.tab-item.active .tab-label {
-  opacity: 1;
-  transform: translateY(-2px);
-}
-
-.tab-item:not(.active) .tab-label {
-  transform: translateY(0);
-}
-
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .tab-item,
-  .tab-icon,
-  .tab-label,
   .tab-item-static,
-  .tab-item-static .tab-icon,
-  .tab-item-static .tab-label {
+  .tab-icon,
+  .tab-label {
     transition: none;
-    animation: none;
-  }
-
-  .tab-item.active,
-  .tab-item-static.active {
-    transform: none;
-  }
-
-  .tab-item.active .tab-icon,
-  .tab-item-static.active .tab-icon {
-    transform: none;
-  }
-
-  .tab-item.active .tab-label,
-  .tab-item-static.active .tab-label {
-    transform: none;
   }
 }
 
@@ -195,37 +129,20 @@
     padding: 6px 0;
   }
 
-  .tab-item,
   .tab-item-static {
     padding: 8px 6px;
     min-width: 50px;
-    /* Ensure minimum touch target size */
     min-height: 44px;
-  }
-
-  .tab-item.active,
-  .tab-item-static.active {
-    transform: translateY(-2px) scale(1.06);
-  }
-
-  .tab-item.active .tab-icon,
-  .tab-item-static.active .tab-icon {
-    transform: scale(1.12);
   }
 }
 
 /* Enhanced focus states for accessibility */
-.tab-item:focus-visible,
 .tab-item-static:focus-visible {
   outline: 2px solid var(--tab-color);
   outline-offset: 2px;
 }
 
 /* Animated tab indicator sitting under the active tab. Color/position/width animate. */
-.tabbar-inner {
-  position: relative;
-}
-
 .tab-indicator {
   position: absolute;
   height: 4px;
@@ -257,6 +174,5 @@
   pointer-events: none !important;
 }
 .imgedit-open .tabbar {
-  /* keep it visually present if desired; use opacity instead if you want it hidden */
   user-select: none;
 }

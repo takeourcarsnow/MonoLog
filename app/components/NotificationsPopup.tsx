@@ -301,6 +301,17 @@ export function NotificationsPopup({ open, onClose }: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (open) {
+      document.body.classList.add('notifications-popup-open');
+    } else {
+      document.body.classList.remove('notifications-popup-open');
+    }
+    return () => {
+      document.body.classList.remove('notifications-popup-open');
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (

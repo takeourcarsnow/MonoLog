@@ -470,20 +470,22 @@
   .auth-form.mode-signup .auth-actions { margin-top: -12px; gap: 6px; }
 }
 
-/* Notifications popup */
-.notifications-popup-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(4px);
+/* Blur background when notifications popup is open */
+body.notifications-popup-open .app-content,
+body.notifications-popup-open .content,
+body.notifications-popup-open .header,
+body.notifications-popup-open .tabbar {
+  filter: blur(4px) !important;
+  transition: filter 200ms cubic-bezier(.2,.65,.2,1) !important;
+  will-change: filter;
+  pointer-events: none; /* keep background non-interactive while popup is open */
 }
 
 .notifications-popup {
   position: fixed;
   right: 20px;
   top: 60px;
-  z-index: 50;
+  z-index: 10001;
   background: var(--bg);
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);

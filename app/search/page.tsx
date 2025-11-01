@@ -80,12 +80,6 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
 
         {results && (
           <div className="search-results">
-            <div className="search-tabs">
-              <div>Posts ({results.posts.length})</div>
-              <div>Users ({results.users.length})</div>
-              <div>Communities ({results.communities.length})</div>
-            </div>
-
             <div className="search-content">
               <div className="posts-list">
                 {results.posts.map((post) => (

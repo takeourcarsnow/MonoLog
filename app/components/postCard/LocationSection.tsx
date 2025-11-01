@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import Link from "next/link";
 
 interface LocationSectionProps {
   showLocation: boolean;
@@ -29,9 +30,9 @@ export const LocationSection = ({ showLocation, locationLatitude, locationLongit
       <div className="location-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
         <div style={{ display: 'flex', gap: '8px 12px', justifyContent: 'center', alignItems: 'center' }}>
           {city ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <Link href={`/search?q=${encodeURIComponent(city)}`} style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
               <MapPin size={12} style={{ marginRight: 6 }} />{city}
-            </span>
+            </Link>
           ) : (
             // Fallback: if no address string exists, show nothing (we intentionally
             // avoid showing raw lat/lng or full address per UX request)

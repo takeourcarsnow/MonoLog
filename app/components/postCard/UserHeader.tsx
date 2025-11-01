@@ -119,10 +119,10 @@ export const UserHeader = memo(function UserHeader({
           <div className="post-meta dim">
             <AutoScroll innerStyle={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
               {post.weatherLocation && (
-                <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+                <Link href={`/search?q=${encodeURIComponent(post.weatherLocation)}`} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13, textDecoration: 'none', color: 'inherit' }}>
                   <MapPin size={14} aria-hidden />
                   <span style={{ display: 'inline-block' }}>{post.weatherLocation}</span>
-                </span>
+                </Link>
               )}
               {/* explicit spacer between location and temperature so copies and
                   duplicate-track scenarios always have a visible gap */}

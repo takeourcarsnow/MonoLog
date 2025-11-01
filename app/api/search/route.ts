@@ -25,11 +25,24 @@ export async function GET(req: Request) {
       .from('posts')
       .select('*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)')
       .eq('public', true)
-      .or(`caption.ilike.%${q}%`)
+      .or(`caption.ilike.%${q}%,weather_location.ilike.%${q}%`)
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    const { data: postsData, error: postsError } = await postsQuery;
+    let { data: postsData, error: postsError } = await postsQuery;
+    if (postsError && postsError.message?.includes('column') && postsError.message?.includes('weather_location')) {
+      // Retry without weather_location if column doesn't exist
+      postsQuery = sb
+        .from('posts')
+        .select('*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)')
+        .eq('public', true)
+        .or(`caption.ilike.%${q}%`)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      const retry = await postsQuery;
+      postsData = retry.data;
+      postsError = retry.error;
+    }
     if (postsError) {
       return NextResponse.json({ error: postsError.message }, { status: 500 });
     }

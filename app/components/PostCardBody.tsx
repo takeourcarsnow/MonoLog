@@ -5,6 +5,7 @@ import { ActionsSection } from "./postCard/ActionsSection";
 import { CommentsSection } from "./postCard/CommentsSection";
 import { SpotifySection } from "./postCard/SpotifySection";
 import { ExifSection } from "./postCard/ExifSection";
+import { LocationSection } from "./postCard/LocationSection";
 import { EditorWrap } from "./postCard/EditorWrap";
 
 // Lazy load heavy components

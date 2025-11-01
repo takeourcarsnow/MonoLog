@@ -108,7 +108,7 @@ export const UserHeader = memo(function UserHeader({
         <Link className="user-link" href={`/${post.user.username || post.user.id}`}>
           <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
           <div className="user-line">
-            <span className="username">@{post.user.username}</span>
+            <span className="username" style={{ whiteSpace: 'nowrap' }}>@{post.user.username}</span>
           </div>
         </Link>
         <span className="dim">{userLine} {lockIcon}</span>

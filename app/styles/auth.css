@@ -497,8 +497,12 @@
 }
 
 @keyframes notificationsPopupIn {
-  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  /* Preserve any horizontal translate (centering) during the entrance
+     animation by including translateX(-50%) in the keyframes. This avoids
+     the animation overwriting the centering transform and leaving the
+     popup offset to the right. */
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 
 .notifications-popup-header {
@@ -611,10 +615,16 @@
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .notifications-popup {
-    right: 10px;
-    left: 10px;
+    /* Center the popup horizontally and constrain its width so the
+       right side won't be clipped on narrow viewports. Use left:50%+
+       translateX(-50%) for robust centering even when other layout
+       rules are present. Keep a small top offset to sit below the
+       header/tabbar area. */
+    left: 50%;
     top: 70px;
-    width: auto;
+    transform: translateX(-50%);
+    right: auto;
+    width: min(360px, calc(100vw - 20px));
     max-width: none;
   }
 }

@@ -195,3 +195,25 @@ export async function selectUserFields(sb: any, id: string, fields: string) {
     return { data: null, error: e } as any;
   }
 }
+
+import { NextResponse } from 'next/server';
+import { apiError } from '../../../lib/apiResponse';
+
+export function checkRateLimitResponse(limiter: any, ip: string, useApiError = false) {
+  const rateLimit = limiter.checkLimit(ip);
+  if (!rateLimit.allowed) {
+    const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
+    if (useApiError) {
+      return apiError('Too many requests. Please try again later.', 429, { retryAfter });
+    } else {
+      return NextResponse.json({
+        error: 'Too many requests. Please try again later.',
+        retryAfter
+      }, {
+        status: 429,
+        headers: { 'Retry-After': retryAfter.toString() }
+      });
+    }
+  }
+  return null;
+}

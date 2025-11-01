@@ -1,4 +1,5 @@
 import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken } from "./client";
+import { extractUserProfile } from "./userProfile";
 
 export async function follow(userId: string) {
   // Call server endpoint to perform the follow operation with service role privileges
@@ -63,18 +64,14 @@ async function getCurrentUser() {
   const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).maybeSingle();
   if (profErr) {
     // Real query error (e.g. permissions); fall back to synthesized profile (no DB write)
-    const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-    const synthDisplay = user.user_metadata?.name || synthUsername;
-    const synthAvatar = user.user_metadata?.avatar_url || "/logo.svg";
+    const { username: synthUsername, displayName: synthDisplay, avatarUrl: synthAvatar } = extractUserProfile(user);
     const joinedAt = new Date().toISOString();
     return { id: user.id, username: synthUsername, displayName: synthDisplay, avatarUrl: synthAvatar, joinedAt } as any;
   }
 
   if (!profile) {
     // Row truly missing. Insert a minimal profile.
-    const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-    const synthDisplay = user.user_metadata?.name || synthUsername;
-    const synthAvatar = user.user_metadata?.avatar_url || "/logo.svg";
+    const { username: synthUsername, displayName: synthDisplay, avatarUrl: synthAvatar } = extractUserProfile(user);
     const joinedAt = new Date().toISOString();
     const insertObj: any = { id: user.id, username: synthUsername, display_name: synthDisplay, joined_at: joinedAt };
     if (synthAvatar) insertObj.avatar_url = synthAvatar;

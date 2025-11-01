@@ -14,6 +14,7 @@ import {
   processPostAfterBreak,
   clearCaches
 } from './helpers';
+import { checkRateLimitResponse } from '@/src/lib/api/utils';
 
 async function fetchWeather(ip: string) {
   try {
@@ -64,12 +65,8 @@ export async function POST(req: Request) {
   try {
     // Rate limiting: strict limits for post creation
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    const rateLimit = strictRateLimiter.checkLimit(ip);
-    if (!rateLimit.allowed) {
-      return apiError('Too many requests. Please try again later.', 429, {
-        retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000)
-      });
-    }
+    const rateLimitRes = checkRateLimitResponse(strictRateLimiter, ip, true);
+    if (rateLimitRes) return rateLimitRes;
 
     const body = await req.json();
     const validation = createPostSchema.safeParse(body);

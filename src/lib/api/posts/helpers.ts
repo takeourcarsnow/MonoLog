@@ -1,5 +1,6 @@
 import { getClient, getCachedAuthUser } from "../client";
 import { apiCache } from "../cache";
+import { extractUserProfile } from "../userProfile";
 
 // Helper function to get cached following IDs for a user
 export async function getCachedFollowingIds(sb: any, userId: string): Promise<string[]> {
@@ -76,16 +77,14 @@ export async function getCurrentUser() {
   const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).maybeSingle();
   if (profErr) {
     // Real query error (e.g. permissions); fall back to synthesized profile (no DB write)
-    const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-    const synthAvatar = user.user_metadata?.avatar_url || "/logo.svg";
+    const { username: synthUsername, displayName: synthDisplayName, avatarUrl: synthAvatar } = extractUserProfile(user);
     const joinedAt = new Date().toISOString();
-    return { id: user.id, username: synthUsername, displayName: null, avatarUrl: synthAvatar, joinedAt } as any;
+    return { id: user.id, username: synthUsername, displayName: synthDisplayName, avatarUrl: synthAvatar, joinedAt } as any;
   }
 
   if (!profile) {
     // Row truly missing. Insert a minimal profile.
-    const synthUsername = user.user_metadata?.username || user.email?.split("@")[0] || user.id;
-    const synthAvatar = user.user_metadata?.avatar_url || "/logo.svg";
+    const { username: synthUsername, displayName: synthDisplayName, avatarUrl: synthAvatar } = extractUserProfile(user);
     const joinedAt = new Date().toISOString();
     const insertObj: any = { id: user.id, username: synthUsername, display_name: null, joined_at: joinedAt };
     if (synthAvatar) insertObj.avatar_url = synthAvatar;
@@ -94,7 +93,7 @@ export async function getCurrentUser() {
     } catch (e) {
       // ignore duplicate or RLS failures; we still return synthesized profile
     }
-    return { id: user.id, username: synthUsername, displayName: null, avatarUrl: synthAvatar, joinedAt } as any;
+    return { id: user.id, username: synthUsername, displayName: synthDisplayName, avatarUrl: synthAvatar, joinedAt } as any;
   }
   return {
     id: profile.id,

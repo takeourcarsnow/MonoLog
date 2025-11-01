@@ -4,42 +4,19 @@ import { uid } from '@/src/lib/id';
 import { getUserFromAuthHeader, getTokenFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
 import { checkComment } from '@/src/lib/moderation';
 import { apiRateLimiter } from '@/src/lib/rateLimiter';
+import { extractUserProfile } from '@/src/lib/api/userProfile';
+import { checkRateLimitResponse } from '@/src/lib/api/utils';
 
 function extractUserProfileFromAuth(authUser: any) {
-  let username = String(authUser.id || 'unknown').slice(0, 8);
-  let displayName = 'User';
-  let avatarUrl: string | undefined = undefined;
-
-  const md = authUser.user_metadata || authUser.raw_user_meta_data || authUser.raw_app_meta_data || {};
-  if (md.username) username = md.username;
-  if (md.name) displayName = md.name;
-  if (md.avatar_url) avatarUrl = md.avatar_url;
-  if (md.avatarUrl) avatarUrl = avatarUrl || md.avatarUrl;
-
-  // Fallback to email-based username
-  if ((!md || !md.username) && authUser.email) {
-    username = authUser.email.split('@')[0];
-  }
-
-  return { username, displayName, avatarUrl };
+  return extractUserProfile(authUser);
 }
 
 export async function POST(req: Request) {
   try {
     // Rate limiting: moderate limits for comment creation
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    const rateLimit = apiRateLimiter.checkLimit(ip);
-    if (!rateLimit.allowed) {
-      return NextResponse.json({
-        error: 'Too many requests. Please try again later.',
-        retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000)
-      }, {
-        status: 429,
-        headers: {
-          'Retry-After': Math.ceil((rateLimit.resetTime - Date.now()) / 1000).toString()
-        }
-      });
-    }
+    const rateLimitRes = checkRateLimitResponse(apiRateLimiter, ip, false);
+    if (rateLimitRes) return rateLimitRes;
 
     const body = await req.json();
     const postId = body.postId;

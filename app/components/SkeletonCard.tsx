@@ -80,31 +80,34 @@ export function ThreadCardSkeleton() {
 
 export function PostCardSkeleton() {
   return (
-    <article className="post-card animate-pulse">
-      {/* User Header */}
-      <div className="post-header">
-        <div className="flex items-center gap-3">
+    <article className="card animate-pulse">
+      {/* User Header (match real post markup) */}
+      <div className="card-head">
+        <div className="user-meta">
           <div className="avatar rounded-full bg-gray-200 dark:bg-gray-700" style={{ width: 32, height: 32 }} />
-          <div className="flex-1">
+          <div className="user-line">
             <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
             <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded mt-1" />
           </div>
         </div>
+        <div className="post-actions" style={{ marginLeft: 'auto' }}>
+          <div className="h-6 w-14 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
       </div>
-      
+
       {/* Media Section */}
-      <div className="post-media">
+      <div className="card-media">
         <div className="aspect-square bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
-      
+
       {/* Post Body */}
-      <div className="post-body">
+      <div className="card-body">
         {/* Caption */}
         <div className="space-y-1 mb-3">
           <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded" />
           <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
-        
+
         {/* Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

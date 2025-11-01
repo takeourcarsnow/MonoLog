@@ -162,6 +162,19 @@
   min-width: 0; /* Allow flex children to shrink */
 }
 
+/* Post actions container (right side of header) - default spacing between buttons */
+.card-head .post-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* When the post belongs to the current user, tighten spacing between
+   edit and delete buttons to bring them closer together as requested. */
+.card-head .post-actions.is-me {
+  gap: 4px; /* smaller gap between edit and delete */
+}
+
 /* The avatar and user text are wrapped in a link which itself is a flex container
    (set via inline styles). Add an explicit gap here so the avatar and text separate
    even when the link is the immediate flex child. Keeping display/align-items here
@@ -206,6 +219,43 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+}
+
+/* Allow the user-meta area to grow so inline auto-scrolling content (weather,
+   location) can use any available space before the action buttons. Keeping
+   min-width:0 prevents overflow from forcing layout break. */
+.card-head .user-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Post-meta inside the header (weather / location / small metadata). Give it
+   the ability to expand and ensure its inner auto-scroll container can use
+   the available width for longer scrolling text. */
+.card-head .post-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  /* Let post-meta fill the available space between the date and the
+     action buttons so the scrolling track spans that gap (starts near
+     the actions and ends near the date). */
+  flex: 1 1 auto;
+}
+
+/* Make the AutoScroll container flexible so it fills remaining inline space
+   and provides a larger viewport for the scrolling track. */
+.card-head .post-meta .auto-scroll-container {
+  display: block; /* override inline-block to allow width:100% */
+  width: 100%;
+  min-width: 0;
+}
+
+/* The inner auto-scroll element should preserve its inline layout but be able
+   to expand to the container width. */
+.card-head .post-meta .auto-scroll-inner {
+  display: inline-block;
+  width: 100%;
 }
 
 /* Subtle, card-scoped button micro-interactions (used on About and other card actions) */
@@ -342,6 +392,22 @@
     display: inline-block;
     line-height: 1;
     transform: translateY(1px);
+}
+
+/* Ensure the post header's date isn't visually truncated by the generic
+   .dim ellipsis rule above. The header layout manages space with flex so
+   allow the date span to overflow visibly instead of being clipped. */
+.card-head .dim {
+  /* Keep the date visible: don't allow the post-meta area to shrink it.
+     Make the date occupy its intrinsic size so the scrolling metadata can
+     end close to the date. */
+  flex: 0 0 auto;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px; /* small buffer between date and scrolling text */
 }
 
 .card-media img {
@@ -1113,4 +1179,15 @@
     /* keep center alignment but narrower for better readability */
     text-align: center;
   }
+}
+
+/* Specific styling for the date element inside the post header. We allow
+   the date to wrap or overflow visibly so it never appears truncated while
+   keeping the surrounding .dim container constrained for layout/measurement. */
+.card-head .post-date {
+  display: inline-block;
+  white-space: normal; /* allow wrapping when necessary */
+  overflow: visible; /* make sure the full date is visible */
+  text-overflow: clip;
+  max-width: none;
 }

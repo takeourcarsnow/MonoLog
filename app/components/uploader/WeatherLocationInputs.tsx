@@ -255,55 +255,8 @@ export function WeatherLocationInputs({
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
       {activeField === null ? (
-        // Show all fields when none is active
+        // Show all fields when none is active (Location first, then Weather)
         <>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <input
-              type="text"
-              placeholder="Tap to add Weather"
-              value={combinedWeather}
-              onChange={(e) => handleCombinedWeatherChange(e.target.value)}
-              disabled={!hasPreview || processing}
-              onFocus={() => {
-                if (!combinedWeather.trim()) {
-                  fetchWeatherForCurrentLocation();
-                } else {
-                  setActiveField('combinedWeather');
-                }
-              }}
-              onBlur={handleCombinedWeatherBlur}
-              style={{
-                width: '100%',
-                padding: '8px 12px 8px 40px',
-                border: '1px solid var(--border)',
-                borderRadius: '6px',
-                background: 'var(--bg)',
-                color: 'var(--text)',
-                fontSize: '14px',
-                cursor: (!hasPreview || processing) ? 'not-allowed' : 'text'
-              }}
-            />
-            <button
-              type="button"
-              onClick={fetchWeatherForCurrentLocation}
-              disabled={!hasPreview || processing || fetchingWeather}
-              title="Fetch current weather for this location"
-              style={{
-                position: 'absolute',
-                left: 8,
-                top: 8,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 4,
-                border: 'none',
-                background: 'transparent',
-                cursor: (!hasPreview || processing || fetchingWeather) ? 'not-allowed' : 'pointer'
-              }}
-            >
-              <Cloud size={14} />
-            </button>
-          </div>
           <div style={{ position: 'relative', flex: 1 }}>
             <input
               type="text"
@@ -349,6 +302,53 @@ export function WeatherLocationInputs({
               }}
             >
               <MapPin size={14} />
+            </button>
+          </div>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Tap to add Weather"
+              value={combinedWeather}
+              onChange={(e) => handleCombinedWeatherChange(e.target.value)}
+              disabled={!hasPreview || processing}
+              onFocus={() => {
+                if (!combinedWeather.trim()) {
+                  fetchWeatherForCurrentLocation();
+                } else {
+                  setActiveField('combinedWeather');
+                }
+              }}
+              onBlur={handleCombinedWeatherBlur}
+              style={{
+                width: '100%',
+                padding: '8px 12px 8px 40px',
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                background: 'var(--bg)',
+                color: 'var(--text)',
+                fontSize: '14px',
+                cursor: (!hasPreview || processing) ? 'not-allowed' : 'text'
+              }}
+            />
+            <button
+              type="button"
+              onClick={fetchWeatherForCurrentLocation}
+              disabled={!hasPreview || processing || fetchingWeather}
+              title="Fetch current weather for this location"
+              style={{
+                position: 'absolute',
+                left: 8,
+                top: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 4,
+                border: 'none',
+                background: 'transparent',
+                cursor: (!hasPreview || processing || fetchingWeather) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <Cloud size={14} />
             </button>
           </div>
         </>

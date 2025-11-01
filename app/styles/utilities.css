@@ -34,3 +34,77 @@
     background: var(--bg-elev);
   }
 }
+
+/* Auto-scroll (marquee) utility for overflowing inline text */
+.auto-scroll-container {
+  /* container hides overflow; inline-block so it fits in lines */
+  position: relative;
+}
+.auto-scroll-inner { 
+  will-change: transform;
+}
+.auto-scroll-track {
+  display: inline-flex;
+  white-space: nowrap;
+}
+.auto-scroll-gap {
+  width: var(--autoscroll-gap, 12px);
+  flex: 0 0 auto;
+}
+
+/* Small spacer used by content inside AutoScroll. When the track is
+   animating we want a slightly larger explicit gap between copies; when
+   idle (not animating) reduce the spacer so inline content doesn't appear
+   overly distant. User code should add the `auto-scroll-spacer` element
+   instead of relying on inline widths so the spacer can be tuned here. */
+.auto-scroll-spacer {
+  display: inline-block;
+  width: 4px; /* default smaller gap when not animating */
+  flex: 0 0 auto;
+}
+.auto-scroll-inner.animate .auto-scroll-spacer {
+  width: 8px; /* larger gap used during animation / duplication scenarios */
+}
+
+/* Fade overlays shown at the left/right edges during autoscroll to soften
+   the entrance/exit of content. Uses the page background variable so the
+   fade blends with the app background in light/dark themes. */
+.auto-scroll-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--autoscroll-fade-width, 18px);
+  pointer-events: none;
+  z-index: 2;
+}
+.auto-scroll-fade.left {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), rgba(0,0,0,0));
+}
+.auto-scroll-fade.right {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), rgba(0,0,0,0));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auto-scroll-fade { display: none !important; }
+}
+.auto-scroll-inner.animate {
+  /* use CSS variables set by the component: --autoscroll-distance, --autoscroll-duration */
+  animation-name: monolog-autoscroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: var(--autoscroll-duration, 6s);
+}
+
+@keyframes monolog-autoscroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(var(--autoscroll-distance) * -1)); }
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .auto-scroll-inner.animate {
+    animation: none !important;
+  }
+}

@@ -10,6 +10,7 @@ import Image from "next/image";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
 import { AuthForm } from "../AuthForm";
+import AutoScroll from "../AutoScroll";
 import { useToast } from "../Toast";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -91,9 +92,11 @@ export const UserHeader = memo(function UserHeader({
   const pathname = usePathname();
   const router = useRouter();
   const [showFullDate, setShowFullDate] = useState(false);
+  const IconComponent = getWeatherIcon(post.weatherCondition || '');
   const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
   const userLine = (
-    <span 
+    <span
+      className="post-date"
       onClick={() => setShowFullDate(!showFullDate)}
       style={{ cursor: 'pointer' }}
       title={showFullDate ? 'Click to show relative time' : 'Click to show full date'}
@@ -113,26 +116,30 @@ export const UserHeader = memo(function UserHeader({
         </Link>
         <span className="dim">{userLine} {lockIcon}</span>
         {(post.weatherCondition || post.weatherTemperature || post.weatherLocation) && (
-          <div className="post-meta dim" style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 8 }}>
-            {post.weatherTemperature !== undefined && (
-              <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
-                {(() => {
-                  const IconComponent = getWeatherIcon(post.weatherCondition || '');
-                  return <IconComponent size={14} aria-hidden />;
-                })()}
-                {Math.round(post.weatherTemperature)}°C
-              </span>
-            )}
-            {post.weatherLocation && (
-              <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
-                <MapPin size={14} aria-hidden />
-                {post.weatherLocation}
-              </span>
-            )}
+          <div className="post-meta dim">
+            <AutoScroll innerStyle={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+              {post.weatherLocation && (
+                <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+                  <MapPin size={14} aria-hidden />
+                  <span style={{ display: 'inline-block' }}>{post.weatherLocation}</span>
+                </span>
+              )}
+              {/* explicit spacer between location and temperature so copies and
+                  duplicate-track scenarios always have a visible gap */}
+              {post.weatherTemperature !== undefined && post.weatherLocation && (
+                <span className="auto-scroll-spacer" aria-hidden />
+              )}
+              {post.weatherTemperature !== undefined && (
+                <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+                  <IconComponent size={14} aria-hidden />
+                  <span style={{ display: 'inline-block' }}>{Math.round(post.weatherTemperature)}°C</span>
+                </span>
+              )}
+            </AutoScroll>
           </div>
         )}
       </div>
-      <div style={{ marginLeft: "auto", position: "relative", display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
+      <div className={`post-actions ${isMe ? 'is-me' : ''}`} style={{ marginLeft: "auto", position: "relative", flexShrink: 0, alignItems: "center" }}>
         {!authLoading && (
           <>
             {!isMe ? (

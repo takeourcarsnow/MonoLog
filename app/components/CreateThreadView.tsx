@@ -8,49 +8,21 @@ import Link from "next/link";
 import type { HydratedCommunity } from "@/src/lib/types";
 import { AuthRequired } from "./AuthRequired";
 import { AuthForm } from "./AuthForm";
+import { useCommunity } from "@/src/lib/hooks/useCommunity";
+import { useAuthState } from "@/src/lib/hooks/useAuthState";
 
 export function CreateThreadView() {
   const params = useParams();
   const communitySlug = params.slug as string;
   const navigate = useRouter();
 
-  const [community, setCommunity] = useState<HydratedCommunity | null>(null);
+  const { community, loading: communityLoading, error: communityError } = useCommunity(communitySlug);
+  const { currentUser, authLoading, refreshAuth } = useAuthState();
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // auth state
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
-
-  useEffect(() => {
-    const loadCommunity = async () => {
-      if (!communitySlug) return;
-      try {
-        const data = await api.getCommunity(communitySlug);
-        setCommunity(data);
-      } catch (e) {
-        setError('Community not found');
-      }
-    };
-    loadCommunity();
-  }, [communitySlug]);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const user = await api.getCurrentUser();
-        setCurrentUser(user);
-      } catch (e) {
-        // not authenticated
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +30,7 @@ export function CreateThreadView() {
 
     // If not authenticated, show auth UI instead of attempting create
     if (!currentUser) {
-      setShowAuthPrompt(true);
+      setError('Please sign in to create a thread');
       return;
     }
 
@@ -73,12 +45,6 @@ export function CreateThreadView() {
       navigate.push(`/communities/${communitySlug}/thread/${thread.slug}`);
     } catch (err: any) {
       const message = err?.message || String(err);
-      // If the API reports unauthenticated, show the auth form so user can sign in
-      if (message.includes('Not authenticated') || message.includes('Unauthorized')) {
-        setShowAuthPrompt(true);
-        setError(null);
-        return;
-      }
       setError(message || 'Failed to create thread');
     } finally {
       setLoading(false);
@@ -103,19 +69,17 @@ export function CreateThreadView() {
   }
 
   // If we were prompted to sign in (or user is not signed in) show auth UI
-  if (showAuthPrompt || !currentUser) {
+  if (!currentUser) {
     return (
       <AuthRequired>
         <AuthForm onClose={async () => {
-          const user = await api.getCurrentUser();
-          setCurrentUser(user);
-          setShowAuthPrompt(false);
+          await refreshAuth();
         }} />
       </AuthRequired>
     );
   }
 
-  if (!community && !error) {
+  if (communityLoading) {
     return (
       <div className="content create-thread">
         <div className="card skeleton" style={{ height: 100 }} />
@@ -123,12 +87,12 @@ export function CreateThreadView() {
     );
   }
 
-  if (error || !community) {
+  if (communityError || !community) {
     return (
       <div className="content create-thread">
         <div className="content-body">
           <div className="card">
-            <p className="text-red-500">{error || 'Community not found'}</p>
+            <p className="text-red-500">{communityError || 'Community not found'}</p>
             <Link href="/communities">
               <Button>Back to Communities</Button>
             </Link>

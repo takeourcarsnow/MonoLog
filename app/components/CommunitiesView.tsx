@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/src/lib/api";
-import { Users, UserMinus, UserPlus } from "lucide-react";
+import { Users } from "lucide-react";
 import type { HydratedCommunity } from "@/src/lib/types";
 import { Button } from "./Button";
 import Link from "next/link";
@@ -12,11 +12,12 @@ import CommunityCard from "./CommunityCard";
 import LazyMount from "./LazyMount";
 import SkeletonCard from "./SkeletonCard";
 import { useErrorState } from "@/lib/hooks/useErrorState";
+import { useCommunityMembership } from "@/src/lib/hooks/useCommunityMembership";
 
 export function CommunitiesView() {
   const { me } = useAuth();
   const { data: communities, mutate: mutateCommunities, isLoading: loading, error: fetchError } = useCommunities();
-  const [pendingJoin, setPendingJoin] = useState<Set<string>>(new Set());
+  const { joinLeave, pending } = useCommunityMembership();
   const { error, setError, handleError } = useErrorState();
 
   // Update last checked time when component mounts
@@ -33,54 +34,9 @@ export function CommunitiesView() {
     }
   }, [communities]);
 
-  // Debugging: log communities array when loaded
-  useEffect(() => {
-    if (communities && communities.length > 0) {
-      try {
-        console.debug('[CommunitiesView] loaded communities:', communities.map(c => ({ id: c.id, creator: c.creator })));
-      } catch (e) {}
-    }
-  }, [communities]);
-
   const handleJoinLeave = useCallback(async (communityId: string, isMember: boolean) => {
-    if (pendingJoin.has(communityId)) return;
-    // Optimistic update: flip isMember locally and adjust counts
-    setPendingJoin((s) => new Set(s).add(communityId));
-    mutateCommunities(
-      (prev) => prev?.map(c => {
-        if (c.id !== communityId) return c;
-        return {
-          ...c,
-          isMember: !isMember,
-          memberCount: isMember ? Math.max(0, (c.memberCount || 1) - 1) : (c.memberCount || 0) + 1
-        };
-      }),
-      false // don't revalidate
-    );
-
-    try {
-      if (isMember) {
-        await api.leaveCommunity(communityId);
-      } else {
-        await api.joinCommunity(communityId);
-      }
-      // Success: revalidate to get fresh data
-      mutateCommunities();
-    } catch (e: any) {
-      // Revert optimistic update on error
-      mutateCommunities(
-        (prev) => prev?.map(c => c.id === communityId ? { ...c, isMember, memberCount: isMember ? (c.memberCount || 0) + 1 : Math.max(0, (c.memberCount || 1) - 1) } : c),
-        false
-      );
-      handleError(e);
-    } finally {
-      setPendingJoin((s) => {
-        const next = new Set(s);
-        next.delete(communityId);
-        return next;
-      });
-    }
-  }, [pendingJoin, mutateCommunities]);
+    await joinLeave(communityId, isMember, mutateCommunities, handleError);
+  }, [joinLeave, mutateCommunities, handleError]);
 
   if (loading) {
     return (
@@ -149,7 +105,7 @@ export function CommunitiesView() {
               <CommunityCard
                 community={community}
                 meId={me?.id}
-                pending={pendingJoin.has(community.id)}
+                pending={pending.has(community.id)}
                 onJoinLeave={handleJoinLeave}
               />
             </LazyMount>

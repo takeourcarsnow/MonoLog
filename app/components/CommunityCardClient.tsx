@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useState } from 'react';
-import { Button } from './Button';
+import ToggleActionButton from './ToggleActionButton';
 import { UserMinus, UserPlus } from 'lucide-react';
 import { api } from '@/src/lib/api';
 import { useAuth } from '@/src/lib/hooks/useAuth';
@@ -61,17 +61,18 @@ export default function CommunityCardClient({ communityId, initialIsMember = fal
 
   return (
     <div>
-      <Button
-        variant={isMember ? 'ghost' : 'default'}
-        size="sm"
-        className="small-min"
+      <ToggleActionButton
+        active={isMember}
+        pending={pending}
         onClick={handleJoinLeave}
-        disabled={pending}
-        aria-label={isMember ? 'Leave community' : 'Join community'}
-        title={isMember ? 'Leave community' : 'Join community'}
-      >
-        {isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
-      </Button>
+        className="small-min"
+        activeIcon={<UserMinus size={16} />}
+        inactiveIcon={<UserPlus size={16} />}
+        ariaActiveLabel="Leave community"
+        ariaInactiveLabel="Join community"
+        titleActive="Leave community"
+        titleInactive="Join community"
+      />
     </div>
   );
 }

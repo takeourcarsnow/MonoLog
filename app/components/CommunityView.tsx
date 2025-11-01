@@ -6,6 +6,7 @@ import { Users, MessageSquare, Plus, Trash2, UserMinus, UserPlus, ArrowLeft } fr
 import { useRef } from "react";
 import type { HydratedCommunity, HydratedThread } from "@/src/lib/types";
 import { Button } from "./Button";
+import ToggleActionButton from "./ToggleActionButton";
 import TimeDisplay from "./TimeDisplay";
 import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
@@ -314,17 +315,18 @@ export function CommunityView() {
 
             {/* Don't show join button for community creators */}
             {currentUser?.id !== community.creator.id && (
-              <Button
-                variant={community.isMember ? "ghost" : "default"}
-                size="sm"
-                className="small-min"
+              <ToggleActionButton
+                active={!!community.isMember}
+                pending={pendingJoin}
                 onClick={handleJoinLeave}
-                aria-label={community.isMember ? 'Leave community' : 'Join community'}
-                title={community.isMember ? 'Leave community' : 'Join community'}
-                disabled={pendingJoin}
-              >
-                {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
-              </Button>
+                className="small-min"
+                activeIcon={<UserMinus size={16} />}
+                inactiveIcon={<UserPlus size={16} />}
+                ariaActiveLabel="Leave community"
+                ariaInactiveLabel="Join community"
+                titleActive="Leave community"
+                titleInactive="Join community"
+              />
             )}
           </div>
         </div>

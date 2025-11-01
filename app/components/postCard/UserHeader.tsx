@@ -9,6 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
+import ToggleActionButton from "../ToggleActionButton";
 import { AuthForm } from "../AuthForm";
 import AutoScroll from "../AutoScroll";
 import { useToast } from "../Toast";
@@ -144,49 +145,61 @@ export const UserHeader = memo(function UserHeader({
           <>
             {!isMe ? (
               <>
-                <button
-                  ref={followBtnRef}
-                  className={`btn follow-btn icon-reveal ${isFollowing ? 'following' : 'not-following'} ${followAnim || ''} ${followExpanded ? 'expanded' : ''}`}
-                  aria-pressed={isFollowing}
-                  onClick={async () => {
-                    const cur = await api.getCurrentUser();
-                    if (!cur) {
-                      try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
-                      setShowAuth(true);
-                      return;
-                    }
-                    if (followInFlightRef.current) return;
-                    const prev = !!isFollowing;
-                    setIsFollowing(!prev);
-                    setFollowExpanded(true);
-                    if (followExpandTimerRef.current) { window.clearTimeout(followExpandTimerRef.current); followExpandTimerRef.current = null; }
-                    followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
-                    const willFollow = !prev;
-                    setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
-                    followInFlightRef.current = true;
-                    try {
-                      if (!prev) {
-                        await api.follow(post.userId);
-                      } else {
-                        await api.unfollow(post.userId);
+                <>
+                  {/* follow/unfollow: use ToggleActionButton to DRY icon + reveal label */}
+                  <ToggleActionButton
+                    ref={followBtnRef as any}
+                    className={`btn follow-btn icon-reveal ${isFollowing ? 'following' : 'not-following'} ${followAnim || ''} ${followExpanded ? 'expanded' : ''}`}
+                    active={isFollowing}
+                    pending={!!followInFlightRef.current}
+                    onClick={async () => {
+                      const cur = await api.getCurrentUser();
+                      if (!cur) {
+                        try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+                        setShowAuth(true);
+                        return;
                       }
-                      // Dispatch confirmed change after success so other views can
-                      // refresh reliably.
-                      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
-                    } catch (e: any) {
-                      setIsFollowing(prev);
-                      try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}
-                    } finally {
-                      followInFlightRef.current = false;
-                      setTimeout(() => setFollowAnim(null), 520);
-                    }
-                  }}
-                >
-                  <span className="icon" aria-hidden="true">
-                    {isFollowing ? <UserCheck size={16} /> : <UserPlus size={16} />}
-                  </span>
-                  <span className="reveal label">{isFollowing ? 'Followed' : 'Unfollowed'}</span>
-                </button>
+                      if (followInFlightRef.current) return;
+                      const prev = !!isFollowing;
+                      setIsFollowing(!prev);
+                      setFollowExpanded(true);
+                      if (followExpandTimerRef.current) { window.clearTimeout(followExpandTimerRef.current); followExpandTimerRef.current = null; }
+                      followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
+                      const willFollow = !prev;
+                      setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
+                      followInFlightRef.current = true;
+                      try {
+                        if (!prev) {
+                          await api.follow(post.userId);
+                        } else {
+                          await api.unfollow(post.userId);
+                        }
+                        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
+                      } catch (e: any) {
+                        setIsFollowing(prev);
+                        try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}
+                      } finally {
+                        followInFlightRef.current = false;
+                        setTimeout(() => setFollowAnim(null), 520);
+                      }
+                    }}
+                    activeIcon={<UserCheck size={16} />}
+                    inactiveIcon={<UserPlus size={16} />}
+                    ariaActiveLabel="Unfollow"
+                    ariaInactiveLabel="Follow"
+                    titleActive="Unfollow"
+                    titleInactive="Follow"
+                    revealLabel={isFollowing ? 'Followed' : 'Unfollowed'}
+                  />
+                  {showAuth ? (
+                    <>
+                      <div className="auth-dialog-backdrop" onClick={() => setShowAuth(false)} />
+                      <div role="dialog" aria-modal="true" aria-label="Sign in or sign up" className="auth-dialog">
+                        <AuthForm onClose={() => setShowAuth(false)} />
+                      </div>
+                    </>
+                  ) : null}
+                </>
                 {showAuth ? (
                   <>
                     <div className="auth-dialog-backdrop" onClick={() => setShowAuth(false)} />

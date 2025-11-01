@@ -5,6 +5,7 @@ import { SignOutButton } from "@/app/components/SignOut";
 import Link from "next/link";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
+import ToggleActionButton from "../ToggleActionButton";
 import { BarChart3 } from "lucide-react";
 import { Bell } from "lucide-react";
 import { Star } from "lucide-react";
@@ -180,18 +181,20 @@ export function ProfileActions({
       `}</style>
       {/* Follow button moved outside profile-actions div */}
       {currentUserId && user?.id !== currentUserId ? (
-        <button
-          ref={followBtnRef}
+        <ToggleActionButton
+          ref={followBtnRef as any}
           className={`btn follow-btn ${following ? 'following' : 'not-following'} expanded ${followAnim || ''}`}
-          aria-pressed={!!following || false}
+          active={!!following}
+          pending={followInFlightRef.current}
           onClick={handleFollowToggle}
-          title={following ? "Unfollow" : "Follow"}
-        >
-          <span className="icon" aria-hidden="true">
-            {following ? <UserCheck size={18} /> : <UserPlus size={18} />}
-          </span>
-          <span className="reveal label">{displayText}</span>
-        </button>
+          activeIcon={<UserCheck size={18} />}
+          inactiveIcon={<UserPlus size={18} />}
+          ariaActiveLabel="Unfollow"
+          ariaInactiveLabel="Follow"
+          titleActive={following ? 'Unfollow' : 'Follow'}
+          titleInactive={following ? 'Unfollow' : 'Follow'}
+          revealLabel={displayText}
+        />
       ) : null}
       <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 12 }}>
         {/* Show owner actions when the signed-in user is viewing their own profile.

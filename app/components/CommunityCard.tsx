@@ -4,7 +4,7 @@ import React from "react";
 import type { HydratedCommunity } from "@/src/lib/types";
 import CommunityCardBase from "./CommunityCardBase";
 import LazyMount from "./LazyMount";
-import { Button } from "./Button";
+import ToggleActionButton from "./ToggleActionButton";
 import { UserMinus, UserPlus } from "lucide-react";
 
 type Props = {
@@ -41,17 +41,18 @@ function CommunityCardInner({ community, meId, pending, onJoinLeave, showCreator
     >
       <div className="mt-3">
         {meId !== community.creator?.id && (
-          <Button
-            variant={community.isMember ? "ghost" : "default"}
-            size="sm"
-            className="small-min"
+          <ToggleActionButton
+            active={!!community.isMember}
+            pending={!!pending}
             onClick={() => onJoinLeave(community.id, community.isMember || false)}
-            aria-label={community.isMember ? 'Leave community' : 'Join community'}
-            title={community.isMember ? 'Leave community' : 'Join community'}
-            disabled={!!pending}
-          >
-            {community.isMember ? <UserMinus size={16} /> : <UserPlus size={16} />}
-          </Button>
+            className="small-min"
+            activeIcon={<UserMinus size={16} />}
+            inactiveIcon={<UserPlus size={16} />}
+            ariaActiveLabel="Leave community"
+            ariaInactiveLabel="Join community"
+            titleActive="Leave community"
+            titleInactive="Join community"
+          />
         )}
       </div>
     </CommunityCardBase>

@@ -113,7 +113,7 @@ export function CreateThreadView() {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-3 pr-16 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                className="w-full p-3 pr-16 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 placeholder="Enter thread title"
                 maxLength={200}
                 required
@@ -128,7 +128,7 @@ export function CreateThreadView() {
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full p-3 pr-16 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                className="w-full p-3 pr-16 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 placeholder="Write your thread content here..."
                 rows={8}
                 maxLength={10000}

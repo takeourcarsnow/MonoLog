@@ -57,13 +57,8 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
 
   // Do debounced fetch when the debounced value changes
   useEffect(() => {
-    if (debounced === (initialQuery || '')) {
-      // If debounced equals the initial query, show initial results (no fetch)
-      setResults(initialResults || null);
-      return;
-    }
     doFetch(debounced);
-  }, [debounced, doFetch, initialQuery, initialResults]);
+  }, [debounced, doFetch]);
 
   // Sync input with URL search param when present (handles client-side navigation
   // where the server-provided `initialQuery` may not update the mounted client

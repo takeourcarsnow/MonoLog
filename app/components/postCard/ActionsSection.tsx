@@ -80,6 +80,30 @@ export const ActionsSection = function ActionsSection({
   return (
     <div className="actions">
       <button
+        className="action share"
+        title="Share link"
+        aria-label="Share post"
+        onClick={() => { sharePost(); }}
+      >
+        <LinkIcon size={16} />
+      </button>
+      {setShowExif && (
+        <button
+          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''}`}
+          title={`Show EXIF info ${showExif ? "(active)" : ""}`}
+          aria-label="Toggle EXIF information"
+          aria-pressed={showExif}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            e.preventDefault(); 
+            console.log('EXIF button clicked, current state:', showExif);
+            setShowExif(!showExif); 
+          }}
+        >
+          <Camera size={16} />
+        </button>
+      )}
+      <button
         className="action comments-toggle"
         aria-expanded={commentsOpen}
         aria-controls={`comments-${postId}`}
@@ -105,6 +129,16 @@ export const ActionsSection = function ActionsSection({
         <MessageCircle size={16} />
         {count > 0 && <span style={{ marginLeft: 2 }}>{count}</span>}
       </button>
+      {setShowExif && (
+        <button
+          className="action fullscreen"
+          title="View photo"
+          aria-label="View photo fullscreen"
+          onClick={() => { openFullscreen?.(); }}
+        >
+          <FullscreenIcon size={16} />
+        </button>
+      )}
       <button
         className={`action favorite ${isFavorite ? "active" : ""}`}
         aria-pressed={isFavorite}
@@ -120,24 +154,7 @@ export const ActionsSection = function ActionsSection({
       >
         <StarIcon size={16} aria-hidden="true" />
       </button>
-      <button
-        className="action share"
-        title="Share link"
-        aria-label="Share post"
-        onClick={() => { sharePost(); }}
-      >
-        <LinkIcon size={16} />
-      </button>
-      {setShowExif && (
-        <button
-          className="action fullscreen"
-          title="View photo"
-          aria-label="View photo fullscreen"
-          onClick={() => { openFullscreen?.(); }}
-        >
-          <FullscreenIcon size={16} />
-        </button>
-      )}
+      {/* Weather & Location buttons intentionally removed — info is shown in header */}
       {setShowSpotify && (
         <button
           className={`action spotify-info ${spotifyLink ? 'spotify-has-link' : ''}`}
@@ -160,23 +177,6 @@ export const ActionsSection = function ActionsSection({
           >
             <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.6-.12-.421.18-.78.6-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.241 1.081zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.42-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.781-.18-.601.18-1.2.78-1.381 4.5-1.14 11.28-.86 15.72 1.621.479.3.599 1.02.3 1.5-.3.48-.84.599-1.32.3z"/>
           </svg>
-        </button>
-      )}
-      {/* Weather & Location buttons intentionally removed — info is shown in header */}
-      {setShowExif && (
-        <button
-          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''}`}
-          title={`Show EXIF info ${showExif ? "(active)" : ""}`}
-          aria-label="Toggle EXIF information"
-          aria-pressed={showExif}
-          onClick={(e) => { 
-            e.stopPropagation(); 
-            e.preventDefault(); 
-            console.log('EXIF button clicked, current state:', showExif);
-            setShowExif(!showExif); 
-          }}
-        >
-          <Camera size={16} />
         </button>
       )}
       <ReportButton postId={postId} />

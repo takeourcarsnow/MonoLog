@@ -1240,28 +1240,31 @@
   white-space: nowrap;
 }
 
-/* Prevent vertical scrollbars on the EXIF action button caused by a
-   class-name collision with the EXIF section (.exif-info). The button
-   intentionally uses the same class name in markup, so scope a rule
-   specifically for `.action.exif-info` to keep it a fixed square and
-   hide any overflow. */
+/* Make EXIF action visually identical to other `.action` buttons while
+   keeping defensive overflow handling for the auto-scroll EXIF section
+   that shares the `.exif-info` class name. Avoid using !important so
+   the button can respond to container-based size adjustments like other
+   actions. */
 .action.exif-info,
 .action.exif-has-data {
-  overflow: hidden !important;
   box-sizing: border-box;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 36px !important;
-  height: 36px !important;
-  padding: 0 !important;
-  line-height: 1 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  /* match the default .action padding so spacing and hover areas are identical */
+  padding: 0 4px;
+  line-height: 1;
+  overflow: hidden; /* keep defensive clipping if needed */
 }
 .action.exif-info svg,
 .action.exif-has-data svg {
-  display: block !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
+  display: block;
+  width: 18px; /* match .action svg size */
+  height: 18px;
+  max-width: none;
+  max-height: none;
 }
 
 @keyframes exif-scroll {

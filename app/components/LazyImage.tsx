@@ -15,6 +15,10 @@ interface LazyImageProps {
   sizes?: string;
   rootMargin?: string;
   lazy?: boolean;
+  // When true, avoid cross-fading / opacity transitions to reduce flicker
+  disableLoadingTransition?: boolean;
+  // Allow overriding placeholder behavior ("blur" or "empty")
+  placeholder?: 'blur' | 'empty';
 }
 
 export function LazyImage({
@@ -29,6 +33,11 @@ export function LazyImage({
   sizes,
   rootMargin = "50px",
   lazy = true,
+  disableLoadingTransition = false,
+  placeholder = 'blur',
+  // When true, render a plain <img> instead of next/image for minimal markup
+  // and to avoid next/image optimizer transitions which can cause flicker
+  useNativeImg = false,
 }: LazyImageProps) {
   const [isVisible, setIsVisible] = useState(priority || !lazy);
   const ref = useRef<HTMLDivElement>(null);
@@ -73,6 +82,27 @@ export function LazyImage({
   }
 
   if (!lazy) {
+    if (useNativeImg) {
+      return (
+        <img
+          src={src}
+          alt={alt}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          className={className}
+          style={{
+            ...style,
+            width: fill ? '100%' : width,
+            height: fill ? '100%' : height,
+            objectFit: fill ? 'cover' : 'contain',
+            objectPosition: 'center center',
+            borderRadius: 'inherit',
+            backgroundColor: 'var(--bg-elev)'
+          }}
+        />
+      );
+    }
+
     return (
       <OptimizedImage
         src={src}
@@ -91,9 +121,10 @@ export function LazyImage({
         fill={fill}
         loading={priority ? 'eager' : 'lazy'}
         sizes={sizes}
-        placeholder={"blur"}
+        placeholder={placeholder}
         unoptimized={false}
         priority={priority}
+        disableLoadingTransition={disableLoadingTransition}
       />
     );
   }
@@ -101,18 +132,37 @@ export function LazyImage({
   return (
     <div ref={ref} className={className} style={style}>
       {isVisible ? (
-        <OptimizedImage
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          fill={fill}
-          sizes={sizes}
-          loading="lazy"
-          unoptimized={false}
-          placeholder="blur"
-          disableLoadingTransition={false}
-        />
+        useNativeImg ? (
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            className={className}
+            style={{
+              ...style,
+              width: fill ? '100%' : width,
+              height: fill ? '100%' : height,
+              objectFit: fill ? 'cover' : 'contain',
+              objectPosition: 'center center',
+              borderRadius: 'inherit',
+              backgroundColor: 'var(--bg-elev)'
+            }}
+          />
+        ) : (
+          <OptimizedImage
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            fill={fill}
+            sizes={sizes}
+            loading="lazy"
+            unoptimized={false}
+            placeholder={placeholder}
+            disableLoadingTransition={disableLoadingTransition}
+          />
+        )
       ) : (
         <div
           style={{

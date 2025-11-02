@@ -11,6 +11,12 @@
   flex: 1;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  /* Reserve space for the vertical scrollbar to avoid layout shifts when
+     content changes and the browser shows/hides the scrollbar (prevents
+     the grid from "shaking" as images load). Modern browsers support
+     `scrollbar-gutter`. Keep overflow:auto as the interactive scrolling
+     container. */
+  scrollbar-gutter: stable both-edges;
 }
 
 /* Add extra top space when viewing the Favorites page so posts don't butt up
@@ -850,6 +856,20 @@
   opacity: 0;
   transform: translateY(8px);
   animation: gridIn 420ms var(--transition-mid) forwards;
+}
+
+/* Developers: when many images load simultaneously the entrance animation
+   and image transitions can create visible flicker. For a denser, stable
+   grid experience we disable per-tile and per-image transitions here so
+   images replace neutral placeholders without cross-fades or re-animating
+   the tile container. This improves perceived stability when scrolling. */
+.feed.grid-view .grid .tile,
+.feed.grid-view .grid .tile img,
+.feed.grid-view .grid .tile > * {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  opacity: 1 !important;
 }
 
 /* small stagger so tiles cascade visually across rows (3-column default) */

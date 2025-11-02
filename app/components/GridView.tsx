@@ -46,6 +46,14 @@ export const GridView = memo(function GridView({ posts, hasMore, setSentinel, lo
                 alt={Array.isArray(p.alt) ? p.alt[0] || "Photo" : p.alt || "Photo"}
                 sizes="(min-width: 768px) 25vw, 33vw"
                 lazy={false}
+                // Grid tiles should avoid opacity transitions and blur placeholders
+                // to minimize flicker when many small images load at once.
+                disableLoadingTransition={true}
+                placeholder="empty"
+                // Use a native <img> element in the dense grid to avoid next/image
+                // optimizer behavior which can sometimes cause visible flicker
+                // when many thumbnails render together.
+                useNativeImg={true}
                 style={{
                   objectFit: 'cover',
                   objectPosition: 'center center',

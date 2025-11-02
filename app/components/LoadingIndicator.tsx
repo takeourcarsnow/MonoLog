@@ -101,7 +101,6 @@ export function InfiniteScrollLoader({
           <div className="flex items-center space-x-2">
             <SpinningLogo size={20} />
           </div>
-          <div className="text-gray-500 text-sm mt-2">Loading more posts...</div>
         </div>
     );
   }

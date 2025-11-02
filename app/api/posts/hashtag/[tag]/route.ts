@@ -3,9 +3,15 @@ import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { mapRowToHydratedPost } from '@/src/lib/api/utils';
 import { getServerCache, setServerCache } from '@/src/lib/serverCache';
 
-export async function GET(req: Request, { params }: { params: { tag: string } }) {
+export async function GET(req: Request, context: any) {
+  // Next's route handler context may provide `params` as a plain
+  // object or as a Promise depending on Next version/runtime. Await
+  // if necessary to be compatible with both.
+  const params = context?.params && typeof context.params.then === 'function'
+    ? await context.params
+    : context?.params;
   try {
-    const tag = params.tag?.toLowerCase();
+    const tag = params?.tag?.toLowerCase();
     if (!tag || tag.trim() === '') {
       return NextResponse.json({ error: 'Valid tag required' }, { status: 400 });
     }

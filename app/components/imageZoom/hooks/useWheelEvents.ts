@@ -2,13 +2,13 @@ import { useEffect } from 'react';
 import { getBounds } from '../utils/zoomUtils';
 
 interface UseWheelEventsParams {
-  imgRef: React.RefObject<HTMLImageElement>;
+  imgRef: React.RefObject<HTMLImageElement | null>;
   isFullscreen: boolean;
   wheelEnabledRef: React.MutableRefObject<boolean>;
   scaleRef: React.MutableRefObject<number>;
   maxScale: number;
   setIsTransitioning: (transitioning: boolean) => void;
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   txRef: React.MutableRefObject<number>;
   tyRef: React.MutableRefObject<number>;
   naturalRef: React.MutableRefObject<{ w: number; h: number }>;

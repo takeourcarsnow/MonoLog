@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 
 export const useImageSizing = (
-  containerRef: React.RefObject<HTMLDivElement>,
-  imgRef: React.RefObject<HTMLImageElement>,
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  imgRef: React.RefObject<HTMLImageElement | null>,
   isFullscreen: boolean,
   src: string | undefined,
   isActive: boolean

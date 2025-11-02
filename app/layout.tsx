@@ -9,37 +9,14 @@ import { CONFIG } from '@/src/lib/config';
 import ClientErrorBoundary from '@/app/components/ClientErrorBoundary';
 import { isInAppBrowser } from '@/src/lib/detectWebview';
 import { SWRConfig } from 'swr';
+import ClientInit from '@/app/components/ClientInit';
 
 // Self-host the previously imported Google Font for better performance & privacy.
 const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
 
-// AppShell is a client component that uses next/navigation hooks. Dynamically
-// load it on the client only to avoid calling client-only hooks during server
-// rendering which can cause `useContext` to be null in dev/hydration.
-const AppShell = dynamic(() => import("@/app/components/AppShell").then(mod => mod.AppShell), {
-  ssr: false,
-  // Avoid rendering an extra ad-hoc spinner while AppShell hydrates. The
-  // the root layout will render the full-page preloader, so render
-  // nothing here to prevent duplicate loading UIs.
-  loading: () => null,
-});
-
-// Root-level preloader: dynamic client-only component so it mounts once
-// and can listen for a global readiness event from the app init.
-const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ssr: false, loading: () => null });
-
-// Navbar is not critical for initial render, load it dynamically
-const Navbar = dynamic(() => import('@/app/components/NavBar').then(mod => mod.Navbar), { ssr: false });
-
-// Inert polyfill is loaded via the client component `InertPolyfillClient`
-const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfillClient'), { ssr: false });
-
-// PWA Analytics for tracking installation and usage
-const PWAAnalytics = dynamic(() => import('@/app/components/PWAAnalytics').then(mod => mod.PWAAnalytics), { ssr: false });
-const PWAHealthCheck = dynamic(() => import('@/app/components/PWAAnalytics').then(mod => mod.PWAHealthCheck), { ssr: false });
-
-// Route prefetcher for better navigation performance
-const RoutePrefetcher = dynamic(() => import('@/app/components/RoutePrefetcher'), { ssr: false });
+// ClientInit is a client-only wrapper that hosts dynamic client components
+// and client-side effects (web-vitals, SW registration). Keeping the root
+// layout as a Server Component improves performance and allows streaming.
 
 // Render Header at root. Header is a server component that itself will
 // dynamically load the interactive portion (`HeaderInteractive`) on the
@@ -164,86 +141,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           errorRetryInterval: 5000,
         }}>
             <a href="#view" className="skip-link">Skip to content</a>
-            <AppPreloader />
             <Header />
-            <div id="app-root">
-              <ClientErrorBoundary>
-                <AppShell>{children}</AppShell>
-              </ClientErrorBoundary>
-            </div>
-            <Navbar />
-            <InertPolyfillClient />
-            <PWAAnalytics />
-            <PWAHealthCheck />
-            <RoutePrefetcher />
+            <ClientErrorBoundary>
+              <ClientInit>
+                {children}
+              </ClientInit>
+            </ClientErrorBoundary>
             {/* <ToastHost /> */}
         </SWRConfig>
   <noscript>MonoLog — Your day in pictures. Requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}
-        {process.env.NODE_ENV === 'production' ? <WebVitalsScript /> : null}
       </body>
     </html>
   );
 }
 
-// Inline component to lazily import and init web vitals with minimal bundle impact.
-function WebVitalsScript() {
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals');
 
-        getCLS(console.log);
-        getFID(console.log);
-        getFCP(console.log);
-        getLCP(console.log);
-        getTTFB(console.log);
-
-        // Register service worker for caching
-        if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production' && !isInAppBrowser()) {
-          navigator.serviceWorker.register('/sw.js').then((registration) => {
-            // Check for updates when the page becomes visible
-            document.addEventListener('visibilitychange', () => {
-              if (document.visibilityState === 'visible') {
-                registration.update();
-              }
-            });
-
-            // When an update is found, ask the new worker to skipWaiting and then reload
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    try {
-                      // Tell the worker to activate immediately
-                      newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    } catch (e) {
-                      // fallback: reload which should pick up the new content
-                      window.location.reload();
-                    }
-                  }
-                });
-              }
-            });
-
-            // When the active controller changes (new SW has taken control), reload the page
-            // so the user sees the fresh content immediately.
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-              try {
-                window.location.reload();
-              } catch (e) {
-                // ignore
-              }
-            });
-          }).catch((error) => {
-            console.warn('Service worker registration failed:', error);
-          });
-        }
-      } catch (e) {
-        // ignore
-      }
-    })();
-  }, []);
-  return null;
-}

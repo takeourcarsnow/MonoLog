@@ -30,7 +30,7 @@ interface ImageEditorPanelsProps {
   filterStrength: number;
   setFilterStrength: (v: number) => void;
   filterStrengthRef: React.MutableRefObject<number>;
-  filtersContainerRef: React.RefObject<HTMLDivElement>;
+  filtersContainerRef: React.RefObject<HTMLDivElement | null>;
   filterHighlight: { left: number; top: number; width: number; height: number } | null;
   // Effects panel props
   vignette: number;
@@ -55,7 +55,7 @@ interface ImageEditorPanelsProps {
   setRotation: (v: number) => void;
   rotationRef: React.MutableRefObject<number>;
   computeImageLayout: () => any;
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
   imageSrc: string;
   originalRef: React.MutableRefObject<string>;
   bakeRotate90: () => Promise<void>;

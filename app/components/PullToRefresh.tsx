@@ -56,7 +56,7 @@ interface PullToRefreshWrapperProps {
   isRefreshing: boolean;
   pullDistance: number;
   threshold: number;
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   getPullStyles: () => React.CSSProperties;
   className?: string;
 }

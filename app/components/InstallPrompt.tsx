@@ -140,18 +140,14 @@ export function InstallPrompt() {
 
   return (
     <div
-      className="fixed top-[calc(var(--header-height)+1rem)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md
-                 bg-white dark:bg-gray-900 border border-transparent dark:border-transparent
-                 rounded-xl shadow-lg p-4 z-[1000001] animate-slide-down"
+      className="fixed top-[calc(var(--header-height)+1rem)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-white dark:bg-gray-900 border border-transparent dark:border-transparent rounded-xl shadow-lg p-4 z-[1000001] animate-slide-down"
       role="dialog"
       aria-labelledby="install-title"
       aria-describedby="install-desc"
     >
       <button
         onClick={handlePermanentDismiss}
-        className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 
-                   dark:hover:text-gray-300 rounded-full hover:bg-gray-100 
-                   dark:hover:bg-gray-800 transition-colors"
+        className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="Don&apos;t show again"
         title="Don&apos;t show this again"
       >
@@ -178,19 +174,13 @@ export function InstallPrompt() {
         <div className="flex gap-3">
           <button
             onClick={handleInstall}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white
-                     px-5 py-3 rounded-lg font-semibold text-base
-                     shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02]
-                     active:scale-[0.98]"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-semibold text-base shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
           >
             Add to Home Screen
           </button>
           <button
             onClick={() => handleSnooze(3)}
-            className="px-4 py-2 rounded-lg font-medium text-sm
-                     text-gray-700 dark:text-gray-300
-                     hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors
-                     border border-gray-200 dark:border-gray-700"
+            className="px-4 py-2 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700"
           >
             Remind me in 3 days
           </button>

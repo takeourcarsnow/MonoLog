@@ -16,7 +16,7 @@ interface PostCardBodyProps {
   editing: boolean;
   editorAnim: 'enter' | 'exit' | null;
   showEditor: boolean;
-  editorWrapRef: React.RefObject<HTMLDivElement>;
+  editorWrapRef: React.RefObject<HTMLDivElement | null>;
   handleTransitionEnd: (e: React.TransitionEvent) => void;
   editorRef: React.RefObject<any>;
   handleCancel: () => void;
@@ -25,7 +25,7 @@ interface PostCardBodyProps {
   setCommentsOpen: (value: boolean) => void;
   commentsMounted: boolean;
   setCommentsMounted: (value: boolean) => void;
-  commentsRef: React.RefObject<HTMLDivElement>;
+  commentsRef: React.RefObject<HTMLDivElement | null>;
   count: number;
   setCount: (count: number) => void;
   isFavorite: boolean;

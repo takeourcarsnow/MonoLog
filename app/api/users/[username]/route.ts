@@ -7,9 +7,10 @@ function looksLikeUuid(s: string) {
   return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);
 }
 
-export async function GET(req: Request, { params }: { params: { username: string } }) {
+export async function GET(req: Request, context: any) {
+  const params = context?.params && typeof context.params.then === 'function' ? await context.params : context?.params;
   try {
-    const identifier = params.username;
+    const identifier = params?.username;
     if (!identifier) {
       return apiError('Identifier required', 400);
     }

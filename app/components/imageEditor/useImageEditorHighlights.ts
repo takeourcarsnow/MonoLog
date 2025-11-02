@@ -4,8 +4,8 @@ import { throttle } from '@/src/lib/utils';
 export function useImageEditorHighlights(
   selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays',
   selectedFilter: string,
-  categoriesContainerRef: React.RefObject<HTMLDivElement>,
-  filtersContainerRef: React.RefObject<HTMLDivElement>,
+  categoriesContainerRef: React.RefObject<HTMLDivElement | null>,
+  filtersContainerRef: React.RefObject<HTMLDivElement | null>,
   setCategoryHighlight: (highlight: { left: number; top: number; width: number; height: number } | null) => void,
   setFilterHighlight: (highlight: { left: number; top: number; width: number; height: number } | null) => void,
   suppressFilterTransitionRef: React.MutableRefObject<boolean>

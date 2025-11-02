@@ -2,7 +2,7 @@ import { useCallback } from "react";
 
 export function useImageEditorDownload(
   draw: (info?: any, overrides?: any, targetCanvas?: HTMLCanvasElement) => void,
-  imgRef: React.RefObject<HTMLImageElement>
+  imgRef: React.RefObject<HTMLImageElement | null>
 ) {
   const handleDownload = useCallback(() => {
     const img = imgRef.current;

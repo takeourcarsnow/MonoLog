@@ -8,7 +8,7 @@ interface DropZoneProps {
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
-  dropRef: React.RefObject<HTMLDivElement>;
+  dropRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export function DropZone({

@@ -11,7 +11,7 @@ interface ColorPanelProps {
   filterStrengthRef: React.MutableRefObject<number>;
   draw: (overrides?: any) => void;
   resetControlToDefault: (control: string) => void;
-  filtersContainerRef: React.RefObject<HTMLDivElement>;
+  filtersContainerRef: React.RefObject<HTMLDivElement | null>;
   filterHighlight: { left: number; top: number; width: number; height: number } | null;
 }
 

@@ -1,4 +1,5 @@
-type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
+type Props = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
+  src?: string;
   maxScale?: number;
   isActive?: boolean;
   isFullscreen?: boolean;

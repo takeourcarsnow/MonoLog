@@ -13,8 +13,8 @@ interface UsePointerEventsParams {
   isPanning: boolean;
   setTx: (tx: number) => void;
   setTy: (ty: number) => void;
-  containerRef: React.RefObject<HTMLDivElement>;
-  imgRef: React.RefObject<HTMLImageElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  imgRef: React.RefObject<HTMLImageElement | null>;
   naturalRef: React.MutableRefObject<{ w: number; h: number }>;
   containerRectRef: React.MutableRefObject<{ width: number; height: number } | null>;
   TAP_MOVE_THRESHOLD: number;

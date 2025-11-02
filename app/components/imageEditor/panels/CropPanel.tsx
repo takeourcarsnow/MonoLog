@@ -21,7 +21,7 @@ interface CropPanelProps {
   draw: () => void;
   resetControlToDefault: (control: string) => void;
   computeImageLayout: () => { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number } | null;
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
   imageSrc: string;
   originalRef: React.MutableRefObject<string>;
   bakeRotate90: () => Promise<void>;

@@ -241,9 +241,9 @@ export function HeaderInteractive() {
 // header actions overlap the logo text and collapse the text to avoid visual
 // overlap. Uses ResizeObserver and window resize for robustness.
 function useLogoOverlapDetection(
-  logoRef: React.RefObject<HTMLElement>,
-  logoTextRef: React.RefObject<HTMLElement>,
-  actionsRef: React.RefObject<HTMLElement>,
+  logoRef: React.RefObject<HTMLElement | null>,
+  logoTextRef: React.RefObject<HTMLElement | null>,
+  actionsRef: React.RefObject<HTMLElement | null>,
   setHidden: Dispatch<SetStateAction<boolean>>
 ) {
   useEffect(() => {

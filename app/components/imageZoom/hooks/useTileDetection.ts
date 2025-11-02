@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 interface UseTileDetectionParams {
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   setIsTile: (tile: boolean) => void;
 }
 

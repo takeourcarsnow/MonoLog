@@ -5,7 +5,7 @@ import { SUPABASE } from '@/src/lib/config';
 
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sb = createServerClient(SUPABASE.url, SUPABASE.anonKey, {
       cookies: {
         getAll() {

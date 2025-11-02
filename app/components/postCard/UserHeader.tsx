@@ -44,7 +44,7 @@ interface UserHeaderProps {
   setDeleteExpanded: (value: boolean) => void;
   showConfirmText: boolean;
   deleteExpandTimerRef: React.MutableRefObject<number | null>;
-  followBtnRef: React.RefObject<HTMLButtonElement>;
+  followBtnRef: React.RefObject<HTMLButtonElement | null>;
   followAnim: 'following-anim' | 'unfollow-anim' | null;
   setFollowAnim: (value: 'following-anim' | 'unfollow-anim' | null) => void;
   followExpanded: boolean;

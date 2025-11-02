@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef } from 'react';
 
 export function useImageEditorLayout(
   imageSrc: string,
-  canvasRef: React.RefObject<HTMLCanvasElement>,
-  containerRef: React.RefObject<HTMLDivElement>,
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  containerRef: React.RefObject<HTMLDivElement | null>,
   imgRef: React.MutableRefObject<HTMLImageElement | null>,
   originalImgRef: React.MutableRefObject<HTMLImageElement | null>,
   originalRef: React.MutableRefObject<string>,

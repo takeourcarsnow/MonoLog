@@ -3,7 +3,7 @@ import { CATEGORY_COLORS } from './constants';
 import React from 'react';
 
 interface ToolbarCategoriesProps {
-  categoriesContainerRef: React.RefObject<HTMLDivElement>;
+  categoriesContainerRef: React.RefObject<HTMLDivElement | null>;
   selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays';
   setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays') => void;
   categoryHighlight: { left: number; top: number; width: number; height: number } | null;

@@ -20,7 +20,7 @@ interface ProfileEditFieldsProps {
   setEditFacebook: (value: string) => void;
   editWebsite: string;
   setEditWebsite: (value: string) => void;
-  usernameRef: React.RefObject<HTMLInputElement>;
+  usernameRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export const ProfileEditFields = ({

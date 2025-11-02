@@ -134,7 +134,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   const { isFullscreen, editorContainerRef, handleToggleFullscreen } = useImageEditorFullscreen();
 
-  const computeImageLayoutRef = useRef<() => any>();
+  const computeImageLayoutRef = useRef<(() => any) | null>(null);
 
   const { draw } = useImageEditorDraw(
     canvasRef,

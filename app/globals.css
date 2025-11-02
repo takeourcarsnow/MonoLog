@@ -1,4 +1,24 @@
-﻿@tailwind base;
+﻿/* Import modular CSS files */
+@import './styles/animations.css';
+@import './styles/global.css';
+@import './styles/header.css';
+@import './styles/buttons.css';
+@import './styles/layout.css';
+@import './styles/cards.css';
+@import './styles/calendar.css';
+@import './styles/week-review.css';
+@import './styles/carousel.css';
+@import './styles/comments.css';
+@import './styles/uploader.css';
+@import './styles/forms.css';
+@import './styles/auth.css';
+@import './styles/calendar.css';
+@import './styles/profile.css';
+@import './styles/utilities.css';
+@import './styles/overlays.css';
+@import './styles/navbar.css';
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -240,26 +260,6 @@ html[class*="notifications-page-scroll"] .content {
 .dark {
   --auth-toggle-indicator: rgba(255,255,255,0.04);
 }
-
-/* Import modular CSS files */
-@import './styles/animations.css';
-@import './styles/global.css';
-@import './styles/header.css';
-@import './styles/buttons.css';
-@import './styles/layout.css';
-@import './styles/cards.css';
-@import './styles/calendar.css';
-@import './styles/week-review.css';
-@import './styles/carousel.css';
-@import './styles/comments.css';
-@import './styles/uploader.css';
-@import './styles/forms.css';
-@import './styles/auth.css';
-@import './styles/calendar.css';
-@import './styles/profile.css';
-@import './styles/utilities.css';
-@import './styles/overlays.css';
-@import './styles/navbar.css';
 
 /* Dice icon 180deg spin animation for username generator */
 @keyframes dice-spin-180 {

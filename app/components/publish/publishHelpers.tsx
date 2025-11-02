@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { Hourglass, Clock, RefreshCw, Zap, Sparkles, Star, Camera, Check, MessageCircle, Compass, Calendar, Lock, Home } from 'lucide-react';
 
 export const MESSAGES: string[] = [
@@ -25,7 +26,7 @@ export const MESSAGES: string[] = [
   'Hold tight — good things take time',
 ];
 
-export function getWaitIcons(): JSX.Element[] {
+export function getWaitIcons(): React.JSX.Element[] {
   return [
     <Hourglass key="hg" size={18} strokeWidth={1.6} aria-hidden />,
     <Clock key="clk" size={18} strokeWidth={1.6} aria-hidden />,
@@ -43,7 +44,7 @@ export function getWaitIcons(): JSX.Element[] {
   ];
 }
 
-export function selectTimeIcon(remainingMs: number | null): JSX.Element {
+export function selectTimeIcon(remainingMs: number | null): React.JSX.Element {
   const icons = getWaitIcons();
   if (remainingMs == null) return icons[0];
   if (remainingMs <= 60_000) return icons[1];

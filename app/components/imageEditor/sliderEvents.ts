@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export function useSliderEvents(containerRef: React.RefObject<HTMLDivElement>) {
+export function useSliderEvents(containerRef: React.RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const container = containerRef.current;
     if (!container || typeof window === 'undefined') return;

@@ -1,9 +1,9 @@
 import { draw as canvasDraw } from './CanvasRenderer';
 
 export function drawImage(
-  canvasRef: React.RefObject<HTMLCanvasElement>,
-  imgRef: React.RefObject<HTMLImageElement>,
-  originalImgRef: React.RefObject<HTMLImageElement>,
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  imgRef: React.RefObject<HTMLImageElement | null>,
+  originalImgRef: React.RefObject<HTMLImageElement | null>,
   previewOriginalRef: React.MutableRefObject<boolean>,
   offset: { x: number; y: number },
   sel: { x: number; y: number; w: number; h: number } | null,

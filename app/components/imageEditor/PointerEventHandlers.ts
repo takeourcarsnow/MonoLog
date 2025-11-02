@@ -4,8 +4,8 @@ import { handlePointerMove } from './PointerMoveLogic';
 import { handlePointerUp, handlePointerCancel } from './PointerUpLogic';
 
 export function usePointerEvents(
-  canvasRef: React.RefObject<HTMLCanvasElement>,
-  containerRef: React.RefObject<HTMLDivElement>,
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  containerRef: React.RefObject<HTMLDivElement | null>,
   selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays',
   cropRatio: React.MutableRefObject<number | null>,
   dragging: React.MutableRefObject<null | {

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ valid: true });
     }
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sb = createServerClient(SUPABASE.url, SUPABASE.anonKey, {
       cookies: {
         getAll() {

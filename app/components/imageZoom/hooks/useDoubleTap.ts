@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 import { getBounds } from '../utils/zoomUtils';
 
 interface UseDoubleTapParams {
-  containerRef: React.RefObject<HTMLDivElement>;
-  imgRef: React.RefObject<HTMLImageElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  imgRef: React.RefObject<HTMLImageElement | null>;
   naturalRef: React.MutableRefObject<{ w: number; h: number }>;
   containerRectRef: React.MutableRefObject<{ width: number; height: number } | null>;
   scaleRef: React.MutableRefObject<number>;

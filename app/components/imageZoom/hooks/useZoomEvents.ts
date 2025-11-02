@@ -19,8 +19,8 @@ import { useTapRegistration } from './useTapRegistration';
 import { useInactiveReset } from './useInactiveReset';
 
 interface ZoomState {
-  containerRef: React.RefObject<HTMLDivElement>;
-  imgRef: React.RefObject<HTMLImageElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  imgRef: React.RefObject<HTMLImageElement | null>;
   scale: number;
   setScale: (scale: number) => void;
   tx: number;

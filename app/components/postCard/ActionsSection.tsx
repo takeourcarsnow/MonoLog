@@ -9,7 +9,7 @@ interface ActionsSectionProps {
   setCommentsOpen: (value: boolean) => void;
   commentsMounted: boolean;
   setCommentsMounted: (value: boolean) => void;
-  commentsRef: React.RefObject<HTMLDivElement>;
+  commentsRef: React.RefObject<HTMLDivElement | null>;
   isFavorite: boolean;
   setIsFavorite: (value: boolean) => void;
   toggleFavoriteWithAuth: () => Promise<boolean>;

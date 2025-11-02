@@ -6,7 +6,7 @@ export function useImageEditorCrop(
   sel: any,
   setSel: (sel: any) => void,
   computeImageLayout: () => any,
-  canvasRef: React.RefObject<HTMLCanvasElement>,
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
   draw: () => void,
   dragging: React.MutableRefObject<any>,
   previewPointerIdRef: React.MutableRefObject<number | null>,

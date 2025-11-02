@@ -1,5 +1,5 @@
 export async function bakeRotate90(
-  imgRef: React.RefObject<HTMLImageElement>,
+  imgRef: React.RefObject<HTMLImageElement | null>,
   setImageSrc: (src: string) => void,
   setSel: (sel: null) => void,
   setOffset: (offset: { x: number; y: number }) => void
@@ -18,7 +18,7 @@ export async function bakeRotate90(
 }
 
 export async function bakeRotateMinus90(
-  imgRef: React.RefObject<HTMLImageElement>,
+  imgRef: React.RefObject<HTMLImageElement | null>,
   setImageSrc: (src: string) => void,
   setSel: (sel: null) => void,
   setOffset: (offset: { x: number; y: number }) => void

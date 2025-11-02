@@ -5,7 +5,7 @@ interface CommentsSectionProps {
   postId: string;
   commentsMounted: boolean;
   commentsOpen: boolean;
-  commentsRef: React.RefObject<HTMLDivElement>;
+  commentsRef: React.RefObject<HTMLDivElement | null>;
   setCount: (value: number) => void;
 }
 

@@ -18,7 +18,7 @@ export function createFileHandlers(
   setAlt: (alt: string | string[]) => void,
   setCamera: (camera: string) => void,
   setLens: (lens: string) => void,
-  fileInputRef: React.RefObject<HTMLInputElement>,
+  fileInputRef: React.RefObject<HTMLInputElement | null>,
   dataUrls: string[],
   alt: string | string[],
   caption: string,

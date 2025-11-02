@@ -16,7 +16,6 @@
   padding: var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) var(--page-side-padding) calc(var(--tabbar-height, 64px) + 36px);
 }
 .upload-empty .content { padding-bottom: calc(28px + var(--safe-bottom)); }
-*** End Patch
 
 /* Strong page-level override when uploader has an active preview (JS toggles
   `body.uploader-has-preview`). This lives immediately after the base

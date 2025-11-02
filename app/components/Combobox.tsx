@@ -17,7 +17,7 @@ interface ComboboxProps {
   expanded?: boolean;
   removableOptions?: string[];
   onRemoveOption?: (option: string) => void;
-  inputRef?: React.RefObject<HTMLInputElement>;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
 export function Combobox({ value, onChange, options, placeholder, disabled, className, icon: Icon, header, onFocus, onBlur, expanded, removableOptions = [], onRemoveOption, inputRef: externalInputRef }: ComboboxProps) {

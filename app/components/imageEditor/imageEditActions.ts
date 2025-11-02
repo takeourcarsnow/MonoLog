@@ -11,8 +11,8 @@ import { drawFrame } from './ImageEditFrame';
 import { generateDataUrl, createSettings } from './ImageEditExport';
 
 export async function applyEdit(
-  imgRef: React.RefObject<HTMLImageElement>,
-  canvasRef: React.RefObject<HTMLCanvasElement>,
+  imgRef: React.RefObject<HTMLImageElement | null>,
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
   offset: { x: number; y: number },
   sel: { x: number; y: number; w: number; h: number } | null,
   exposure: number,

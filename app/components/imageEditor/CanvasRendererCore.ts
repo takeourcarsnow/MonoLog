@@ -2,9 +2,9 @@ import { FILTER_PRESETS } from "./constants";
 import { generateNoiseCanvas } from "./utils";
 
 export interface DrawParams {
-  canvasRef: React.RefObject<HTMLCanvasElement>;
-  imgRef: React.RefObject<HTMLImageElement>;
-  originalImgRef: React.RefObject<HTMLImageElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  imgRef: React.RefObject<HTMLImageElement | null>;
+  originalImgRef: React.RefObject<HTMLImageElement | null>;
   previewOriginalRef: React.MutableRefObject<boolean>;
   offset: { x: number; y: number };
   sel: { x: number; y: number; w: number; h: number } | null;

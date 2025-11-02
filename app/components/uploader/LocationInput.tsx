@@ -15,7 +15,7 @@ interface LocationInputProps {
   processing: boolean;
   activeField: string | null;
   setActiveField: (field: string | null) => void;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export function LocationInput({

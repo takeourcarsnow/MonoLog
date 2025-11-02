@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 interface UseImageDimensionsParams {
-  imgRef: React.RefObject<HTMLImageElement>;
+  imgRef: React.RefObject<HTMLImageElement | null>;
   naturalRef: React.MutableRefObject<{ w: number; h: number }>;
   src: string | undefined;
   setScale: (scale: number) => void;

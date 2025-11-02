@@ -6,7 +6,7 @@ const Editor = lazy(() => import("./Editor").then(mod => ({ default: mod.Editor 
 interface EditorWrapProps {
   showEditor: boolean;
   editorAnim: string | null;
-  editorWrapRef: RefObject<HTMLDivElement>;
+  editorWrapRef: RefObject<HTMLDivElement | null>;
   handleTransitionEnd: (e: React.TransitionEvent) => void;
   editorRef: RefObject<any>;
   post: HydratedPost;

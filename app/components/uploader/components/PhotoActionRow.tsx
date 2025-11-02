@@ -10,8 +10,8 @@ interface PhotoActionRowProps {
   dataUrls: (string | null)[];
   originalDataUrls: (string | null)[];
   index: number;
-  fileActionRef: React.MutableRefObject<string>;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileActionRef: React.MutableRefObject<'append' | 'replace'>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   onEdit: () => void;
   onRemove: (index: number) => void;
   onAddPhotos: () => void;

@@ -7,7 +7,7 @@ interface PostCardState {
   setEditing: (editing: boolean) => void;
   editorAnim: 'enter' | 'exit' | null;
   showEditor: boolean;
-  editorWrapRef: React.RefObject<HTMLDivElement>;
+  editorWrapRef: React.RefObject<HTMLDivElement | null>;
   handleTransitionEnd: (e: React.TransitionEvent) => void;
   editorRef: React.RefObject<any>;
   handleCancel: () => void;
@@ -16,7 +16,7 @@ interface PostCardState {
   setCommentsOpen: (value: boolean) => void;
   commentsMounted: boolean;
   setCommentsMounted: (value: boolean) => void;
-  commentsRef: React.RefObject<HTMLDivElement>;
+  commentsRef: React.RefObject<HTMLDivElement | null>;
   count: number;
   setCount: (count: number) => void;
   isFavorite: boolean;
@@ -76,7 +76,7 @@ interface PostCardState {
   editorSaving: boolean;
   editorOpeningRef: React.RefObject<any>;
   pathname: string;
-  followBtnRef: React.RefObject<HTMLButtonElement>;
+  followBtnRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 const PostCardContext = createContext<PostCardState | null>(null);

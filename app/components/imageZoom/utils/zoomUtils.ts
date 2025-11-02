@@ -1,8 +1,8 @@
 import React from 'react';
 
 export const getBounds = (
-  containerRef: React.RefObject<HTMLDivElement>,
-  imgRef: React.RefObject<HTMLImageElement>,
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  imgRef: React.RefObject<HTMLImageElement | null>,
   naturalRef: React.MutableRefObject<{ w: number; h: number }>,
   currentScale: number,
   containerRectRef: React.MutableRefObject<{ width: number; height: number } | null>

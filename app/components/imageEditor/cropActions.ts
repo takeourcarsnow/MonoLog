@@ -1,6 +1,6 @@
 export async function applyCropOnly(
-  imgRef: React.RefObject<HTMLImageElement>,
-  canvasRef: React.RefObject<HTMLCanvasElement>,
+  imgRef: React.RefObject<HTMLImageElement | null>,
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
   sel: { x: number; y: number; w: number; h: number } | null,
   offset: { x: number; y: number },
   rotation: number,
@@ -74,7 +74,7 @@ export function resetCrop(
   previewOriginalRef: React.MutableRefObject<boolean>,
   setPreviewOriginal: (v: boolean) => void,
   computeImageLayout: () => any,
-  canvasRef: React.RefObject<HTMLCanvasElement>
+  canvasRef: React.RefObject<HTMLCanvasElement | null>
 ) {
   // If the underlying working image was replaced by a baked crop, restore
   // the original (uncropped) image. Do not reset color adjustments — only

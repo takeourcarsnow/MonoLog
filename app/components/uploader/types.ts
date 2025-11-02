@@ -22,13 +22,13 @@ export interface PreviewSectionProps {
   previewLoaded: boolean;
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
-  trackRef: React.RefObject<HTMLDivElement>;
+  trackRef: React.RefObject<HTMLDivElement | null>;
   touchStartX: React.MutableRefObject<number | null>;
   touchDeltaX: React.MutableRefObject<number>;
   fileActionRef: React.MutableRefObject<'append' | 'replace'>;
   replaceIndexRef: React.MutableRefObject<number | null>;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  cameraInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  cameraInputRef: React.RefObject<HTMLInputElement | null>;
   toast: any;
   handleFile: (file: File) => Promise<void>;
 }

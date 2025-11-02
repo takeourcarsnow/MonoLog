@@ -77,8 +77,10 @@ const nextConfig = {
       },
     ],
   },
-  // Enable SWC minification for better performance
-  swcMinify: true,
+  // Turbopack configuration placeholder. Having an explicit `turbopack` key
+  // silences the build-time error when a custom webpack config is present.
+  // If you need Turbopack-specific configuration, add it here.
+  turbopack: {},
   // Optimize package imports
   experimental: {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js', '@supabase/ssr'],

@@ -9,7 +9,7 @@ interface CarouselViewProps {
   alt: string | string[];
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
-  trackRef: React.RefObject<HTMLDivElement>;
+  trackRef: React.RefObject<HTMLDivElement | null>;
   touchStartX: React.MutableRefObject<number | null>;
   touchDeltaX: React.MutableRefObject<number>;
   setEditingIndex: React.Dispatch<React.SetStateAction<number>>;

@@ -14,7 +14,7 @@ interface WeatherInputProps {
   setActiveField: (field: string | null) => void;
   combinedWeather: string;
   setCombinedWeather: (weather: string) => void;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export function WeatherInput({

@@ -8,6 +8,8 @@ import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
 import { useToast } from "./Toast";
 import { CommentItem } from "./CommentItem";
 import { CommentInput } from "./CommentInput";
+import { LoadingIndicator } from "./LoadingIndicator";
+import { SpinningLogo } from "./SpinningLogo";
 import { COMMENT_MAX, Comment, CommentContext, CommentsProps } from "./comments-types";
 
 export function Comments({ postId, onCountChange }: CommentsProps) {
@@ -135,7 +137,11 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
     <>
       <div className="comment-list">
         {loading && comments.length === 0 ? (
-          <div className="dim">Loading comments…</div>
+          <div className="dim">
+            <div className="flex items-center justify-center">
+              <SpinningLogo size={20} />
+            </div>
+          </div>
         ) : !comments.length ? (
           <div className="empty">No comments yet. Be the first to comment.</div>
         ) : (

@@ -79,9 +79,11 @@ export function InfiniteScrollLoader({
   active = true,
   showEndMessage = true
 }: InfiniteScrollLoaderProps) {
+  const loaderMinHeight = { minHeight: '84px' };
+
   if (error) {
     return (
-      <div className={`flex flex-col items-center justify-center py-8 px-4 ${className}`}>
+      <div className={`flex flex-col items-center justify-center px-4 ${className}`} style={loaderMinHeight}>
         <div className="text-red-500 text-sm mb-2">Failed to load more posts</div>
         {onRetry && (
           <button
@@ -97,7 +99,7 @@ export function InfiniteScrollLoader({
 
   if (loading) {
     return (
-        <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
+        <div className={`flex flex-col items-center justify-center ${className}`} style={loaderMinHeight}>
           <div className="flex items-center space-x-2">
             <SpinningLogo size={20} />
           </div>
@@ -108,15 +110,21 @@ export function InfiniteScrollLoader({
   if (!hasMore) {
     if (!showEndMessage) return null;
     return (
-      <div className={`text-center py-8 text-gray-500 text-sm ${className}`}>
-        You&apos;ve reached the end!
+      <div className={`text-center text-gray-500 text-sm ${className}`} style={loaderMinHeight}>
+        <div className="flex items-center justify-center h-full">
+          You&apos;ve reached the end!
+        </div>
       </div>
     );
   }
 
-  // When there are more posts available, render the sentinel for infinite scroll
+  // When there are more posts available, render the sentinel with reserved height
   if (setSentinel && active) {
-    return <div ref={setSentinel} className={`feed-sentinel ${className}`} />;
+    return (
+      <div className={`flex flex-col items-center justify-center ${className}`} style={loaderMinHeight}>
+        <div ref={setSentinel} className="feed-sentinel" style={{ height: '20px' }} />
+      </div>
+    );
   }
 
   return null;

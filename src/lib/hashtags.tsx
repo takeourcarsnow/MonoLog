@@ -17,7 +17,7 @@ export function parseHashtags(text: string): string[] {
  * Render text with hashtags and mentions as links
  */
 export function renderCaption(text: string): React.ReactNode {
-  const urlRegex = /https?:\/\/[^\s]+/gi;
+  const urlRegex = /https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*/gi;
   const hashtagRegex = /#([a-zA-Z0-9_-]+)/g;
   const mentionRegex = /@([a-zA-Z0-9_]+)/g;
   const parts: React.ReactNode[] = [];
@@ -83,9 +83,9 @@ export function renderCaption(text: string): React.ReactNode {
           </a>
         );
       } else if (m.type === 'url') {
-        const href = m.value;
+        const href = m.value.startsWith('http') ? m.value : (m.value.startsWith('//') ? m.value : `//${m.value}`);
         // Display shorter text for very long urls
-        const display = href.length > 60 ? href.slice(0, 50) + '…' : href;
+        const display = m.value.length > 60 ? m.value.slice(0, 50) + '…' : m.value;
         parts.push(
           <a
             key={`${m.type}-${m.index}`}

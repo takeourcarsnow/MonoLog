@@ -21,10 +21,44 @@
 }
 
 .tab-item-static .tab-icon {
-  margin-bottom: 4px;
+  /* Ensure the icon itself is a centered flex container so SVGs of
+     varying viewBox/size align consistently with the label. Match
+     the icon component's size (20px) for predictable layout. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-bottom: 6px;
   transition: color 260ms ease;
   position: relative;
   z-index: 1;
+}
+
+/* Subtle expansion effect for the active tab: scale the icon and lift it slightly.
+   Also draw a faint circular background 'bubble' behind the active icon. These
+   styles are kept performant (transform/opacity only) and respect reduced-motion. */
+.tab-item-static .tab-icon {
+  transition: transform 260ms cubic-bezier(.2,1,.25,1), color 260ms ease;
+  transform-origin: center center;
+}
+
+.tab-item-static.active {
+  /* lift the active item so it feels elevated */
+  transform: translateY(-2px);
+}
+
+.tab-item-static.active .tab-icon {
+  transform: translateY(-4px) scale(1.18);
+}
+
+/* Background bubble behind icon to accent the active state. Kept subtle. */
+/* Background bubble removed per request: no additional background behind active icon. */
+
+/* Ensure SVGs inside the icon container size to the box */
+.tab-item-static .tab-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .tab-item-static .tab-label {

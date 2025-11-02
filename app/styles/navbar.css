@@ -75,24 +75,7 @@
   box-shadow: none !important;
 }
 
-/* Cover any thin hairline coming from content beneath the tabbar by adding
-   a small solid backing that overlaps the content edge. This is a minimal,
-   non-invasive visual fix that doesn't change card styles. */
-.tabbar::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  /* keep this tiny so it masks only the hairline and doesn't create a visible gap */
-  top: -1px;
-  height: 1px;
-  /* fully-opaque 1px strip matching the elevated background to mask the hairline */
-  background: var(--bg-elev);
-  /* ensure this masking strip doesn't unintentionally sit above global overlays
-     (notifications/backdrop etc). Keep it just below common overlay z-indices. */
-  z-index: 9998; /* above the tabbar children but below overlay/backdrop */
-  pointer-events: none;
-}
+/* The thin mask previously used to hide hairlines has been removed. */
 
 .tabbar-inner {
   display: flex;

@@ -138,13 +138,6 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
     if (m > 11) { setMonth(0); setYear(curYear + 1); } else setMonth(m);
   }, [curMonth, curYear]);
 
-  const goToToday = useCallback(() => {
-    const n = new Date();
-    setYear(n.getFullYear());
-    setMonth(n.getMonth());
-    setSelectedDay(null);
-  }, []);
-
   // Auto-select today when the calendar initially shows the current month/year
   useEffect(() => {
     try {
@@ -222,22 +215,18 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
         </div>
       ) : (
       <div className="calendar-page">
-      <div className="calendar">
-        <div className="header">
-          <button className="btn" id="prev" aria-label="Previous month" onClick={goToPrevMonth}>←</button>
-          <div>
-            <strong
-              id="title"
-              role="button"
-              tabIndex={0}
-              onClick={goToToday}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && goToToday()}
-            >
-              {new Date(curYear, curMonth).toLocaleString(undefined, { month: "long", year: "numeric" })}
-            </strong>
-          </div>
-          <button className="btn" id="next" aria-label="Next month" onClick={goToNextMonth}>→</button>
+        <div className="calendar-header">
+          <button onClick={goToPrevMonth} className="calendar-nav-btn" aria-label="Previous month">
+            ‹
+          </button>
+          <h2 className="calendar-month">
+            {new Date(curYear, curMonth).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+          </h2>
+          <button onClick={goToNextMonth} className="calendar-nav-btn" aria-label="Next month">
+            ›
+          </button>
         </div>
+      <div className="calendar">
         <div className="calendar-weekdays">
           {weekdays.map(d => <div key={d} className="dim" style={{ textAlign: "center" }}>{d}</div>)}
         </div>

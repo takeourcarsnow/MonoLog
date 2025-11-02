@@ -6,8 +6,47 @@
   box-sizing: border-box; 
   margin-bottom: 36px;
 }
-.calendar-page { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 60px 12px 40px; box-sizing: border-box; }
-@media (min-width: 900px) { .calendar-page { padding-left: 12px; padding-right: 12px; padding-top: 40px; padding-bottom: 20px; } }
+.calendar-page { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 20px 12px 40px; box-sizing: border-box; }
+@media (min-width: 900px) { .calendar-page { padding-left: 12px; padding-right: 12px; padding-top: 20px; padding-bottom: 20px; } }
+
+.calendar-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 8px 0;
+}
+
+.calendar-nav-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text);
+  transition: color var(--transition-fast);
+}
+
+.calendar-nav-btn:hover {
+  color: var(--primary);
+}
+
+.calendar-month {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  min-width: 200px;
+  text-align: center;
+}
+
 .calendar .header {
   display: flex; justify-content: space-between; align-items: center;
   border: none; background: transparent;

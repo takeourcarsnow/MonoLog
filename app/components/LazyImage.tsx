@@ -19,6 +19,9 @@ interface LazyImageProps {
   disableLoadingTransition?: boolean;
   // Allow overriding placeholder behavior ("blur" or "empty")
   placeholder?: 'blur' | 'empty';
+  // When true, render a plain <img> instead of next/image for minimal markup
+  // and to avoid next/image optimizer transitions which can cause flicker
+  useNativeImg?: boolean;
 }
 
 export function LazyImage({

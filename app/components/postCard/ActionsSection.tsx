@@ -79,14 +79,21 @@ export const ActionsSection = function ActionsSection({
 }: ActionsSectionProps) {
   const [copied, setCopied] = useState(false);
   const [favoriteAnimating, setFavoriteAnimating] = useState(false);
+  const [spotifyAnimating, setSpotifyAnimating] = useState(false);
+  const [exifAnimating, setExifAnimating] = useState(false);
+  const [commentsAnimating, setCommentsAnimating] = useState(false);
+  const [fullscreenAnimating, setFullscreenAnimating] = useState(false);
+  const [shareAnimating, setShareAnimating] = useState(false);
 
   return (
     <div className="actions">
       <button
-        className="action share"
+        className={`action share ${shareAnimating ? 'animating' : ''}`}
         title="Share link"
         aria-label="Share post"
         onClick={async () => {
+          setShareAnimating(true);
+          setTimeout(() => setShareAnimating(false), 500);
           const success = await sharePost();
           if (success) {
             setCopied(true);
@@ -94,17 +101,36 @@ export const ActionsSection = function ActionsSection({
           }
         }}
       >
-        {copied ? <Check size={16} /> : <LinkIcon size={16} />}
+        <LinkIcon 
+          size={16} 
+          style={{ 
+            opacity: copied ? 0 : 1, 
+            transform: copied ? 'scale(0.5) rotate(-90deg)' : 'scale(1) rotate(0deg)',
+            transition: 'all 0.4s ease-in-out',
+            position: 'absolute'
+          }} 
+        />
+        <Check 
+          size={16} 
+          style={{ 
+            opacity: copied ? 1 : 0, 
+            transform: copied ? 'scale(1) rotate(0deg)' : 'scale(0.5) rotate(90deg)',
+            transition: 'all 0.4s ease-in-out',
+            position: 'absolute'
+          }} 
+        />
       </button>
       {setShowExif && (
         <button
-          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''}`}
+          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''} ${exifAnimating ? 'animating' : ''}`}
           title={`Show EXIF info ${showExif ? "(active)" : ""}`}
           aria-label="Toggle EXIF information"
           aria-pressed={showExif}
           onClick={(e) => { 
             e.stopPropagation(); 
             e.preventDefault(); 
+            setExifAnimating(true);
+            setTimeout(() => setExifAnimating(false), 500);
             console.log('EXIF button clicked, current state:', showExif);
             setShowExif(!showExif); 
           }}
@@ -113,10 +139,12 @@ export const ActionsSection = function ActionsSection({
         </button>
       )}
       <button
-        className="action comments-toggle"
+        className={`action comments-toggle ${commentsAnimating ? 'animating' : ''}`}
         aria-expanded={commentsOpen}
         aria-controls={`comments-${postId}`}
         onClick={() => {
+          setCommentsAnimating(true);
+          setTimeout(() => setCommentsAnimating(false), 500);
           if (!commentsMounted) {
             setCommentsMounted(true);
             setCommentsOpen(true);
@@ -140,10 +168,14 @@ export const ActionsSection = function ActionsSection({
       </button>
       {setShowExif && (
         <button
-          className="action fullscreen"
+          className={`action fullscreen ${fullscreenAnimating ? 'animating' : ''}`}
           title="View photo"
           aria-label="View photo fullscreen"
-          onClick={() => { openFullscreen?.(); }}
+          onClick={() => { 
+            setFullscreenAnimating(true);
+            setTimeout(() => setFullscreenAnimating(false), 500);
+            openFullscreen?.(); 
+          }}
         >
           <FullscreenIcon size={16} />
         </button>
@@ -167,13 +199,15 @@ export const ActionsSection = function ActionsSection({
       {/* Weather & Location buttons intentionally removed — info is shown in header */}
       {setShowSpotify && (
         <button
-          className={`action spotify-info ${spotifyLink ? 'spotify-has-link' : ''}`}
+          className={`action spotify-info ${spotifyLink ? 'spotify-has-link' : ''} ${spotifyAnimating ? 'animating' : ''}`}
           title={`Show Spotify info ${showSpotify ? "(active)" : ""}`}
           aria-label="Toggle Spotify information"
           aria-pressed={showSpotify}
           onClick={(e) => { 
             e.stopPropagation(); 
             e.preventDefault(); 
+            setSpotifyAnimating(true);
+            setTimeout(() => setSpotifyAnimating(false), 500);
             console.log('Spotify button clicked, current state:', showSpotify);
             setShowSpotify(!showSpotify); 
           }}

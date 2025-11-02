@@ -204,17 +204,17 @@ export function ProfileActions({
           <>
             <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following" title="View following list">
               <span className="icon" aria-hidden>
-                <User size={18} strokeWidth={1.2} />
+                <User size={18} strokeWidth={2} />
               </span>
             </Link>
             <Link className="btn icon week-review-link no-effects" href="/week-review" aria-label="Week in Review" title="View week in review">
               <span className="icon" aria-hidden>
-                <BarChart3 size={18} strokeWidth={1.2} />
+                <BarChart3 size={18} strokeWidth={2} />
               </span>
             </Link>
             <Link className="btn icon favorites-link no-effects" href="/favorites" aria-label="Favorites" title="View favorites">
               <span className="icon" aria-hidden>
-                <Star size={18} strokeWidth={1.2} />
+                <Star size={18} strokeWidth={2} />
               </span>
             </Link>
 
@@ -227,7 +227,7 @@ export function ProfileActions({
               type="button"
             >
               <span className="icon" aria-hidden>
-                <UserPlus size={18} strokeWidth={1.2} />
+                <UserPlus size={18} strokeWidth={2} />
               </span>
             </button>
             {/* New Post button removed from profile actions */}

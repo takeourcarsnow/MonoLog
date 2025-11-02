@@ -73,7 +73,7 @@ export function ProfileView({ userId }: { userId?: string }) {
       <div className="empty feed-empty" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
-            <UserIcon size={56} strokeWidth={1.5} />
+            <UserIcon size={56} strokeWidth={2} />
           </div>
 
           <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>User not found</h2>

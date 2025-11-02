@@ -226,7 +226,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
             ›
           </button>
         </div>
-      <div className="calendar">
+      <div className="calendar" key={`${curYear}-${curMonth}`}>
         <div className="calendar-weekdays">
           {weekdays.map(d => <div key={d} className="dim" style={{ textAlign: "center" }}>{d}</div>)}
         </div>

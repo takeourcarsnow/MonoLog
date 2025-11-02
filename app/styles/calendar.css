@@ -58,6 +58,7 @@
 }
 .calendar-grid {
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%;
+  animation: calendarFadeIn 0.3s ease-out;
 }
 .day {
   border: 1px solid var(--border); border-radius: 10px; padding: 8px; aspect-ratio: 1;
@@ -230,5 +231,14 @@
     z-index: 10;
     padding-top: 10px;
     padding-bottom: 10px;
+  }
+}
+
+@keyframes calendarFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }

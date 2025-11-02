@@ -55,9 +55,14 @@
      surface extends under system UI while keeping content readable. */
   padding-bottom: env(safe-area-inset-bottom, 0);
   --tabbar-height: 56px;
-  background: color-mix(in srgb, var(--bg-elev), transparent 15%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+    /* Backdrop blur with a translucent backing. Keep color-mix for modern
+      browsers and add an rgba fallback using --bg-elev-rgb so translucency
+      is reliable where color-mix isn't supported. */
+    background: color-mix(in srgb, var(--bg-elev), transparent 15%);
+    /* Use the theme-aware alpha variable so dark theme gets a different translucency. */
+    background-color: rgba(var(--bg-elev-rgb, 247,247,249), var(--tabbar-alpha, 0.78));
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
   z-index: 9999;
   transform: translateZ(0);
   transition: opacity 0.15s ease;
@@ -177,4 +182,19 @@
 }
 .imgedit-open .tabbar {
   user-select: none;
+}
+
+/* Force a theme-specific translucent backing for the tabbar with higher
+   specificity so theme switches reliably update the visible bar color. The
+   !important ensures runtime or cascade styles don't accidentally override
+   the intended theme color. */
+:root[data-theme="dark"] .tabbar,
+.dark .tabbar {
+  background: none !important;
+  background-color: rgba(var(--bg-elev-rgb, 20,20,24), var(--tabbar-alpha, 0.48)) !important;
+}
+
+:root[data-theme="light"] .tabbar {
+  background: none !important;
+  background-color: rgba(var(--bg-elev-rgb, 247,247,249), var(--tabbar-alpha, 0.78)) !important;
 }

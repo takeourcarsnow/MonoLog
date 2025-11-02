@@ -4,6 +4,11 @@
 
   --bg: #ffffff;
   --bg-elev: #f7f7f9;
+  /* RGB fallbacks for translucent backgrounds (used with rgba and backdrop-filter) */
+  --bg-rgb: 255, 255, 255;
+  --bg-elev-rgb: 247, 247, 249;
+  /* default alpha for the bottom tabbar translucent backing (light theme) */
+  --tabbar-alpha: 0.78;
   --text: #0f0f10;
   --muted: #6b7280;
   --primary: #2563eb;
@@ -43,6 +48,10 @@
 :root[data-theme="dark"] {
   --bg: #0c0c0e;
   --bg-elev: #141418;
+  /* darker RGB fallbacks set above; use a lower alpha so the tabbar remains translucent but not too bright */
+  --tabbar-alpha: 0.48;
+  --bg-rgb: 12, 12, 14;
+  --bg-elev-rgb: 20, 20, 24;
   --text: #f7f7f7;
   --muted: #9ca3af;
   --primary: #60a5fa;
@@ -59,6 +68,9 @@
 :root[data-theme="light"] {
   --bg: #ffffff;
   --bg-elev: #f7f7f9;
+  --tabbar-alpha: 0.78;
+  --bg-rgb: 255, 255, 255;
+  --bg-elev-rgb: 247, 247, 249;
   --text: #0f0f10;
   --muted: #6b7280;
   --primary: #2563eb;
@@ -75,4 +87,8 @@
 /* support projects that toggle dark mode by adding a `dark` class to the html element */
 .dark {
   --auth-toggle-indicator: rgba(255,255,255,0.04);
+  /* also mirror the same RGB/alpha theme variables when using the `.dark` class */
+  --bg-rgb: 12, 12, 14;
+  --bg-elev-rgb: 20, 20, 24;
+  --tabbar-alpha: 0.48;
 }

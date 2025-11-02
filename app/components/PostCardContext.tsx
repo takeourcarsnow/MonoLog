@@ -24,7 +24,7 @@ interface PostCardState {
   toggleFavoriteWithAuth: () => Promise<boolean>;
   showAuth: boolean;
   setShowAuth: (show: boolean) => void;
-  sharePost: () => void;
+  sharePost: () => Promise<boolean>;
   api: any;
   toast: any;
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;

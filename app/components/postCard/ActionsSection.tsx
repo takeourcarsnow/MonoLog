@@ -15,7 +15,7 @@ interface ActionsSectionProps {
   toggleFavoriteWithAuth: () => Promise<boolean>;
   showAuth: boolean;
   setShowAuth: (value: boolean) => void;
-  sharePost: () => void;
+  sharePost: () => Promise<boolean>;
   api: any;
   toast: any;
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
@@ -78,6 +78,7 @@ export const ActionsSection = function ActionsSection({
   locationAddress,
 }: ActionsSectionProps) {
   const [copied, setCopied] = useState(false);
+  const [favoriteAnimating, setFavoriteAnimating] = useState(false);
 
   return (
     <div className="actions">
@@ -148,19 +149,20 @@ export const ActionsSection = function ActionsSection({
         </button>
       )}
       <button
-        className={`action favorite ${isFavorite ? "active" : ""}`}
+        className={`action favorite ${isFavorite ? "active" : ""} ${favoriteAnimating ? "animating" : ""}`}
         aria-pressed={isFavorite}
         title={isFavorite ? "Remove from favorites" : "Add to favorites"}
         onClick={async () => {
+          setFavoriteAnimating(true);
+          setTimeout(() => setFavoriteAnimating(false), 500);
+          showFavoriteFeedback(isFavorite ? 'removing' : 'adding');
           const success = await toggleFavoriteWithAuth();
           if (!success) {
             setShowAuth(true);
-          } else {
-            showFavoriteFeedback(isFavorite ? 'removing' : 'adding');
           }
         }}
       >
-        <StarIcon size={16} aria-hidden="true" />
+        <StarIcon className="star" size={16} aria-hidden="true" />
       </button>
       {/* Weather & Location buttons intentionally removed — info is shown in header */}
       {setShowSpotify && (

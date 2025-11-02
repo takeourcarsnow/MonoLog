@@ -592,6 +592,14 @@
   border-radius: 8px;
 }
 
+/* Don't show the card outline when the only focus-visible descendant is
+   the compact comment input textarea. The comment input manages its own
+   focus affordance (or intentionally hides it), so avoid the strong
+   card-level halo which looks like a blue border around the post. */
+.card:has(.comment-box :focus-visible) {
+  outline: none !important;
+}
+
 .card-body { padding: 12px 14px; display: grid; gap: 12px; overflow: visible; }
 .caption {
   font-size: 15px;

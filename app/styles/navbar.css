@@ -44,12 +44,13 @@
 }
 
 .tab-item-static.active {
-  /* lift the active item so it feels elevated */
-  transform: translateY(-2px);
+  /* Slightly lift the active item (reduced to be less pronounced) */
+  transform: translateY(-1px);
 }
 
 .tab-item-static.active .tab-icon {
-  transform: translateY(-4px) scale(1.18);
+  /* Reduce lift and scale so the effect is more subtle */
+  transform: translateY(-2px) scale(1.12);
 }
 
 /* Background bubble behind icon to accent the active state. Kept subtle. */

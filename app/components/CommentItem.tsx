@@ -116,7 +116,7 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
             >
               <span className="author">{comment.user?.username ? `@${comment.user?.username}` : (comment.user?.displayName || "User")}</span>
             </Link>
-            <span className="inline-flex items-center gap-1 dim"><Clock size={12} /> <TimeDisplay date={comment.createdAt} className="dim" /></span>
+            <span className="inline-flex items-center gap-2 dim"><Clock size={12} className="mr-1" />{"\u00A0"}<TimeDisplay date={comment.createdAt} className="dim" /></span>
             <CommentActions
               commentId={comment.id}
               isReply={isReply}

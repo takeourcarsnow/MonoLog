@@ -175,7 +175,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
                     ) : null}
                     <div className="post-info">
                       <p className="post-caption">{post.caption?.trim() || '(no caption)'}</p>
-                      <small style={{ color: 'var(--muted)' }}>@{post.user?.username} · <span className="inline-flex items-center gap-1"><Clock size={12} /> <TimeDisplay date={post.createdAt} className="dim" /></span></small>
+                      <small style={{ color: 'var(--muted)' }}>@{post.user?.username} · <span className="inline-flex items-center gap-2"><Clock size={12} className="mr-1" />{"\u00A0"}<TimeDisplay date={post.createdAt} className="dim" /></span></small>
                     </div>
                   </a>
                 </div>

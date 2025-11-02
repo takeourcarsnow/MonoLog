@@ -61,8 +61,8 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
               </div>
               <span>@{thread.user.username}</span>
             </div>
-            <span className="inline-flex items-center gap-1">
-              <Clock size={14} />
+            <span className="inline-flex items-center gap-2">
+              <Clock size={14} className="mr-1" />{"\u00A0"}
               <TimeDisplay date={thread.createdAt} />
             </span>
             <span className="flex items-center gap-1">

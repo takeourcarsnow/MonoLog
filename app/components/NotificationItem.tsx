@@ -27,7 +27,7 @@ function NotificationItem({
       }}
     >
       <div className="notification-content">
-        <span className="inline-flex items-center gap-1 notification-time"><Clock size={12} /> <TimeDisplay date={notification.created_at} className="notification-time" /></span>
+        <span className="inline-flex items-center gap-2 notification-time"><Clock size={12} className="mr-1" />{"\u00A0"}<TimeDisplay date={notification.created_at} className="notification-time" /></span>
         {messageData?.actorAvatarUrl && (() => {
           const parts = messageData?.message.split(' ') || [];
           const username = parts[0]?.startsWith('@') ? parts[0].slice(1) : null;

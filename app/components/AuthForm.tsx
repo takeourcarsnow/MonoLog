@@ -82,18 +82,7 @@ export function AuthForm({ onClose }: { onClose?: () => void }) {
         emailWarning={emailWarning}
       />
 
-      {mode === "forgot" && (
-        <div style={{ textAlign: 'center', marginTop: 8 }}>
-          <button
-            type="button"
-            className="btn small dim"
-            onClick={() => setMode("signin")}
-            style={{ fontSize: 14 }}
-          >
-            Back to sign in
-          </button>
-        </div>
-      )}
+
 
       <AuthButton
         mode={mode}

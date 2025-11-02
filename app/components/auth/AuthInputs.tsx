@@ -123,7 +123,7 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               <div style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(calc(-50% - 2px))' }}>
                 <button
                   type="button"
-                  className="btn small dim no-effects"
+                  className="btn small dim"
                   onClick={onForgotPassword}
                   style={{ fontSize: 12, padding: '2px 6px' }}
                 >

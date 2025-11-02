@@ -8,6 +8,7 @@ import { LoadingIndicator } from "@/app/components/LoadingIndicator";
 import NextImage from 'next/image';
 import { useNotifications } from "./useNotifications";
 import NotificationItem from "./NotificationItem";
+import { SpinningLogo } from "./SpinningLogo";
 
 type Props = {
   open: boolean;
@@ -98,14 +99,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
         <div className="notifications-popup-content">
           {loading ? (
             <div className="text-center py-8">
-              <style>{`
-                @keyframes subtleSpin {
-                  0% { transform: rotate(0deg) scale(1); }
-                  50% { transform: rotate(180deg) scale(1.1); }
-                  100% { transform: rotate(360deg) scale(1); }
-                }
-              `}</style>
-              <NextImage src="/logo.svg" alt="loading" width={24} height={24} className="mx-auto" style={{ animation: 'subtleSpin 1.5s infinite', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
+              <SpinningLogo invertInLight={theme === 'light'} />
             </div>
           ) : error ? (
             <div className="text-center py-8" style={{ color: 'var(--danger)' }}>{error}</div>

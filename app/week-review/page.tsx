@@ -7,6 +7,7 @@ import { renderCaption } from "@/src/lib/hashtags";
 import { Calendar, Image, MessageCircle, ChevronDown } from "lucide-react";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import type { WeekReviewStats } from "@/src/lib/types";
+import { StatCard } from "@/app/components/StatCard";
 
 export default function WeekReviewPage() {
   const [stats, setStats] = useState<WeekReviewStats | null>(null);
@@ -81,14 +82,6 @@ export default function WeekReviewPage() {
   if (!stats) {
     return null;
   }
-
-  const StatCard = ({ icon, title, value }: { icon: React.ReactNode; title: string; value: string | number }) => (
-    <div className="stat-card">
-      <div className="stat-icon">{icon}</div>
-      <div className="stat-value">{value}</div>
-      <div className="stat-title">{title}</div>
-    </div>
-  );
 
   return (
     <div className="week-review-page">

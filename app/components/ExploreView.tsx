@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "@/src/lib/api";
 import { Compass } from "lucide-react";
 import { FeedPage } from "./FeedPage";
+import { useAuthChange } from "@/src/lib/hooks/useAuthChange";
 
 export function ExploreView() {
   const fetchExploreFeed = useCallback((opts: { limit: number; before?: string }) => api.getExploreFeedPage(opts), []);
@@ -27,18 +28,14 @@ export function ExploreView() {
     }, []);
 
     // Refresh canPost when authentication state changes
-    useEffect(() => {
-      const handler = async () => {
-        try {
-          const resp = await api.canPostToday();
-          setCanPost(Boolean(resp?.allowed));
-        } catch (e) {
-          setCanPost(null);
-        }
-      };
-      if (typeof window !== 'undefined') window.addEventListener('auth:changed', handler);
-      return () => { if (typeof window !== 'undefined') window.removeEventListener('auth:changed', handler); };
-    }, []);
+    useAuthChange(async () => {
+      try {
+        const resp = await api.canPostToday();
+        setCanPost(Boolean(resp?.allowed));
+      } catch (e) {
+        setCanPost(null);
+      }
+    });
 
     const emptyMessage = "You're already following everyone! This section shows posts from users you're not following yet.";
 

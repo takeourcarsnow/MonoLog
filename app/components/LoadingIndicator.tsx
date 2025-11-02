@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { SpinningLogo } from './SpinningLogo';
 
 interface LoadingIndicatorProps {
   size?: 'small' | 'medium' | 'large';
@@ -96,26 +97,12 @@ export function InfiniteScrollLoader({
 
   if (loading) {
     return (
-      <>
-        <style>{`
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          @keyframes subtleSpin {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.1); }
-            100% { transform: rotate(360deg) scale(1); }
-          }
-        `}</style>
         <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
           <div className="flex items-center space-x-2">
-            {/* high-res PNG for crisp small icon */}
-            <Image src="/icon-1024.png" alt="logo" width={20} height={20} className="w-5 h-5 pull-to-refresh-logo" style={{ animation: 'fadeIn 50ms forwards, subtleSpin 1.5s infinite' }} />
+            <SpinningLogo size={20} />
           </div>
           <div className="text-gray-500 text-sm mt-2">Loading more posts...</div>
         </div>
-      </>
     );
   }
 

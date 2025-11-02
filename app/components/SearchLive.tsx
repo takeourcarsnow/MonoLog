@@ -6,6 +6,7 @@ import { Image as ImageIcon, User, Users as UsersIcon, Search, MapPin } from 'lu
 import Image from 'next/image';
 import { useCurrentUser } from '@/lib/hooks';
 import { getAccessToken, getSupabaseClient } from '@/src/lib/api/client';
+import { SpinningLogo } from './SpinningLogo';
 
 interface SearchResult {
   posts: any[];
@@ -145,18 +146,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
 
       {loading ? (
         <div className="search-results" style={{ width: '100%', marginTop: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-          <style>{`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes subtleSpin {
-              0% { transform: rotate(0deg) scale(1); }
-              50% { transform: rotate(180deg) scale(1.1); }
-              100% { transform: rotate(360deg) scale(1); }
-            }
-          `}</style>
-          <Image src="/logo.svg" alt="loading" width={32} height={32} className="w-8 h-8" style={{ animation: 'fadeIn 50ms forwards, subtleSpin 1.5s infinite' }} />
+          <SpinningLogo size={32} />
         </div>
       ) : results && (
         <div className="search-results" style={{ width: '100%', marginTop: '16px' }}>

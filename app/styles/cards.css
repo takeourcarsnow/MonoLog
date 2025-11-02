@@ -655,7 +655,7 @@
   color: var(--primary);
   cursor: pointer;
   padding: 2px;
-  margin-left: 4px;
+  margin-left: 0; /* remove left nudge so caret centers under caption */
   border-radius: 4px;
   display: inline-flex;
   align-items: center;

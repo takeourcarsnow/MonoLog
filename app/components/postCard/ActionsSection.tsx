@@ -130,18 +130,12 @@ export const ActionsSection = function ActionsSection({
       </button>
       {setShowExif && (
         <button
-          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''}`}
-          title={`Show EXIF info ${showExif ? "(active)" : ""}`}
-          aria-label="Toggle EXIF information"
-          aria-pressed={showExif}
-          onClick={(e) => { 
-            e.stopPropagation(); 
-            e.preventDefault(); 
-            console.log('EXIF button clicked, current state:', showExif);
-            setShowExif(!showExif); 
-          }}
+          className="action fullscreen"
+          title="View photo"
+          aria-label="View photo fullscreen"
+          onClick={() => { openFullscreen?.(); }}
         >
-          <Camera size={16} />
+          <FullscreenIcon size={16} />
         </button>
       )}
       {setShowSpotify && (
@@ -169,14 +163,22 @@ export const ActionsSection = function ActionsSection({
         </button>
       )}
       {/* Weather & Location buttons intentionally removed — info is shown in header */}
-      <button
-        className="action fullscreen"
-        title="View photo"
-        aria-label="View photo fullscreen"
-        onClick={() => { openFullscreen?.(); }}
-      >
-        <FullscreenIcon size={16} />
-      </button>
+      {setShowExif && (
+        <button
+          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''}`}
+          title={`Show EXIF info ${showExif ? "(active)" : ""}`}
+          aria-label="Toggle EXIF information"
+          aria-pressed={showExif}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            e.preventDefault(); 
+            console.log('EXIF button clicked, current state:', showExif);
+            setShowExif(!showExif); 
+          }}
+        >
+          <Camera size={16} />
+        </button>
+      )}
       <ReportButton postId={postId} />
     </div>
   );

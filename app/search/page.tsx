@@ -14,7 +14,7 @@ interface SearchResult {
   locations: number;
 }
 
-export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
+export default async function SearchPage({ searchParams }: { searchParams: any }) {
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -35,7 +35,10 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
     redirect('/profile');
   }
 
-  const query = searchParams.q?.trim() || '';
+  // In some Next.js versions `searchParams` may be a Promise that must be awaited
+  // before accessing properties. Await to ensure compatibility.
+  const params = await searchParams;
+  const query = params?.q?.trim() || '';
 
   let results: SearchResult | null = null;
 

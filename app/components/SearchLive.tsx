@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useDebouncedValue } from '@/src/lib/hooks/useDebouncedValue';
 import { Image as ImageIcon, User, Users as UsersIcon, Search, MapPin, Clock } from 'lucide-react';
 import Image from 'next/image';
@@ -63,6 +64,23 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
     }
     doFetch(debounced);
   }, [debounced, doFetch, initialQuery, initialResults]);
+
+  // Sync input with URL search param when present (handles client-side navigation
+  // where the server-provided `initialQuery` may not update the mounted client
+  // component's state). This ensures clicking a MapPin/Link to /search?q=... will
+  // populate the input.
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    try {
+      const qp = searchParams?.get?.('q') || '';
+      if (qp && qp !== value) {
+        setValue(qp);
+      }
+    } catch (e) {
+      // noop
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Immediate search on Enter
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

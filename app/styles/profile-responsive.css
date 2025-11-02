@@ -74,3 +74,50 @@
     font-size: 11px;
   }
 }
+
+/* Ensure list view feed in profile pages fits narrow mobile viewports.
+   The global --maxw uses a minimum of 640px which can force the feed
+   wider than the viewport on small phones, causing horizontal clipping
+   in the list (single-column) layout. Override max-width for profile
+   pages on small screens so cards use the available viewport width. */
+@media (max-width: 640px) {
+  .view-fade .feed,
+  .profile .feed {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    /* ensure we still respect mobile side padding */
+    padding-left: var(--page-side-padding-mobile);
+    padding-right: var(--page-side-padding-mobile);
+  }
+}
+
+/* Defensive fixes: if any inner wrapper or card tries to exceed the
+   viewport (due to inline styles or unexpected margins), force no
+   horizontal overflow and allow cards to shrink. This helps in cases
+   where some feeds render an extra wrapper element. */
+@media (max-width: 640px) {
+  .view-fade .feed,
+  .view-fade .feed > div,
+  .profile .feed,
+  .profile .feed > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Ensure cards inside the feed can shrink and won't cause horizontal scroll */
+  .view-fade .feed .card,
+  .profile .feed .card {
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Ensure card body content wraps / breaks long words to avoid overflow */
+  .view-fade .feed .card-body,
+  .profile .feed .card-body {
+    min-width: 0 !important;
+    word-break: break-word !important;
+  }
+}

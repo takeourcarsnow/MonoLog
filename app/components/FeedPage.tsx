@@ -49,8 +49,10 @@ export function FeedPage({
 }: FeedPageProps) {
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
   const [isTransitioning, setIsTransitioning] = useState(false);
-  // keep track of pending timeout so we can clear on unmount
-  const transitionRef = useRef<number | null>(null);
+  const [pendingView, setPendingView] = useState<"list" | "grid" | null>(null);
+  // Ref to the fading container and a cleanup holder for transition listeners
+  const fadeRef = useRef<HTMLDivElement | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   const { me } = useAuth();
 
@@ -146,38 +148,77 @@ export function FeedPage({
 
   const handleViewChange = useCallback((v: "list" | "grid") => {
     if (v === view) return;
-    // play fade-out, then swap view, then fade-in
-    setIsTransitioning(true);
-    // small delay to allow fade-out animation to run
-    transitionRef.current = window.setTimeout(() => {
+    // Immediately reflect the desired selection in the toggle UI
+    setPendingView(v);
+    const el = fadeRef.current;
+    // If no element yet, just swap immediately as a safe fallback
+    if (!el) {
       setView(v);
+      setPendingView(null);
       if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v);
-      // trigger fade-in
+      return;
+    }
+
+    // If a previous transition is in progress, clean it up
+    if (cleanupRef.current) {
+      try { cleanupRef.current(); } catch {}
+      cleanupRef.current = null;
+    }
+
+    // Trigger fade-out
+    setIsTransitioning(true);
+
+    const onEnd = (e: TransitionEvent) => {
+      if (e.target !== el || e.propertyName !== 'opacity') return;
+      el.removeEventListener('transitionend', onEnd as any);
+      // Swap view after fade-out completes
+      setView(v);
+      setPendingView(null);
+      if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v);
+      // Next frame, fade back in to ensure style recalculation
+      requestAnimationFrame(() => {
+        setIsTransitioning(false);
+      });
+      cleanupRef.current = null;
+    };
+
+    el.addEventListener('transitionend', onEnd as any);
+    cleanupRef.current = () => {
+      try { el.removeEventListener('transitionend', onEnd as any); } catch {}
       setIsTransitioning(false);
-    }, 260);
+    };
+
+    // Ensure the fade-hidden class is applied before listening completes
+    // by yielding to the next frame. This helps browsers reliably
+    // transition even when layout also changes (list <-> grid).
+    requestAnimationFrame(() => {});
   }, [view, viewStorageKey]);
 
   useEffect(() => {
     return () => {
-      if (transitionRef.current) window.clearTimeout(transitionRef.current as number);
+      if (cleanupRef.current) {
+        try { cleanupRef.current(); } catch {}
+      }
     };
   }, []);
 
   return (
     <div className="view-fade">
       {(posts.length > 0 || viewStorageKey === 'hashtagView' || showToggle) && (
-        <ViewToggle title={title} subtitle={subtitle} selected={view} onSelect={handleViewChange} />
+        <ViewToggle title={title} subtitle={subtitle} selected={pendingView ?? view} onSelect={handleViewChange} />
       )}
-      <PullToRefreshWrapper
-        isRefreshing={isRefreshing}
-        pullDistance={pullDistance}
-        threshold={80}
-        containerRef={containerRef}
-        getPullStyles={getPullStyles}
-        className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}
-      >
-        {renderContent()}
-      </PullToRefreshWrapper>
+      <div ref={fadeRef} className={`fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
+        <PullToRefreshWrapper
+          isRefreshing={isRefreshing}
+          pullDistance={pullDistance}
+          threshold={80}
+          containerRef={containerRef}
+          getPullStyles={getPullStyles}
+          className={`feed ${view === 'grid' ? 'grid-view' : ''}`}
+        >
+          {renderContent()}
+        </PullToRefreshWrapper>
+      </div>
     </div>
   );
 }

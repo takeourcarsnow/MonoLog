@@ -25,20 +25,46 @@ export function ProfileView({ userId }: { userId?: string }) {
   const router = useRouter();
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("profileView") as any)) || "grid");
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const transitionRef = useRef<number | null>(null);
+  const [pendingView, setPendingView] = useState<"list" | "grid" | null>(null);
+  const fadeRef = useRef<HTMLDivElement | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   const handleViewChange = useCallback((v: "list" | "grid") => {
     if (v === view) return;
-    setIsTransitioning(true);
-    transitionRef.current = window.setTimeout(() => {
+    setPendingView(v);
+    const el = fadeRef.current;
+    if (!el) {
       setView(v);
+      setPendingView(null);
       if (typeof window !== "undefined") localStorage.setItem("profileView", v);
+      return;
+    }
+
+    if (cleanupRef.current) {
+      try { cleanupRef.current(); } catch {}
+      cleanupRef.current = null;
+    }
+
+    setIsTransitioning(true);
+    const onEnd = (e: TransitionEvent) => {
+      if (e.target !== el || e.propertyName !== 'opacity') return;
+      el.removeEventListener('transitionend', onEnd as any);
+      setView(v);
+      setPendingView(null);
+      if (typeof window !== "undefined") localStorage.setItem("profileView", v);
+      requestAnimationFrame(() => { setIsTransitioning(false); });
+      cleanupRef.current = null;
+    };
+    el.addEventListener('transitionend', onEnd as any);
+    cleanupRef.current = () => {
+      try { el.removeEventListener('transitionend', onEnd as any); } catch {}
       setIsTransitioning(false);
-    }, 260);
+    };
+    requestAnimationFrame(() => {});
   }, [view]);
 
   useEffect(() => {
-    return () => { if (transitionRef.current) window.clearTimeout(transitionRef.current as number); };
+    return () => { if (cleanupRef.current) { try { cleanupRef.current(); } catch {} } };
   }, []);
   const [showInvites, setShowInvites] = useState(false);
 
@@ -127,7 +153,7 @@ export function ProfileView({ userId }: { userId?: string }) {
             <ViewToggle
               title={<UserIcon size={20} strokeWidth={2} />}
               subtitle={subtitle}
-              selected={view}
+              selected={pendingView ?? view}
               onSelect={handleViewChange}
             />
           );
@@ -147,7 +173,7 @@ export function ProfileView({ userId }: { userId?: string }) {
         );
 
         return (
-          <div className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
+          <div ref={fadeRef} className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
             <div style={{ display: view === 'grid' ? 'block' : 'none' }}>
               {gridView}
             </div>

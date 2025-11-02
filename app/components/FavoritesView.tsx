@@ -29,20 +29,45 @@ export function FavoritesView() {
   }, [posts]);
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("favoritesView") as any)) || "list");
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const transitionRef = useRef<number | null>(null);
+  const [pendingView, setPendingView] = useState<"list" | "grid" | null>(null);
+  const fadeRef = useRef<HTMLDivElement | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   const handleViewChange = useCallback((v: "list" | "grid") => {
     if (v === view) return;
-    setIsTransitioning(true);
-    transitionRef.current = window.setTimeout(() => {
+    setPendingView(v);
+    const el = fadeRef.current;
+    if (!el) {
       setView(v);
+      setPendingView(null);
       if (typeof window !== "undefined") localStorage.setItem("favoritesView", v);
+      return;
+    }
+
+    if (cleanupRef.current) {
+      try { cleanupRef.current(); } catch {}
+      cleanupRef.current = null;
+    }
+    setIsTransitioning(true);
+    const onEnd = (e: TransitionEvent) => {
+      if (e.target !== el || e.propertyName !== 'opacity') return;
+      el.removeEventListener('transitionend', onEnd as any);
+      setView(v);
+      setPendingView(null);
+      if (typeof window !== "undefined") localStorage.setItem("favoritesView", v);
+      requestAnimationFrame(() => { setIsTransitioning(false); });
+      cleanupRef.current = null;
+    };
+    el.addEventListener('transitionend', onEnd as any);
+    cleanupRef.current = () => {
+      try { el.removeEventListener('transitionend', onEnd as any); } catch {}
       setIsTransitioning(false);
-    }, 260);
+    };
+    requestAnimationFrame(() => {});
   }, [view]);
 
   useEffect(() => {
-    return () => { if (transitionRef.current) window.clearTimeout(transitionRef.current as number); };
+    return () => { if (cleanupRef.current) { try { cleanupRef.current(); } catch {} } };
   }, []);
 
   // Handle favorite changes optimistically
@@ -109,9 +134,9 @@ export function FavoritesView() {
   return (
     <div className="view-fade">
       {posts.length > 0 && (
-        <ViewToggle title={<StarIcon size={20} strokeWidth={2} />} subtitle="Your favorite posts" selected={view} onSelect={handleViewChange} />
+        <ViewToggle title={<StarIcon size={20} strokeWidth={2} />} subtitle="Your favorite posts" selected={pendingView ?? view} onSelect={handleViewChange} />
       )}
-      <div className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
+      <div ref={fadeRef} className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
         {view === 'list' ? (
           posts.map((p, index) => <PostCard key={p.id} post={p} index={index} />)
         ) : (

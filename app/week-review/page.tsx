@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/src/lib/api";
 import { renderCaption } from "@/src/lib/hashtags";
-import { Calendar, Image, MessageCircle, ChevronDown } from "lucide-react";
+import { Calendar, Image, MessageCircle, ChevronDown, ChartBar } from "lucide-react";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import type { WeekReviewStats } from "@/src/lib/types";
 import { StatCard } from "@/app/components/StatCard";
@@ -187,7 +187,9 @@ export default function WeekReviewPage() {
 
       {stats.totalPosts === 0 && (
         <div className="empty-state">
-          <div className="empty-icon">📊</div>
+          <div className="empty-icon">
+            <ChartBar size={48} style={{ color: 'var(--muted)' }} />
+          </div>
           <h3>No posts this week</h3>
           <p>Start sharing your daily moments to see your weekly summary here!</p>
         </div>

@@ -108,6 +108,29 @@
 .comment-box { display:flex; gap:8px; align-items:center; }
 .reply-box { display:flex; gap:8px; align-items:center; }
 .comment-box .input { flex: 1 1 auto; border-radius: 999px; padding: 10px 14px; }
+
+/* Improve vertical centering and breathing room for comment inputs/placeholders
+   Some components (comment input uses textarea with Tailwind classes) set
+   inline paddings; ensure a consistent vertical rhythm and left/right space
+   so placeholder/ghost text doesn't sit flush against the border. */
+.comment-box textarea,
+.comment-box input,
+.comment-box .input {
+  box-sizing: border-box;
+  min-height: 40px; /* match inline minHeight used in components */
+  padding-top: 10px; /* ensure vertical centering */
+  padding-bottom: 10px;
+  padding-left: 12px; /* a little breathing room from the left edge */
+  line-height: 1.2; /* tighter line-height for small text sizes */
+}
+
+/* Make sure placeholder text is vertically centered too */
+.comment-box textarea::placeholder,
+.comment-box input::placeholder {
+  opacity: 0.85;
+  color: color-mix(in srgb, var(--muted), transparent 12%);
+  line-height: 1.2;
+}
 .comment-box .btn.primary { border-radius: 999px; padding: 8px 12px; }
 
 /* Remove the strong blue outline/halo specifically for the comment input when focused.

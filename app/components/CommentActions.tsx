@@ -34,7 +34,7 @@ export function CommentActions({
 }: CommentActionsProps) {
   return (
     <div className="comment-action-slot">
-      {!isReply && currentUser && (
+      {currentUser && (
         <button
           className="comment-badge reply-btn"
           title="Reply to comment"

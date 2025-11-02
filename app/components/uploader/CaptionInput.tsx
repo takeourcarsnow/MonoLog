@@ -125,6 +125,37 @@ export function CaptionInput({
   const spotifyRef = useRef<HTMLInputElement | null>(null);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Prevent ancestor touch/pointer handlers (e.g., Swiper) from
+  // blurring the active input while the user is interacting with it.
+  // We add a capture-phase listener when either input is focused which
+  // stops propagation of the initial touch/pointer events but does NOT
+  // call preventDefault so native scrolling still works.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (!captionFocused && !spotifyFocused) return;
+
+    const handler = (e: Event) => {
+      try {
+        // If the active element is one of our inputs, stop propagation so
+        // higher-level listeners (like Swiper) don't run their focus-clearing logic.
+        const active = document.activeElement;
+        if (active === inputRef.current || active === spotifyRef.current) {
+          e.stopPropagation();
+        }
+      } catch (_) {
+        // ignore
+      }
+    };
+
+    document.addEventListener('touchstart', handler as EventListener, { capture: true } as any);
+    document.addEventListener('pointerdown', handler as EventListener, { capture: true } as any);
+
+    return () => {
+      try { document.removeEventListener('touchstart', handler as EventListener, { capture: true } as any); } catch (_) {}
+      try { document.removeEventListener('pointerdown', handler as EventListener, { capture: true } as any); } catch (_) {}
+    };
+  }, [captionFocused, spotifyFocused]);
+
   // Determine if counter should be visible: only when focused and has text
   const counterVisible = captionFocused && caption.trim();
 
@@ -216,6 +247,13 @@ export function CaptionInput({
             // Block mouse interaction when no image is selected so clicks don't focus the input
             if (!hasPreview || processing) e.preventDefault();
           }}
+          // Prevent parent touch/pointer handlers from stealing focus while
+          // the user interacts with the input on mobile. We only stop
+          // propagation (don't preventDefault) so the page can still scroll.
+          onTouchStart={(e:any) => { e.stopPropagation(); }}
+          onTouchMove={(e:any) => { e.stopPropagation(); }}
+          onPointerDown={(e:any) => { e.stopPropagation(); }}
+          onPointerMove={(e:any) => { e.stopPropagation(); }}
           onFocus={(e) => {
             if (!hasPreview || processing) {
               e.target.blur();
@@ -289,6 +327,13 @@ export function CaptionInput({
             tabIndex={hasPreview ? 0 : -1}
             ref={spotifyRef}
             onMouseDown={(e) => { if (!hasPreview || processing) e.preventDefault(); }}
+              // Prevent parent touch/pointer handlers from stealing focus while
+              // the user interacts with this input on mobile. Stop propagation
+              // only so vertical scrolling still works as expected.
+              onTouchStart={(e:any) => { e.stopPropagation(); }}
+              onTouchMove={(e:any) => { e.stopPropagation(); }}
+              onPointerDown={(e:any) => { e.stopPropagation(); }}
+              onPointerMove={(e:any) => { e.stopPropagation(); }}
             onFocus={(e) => {
               if (!hasPreview || processing) {
                 e.target.blur();

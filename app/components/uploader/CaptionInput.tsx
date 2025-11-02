@@ -270,7 +270,17 @@ export function CaptionInput({
           ) : null}
           <input
             className="input"
-            type="url"
+            /* Use text input but hint url inputmode to avoid some mobile browsers
+               opening the native "URL" sheet or large suggestion panel when
+               focusing a type=url field. Keep accessibility and behavior by
+               disabling autocomplete/autocorrect which previously triggered
+               large autofill UI on some Android builds. */
+            type="text"
+            inputMode="url"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            autoCapitalize="none"
             aria-label="Spotify link (optional)"
             placeholder={spotifyLink ? undefined : ''}
             value={spotifyLink || ''}

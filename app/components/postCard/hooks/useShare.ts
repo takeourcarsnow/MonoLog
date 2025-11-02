@@ -8,8 +8,10 @@ export function useShare(post: { id: string; user: { username?: string; id: stri
     try {
       await navigator.clipboard.writeText(url);
       toast.show('Link copied');
+      return true;
     } catch (e) {
       toast.show('Failed to copy link');
+      return false;
     }
   };
 

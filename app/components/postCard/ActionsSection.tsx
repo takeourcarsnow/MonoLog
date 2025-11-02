@@ -1,5 +1,5 @@
-import { memo } from "react";
-import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Camera } from "lucide-react";
+import { memo, useState } from "react";
+import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Camera, Check } from "lucide-react";
 import { ReportButton } from "../ReportButton";
 
 interface ActionsSectionProps {
@@ -77,15 +77,23 @@ export const ActionsSection = function ActionsSection({
   locationLongitude,
   locationAddress,
 }: ActionsSectionProps) {
+  const [copied, setCopied] = useState(false);
+
   return (
     <div className="actions">
       <button
         className="action share"
         title="Share link"
         aria-label="Share post"
-        onClick={() => { sharePost(); }}
+        onClick={async () => {
+          const success = await sharePost();
+          if (success) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }
+        }}
       >
-        <LinkIcon size={16} />
+        {copied ? <Check size={16} /> : <LinkIcon size={16} />}
       </button>
       {setShowExif && (
         <button

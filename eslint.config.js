@@ -2,9 +2,11 @@ import js from "@eslint/js";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import reactHooks from "eslint-plugin-react-hooks";
+import nextConfig from "eslint-config-next";
 
 export default [
   js.configs.recommended,
+  ...nextConfig,
   {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {

@@ -16,12 +16,12 @@ export default function ClientInit({ children }: { children: React.ReactNode }) 
   React.useEffect(() => {
     (async () => {
       try {
-        const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals');
-        getCLS(console.log);
-        getFID(console.log);
-        getFCP(console.log);
-        getLCP(console.log);
-        getTTFB(console.log);
+        const { onCLS, onINP, onFCP, onLCP, onTTFB } = await import('web-vitals');
+        onCLS(console.log);
+        onINP(console.log);
+        onFCP(console.log);
+        onLCP(console.log);
+        onTTFB(console.log);
 
         if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production' && !isInAppBrowser()) {
           try {

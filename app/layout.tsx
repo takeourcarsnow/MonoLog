@@ -94,7 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <script
           id="theme-init"
-          dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);}else{try{var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');document.documentElement.setAttribute('data-theme',(m&&m.matches)?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} document.documentElement.classList.add('preloader-active');}catch(e){} })();` }}
+          dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);if(v==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}else{document.documentElement.setAttribute('data-theme','light');document.documentElement.classList.remove('dark');}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} document.documentElement.classList.add('preloader-active');}catch(e){} })();` }}
         />
         <script
           id="runtime-supabase-init"

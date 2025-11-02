@@ -1,5 +1,6 @@
 import Link from "next/link";
 import TimeDisplay from "./TimeDisplay";
+import { Clock } from 'lucide-react';
 import { OptimizedImage } from "./OptimizedImage";
 import type { Notification } from "@/src/lib/types";
 
@@ -26,7 +27,7 @@ function NotificationItem({
       }}
     >
       <div className="notification-content">
-        <TimeDisplay date={notification.created_at} className="notification-time" />
+        <span className="inline-flex items-center gap-1 notification-time"><Clock size={12} /> <TimeDisplay date={notification.created_at} className="notification-time" /></span>
         {messageData?.actorAvatarUrl && (() => {
           const parts = messageData?.message.split(' ') || [];
           const username = parts[0]?.startsWith('@') ? parts[0].slice(1) : null;

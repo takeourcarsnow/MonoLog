@@ -59,7 +59,7 @@ export function LocationInput({
     return (
       <div style={{ position: 'relative', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-          <MapPin size={16} style={{ color: 'var(--dim)' }} />
+            <MapPin size={16} className={`input-icon ${weatherLocation ? 'input-filled' : ''}`} />
           <input
             ref={inputRef}
             type="text"
@@ -85,9 +85,10 @@ export function LocationInput({
           disabled={!hasPreview || processing || fetchingLocation}
           title="Fetch current location/address"
           style={{
-            position: 'absolute',
-            left: 8,
-            top: 8,
+              position: 'absolute',
+              left: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -97,7 +98,7 @@ export function LocationInput({
             cursor: (!hasPreview || processing || fetchingLocation) ? 'not-allowed' : 'pointer'
           }}
         >
-          <MapPin size={14} />
+              <MapPin size={14} className={`input-icon ${weatherLocation ? 'input-filled' : ''}`} />
         </button>
       </div>
     );
@@ -138,7 +139,8 @@ export function LocationInput({
         style={{
           position: 'absolute',
           left: 8,
-          top: 8,
+          top: '50%',
+          transform: 'translateY(-50%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -148,7 +150,7 @@ export function LocationInput({
           cursor: (!hasPreview || processing || fetchingLocation) ? 'not-allowed' : 'pointer'
         }}
       >
-        <MapPin size={14} />
+            <MapPin size={14} className={`input-icon ${weatherLocation ? 'input-filled' : ''}`} />
       </button>
     </div>
   );

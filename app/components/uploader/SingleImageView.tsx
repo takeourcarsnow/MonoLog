@@ -64,7 +64,7 @@ export function SingleImageView({
           src={(dataUrls.length ? dataUrls[index] : dataUrl) || "/logo.svg"}
           fill
           sizes="100%"
-          style={{ objectFit: 'contain' }}
+          style={{ objectFit: 'contain', objectPosition: 'center center' }}
           onLoadingComplete={() => setPreviewLoaded(true)}
           onError={() => setPreviewLoaded(true)}
         />

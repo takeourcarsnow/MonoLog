@@ -68,7 +68,7 @@ export function WeatherInput({
     return (
       <div style={{ position: 'relative', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-          <Cloud size={16} style={{ color: 'var(--dim)' }} />
+          <Cloud size={16} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
           <input
             ref={inputRef}
             type="text"
@@ -96,7 +96,8 @@ export function WeatherInput({
           style={{
             position: 'absolute',
             left: 8,
-            top: 8,
+            top: '50%',
+            transform: 'translateY(-50%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -106,7 +107,7 @@ export function WeatherInput({
             cursor: (!hasPreview || processing || fetchingWeather) ? 'not-allowed' : 'pointer'
           }}
         >
-          <Cloud size={14} />
+          <Cloud size={14} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
         </button>
       </div>
     );
@@ -147,7 +148,8 @@ export function WeatherInput({
         style={{
           position: 'absolute',
           left: 8,
-          top: 8,
+          top: '50%',
+          transform: 'translateY(-50%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -157,7 +159,7 @@ export function WeatherInput({
           cursor: (!hasPreview || processing || fetchingWeather) ? 'not-allowed' : 'pointer'
         }}
       >
-        <Cloud size={14} />
+            <Cloud size={14} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
       </button>
     </div>
   );

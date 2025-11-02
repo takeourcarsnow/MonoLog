@@ -60,6 +60,14 @@ html[class*="page-scroll"] {
   padding-top: var(--header-height) !important;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Ensure pages with a communities list reserve extra bottom padding so
+   the final card isn't visually obscured by the fixed tabbar. This is a
+   defensive rule in case per-list padding isn't applied or the tabbar
+   height varies on some devices. */
+.content:has(.communities) {
+  padding-bottom: calc(var(--tabbar-height, 56px) + 2.25rem) !important;
+}
 .content:has(.week-review-page) {
   overflow: auto !important;
   height: auto !important;
@@ -172,6 +180,9 @@ html[class*="notifications-page-scroll"] .content {
 
   /* Preloader blur strength */
   --preloader-blur: 6px;
+
+  /* Dim color for secondary text */
+  --dim: var(--muted);
 }
 
 /* calendar selected-day header animation */

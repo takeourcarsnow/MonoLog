@@ -13,6 +13,7 @@ interface ReplyFormProps {
 export function ReplyForm({ threadId, onReplyAdded, onReplyCountUpdate }: ReplyFormProps) {
   const [newReply, setNewReply] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,13 +21,16 @@ export function ReplyForm({ threadId, onReplyAdded, onReplyCountUpdate }: ReplyF
 
     try {
       setSubmitting(true);
+      setErrorMsg(null);
       const reply = await api.addThreadReply(threadId, newReply.trim());
       onReplyAdded(reply);
       onReplyCountUpdate(1);
       setNewReply("");
     } catch (e: any) {
-      // Error handling can be passed up or handled here
-      console.error(e?.message || 'Failed to post reply');
+      // Error handling: surface message to the user and log for debugging
+      const msg = e?.message || 'Failed to post reply';
+      console.error(msg);
+      setErrorMsg(msg);
     } finally {
       setSubmitting(false);
     }
@@ -44,6 +48,13 @@ export function ReplyForm({ threadId, onReplyAdded, onReplyCountUpdate }: ReplyF
             rows={3}
             maxLength={5000}
           />
+          
+          {/* Show error directly under the textarea so it's clearly associated with the field */}
+          {errorMsg && (
+            <div className="text-sm text-red-600 dark:text-red-400">
+              {errorMsg}
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">
               {newReply.length}/5000 characters

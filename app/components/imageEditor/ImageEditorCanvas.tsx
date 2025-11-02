@@ -24,7 +24,7 @@ export default function ImageEditorCanvas({ canvasRef, mounted }: ImageEditorCan
   }, []);
   
   return (
-    <figure style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', width: '100%', height: '100%' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
       <canvas
         ref={canvasRef}
         style={{
@@ -35,10 +35,13 @@ export default function ImageEditorCanvas({ canvasRef, mounted }: ImageEditorCan
           boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05)',
           border: 'none',
           background: isFullscreen ? 'var(--bg)' : 'var(--bg-elev)',
-          maxWidth: '100%',
-          maxHeight: '100%'
+          // Do not constrain the canvas with max-width/height here — the
+          // layout hook sizes the canvas explicitly via style.width/height
+          // and we want the browser to use those values directly.
+          width: 'auto',
+          height: 'auto'
         }}
       />
-    </figure>
+    </div>
   );
 }

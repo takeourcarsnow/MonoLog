@@ -32,7 +32,7 @@ export function ReplyInput({
     <div className="reply-box" style={{ marginLeft: 20, marginTop: 8 }}>
       <div style={{ position: 'relative', flex: 1 }}>
         <textarea
-          className="input"
+          className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2.5 rounded-lg text-xs font-sans resize-none"
           placeholder={placeholder}
           aria-label="Reply to comment"
           value={replyText}

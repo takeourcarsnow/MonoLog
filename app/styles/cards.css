@@ -50,6 +50,42 @@
   margin-right: auto;
 }
 
+/* Ensure consistent vertical spacing between community cards even if utility classes
+   are not applied or Tailwind isn't rebuilding. This forces a visible gap between
+   consecutive children of the communities list. Increase the value if you want
+   larger gaps on mobile. */
+.communities .content-body > * + * {
+  margin-top: 2.5rem; /* 40px - matches approx. space-y-10 */
+}
+
+/* Ensure content doesn't get hidden under the fixed bottom tabbar. Add
+   a comfortable padding so the last community card can be scrolled above
+   the tabbar and its rounded corners remain visible. Uses the tabbar
+   height variable when available and accounts for safe-area insets. */
+.communities .content-body {
+  padding-bottom: calc(var(--tabbar-height, 56px) + 1.5rem + var(--safe-bottom, env(safe-area-inset-bottom)));
+}
+
+/* Match spacing for single community view panels: ensure consistent vertical
+   distances between the header card and subsequent content panels, and
+   between panels inside the community's content-body. Reduce spacing slightly
+   so header and content appear closer on mobile while preserving desktop
+   breathing room. */
+.community > .card + .content-body {
+  margin-top: 1rem; /* reduced from 2.5rem */
+}
+.community .content-body > * + * {
+  margin-top: 1rem; /* reduced from 2.5rem */
+}
+
+/* Match spacing for thread pages as used in communities list/single community view */
+.content.thread > .card + .content-body {
+  margin-top: 1rem; /* reduced from 2.5rem */
+}
+.content.thread .content-body > * + * {
+  margin-top: 1rem; /* reduced from 2.5rem */
+}
+
 @media (min-width: 992px) {
   /* Limit community card width on desktop so panels aren't too wide */
   .communities .content-body .card {
@@ -105,13 +141,28 @@
   width: 100%;
 }
 
+/* On narrow screens bring the thread back-link / header slightly closer
+   to the fixed site header so the visual gap isn't excessive on mobile. */
+@media (max-width: 991px) {
+  .content.thread > :first-child,
+  .community > :first-child {
+    margin-top: 1.5rem; /* add extra top spacing on mobile so header and content are further apart */
+  }
+}
+
 @media (min-width: 992px) {
-  .community > :first-child,
+  .community > :first-child {
+    max-width: 720px;
+    padding-left: 0; /* let the link align flush with the card */
+    /* Keep community header a bit lower on desktop so it has breathing room */
+    margin-top: 1.5rem; /* ~24px spacing on desktop */
+  }
+
   .content.thread > :first-child {
     max-width: 720px;
     padding-left: 0; /* let the link align flush with the card */
-    /* thread should sit higher: pull it up relative to the normal flow */
-    margin-top: -1.5rem; /* raise by 24px on desktop */
+    /* Thread view should sit closer to the site header — pull it up slightly */
+    margin-top: -0.75rem; /* bring thread header closer to fixed header on desktop */
   }
   /* If we still need to adjust thread position further, we can use a negative
      margin-top here specifically for .content.thread > :first-child. */

@@ -581,6 +581,13 @@ body.notifications-popup-open .tabbar {
   overflow-y: auto;
 }
 
+/* Extra top spacing for the empty notifications state to visually separate
+   the `No notifications yet` message from the popup header. This avoids the
+   empty-state feeling cramped under the header on small viewports. */
+.notifications-popup-content .notifications-empty-state {
+  padding-top: 40px; /* increases space between header and empty state */
+}
+
 .notifications-popup-actions {
   padding: 12px 20px;
   border-bottom: 1px solid var(--border);

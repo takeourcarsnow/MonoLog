@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Edit3, Check, X } from "lucide-react";
+import { Trash2, Edit3, Check, X, Clock } from "lucide-react";
 import type { HydratedThreadReply } from "@/src/lib/types";
 import { Button } from "../Button";
 import TimeDisplay from "../TimeDisplay";
@@ -51,7 +51,7 @@ export function ReplyItem({ reply, currentUserId, onUpdate, onDelete }: ReplyIte
     <div className="card">
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-3 text-sm text-gray-500">
             <div className="flex-shrink-0 mr-2">
               <Link href={`/${reply.user.username}`}>
                 <OptimizedImage
@@ -64,8 +64,7 @@ export function ReplyItem({ reply, currentUserId, onUpdate, onDelete }: ReplyIte
               </Link>
             </div>
             <span className="font-medium">@{reply.user.username}</span>
-            <span>•</span>
-            <TimeDisplay date={reply.createdAt} />
+            <span className="inline-flex items-center gap-1"><Clock size={12} /> <TimeDisplay date={reply.createdAt} /></span>
           </div>
           {currentUserId && reply.user.id === currentUserId && (
             <div className="flex gap-1">

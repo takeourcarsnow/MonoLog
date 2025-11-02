@@ -3,6 +3,11 @@ const KEY = "monolog_theme";
 function apply(mode: "light" | "dark") {
   if (typeof document === "undefined") return;
   document.documentElement.setAttribute("data-theme", mode);
+  if (mode === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
 }
 
 export function initTheme() {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/src/lib/api";
-import { Users, MessageSquare, Plus, Trash2, UserMinus, UserPlus, ArrowLeft } from "lucide-react";
+import { Users, MessageSquare, Plus, Trash2, UserMinus, UserPlus, ArrowLeft, User as UserIcon, Clock } from "lucide-react";
 import { useRef } from "react";
 import type { HydratedCommunity, HydratedThread } from "@/src/lib/types";
 import { Button } from "./Button";
@@ -276,9 +276,20 @@ export function CommunityView() {
           </p>
 
           <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
-            <span>{community.memberCount || 0} members</span>
-            <span>{community.threadCount || 0} threads</span>
-            <span>by @{community.creator.username}</span>
+            <span className="inline-flex items-center gap-1" title={`${community.memberCount || 0} members`} aria-label={`${community.memberCount || 0} members`}>
+              <Users size={14} />
+              <span>{community.memberCount || 0}</span>
+            </span>
+
+            <span className="inline-flex items-center gap-1" title={`${community.threadCount || 0} threads`} aria-label={`${community.threadCount || 0} threads`}>
+              <MessageSquare size={14} />
+              <span>{community.threadCount || 0}</span>
+            </span>
+
+            <span className="inline-flex items-center gap-1" title={`@${community.creator.username}`} aria-label={`${community.creator.username}`}>
+              <UserIcon size={14} />
+              <span>@{community.creator.username}</span>
+            </span>
           </div>
 
           <div className="flex flex-wrap gap-2 justify-center mt-3">
@@ -341,42 +352,43 @@ export function CommunityView() {
         ) : (
           threads.map((thread, index) => (
             <Link key={thread.id} href={`/communities/${community.slug}/thread/${thread.slug}`} className="card block thread-card" style={{ animationDelay: `${index * 0.15}s` }}>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <OptimizedImage
-                    src={getAvatarSrc(thread)}
-                    alt={thread.user.username}
-                    width={40}
-                    height={40}
-                    className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                    fallbackSrc="/logo.svg"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-lg hover:underline">{thread.title}</h3>
-                    {currentUser && thread.user.id === currentUser.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`small-min ${threadDeleteArmedSet.has(thread.id) ? 'confirm' : ''}`}
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          await handleDeleteThread(thread.id);
-                        }}
-                        aria-label={threadDeleteArmedSet.has(thread.id) ? 'Confirm delete thread' : 'Delete thread'}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    )}
-                  </div>
+              <div className="flex items-center justify-center">
+                  <div className="flex-1 min-w-0 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <h3 className="font-semibold text-lg hover:underline">{thread.title}</h3>
+                      {currentUser && thread.user.id === currentUser.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`small-min ${threadDeleteArmedSet.has(thread.id) ? 'confirm' : ''}`}
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            await handleDeleteThread(thread.id);
+                          }}
+                          aria-label={threadDeleteArmedSet.has(thread.id) ? 'Confirm delete thread' : 'Delete thread'}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      )}
+                    </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                     {thread.content}
                   </p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                    <span>by @{thread.user.username}</span>
-                    <span>{thread.replyCount || 0} replies</span>
-                    <TimeDisplay date={thread.createdAt} />
+                  <div className="flex items-center justify-center gap-4 mt-2 text-sm text-gray-500">
+                    <span className="inline-flex items-center gap-1 truncate" title={`@${thread.user.username}`} aria-label={`${thread.user.username}`}>
+                      <UserIcon size={14} />
+                      <span className="truncate">@{thread.user.username}</span>
+                    </span>
+
+                    <span className="inline-flex items-center gap-1" title={`${thread.replyCount || 0}`} aria-label={`${thread.replyCount || 0}`}>
+                      <MessageSquare size={14} />
+                      <span>{thread.replyCount || 0}</span>
+                    </span>
+
+                    <span className="inline-flex items-center gap-1" title={`${thread.createdAt}`} aria-label={`${thread.createdAt}`}>
+                      <Clock size={14} />
+                      <TimeDisplay date={thread.createdAt} />
+                    </span>
                   </div>
                 </div>
               </div>

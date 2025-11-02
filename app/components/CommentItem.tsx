@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import TimeDisplay from "./TimeDisplay";
+import { Clock } from 'lucide-react';
 import { renderCaption } from "@/src/lib/hashtags";
 import { CommentActions } from "./CommentActions";
 import { ReplyInput } from "./ReplyInput";
@@ -115,7 +116,7 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
             >
               <span className="author">{comment.user?.username ? `@${comment.user?.username}` : (comment.user?.displayName || "User")}</span>
             </Link>
-            <TimeDisplay date={comment.createdAt} className="dim" />
+            <span className="inline-flex items-center gap-1 dim"><Clock size={12} /> <TimeDisplay date={comment.createdAt} className="dim" /></span>
             <CommentActions
               commentId={comment.id}
               isReply={isReply}

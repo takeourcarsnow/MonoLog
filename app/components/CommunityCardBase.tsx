@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
 import { formatRelative } from "@/src/lib/date";
+import { Users, MessageSquare, Clock } from "lucide-react";
 
 type Props = {
   id?: string;
@@ -33,7 +34,7 @@ export default function CommunityCardBase({
   lastActivity,
 }: Props) {
   return (
-    <div className="card mb-8">
+    <div className="card">
       <div className="flex flex-col items-center text-center gap-3 py-4">
         {imageNode || (
           <OptimizedImage
@@ -54,10 +55,24 @@ export default function CommunityCardBase({
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 max-w-[40ch]">{description}</p>
 
         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
-          <span>{memberCount || 0} members</span>
-          <span>{threadCount || 0} threads</span>
-          {lastActivity && <span>last reply {formatRelative(lastActivity)} ago</span>}
-          {showCreator && <span>by @{creator?.username}</span>}
+          <span className="inline-flex items-center gap-1" title={`${memberCount || 0} members`} aria-label={`${memberCount || 0} members`}>
+            <Users size={14} />
+            <span>{memberCount || 0}</span>
+          </span>
+
+          <span className="inline-flex items-center gap-1" title={`${threadCount || 0} threads`} aria-label={`${threadCount || 0} threads`}>
+            <MessageSquare size={14} />
+            <span>{threadCount || 0}</span>
+          </span>
+
+          {lastActivity && (
+            <span className="inline-flex items-center gap-1" title={`${formatRelative(lastActivity)}`} aria-label={`${formatRelative(lastActivity)}`}>
+              <Clock size={14} />
+              <span>{formatRelative(lastActivity)}</span>
+            </span>
+          )}
+
+          {showCreator && <span>@{creator?.username}</span>}
         </div>
 
         {/* client-side children (eg. join/leave button) */}

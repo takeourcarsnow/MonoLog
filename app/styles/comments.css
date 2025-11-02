@@ -124,13 +124,16 @@
 /* Confirm-once delete badge: first click enters .confirming state (tinted danger)
    second click proceeds with removal. Auto-cancels after a short timeout. */
 .comment-badge.confirming {
-  background: color-mix(in srgb, var(--danger), var(--bg-elev) 8%);
-  border-color: color-mix(in srgb, var(--danger), transparent 72%);
-  color: #fff;
-  transform: scale(1.04);
+  /* Armed (confirm) state must be visibly red even when other button
+     styles try to suppress backgrounds. Use !important to guarantee the
+     red tint appears and remain accessible. Keep layout stable (no scale). */
+  background: color-mix(in srgb, var(--danger), var(--bg-elev) 8%) !important;
+  border-color: color-mix(in srgb, var(--danger), transparent 72%) !important;
+  color: #fff !important;
+  transform: none !important; /* avoid the raised/3D look */
   /* intentionally no glow/drop-shadow to keep the confirm visual subtle */
 }
-.comment-badge.confirming svg { stroke: #fff; color: #fff; filter: none; }
+.comment-badge.confirming svg { stroke: #fff !important; color: #fff !important; filter: none !important; }
 
 /* Inline post delete button confirming state: first click toggles confirming,
    second click (within timeout) proceeds. Visual matches comment confirm style. */
@@ -171,6 +174,26 @@
 }
 
 .comment-badge { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:6px; background: transparent; border-radius:8px; color:var(--muted); }
+
+/* Remove hover/focus/active 3D/halo effects for compact comment action buttons.
+  Keep keyboard accessibility (use focus-visible if you want a visible ring),
+  but disable the large shadow/scale/ripple that creates a '3D' look. */
+.comment-badge:not(.confirming),
+.comment-badge:not(.confirming):focus,
+.comment-badge:not(.confirming):focus-visible,
+.comment-badge:not(.confirming):hover,
+.comment-badge:not(.confirming):active {
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  border: none !important; /* remove default UA button border */
+  background: transparent !important; /* ensure no background/backplate */
+  padding: 6px !important;
+}
+
+/* Disable the slight scale used for the confirming state to avoid a raised
+  3D appearance — leave the color change but keep layout stable. */
+.comment-badge.confirming { transform: none; }
 
 .empty {
   padding: 32px 16px; text-align: center; color: var(--muted);

@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, Clock } from 'lucide-react';
 import { SearchClient } from '@/app/components/SearchClient';
 import { SearchLive } from '@/app/components/SearchLive';
 import Image from 'next/image';
+import TimeDisplay from '@/app/components/TimeDisplay';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -97,7 +98,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                       ) : null}
                       <div className="post-info">
                         <p className="post-caption">{post.caption?.trim() || '(no caption)'}</p>
-                        <small>by @{post.user.username}</small>
+                        <small style={{ color: 'var(--muted)' }}>@{post.user.username} · <span className="inline-flex items-center gap-1"><Clock size={12} /> <TimeDisplay date={post.createdAt} className="dim" /></span></small>
                       </div>
                     </a>
                   </div>
@@ -115,8 +116,11 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                         className="user-avatar"
                       />
                       <div>
-                        <h3>{user.username}</h3>
-                        <p>@{user.username}</p>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+                          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>@{user.username}</h3>
+                          {user.displayName ? <small style={{ color: 'var(--muted)', marginLeft: 6 }}>{user.displayName}</small> : null}
+                        </div>
+                        {user.bio ? <p className="user-bio" style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: 13 }}>{user.bio}</p> : null}
                       </div>
                     </a>
                   </div>

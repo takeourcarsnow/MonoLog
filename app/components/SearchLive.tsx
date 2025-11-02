@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useDebouncedValue } from '@/src/lib/hooks/useDebouncedValue';
-import { Image as ImageIcon, User, Users as UsersIcon, Search, MapPin } from 'lucide-react';
+import { Image as ImageIcon, User, Users as UsersIcon, Search, MapPin, Clock } from 'lucide-react';
 import Image from 'next/image';
 import { useCurrentUser } from '@/lib/hooks';
 import { getAccessToken, getSupabaseClient } from '@/src/lib/api/client';
 import { SpinningLogo } from './SpinningLogo';
+import TimeDisplay from './TimeDisplay';
 
 interface SearchResult {
   posts: any[];
@@ -161,7 +162,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
                     ) : null}
                     <div className="post-info">
                       <p className="post-caption">{post.caption?.trim() || '(no caption)'}</p>
-                      <small>by @{post.user?.username}</small>
+                      <small style={{ color: 'var(--muted)' }}>@{post.user?.username} · <span className="inline-flex items-center gap-1"><Clock size={12} /> <TimeDisplay date={post.createdAt} className="dim" /></span></small>
                     </div>
                   </a>
                 </div>
@@ -171,11 +172,14 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
             <div className="users-list">
               {results.users.slice(0, 10).map((user) => (
                 <div key={user.id} className="user-item" style={{ marginBottom: '8px' }}>
-                  <a href={`/${user.username}`}>
+                  <a href={`/${user.username}`} style={{ display: 'flex', gap: 8, alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
                     {user.avatarUrl && <Image src={user.avatarUrl} alt={user.username} width={50} height={50} />}
-                    <div>
-                      <h3>{user.username}</h3>
-                      <p>@{user.username}</p>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{user.username}</h3>
+                        {user.displayName ? <small style={{ color: 'var(--muted)', marginLeft: 6 }}>{user.displayName}</small> : null}
+                      </div>
+                      {user.bio ? <p className="user-bio" style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: 13, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{user.bio}</p> : null}
                     </div>
                   </a>
                 </div>

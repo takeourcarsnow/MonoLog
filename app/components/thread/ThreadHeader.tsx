@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Trash2, MessageSquare } from "lucide-react";
+import { ArrowLeft, Trash2, MessageSquare, Clock } from "lucide-react";
 import type { HydratedThread } from "@/src/lib/types";
 import { Button } from "../Button";
 import TimeDisplay from "../TimeDisplay";
@@ -44,11 +44,10 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
           </div>
         )}
 
-        <div className="flex flex-col items-center text-center gap-4 py-4">
+        <div className="flex flex-col items-center text-center gap-3 py-3">
           <h1 className="text-2xl font-bold">{thread.title}</h1>
-
-          <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 justify-center">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 justify-center">
+              <div className="flex items-center gap-2">
               <div className="flex-shrink-0">
                 <Link href={`/${thread.user.username}`}>
                   <OptimizedImage
@@ -60,19 +59,20 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
                   />
                 </Link>
               </div>
-              <span>by @{thread.user.username}</span>
+              <span>@{thread.user.username}</span>
             </div>
-            <span>•</span>
-            <TimeDisplay date={thread.createdAt} />
-            <span>•</span>
+            <span className="inline-flex items-center gap-1">
+              <Clock size={14} />
+              <TimeDisplay date={thread.createdAt} />
+            </span>
             <span className="flex items-center gap-1">
               <MessageSquare size={14} />
-              {thread.replyCount || 0} replies
+              {thread.replyCount || 0}
             </span>
           </div>
         </div>
 
-        <div className="mt-4 prose dark:prose-invert max-w-none">
+        <div className="mt-2 prose dark:prose-invert max-w-none">
           <p className="whitespace-pre-wrap text-center">{renderCaption(thread.content)}</p>
         </div>
       </div>

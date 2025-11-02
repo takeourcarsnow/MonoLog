@@ -387,7 +387,9 @@ export function CarouselView({
                 alt={Array.isArray(alt) ? (alt[idx] || `Image ${idx + 1}`) : (alt || `Image ${idx + 1}`)}
                 fill
                 sizes="100%"
-                style={{ objectFit: 'contain' }}
+                // ensure the image is centered inside its container when using contain
+                // (some browsers may default object-position differently)
+                style={{ objectFit: 'contain', objectPosition: 'center center' }}
                 priority={true}
                 onLoadingComplete={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}

@@ -32,7 +32,7 @@ export function CommentInput({
     <div className="comment-box" style={{ marginTop: 8 }}>
       <div style={{ position: 'relative', flex: 1 }}>
         <textarea
-          className="input"
+          className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2.5 pr-3.5 rounded-full text-xs font-sans resize-none"
           placeholder="Add a comment…"
           aria-label="Add a comment"
           value={text}

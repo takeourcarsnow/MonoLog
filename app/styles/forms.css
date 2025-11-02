@@ -305,3 +305,31 @@
     width: 100%;
   }
 }
+
+/* Ensure textarea backgrounds and placeholder colors follow the active theme
+   Use CSS variables (which switch with data-theme or .dark) so inputs don't
+   remain visually stuck in dark-mode when the app is set to light. The
+   !important flags are used sparingly to override utility classes injected
+   by Tailwind in development builds when needed. */
+textarea {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+textarea::placeholder {
+  color: color-mix(in srgb, var(--muted), transparent 36%) !important;
+}
+
+/* Remove the global focus halo specifically for form textareas so the
+   comment/reply inputs don't get a thick outline when focused. We still
+   respect keyboard focus by keeping a subtle border-color change if needed
+   but avoid the heavy outline used globally. */
+textarea:focus,
+textarea:focus-visible,
+.comment-box textarea:focus,
+.reply-box textarea:focus,
+.card textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--border) !important;
+}

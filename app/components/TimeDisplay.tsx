@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { formatRelative } from '@/src/lib/date';
 
@@ -21,7 +23,7 @@ export default function TimeDisplay({ date, className = '' }: TimeDisplayProps) 
         day: 'numeric', 
         hour: 'numeric', 
         minute: '2-digit' 
-      }) : `${formatRelative(date)} ago`}
+      }) : formatRelative(date)}
     </span>
   );
 }

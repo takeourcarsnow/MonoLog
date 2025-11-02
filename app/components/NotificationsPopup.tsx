@@ -103,7 +103,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
           ) : error ? (
             <div className="text-center py-8" style={{ color: 'var(--danger)' }}>{error}</div>
           ) : loadedNotifications.length === 0 ? (
-            <div className="text-center py-8">
+            <div className="text-center py-8 notifications-empty-state">
               <Bell size={48} style={{ color: 'var(--muted)' }} />
               <p style={{ color: 'var(--muted)' }}>No notifications yet</p>
             </div>

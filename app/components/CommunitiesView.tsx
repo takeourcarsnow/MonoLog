@@ -49,7 +49,7 @@ export function CommunitiesView() {
             </h1>
           </div>
         </div>
-        <div className="content-body space-y-6">
+        <div className="content-body space-y-10">
           {[...Array(6)].map((_, i) => (
             <SkeletonCard key={i} />
           ))}
@@ -94,7 +94,7 @@ export function CommunitiesView() {
           </Link>
         </div>
       </div>
-      <div className="content-body space-y-6">
+      <div className="content-body space-y-10">
         {(!communities || communities.length === 0) ? (
           <div className="card">
             <p>No communities yet. Be the first to create one!</p>

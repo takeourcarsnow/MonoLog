@@ -76,23 +76,24 @@ export function CommentInput({
         ) : null}
       </div>
 
-      <button
-        ref={sendBtnRef}
-        className={`btn follow-btn icon-reveal ${sendAnim || ''}`}
-        style={{ opacity: text.trim() ? 1 : 0, pointerEvents: text.trim() ? 'auto' : 'none' }}
-        onClick={onSend}
-        disabled={sending}
-        aria-label={sending ? "Sending comment" : "Send comment"}
-        title={sending ? "Sending…" : "Send comment"}
-      >
-        <span className="icon" aria-hidden="true">
-          <Suspense fallback={<span>→</span>}>
-            <Send size={16} />
-          </Suspense>
-        </span>
-        {/* keep a screen-reader-only label so assistive tech still announces the action */}
-        <span className="sr-only">{sending ? "Sending comment" : "Send comment"}</span>
-      </button>
+      <div style={{ width: text.trim() ? '48px' : '0px', overflow: 'hidden', transition: 'width 0.3s ease' }}>
+        <button
+          ref={sendBtnRef}
+          className={`btn follow-btn icon-reveal ${sendAnim || ''}`}
+          onClick={onSend}
+          disabled={sending}
+          aria-label={sending ? "Sending comment" : "Send comment"}
+          title={sending ? "Sending…" : "Send comment"}
+        >
+          <span className="icon" aria-hidden="true">
+            <Suspense fallback={<span>→</span>}>
+              <Send size={16} />
+            </Suspense>
+          </span>
+          {/* keep a screen-reader-only label so assistive tech still announces the action */}
+          <span className="sr-only">{sending ? "Sending comment" : "Send comment"}</span>
+        </button>
+      </div>
     </div>
   );
 }

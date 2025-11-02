@@ -97,7 +97,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
         </div>
         <div className="notifications-popup-content">
           {loading ? (
-            <div className="text-center py-8">
+            <div className="text-center py-8" style={{ paddingTop: '60px' }}>
               <SpinningLogo invertInLight={theme === 'light'} />
             </div>
           ) : error ? (

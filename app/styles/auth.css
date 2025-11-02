@@ -70,6 +70,12 @@
 .auth-form .username-wrap { overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); }
 .auth-form .username-wrap.open { overflow: visible; max-height: 160px; opacity: 1; transform: translateY(0); }
 
+/* Increase spacing between the username input and the invite code input
+  when signup mode is active. The markup places the invite code inside the
+  `.username-wrap`, so add a larger bottom margin on the username's
+  inner wrapper to visually separate the two controls. */
+.auth-form .username-wrap .relative { margin-bottom: 12px; }
+
 @media (prefers-reduced-motion: reduce) {
   .auth-form .check,
   .auth-form .check.pending,

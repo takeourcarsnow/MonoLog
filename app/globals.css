@@ -462,3 +462,20 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
   color: var(--muted);
 }
 
+/* Prevent iOS Safari from auto-zooming inputs when focused.
+   Safari automatically zooms if the computed font-size is < 16px.
+   This rule targets WebKit-based browsers (iOS) via @supports so
+   it doesn't affect desktop environments. Keeping inputs at
+   16px prevents the automatic zoom while preserving accessibility.
+*/
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select, button {
+    font-size: 16px;
+    /* Ensure line-height remains comfortable when increasing font-size */
+    line-height: 1.25;
+  }
+  /* If you have custom input classes that set a smaller font-size,
+     add them here or rely on this rule to override with sufficient
+     specificity. */
+}
+

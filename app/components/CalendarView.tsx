@@ -34,7 +34,9 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
   const [shouldScroll, setShouldScroll] = useState(false);
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("calendarView") as any)) || "list");
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const transitionRef = useRef<number | null>(null);
+  const [pendingView, setPendingView] = useState<"list" | "grid" | null>(null);
+  const fadeRef = useRef<HTMLDivElement | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
   const [dayPostsCache, setDayPostsCache] = useState<Record<string, HydratedPost[]>>({});
   // Only start loading data when the view has been active for a short time.
   // This prevents quick swipes through the calendar from triggering loads.
@@ -205,16 +207,39 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
 
   const handleViewChange = useCallback((v: "list" | "grid") => {
     if (v === view) return;
-    setIsTransitioning(true);
-    transitionRef.current = window.setTimeout(() => {
+    setPendingView(v);
+    const el = fadeRef.current;
+    if (!el) {
       setView(v);
+      setPendingView(null);
       if (typeof window !== "undefined") localStorage.setItem("calendarView", v);
+      return;
+    }
+    if (cleanupRef.current) {
+      try { cleanupRef.current(); } catch {}
+      cleanupRef.current = null;
+    }
+    setIsTransitioning(true);
+    const onEnd = (e: TransitionEvent) => {
+      if (e.target !== el || e.propertyName !== 'opacity') return;
+      el.removeEventListener('transitionend', onEnd as any);
+      setView(v);
+      setPendingView(null);
+      if (typeof window !== "undefined") localStorage.setItem("calendarView", v);
+      requestAnimationFrame(() => { setIsTransitioning(false); });
+      cleanupRef.current = null;
+    };
+    el.addEventListener('transitionend', onEnd as any);
+    cleanupRef.current = () => {
+      try { el.removeEventListener('transitionend', onEnd as any); } catch {}
       setIsTransitioning(false);
-    }, 260);
+    };
+    // Yield to ensure class application before transition observed
+    requestAnimationFrame(() => {});
   }, [view]);
 
   useEffect(() => {
-    return () => { if (transitionRef.current) window.clearTimeout(transitionRef.current as number); };
+    return () => { if (cleanupRef.current) { try { cleanupRef.current(); } catch {} } };
   }, []);
 
   return (
@@ -296,31 +321,32 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
           </div>
         </div>
       </div>
-  <div className={`feed grid-view fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`} id="day-feed" ref={feedRef}>
         {dayPosts && dayPosts.length > 0 && (
           <ViewToggle
             title={<Calendar size={20} strokeWidth={2} />}
             subtitle="Posts from selected day"
-            selected={view}
+            selected={pendingView ?? view}
             onSelect={handleViewChange}
             className="tight"
           />
         )}
-
-  {loadingDay ? (
-    <InlinePreloader />
-  ) : (
-    dayPosts ? (dayPosts.length ? (
-      view === "grid" ? (
-        <GridView posts={dayPosts} hasMore={false} setSentinel={() => {}} loadingMore={false} />
+  <div ref={fadeRef} className={`fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
+    <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`} id="day-feed" ref={feedRef}>
+      {loadingDay ? (
+        <InlinePreloader />
       ) : (
-        dayPosts.map((p, index) => <PostCard key={p.id} post={p} disableMediaNavigation={true} index={index} />)
-      )
-    )
-      : <div className="empty">No posts for that day.</div>)
-      : null
-  )}
-      </div>
+        dayPosts ? (dayPosts.length ? (
+          view === "grid" ? (
+            <GridView posts={dayPosts} hasMore={false} setSentinel={() => {}} loadingMore={false} />
+          ) : (
+            dayPosts.map((p, index) => <PostCard key={p.id} post={p} disableMediaNavigation={true} index={index} />)
+          )
+        )
+          : <div className="empty">No posts for that day.</div>)
+          : null
+      )}
+    </div>
+  </div>
       </div>
       )}
     </div>

@@ -28,7 +28,6 @@ export function NotificationsPopup({ open, onClose }: Props) {
     loadInitialNotifications,
     loadMoreNotifications,
     markAsRead,
-    markAllAsRead,
   } = useNotifications(pageSize);
 
   const setSentinel = useCallback((el: HTMLDivElement | null) => {
@@ -110,20 +109,13 @@ export function NotificationsPopup({ open, onClose }: Props) {
             </div>
           ) : (
             <>
-              {loadedNotifications.some(item => !item.notification.read) && (
-                <div className="notifications-popup-actions">
-                  <button onClick={markAllAsRead} className="btn">
-                    Mark all as read
-                  </button>
-                </div>
-              )}
+              {/* Removed "Mark all as read" button per UI update */}
               <div className="notifications-popup-list">
                 {loadedNotifications.map(item => (
                   <NotificationItem
                     key={item.notification.id}
                     notification={item.notification}
                     messageData={item.messageData}
-                    onMarkAsRead={() => markAsRead([item.notification.id])}
                     onClose={onClose}
                   />
                 ))}

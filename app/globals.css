@@ -403,6 +403,16 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
   background: var(--bg-elev);
 }
 
+/* For search results we prefer a clean, transparent background so the
+   items blend with surrounding content. This only affects results shown
+   inside the search UI (components that render inside an element with
+   the .search-results class). */
+.search-results .post-item,
+.search-results .user-item,
+.search-results .community-item {
+  background: transparent;
+}
+
 .post-item a, .user-item a, .community-item a {
   display: flex;
   align-items: center;

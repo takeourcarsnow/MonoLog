@@ -6,12 +6,10 @@ import type { Notification } from "@/src/lib/types";
 function NotificationItem({
   notification,
   messageData,
-  onMarkAsRead,
   onClose
 }: {
   notification: Notification;
   messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string };
-  onMarkAsRead: () => void;
   onClose: () => void;
 }) {
   const handleLinkClick = () => {
@@ -100,15 +98,7 @@ function NotificationItem({
             View related content
           </Link>
         )}
-        {!notification.read && (
-          <button
-            onClick={onMarkAsRead}
-            className="hover:underline text-sm notification-action"
-            style={{ color: 'var(--primary)' }}
-          >
-            Mark as read
-          </button>
-        )}
+        {/* Per-notification "Mark as read" action removed per UI update */}
       </div>
     </div>
   );

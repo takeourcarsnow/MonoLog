@@ -1,11 +1,15 @@
 .input {
   width: 100%; border: 1px solid var(--border); background: var(--bg);
   color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 12px;
+  /* Ensure form inputs/controls use the app's chosen typeface by default. */
+  font-family: var(--font-family);
 }
 .input:focus { outline: 2px solid color-mix(in srgb, var(--primary), transparent 60%); border-color: var(--primary); }
 .bio-editor {
   width: 100%; border: 1px solid var(--border); background: var(--bg);
   color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 12px;
+  /* Bio textarea should use the app sans-serif font (not monospace). */
+  font-family: var(--font-family);
   /* prevent the user from manually resizing the textarea (we control sizing via grid/CSS) */
   resize: none;
   /* allow internal scrolling if content overflows the configured height */

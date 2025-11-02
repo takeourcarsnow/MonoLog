@@ -538,8 +538,9 @@
 .card-body { padding: 12px 14px; display: grid; gap: 12px; overflow: visible; }
 .caption {
   font-size: 15px;
-  font-family: 'Patrick Hand', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  line-height: 1.4;
+  /* Use the app's single font-family variable so captions match the global typeface. */
+  font-family: var(--font-family);
+  line-height: 1.35;
   text-align: center;
   /* allow long captions/newlines to wrap */
   white-space: pre-wrap;
@@ -692,21 +693,32 @@
   opacity: 0;
 }
 
-.actions { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: nowrap; overflow: visible; min-width: 0; flex-shrink: 1; }
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Use a fluid gap that can shrink on narrow containers to avoid clipping. */
+  gap: clamp(4px, 0.9vw, 14px);
+  /* Keep actions on a single line; shrink buttons and gap instead of wrapping. */
+  flex-wrap: nowrap;
+  overflow: hidden; /* hide tiny visual overflow if present while shrinking */
+  min-width: 0;
+  flex-shrink: 1;
+}
 
 /* Make buttons tighter on smaller screens to fit in one line */
 @media (max-width: 640px) {
-  .actions { gap: 2px; }
-  .action { padding: 4px 3px; gap: 2px; font-size: 12px; }
+  .actions { gap: 10px; }
+  .action { width: 32px; height: 32px; font-size: 12px; }
   .action svg { width: 16px; height: 16px; }
-  .profile-actions { gap: 2px !important; }
+  .profile-actions { gap: 8px !important; }
   .profile-actions .btn { padding: 6px 8px !important; font-size: 12px !important; }
 }
 
 /* Extra tight for very small screens */
 @media (max-width: 480px) {
-  .actions { gap: 1px; }
-  .action { padding: 3px 2px; gap: 1px; font-size: 11px; }
+  .actions { gap: 8px; }
+  .action { width: 28px; height: 28px; font-size: 11px; }
   .action svg { width: 14px; height: 14px; }
   /* Hide comment count text on very small screens to save space */
   .action.comments-toggle span { display: none; }
@@ -714,15 +726,43 @@
 
 /* Ultra tight for extremely small viewports or high zoom levels */
 @media (max-width: 360px) {
-  .actions { gap: 0px; }
-  .action { padding: 2px 1px; gap: 0px; font-size: 10px; }
+  .actions { gap: 6px; }
+  .action { width: 24px; height: 24px; font-size: 10px; }
   .action svg { width: 12px; height: 12px; }
 }
+
+/* Container-based adjustments: when the actions container itself is narrow
+   (e.g. very small card, high zoom, or many buttons), reduce gap and button
+   sizes to avoid clipping. These rules are more targeted than viewport
+   media queries and will trigger only when the .actions wrapper is small. */
+@container (max-width: 220px) {
+  .actions { gap: 4px; }
+  .action { width: 28px; height: 28px; font-size: 11px; }
+  .action svg { width: 14px; height: 14px; }
+  .action.comments-toggle span { display: none; }
+}
+
+@container (max-width: 160px) {
+  .actions { gap: 2px; }
+  .action { width: 24px; height: 24px; font-size: 10px; }
+  .action svg { width: 12px; height: 12px; }
+}
+
+@container (max-width: 120px) {
+  .actions { gap: 0px; }
+  .action { width: 20px; height: 20px; font-size: 9px; }
+  .action svg { width: 10px; height: 10px; }
+}
 .action {
-  display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
-  font-size: 13px; cursor: pointer; padding: 8px 8px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; gap: 0; color: var(--muted);
+  font-size: 13px; cursor: pointer; padding: 0 4px; border-radius: 8px;
+  background: none; border: none !important; box-shadow: none;
+  appearance: none; outline: none;
   transition: background var(--transition-fast), color var(--transition-fast);
-  flex-shrink: 1; min-width: 0;
+  /* Allow buttons to shrink when space is tight; set a small min-width so
+     icons remain tappable but text (comment count) can be hidden at small sizes. */
+  flex: 0 1 auto; min-width: 20px; max-width: 100%;
 }
 
 /* Tap / press feedback for action icons */
@@ -732,7 +772,7 @@
 /* Subtle press scale and color change for most actions (but not overriding favorite active state) */
 .action:active { transform: translateY(1px) scale(0.992); }
 .action:not(.favorite):active { color: var(--primary); }
-.action:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 4px; border-radius: 8px; }
+.action:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary), transparent 70%); outline-offset: 4px; border-radius: 0; }
 
 /* Also provide a tiny hover/press lift on pointer devices */
 /* Grid view: layout grid and square tiles */
@@ -1147,6 +1187,30 @@
 .exif-info > div {
   animation: exif-scroll 20s linear infinite;
   white-space: nowrap;
+}
+
+/* Prevent vertical scrollbars on the EXIF action button caused by a
+   class-name collision with the EXIF section (.exif-info). The button
+   intentionally uses the same class name in markup, so scope a rule
+   specifically for `.action.exif-info` to keep it a fixed square and
+   hide any overflow. */
+.action.exif-info,
+.action.exif-has-data {
+  overflow: hidden !important;
+  box-sizing: border-box;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+.action.exif-info svg,
+.action.exif-has-data svg {
+  display: block !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
 }
 
 @keyframes exif-scroll {

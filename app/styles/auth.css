@@ -24,6 +24,16 @@
 .auth-form .inputs-wrap {
   margin-bottom: -6px; /* pull the actions up slightly so the inputs->button gap is smaller while top gaps remain 12px */
 }
+
+/* Ensure the inputs inside the auth inputs-wrap have comfortable vertical spacing
+   — some components rely on utility classes (gap-2) which may be too tight in
+   certain contexts. Make the default gap slightly larger so inputs don't touch. */
+.auth-form .inputs-wrap,
+.auth-form .inputs-wrap .field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* 12px vertical space between each input */
+}
 .auth-form.enhanced { max-width: 480px; width: 100%; margin: 0 auto; }
 .auth-form.enhanced .field-group { width: 100%; }
 .auth-form.enhanced .fancy-input { 

@@ -74,14 +74,30 @@ export async function POST(req: Request) {
       // Note: If signup fails later, we'll revert the claim
     }
 
-    // Perform signup
+    // Perform signup. Include an email redirect so confirmation links point to the running app.
+    // If you don't want to force a redirect, you can omit `emailRedirectTo`.
+    const emailRedirectTo = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000';
     const { data, error } = await sb.auth.signUp({
       email,
       password,
-      options: { data: { username, name: null } }
+      options: { data: { username, name: null }, emailRedirectTo }
     });
 
+    // Helpful debug logging for signup flow. Avoid printing secrets.
+    // This will help diagnose why confirmation emails are not arriving after a refactor.
+    try {
+      console.log('[signup-proxy] signUp result:', {
+        userId: (data as any)?.user?.id || null,
+        userEmail: (data as any)?.user?.email || null,
+        confirmationSent: Boolean((data as any)?.user?.email_confirmed_at === null || (data as any)?.user?.confirm_sent_at),
+      });
+    } catch (err) {
+      // don't fail the request just for logging
+      console.log('[signup-proxy] signUp logging failed', String(err));
+    }
+
     if (error) {
+      console.log('[signup-proxy] signUp error:', String(error));
       // Revert the invite claim if signup failed
       if (inviteCode !== 'EARLYADOPTER') {
         await sb

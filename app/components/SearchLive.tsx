@@ -161,7 +161,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
                     ) : null}
                     <div className="post-info">
                       <p className="post-caption">{post.caption?.trim() || '(no caption)'}</p>
-                      <small>by {post.user?.displayName || post.user?.username}</small>
+                      <small>by @{post.user?.username}</small>
                     </div>
                   </a>
                 </div>
@@ -172,9 +172,9 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
               {results.users.slice(0, 10).map((user) => (
                 <div key={user.id} className="user-item" style={{ marginBottom: '8px' }}>
                   <a href={`/${user.username}`}>
-                    {user.avatarUrl && <Image src={user.avatarUrl} alt={user.displayName || user.username} width={50} height={50} />}
+                    {user.avatarUrl && <Image src={user.avatarUrl} alt={user.username} width={50} height={50} />}
                     <div>
-                      <h3>{user.displayName || user.username}</h3>
+                      <h3>{user.username}</h3>
                       <p>@{user.username}</p>
                     </div>
                   </a>

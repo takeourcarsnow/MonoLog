@@ -188,6 +188,8 @@
   width: 100%;
   /* center input text and placeholders so the edit card reads like the bio editor */
   text-align: center;
+  /* Ensure the edit UI uses the app's chosen sans-serif font (override other rules) */
+  font-family: var(--font-family) !important;
 }
 
 .inline-edit-card .input {
@@ -200,6 +202,7 @@
 .inline-edit-card .bio-editor {
   min-height: 64px;
   box-sizing: border-box;
+  font-family: var(--font-family) !important;
 }
 
 /* Bio editor container and character count positioning */

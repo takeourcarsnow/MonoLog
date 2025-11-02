@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 // dynamic already imported above
-import { Patrick_Hand } from "next/font/google";
+// Patrick Hand font removed per request
 import React from "react";
 import dynamic from "next/dynamic";
 import { Header } from '@/app/components/Header';
@@ -11,8 +11,7 @@ import { isInAppBrowser } from '@/src/lib/detectWebview';
 import { SWRConfig } from 'swr';
 import ClientInit from '@/app/components/ClientInit';
 
-// Self-host the previously imported Google Font for better performance & privacy.
-const patrick = Patrick_Hand({ subsets: ['latin'], weight: ['400'], variable: '--font-hand' });
+// No custom Google fonts are loaded here to keep the bundle minimal.
 
 // ClientInit is a client-only wrapper that hosts dynamic client components
 // and client-side effects (web-vitals, SW registration). Keeping the root
@@ -90,7 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       hydration mismatch warning — using suppressHydrationWarning here
       documents and silences that expected mismatch.
     */
-  <html lang="en" className={`no-transitions ${patrick.variable}`} suppressHydrationWarning>
+  <html lang="en" className={`no-transitions`} suppressHydrationWarning>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <script

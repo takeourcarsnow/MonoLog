@@ -27,13 +27,15 @@ export function dedupePostsById<T extends { id: string; created_at: string }>(po
 }
 
 // Helper function to resolve post ID from slug or direct ID
-export function resolvePostId(id: string): { raw: string; candidateId: string } {
-  let raw = id;
-  let candidateId = id;
-  const dashIdx = id.lastIndexOf('-');
-  if (dashIdx > 0) {
-    const trailing = id.slice(dashIdx + 1);
-    if (/^[0-9a-fA-F]{6,}$/.test(trailing)) candidateId = trailing;
+export function resolvePostId(id: string | undefined | null): { raw: string; candidateId: string } {
+  const raw = id ?? '';
+  let candidateId = raw;
+  if (raw && typeof raw === 'string') {
+    const dashIdx = raw.lastIndexOf('-');
+    if (dashIdx > 0) {
+      const trailing = raw.slice(dashIdx + 1);
+      if (/^[0-9a-fA-F]{6,}$/.test(trailing)) candidateId = trailing;
+    }
   }
   return { raw, candidateId };
 }

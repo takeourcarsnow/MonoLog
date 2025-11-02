@@ -1,4 +1,8 @@
 * { box-sizing: border-box; }
+/* Global font variable: change this to pick a single typeface for the whole app. */
+:root {
+  --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
 /* Prevent any accidental horizontal overflow (fixes unwanted horizontal scrollbar on desktop) */
 html, body { 
   height: 100%; 
@@ -12,7 +16,8 @@ body {
   margin: 0; 
   background: var(--bg); 
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  /* Use the single app font-family variable so every stylesheet can inherit the same typeface. */
+  font-family: var(--font-family);
   line-height: 1.45;
   /* Enable font smoothing for better text rendering */
   -webkit-font-smoothing: antialiased;
@@ -100,4 +105,14 @@ body.debug-layout-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .no-transitions, .no-transitions * , .no-transitions *::before, .no-transitions *::after {
   transition: none !important;
   animation: none !important;
+}
+
+/* Preserve monospace for code-like elements so they don't inherit the app's
+   single sans-serif typeface. This keeps code, keyboard keys, and preformatted
+   text readable and distinct. */
+code, kbd, samp, pre, tt {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  font-size: 1em;
 }

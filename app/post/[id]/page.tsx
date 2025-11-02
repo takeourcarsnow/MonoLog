@@ -62,8 +62,25 @@ function mapRowToHydratedPost(row: any): HydratedPost {
 
 // Server-rendered page: resolve slug/short-id to the canonical full post id
 // using the server service-role client so direct refreshes work reliably.
-export default async function PostIdPage({ params }: { params: { id: string } }) {
-  const raw = params.id;
+export default async function PostIdPage({ params }: { params: any }) {
+  // `params` may be a Promise in some Next.js setups; await it to get the real object.
+  const { id: raw } = await params;
+  // If the route param is missing or not a string, render not-found early
+  if (!raw || typeof raw !== 'string') {
+    return (
+      <div className="post-view-wrap view-fade">
+        <div className="toolbar">
+          <a className="btn" href="/explore" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Back</span>
+          </a>
+        </div>
+        <div className="empty">Post not found.</div>
+      </div>
+    );
+  }
   // incoming route param
   const sb = getServiceSupabase();
 

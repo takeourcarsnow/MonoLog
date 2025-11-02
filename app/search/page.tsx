@@ -97,7 +97,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                       ) : null}
                       <div className="post-info">
                         <p className="post-caption">{post.caption?.trim() || '(no caption)'}</p>
-                        <small>by {post.user.displayName || post.user.username}</small>
+                        <small>by @{post.user.username}</small>
                       </div>
                     </a>
                   </div>
@@ -109,13 +109,13 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                     <a href={`/${user.username}`}>
                       <Image
                         src={user.avatarUrl}
-                        alt={user.displayName || user.username}
+                        alt={user.username}
                         width={50}
                         height={50}
                         className="user-avatar"
                       />
                       <div>
-                        <h3>{user.displayName || user.username}</h3>
+                        <h3>{user.username}</h3>
                         <p>@{user.username}</p>
                       </div>
                     </a>

@@ -7,7 +7,14 @@ const config: Config = {
     "./src/**/*.{ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        // Use the same CSS variable so Tailwind's `font-sans` utility matches the app font
+        sans: ['var(--font-family)'],
+        // Keep a proper system monospace stack for `font-mono` utilities
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+      },
+    },
   },
   plugins: [],
 };

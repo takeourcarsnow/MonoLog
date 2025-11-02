@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "./Button";
 import { api } from "@/src/lib/api";
 import type { HydratedPost, User } from "@/src/lib/types";
@@ -24,6 +24,22 @@ export function ProfileView({ userId }: { userId?: string }) {
   const { user, posts, loading, following, setFollowing, currentUserId, isOtherParam, setUser } = useUserData(userId);
   const router = useRouter();
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("profileView") as any)) || "grid");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionRef = useRef<number | null>(null);
+
+  const handleViewChange = useCallback((v: "list" | "grid") => {
+    if (v === view) return;
+    setIsTransitioning(true);
+    transitionRef.current = window.setTimeout(() => {
+      setView(v);
+      if (typeof window !== "undefined") localStorage.setItem("profileView", v);
+      setIsTransitioning(false);
+    }, 260);
+  }, [view]);
+
+  useEffect(() => {
+    return () => { if (transitionRef.current) window.clearTimeout(transitionRef.current as number); };
+  }, []);
   const [showInvites, setShowInvites] = useState(false);
 
   const handleAuthRequired = () => {
@@ -34,7 +50,7 @@ export function ProfileView({ userId }: { userId?: string }) {
 
   if (!user) {
     // while loading, show a proper skeleton with multiple placeholders
-    if (loading) {
+      if (loading) {
       return (
         <div className="view-fade">
           <div className="profile-header toolbar">
@@ -107,12 +123,12 @@ export function ProfileView({ userId }: { userId?: string }) {
       {posts.length > 0 && (
         (() => {
           const subtitle = (currentUserId && user && currentUserId === user.id) ? 'Your posts' : `${user?.username || 'User'}'s posts`;
-          return (
+            return (
             <ViewToggle
               title={<UserIcon size={20} strokeWidth={2} />}
               subtitle={subtitle}
               selected={view}
-              onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("profileView", v); }}
+              onSelect={handleViewChange}
             />
           );
         })()
@@ -131,7 +147,7 @@ export function ProfileView({ userId }: { userId?: string }) {
         );
 
         return (
-          <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
+          <div className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
             <div style={{ display: view === 'grid' ? 'block' : 'none' }}>
               {gridView}
             </div>

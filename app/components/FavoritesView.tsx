@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "@/src/lib/api";
 import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
@@ -28,6 +28,22 @@ export function FavoritesView() {
     } catch (e) {}
   }, [posts]);
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("favoritesView") as any)) || "list");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionRef = useRef<number | null>(null);
+
+  const handleViewChange = useCallback((v: "list" | "grid") => {
+    if (v === view) return;
+    setIsTransitioning(true);
+    transitionRef.current = window.setTimeout(() => {
+      setView(v);
+      if (typeof window !== "undefined") localStorage.setItem("favoritesView", v);
+      setIsTransitioning(false);
+    }, 260);
+  }, [view]);
+
+  useEffect(() => {
+    return () => { if (transitionRef.current) window.clearTimeout(transitionRef.current as number); };
+  }, []);
 
   // Handle favorite changes optimistically
   useEventListener('monolog:favorite_changed', (e: any) => {
@@ -93,9 +109,9 @@ export function FavoritesView() {
   return (
     <div className="view-fade">
       {posts.length > 0 && (
-        <ViewToggle title={<StarIcon size={20} strokeWidth={2} />} subtitle="Your favorite posts" selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("favoritesView", v); }} />
+        <ViewToggle title={<StarIcon size={20} strokeWidth={2} />} subtitle="Your favorite posts" selected={view} onSelect={handleViewChange} />
       )}
-      <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
+      <div className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
         {view === 'list' ? (
           posts.map((p, index) => <PostCard key={p.id} post={p} index={index} />)
         ) : (
@@ -105,3 +121,4 @@ export function FavoritesView() {
     </div>
   );
 }
+

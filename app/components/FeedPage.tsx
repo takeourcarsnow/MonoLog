@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getSlideState, setSlideState } from '@/src/lib/slideStateCache';
 import type { HydratedPost } from "@/src/lib/types";
 import { PostCard } from "./PostCard";
@@ -48,6 +48,9 @@ export function FeedPage({
   showToggle = false,
 }: FeedPageProps) {
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  // keep track of pending timeout so we can clear on unmount
+  const transitionRef = useRef<number | null>(null);
 
   const { me } = useAuth();
 
@@ -141,10 +144,29 @@ export function FeedPage({
     );
   };
 
+  const handleViewChange = useCallback((v: "list" | "grid") => {
+    if (v === view) return;
+    // play fade-out, then swap view, then fade-in
+    setIsTransitioning(true);
+    // small delay to allow fade-out animation to run
+    transitionRef.current = window.setTimeout(() => {
+      setView(v);
+      if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v);
+      // trigger fade-in
+      setIsTransitioning(false);
+    }, 260);
+  }, [view, viewStorageKey]);
+
+  useEffect(() => {
+    return () => {
+      if (transitionRef.current) window.clearTimeout(transitionRef.current as number);
+    };
+  }, []);
+
   return (
     <div className="view-fade">
       {(posts.length > 0 || viewStorageKey === 'hashtagView' || showToggle) && (
-        <ViewToggle title={title} subtitle={subtitle} selected={view} onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v); }} />
+        <ViewToggle title={title} subtitle={subtitle} selected={view} onSelect={handleViewChange} />
       )}
       <PullToRefreshWrapper
         isRefreshing={isRefreshing}
@@ -152,7 +174,7 @@ export function FeedPage({
         threshold={80}
         containerRef={containerRef}
         getPullStyles={getPullStyles}
-        className={`feed ${view === 'grid' ? 'grid-view' : ''}`}
+        className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}
       >
         {renderContent()}
       </PullToRefreshWrapper>

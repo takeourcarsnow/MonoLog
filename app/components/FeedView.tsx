@@ -13,7 +13,7 @@ export const FeedView = memo(function FeedView() {
     <FeedPage
       fetchFunction={fetchFollowingFeed}
       title={<Home size={20} strokeWidth={2} />}
-      subtitle="MonoLogs from you & people that you follow"
+      subtitle="Posts from you & people that you follow"
       viewStorageKey="feedView"
       scrollStateKey="feed"
       deferFollowChanges={true}

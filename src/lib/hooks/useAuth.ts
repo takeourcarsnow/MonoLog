@@ -21,7 +21,12 @@ export function useAuth() {
     if (currentUser !== undefined) {
       setMe(currentUser);
       setIsLoading(false);
-      try { if (typeof window !== 'undefined') storage.set('currentUserId', currentUser?.id || null); } catch (_) {}
+      try {
+        if (typeof window !== 'undefined') storage.set('currentUserId', currentUser?.id || null);
+        // Cache following list so client components can synchronously
+        // determine follow state on mount without waiting for SWR.
+        try { storage.set('currentUserFollowing', (currentUser as any)?.following || []); } catch (_) {}
+      } catch (_) {}
     }
   }, [currentUser]);
 

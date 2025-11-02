@@ -33,6 +33,8 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
   const feedRef = useRef<HTMLDivElement>(null);
   const [shouldScroll, setShouldScroll] = useState(false);
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem("calendarView") as any)) || "list");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionRef = useRef<number | null>(null);
   const [dayPostsCache, setDayPostsCache] = useState<Record<string, HydratedPost[]>>({});
   // Only start loading data when the view has been active for a short time.
   // This prevents quick swipes through the calendar from triggering loads.
@@ -201,6 +203,20 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
     );
   };
 
+  const handleViewChange = useCallback((v: "list" | "grid") => {
+    if (v === view) return;
+    setIsTransitioning(true);
+    transitionRef.current = window.setTimeout(() => {
+      setView(v);
+      if (typeof window !== "undefined") localStorage.setItem("calendarView", v);
+      setIsTransitioning(false);
+    }, 260);
+  }, [view]);
+
+  useEffect(() => {
+    return () => { if (transitionRef.current) window.clearTimeout(transitionRef.current as number); };
+  }, []);
+
   return (
     <div className="view-fade">
       {!me ? (
@@ -280,13 +296,13 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
           </div>
         </div>
       </div>
-  <div className="feed grid-view" id="day-feed" ref={feedRef}>
+  <div className={`feed grid-view fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`} id="day-feed" ref={feedRef}>
         {dayPosts && dayPosts.length > 0 && (
           <ViewToggle
             title={<Calendar size={20} strokeWidth={2} />}
             subtitle="Posts from selected day"
             selected={view}
-            onSelect={(v) => { setView(v); if (typeof window !== "undefined") localStorage.setItem("calendarView", v); }}
+            onSelect={handleViewChange}
             className="tight"
           />
         )}

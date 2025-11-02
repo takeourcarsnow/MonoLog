@@ -199,6 +199,51 @@
 }
 @keyframes viewFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
+/* Explicit fade-out animation when switching views (list <-> grid) */
+@keyframes viewFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(6px); }
+}
+
+/* Classes used by JS to orchestrate fade-out then fade-in when toggling views */
+.view-fade.fade-out {
+  animation: viewFadeOut 220ms var(--transition-mid) both;
+}
+.view-fade.fade-in {
+  animation: viewFade 260ms var(--transition-mid) both;
+}
+
+/* Generic classes so we can apply fade to any container (e.g. .feed) */
+.fade-out {
+  animation: viewFadeOut 220ms var(--transition-mid) both;
+}
+.fade-in {
+  animation: viewFade 260ms var(--transition-mid) both;
+}
+
+/* More robust transition-based fade classes (use transitions instead of
+   keyframe fill modes which can sometimes leave elements stuck). Apply
+   `fade-anim` with either `fade-hidden` or `fade-visible`. */
+.fade-anim {
+  transition: opacity 260ms var(--transition-mid), transform 260ms var(--transition-mid);
+  will-change: opacity, transform;
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-hidden {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none; /* optional: avoid interactions while hidden */
+}
+.fade-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-fade.fade-out, .view-fade.fade-in { animation: none !important; }
+}
+
 .comment-item.new { animation: commentIn 360ms cubic-bezier(.2,.8,.2,1); }
 @keyframes commentIn { from { opacity: 0; transform: translateY(6px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -224,6 +269,13 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  /* Ensure action buttons (follow/edit/delete) sit above any
+     auto-scrolling metadata (location/weather) which may briefly
+     overflow or render fade overlays. Giving the container a
+     positioned stacking context and a higher z-index prevents
+     the metadata from visually overlapping the buttons. */
+  position: relative;
+  z-index: 3;
 }
 
 /* When the post belongs to the current user, tighten spacing between

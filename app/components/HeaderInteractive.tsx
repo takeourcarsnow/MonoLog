@@ -9,7 +9,6 @@ import { Users } from "lucide-react";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/src/lib/api";
-import { useToast } from "./Toast";
 import { useAuth } from "@/src/lib/hooks/useAuth";
 import { NotificationsPopup } from "./NotificationsPopup";
 
@@ -23,7 +22,6 @@ export function HeaderInteractive() {
   const pathname = usePathname();
   const [hasNewThreads, setHasNewThreads] = useState(false);
   const prevHasNewThreadsRef = useRef(false);
-  const { show } = useToast();
   const { me } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [showNotificationsPopup, setShowNotificationsPopup] = useState(false);
@@ -46,16 +44,16 @@ export function HeaderInteractive() {
 
   const hasNew = await api.hasNewThreads(lastChecked);
       
-      if (forceToast) {
-        show("New posts in communities (forced)");
-      } else {
-        setHasNewThreads(hasNew);
+      // We no longer use toast notifications; optionally log in dev
+      if (forceToast && process.env.NODE_ENV === 'development') {
+        console.debug('[communities] New posts detected (forced)');
       }
+      setHasNewThreads(hasNew);
     } catch (e) {
       // Ignore errors - user might not be authenticated or API might be down
       setHasNewThreads(false);
     }
-  }, [show, me]);
+  }, [me]);
 
   // Expose for console testing
   useEffect(() => {
@@ -156,13 +154,15 @@ export function HeaderInteractive() {
     };
   }, [checkForNewThreads, me]);
 
-  // Show toast when new threads are detected
+  // Optional console hint when new threads are detected
   useEffect(() => {
     if (hasNewThreads && !prevHasNewThreadsRef.current) {
-      show("New posts in communities");
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[communities] New posts detected');
+      }
     }
     prevHasNewThreadsRef.current = hasNewThreads;
-  }, [hasNewThreads, show]);
+  }, [hasNewThreads]);
 
   // Detect overlap between logo text and header actions and hide the text
   // when they approach each other to avoid visual overlap. Uses the logo

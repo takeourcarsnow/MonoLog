@@ -1,12 +1,10 @@
 import { useState, useRef } from "react";
 import { api } from "@/src/lib/api";
-import { useToast } from "../../Toast";
 import { useToggle } from "@/src/lib/hooks/useToggle";
 
 export function useFavorite(postId: string) {
   const [favoriteOverlayState, setFavoriteOverlayState] = useState<'adding' | 'removing' | null>(null);
   const overlayTimerRef = useRef<any>(null);
-  const toast = useToast();
 
   const { state: isFavorite, setState: setIsFavorite, toggleWithAuth } = useToggle({
     id: postId,
@@ -17,7 +15,7 @@ export function useFavorite(postId: string) {
     },
     eventName: 'monolog:favorite_changed',
     eventDetailKey: 'postId',
-    onError: (e) => toast.show(e?.message || "Failed to toggle favorite")
+    onError: (e) => console.warn(e?.message || "Failed to toggle favorite")
   });
 
   const showFavoriteFeedback = (action: 'adding' | 'removing') => {

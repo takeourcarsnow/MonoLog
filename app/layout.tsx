@@ -22,9 +22,7 @@ import ClientInit from '@/app/components/ClientInit';
 // client. Importing it statically here keeps static markup server-rendered
 // and reduces client-side bundle and parse/compile time.
 
-// Toast provider for the entire app
-// const ToastProvider = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastProvider), { ssr: false });
-// const ToastHost = dynamic(() => import('@/app/components/Toast').then(mod => mod.ToastHost), { ssr: false });
+// Toast system removed
 
 // Inert polyfill is loaded via the client component `InertPolyfillClient`
 
@@ -146,7 +144,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {children}
               </ClientInit>
             </ClientErrorBoundary>
-            {/* <ToastHost /> */}
         </SWRConfig>
   <noscript>MonoLog — Your day in pictures. Requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { preloadOverlayThumbnails } from "../../imageEditor/overlaysPreload";
 import { api } from "@/src/lib/api";
-import { useToast } from "../../Toast";
 import type { HydratedPost } from "@/src/lib/types";
 
 export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => void) {
@@ -51,7 +50,6 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
   const [editorSaving, setEditorSaving] = useState(false);
   const editTimerRef = useRef<number | null>(null);
   const editorRef = useRef<{ save: () => Promise<void>; cancel?: () => void } | null>(null);
-  const toast = useToast();
 
   const handleSave = async (patch: any) => {
     setEditorSaving(true);
@@ -61,7 +59,7 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
   // debug removed
       setEditing(false);
     } catch (e: any) {
-      toast.show(e?.message || "Failed to update post");
+      console.warn(e?.message || "Failed to update post");
     } finally {
       setEditorSaving(false);
     }

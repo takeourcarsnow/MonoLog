@@ -3,10 +3,9 @@
 import { useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { CONFIG } from "@/src/lib/config";
-import { useToast } from "../Toast";
 
 export function createPublishHandler(
-  toast: ReturnType<typeof useToast>,
+  toast: { show: (msg: unknown) => void } | undefined,
   setProcessing: (processing: boolean) => void,
   resetDraft: () => void,
   router: ReturnType<typeof useRouter>,
@@ -29,10 +28,11 @@ export function createPublishHandler(
 ) {
   async function publish() {
     const images = dataUrls.length ? dataUrls : [];
-    if (!images.length) return toast.show("Please select at least one image");
+    if (!images.length) { console.warn("Please select at least one image"); return; }
     const maxBytes = CONFIG.imageMaxSizeMB * 1024 * 1024;
     if (compressedSize && compressedSize > maxBytes) {
-      return toast.show(`Compressed image is too large (${Math.round(compressedSize/1024)} KB). Try a smaller photo or reduce quality.`);
+      console.warn(`Compressed image is too large (${Math.round(compressedSize/1024)} KB). Try a smaller photo or reduce quality.`);
+      return;
     }
     setProcessing(true);
     try {
@@ -61,9 +61,9 @@ export function createPublishHandler(
       router.push("/");
     } catch (e: any) {
       if (e?.code === "LIMIT") {
-        toast.show("You already posted today.");
+        console.warn("You already posted today.");
       } else {
-        toast.show(e?.message || "Failed to publish");
+        console.warn(e?.message || "Failed to publish");
       }
       setProcessing(false);
     }

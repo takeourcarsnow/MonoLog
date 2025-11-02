@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/src/lib/api";
-import { useToast } from "../../Toast";
 
 export function useDelete(postId: string) {
   const [deleteExpanded, setDeleteExpanded] = useState(false);
@@ -9,7 +8,6 @@ export function useDelete(postId: string) {
   const deleteExpandTimerRef = useRef<number | null>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const toast = useToast();
 
   // cleanup any pending delete expand timer when component unmounts
   useEffect(() => {
@@ -36,7 +34,7 @@ export function useDelete(postId: string) {
         window.dispatchEvent(new CustomEvent('monolog:post_deleted', { detail: { postId } }));
         if (pathname?.startsWith("/post/")) router.push("/");
       } catch (e: any) {
-        toast.show(e?.message || "Failed to delete post");
+        console.warn(e?.message || "Failed to delete post");
       } finally {
         setDeleteExpanded(false);
         setShowConfirmText(false);

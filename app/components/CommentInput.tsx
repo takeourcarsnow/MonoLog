@@ -43,14 +43,14 @@ export function CommentInput({
             const v = e.target.value;
             if (v.length <= COMMENT_MAX) setText(v);
             else {
-              // defensive: should be prevented by maxLength but notify user if they paste huge text
-              toast.show(`Comments are limited to ${COMMENT_MAX} characters`);
+              // defensive: should be prevented by maxLength but notify via console if they paste huge text
+              console.warn(`Comments are limited to ${COMMENT_MAX} characters`);
             }
           }}
           onKeyDown={async (e) => {
             if (e.key === "Enter" && e.shiftKey) {
               if (!text.trim()) return;
-              if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
+              if (text.length > COMMENT_MAX) { console.warn(`Comments are limited to ${COMMENT_MAX} characters`); return; }
               onSend();
             }
           }}

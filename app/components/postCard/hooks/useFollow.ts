@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { api } from "@/src/lib/api";
-import { useToast } from "../../Toast";
 import { useToggle } from "@/src/lib/hooks/useToggle";
 
 export function useFollow(userId: string) {
@@ -8,7 +7,6 @@ export function useFollow(userId: string) {
   const [followExpanded, setFollowExpanded] = useState(false);
   const followExpandTimerRef = useRef<number | null>(null);
   const followAnimTimerRef = useRef<number | null>(null);
-  const toast = useToast();
 
   const { state: isFollowing, setState: setIsFollowing, toggleWithAuth } = useToggle({
     id: userId,
@@ -19,7 +17,7 @@ export function useFollow(userId: string) {
     },
     eventName: 'monolog:follow_changed',
     eventDetailKey: 'userId',
-    onError: (e) => toast.show(e?.message || 'Failed to update follow')
+    onError: (e) => console.warn(e?.message || 'Failed to update follow')
   });
 
   // Listen for follow changes triggered elsewhere (ProfileView) so this

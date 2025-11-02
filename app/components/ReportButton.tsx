@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Flag } from "lucide-react";
-import { useToast } from "./Toast";
 import { getClient, getAccessToken } from '@/src/lib/api/client';
 
 interface ReportButtonProps {
@@ -14,7 +13,6 @@ interface ReportButtonProps {
 export function ReportButton({ postId, commentId, className = "" }: ReportButtonProps) {
   const [isReporting, setIsReporting] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const toast = useToast();
 
   const handleReport = async (reason: string, details?: string) => {
     if (!postId && !commentId) return;
@@ -41,13 +39,13 @@ export function ReportButton({ postId, commentId, className = "" }: ReportButton
       const data = await response.json();
 
       if (response.ok) {
-        toast.show('Report submitted successfully');
+        console.info('Report submitted successfully');
         setShowModal(false);
       } else {
-        toast.show(data.error || 'Failed to submit report');
+        console.warn('Failed to submit report:', data.error || 'Unknown error');
       }
     } catch (error) {
-      toast.show('Failed to submit report');
+      console.warn('Failed to submit report', error);
     } finally {
       setIsReporting(false);
     }

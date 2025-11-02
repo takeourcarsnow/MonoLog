@@ -15,7 +15,6 @@ interface UseCameraCaptureHandlerProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   streamRef: React.MutableRefObject<MediaStream | null>;
   setCameraOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  toast: any;
   handleFile: (file: File) => Promise<void>;
 }
 
@@ -34,7 +33,6 @@ export function useCameraCaptureHandler({
   videoRef,
   streamRef,
   setCameraOpen,
-  toast,
   handleFile
 }: UseCameraCaptureHandlerProps) {
   const onCameraCapture = async () => {
@@ -91,7 +89,6 @@ export function useCameraCaptureHandler({
             replaceIndexRef.current = null;
           } catch (e) {
             console.error(e);
-            toast.show('Failed to process captured image');
           } finally {
             setProcessing(false);
           }
@@ -104,7 +101,6 @@ export function useCameraCaptureHandler({
       }, 'image/jpeg', 0.92);
     } catch (e) {
       console.error(e);
-      toast.show('Failed to capture photo');
       setProcessing(false);
     }
   };

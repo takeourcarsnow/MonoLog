@@ -52,7 +52,7 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
           context.setComments(backup);
           try { context.setCachedComments(context.postId, backup); } catch (_) {}
           context.notifyCount(backup.length);
-          context.toast.show(e?.message || 'Failed to delete comment');
+          console.warn(e?.message || 'Failed to delete comment');
         } finally {
           context.setRemovingIds(prev => {
             const n = new Set(prev);
@@ -83,7 +83,7 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
       return;
     }
     if (!context.replyText.trim()) return;
-    if (context.replyText.length > 500) { context.toast.show(`Comments are limited to 500 characters`); return; }
+    if (context.replyText.length > 500) { console.warn(`Comments are limited to 500 characters`); return; }
     context.setSending(true);
     const sendText = context.replyText;
     context.setReplyText("");

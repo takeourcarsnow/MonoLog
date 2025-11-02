@@ -12,7 +12,6 @@ import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin, Sun, CloudRain, 
 import ToggleActionButton from "../ToggleActionButton";
 import { AuthForm } from "../AuthForm";
 import AutoScroll from "../AutoScroll";
-import { useToast } from "../Toast";
 import { usePathname, useRouter } from "next/navigation";
 
 function getWeatherIcon(condition: string) {
@@ -55,7 +54,7 @@ interface UserHeaderProps {
   handleDeleteActivation: () => void;
   editorRef?: React.MutableRefObject<{ save?: () => Promise<void>; cancel?: () => void } | null>;
   editorOpeningRef?: React.MutableRefObject<boolean | null>;
-  toast: ReturnType<typeof useToast>;
+  toast?: unknown; // deprecated
 }
 
 export const UserHeader = memo(function UserHeader({
@@ -87,7 +86,7 @@ export const UserHeader = memo(function UserHeader({
   handleDeleteActivation,
   editorRef,
   editorOpeningRef,
-  toast,
+  toast: _toast,
 }: UserHeaderProps) {
   const editClickLockRef = useRef<number | null>(null);
   const pathname = usePathname();
@@ -189,7 +188,7 @@ export const UserHeader = memo(function UserHeader({
                         try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
                       } catch (e: any) {
                         setIsFollowing(prev);
-                        try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}
+                        console.warn(e?.message || 'Failed to update follow');
                       } finally {
                         followInFlightRef.current = false;
                         setTimeout(() => setFollowAnim(null), 520);

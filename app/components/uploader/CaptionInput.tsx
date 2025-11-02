@@ -239,7 +239,7 @@ export function CaptionInput({
           onChange={e => {
             const v = e.target.value;
             if (v.length <= CAPTION_MAX) setCaption(v);
-            else toast.show(`Captions are limited to ${CAPTION_MAX} characters`);
+            else console.warn(`Captions are limited to ${CAPTION_MAX} characters`);
           }}
           readOnly={!hasPreview || processing}
           tabIndex={hasPreview ? 0 : -1}

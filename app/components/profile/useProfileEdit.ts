@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
-import { useToast } from "../Toast";
 import type { User } from "@/src/lib/types";
 import { validateUsername, normalizeDisplayName, normalizeBio, normalizeSocialLinks } from "./profileUtils";
 
@@ -11,7 +10,6 @@ export const useProfileEdit = (
   setIsEditingProfile: (editing: boolean) => void
 ) => {
   const router = useRouter();
-  const toast = useToast();
 
   const usernameRef = useRef<HTMLInputElement | null>(null);
 
@@ -30,7 +28,7 @@ export const useProfileEdit = (
 
     const validationError = validateUsername(editUsername);
     if (validationError) {
-      toast.show(validationError);
+      console.warn('[profile] validation error:', validationError);
       return;
     }
 
@@ -79,7 +77,6 @@ export const useProfileEdit = (
       }
     } catch (e: any) {
       console.error('[ProfileEditForm] saveEdits error', e);
-      toast.show(e?.message || 'Failed to update profile');
     } finally {
       setEditProcessing(false);
     }

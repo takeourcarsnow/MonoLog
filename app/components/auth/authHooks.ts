@@ -1,3 +1,4 @@
+"use client";
 // authHooks.ts
 import { useState, useRef, useEffect } from "react";
 

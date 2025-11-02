@@ -1,11 +1,10 @@
 "use client";
 
 import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
-import { useToast } from "../Toast";
 import exifr from 'exifr';
 
 export function createFileHandlers(
-  toast: ReturnType<typeof useToast>,
+  toast: { show: (msg: unknown) => void } | undefined,
   setProcessing: (processing: boolean) => void,
   setPreviewLoaded: (loaded: boolean) => void,
   setOriginalSize: (size: number | null) => void,
@@ -117,7 +116,7 @@ export function createFileHandlers(
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      toast.show("Please select an image file");
+      console.warn("Please select an image file");
       return;
     }
     setProcessing(true);
@@ -166,7 +165,6 @@ export function createFileHandlers(
       }
     } catch (e) {
       console.error(e);
-      toast.show("Failed to process image");
       try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (e) {}
     } finally {
       setProcessing(false);
@@ -207,7 +205,7 @@ export function createFileHandlers(
       }
     } catch (e) {
       console.error(e);
-      toast.show(isReplace ? 'Failed to process replacement image' : 'Failed to process selected files');
+      console.warn(isReplace ? 'Failed to process replacement image' : 'Failed to process selected files');
     } finally {
       setProcessing(false);
       if (isReplace) {

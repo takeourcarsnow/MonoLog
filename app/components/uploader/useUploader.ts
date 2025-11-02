@@ -5,7 +5,6 @@ import { useAuth } from "./useAuth";
 import { useDraftPersistence } from "./useDraftPersistence";
 import { useCountdown } from "./useCountdown";
 import { useFileHandling } from "./useFileHandling";
-import { useToast } from "../Toast";
 import { EDITING_SESSION_KEY, DRAFT_KEY } from "./constants";
 import { EditorSettings } from "../imageEditor/types";
 import { useUploaderState } from "./uploaderState";
@@ -18,7 +17,8 @@ import { useUploaderEffects } from "./uploaderEffects";
 export function useUploader() {
   const pathname = usePathname();
   const router = useRouter();
-  const toast = useToast();
+  // Local no-op logger to satisfy downstream function signatures
+  const toast = { show: (_: unknown) => {} } as const;
 
   // State
   const state = useUploaderState();

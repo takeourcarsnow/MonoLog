@@ -1,11 +1,9 @@
 import { useRef, useState } from "react";
-import { useToast } from "../Toast";
 
 export function useCameraCapture() {
   const [cameraOpen, setCameraOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const toast = useToast();
 
   // Check if camera permissions are available
   const checkCameraPermission = async (): Promise<PermissionState | null> => {
@@ -33,7 +31,6 @@ export function useCameraCapture() {
       if (!navigator?.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
         const err = new Error('Camera not supported on this device');
         console.warn(err);
-        toast.show('Camera is not supported on this device');
         throw err;
       }
 
@@ -41,7 +38,6 @@ export function useCameraCapture() {
       const permissionState = await checkCameraPermission();
       if (permissionState === 'denied') {
         const err = new Error('Camera permission denied');
-        toast.show('Camera access is blocked. Please enable camera permissions in your browser settings.');
         throw err;
       }
 
@@ -91,7 +87,7 @@ export function useCameraCapture() {
         errorMessage = 'Camera access blocked due to security restrictions. Please ensure you\'re using HTTPS.';
       }
 
-      toast.show(errorMessage);
+      console.warn(errorMessage);
 
       // Don't show a toast here — callers will fallback to the hidden
       // camera-capable file input, which typically opens the native camera

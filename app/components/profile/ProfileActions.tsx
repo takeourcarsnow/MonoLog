@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react";
 import { api } from "@/src/lib/api";
-import { useToast } from "../Toast";
 import { SignOutButton } from "@/app/components/SignOut";
 import Link from "next/link";
 import { User } from "lucide-react";
@@ -33,7 +32,6 @@ export function ProfileActions({
   showInvites,
   setShowInvites
 }: ProfileActionsProps) {
-  const toast = useToast();
   const followInFlightRef = useRef(false);
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
   const [followAnim, setFollowAnim] = useState<'following-anim' | 'unfollow-anim' | null>(null);
@@ -149,9 +147,9 @@ export function ProfileActions({
       // re-fetching on optimistic-only failures.
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: user.id, following: !prev } })); } catch (_) {}
     } catch (e: any) {
-      // Revert optimistic change on error and show toast
+      // Revert optimistic change on error
       setFollowing(prev);
-      try { toast.show(e?.message || 'Failed to update follow'); } catch (_) {}
+      console.warn(e?.message || 'Failed to update follow');
     }
     finally {
       followInFlightRef.current = false;

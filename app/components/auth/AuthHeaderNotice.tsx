@@ -1,5 +1,5 @@
 // AuthHeaderNotice.tsx
-import { HeaderNotice } from "./authHooks";
+import type { HeaderNotice } from "./authHooks";
 
 interface AuthHeaderNoticeProps {
   headerNotice: HeaderNotice | null;

@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
-import { useToast } from "./Toast";
 import { CommentItem } from "./CommentItem";
 import { CommentInput } from "./CommentInput";
 import { LoadingIndicator } from "./LoadingIndicator";
@@ -77,7 +76,8 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
     return () => { mounted = false; };
   }, []);
 
-  const toast = useToast();
+  // Toasts are removed; prefer inline UI or console logging
+  const toast = { show: (_: unknown) => {} } as const;
   const commentRemaining = Math.max(0, COMMENT_MAX - (text?.length || 0));
 
   const doOptimisticAdd = async (bodyText: string, parentId?: string) => {
@@ -132,7 +132,7 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
         return next;
       });
       setNewCommentId(null);
-      toast.show(err?.message || 'Failed to add comment');
+      console.warn(err?.message || 'Failed to add comment');
     }
   };
 
@@ -200,7 +200,7 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
           if (!text.trim()) {
             return;
           }
-          if (text.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
+          if (text.length > COMMENT_MAX) { console.warn(`Comments are limited to ${COMMENT_MAX} characters`); return; }
           setSending(true);
           setSendAnim('following-anim');
           const sendText = text;

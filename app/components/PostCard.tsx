@@ -18,7 +18,6 @@ import { useEditorAnimation } from "./postCard/hooks/useEditorAnimation";
 import { useFullscreen } from "./postCard/hooks/useFullscreen";
 import { useCardNavigation } from "./postCard/hooks/useCardNavigation";
 import { useIsMe, useAuth } from "@/src/lib/hooks/useAuth";
-import { useToast } from "./Toast";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { PostCardBody } from "./PostCardBody";
@@ -109,7 +108,8 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   const { isMe, isLoading: authLoading } = useIsMe(post.userId);
   const { me } = useAuth();
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
-  const toast = useToast();
+  // Deprecated: toast no longer used for user-visible messages
+  const toast = { show: (_: unknown) => {} } as const;
 
   return (
   <article id={`post-${post.id}`} onClick={disableCardNavigation ? undefined : handleCardClick} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>

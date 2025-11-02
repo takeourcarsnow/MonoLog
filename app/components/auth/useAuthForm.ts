@@ -1,7 +1,7 @@
+"use client";
 // useAuthForm.ts
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "../Toast";
 import { useHeaderNotice } from "./authHooks";
 import { validUsername, isTempEmail } from "./authUtils";
 import { isAllowedEmailDomain } from "@/src/lib/utils";
@@ -19,7 +19,6 @@ export function useAuthForm(onClose?: () => void) {
   const [justSignedIn, setJustSignedIn] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const router = useRouter();
-  const toast = useToast();
   const { headerNotice, headerNoticePhase, showHeaderNotice, setHeaderNotice } = useHeaderNotice();
 
   const [emailWarning, setEmailWarning] = useState<string | null>(null);

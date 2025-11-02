@@ -43,13 +43,13 @@ export function ReplyInput({
             const v = e.target.value;
             if (v.length <= COMMENT_MAX) setReplyText(v);
             else {
-              toast.show(`Comments are limited to ${COMMENT_MAX} characters`);
+              console.warn(`Comments are limited to ${COMMENT_MAX} characters`);
             }
           }}
           onKeyDown={async (e) => {
             if (e.key === "Enter" && e.shiftKey) {
               if (!replyText.trim()) return;
-              if (replyText.length > COMMENT_MAX) { toast.show(`Comments are limited to ${COMMENT_MAX} characters`); return; }
+              if (replyText.length > COMMENT_MAX) { console.warn(`Comments are limited to ${COMMENT_MAX} characters`); return; }
               onSend();
             }
           }}

@@ -2,7 +2,6 @@ import { useRef, useState, useEffect } from "react";
 import { api, getSupabaseClient } from "@/src/lib/api";
 import { compressImage } from "@/src/lib/image";
 import { uid } from "@/src/lib/id";
-import { useToast } from "../Toast";
 import Image from "next/image";
 import { OptimizedImage } from "../OptimizedImage";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,7 +15,6 @@ interface ProfileAvatarProps {
 
 export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAvatarProps) {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
-  const toast = useToast();
   const [avatarUploading, setAvatarUploading] = useState(false);
   // expanded controls in-place scale animation of avatar
   const [expanded, setExpanded] = useState(false);
@@ -193,7 +191,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
         // ignore
       }
     } catch (e: any) {
-      try { toast.show(e?.message || "Failed to upload avatar"); } catch (_) { /* ignore */ }
+      console.warn(e?.message || "Failed to upload avatar");
     }
     finally {
       setAvatarUploading(false);

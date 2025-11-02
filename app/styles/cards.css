@@ -902,12 +902,12 @@
 .action.favorite.active svg {
   fill: currentColor;
   /* thicker darker outline so the yellow star reads on light backgrounds */
-  stroke: rgba(0,0,0,0.48);
-  stroke-width: 1.8px;
+  /* stroke: rgba(0,0,0,0.48); */
+  /* stroke-width: 1.8px; */
 }/* Dark theme: use a lighter stroke for contrast on dark backgrounds */
 :root[data-theme="dark"] .action.favorite.active svg {
-  stroke: rgba(255,255,255,0.22);
-  stroke-width: 1.8px;
+  /* stroke: rgba(255,255,255,0.22); */
+  /* stroke-width: 1.8px; */
 }
 /* Pull-to-refresh loader/logo adjustments */
 .pull-to-refresh-logo { display: inline-block; filter: none; transition: filter 180ms ease, opacity 180ms ease; }

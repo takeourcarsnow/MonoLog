@@ -67,6 +67,7 @@
     "svgo": "^4.0.0",
     "tailwindcss": "^4.1.16",
     "ts-jest": "^29.4.5",
+    "ts-unused-exports": "^11.0.1",
     "typescript": "^5.9.3"
   },
   "overrides": {

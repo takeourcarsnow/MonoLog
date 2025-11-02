@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { formatRelative } from '@/src/lib/date';
 
 interface TimeDisplayProps {
@@ -10,20 +10,32 @@ interface TimeDisplayProps {
 
 export default function TimeDisplay({ date, className = '' }: TimeDisplayProps) {
   const [showFullDate, setShowFullDate] = useState(false);
+  const [currentText, setCurrentText] = useState(formatRelative(date));
+  const [opacity, setOpacity] = useState(1);
+
+  useEffect(() => {
+    setOpacity(0);
+    const timer = setTimeout(() => {
+      setCurrentText(showFullDate ? new Date(date).toLocaleString([], { 
+        year: 'numeric', 
+        month: 'numeric', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: '2-digit' 
+      }) : formatRelative(date));
+      setOpacity(1);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [showFullDate, date]);
 
   return (
     <span
       className={`${className} cursor-pointer`}
       onClick={() => setShowFullDate(!showFullDate)}
       title={showFullDate ? 'Click to show relative time' : 'Click to show full date'}
+      style={{ opacity, transition: 'opacity 0.3s ease-in-out' }}
     >
-      {showFullDate ? new Date(date).toLocaleString([], { 
-        year: 'numeric', 
-        month: 'numeric', 
-        day: 'numeric', 
-        hour: 'numeric', 
-        minute: '2-digit' 
-      }) : formatRelative(date)}
+      {currentText}
     </span>
   );
 }

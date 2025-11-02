@@ -78,6 +78,10 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
   };
 
   const handleReplySend = async () => {
+    if (!context.currentUser) {
+      context.router.push('/profile');
+      return;
+    }
     if (!context.replyText.trim()) return;
     if (context.replyText.length > 500) { context.toast.show(`Comments are limited to 500 characters`); return; }
     context.setSending(true);

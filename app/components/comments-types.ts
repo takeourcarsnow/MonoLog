@@ -34,6 +34,7 @@ export type CommentContext = {
   setRemovingIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   sending: boolean;
   confirmingIds: Set<string>;
+  router: any;
 };
 
 export type CommentsProps = {

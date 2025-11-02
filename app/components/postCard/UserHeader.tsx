@@ -93,16 +93,28 @@ export const UserHeader = memo(function UserHeader({
   const pathname = usePathname();
   const router = useRouter();
   const [showFullDate, setShowFullDate] = useState(false);
+  const [currentText, setCurrentText] = useState(formatRelative(post.createdAt));
+  const [opacity, setOpacity] = useState(1);
+
+  useEffect(() => {
+    setOpacity(0);
+    const timer = setTimeout(() => {
+      setCurrentText(showFullDate ? new Date(post.createdAt).toLocaleDateString() : formatRelative(post.createdAt));
+      setOpacity(1);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [showFullDate, post.createdAt]);
+
   const IconComponent = getWeatherIcon(post.weatherCondition || '');
   const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
   const userLine = (
     <span
       className="post-date"
       onClick={() => setShowFullDate(!showFullDate)}
-      style={{ cursor: 'pointer' }}
+      style={{ cursor: 'pointer', opacity, transition: 'opacity 0.3s ease-in-out' }}
       title={showFullDate ? 'Click to show relative time' : 'Click to show full date'}
     >
-      {showFullDate ? new Date(post.createdAt).toLocaleDateString() : formatRelative(post.createdAt)}
+      {currentText}
     </span>
   );
 

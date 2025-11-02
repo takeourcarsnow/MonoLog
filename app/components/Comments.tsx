@@ -3,6 +3,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
 import { useToast } from "./Toast";
@@ -25,6 +26,8 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
   const confirmTimers = useRef<Map<string, number>>(new Map());
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+
+  const router = useRouter();
 
   // helper to notify parent about comment count without causing
   // render-phase updates (defers the call to a microtask)
@@ -174,7 +177,8 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
                 notifyCount,
                 setRemovingIds,
                 sending,
-                confirmingIds
+                confirmingIds,
+                router
               }}
             />
           ))
@@ -189,6 +193,10 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
         sending={sending}
         toast={toast}
         onSend={async () => {
+          if (!currentUser) {
+            router.push('/profile');
+            return;
+          }
           if (!text.trim()) {
             return;
           }

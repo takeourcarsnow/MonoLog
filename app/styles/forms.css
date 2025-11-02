@@ -333,3 +333,30 @@ textarea:focus-visible,
   box-shadow: none !important;
   border-color: var(--border) !important;
 }
+
+/* Blur everything in the uploader area except the upload field until a
+   photo has been added. We use the presence of the `.has-preview` class on
+   `.uploader` to know when a photo exists; when it's not present, blur
+   all immediate children except the `.drop-zone` (the visible upload
+   affordance). Keep pointer events enabled for the drop-zone so the user
+   can interact with it. */
+.uploader:not(.has-preview) > *:not(.drop-zone) {
+  filter: blur(3px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.98; /* slightly dim to emphasize disabled state (subtler) */
+  transition: filter 180ms var(--transition-fast), opacity 180ms var(--transition-fast);
+}
+
+.uploader:not(.has-preview) .drop-zone {
+  position: relative; /* ensure it stays on top if other elements have stacking/context */
+  z-index: 2;
+  filter: none !important;
+  pointer-events: auto !important;
+}
+
+/* Make sure interactive elements inside the visible upload field are fully
+   accessible and not inadvertently dimmed by ancestor rules. */
+.uploader:not(.has-preview) .drop-zone, .uploader:not(.has-preview) .drop-zone * {
+  opacity: 1 !important;
+}

@@ -14,3 +14,13 @@ export function useToast() {
 export function ToastHost() {
   return null;
 }
+
+// Default export kept for any legacy/default imports during HMR or third-party
+// integrations. Provide the same no-op surface as the named exports.
+const _default = {
+  ToastProvider,
+  useToast: () => ({ show: (_: unknown) => {} }),
+  ToastHost,
+};
+
+export default _default;

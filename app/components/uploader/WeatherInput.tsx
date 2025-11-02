@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Cloud } from "lucide-react";
+import { Cloud, X } from "lucide-react";
 import { parseCombinedWeather, fetchWeatherForCurrentLocation } from "./weatherUtils";
 import { getCurrentPosition } from "./locationUtils";
 
@@ -64,6 +64,14 @@ export function WeatherInput({
     );
   };
 
+  const handleClear = () => {
+    setWeatherCondition?.('');
+    setWeatherTemperature?.(undefined);
+    setCombinedWeather('');
+    setActiveField(null);
+    try { inputRef?.current?.blur(); } catch (_) {}
+  };
+
   if (activeField === 'combinedWeather') {
     return (
       <div style={{ position: 'relative', width: '100%' }}>
@@ -109,6 +117,18 @@ export function WeatherInput({
         >
           <Cloud size={14} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
         </button>
+        {combinedWeather && !processing && hasPreview && (
+          <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="clear-button"
+              title="Remove weather info"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -161,6 +181,18 @@ export function WeatherInput({
       >
             <Cloud size={14} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
       </button>
+      {combinedWeather && !processing && hasPreview && (
+        <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="clear-button"
+            title="Remove weather info"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

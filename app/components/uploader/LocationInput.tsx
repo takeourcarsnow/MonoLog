@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, X } from "lucide-react";
 import { fetchLocationForCurrentCoords } from "./locationUtils";
 
 interface LocationInputProps {
@@ -55,6 +55,17 @@ export function LocationInput({
     );
   };
 
+  const handleClear = () => {
+    // Clear location and related metadata
+    setWeatherLocation?.('');
+    setLocationLatitude?.(undefined);
+    setLocationLongitude?.(undefined);
+    setLocationAddress?.('');
+    // Close any active input
+    setActiveField(null);
+    try { inputRef?.current?.blur(); } catch (_) {}
+  };
+
   if (activeField === 'weatherLocation') {
     return (
       <div style={{ position: 'relative', width: '100%' }}>
@@ -100,6 +111,18 @@ export function LocationInput({
         >
               <MapPin size={14} className={`input-icon ${weatherLocation ? 'input-filled' : ''}`} />
         </button>
+        {weatherLocation && !processing && hasPreview && (
+          <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="clear-button"
+              title="Remove location"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -152,6 +175,18 @@ export function LocationInput({
       >
             <MapPin size={14} className={`input-icon ${weatherLocation ? 'input-filled' : ''}`} />
       </button>
+      {weatherLocation && !processing && hasPreview && (
+        <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="clear-button"
+            title="Remove location"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -128,62 +128,70 @@ export function ExifInputs({
   };
 
   return (
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8, flexWrap: 'wrap' }}>
       {activeExifField === null ? (
         // Show all fields when none is active
         <>
-          <CameraScopeSelector
-            camera={camera}
-            setCamera={handleCameraChange}
-            disabled={!hasPreview || processing}
-            onFocus={() => setActiveExifField('camera')}
-            onBlur={handleCameraBlur}
-            user={user}
-            removableOptions={user?.exifPresets?.cameras || []}
-            onRemoveOption={(option) => handleRemovePreset('cameras', option)}
-          />
-          <Combobox
-            value={lens || ''}
-            onChange={handleLensChange}
-            options={mergedPresets.lenses}
-            placeholder="Lens"
-            disabled={!hasPreview || processing}
-            icon={Settings}
-            onFocus={() => setActiveExifField('lens')}
-            onBlur={handleLensBlur}
-            removableOptions={user?.exifPresets?.lenses || []}
-            onRemoveOption={(option) => handleRemovePreset('lenses', option)}
-          />
+          <div style={{ minWidth: '120px', flex: 1 }}>
+            <CameraScopeSelector
+              camera={camera}
+              setCamera={handleCameraChange}
+              disabled={!hasPreview || processing}
+              onFocus={() => setActiveExifField('camera')}
+              onBlur={handleCameraBlur}
+              user={user}
+              removableOptions={user?.exifPresets?.cameras || []}
+              onRemoveOption={(option) => handleRemovePreset('cameras', option)}
+            />
+          </div>
+          <div style={{ minWidth: '120px', flex: 1 }}>
+            <Combobox
+              value={lens || ''}
+              onChange={handleLensChange}
+              options={mergedPresets.lenses}
+              placeholder="Lens"
+              disabled={!hasPreview || processing}
+              icon={Settings}
+              onFocus={() => setActiveExifField('lens')}
+              onBlur={handleLensBlur}
+              removableOptions={user?.exifPresets?.lenses || []}
+              onRemoveOption={(option) => handleRemovePreset('lenses', option)}
+            />
+          </div>
           {!camera || !CAMERA_DIGITAL_PRESETS.includes(camera) ? (
             <>
-              <Combobox
-                value={filmType || ''}
-                onChange={(value) => {
-                  handleFilmTypeChange(value);
-                  if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
-                }}
-                options={mergedPresets.filmTypes}
-                placeholder="Film"
-                disabled={!hasPreview || processing}
-                icon={Image}
-                onFocus={() => setActiveExifField('film')}
-                onBlur={handleFilmTypeBlur}
-                removableOptions={user?.exifPresets?.filmTypes || []}
-                onRemoveOption={(option) => handleRemovePreset('filmTypes', option)}
-              />
-              {filmType && (
+              <div style={{ minWidth: '120px', flex: 1 }}>
                 <Combobox
-                  value={filmIso || ''}
-                  onChange={handleFilmIsoChange}
-                  options={mergedPresets.filmIsos}
-                  placeholder="ISO"
+                  value={filmType || ''}
+                  onChange={(value) => {
+                    handleFilmTypeChange(value);
+                    if (!value) setFilmIso?.(''); // Clear ISO when film is cleared
+                  }}
+                  options={mergedPresets.filmTypes}
+                  placeholder="Film"
                   disabled={!hasPreview || processing}
-                  icon={Gauge}
-                  onFocus={() => setActiveExifField('iso')}
-                  onBlur={handleFilmIsoBlur}
-                  removableOptions={user?.exifPresets?.filmIsos || []}
-                  onRemoveOption={(option) => handleRemovePreset('filmIsos', option)}
+                  icon={Image}
+                  onFocus={() => setActiveExifField('film')}
+                  onBlur={handleFilmTypeBlur}
+                  removableOptions={user?.exifPresets?.filmTypes || []}
+                  onRemoveOption={(option) => handleRemovePreset('filmTypes', option)}
                 />
+              </div>
+              {filmType && (
+                <div style={{ minWidth: '120px', flex: 1 }}>
+                  <Combobox
+                    value={filmIso || ''}
+                    onChange={handleFilmIsoChange}
+                    options={mergedPresets.filmIsos}
+                    placeholder="ISO"
+                    disabled={!hasPreview || processing}
+                    icon={Gauge}
+                    onFocus={() => setActiveExifField('iso')}
+                    onBlur={handleFilmIsoBlur}
+                    removableOptions={user?.exifPresets?.filmIsos || []}
+                    onRemoveOption={(option) => handleRemovePreset('filmIsos', option)}
+                  />
+                </div>
               )}
             </>
           ) : null}

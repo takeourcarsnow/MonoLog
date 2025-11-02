@@ -139,7 +139,7 @@ export function CaptionInput({
       if (textarea) {
         textarea.style.height = 'auto';
         const scrollH = textarea.scrollHeight;
-        const minH = 48;
+        const minH = 32;
         const lineH = 21; // approx line-height * font-size
         const originalPadding = 12;
         if (scrollH <= minH) {
@@ -292,21 +292,6 @@ export function CaptionInput({
           <SpotifyIcon size={16} className={`input-icon ${spotifyLink?.trim() && (spotifyLink.includes('spotify.com') || spotifyLink.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />
         </div>
       </div>
-      {/* EXIF inputs - optional */}
-      <ExifInputs
-        camera={camera}
-        setCamera={setCamera}
-        lens={lens}
-        setLens={setLens}
-        filmType={filmType}
-        setFilmType={setFilmType}
-        filmIso={filmIso}
-        setFilmIso={setFilmIso}
-        hasPreview={hasPreview}
-        processing={processing}
-        user={user}
-        setUser={setUser}
-      />
       {/* Weather and location inputs - optional */}
       <WeatherLocationInputs
         weatherCondition={weatherCondition}
@@ -323,6 +308,21 @@ export function CaptionInput({
         setLocationAddress={setLocationAddress}
         hasPreview={hasPreview}
         processing={processing}
+      />
+      {/* EXIF inputs - optional */}
+      <ExifInputs
+        camera={camera}
+        setCamera={setCamera}
+        lens={lens}
+        setLens={setLens}
+        filmType={filmType}
+        setFilmType={setFilmType}
+        filmIso={filmIso}
+        setFilmIso={setFilmIso}
+        hasPreview={hasPreview}
+        processing={processing}
+        user={user}
+        setUser={setUser}
       />
     </div>
   );

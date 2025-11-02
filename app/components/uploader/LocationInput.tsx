@@ -75,7 +75,7 @@ export function LocationInput({
               borderRadius: '6px',
               background: 'var(--bg)',
               color: 'var(--text)',
-              fontSize: '14px'
+              fontSize: '12px'
             }}
           />
         </div>
@@ -105,7 +105,7 @@ export function LocationInput({
   }
 
   return (
-    <div style={{ position: 'relative', flex: 1 }}>
+    <div style={{ position: 'relative', flex: 1, minWidth: '120px' }}>
       <input
         type="text"
         placeholder="Tap to add Location"
@@ -127,7 +127,7 @@ export function LocationInput({
           borderRadius: '6px',
           background: 'var(--bg)',
           color: 'var(--text)',
-          fontSize: '14px',
+          fontSize: '12px',
           cursor: (!hasPreview || processing) ? 'not-allowed' : 'text'
         }}
       />

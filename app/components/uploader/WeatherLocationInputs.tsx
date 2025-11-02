@@ -61,7 +61,7 @@ export function WeatherLocationInputs({
   }, [activeField]);
 
   return (
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8, flexWrap: 'wrap' }}>
       {activeField === null ? (
         // Show all fields when none is active (Location first, then Weather)
         <>

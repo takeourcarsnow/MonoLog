@@ -84,7 +84,7 @@ export function WeatherInput({
               borderRadius: '6px',
               background: 'var(--bg)',
               color: 'var(--text)',
-              fontSize: '14px'
+              fontSize: '12px'
             }}
           />
         </div>
@@ -114,7 +114,7 @@ export function WeatherInput({
   }
 
   return (
-    <div style={{ position: 'relative', flex: 1 }}>
+    <div style={{ position: 'relative', flex: 1, minWidth: '120px' }}>
       <input
         type="text"
         placeholder="Tap to add Weather"
@@ -136,7 +136,7 @@ export function WeatherInput({
           borderRadius: '6px',
           background: 'var(--bg)',
           color: 'var(--text)',
-          fontSize: '14px',
+          fontSize: '12px',
           cursor: (!hasPreview || processing) ? 'not-allowed' : 'text'
         }}
       />

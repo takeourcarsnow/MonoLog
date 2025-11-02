@@ -226,3 +226,14 @@
 @media (min-width: 900px) {
   .feed-empty { padding-top: 0px; padding-bottom: 32px; }
 }
+
+/* Replies indentation control
+   Use a fixed left offset for the first level of replies, but prevent
+   further nested .replies containers from compounding the indent. This
+   keeps third+ level replies from drifting too far to the right. */
+.replies { margin-left: 20px; }
+.replies.reply-level { margin-left: 36px; }
+.replies .replies { margin-left: 0; }
+
+/* Small tweak to ensure vertical spacing remains consistent */
+.replies { margin-top: 8px; }

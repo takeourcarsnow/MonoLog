@@ -154,7 +154,7 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
         />
       )}
       {replies.length > 0 && (
-        <div className="replies" style={{ marginLeft: isReply ? 40 : 20, marginTop: 8 }}>
+        <div className={`replies ${isReply ? 'reply-level' : ''}`} style={{ marginTop: 8 }}>
           {replies.map(reply => (
             <CommentItem key={reply.id} comment={reply} isReply={true} context={context} />
           ))}

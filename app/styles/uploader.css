@@ -778,6 +778,15 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   filter: none !important; /* Explicitly remove any filters to preserve transparency */
 }
 
+/* Apply preloader-like spin to inline LogoLoader variants so they match
+   the main app preloader's motion. Keep !important to override the
+   earlier 'none' rule which targets legacy rotation helpers. Respects
+   prefers-reduced-motion via the media query further below. */
+.logo-first,
+.logo-other {
+  animation: preloader-spin-scale 2400ms var(--preloader-ease-smooth) infinite !important;
+}
+
 /* Default mapping:
    - `.logo-first` is the primary loader color (used for the first/primary photo overlay)
    - `.logo-other` is used for other inline/secondary loaders (dropzone, small buttons)
@@ -812,7 +821,9 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   .logo-sparks .spark,
   .logo-ring-arc,
   .logo-dot,
-  .logo-subtle {
+  .logo-subtle,
+  .logo-first,
+  .logo-other {
     animation: none !important;
   }
 }

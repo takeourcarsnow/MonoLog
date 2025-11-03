@@ -64,14 +64,8 @@ const buildLocationLabel = (addr: any): string => {
   const a = addr.address || {};
   // Prefer specific localities
   const cityLike = a.city || a.town || a.village || a.municipality || a.locality || a.suburb || a.neighbourhood || a.hamlet || a.county || a.state;
-  const stateCode = a['ISO3166-2-lvl4'] || a['ISO3166-2-lvl6'] || a.state || '';
-  const countryCode = (a.country_code ? String(a.country_code).toUpperCase() : '') || a.country || '';
-  // Compose: City [, StateCode] [, CC]
-  const parts: string[] = [];
-  if (cityLike) parts.push(String(cityLike));
-  if (stateCode && stateCode !== cityLike) parts.push(String(stateCode));
-  if (countryCode && countryCode !== stateCode && countryCode !== cityLike) parts.push(String(countryCode));
-  return parts.join(', ');
+  // Only return the city
+  return cityLike ? String(cityLike) : '';
 };
 
 export const fetchLocationForCurrentCoords = async (

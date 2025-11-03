@@ -91,21 +91,38 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
 
   return (
     <div ref={editorRef} className="post-editor" tabIndex={-1}>
-      <textarea
-        className="edit-caption input"
-        placeholder="Tell your story (if you feel like it)"
-        value={caption}
-        onChange={e => setCaption(e.target.value)}
-        autoFocus
-        rows={3}
-        style={{ resize: 'vertical', minHeight: '60px' }}
-        onKeyDown={async (e) => {
-          if (e.key === 'Enter' && e.shiftKey) {
-            e.preventDefault();
-            await doSave();
-          }
-        }}
-      />
+      <div style={{ position: 'relative' }}>
+        <textarea
+          className="edit-caption input"
+          placeholder="Tell your story (if you feel like it)"
+          value={caption}
+          onChange={e => setCaption(e.target.value)}
+          autoFocus
+          rows={3}
+          maxLength={2000}
+          style={{ resize: 'vertical', minHeight: '60px', paddingBottom: '24px' }}
+          onKeyDown={async (e) => {
+            if (e.key === 'Enter' && e.shiftKey) {
+              e.preventDefault();
+              await doSave();
+            }
+          }}
+        />
+        <div
+          className="char-counter"
+          style={{
+            position: 'absolute',
+            bottom: '8px',
+            right: '8px',
+            fontSize: '10px',
+            color: (2000 - caption.length) <= 0 ? '#b91c1c' : (2000 - caption.length) <= 10 ? '#c47700' : '#999',
+            transition: 'color 0.2s ease',
+            pointerEvents: 'none'
+          }}
+        >
+          {caption.length}/2000
+        </div>
+      </div>
       <input
         type="url"
         className="edit-spotify input"

@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 
 export function useUploaderState() {
-  const CAPTION_MAX = 1000;
+  const CAPTION_MAX = 2000;
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [dataUrls, setDataUrls] = useState<string[]>([]);
   const [originalDataUrls, setOriginalDataUrls] = useState<string[]>([]);

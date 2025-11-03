@@ -49,8 +49,8 @@ export function useImageEditorRefs(
   // new optional specials
   ditherColorMode?: 'bw' | 'color',
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>,
-  ditherPalette?: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16',
-  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16'>,
+  ditherPalette?: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii',
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>,
   ditherCustomPalette?: string,
   ditherCustomPaletteRef?: React.MutableRefObject<string>,
   pixelShape?: 'square' | 'circle',

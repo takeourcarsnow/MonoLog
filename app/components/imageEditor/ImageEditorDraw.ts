@@ -28,7 +28,7 @@ export function useImageEditorDraw(
   ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
   ditherLevelsRef?: React.MutableRefObject<number>,
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>,
-  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16'>,
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>,
   ditherCustomPaletteRef?: React.MutableRefObject<string>,
   pixelSizeRef?: React.MutableRefObject<number>,
   pixelShapeRef?: React.MutableRefObject<'square' | 'circle'>,

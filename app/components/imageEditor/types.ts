@@ -18,7 +18,7 @@ export type EditorSettings = {
   ditherMethod?: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn';
   ditherLevels?: number; // 2..8
   ditherColorMode?: 'bw' | 'color';
-  ditherPalette?: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16';
+  ditherPalette?: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii';
   ditherCustomPalette?: string; // comma-separated hex colors
   pixelSize?: number; // 1..50 (1=off)
   pixelShape?: 'square' | 'circle';

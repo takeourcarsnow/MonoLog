@@ -13,9 +13,9 @@ interface SpecialPanelProps {
   ditherColorMode?: 'bw' | 'color';
   setDitherColorMode?: (v: 'bw' | 'color') => void;
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>;
-  ditherPalette?: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16';
-  setDitherPalette?: (v: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16') => void;
-  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16'>;
+  ditherPalette?: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii';
+  setDitherPalette?: (v: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii') => void;
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>;
   ditherCustomPalette?: string;
   setDitherCustomPalette?: (v: string) => void;
   ditherCustomPaletteRef?: React.MutableRefObject<string>;
@@ -170,11 +170,13 @@ export default function SpecialPanel(props: SpecialPanelProps) {
                   aria-label="Dither palette"
                 >
                   <option value="auto">Auto</option>
-                  <option value="websafe">Web-safe</option>
-                  <option value="cga16">CGA 16</option>
-                  <option value="ega64">EGA 64</option>
-                  <option value="mac16">Mac 16</option>
-                  <option value="win16">Windows 16</option>
+                  <option value="gameboy">Game Boy</option>
+                  <option value="pico8">PICO-8</option>
+                  <option value="nes">NES</option>
+                  <option value="zx_spectrum">ZX Spectrum</option>
+                  <option value="atari_2600">Atari 2600</option>
+                  <option value="commodore64">Commodore 64</option>
+                  <option value="apple_ii">Apple II</option>
                 </select>
               </div>
             )}

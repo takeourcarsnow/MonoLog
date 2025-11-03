@@ -1,5 +1,7 @@
 import { draw as canvasDraw } from './CanvasRenderer';
 
+type DitherPaletteType = 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii';
+
 export function drawImage(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   imgRef: React.RefObject<HTMLImageElement | null>,
@@ -27,7 +29,7 @@ export function drawImage(
   ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
   ditherLevelsRef?: React.MutableRefObject<number>,
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>,
-  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16'>,
+  ditherPaletteRef?: React.MutableRefObject<DitherPaletteType>,
   ditherCustomPaletteRef?: React.MutableRefObject<string>,
   pixelSizeRef?: React.MutableRefObject<number>,
   pixelShapeRef?: React.MutableRefObject<'square' | 'circle'>,

@@ -50,8 +50,8 @@ export function resetAdjustments(
   ditherLevelsRef?: React.MutableRefObject<number>,
   setDitherColorMode?: (v: 'bw' | 'color') => void,
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>,
-  setDitherPalette?: (v: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16') => void,
-  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16'>,
+  setDitherPalette?: (v: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii') => void,
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>,
   setDitherCustomPalette?: (v: string) => void,
   ditherCustomPaletteRef?: React.MutableRefObject<string>,
   setPixelSize?: (v: number) => void,
@@ -130,7 +130,7 @@ export function resetAdjustments(
   const defDitherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn' = 'none';
   const defDitherLevels = 2;
   const defDitherColorMode: 'bw' | 'color' = 'bw';
-  const defDitherPalette: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16' = 'auto';
+  const defDitherPalette: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii' = 'auto';
   const defDitherCustomPalette = '';
   const defPixelSize = 1;
   const defPixelShape: 'square' | 'circle' = 'square';

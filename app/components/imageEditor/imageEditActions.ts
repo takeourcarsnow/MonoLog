@@ -35,7 +35,7 @@ export async function applyEdit(
   ditherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn',
   ditherLevels: number,
   ditherColorMode: 'bw' | 'color',
-  ditherPalette: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16',
+  ditherPalette: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii',
   ditherCustomPalette: string | undefined,
   pixelSize: number,
   pixelShape: 'square' | 'circle',

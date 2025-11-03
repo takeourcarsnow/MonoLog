@@ -50,7 +50,8 @@ export function applySoftFocusEffect(
   imgW: number,
   imgH: number,
   angleRad: number,
-  curSoftFocus: number
+  curSoftFocus: number,
+  effectScale: number = 1
 ) {
   if (curSoftFocus <= 0.001) return;
 
@@ -65,7 +66,8 @@ export function applySoftFocusEffect(
     tctx.drawImage(img, 0, 0, (img as HTMLImageElement).naturalWidth, (img as HTMLImageElement).naturalHeight, 0, 0, tmp.width, tmp.height);
 
     // Apply blur
-    const blurAmount = Math.max(3, curSoftFocus * 12);
+    // Scale the blur in proportion to the export scale so the look matches preview
+    const blurAmount = Math.max(3, curSoftFocus * 12 * Math.max(1, effectScale));
     tctx.filter = `blur(${blurAmount}px) brightness(1.05)`;
     tctx.drawImage(tmp, 0, 0);
     tctx.filter = 'none';
@@ -207,13 +209,16 @@ export function applyPixelateEffect(
   pixelSize: number,
   filterValues: any,
   pixelShape: 'square' | 'circle' = 'square',
-  pixelSample: 'average' | 'nearest' = 'average'
+  pixelSample: 'average' | 'nearest' = 'average',
+  effectScale: number = 1
 ) {
   if (!pixelSize || pixelSize <= 1) return;
   try {
     const processed = renderProcessedSourceCanvas(img, filterValues);
-    const w = Math.max(1, Math.round(imgW / pixelSize));
-    const h = Math.max(1, Math.round(imgH / pixelSize));
+    // Keep pixel block size visually consistent by scaling with export ratio
+    const effPixel = Math.max(1, pixelSize * Math.max(1, effectScale));
+    const w = Math.max(1, Math.round(imgW / effPixel));
+    const h = Math.max(1, Math.round(imgH / effPixel));
     if (pixelShape === 'square') {
       const tmp = document.createElement('canvas');
       tmp.width = w; tmp.height = h;
@@ -264,15 +269,18 @@ export function applyDitherEffect(
   levels: number,
   filterValues: any,
   colorMode: 'bw' | 'color' = 'bw',
-  paletteName: 'auto' | 'websafe' | 'cga16' | 'ega64' = 'auto',
-  customPaletteStr?: string
+  paletteName: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16' = 'auto',
+  customPaletteStr?: string,
+  effectScale: number = 1
 ) {
   if (!method || method === 'none') return;
   const L = Math.max(2, Math.min(32, Math.round(levels || 2)));
   try {
     const processed = renderProcessedSourceCanvas(img, filterValues);
-    const w = Math.max(1, Math.round(imgW));
-    const h = Math.max(1, Math.round(imgH));
+    // Downsample to preview-equivalent resolution so pattern density matches
+    const scale = Math.max(1, effectScale);
+    const w = Math.max(1, Math.round(imgW / scale));
+    const h = Math.max(1, Math.round(imgH / scale));
     const src = document.createElement('canvas'); src.width = w; src.height = h;
     const sctx = src.getContext('2d')!;
     // draw processed scaled to display size to keep dither density consistent
@@ -290,13 +298,23 @@ export function applyDitherEffect(
         0x55,0x55,0x55, 0x55,0xFF,0xFF, 0xFF,0x55,0xFF, 0xFF,0xFF,0x55,
         0x55,0xFF,0x55, 0x55,0x55,0xFF, 0xFF,0xFF,0xFF
       ],
-      ega64: Array.from({length:4},(_,i)=>i*85).flatMap(r=>Array.from({length:4},(_,j)=>j*85).flatMap(g=>Array.from({length:4},(_,k)=>[r,g,k*85]).flat()))
+      ega64: Array.from({length:4},(_,i)=>i*85).flatMap(r=>Array.from({length:4},(_,j)=>j*85).flatMap(g=>Array.from({length:4},(_,k)=>[r,g,k*85]).flat())),
+      mac16: [
+        0,0,0, 255,255,255, 255,0,0, 0,255,0, 0,0,255, 255,255,0, 0,255,255, 255,0,255,
+        128,128,128, 192,192,192, 255,128,128, 128,255,128, 128,128,255, 255,255,128, 128,255,255, 255,128,255
+      ],
+      win16: [
+        0,0,0, 128,0,0, 0,128,0, 128,128,0, 0,0,128, 128,0,128, 0,128,128, 192,192,192,
+        128,128,128, 255,0,0, 0,255,0, 255,255,0, 0,0,255, 255,0,255, 0,255,255, 255,255,255
+      ]
     };
     let palette: number[] | null = null;
     if (colorMode === 'color') {
-      if (paletteName === 'websafe') palette = palettes.websafe;
-      else if (paletteName === 'cga16') palette = palettes.cga16;
-      else if (paletteName === 'ega64') palette = palettes.ega64;
+    if (paletteName === 'websafe') palette = palettes.websafe;
+    else if (paletteName === 'cga16') palette = palettes.cga16;
+    else if (paletteName === 'ega64') palette = palettes.ega64;
+    else if (paletteName === 'mac16') palette = palettes.mac16;
+    else if (paletteName === 'win16') palette = palettes.win16;
       else if (customPaletteStr) {
         const parts = customPaletteStr.split(',').map(s=>s.trim()).filter(Boolean);
         const arr: number[] = [];
@@ -325,8 +343,9 @@ export function applyDitherEffect(
       const rbuf = new Float32Array(w*h), gbuf = new Float32Array(w*h), bbuf = new Float32Array(w*h);
       for (let i=0,p=0;i<data.length;i+=4,p++){ rbuf[p]=data[i]; gbuf[p]=data[i+1]; bbuf[p]=data[i+2]; }
       const nearestPalette = (r:number,g:number,b:number) => {
-        if (!palette) return [quantScalar(r), quantScalar(g), quantScalar(b)] as [number,number,number];
-        let bestI=0, bestD=Infinity; for (let i=0;i<palette.length;i+=3){ const pr=palette[i],pg=palette[i+1],pb=palette[i+2]; const dr=pr-r,dg=pg-g,db=pb-b; const dist=dr*dr+dg*dg+db*db; if (dist<bestD){bestD=dist;bestI=i;} }
+        const qr = quantScalar(r), qg = quantScalar(g), qb = quantScalar(b);
+        if (!palette) return [qr, qg, qb] as [number,number,number];
+        let bestI=0, bestD=Infinity; for (let i=0;i<palette.length;i+=3){ const pr=palette[i],pg=palette[i+1],pb=palette[i+2]; const dr=pr-qr,dg=pg-qg,db=pb-qb; const dist=dr*dr+dg*dg+db*db; if (dist<bestD){bestD=dist;bestI=i;} }
         return [palette[bestI], palette[bestI+1], palette[bestI+2]] as [number,number,number];
       };
       for (let y=0;y<h;y++){
@@ -395,8 +414,9 @@ export function applyDitherEffect(
         63,31,55,23,61,29,53,21
       ];
       const nearestPalette = (r:number,g:number,b:number) => {
-        if (!palette) return [quantScalar(r), quantScalar(g), quantScalar(b)] as [number,number,number];
-        let bestI=0, bestD=Infinity; for (let i=0;i<palette.length;i+=3){ const pr=palette[i],pg=palette[i+1],pb=palette[i+2]; const dr=pr-r,dg=pg-g,db=pb-b; const dist=dr*dr+dg*dg+db*db; if (dist<bestD){bestD=dist;bestI=i;} }
+        const qr = quantScalar(r), qg = quantScalar(g), qb = quantScalar(b);
+        if (!palette) return [qr, qg, qb] as [number,number,number];
+        let bestI=0, bestD=Infinity; for (let i=0;i<palette.length;i+=3){ const pr=palette[i],pg=palette[i+1],pb=palette[i+2]; const dr=pr-qr,dg=pg-qg,db=pb-qb; const dist=dr*dr+dg*dg+db*db; if (dist<bestD){bestD=dist;bestI=i;} }
         return [palette[bestI], palette[bestI+1], palette[bestI+2]] as [number,number,number];
       };
       if (method === 'ordered' || method === 'bayer8') {
@@ -428,7 +448,13 @@ export function applyDitherEffect(
       }
     }
     sctx.putImageData(imgData, 0, 0);
+    // Draw the dithered image back without smoothing so the pattern stays crisp when upscaling
+    ctx.save();
+    const prevSmooth = (ctx as any).imageSmoothingEnabled;
+    (ctx as any).imageSmoothingEnabled = false;
     drawRotated(src, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
+    (ctx as any).imageSmoothingEnabled = prevSmooth;
+    ctx.restore();
   } catch {}
 }
 
@@ -454,15 +480,18 @@ export function applyAsciiEffect(
     gamma?: number;
     bold?: boolean;
     edge?: 'none'|'stroke';
-  }
+  },
+  effectScale: number = 1
 ) {
   if (!enabled) return;
   try {
     const processed = renderProcessedSourceCanvas(img, filterValues);
     const w = Math.max(1, Math.round(imgW));
     const h = Math.max(1, Math.round(imgH));
-    const cols = Math.max(1, Math.floor(w / Math.max(2, cellSize || 8)));
-    const rows = Math.max(1, Math.floor(h / Math.max(2, cellSize || 8)));
+    // Scale the ASCII cell size so the number of cells matches preview
+    const effCell = Math.max(2, (cellSize || 8) * Math.max(1, effectScale));
+    const cols = Math.max(1, Math.floor(w / effCell));
+    const rows = Math.max(1, Math.floor(h / effCell));
     const sx = processed.width / cols;
     const sy = processed.height / rows;
     const out = document.createElement('canvas'); out.width = w; out.height = h;
@@ -471,7 +500,7 @@ export function applyAsciiEffect(
     if (bg !== 'transparent') { octx.fillStyle = bg; octx.fillRect(0, 0, w, h); } else { octx.clearRect(0,0,w,h); }
     const fontFam = options?.font || 'monospace';
     const bold = options?.bold ? 'bold ' : '';
-    octx.font = `${bold}${Math.max(4, cellSize || 8)}px ${fontFam}`;
+    octx.font = `${bold}${Math.max(4, Math.floor(effCell))}px ${fontFam}`;
     octx.textBaseline = 'middle'; octx.textAlign = 'center';
     const tmp = document.createElement('canvas'); tmp.width = cols; tmp.height = rows;
     const tctx = tmp.getContext('2d')!;

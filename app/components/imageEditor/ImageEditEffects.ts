@@ -207,7 +207,7 @@ export function applyDitherExport(
   method: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn',
   levels: number,
   colorMode: 'bw' | 'color' = 'bw',
-  paletteName: 'auto' | 'websafe' | 'cga16' | 'ega64' = 'auto',
+  paletteName: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16' = 'auto',
   customPaletteStr: string | undefined,
   baseFilter: string,
   presetFilter: string,
@@ -215,8 +215,11 @@ export function applyDitherExport(
 ) {
   if (!method || method === 'none') return;
   const processed = renderProcessedForExport(img, srcX, srcY, srcW, srcH, baseFilter, presetFilter, filterStrength);
-  const w = Math.max(1, Math.round(drawW));
-  const h = Math.max(1, Math.round(drawH));
+  // Simplify: dither at fixed width based on mode, scaled aspect
+  const ditherW = 300;
+  const ditherH = Math.round(ditherW * (drawH / drawW));
+  const w = Math.max(1, ditherW);
+  const h = Math.max(1, ditherH);
   const src = document.createElement('canvas'); src.width = w; src.height = h; const sctx = src.getContext('2d')!;
   sctx.drawImage(processed, 0, 0, processed.width, processed.height, 0, 0, w, h);
   const id = sctx.getImageData(0, 0, w, h); const data = id.data;
@@ -244,11 +247,22 @@ export function applyDitherExport(
         0x00,0xAA,0x00, 0x00,0x00,0xAA, 0xAA,0xAA,0x00, 0xAA,0x55,0x55,
         0x55,0x55,0x55, 0x55,0xFF,0xFF, 0xFF,0x55,0xFF, 0xFF,0xFF,0x55,
         0x55,0xFF,0x55, 0x55,0x55,0xFF, 0xFF,0xFF,0xFF
+      ],
+      ega64: Array.from({length:4},(_,i)=>i*85).flatMap(r=>Array.from({length:4},(_,j)=>j*85).flatMap(g=>Array.from({length:4},(_,k)=>[r,g,k*85]).flat())),
+      mac16: [
+        0,0,0, 255,255,255, 255,0,0, 0,255,0, 0,0,255, 255,255,0, 0,255,255, 255,0,255,
+        128,128,128, 192,192,192, 255,128,128, 128,255,128, 128,128,255, 255,255,128, 128,255,255, 255,128,255
+      ],
+      win16: [
+        0,0,0, 128,0,0, 0,128,0, 128,128,0, 0,0,128, 128,0,128, 0,128,128, 192,192,192,
+        128,128,128, 255,0,0, 0,255,0, 255,255,0, 0,0,255, 255,0,255, 0,255,255, 255,255,255
       ]
-      , ega64: Array.from({length:4},(_,i)=>i*85).flatMap(r=>Array.from({length:4},(_,j)=>j*85).flatMap(g=>Array.from({length:4},(_,k)=>[r,g,k*85]).flat()))
     };
     if (paletteName === 'websafe') palette = palettes.websafe;
     else if (paletteName === 'cga16') palette = palettes.cga16;
+    else if (paletteName === 'ega64') palette = palettes.ega64;
+    else if (paletteName === 'mac16') palette = palettes.mac16;
+    else if (paletteName === 'win16') palette = palettes.win16;
     else if (customPaletteStr) {
       const parts = customPaletteStr.split(',').map(s=>s.trim()).filter(Boolean);
       const arr: number[] = [];
@@ -317,11 +331,12 @@ export function applyDitherExport(
   } else {
     const quantCh = (v:number)=>quantScalar(v);
     const nearestPalette = (r:number,g:number,b:number) => {
-      if (!palette) return [quantCh(r), quantCh(g), quantCh(b)] as [number,number,number];
+      const qr = quantCh(r), qg = quantCh(g), qb = quantCh(b);
+      if (!palette) return [qr, qg, qb] as [number,number,number];
       let bestI = 0; let bestD = Infinity;
       for (let i = 0; i < palette.length; i += 3) {
         const pr = palette[i], pg = palette[i+1], pb = palette[i+2];
-        const dr = pr - r, dg = pg - g, db = pb - b; const dist = dr*dr + dg*dg + db*db;
+        const dr = pr - qr, dg = pg - qg, db = pb - qb; const dist = dr*dr + dg*dg + db*db;
         if (dist < bestD) { bestD = dist; bestI = i; }
       }
       return [palette[bestI], palette[bestI+1], palette[bestI+2]] as [number,number,number];
@@ -382,7 +397,12 @@ export function applyDitherExport(
     }
   }
   sctx.putImageData(id, 0, 0);
-  octx.save(); octx.translate(centerX, centerY); octx.rotate(angle); octx.drawImage(src, -drawW / 2, -drawH / 2, drawW, drawH); octx.restore();
+  octx.save(); 
+  const prevSmoothing = (octx as any).imageSmoothingEnabled;
+  (octx as any).imageSmoothingEnabled = false;
+  octx.translate(centerX, centerY); octx.rotate(angle); octx.drawImage(src, -drawW / 2, -drawH / 2, drawW, drawH); 
+  (octx as any).imageSmoothingEnabled = prevSmoothing;
+  octx.restore();
 }
 
 export function applyAsciiExport(

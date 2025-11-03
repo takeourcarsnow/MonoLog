@@ -44,6 +44,7 @@ export function CarouselView({
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null); // Dummy ref for getBounds compatibility
   const [containerWidth, setContainerWidth] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
   // Zoom state
@@ -79,22 +80,23 @@ export function CarouselView({
 
   // Update container width on resize
   useEffect(() => {
-    const updateWidth = () => {
+    const updateSize = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.clientWidth);
+        setContainerHeight(containerRef.current.clientHeight);
       }
     };
 
-    updateWidth();
+    updateSize();
 
-    const resizeObserver = new ResizeObserver(updateWidth);
+    const resizeObserver = new ResizeObserver(updateSize);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
 
-    window.addEventListener('resize', updateWidth);
+    window.addEventListener('resize', updateSize);
     return () => {
-      window.removeEventListener('resize', updateWidth);
+      window.removeEventListener('resize', updateSize);
       resizeObserver.disconnect();
     };
   }, []);
@@ -389,7 +391,7 @@ export function CarouselView({
                 sizes="100%"
                 // ensure the image is centered inside its container when using contain
                 // (some browsers may default object-position differently)
-                style={{ objectFit: 'contain', objectPosition: 'center center' }}
+                style={{ objectFit: 'contain', objectPosition: 'center center', imageRendering: 'pixelated' }}
                 priority={true}
                 onLoadingComplete={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}

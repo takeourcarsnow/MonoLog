@@ -56,7 +56,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [ditherMethod, setDitherMethod] = useState<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>(initialSettings?.ditherMethod ?? 'none');
   const [ditherLevels, setDitherLevels] = useState<number>(initialSettings?.ditherLevels ?? 2);
   const [ditherColorMode, setDitherColorMode] = useState<'bw' | 'color'>(initialSettings?.ditherColorMode ?? 'bw');
-  const [ditherPalette, setDitherPalette] = useState<'auto' | 'websafe' | 'cga16' | 'ega64'>(initialSettings?.ditherPalette ?? 'auto');
+  const [ditherPalette, setDitherPalette] = useState<'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16'>(initialSettings?.ditherPalette ?? 'auto');
   const [ditherCustomPalette, setDitherCustomPalette] = useState<string>(initialSettings?.ditherCustomPalette ?? '');
   const [pixelSize, setPixelSize] = useState<number>(initialSettings?.pixelSize ?? 1);
   const [pixelShape, setPixelShape] = useState<'square' | 'circle'>(initialSettings?.pixelShape ?? 'square');
@@ -92,7 +92,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const ditherMethodRef = useRef<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>(ditherMethod);
   const ditherLevelsRef = useRef<number>(ditherLevels);
   const ditherColorModeRef = useRef<'bw' | 'color'>(ditherColorMode);
-  const ditherPaletteRef = useRef<'auto' | 'websafe' | 'cga16' | 'ega64'>(ditherPalette);
+  const ditherPaletteRef = useRef<'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16'>(ditherPalette);
   const ditherCustomPaletteRef = useRef<string>(ditherCustomPalette);
   const pixelSizeRef = useRef<number>(pixelSize);
   const pixelShapeRef = useRef<'square' | 'circle'>(pixelShape);

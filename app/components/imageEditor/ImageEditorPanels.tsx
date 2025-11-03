@@ -86,9 +86,9 @@ interface ImageEditorPanelsProps {
   ditherColorMode?: 'bw' | 'color';
   setDitherColorMode?: (v: 'bw' | 'color') => void;
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>;
-  ditherPalette?: 'auto' | 'websafe' | 'cga16' | 'ega64';
-  setDitherPalette?: (v: 'auto' | 'websafe' | 'cga16' | 'ega64') => void;
-  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64'>;
+  ditherPalette?: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16';
+  setDitherPalette?: (v: 'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16') => void;
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64' | 'mac16' | 'win16'>;
   ditherCustomPalette?: string;
   setDitherCustomPalette?: (v: string) => void;
   ditherCustomPaletteRef?: React.MutableRefObject<string>;

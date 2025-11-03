@@ -41,9 +41,23 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   // Draw the main image with filters
   drawImageWithFilters(ctx, params, img, imgLeft, imgTop, imgW, imgH, angleRad, filterValues);
 
+  // Determine an effect scale so export matches on-screen preview density.
+  // We compute how much larger the current draw area is compared to the live preview display area.
+  let effectScale = 1;
+  try {
+    const previewLayout = typeof params.computeImageLayout === 'function' ? params.computeImageLayout() : null;
+    if (previewLayout && previewLayout.dispW && dispW) {
+      // Use width ratio; height would be equivalent for uniform scaling
+      const ratio = dispW / previewLayout.dispW;
+      if (isFinite(ratio) && ratio > 0) effectScale = ratio;
+    }
+  } catch (e) {
+    effectScale = 1;
+  }
+
   // Apply special effects (only when not at neutral)
   if (filterValues.curSoftFocus > 0.001) {
-    applySoftFocusEffect(ctx, img, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curSoftFocus);
+    applySoftFocusEffect(ctx, img, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curSoftFocus, effectScale);
   }
   if (filterValues.curFade > 0.001) {
     applyFadeEffect(ctx, imgLeft, imgTop, imgW, imgH, filterValues.curFade);
@@ -68,7 +82,8 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       pixelSize,
       filterValues,
       params.pixelShapeRef?.current ?? 'square',
-      params.pixelSampleRef?.current ?? 'average'
+      params.pixelSampleRef?.current ?? 'average',
+      effectScale
     );
   }
   const ditherMethod = params.ditherMethodRef?.current || 'none';
@@ -87,7 +102,8 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       filterValues,
       params.ditherColorModeRef?.current ?? 'bw',
       params.ditherPaletteRef?.current ?? 'auto',
-      params.ditherCustomPaletteRef?.current ?? ''
+      params.ditherCustomPaletteRef?.current ?? '',
+      effectScale
     );
   }
   const asciiEnabled = params.asciiEnabledRef?.current ?? false;
@@ -113,7 +129,8 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
         gamma: params.asciiGammaRef?.current ?? 1,
         bold: params.asciiBoldRef?.current ?? false,
         edge: params.asciiEdgeRef?.current ?? 'none'
-      }
+      },
+      effectScale
     );
   }
   if (params.overlayRef.current) {

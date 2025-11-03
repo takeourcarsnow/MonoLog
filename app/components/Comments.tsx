@@ -25,6 +25,8 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
   const confirmTimers = useRef<Map<string, number>>(new Map());
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [replyError, setReplyError] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -132,7 +134,11 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
         return next;
       });
       setNewCommentId(null);
-      console.warn(err?.message || 'Failed to add comment');
+      if (parentId) {
+        setReplyError(err?.message || 'Failed to add reply');
+      } else {
+        setCommentError(err?.message || 'Failed to add comment');
+      }
     }
   };
 
@@ -178,7 +184,9 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
                 setRemovingIds,
                 sending,
                 confirmingIds,
-                router
+                router,
+                replyError,
+                setReplyError
               }}
             />
           ))
@@ -201,6 +209,7 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
             return;
           }
           if (text.length > COMMENT_MAX) { console.warn(`Comments are limited to ${COMMENT_MAX} characters`); return; }
+          setCommentError(null);
           setSending(true);
           setSendAnim('following-anim');
           const sendText = text;
@@ -211,6 +220,11 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
         }}
         COMMENT_MAX={COMMENT_MAX}
       />
+      {commentError && (
+        <div className="text-red-500 text-sm mt-1 px-3">
+          {commentError}
+        </div>
+      )}
     </>
   );
 }

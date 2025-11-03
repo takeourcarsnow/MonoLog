@@ -84,6 +84,7 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
     }
     if (!context.replyText.trim()) return;
     if (context.replyText.length > 500) { console.warn(`Comments are limited to 500 characters`); return; }
+    context.setReplyError(null);
     context.setSending(true);
     const sendText = context.replyText;
     context.setReplyText("");
@@ -156,6 +157,11 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
           placeholder={`Reply to ${comment.user?.username || comment.user?.displayName || 'user'}…`}
           COMMENT_MAX={500}
         />
+      )}
+      {context.replyError && context.replyingTo === comment.id && (
+        <div className="text-red-500 text-sm mt-1 px-3 ml-5">
+          {context.replyError}
+        </div>
       )}
       {replies.length > 0 && (
         <div className={`replies ${isReply ? 'reply-level' : ''}`} style={{ marginTop: 8 }}>

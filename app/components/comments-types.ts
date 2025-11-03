@@ -35,6 +35,8 @@ export type CommentContext = {
   sending: boolean;
   confirmingIds: Set<string>;
   router: any;
+  replyError: string | null;
+  setReplyError: (error: string | null) => void;
 };
 
 export type CommentsProps = {

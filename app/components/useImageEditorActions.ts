@@ -280,6 +280,25 @@ export function useImageEditorActions(
       asciiEdgeRef,
       setAsciiCharsetPreset
     );
+    // Also reset crop state and restore original image if it was baked by a prior crop
+    resetCropAction(
+      imageSrc,
+      originalRef,
+      setImageSrc,
+      setSel,
+      setOffset,
+      rotationRef,
+      setRotation,
+      cropRatio,
+      setPresetIndex,
+      dragging,
+      previewPointerIdRef,
+      previewOriginalRef,
+      setPreviewOriginal,
+      computeImageLayout,
+      canvasRef,
+      { showOverlay: false }
+    );
     // ensure canvas redraw after reset
     requestAnimationFrame(() => draw());
   }

@@ -107,8 +107,10 @@ export function resetCrop(
   previewOriginalRef: React.MutableRefObject<boolean>,
   setPreviewOriginal: (v: boolean) => void,
   computeImageLayout: () => any,
-  canvasRef: React.RefObject<HTMLCanvasElement | null>
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  options?: { showOverlay?: boolean }
 ) {
+  const showOverlay = options?.showOverlay ?? true;
   // If the underlying working image was replaced by a baked crop, restore
   // the original (uncropped) image. Do not reset color adjustments — only
   // undo geometry (crop/rotation/preset/selection).
@@ -119,19 +121,24 @@ export function resetCrop(
   }
 
   cropRatio.current = null;
-  // Instead of clearing selection, set it to the full display area to keep overlay but not crop
-  const info = computeImageLayout();
-  if (info) {
-    setSel({ x: info.left, y: info.top, w: info.dispW, h: info.dispH });
-  } else {
-    // fallback
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const rect = canvas.getBoundingClientRect();
-      setSel({ x: 0, y: 0, w: rect.width, h: rect.height });
+  if (showOverlay) {
+    // Fill the display area to show an overlay inside the Crop panel
+    const info = computeImageLayout();
+    if (info) {
+      setSel({ x: info.left, y: info.top, w: info.dispW, h: info.dispH });
     } else {
-      setSel(null); // last resort
+      // fallback
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        setSel({ x: 0, y: 0, w: rect.width, h: rect.height });
+      } else {
+        setSel(null); // last resort
+      }
     }
+  } else {
+    // Do not show overlay outside of the Crop panel
+    setSel(null);
   }
   setPresetIndex(0);
   // clear any active drag state and A/B preview

@@ -19,7 +19,11 @@ export function setupCanvas(params: DrawParams, info?: LayoutInfo, overrides?: D
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+  
+  // Fill with background color instead of clearing to transparent
+  const bgColor = getComputedStyle(canvas).backgroundColor;
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
   let layoutInfo = info;
   if (targetCanvas && !info) {

@@ -11,16 +11,23 @@ export default function ImageEditorCanvas({ canvasRef, mounted }: ImageEditorCan
   
   React.useEffect(() => {
     const checkFullscreen = () => {
-      const fullscreenElement = document.querySelector('.upload-editor-fullscreen');
-      setIsFullscreen(!!fullscreenElement);
+      const modalFullscreen = document.querySelector('.upload-editor-fullscreen');
+      const browserFullscreen = document.fullscreenElement;
+      setIsFullscreen(!!modalFullscreen || !!browserFullscreen);
     };
     
     checkFullscreen();
     
+    // Listen for fullscreen changes
+    document.addEventListener('fullscreenchange', checkFullscreen);
+    
     // Check again after a short delay to ensure DOM is ready
     const timeout = setTimeout(checkFullscreen, 100);
     
-    return () => clearTimeout(timeout);
+    return () => {
+      document.removeEventListener('fullscreenchange', checkFullscreen);
+      clearTimeout(timeout);
+    };
   }, []);
   
   return (

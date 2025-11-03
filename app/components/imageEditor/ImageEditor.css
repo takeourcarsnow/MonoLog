@@ -328,10 +328,12 @@
     flex-direction: row;
     align-items: center;
     gap: 8px;
+    justify-content: center;
   }
   .special-panel label span:first-child {
     width: 70px;
     font-size: 12px;
+    justify-content: center;
   }
   .special-panel label span:first-child svg {
     width: 14px;
@@ -340,6 +342,7 @@
   .special-panel div[style*="display: flex"][style*="align-items: center"] span:first-child {
     width: 70px;
     font-size: 12px;
+    text-align: center;
   }
   /* Keep basic panel compact in one line */
   .basic-panel label {

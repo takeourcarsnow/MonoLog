@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Type, Contrast } from 'lucide-react';
+import { Type, Lightbulb } from 'lucide-react';
 import { rangeBg } from '../utils';
 import { throttle } from '@/src/lib/utils';
 
@@ -65,8 +65,7 @@ export default function AsciiPanel(props: AsciiPanelProps) {
           </label>
           {props.asciiEnabled && (
             <>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Cell Size</span>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
                 <input
                   className="imgedit-range"
                   type="range"
@@ -79,8 +78,7 @@ export default function AsciiPanel(props: AsciiPanelProps) {
                   aria-label="ASCII cell size"
                 />
               </div>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Charset</span>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
                 <input
                   type="text"
                   value={props.asciiCharset}
@@ -91,8 +89,7 @@ export default function AsciiPanel(props: AsciiPanelProps) {
                 />
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Preset</span>
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                   <button
                     type="button"
                     onClick={() => {
@@ -303,43 +300,60 @@ export default function AsciiPanel(props: AsciiPanelProps) {
                   </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Invert</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const v = !props.asciiInvert;
-                    props.asciiInvertRef.current = v;
-                    props.setAsciiInvert(v);
-                    scheduleDraw();
-                  }}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: 6,
-                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
-                    background: props.asciiInvert ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
-                    color: 'var(--text)',
-                    fontSize: 11,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'background 0.2s ease',
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  aria-label={`ASCII invert: ${props.asciiInvert ? 'On' : 'Off'}`}
-                >
-                  <Contrast
-                    size={16}
-                    strokeWidth={2}
-                    style={{
-                      color: props.asciiInvert ? '#ff6b6b' : 'var(--text)',
-                      fill: 'none'
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: 2, borderRadius: 6, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', overflow: 'hidden' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = false;
+                      props.asciiInvertRef.current = v;
+                      props.setAsciiInvert(v);
+                      scheduleDraw();
                     }}
-                    aria-hidden
-                  />
-                </button>
+                    style={{
+                      padding: '4px 8px',
+                      background: !props.asciiInvert ? 'color-mix(in srgb, var(--primary) 15%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 11,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      border: 'none',
+                      borderRight: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    aria-label="ASCII invert: Normal"
+                  >
+                    Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = true;
+                      props.asciiInvertRef.current = v;
+                      props.setAsciiInvert(v);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      background: props.asciiInvert ? 'color-mix(in srgb, var(--primary) 15%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 11,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    aria-label="ASCII invert: Inverted"
+                  >
+                    Inverted
+                  </button>
+                </div>
               </div>
             </>
           )}

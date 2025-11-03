@@ -41,7 +41,6 @@ export default function PixelatePanel(props: PixelatePanelProps) {
           {props.pixelateEnabled && (
             <>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Pixel Size</span>
                 <input
                   className="imgedit-range"
                   type="range"
@@ -55,7 +54,7 @@ export default function PixelatePanel(props: PixelatePanelProps) {
                     props.setPixelSize(v);
                     scheduleDraw();
                   }}
-                  style={{ flex: 1, maxWidth: 180, background: rangeBg(props.pixelSize, 1, 100, '#334155', '#38bdf8') }}
+                  style={{ flex: 1, background: rangeBg(props.pixelSize, 1, 100, '#334155', '#38bdf8') }}
                   aria-label="Pixel size"
                 />
               </div>

@@ -119,7 +119,7 @@ export default function DitherPanel(props: DitherPanelProps) {
                   </span>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
                 <button
                   type="button"
                   disabled={props.ditherPalette === 'gameboy'}
@@ -217,7 +217,7 @@ export default function DitherPanel(props: DitherPanelProps) {
               </div>
               {props.ditherMethod !== 'none' && props.ditherColorMode === 'color' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button
                       type="button"
                       onClick={() => {

@@ -6,6 +6,12 @@
   flex-wrap: nowrap !important;
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+  /* Stabilize vertical layout: keep a constant bar height so switching
+     categories doesn't change the editor's total height and trigger a
+     canvas resize/redraw flicker. Matches crop-mode height. */
+  height: 48px !important;
+  min-height: 48px !important;
+  align-items: center;
 }
 .categories-scroll::-webkit-scrollbar { height: 0; display: none; }
 
@@ -25,6 +31,6 @@
 
 /* Small screens: reduce button paddings so items fit without wrapping */
 @media (max-width: 420px) {
-  .categories-scroll { gap: 6px; padding: 4px; }
+  .categories-scroll { gap: 6px; padding: 4px; height: 44px !important; min-height: 44px !important; }
   .image-editor-buttons .btn.icon { width: 22px; height: 22px; padding: 2px; }
 }

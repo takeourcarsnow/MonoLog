@@ -116,6 +116,9 @@
   height: 160px;
   overflow: visible;
   box-sizing: border-box;
+  /* Isolate layout/paint so dynamic panel contents don't cause upstream
+     reflow that might momentarily resize the canvas. */
+  contain: layout paint;
 }
 
 /* Responsive adjustments for full-screen mode */

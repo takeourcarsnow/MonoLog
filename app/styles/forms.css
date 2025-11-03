@@ -1,6 +1,6 @@
 .input {
-  width: 100%; border: 1px solid var(--border); background: var(--bg);
-  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 12px;
+  width: 100%; border: 1px solid var(--border); background: var(--bg) !important;
+  color: var(--text) !important; padding: 10px 12px; border-radius: 10px; font-size: 12px;
   /* Ensure form inputs/controls use the app's chosen typeface by default. */
   font-family: var(--font-family);
 }
@@ -30,13 +30,13 @@
 .input-ghost-placeholder {
   position: absolute;
   left: 12px; right: 12px; top: 50%; transform: translateY(-50%);
-  pointer-events: none; color: color-mix(in srgb, var(--muted), transparent 12%);
+  pointer-events: none; color: var(--muted);
   font-size: 12px; line-height: 1; overflow: hidden; white-space: nowrap;
 }
 .input-ghost-placeholder { display: flex; align-items: center; gap: 6px; }
 .input-ghost-placeholder .typewriter {
   display: inline-block; max-width: 100%; overflow: hidden; text-overflow: clip;
-  color: color-mix(in srgb, var(--muted), transparent 8%);
+  color: var(--muted);
 }
 .input-ghost-placeholder .typewriter {
   /* CSS-only typewriter: reveal by animating width in ch units.
@@ -72,7 +72,7 @@
   100% { width: 0ch; }
 }
 .input-ghost-placeholder .caret {
-  color: color-mix(in srgb, var(--muted), transparent 12%);
+  color: var(--muted);
   opacity: 0.95;
   animation: blinkCaret 900ms steps(1) infinite;
   font-weight: 700;

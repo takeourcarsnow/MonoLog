@@ -56,7 +56,9 @@ export function WeatherLocationInputs({
     if (activeField && inputRef.current) {
       inputRef.current.focus();
       // Select all text for easy replacement
-      setTimeout(() => inputRef.current?.select(), 0);
+      requestAnimationFrame(() => {
+        inputRef.current?.select();
+      });
     }
   }, [activeField]);
 

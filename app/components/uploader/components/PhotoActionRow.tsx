@@ -2,19 +2,23 @@
 
 import { Download } from 'lucide-react';
 import { preloadOverlayThumbnails } from '../../imageEditor/overlaysPreload';
+import { EditorSettings } from '../../imageEditor/types';
 
 interface PhotoActionRowProps {
   hasPreview: boolean;
   editing: boolean;
   processing: boolean;
-  dataUrls: (string | null)[];
-  originalDataUrls: (string | null)[];
+  dataUrls: string[];
+  originalDataUrls: string[];
+  editorSettings: EditorSettings[];
   index: number;
   fileActionRef: React.MutableRefObject<'append' | 'replace'>;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onEdit: () => void;
   onRemove: (index: number) => void;
   onAddPhotos: () => void;
+  onMoveLeft: () => void;
+  onMoveRight: () => void;
 }
 
 export function PhotoActionRow({
@@ -23,12 +27,15 @@ export function PhotoActionRow({
   processing,
   dataUrls,
   originalDataUrls,
+  editorSettings,
   index,
   fileActionRef,
   fileInputRef,
   onEdit,
   onRemove,
   onAddPhotos,
+  onMoveLeft,
+  onMoveRight,
 }: PhotoActionRowProps) {
   const handleDownload = () => {
     try {
@@ -54,6 +61,20 @@ export function PhotoActionRow({
 
   return (
     <div className="photo-action-row">
+      {dataUrls.length > 1 && (
+        <button
+          type="button"
+          className="btn icon ghost small-min"
+          aria-label="Move photo left"
+          onClick={onMoveLeft}
+          disabled={processing || index === 0}
+          title="Move photo left"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+      )}
       <button
         type="button"
         className="btn icon ghost small-min"
@@ -110,6 +131,20 @@ export function PhotoActionRow({
           <line x1="14" y1="11" x2="14" y2="17"/>
         </svg>
       </button>
+      {dataUrls.length > 1 && (
+        <button
+          type="button"
+          className="btn icon ghost small-min"
+          aria-label="Move photo right"
+          onClick={onMoveRight}
+          disabled={processing || index === dataUrls.length - 1}
+          title="Move photo right"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

@@ -105,6 +105,60 @@ export function UploaderCore() {
     handleFileInputChange,
   } = useUploader();
 
+  const handleMoveLeft = () => {
+    if (index === 0) return;
+    const newIndex = index - 1;
+    // Swap dataUrls
+    const newDataUrls = [...dataUrls];
+    [newDataUrls[index], newDataUrls[newIndex]] = [newDataUrls[newIndex], newDataUrls[index]];
+    setDataUrls(newDataUrls);
+    // Swap originalDataUrls
+    const newOriginalDataUrls = [...originalDataUrls];
+    [newOriginalDataUrls[index], newOriginalDataUrls[newIndex]] = [newOriginalDataUrls[newIndex], newOriginalDataUrls[index]];
+    setOriginalDataUrls(newOriginalDataUrls);
+    // Swap editorSettings
+    const newEditorSettings = [...editorSettings];
+    [newEditorSettings[index], newEditorSettings[newIndex]] = [newEditorSettings[newIndex], newEditorSettings[index]];
+    setEditorSettings(newEditorSettings);
+    // Swap alt if it's an array
+    if (Array.isArray(alt)) {
+      const newAlt = [...alt];
+      [newAlt[index], newAlt[newIndex]] = [newAlt[newIndex], newAlt[index]];
+      setAlt(newAlt);
+    }
+    setIndex(newIndex);
+  };
+
+  const handleMoveRight = () => {
+    if (index === dataUrls.length - 1) return;
+    const newIndex = index + 1;
+    // Swap dataUrls
+    const newDataUrls = [...dataUrls];
+    [newDataUrls[index], newDataUrls[newIndex]] = [newDataUrls[newIndex], newDataUrls[index]];
+    setDataUrls(newDataUrls);
+    // Swap originalDataUrls
+    const newOriginalDataUrls = [...originalDataUrls];
+    [newOriginalDataUrls[index], newOriginalDataUrls[newIndex]] = [newOriginalDataUrls[newIndex], newOriginalDataUrls[index]];
+    setOriginalDataUrls(newOriginalDataUrls);
+    // Swap editorSettings
+    const newEditorSettings = [...editorSettings];
+    [newEditorSettings[index], newEditorSettings[newIndex]] = [newEditorSettings[newIndex], newEditorSettings[index]];
+    setEditorSettings(newEditorSettings);
+    // Swap alt if it's an array
+    if (Array.isArray(alt)) {
+      const newAlt = [...alt];
+      [newAlt[index], newAlt[newIndex]] = [newAlt[newIndex], newAlt[index]];
+      setAlt(newAlt);
+    }
+    setIndex(newIndex);
+  };
+
+  const handleEditPhoto = async () => {
+    setEditingIndex(index);
+    try { await preloadOverlayThumbnails(); } catch {}
+    setEditing(true);
+  };
+
   const handleAddPhotos = () => {
     if (dataUrls.length >= 5) {
       return;
@@ -112,12 +166,6 @@ export function UploaderCore() {
     fileActionRef.current = 'append';
     try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
     try { fileInputRef.current?.click(); } catch (_) {}
-  };
-
-  const handleEditPhoto = async () => {
-    setEditingIndex(index);
-    try { await preloadOverlayThumbnails(); } catch {}
-    setEditing(true);
   };
 
   return (
@@ -245,12 +293,15 @@ export function UploaderCore() {
         processing={processing}
         dataUrls={dataUrls}
         originalDataUrls={originalDataUrls}
+        editorSettings={editorSettings}
         index={index}
         fileActionRef={fileActionRef}
         fileInputRef={fileInputRef}
         onEdit={handleEditPhoto}
         onRemove={removePhoto}
         onAddPhotos={handleAddPhotos}
+        onMoveLeft={handleMoveLeft}
+        onMoveRight={handleMoveRight}
       />
 
       <SizeWarning compressedSize={compressedSize} />

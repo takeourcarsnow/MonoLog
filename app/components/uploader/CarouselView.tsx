@@ -410,7 +410,7 @@ export function CarouselView({
         </div>
       </div>
 
-      {dataUrls.length > 1 && (
+      {dataUrls.length === 1 && (
         <>
           <button
             className="carousel-nav carousel-nav-prev"

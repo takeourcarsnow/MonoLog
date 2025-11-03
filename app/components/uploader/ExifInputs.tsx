@@ -42,7 +42,10 @@ export function ExifInputs({
     if (activeExifField && inputRef.current) {
       inputRef.current.focus();
       // Select all text for easy replacement
-      setTimeout(() => inputRef.current?.select(), 0);
+      requestAnimationFrame(() => {
+        inputRef.current?.select();
+        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     }
   }, [activeExifField]);
 

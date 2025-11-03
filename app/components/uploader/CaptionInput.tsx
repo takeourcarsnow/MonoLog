@@ -260,6 +260,7 @@ export function CaptionInput({
               return;
             }
             setCaptionFocused(true);
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}
           onBlur={() => setCaptionFocused(false)}
           style={{ width: '100%', cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', paddingRight: counterVisible ? 72 : 32, paddingLeft: 32 }}
@@ -340,9 +341,10 @@ export function CaptionInput({
                 return;
               }
               setSpotifyFocused(true);
+              e.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
             onBlur={() => setSpotifyFocused(false)}
-            style={{ width: '100%', paddingRight: 72, paddingLeft: 32, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text' }}
+            style={{ width: '100%', paddingRight: 72, paddingLeft: 32, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)' }}
           />
           <SpotifyIcon size={16} className={`input-icon ${spotifyLink?.trim() && (spotifyLink.includes('spotify.com') || spotifyLink.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />
         </div>

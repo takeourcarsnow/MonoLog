@@ -78,6 +78,7 @@ export function LocationInput({
             onChange={(e) => handleWeatherLocationChange(e.target.value)}
             disabled={!hasPreview || processing}
             onBlur={handleWeatherLocationBlur}
+            onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             style={{
               flex: 1,
               padding: '8px 12px 8px 40px',
@@ -137,6 +138,8 @@ export function LocationInput({
         onFocus={() => {
           if (!weatherLocation?.trim()) {
             handleFetchLocation();
+            // Scroll the compact input
+            setTimeout(() => (document.activeElement as HTMLElement)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
           } else {
             setActiveField('weatherLocation');
           }

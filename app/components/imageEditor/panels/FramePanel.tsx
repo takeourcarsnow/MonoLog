@@ -105,7 +105,7 @@ export default function FramePanel({
   };
   return (
     <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
-      <fieldset>
+      <fieldset style={{ border: 'none' }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}><span className="sr-only">Photo Frame</span></div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -124,7 +124,7 @@ export default function FramePanel({
                       style={{
                         width: 60,
                         height: 60,
-                        border: selectedFile === file ? '2px solid var(--primary)' : '1px solid var(--border)',
+                        border: 'none',
                         borderRadius: 8,
                         backgroundImage: showThumb ? `url("${thumbUrl}")` : undefined,
                         backgroundPosition: 'center',
@@ -133,7 +133,8 @@ export default function FramePanel({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: showThumb ? undefined : 'var(--muted-bg)'
+                        backgroundColor: showThumb ? undefined : 'var(--muted-bg)',
+                        boxShadow: selectedFile === file ? '0 0 0 2px var(--primary)' : 'none'
                       }}
                       title={file}
                     >
@@ -153,7 +154,7 @@ export default function FramePanel({
           )}
 
           {!frameOverlay && (
-            <fieldset>
+            <fieldset style={{ border: 'none' }}>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}><span className="sr-only">Frame Color</span></div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
@@ -170,7 +171,8 @@ export default function FramePanel({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 8
+                    gap: 8,
+                    border: 'none'
                   }}
                 >
                   <span style={{ fontSize: 18 }}>⚪</span>
@@ -190,7 +192,8 @@ export default function FramePanel({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 8
+                    gap: 8,
+                    border: 'none'
                   }}
                 >
                   <span style={{ fontSize: 18 }}>⚫</span>

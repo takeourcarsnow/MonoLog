@@ -59,9 +59,9 @@ export default function ColorPanel({
   );
 
   return (
-    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
+    <section className="imgedit-panel-inner" style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       {/* panel heading removed (tab already shows Filters) */}
-      <nav ref={filtersContainerRef} style={{ position: 'relative' }}>
+      <nav ref={filtersContainerRef} style={{ flex: 1, position: 'relative' }}>
         {/* animated highlight pill sits behind buttons and moves between them */}
         <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease', pointerEvents: 'none', opacity: filterHighlight ? 0.95 : 0, boxShadow: 'none', border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)' }} />
         {renderFilterGroup(colorFilters, 'wrap')}
@@ -69,23 +69,25 @@ export default function ColorPanel({
         {renderFilterGroup(otherFilters)}
       </nav>
 
-      <label style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 2 }}>
-        <input
-          className="imgedit-range"
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={filterStrength}
-          onInput={(e: any) => {
-            const v = Number(e.target.value);
-            filterStrengthRef.current = v;
-            setFilterStrength(v);
-            requestAnimationFrame(() => draw());
-          }}
-          onDoubleClick={() => resetControlToDefault('filterStrength')}
-          style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#2d9cff', '#ffd166') }}
-        />
+      <label style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 2, flexShrink: 0 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
+          <input
+            className="imgedit-range"
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={filterStrength}
+            onInput={(e: any) => {
+              const v = Number(e.target.value);
+              filterStrengthRef.current = v;
+              setFilterStrength(v);
+              requestAnimationFrame(() => draw());
+            }}
+            onDoubleClick={() => resetControlToDefault('filterStrength')}
+            style={{ flex: 1, background: rangeBg(filterStrength, 0, 1, '#2d9cff', '#ffd166') }}
+          />
+        </span>
       </label>
     </section>
   );

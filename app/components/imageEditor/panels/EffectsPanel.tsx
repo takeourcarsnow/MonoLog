@@ -35,9 +35,9 @@ export default function EffectsPanel({
   resetControlToDefault,
 }: EffectsPanelProps) {
   return (
-    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
+    <section className="imgedit-panel-inner effects-panel" style={{ display: 'grid', width: '100%' }}>
       <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
           <Aperture size={18} strokeWidth={2} aria-hidden />
           <span>Vignette</span>
         </span>
@@ -55,11 +55,11 @@ export default function EffectsPanel({
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('vignette')}
-          style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#001122', '#66d1ff') }}
+          style={{ width: '180px', background: rangeBg(vignette, 0, 1, '#001122', '#66d1ff') }}
         />
       </label>
       <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
           <Layers size={18} strokeWidth={2} aria-hidden />
           <span>Grain</span>
         </span>
@@ -77,12 +77,12 @@ export default function EffectsPanel({
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('grain')}
-          style={{ flex: 1, background: rangeBg(grain, 0, 1, '#8b7355', '#ff9f43') }}
+          style={{ width: '180px', background: rangeBg(grain, 0, 1, '#8b7355', '#ff9f43') }}
         />
       </label>
 
       <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
           <ZapOff size={18} strokeWidth={2} aria-hidden />
           <span>Soft Focus</span>
         </span>
@@ -100,12 +100,12 @@ export default function EffectsPanel({
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('softFocus')}
-          style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }}
+          style={{ width: '180px', background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }}
         />
       </label>
 
       <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 120, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
           <Film size={18} strokeWidth={2} aria-hidden />
           <span>Fade</span>
         </span>
@@ -123,7 +123,7 @@ export default function EffectsPanel({
             requestAnimationFrame(() => draw());
           }}
           onDoubleClick={() => resetControlToDefault('fade')}
-          style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }}
+          style={{ width: '180px', background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }}
         />
       </label>
     </section>

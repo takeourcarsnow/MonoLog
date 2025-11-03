@@ -134,7 +134,7 @@ export default function OverlaysPanel({
 
   return (
     <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
-      <fieldset>
+      <fieldset style={{ border: 'none' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Overlay selection */}
           <div>
@@ -152,7 +152,7 @@ export default function OverlaysPanel({
                     style={{
                       width: 60,
                       height: 60,
-                      border: selectedFile === file ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      border: 'none',
                       borderRadius: 8,
                       backgroundImage: showThumb ? `url("${thumbUrl}")` : undefined,
                       backgroundPosition: 'center',
@@ -161,7 +161,8 @@ export default function OverlaysPanel({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: showThumb ? undefined : 'var(--muted-bg)'
+                      backgroundColor: showThumb ? undefined : 'var(--muted-bg)',
+                      boxShadow: selectedFile === file ? '0 0 0 2px var(--primary)' : 'none'
                     }}
                     title={file}
                   >
@@ -176,7 +177,7 @@ export default function OverlaysPanel({
 
           {/* Blending mode */}
           {overlay && (
-            <fieldset>
+            <fieldset style={{ border: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                 <Blend size={18} style={{ marginRight: 4 }} />
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>

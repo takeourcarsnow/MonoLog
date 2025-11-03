@@ -81,11 +81,11 @@ export default function SpecialPanel(props: SpecialPanelProps) {
   const anyEnabled = pixelateEnabled || ditherEnabled || asciiEnabled;
 
   return (
-    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%', gap: 8 }}>
+    <section className="imgedit-panel-inner special-panel" style={{ display: 'grid', width: '100%', gap: 8 }}>
       {/* Pixelate */}
       {(!anyEnabled || pixelateEnabled) && (
         <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-          <span style={{ width: 140, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+          <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
             <Grid size={18} strokeWidth={2} aria-hidden />
             <span>Pixelate</span>
           </span>
@@ -111,7 +111,7 @@ export default function SpecialPanel(props: SpecialPanelProps) {
       {/* Dithering */}
       {(!anyEnabled || ditherEnabled) && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ width: 140, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+          <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
             <Wand2 size={18} strokeWidth={2} aria-hidden />
             <span>Dithering</span>
           </span>
@@ -489,7 +489,7 @@ export default function SpecialPanel(props: SpecialPanelProps) {
       {(!anyEnabled || asciiEnabled) && (
         <div style={{ display: 'grid', gap: 4 }}>
           <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+            <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
               <Type size={18} strokeWidth={2} aria-hidden />
               <span>ASCII Art</span>
             </span>
@@ -503,7 +503,7 @@ export default function SpecialPanel(props: SpecialPanelProps) {
           {props.asciiEnabled && (
             <>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 100, fontSize: 12, opacity: 0.8 }}>Cell Size</span>
+                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Cell Size</span>
                 <input
                   className="imgedit-range"
                   type="range"
@@ -517,7 +517,7 @@ export default function SpecialPanel(props: SpecialPanelProps) {
                 />
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 100, fontSize: 12, opacity: 0.8 }}>Charset</span>
+                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Charset</span>
                 <input
                   type="text"
                   value={props.asciiCharset}
@@ -528,7 +528,7 @@ export default function SpecialPanel(props: SpecialPanelProps) {
                 />
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 100, fontSize: 12, opacity: 0.8 }}>Preset</span>
+                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Preset</span>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
                   <button
                     type="button"
@@ -741,7 +741,7 @@ export default function SpecialPanel(props: SpecialPanelProps) {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ width: 100, fontSize: 12, opacity: 0.8 }}>Invert</span>
+                <span style={{ width: 80, fontSize: 12, opacity: 0.8 }}>Invert</span>
                 <button
                   type="button"
                   onClick={() => {

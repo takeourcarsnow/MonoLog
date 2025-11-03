@@ -113,8 +113,8 @@
 .image-editor-panels-container {
   flex: 0 0 160px;
   height: 160px;
-  overflow-y: auto;
-  padding-bottom: 6px; /* small padding so content isn't flush, but not too tall */
+  overflow: visible;
+  box-sizing: border-box;
 }
 
 /* Responsive adjustments for full-screen mode */
@@ -137,15 +137,10 @@
 }
 
 /* Ensure panels are visible in full-screen mode */
-.upload-editor-fullscreen .imgedit-panels {
+.upload-editor-fullscreen .image-editor-panels-container {
   height: auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.upload-editor-fullscreen .imgedit-panels > div {
-  position: relative;
-  height: auto;
+  overflow: hidden;
+  max-height: calc(95vh - 120px);
 }
 
 /* Category button hover effects */
@@ -239,25 +234,27 @@
 /* panels responsiveness: allow panels to grow and scroll on small viewports */
 .imgedit-panels {
   position: relative;
+  height: 160px;
   overflow-y: auto;
   overflow-x: hidden; /* prevent horizontal scroll */
   border-radius: 12px;
   background: color-mix(in srgb, var(--bg-elev) 95%, var(--primary) 5%);
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+  -webkit-overflow-scrolling: touch;
 }
 .imgedit-panels > div { height: auto; }
 
 .imgedit-panel-inner {
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-x: hidden; /* avoid transient horizontal scroll */
-  -webkit-overflow-scrolling: touch;
   padding: 10px; /* slightly reduced padding */
+  padding-bottom: 6px;
   gap: 10px;
   display: grid;
   background: var(--bg-color);
   border-radius: 8px;
-  min-height: 100px; /* lower min-height to prevent panels from forcing tall layout */
+  height: auto;
 }
 
 /* Reduce header icon button size to make the top bar less tall */
@@ -269,8 +266,95 @@
   font-size: 13px;
 }
 
-@media (min-width: 720px) { .imgedit-panels { max-height: 160px; } }
-@media (max-width: 720px) { .imgedit-panels { max-height: 160px; } }
+@media (min-width: 720px) { .imgedit-panels { height: 160px; } }
+@media (max-width: 720px) { .imgedit-panels { height: 160px; } }
+
+/* Responsive adjustments for panels */
+@media (max-width: 640px) {
+  .imgedit-panel-inner {
+    padding: 8px;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .imgedit-panel-inner label span:first-child {
+    width: 80px;
+    font-size: 12px;
+  }
+  .imgedit-panel-inner label span:first-child svg {
+    width: 16px;
+    height: 16px;
+  }
+  .image-editor-panels-container {
+    height: 140px;
+  }
+  .imgedit-panels {
+    height: 140px;
+  }
+}
+
+/* Stack controls vertically on very small screens to prevent cutoff */
+@media (max-width: 480px) {
+  .imgedit-panel-inner label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .imgedit-panel-inner label span:first-child {
+    width: auto;
+  }
+  .image-editor-panels-container {
+    height: 140px;
+  }
+  .imgedit-panels {
+    height: 140px;
+  }
+  /* Keep effects panel compact in one line */
+  .effects-panel label {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .effects-panel label span:first-child {
+    width: 70px;
+    font-size: 12px;
+  }
+  .effects-panel label span:first-child svg {
+    width: 14px;
+    height: 14px;
+  }
+  /* Keep special panel compact in one line */
+  .special-panel label {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .special-panel label span:first-child {
+    width: 70px;
+    font-size: 12px;
+  }
+  .special-panel label span:first-child svg {
+    width: 14px;
+    height: 14px;
+  }
+  .special-panel div[style*="display: flex"][style*="align-items: center"] span:first-child {
+    width: 70px;
+    font-size: 12px;
+  }
+  /* Keep basic panel compact in one line */
+  .basic-panel label {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .basic-panel label span:first-child {
+    width: 70px;
+    font-size: 12px;
+  }
+  .basic-panel label span:first-child svg {
+    width: 14px;
+    height: 14px;
+  }
+}
 
 /* slider color variables (theme-aware) */
 .image-editor {
@@ -303,7 +387,7 @@
 
 /* Filter buttons */
 .filter-btn {
-  padding: 4px 6px;
+  padding: 6px 8px;
   border-radius: 6px;
   background: transparent;
   color: var(--text);
@@ -315,7 +399,7 @@
   z-index: 1;
   border: none;
   font-weight: 500;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .filter-btn[aria-pressed="true"] {
@@ -323,8 +407,8 @@
 }
 
 .filter-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .filter-group {
@@ -333,15 +417,56 @@
 
 @media (max-width: 640px) {
   .filter-btn {
-    padding: 2px 4px;
+    padding: 4px 6px;
     gap: 2px;
-    font-size: 10px;
+    font-size: 11px;
   }
   .filter-btn svg {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
   }
   .filter-group {
     gap: 1px;
   }
+}
+
+/* Custom checkbox styling for theme adaptation */
+.image-editor input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, var(--text) 30%, transparent);
+  border-radius: 4px;
+  background: var(--bg-color);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.image-editor input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.image-editor input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.image-editor input[type="checkbox"]:hover {
+  border-color: var(--primary);
+}
+
+.image-editor input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent);
 }

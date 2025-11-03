@@ -48,7 +48,7 @@ export default function CropPanel({
 }: CropPanelProps) {
   return (
     <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
-      <fieldset>
+      <fieldset style={{ border: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}><span className="sr-only">Crop Aspect Ratio</span></div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -112,7 +112,7 @@ export default function CropPanel({
                   borderRadius: 6,
                   background: selected ? 'color-mix(in srgb, var(--text) 6%, transparent)' : 'var(--bg-elev)',
                   color: selected ? 'var(--text)' : 'var(--text)',
-                  border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)',
+                  border: 'none',
                   boxShadow: 'none',
                   display: 'flex',
                   flexDirection: 'column',
@@ -192,7 +192,7 @@ export default function CropPanel({
                           const y = (rect.height - h) / 2;
                           setSel({ x, y, w, h });
                         }
-                      }} aria-pressed={selected} style={{ minWidth: 48, padding: '4px 6px', borderRadius: 6, background: selected ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)', color: selected ? 'var(--text)' : 'var(--text)', border: selected ? '1px solid color-mix(in srgb, var(--text) 6%, transparent)' : '1px solid color-mix(in srgb, var(--text) 4%, transparent)', boxShadow: 'none', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 100ms ease, box-shadow 140ms ease, background 140ms ease', fontSize: 11 }}>
+                      }} aria-pressed={selected} style={{ minWidth: 48, padding: '4px 6px', borderRadius: 6, background: selected ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)', color: selected ? 'var(--text)' : 'var(--text)', border: 'none', boxShadow: 'none', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-start', transition: 'transform 100ms ease, box-shadow 140ms ease, background 140ms ease', fontSize: 11 }}>
                         <span aria-hidden style={{ width: 28, height: 14, background: selected ? 'color-mix(in srgb, var(--primary) 6%, transparent)' : 'color-mix(in srgb, var(--text) 4%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative', border: selected ? '1px solid color-mix(in srgb, var(--text) 8%, transparent)' : '1px solid color-mix(in srgb, var(--text) 6%, transparent)', boxShadow: 'none' }}>
                           <span style={{ width: previewInnerWidth, height: 8, background: selected ? 'color-mix(in srgb, var(--text) 82%, #fff)' : 'color-mix(in srgb, var(--text) 58%, #fff)', borderRadius: 3, display: 'block', border: '1px solid color-mix(in srgb, var(--text) 10%, transparent)' }} />
                         </span>
@@ -215,14 +215,14 @@ export default function CropPanel({
           `}</style>
         </div>
       </fieldset>
-      <fieldset style={{ marginTop: 8 }}>
+      <fieldset style={{ marginTop: 8, border: 'none' }}>
         <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button type="button" title="Rotate -90°" onClick={async () => { await bakeRotateMinus90(); /* after bake, keep slider controlled rotation at 0 so user can fine-tune */ rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate -90°" style={{ padding: 6, borderRadius: 8 }}>
+              <button type="button" title="Rotate -90°" onClick={async () => { await bakeRotateMinus90(); /* after bake, keep slider controlled rotation at 0 so user can fine-tune */ rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate -90°" style={{ padding: 6, borderRadius: 8, border: 'none' }}>
                 <RotateCw size={14} aria-hidden />
               </button>
-              <button type="button" title="Rotate +90°" onClick={async () => { await bakeRotate90(); rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate +90°" style={{ padding: 6, borderRadius: 8 }}>
+              <button type="button" title="Rotate +90°" onClick={async () => { await bakeRotate90(); rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate +90°" style={{ padding: 6, borderRadius: 8, border: 'none' }}>
                 <RotateCcw size={14} aria-hidden />
               </button>
             </div>

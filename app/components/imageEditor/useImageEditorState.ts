@@ -67,7 +67,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [asciiInvert, setAsciiInvert] = useState<boolean>(initialSettings?.asciiInvert ?? false);
   const [asciiColor, setAsciiColor] = useState<boolean>(initialSettings?.asciiColor ?? true);
   const [asciiOpacity, setAsciiOpacity] = useState<number>(initialSettings?.asciiOpacity ?? 1);
-  const [asciiBackground, setAsciiBackground] = useState<string>(initialSettings?.asciiBackground ?? 'transparent');
+  const [asciiBackground, setAsciiBackground] = useState<string>(initialSettings?.asciiBackground ?? 'black');
   const [asciiFont, setAsciiFont] = useState<string>(initialSettings?.asciiFont ?? 'monospace');
   const [asciiGamma, setAsciiGamma] = useState<number>(initialSettings?.asciiGamma ?? 1);
   const [asciiBold, setAsciiBold] = useState<boolean>(initialSettings?.asciiBold ?? false);

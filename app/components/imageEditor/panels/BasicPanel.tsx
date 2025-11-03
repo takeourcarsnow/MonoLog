@@ -35,9 +35,9 @@ export default function BasicPanel({
   resetControlToDefault,
 }: BasicPanelProps) {
   return (
-    <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
+    <section className="imgedit-panel-inner basic-panel" style={{ display: 'grid', width: '100%' }}>
       <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
           <SunDim size={18} strokeWidth={2} aria-hidden />
           <span>Exposure</span>
         </span>
@@ -62,7 +62,7 @@ export default function BasicPanel({
         </span>
       </label>
       <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
           <Scale size={18} strokeWidth={2} aria-hidden />
           <span>Contrast</span>
         </span>
@@ -87,7 +87,7 @@ export default function BasicPanel({
         </span>
       </label>
       <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
           <Rainbow size={18} strokeWidth={2} aria-hidden />
           <span>Saturation</span>
         </span>
@@ -112,7 +112,7 @@ export default function BasicPanel({
         </span>
       </label>
       <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
           <Thermometer size={18} strokeWidth={2} aria-hidden />
           <span>Temperature</span>
         </span>

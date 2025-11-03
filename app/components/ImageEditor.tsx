@@ -30,6 +30,8 @@ import { useImageEditorDownload } from './imageEditor/ImageEditorDownload';
 import { useImageEditorRefs } from './imageEditor/ImageEditorRefs';
 import { useImageEditorEffects } from './imageEditor/ImageEditorEffects';
 
+import { toggleTheme } from '@/src/lib/theme';
+
 type Props = {
   initialDataUrl: string;
   initialSettings?: EditorSettings;
@@ -548,6 +550,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         onToggleFullscreen={handleToggleFullscreen}
         isFullscreen={isFullscreen}
         onDownload={handleDownload}
+        onToggleTheme={toggleTheme}
       />
 
       <figure className="image-editor-canvas-container" ref={containerRef}>

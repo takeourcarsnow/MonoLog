@@ -20,7 +20,7 @@ export function useImageEditorActions(
   softFocus: number,
   fade: number,
   // special effects state
-  ditherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn',
+  ditherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes',
   ditherLevels: number,
   ditherColorMode: 'bw' | 'color',
   ditherPalette: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii',
@@ -68,8 +68,8 @@ export function useImageEditorActions(
   setFade: (value: number) => void,
   fadeRef: React.MutableRefObject<number>,
   // special refs + setters
-  setDitherMethod: (v: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn') => void,
-  ditherMethodRef: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  setDitherMethod: (v: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes') => void,
+  ditherMethodRef: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>,
   setDitherLevels: (v: number) => void,
   ditherLevelsRef: React.MutableRefObject<number>,
   setDitherColorMode: (v: 'bw' | 'color') => void,

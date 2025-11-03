@@ -15,7 +15,7 @@ export type EditorSettings = {
   overlay?: { img: HTMLImageElement; blendMode: string; opacity: number };
   frameOverlay?: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } };
   // Special effects
-  ditherMethod?: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn';
+  ditherMethod?: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes';
   ditherLevels?: number; // 3..31 (default 8)
   ditherColorMode?: 'bw' | 'color';
   ditherPalette?: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii';

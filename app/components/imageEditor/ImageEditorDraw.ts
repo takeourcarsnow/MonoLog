@@ -25,7 +25,7 @@ export function useImageEditorDraw(
   dashOffsetRef: React.MutableRefObject<number>,
   computeImageLayout: () => any,
   // special effects refs
-  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>,
   ditherLevelsRef?: React.MutableRefObject<number>,
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>,
   ditherPaletteRef?: React.MutableRefObject<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>,

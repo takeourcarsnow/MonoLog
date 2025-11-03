@@ -30,8 +30,8 @@ export function useImageEditorRefs(
   frameOverlay: any,
   frameOverlayRef: React.MutableRefObject<any>,
   // special effects
-  ditherMethod?: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn',
-  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  ditherMethod?: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes',
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>,
   ditherLevels?: number,
   ditherLevelsRef?: React.MutableRefObject<number>,
   pixelSize?: number,

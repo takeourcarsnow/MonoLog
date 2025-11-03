@@ -44,8 +44,8 @@ export function resetAdjustments(
   cropRatio: React.MutableRefObject<number | null>,
   setPresetIndex: (v: number) => void,
   // special effects
-  setDitherMethod?: (v: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn') => void,
-  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  setDitherMethod?: (v: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes') => void,
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>,
   setDitherLevels?: (v: number) => void,
   ditherLevelsRef?: React.MutableRefObject<number>,
   setDitherColorMode?: (v: 'bw' | 'color') => void,
@@ -127,7 +127,7 @@ export function resetAdjustments(
   const defOverlay = null;
   const defFrameOverlay = null;
   // special defaults
-  const defDitherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn' = 'none';
+  const defDitherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes' = 'none';
   const defDitherLevels = 8;
   const defDitherColorMode: 'bw' | 'color' = 'bw';
   const defDitherPalette: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii' = 'auto';
@@ -218,7 +218,7 @@ export function resetControlToDefault(
   setFrameThickness: (v: number) => void,
   draw: () => void,
   // special effects
-  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>,
   setDitherMethod?: (v: 'none' | 'floyd-steinberg' | 'ordered') => void,
   ditherLevelsRef?: React.MutableRefObject<number>,
   setDitherLevels?: (v: number) => void,

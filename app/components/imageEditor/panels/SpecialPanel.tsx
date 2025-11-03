@@ -4,9 +4,9 @@ import { rangeBg } from '../utils';
 
 interface SpecialPanelProps {
   // Dither
-  ditherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn';
-  setDitherMethod: (v: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn') => void;
-  ditherMethodRef: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>;
+  ditherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes';
+  setDitherMethod: (v: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes') => void;
+  ditherMethodRef: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>;
   ditherLevels: number;
   setDitherLevels: (v: number) => void;
   ditherLevelsRef: React.MutableRefObject<number>;
@@ -119,12 +119,8 @@ export default function SpecialPanel(props: SpecialPanelProps) {
             <>
               <option value="floyd-steinberg">Floyd–Steinberg</option>
               <option value="ordered">Ordered (Bayer 4x4)</option>
-              <option value="bayer8">Ordered (Bayer 8x8)</option>
               <option value="atkinson">Atkinson</option>
               <option value="burkes">Burkes</option>
-              <option value="stucki">Stucki</option>
-              <option value="sierra">Sierra</option>
-              <option value="jjn">Jarvis–Judice–Ninke</option>
             </>
           )}
         </select>

@@ -26,7 +26,7 @@ export function drawImage(
   dashOffsetRef: React.MutableRefObject<number>,
   computeImageLayout: () => any,
   // special effects
-  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>,
   ditherLevelsRef?: React.MutableRefObject<number>,
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>,
   ditherPaletteRef?: React.MutableRefObject<DitherPaletteType>,

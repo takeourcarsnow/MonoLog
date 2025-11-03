@@ -53,7 +53,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [overlay, setOverlay] = useState<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>(initialSettings?.overlay ?? null);
   const [frameOverlay, setFrameOverlay] = useState<{ img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null>(initialSettings?.frameOverlay ?? null);
   // Special effects state
-  const [ditherMethod, setDitherMethod] = useState<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>(initialSettings?.ditherMethod ?? 'none');
+  const [ditherMethod, setDitherMethod] = useState<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>(initialSettings?.ditherMethod ?? 'none');
   const [ditherLevels, setDitherLevels] = useState<number>(initialSettings?.ditherLevels ?? 8);
   const [ditherColorMode, setDitherColorMode] = useState<'bw' | 'color'>(initialSettings?.ditherColorMode ?? 'bw');
   const [ditherPalette, setDitherPalette] = useState<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>(initialSettings?.ditherPalette ?? 'auto');
@@ -89,7 +89,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const overlayRef = useRef<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>(overlay);
   const frameOverlayRef = useRef<{ img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null>(frameOverlay);
   // Special effects refs
-  const ditherMethodRef = useRef<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>(ditherMethod);
+  const ditherMethodRef = useRef<'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes'>(ditherMethod);
   const ditherLevelsRef = useRef<number>(ditherLevels);
   const ditherColorModeRef = useRef<'bw' | 'color'>(ditherColorMode);
   const ditherPaletteRef = useRef<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>(ditherPalette);

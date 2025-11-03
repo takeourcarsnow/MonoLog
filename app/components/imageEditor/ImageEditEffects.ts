@@ -206,7 +206,7 @@ export function applyDitherExport(
   drawW: number,
   drawH: number,
   angle: number,
-  method: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn',
+  method: 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes',
   levels: number,
   colorMode: 'bw' | 'color' = 'bw',
   paletteName: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii' = 'auto',
@@ -306,10 +306,10 @@ export function applyDitherExport(
           }
         }
       }
-    } else if (method === 'ordered' || method === 'bayer8') {
-      const mat = method === 'bayer8' ? bayer8 : bayer4;
-      const n = method === 'bayer8' ? 64 : 16;
-      const size = method === 'bayer8' ? 8 : 4;
+    } else if (method === 'ordered') {
+      const mat = bayer4;
+      const n = 16;
+      const size = 4;
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
           const idx = y * w + x; const threshold = (mat[(y & (size - 1)) * size + (x & (size - 1))] + 0.5) / n * (255 / (L));
@@ -332,11 +332,8 @@ export function applyDitherExport(
       const fs: Array<[number,number,number]> = [[1,0,7],[-1,1,3],[0,1,5],[1,1,1]]; const fsNorm = 16;
       const atkinson: Array<[number,number,number]> = [[1,0,1],[2,0,1],[-1,1,1],[0,1,1],[1,1,1],[0,2,1]]; const atkNorm = 8;
       const burkes: Array<[number,number,number]> = [[1,0,8],[2,0,4],[-2,1,2],[-1,1,4],[0,1,8],[1,1,4],[2,1,2]]; const burkesNorm = 32;
-      const stucki: Array<[number,number,number]> = [[1,0,8],[2,0,4],[-2,1,2],[-1,1,4],[0,1,8],[1,1,4],[2,1,2],[-2,2,1],[-1,2,2],[0,2,4],[1,2,2],[2,2,1]]; const stuckiNorm = 42;
-      const sierra: Array<[number,number,number]> = [[1,0,5],[2,0,3],[-2,1,2],[-1,1,4],[0,1,5],[1,1,4],[2,1,2],[-1,2,2],[0,2,3],[1,2,2]]; const sierraNorm = 32;
-      const jjn: Array<[number,number,number]> = [[1,0,7],[2,0,5],[-2,1,3],[-1,1,5],[0,1,7],[1,1,5],[2,1,3],[-2,2,1],[-1,2,3],[0,2,5],[1,2,3],[2,2,1]]; const jjnNorm = 48;
       const kernelMap: Record<string,{k:Array<[number,number,number]>, n:number}> = {
-        'floyd-steinberg': {k:fs, n:fsNorm}, atkinson:{k:atkinson, n:atkNorm}, burkes:{k:burkes, n:burkesNorm}, stucki:{k:stucki, n:stuckiNorm}, sierra:{k:sierra, n:sierraNorm}, jjn:{k:jjn, n:jjnNorm}
+        'floyd-steinberg': {k:fs, n:fsNorm}, atkinson:{k:atkinson, n:atkNorm}, burkes:{k:burkes, n:burkesNorm}
       };
       const km = kernelMap[method]; if (km) diffuse(km.k, km.n);
     }
@@ -372,10 +369,10 @@ export function applyDitherExport(
         }
       }
       for (let p=0,i=0;p<w*h;p++,i+=4){ data[i]=clamp255(rbuf[p]); data[i+1]=clamp255(gbuf[p]); data[i+2]=clamp255(bbuf[p]); data[i+3]=255; }
-    } else if (method === 'ordered' || method === 'bayer8') {
-      const mat = method === 'bayer8' ? bayer8 : bayer4;
-      const n = method === 'bayer8' ? 64 : 16;
-      const size = method === 'bayer8' ? 8 : 4;
+    } else if (method === 'ordered') {
+      const mat = bayer4;
+      const n = 16;
+      const size = 4;
       for (let y=0;y<h;y++){
         for (let x=0;x<w;x++){
           const i=(y*w+x)*4; const t=(mat[(y & (size-1))*size + (x & (size-1))]+0.5)/n*(255/L);
@@ -400,11 +397,8 @@ export function applyDitherExport(
       const fs: Array<[number,number,number]> = [[1,0,7],[ -1,1,3],[0,1,5],[1,1,1]]; const fsNorm=16;
       const atkinson: Array<[number,number,number]> = [[1,0,1],[2,0,1],[-1,1,1],[0,1,1],[1,1,1],[0,2,1]]; const atkNorm=8;
       const burkes: Array<[number,number,number]> = [[1,0,8],[2,0,4],[-2,1,2],[-1,1,4],[0,1,8],[1,1,4],[2,1,2]]; const burkesNorm=32;
-      const stucki: Array<[number,number,number]> = [[1,0,8],[2,0,4],[-2,1,2],[-1,1,4],[0,1,8],[1,1,4],[2,1,2],[-2,2,1],[-1,2,2],[0,2,4],[1,2,2],[2,2,1]]; const stuckiNorm=42;
-      const sierra: Array<[number,number,number]> = [[1,0,5],[2,0,3],[-2,1,2],[-1,1,4],[0,1,5],[1,1,4],[2,1,2],[-1,2,2],[0,2,3],[1,2,2]]; const sierraNorm=32;
-      const jjn: Array<[number,number,number]> = [[1,0,7],[2,0,5],[-2,1,3],[-1,1,5],[0,1,7],[1,1,5],[2,1,3],[-2,2,1],[-1,2,3],[0,2,5],[1,2,3],[2,2,1]]; const jjnNorm=48;
       const kernelMap: Record<string,{k:Array<[number,number,number]>, n:number}> = {
-        'floyd-steinberg': {k:fs, n:fsNorm}, atkinson:{k:atkinson, n:atkNorm}, burkes:{k:burkes, n:burkesNorm}, stucki:{k:stucki, n:stuckiNorm}, sierra:{k:sierra, n:sierraNorm}, jjn:{k:jjn, n:jjnNorm}
+        'floyd-steinberg': {k:fs, n:fsNorm}, atkinson:{k:atkinson, n:atkNorm}, burkes:{k:burkes, n:burkesNorm}
       };
       const km = kernelMap[method]; if (km) diffuseColor(km.k, km.n);
     }

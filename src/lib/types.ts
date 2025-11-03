@@ -239,6 +239,8 @@ export interface Api {
   // Notifications
   getNotifications(options?: { limit?: number; before?: string }): Promise<Notification[]>;
   markNotificationsRead(notificationIds: string[]): Promise<void>;
+  getUnreadNotificationsCount?(): Promise<number>;
+  markAllNotificationsRead?(): Promise<void>;
 
   // Search
   search(query: string): Promise<{ posts: HydratedPost[]; users: User[]; communities: HydratedCommunity[] }>;

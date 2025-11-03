@@ -261,3 +261,23 @@
   color: var(--text) !important;
   border: none !important;
 }
+
+/* Notifications: highlight bell when there are unread items */
+.header-actions .notifications-btn.unread {
+  position: relative;
+}
+.header-actions .notifications-btn.unread svg,
+.header-actions .notifications-btn.unread svg * {
+  stroke: var(--primary) !important;
+}
+/* small indicator dot in top-right of the bell */
+.header .notifications-btn.unread::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background-color: var(--primary);
+  border-radius: 50%;
+}

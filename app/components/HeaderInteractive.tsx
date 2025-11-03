@@ -25,6 +25,7 @@ export function HeaderInteractive() {
   const { me } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [showNotificationsPopup, setShowNotificationsPopup] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   // Define checkForNewThreads function outside useEffect so it can be exposed globally
   const checkForNewThreads = useCallback(async (forceToast = false) => {
@@ -120,6 +121,8 @@ export function HeaderInteractive() {
   const animationRef = useRef<Animation | null>(null);
   const actionsRef = useRef<HTMLDivElement | null>(null);
   const [hideLogoText, setHideLogoText] = useState(false);
+  const suppressUnreadUntilRef = useRef<number>(0);
+  const lastMarkAllAtRef = useRef<number>(0);
 
   useEffect(() => {
     return () => {
@@ -139,6 +142,36 @@ export function HeaderInteractive() {
     setMounted(true);
   }, []);
 
+  // Listen for global event when notifications are marked as read
+  useEffect(() => {
+    function onMarkedAllRead() {
+      setHasUnreadNotifications(false);
+      // Suppress unread polling updates for a short window to avoid races
+      suppressUnreadUntilRef.current = Date.now() + 10000; // 10s
+      lastMarkAllAtRef.current = Date.now();
+      try { localStorage.setItem('notificationsLastMarkAllAt', String(lastMarkAllAtRef.current)); } catch (_) {}
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('monolog:notifications_marked_all_read', onMarkedAllRead);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('monolog:notifications_marked_all_read', onMarkedAllRead);
+      }
+    };
+  }, []);
+
+  // Restore last mark-all timestamp across refreshes
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('notificationsLastMarkAllAt');
+      if (v) {
+        const ts = parseInt(v, 10);
+        if (!Number.isNaN(ts)) lastMarkAllAtRef.current = ts;
+      }
+    } catch (_) {}
+  }, []);
+
   // Check for new threads periodically when authenticated
   useEffect(() => {
     if (!me) return;
@@ -153,6 +186,41 @@ export function HeaderInteractive() {
       clearInterval(interval);
     };
   }, [checkForNewThreads, me]);
+
+  // Check for unread notifications when authenticated
+  useEffect(() => {
+    let interval: any;
+    let aborted = false;
+    async function checkUnread() {
+      // Skip polling while the popup is open to avoid races while marking read
+      if (showNotificationsPopup) return;
+      // Also skip if within suppression window after marking all read
+      if (Date.now() < suppressUnreadUntilRef.current) return;
+      try {
+        const anyApi: any = api as any;
+        let count: number = (await anyApi.getUnreadNotificationsCount?.()) ?? 0;
+        // If shortly after a mark-all we still see unread, attempt a forced mark-all and recheck once
+        if ((count || 0) > 0 && lastMarkAllAtRef.current && (Date.now() - lastMarkAllAtRef.current) < 20000) {
+          try {
+            await anyApi.markAllNotificationsRead?.();
+            // small delay to allow persistence
+            await new Promise(r => setTimeout(r, 300));
+            count = (await anyApi.getUnreadNotificationsCount?.()) ?? count;
+          } catch (_) { /* ignore */ }
+        }
+        if (!aborted) setHasUnreadNotifications((count || 0) > 0);
+      } catch (_) {
+        if (!aborted) setHasUnreadNotifications(false);
+      }
+    }
+    if (me) {
+      checkUnread();
+      interval = setInterval(checkUnread, 30000);
+    } else {
+      setHasUnreadNotifications(false);
+    }
+    return () => { aborted = true; if (interval) clearInterval(interval); };
+  }, [me, showNotificationsPopup]);
 
   // Optional console hint when new threads are detected
   useEffect(() => {
@@ -206,10 +274,10 @@ export function HeaderInteractive() {
         {/* Notifications button */}
         {mounted && me ? (
           <button
-            className="btn icon notifications-btn no-tap-effects"
+            className={`btn icon notifications-btn no-tap-effects ${hasUnreadNotifications ? 'unread' : ''}`}
             title="Notifications"
             aria-label="Notifications"
-            onClick={() => setShowNotificationsPopup(true)}
+            onClick={() => { setShowNotificationsPopup(true); setHasUnreadNotifications(false); }}
           >
             <Bell size={20} strokeWidth={2} />
           </button>
@@ -231,7 +299,11 @@ export function HeaderInteractive() {
       </div>
       <NotificationsPopup
         open={showNotificationsPopup}
-        onClose={() => setShowNotificationsPopup(false)}
+        onClose={() => {
+          setShowNotificationsPopup(false);
+          // After closing, keep suppression for a short while; next interval poll will refresh
+          suppressUnreadUntilRef.current = Math.max(suppressUnreadUntilRef.current, Date.now() + 4000);
+        }}
       />
     </>
   );
@@ -300,7 +372,7 @@ function useLogoOverlapDetection(
     ro.observe(actionsRef.current);
 
     // Also observe text resize so we can re-measure width if it changes
-    if (logoTextRef.current) ro.observe(logoTextRef.current);
+    // Note: We don't observe logoTextRef to avoid loops when hiding/showing the text
 
     window.addEventListener('resize', () => {
       if (raf) cancelAnimationFrame(raf);

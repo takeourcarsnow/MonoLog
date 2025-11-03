@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { throttle } from '@/src/lib/utils';
 
 export const useZoomState = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -47,7 +48,7 @@ export const useZoomState = () => {
 
     let ro: ResizeObserver | null = null;
     if (typeof window !== 'undefined' && (window as any).ResizeObserver) {
-      ro = new (window as any).ResizeObserver(updateRect);
+      ro = new (window as any).ResizeObserver(throttle(updateRect, 100));
       if (ro) ro.observe(el);
     }
 

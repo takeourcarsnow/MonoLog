@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import { throttle } from "@/src/lib/utils";
 
 interface AutoScrollProps {
   children: React.ReactNode;
@@ -108,13 +109,14 @@ export default function AutoScroll({ children, className, style, innerStyle }: A
     }
 
     update();
-    const ro = new ResizeObserver(() => update());
+    const throttledUpdate = throttle(update, 100);
+    const ro = new ResizeObserver(throttledUpdate);
     ro.observe(c);
     ro.observe(i);
-    window.addEventListener('orientationchange', update);
+    window.addEventListener('orientationchange', throttledUpdate);
     return () => {
       ro.disconnect();
-      window.removeEventListener('orientationchange', update);
+      window.removeEventListener('orientationchange', throttledUpdate);
     };
   }, [children]);
 

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { LoadingBadge } from "./LoadingBadge";
 import { useZoomState } from "../imageZoom/hooks/useZoomState";
 import { getBounds } from "../imageZoom/utils/zoomUtils";
+import { throttle } from "@/src/lib/utils";
 
 interface CarouselViewProps {
   dataUrls: string[];
@@ -87,16 +88,18 @@ export function CarouselView({
       }
     };
 
+    const throttledUpdateSize = throttle(updateSize, 100);
+
     updateSize();
 
-    const resizeObserver = new ResizeObserver(updateSize);
+    const resizeObserver = new ResizeObserver(throttledUpdateSize);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
 
-    window.addEventListener('resize', updateSize);
+    window.addEventListener('resize', throttledUpdateSize);
     return () => {
-      window.removeEventListener('resize', updateSize);
+      window.removeEventListener('resize', throttledUpdateSize);
       resizeObserver.disconnect();
     };
   }, []);

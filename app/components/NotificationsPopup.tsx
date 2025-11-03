@@ -7,6 +7,7 @@ import { currentTheme } from "@/src/lib/theme";
 import { LoadingIndicator } from "@/app/components/LoadingIndicator";
 import NextImage from 'next/image';
 import { useNotifications } from "./useNotifications";
+import { api } from "@/src/lib/api";
 import NotificationItem from "./NotificationItem";
 import { SpinningLogo } from "./SpinningLogo";
 
@@ -28,6 +29,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
     loadInitialNotifications,
     loadMoreNotifications,
     markAsRead,
+    markAllAsRead,
   } = useNotifications(pageSize);
 
   const setSentinel = useCallback((el: HTMLDivElement | null) => {
@@ -46,11 +48,37 @@ export function NotificationsPopup({ open, onClose }: Props) {
     return () => obs.disconnect();
   }, [hasMore, loadMoreNotifications]);
 
+  // On open: immediately mark all notifications read on the server (one-shot)
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const anyApi: any = api as any;
+      anyApi.markAllNotificationsRead?.()
+        .then(() => {
+          try {
+            window.dispatchEvent(new CustomEvent('monolog:notifications_marked_all_read', { detail: { source: 'popup-open-instant' } }));
+          } catch (_) {}
+        })
+        .catch(() => {});
+    } catch (_) {}
+  }, [open]);
+
   useEffect(() => {
     if (open) {
       loadInitialNotifications();
     }
   }, [open, loadInitialNotifications]);
+
+  // After list loads, mark currently loaded items as read in UI
+  useEffect(() => {
+    if (!open) return;
+    if (loading) return;
+    const hasUnread = loadedNotifications.some(n => !n.notification.read);
+    if (hasUnread) {
+      // Local UI: mark the currently loaded page as read immediately for responsiveness
+      markAllAsRead();
+    }
+  }, [open, loading, loadedNotifications, markAllAsRead]);
 
   useEffect(() => {
     const handleThemeChange = () => setTheme(currentTheme());

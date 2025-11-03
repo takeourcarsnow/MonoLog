@@ -78,7 +78,7 @@ export default function SpecialPanel(props: SpecialPanelProps) {
   const anyEnabled = pixelateEnabled || ditherEnabled || asciiEnabled;
 
   return (
-    <section className="imgedit-panel-inner special-panel" style={{ display: 'grid', width: '100%', gap: 8 }}>
+    <section className="imgedit-panel-inner special-panel" style={{ display: 'grid', width: '100%', gap: 8, maxWidth: 720, margin: '0 auto' }}>
       <PixelatePanel
         pixelSize={props.pixelSize}
         setPixelSize={props.setPixelSize}

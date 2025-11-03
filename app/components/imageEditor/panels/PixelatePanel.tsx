@@ -25,9 +25,9 @@ export default function PixelatePanel(props: PixelatePanelProps) {
   return (
     <>
       {(!props.anyEnabled || props.pixelateEnabled) && (
-        <div style={{ display: 'grid', gap: 4 }}>
-          <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <div style={{ display: 'grid', gap: 4, maxWidth: 720, margin: '0 auto', width: '100%' }}>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ width: 'auto', display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
               <Grid size={18} strokeWidth={2} aria-hidden />
               <span>Pixelate</span>
             </span>
@@ -40,7 +40,7 @@ export default function PixelatePanel(props: PixelatePanelProps) {
           </label>
           {props.pixelateEnabled && (
             <>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
                 <input
                   className="imgedit-range"
                   type="range"

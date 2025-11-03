@@ -32,9 +32,9 @@ export default function DitherPanel(props: DitherPanelProps) {
   return (
     <>
       {(!props.anyEnabled || props.ditherEnabled) && (
-        <div style={{ display: 'grid', gap: 4 }}>
-          <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <div style={{ display: 'grid', gap: 4, maxWidth: 720, margin: '0 auto', width: '100%' }}>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ width: 'auto', display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
               <Wand2 size={18} strokeWidth={2} aria-hidden />
               <span>Dithering</span>
             </span>
@@ -46,7 +46,7 @@ export default function DitherPanel(props: DitherPanelProps) {
             />
           </label>
           {props.ditherEnabled && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
               {props.ditherMethod !== 'none' && (
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   <div style={{ display: 'flex', gap: 2, borderRadius: 6, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', overflow: 'hidden' }}>

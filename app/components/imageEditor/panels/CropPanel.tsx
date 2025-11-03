@@ -302,20 +302,20 @@ export default function CropPanel({
       </fieldset>
       <fieldset style={{ marginTop: 8, border: 'none' }}>
         <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button type="button" title="Rotate -90°" onClick={async () => { await bakeRotateMinus90(); /* after bake, keep slider controlled rotation at 0 so user can fine-tune */ rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate -90°" style={{ padding: 6, borderRadius: 8, border: 'none' }}>
-                <RotateCw size={14} aria-hidden />
-              </button>
-              <button type="button" title="Rotate +90°" onClick={async () => { await bakeRotate90(); rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate +90°" style={{ padding: 6, borderRadius: 8, border: 'none' }}>
-                <RotateCcw size={14} aria-hidden />
-              </button>
-            </div>
+          <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
             <span className="sr-only">Straighten</span>
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
+            {/* Rotate left (-90°) on the left side of the slider */}
+            <button type="button" title="Rotate -90°" onClick={async () => { await bakeRotateMinus90(); rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate -90°" style={{ padding: 6, borderRadius: 8, border: 'none' }}>
+              <RotateCcw size={14} aria-hidden />
+            </button>
             <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); // Auto-fit crop to avoid empty triangles
               autoCropSelectionForRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')}             style={{ flex: 1, background: rangeBg(rotation, -30, 30, '#ef4444', '#f87171') }} />
+            {/* Rotate right (+90°) on the right side of the slider */}
+            <button type="button" title="Rotate +90°" onClick={async () => { await bakeRotate90(); rotationRef.current = 0; setRotation(0); draw(); }} className="btn icon ghost" aria-label="Rotate +90°" style={{ padding: 6, borderRadius: 8, border: 'none' }}>
+              <RotateCw size={14} aria-hidden />
+            </button>
           </div>
         </label>
       </fieldset>

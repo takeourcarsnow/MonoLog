@@ -50,9 +50,9 @@ export default function AsciiPanel(props: AsciiPanelProps) {
   return (
     <>
       {(!props.anyEnabled || props.asciiEnabledFlag) && (
-        <div style={{ display: 'grid', gap: 4 }}>
-          <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+        <div style={{ display: 'grid', gap: 4, maxWidth: 720, margin: '0 auto', width: '100%' }}>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ width: 'auto', display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
               <Type size={18} strokeWidth={2} aria-hidden />
               <span>ASCII Art</span>
             </span>

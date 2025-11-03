@@ -67,6 +67,7 @@ interface SpecialPanelProps {
   setAsciiCharsetPreset?: (v: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots') => void;
   // shared
   draw: (overrides?: any) => void;
+  resetControlToDefault?: (control: string) => void;
 }
 
 export default function SpecialPanel(props: SpecialPanelProps) {
@@ -130,16 +131,16 @@ export default function SpecialPanel(props: SpecialPanelProps) {
         {props.ditherMethod !== 'none' && (
           <>
             <div style={{ flex: 1, minWidth: 220, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, opacity: 0.8, width: 60 }}>Levels</span>
               <input
                 className="imgedit-range"
                 type="range"
-                min={2}
-                max={32}
+                min={3}
+                max={31}
                 step={1}
                 value={props.ditherLevels}
                 onInput={(e: any) => { const v = Number(e.target.value); props.ditherLevelsRef.current = v; props.setDitherLevels(v); requestAnimationFrame(() => props.draw()); }}
-                style={{ flex: 1, background: rangeBg(props.ditherLevels, 2, 32, '#0f172a', '#a78bfa') }}
+                onDoubleClick={() => props.resetControlToDefault && props.resetControlToDefault('ditherLevels')}
+                style={{ flex: 1, background: rangeBg(props.ditherLevels, 3, 31, '#0f172a', '#a78bfa') }}
                 aria-label="Dither levels"
               />
             </div>

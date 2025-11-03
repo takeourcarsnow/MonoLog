@@ -262,6 +262,7 @@ export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsPro
           asciiCharsetPreset={props.asciiCharsetPreset}
           setAsciiCharsetPreset={props.setAsciiCharsetPreset!}
           draw={props.draw}
+          resetControlToDefault={props.resetControlToDefault}
         />
       )}
 

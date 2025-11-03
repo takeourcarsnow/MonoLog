@@ -128,7 +128,7 @@ export function resetAdjustments(
   const defFrameOverlay = null;
   // special defaults
   const defDitherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn' = 'none';
-  const defDitherLevels = 2;
+  const defDitherLevels = 8;
   const defDitherColorMode: 'bw' | 'color' = 'bw';
   const defDitherPalette: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii' = 'auto';
   const defDitherCustomPalette = '';
@@ -300,7 +300,7 @@ export function resetControlToDefault(
       break;
     }
     case 'ditherLevels': {
-      const v = 2; if (ditherLevelsRef && setDitherLevels) { ditherLevelsRef.current = v; setDitherLevels(v); } draw(); requestAnimationFrame(() => draw());
+      const v = 8; if (ditherLevelsRef && setDitherLevels) { ditherLevelsRef.current = v; setDitherLevels(v); } draw(); requestAnimationFrame(() => draw());
       break;
     }
     case 'asciiEnabled': {

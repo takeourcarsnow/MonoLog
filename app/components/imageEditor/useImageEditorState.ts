@@ -54,7 +54,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [frameOverlay, setFrameOverlay] = useState<{ img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null>(initialSettings?.frameOverlay ?? null);
   // Special effects state
   const [ditherMethod, setDitherMethod] = useState<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>(initialSettings?.ditherMethod ?? 'none');
-  const [ditherLevels, setDitherLevels] = useState<number>(initialSettings?.ditherLevels ?? 2);
+  const [ditherLevels, setDitherLevels] = useState<number>(initialSettings?.ditherLevels ?? 8);
   const [ditherColorMode, setDitherColorMode] = useState<'bw' | 'color'>(initialSettings?.ditherColorMode ?? 'bw');
   const [ditherPalette, setDitherPalette] = useState<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>(initialSettings?.ditherPalette ?? 'auto');
   const [ditherCustomPalette, setDitherCustomPalette] = useState<string>(initialSettings?.ditherCustomPalette ?? '');

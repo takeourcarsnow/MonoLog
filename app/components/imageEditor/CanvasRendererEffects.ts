@@ -274,7 +274,7 @@ export function applyDitherEffect(
   effectScale: number = 1
 ) {
   if (!method || method === 'none') return;
-  const L = Math.max(2, Math.min(32, Math.round(levels || 2)));
+  const L = Math.max(3, Math.min(31, Math.round(levels || 3)));
   try {
     const processed = renderProcessedSourceCanvas(img, filterValues);
     // Downsample to preview-equivalent resolution so pattern density matches

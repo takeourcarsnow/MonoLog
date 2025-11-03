@@ -3,6 +3,8 @@ import type { HydratedPost } from "@/src/lib/types";
 import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeOff, Monitor, Film } from "lucide-react";
 import { Combobox } from "../Combobox";
 import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
+import { useSpotifyMeta } from "./hooks/useSpotifyMeta";
+import { SpotifySection } from "./SpotifySection";
 
 export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   post: HydratedPost;
@@ -19,6 +21,8 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   const [saving, setSaving] = useState(false);
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  const spotifyMeta = useSpotifyMeta(spotifyLink);
 
   // Split existing filmType into film name and ISO
   useEffect(() => {
@@ -110,6 +114,11 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
         onChange={e => setSpotifyLink(e.target.value)}
         style={{ marginTop: 8 }}
       />
+      {spotifyLink && (
+        <div style={{ marginTop: 8 }}>
+          <SpotifySection showSpotify={true} spotifyLink={spotifyLink} spotifyMeta={spotifyMeta} />
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         {activeExifField === null ? (
           // Show all fields when none is active

@@ -1207,7 +1207,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .clear-button:hover {
-  color: var(--error);
+  color: var(--danger);
   background: var(--bg-hover);
 }
 

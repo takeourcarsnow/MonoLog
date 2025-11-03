@@ -140,7 +140,7 @@ export default function ResetPasswordPage() {
           </div>
 
           {error && (
-            <div style={{ color: 'var(--error)', textAlign: 'center', padding: 8, background: 'var(--error-bg)', borderRadius: 4 }}>
+            <div style={{ color: 'var(--danger)', textAlign: 'center', padding: 8, background: 'var(--danger-bg-start)', border: '1px solid var(--danger-border)', borderRadius: 4 }}>
               {error}
             </div>
           )}

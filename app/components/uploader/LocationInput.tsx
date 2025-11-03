@@ -70,7 +70,6 @@ export function LocationInput({
     return (
       <div style={{ position: 'relative', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-            <MapPin size={16} className={`input-icon ${weatherLocation ? 'input-filled' : ''}`} />
           <input
             ref={inputRef}
             type="text"

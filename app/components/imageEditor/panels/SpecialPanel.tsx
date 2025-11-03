@@ -109,14 +109,23 @@ export default function SpecialPanel(props: SpecialPanelProps) {
           aria-label="Dither method"
         >
           <option value="none">Off</option>
-          <option value="floyd-steinberg">Floyd–Steinberg</option>
-          <option value="ordered">Ordered (Bayer 4x4)</option>
-          <option value="bayer8">Ordered (Bayer 8x8)</option>
-          <option value="atkinson">Atkinson</option>
-          <option value="burkes">Burkes</option>
-          <option value="stucki">Stucki</option>
-          <option value="sierra">Sierra</option>
-          <option value="jjn">Jarvis–Judice–Ninke</option>
+          {props.ditherPalette === 'gameboy' ? (
+            <>
+              <option value="ordered">Ordered (Bayer 4x4)</option>
+              <option value="atkinson">Atkinson</option>
+            </>
+          ) : (
+            <>
+              <option value="floyd-steinberg">Floyd–Steinberg</option>
+              <option value="ordered">Ordered (Bayer 4x4)</option>
+              <option value="bayer8">Ordered (Bayer 8x8)</option>
+              <option value="atkinson">Atkinson</option>
+              <option value="burkes">Burkes</option>
+              <option value="stucki">Stucki</option>
+              <option value="sierra">Sierra</option>
+              <option value="jjn">Jarvis–Judice–Ninke</option>
+            </>
+          )}
         </select>
         {props.ditherMethod !== 'none' && (
           <>
@@ -165,7 +174,17 @@ export default function SpecialPanel(props: SpecialPanelProps) {
                 <span style={{ fontSize: 12, opacity: 0.8 }}>Palette</span>
                 <select
                   value={props.ditherPalette}
-                  onChange={(e) => { const v = e.target.value as any; props.ditherPaletteRef && (props.ditherPaletteRef.current = v); props.setDitherPalette && props.setDitherPalette(v); requestAnimationFrame(() => props.draw()); }}
+                  onChange={(e) => { 
+                    const v = e.target.value as any; 
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v); 
+                    props.setDitherPalette && props.setDitherPalette(v); 
+                    // If switching to gameboy and current method is not ordered or atkinson, set to ordered
+                    if (v === 'gameboy' && !['ordered', 'atkinson'].includes(props.ditherMethod)) {
+                      props.ditherMethodRef.current = 'ordered';
+                      props.setDitherMethod('ordered');
+                    }
+                    requestAnimationFrame(() => props.draw()); 
+                  }}
                   style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', background: 'var(--bg-elev)', color: 'var(--text)' }}
                   aria-label="Dither palette"
                 >

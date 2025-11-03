@@ -76,7 +76,6 @@ export function WeatherInput({
     return (
       <div style={{ position: 'relative', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-          <Cloud size={16} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
           <input
             ref={inputRef}
             type="text"

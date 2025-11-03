@@ -2,12 +2,13 @@ import React from 'react';
 import BasicPanel from './panels/BasicPanel';
 import ColorPanel from './panels/ColorPanel';
 import EffectsPanel from './panels/EffectsPanel';
+import SpecialPanel from './panels/SpecialPanel';
 import CropPanel from './panels/CropPanel';
 import FramePanel from './panels/FramePanel';
 import OverlaysPanel from './panels/OverlaysPanel';
 
 interface ImageEditorPanelsProps {
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays';
+  selectedCategory: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'overlays';
   // Basic panel props
   exposure: number;
   setExposure: (v: number) => void;
@@ -75,6 +76,66 @@ interface ImageEditorPanelsProps {
   frameOverlay: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null;
   setFrameOverlay: (v: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null) => void;
   frameOverlayRef: React.MutableRefObject<{ img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null>;
+  // Special panel props
+  ditherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn';
+  setDitherMethod: (v: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn') => void;
+  ditherMethodRef: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>;
+  ditherLevels: number;
+  setDitherLevels: (v: number) => void;
+  ditherLevelsRef: React.MutableRefObject<number>;
+  ditherColorMode?: 'bw' | 'color';
+  setDitherColorMode?: (v: 'bw' | 'color') => void;
+  ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>;
+  ditherPalette?: 'auto' | 'websafe' | 'cga16' | 'ega64';
+  setDitherPalette?: (v: 'auto' | 'websafe' | 'cga16' | 'ega64') => void;
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64'>;
+  ditherCustomPalette?: string;
+  setDitherCustomPalette?: (v: string) => void;
+  ditherCustomPaletteRef?: React.MutableRefObject<string>;
+  pixelSize: number;
+  setPixelSize: (v: number) => void;
+  pixelSizeRef: React.MutableRefObject<number>;
+  pixelShape?: 'square' | 'circle';
+  setPixelShape?: (v: 'square' | 'circle') => void;
+  pixelShapeRef?: React.MutableRefObject<'square' | 'circle'>;
+  pixelSample?: 'average' | 'nearest';
+  setPixelSample?: (v: 'average' | 'nearest') => void;
+  pixelSampleRef?: React.MutableRefObject<'average' | 'nearest'>;
+  asciiEnabled: boolean;
+  setAsciiEnabled: (v: boolean) => void;
+  asciiEnabledRef: React.MutableRefObject<boolean>;
+  asciiCellSize: number;
+  setAsciiCellSize: (v: number) => void;
+  asciiCellSizeRef: React.MutableRefObject<number>;
+  asciiCharset: string;
+  setAsciiCharset: (v: string) => void;
+  asciiCharsetRef: React.MutableRefObject<string>;
+  asciiInvert: boolean;
+  setAsciiInvert: (v: boolean) => void;
+  asciiInvertRef: React.MutableRefObject<boolean>;
+  asciiColor: boolean;
+  setAsciiColor: (v: boolean) => void;
+  asciiColorRef: React.MutableRefObject<boolean>;
+  asciiOpacity?: number;
+  setAsciiOpacity?: (v: number) => void;
+  asciiOpacityRef?: React.MutableRefObject<number>;
+  asciiBackground?: string;
+  setAsciiBackground?: (v: string) => void;
+  asciiBackgroundRef?: React.MutableRefObject<string>;
+  asciiFont?: string;
+  setAsciiFont?: (v: string) => void;
+  asciiFontRef?: React.MutableRefObject<string>;
+  asciiGamma?: number;
+  setAsciiGamma?: (v: number) => void;
+  asciiGammaRef?: React.MutableRefObject<number>;
+  asciiBold?: boolean;
+  setAsciiBold?: (v: boolean) => void;
+  asciiBoldRef?: React.MutableRefObject<boolean>;
+  asciiEdge?: 'none' | 'stroke';
+  setAsciiEdge?: (v: 'none' | 'stroke') => void;
+  asciiEdgeRef?: React.MutableRefObject<'none' | 'stroke'>;
+  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots';
+  setAsciiCharsetPreset?: (v: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots') => void;
 }
 
 export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsProps) {
@@ -136,6 +197,71 @@ export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsPro
           fadeRef={props.fadeRef}
           draw={props.draw}
           resetControlToDefault={props.resetControlToDefault}
+        />
+      )}
+
+      {props.selectedCategory === 'special' && (
+        <SpecialPanel
+          ditherMethod={props.ditherMethod}
+          setDitherMethod={props.setDitherMethod}
+          ditherMethodRef={props.ditherMethodRef}
+          ditherLevels={props.ditherLevels}
+          setDitherLevels={props.setDitherLevels}
+          ditherLevelsRef={props.ditherLevelsRef}
+          ditherColorMode={props.ditherColorMode}
+          setDitherColorMode={props.setDitherColorMode!}
+          ditherColorModeRef={props.ditherColorModeRef}
+          ditherPalette={props.ditherPalette}
+          setDitherPalette={props.setDitherPalette!}
+          ditherPaletteRef={props.ditherPaletteRef}
+          ditherCustomPalette={props.ditherCustomPalette}
+          setDitherCustomPalette={props.setDitherCustomPalette!}
+          ditherCustomPaletteRef={props.ditherCustomPaletteRef}
+          pixelSize={props.pixelSize}
+          setPixelSize={props.setPixelSize}
+          pixelSizeRef={props.pixelSizeRef}
+          pixelShape={props.pixelShape}
+          setPixelShape={props.setPixelShape!}
+          pixelShapeRef={props.pixelShapeRef}
+          pixelSample={props.pixelSample}
+          setPixelSample={props.setPixelSample!}
+          pixelSampleRef={props.pixelSampleRef}
+          asciiEnabled={props.asciiEnabled}
+          setAsciiEnabled={props.setAsciiEnabled}
+          asciiEnabledRef={props.asciiEnabledRef}
+          asciiCellSize={props.asciiCellSize}
+          setAsciiCellSize={props.setAsciiCellSize}
+          asciiCellSizeRef={props.asciiCellSizeRef}
+          asciiCharset={props.asciiCharset}
+          setAsciiCharset={props.setAsciiCharset}
+          asciiCharsetRef={props.asciiCharsetRef}
+          asciiInvert={props.asciiInvert}
+          setAsciiInvert={props.setAsciiInvert}
+          asciiInvertRef={props.asciiInvertRef}
+          asciiColor={props.asciiColor}
+          setAsciiColor={props.setAsciiColor}
+          asciiColorRef={props.asciiColorRef}
+          asciiOpacity={props.asciiOpacity}
+          setAsciiOpacity={props.setAsciiOpacity!}
+          asciiOpacityRef={props.asciiOpacityRef}
+          asciiBackground={props.asciiBackground}
+          setAsciiBackground={props.setAsciiBackground!}
+          asciiBackgroundRef={props.asciiBackgroundRef}
+          asciiFont={props.asciiFont}
+          setAsciiFont={props.setAsciiFont!}
+          asciiFontRef={props.asciiFontRef}
+          asciiGamma={props.asciiGamma}
+          setAsciiGamma={props.setAsciiGamma!}
+          asciiGammaRef={props.asciiGammaRef}
+          asciiBold={props.asciiBold}
+          setAsciiBold={props.setAsciiBold!}
+          asciiBoldRef={props.asciiBoldRef}
+          asciiEdge={props.asciiEdge}
+          setAsciiEdge={props.setAsciiEdge!}
+          asciiEdgeRef={props.asciiEdgeRef}
+          asciiCharsetPreset={props.asciiCharsetPreset}
+          setAsciiCharsetPreset={props.setAsciiCharsetPreset!}
+          draw={props.draw}
         />
       )}
 

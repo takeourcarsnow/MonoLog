@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { throttle } from '@/src/lib/utils';
 
 export function useImageEditorHighlights(
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays',
+  selectedCategory: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'lightleak' | 'overlays',
   selectedFilter: string,
   categoriesContainerRef: React.RefObject<HTMLDivElement | null>,
   filtersContainerRef: React.RefObject<HTMLDivElement | null>,

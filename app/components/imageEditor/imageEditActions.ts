@@ -5,7 +5,7 @@ import { applyWebGLAdjustments } from './webglFilters';
 import type { EditorSettings } from './types';
 import { calculateCropArea, calculateCanvasSize, calculateFrameOverlaySize } from './ImageEditSetup';
 import { applyFiltersAndDraw } from './ImageEditProcessing';
-import { applySoftFocus, applyFade, applyGrain } from './ImageEditEffects';
+import { applySoftFocus, applyFade, applyGrain, applyPixelateExport, applyDitherExport, applyAsciiExport } from './ImageEditEffects';
 import { drawOverlay, applyFrameOverlay } from './ImageEditOverlays';
 import { drawFrame } from './ImageEditFrame';
 import { generateDataUrl, createSettings } from './ImageEditExport';
@@ -31,6 +31,27 @@ export async function applyEdit(
   rotationRef: React.MutableRefObject<number>,
   overlay: { img: HTMLImageElement; blendMode: string; opacity: number } | null,
   frameOverlay: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null,
+  // special effects
+  ditherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn',
+  ditherLevels: number,
+  ditherColorMode: 'bw' | 'color',
+  ditherPalette: 'auto' | 'websafe' | 'cga16' | 'ega64',
+  ditherCustomPalette: string | undefined,
+  pixelSize: number,
+  pixelShape: 'square' | 'circle',
+  pixelSample: 'average' | 'nearest',
+  asciiEnabled: boolean,
+  asciiCellSize: number,
+  asciiCharset: string,
+  asciiInvert: boolean,
+  asciiColor: boolean,
+  asciiOpacity: number | undefined,
+  asciiBackground: string | undefined,
+  asciiFont: string | undefined,
+  asciiGamma: number | undefined,
+  asciiBold: boolean | undefined,
+  asciiEdge: 'none' | 'stroke' | undefined,
+  asciiCharsetPreset: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | undefined,
   onApply: (dataUrl: string, settings: EditorSettings) => Promise<void>
 ) {
   const img = imgRef.current; if (!img) return;
@@ -117,6 +138,32 @@ export async function applyEdit(
     exposure, contrast, saturation, temperature, selectedFilter, filterStrength
   );
 
+  // Apply special effects on the processed photo region
+  // Derive filter strings for export-time reprocessing
+  const presetFilter = FILTER_PRESETS[selectedFilter] || '';
+  const { baseFilter: baseFilterExport } = mapBasicAdjustments({ exposure, contrast, saturation, temperature });
+
+  // Pixelate
+  applyPixelateExport(
+    img, srcX, srcY, srcW, srcH,
+    octx, centerX, centerY, photoDrawSizeW, photoDrawSizeH, angle,
+    pixelSize, pixelShape, pixelSample, baseFilterExport, presetFilter, filterStrength
+  );
+  // Dither
+  applyDitherExport(
+    img, srcX, srcY, srcW, srcH,
+    octx, centerX, centerY, photoDrawSizeW, photoDrawSizeH, angle,
+    ditherMethod, ditherLevels, ditherColorMode, ditherPalette, ditherCustomPalette, baseFilterExport, presetFilter, filterStrength
+  );
+  // ASCII
+  applyAsciiExport(
+    img, srcX, srcY, srcW, srcH,
+    octx, centerX, centerY, photoDrawSizeW, photoDrawSizeH, angle,
+    asciiEnabled, asciiCellSize, asciiCharset, asciiInvert, asciiColor,
+    { opacity: asciiOpacity, background: asciiBackground, font: asciiFont, gamma: asciiGamma, bold: asciiBold, edge: asciiEdge },
+    baseFilterExport, presetFilter, filterStrength
+  );
+
   // Apply additional visual effects
   applySoftFocus(img, srcX, srcY, srcW, srcH, octx, padPx, softFocus);
   applyFade(octx, padPx, srcW, srcH, fade);
@@ -135,7 +182,11 @@ export async function applyEdit(
 
   const settings = createSettings(
     exposure, contrast, saturation, temperature, rotation, vignette, frameColor, frameThickness,
-    selectedFilter, filterStrength, grain, softFocus, fade, overlay, frameOverlay
+    selectedFilter, filterStrength, grain, softFocus, fade, overlay, frameOverlay,
+    ditherMethod, ditherLevels, ditherColorMode, ditherPalette, ditherCustomPalette,
+    pixelSize, pixelShape, pixelSample,
+    asciiEnabled, asciiCellSize, asciiCharset, asciiInvert, asciiColor,
+    asciiOpacity, asciiBackground, asciiFont, asciiGamma, asciiBold, asciiEdge, asciiCharsetPreset
   );
 
   await onApply(dataUrl, settings);

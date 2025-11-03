@@ -1,11 +1,11 @@
-import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Layers } from "lucide-react";
+import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Layers, Wand2 } from "lucide-react";
 import { CATEGORY_COLORS } from './constants';
 import React from 'react';
 
 interface ToolbarCategoriesProps {
   categoriesContainerRef: React.RefObject<HTMLDivElement | null>;
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays';
-  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays') => void;
+  selectedCategory: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'overlays';
+  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'overlays') => void;
   categoryHighlight: { left: number; top: number; width: number; height: number } | null;
   sel: { x: number; y: number; w: number; h: number } | null;
   applyCropOnly: () => void;
@@ -270,6 +270,38 @@ function ImageEditorToolbarCategories({
       >
         <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'effects' ? CATEGORY_COLORS.effects : undefined }} />
         <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Effects</span>
+      </button>
+
+      <button
+        data-cat="special"
+        data-active={category === 'special'}
+        type="button"
+        aria-label="Special Effects"
+        title="Special Effects"
+        className="cat-btn"
+        onClick={(e: any) => {
+          try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
+          setSelectedCategory('special');
+        }}
+        style={{
+          padding: '6px 8px',
+          borderRadius: 10,
+          background: category === 'special' ? 'transparent' : 'transparent',
+          color: 'var(--text)',
+          transition: 'transform 140ms ease, box-shadow 220ms ease, color 220ms ease, width 200ms ease',
+          position: 'relative',
+          zIndex: 1,
+          flex: '0 0 auto',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          border: 'none',
+          fontWeight: category === 'special' ? 700 : 500,
+          overflow: 'hidden'
+        }}
+      >
+        <Wand2 size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'special' ? CATEGORY_COLORS.special : undefined }} />
+        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Special</span>
       </button>
 
       <button

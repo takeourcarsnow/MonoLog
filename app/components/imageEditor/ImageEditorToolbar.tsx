@@ -12,8 +12,8 @@ interface ImageEditorToolbarProps {
   isFullscreen?: boolean;
   onDownload?: () => void;
   categoriesContainerRef: React.RefObject<HTMLDivElement>;
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays';
-  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'overlays') => void;
+  selectedCategory: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'overlays';
+  setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'overlays') => void;
   categoryHighlight: { left: number; top: number; width: number; height: number } | null;
   sel: { x: number; y: number; w: number; h: number } | null;
   applyCropOnly: () => void;

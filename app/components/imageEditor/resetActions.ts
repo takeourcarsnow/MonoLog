@@ -42,7 +42,47 @@ export function resetAdjustments(
   rotationRef: React.MutableRefObject<number>,
   setSel: (sel: null) => void,
   cropRatio: React.MutableRefObject<number | null>,
-  setPresetIndex: (v: number) => void
+  setPresetIndex: (v: number) => void,
+  // special effects
+  setDitherMethod?: (v: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn') => void,
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  setDitherLevels?: (v: number) => void,
+  ditherLevelsRef?: React.MutableRefObject<number>,
+  setDitherColorMode?: (v: 'bw' | 'color') => void,
+  ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>,
+  setDitherPalette?: (v: 'auto' | 'websafe' | 'cga16' | 'ega64') => void,
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64'>,
+  setDitherCustomPalette?: (v: string) => void,
+  ditherCustomPaletteRef?: React.MutableRefObject<string>,
+  setPixelSize?: (v: number) => void,
+  pixelSizeRef?: React.MutableRefObject<number>,
+  setPixelShape?: (v: 'square' | 'circle') => void,
+  pixelShapeRef?: React.MutableRefObject<'square' | 'circle'>,
+  setPixelSample?: (v: 'average' | 'nearest') => void,
+  pixelSampleRef?: React.MutableRefObject<'average' | 'nearest'>,
+  setAsciiEnabled?: (v: boolean) => void,
+  asciiEnabledRef?: React.MutableRefObject<boolean>,
+  setAsciiCellSize?: (v: number) => void,
+  asciiCellSizeRef?: React.MutableRefObject<number>,
+  setAsciiCharset?: (v: string) => void,
+  asciiCharsetRef?: React.MutableRefObject<string>,
+  setAsciiInvert?: (v: boolean) => void,
+  asciiInvertRef?: React.MutableRefObject<boolean>,
+  setAsciiColor?: (v: boolean) => void,
+  asciiColorRef?: React.MutableRefObject<boolean>,
+  setAsciiOpacity?: (v: number) => void,
+  asciiOpacityRef?: React.MutableRefObject<number>,
+  setAsciiBackground?: (v: string) => void,
+  asciiBackgroundRef?: React.MutableRefObject<string>,
+  setAsciiFont?: (v: string) => void,
+  asciiFontRef?: React.MutableRefObject<string>,
+  setAsciiGamma?: (v: number) => void,
+  asciiGammaRef?: React.MutableRefObject<number>,
+  setAsciiBold?: (v: boolean) => void,
+  asciiBoldRef?: React.MutableRefObject<boolean>,
+  setAsciiEdge?: (v: 'none' | 'stroke') => void,
+  asciiEdgeRef?: React.MutableRefObject<'none' | 'stroke'>,
+  setAsciiCharsetPreset?: (v: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots') => void
 ) {
   // Runtime validation: ensure refs and setters are the expected types.
   const makeType = (v: any) => {
@@ -86,6 +126,27 @@ export function resetAdjustments(
   const defRotation = 0;
   const defOverlay = null;
   const defFrameOverlay = null;
+  // special defaults
+  const defDitherMethod: 'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn' = 'none';
+  const defDitherLevels = 2;
+  const defDitherColorMode: 'bw' | 'color' = 'bw';
+  const defDitherPalette: 'auto' | 'websafe' | 'cga16' | 'ega64' = 'auto';
+  const defDitherCustomPalette = '';
+  const defPixelSize = 1;
+  const defPixelShape: 'square' | 'circle' = 'square';
+  const defPixelSample: 'average' | 'nearest' = 'average';
+  const defAsciiEnabled = false;
+  const defAsciiCellSize = 8;
+  const defAsciiCharset = '@%#*+=-:. ';
+  const defAsciiInvert = false;
+  const defAsciiColor = false;
+  const defAsciiOpacity = 1;
+  const defAsciiBackground = 'transparent';
+  const defAsciiFont = 'monospace';
+  const defAsciiGamma = 1;
+  const defAsciiBold = false;
+  const defAsciiEdge: 'none' | 'stroke' = 'none';
+  const defAsciiCharsetPreset: 'custom' = 'custom';
 
   // Update state (defensively check setters to avoid crashes if a setter is not provided)
   if (typeof setExposure === 'function') { setExposure(defExposure); } exposureRef.current = defExposure;
@@ -103,6 +164,27 @@ export function resetAdjustments(
   if (typeof setOverlay === 'function') { setOverlay(defOverlay); } overlayRef.current = defOverlay;
   if (typeof setFrameOverlay === 'function') { setFrameOverlay(defFrameOverlay); } frameOverlayRef.current = defFrameOverlay;
   if (typeof setRotation === 'function') { setRotation(defRotation); } rotationRef.current = defRotation;
+  // special
+  if (setDitherMethod && ditherMethodRef) { setDitherMethod(defDitherMethod); ditherMethodRef.current = defDitherMethod; }
+  if (setDitherLevels && ditherLevelsRef) { setDitherLevels(defDitherLevels); ditherLevelsRef.current = defDitherLevels; }
+  if (setDitherColorMode && ditherColorModeRef) { setDitherColorMode(defDitherColorMode); ditherColorModeRef.current = defDitherColorMode; }
+  if (setDitherPalette && ditherPaletteRef) { setDitherPalette(defDitherPalette); ditherPaletteRef.current = defDitherPalette; }
+  if (setDitherCustomPalette && ditherCustomPaletteRef) { setDitherCustomPalette(defDitherCustomPalette); ditherCustomPaletteRef.current = defDitherCustomPalette; }
+  if (setPixelSize && pixelSizeRef) { setPixelSize(defPixelSize); pixelSizeRef.current = defPixelSize; }
+  if (setPixelShape && pixelShapeRef) { setPixelShape(defPixelShape); pixelShapeRef.current = defPixelShape; }
+  if (setPixelSample && pixelSampleRef) { setPixelSample(defPixelSample); pixelSampleRef.current = defPixelSample; }
+  if (setAsciiEnabled && asciiEnabledRef) { setAsciiEnabled(defAsciiEnabled); asciiEnabledRef.current = defAsciiEnabled; }
+  if (setAsciiCellSize && asciiCellSizeRef) { setAsciiCellSize(defAsciiCellSize); asciiCellSizeRef.current = defAsciiCellSize; }
+  if (setAsciiCharset && asciiCharsetRef) { setAsciiCharset(defAsciiCharset); asciiCharsetRef.current = defAsciiCharset; }
+  if (setAsciiInvert && asciiInvertRef) { setAsciiInvert(defAsciiInvert); asciiInvertRef.current = defAsciiInvert; }
+  if (setAsciiColor && asciiColorRef) { setAsciiColor(defAsciiColor); asciiColorRef.current = defAsciiColor; }
+  if (setAsciiOpacity && asciiOpacityRef) { setAsciiOpacity(defAsciiOpacity); asciiOpacityRef.current = defAsciiOpacity; }
+  if (setAsciiBackground && asciiBackgroundRef) { setAsciiBackground(defAsciiBackground); asciiBackgroundRef.current = defAsciiBackground; }
+  if (setAsciiFont && asciiFontRef) { setAsciiFont(defAsciiFont); asciiFontRef.current = defAsciiFont; }
+  if (setAsciiGamma && asciiGammaRef) { setAsciiGamma(defAsciiGamma); asciiGammaRef.current = defAsciiGamma; }
+  if (setAsciiBold && asciiBoldRef) { setAsciiBold(defAsciiBold); asciiBoldRef.current = defAsciiBold; }
+  if (setAsciiEdge && asciiEdgeRef) { setAsciiEdge(defAsciiEdge); asciiEdgeRef.current = defAsciiEdge; }
+  if (setAsciiCharsetPreset) { setAsciiCharsetPreset(defAsciiCharsetPreset); }
 
   // Also clear any crop selection/preset
   setSel(null);
@@ -134,7 +216,24 @@ export function resetControlToDefault(
   rotationRef: React.MutableRefObject<number>,
   frameThicknessRef: React.MutableRefObject<number>,
   setFrameThickness: (v: number) => void,
-  draw: () => void
+  draw: () => void,
+  // special effects
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  setDitherMethod?: (v: 'none' | 'floyd-steinberg' | 'ordered') => void,
+  ditherLevelsRef?: React.MutableRefObject<number>,
+  setDitherLevels?: (v: number) => void,
+  pixelSizeRef?: React.MutableRefObject<number>,
+  setPixelSize?: (v: number) => void,
+  asciiEnabledRef?: React.MutableRefObject<boolean>,
+  setAsciiEnabled?: (v: boolean) => void,
+  asciiCellSizeRef?: React.MutableRefObject<number>,
+  setAsciiCellSize?: (v: number) => void,
+  asciiCharsetRef?: React.MutableRefObject<string>,
+  setAsciiCharset?: (v: string) => void,
+  asciiInvertRef?: React.MutableRefObject<boolean>,
+  setAsciiInvert?: (v: boolean) => void,
+  asciiColorRef?: React.MutableRefObject<boolean>,
+  setAsciiColor?: (v: boolean) => void
 ) {
   switch (control) {
     case 'exposure': {
@@ -190,6 +289,38 @@ export function resetControlToDefault(
     case 'frameThickness': {
       const v = 0;
       frameThicknessRef.current = v; if (typeof setFrameThickness === 'function') setFrameThickness(v); draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'pixelSize': {
+      const v = 1; if (pixelSizeRef && setPixelSize) { pixelSizeRef.current = v; setPixelSize(v); } draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'ditherMethod': {
+      const v: 'none' | 'floyd-steinberg' | 'ordered' = 'none'; if (ditherMethodRef && setDitherMethod) { ditherMethodRef.current = v; setDitherMethod(v); } draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'ditherLevels': {
+      const v = 2; if (ditherLevelsRef && setDitherLevels) { ditherLevelsRef.current = v; setDitherLevels(v); } draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'asciiEnabled': {
+      const v = false; if (asciiEnabledRef && setAsciiEnabled) { asciiEnabledRef.current = v; setAsciiEnabled(v); } draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'asciiCellSize': {
+      const v = 8; if (asciiCellSizeRef && setAsciiCellSize) { asciiCellSizeRef.current = v; setAsciiCellSize(v); } draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'asciiCharset': {
+      const v = '@%#*+=-:. '; if (asciiCharsetRef && setAsciiCharset) { asciiCharsetRef.current = v; setAsciiCharset(v); } draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'asciiInvert': {
+      const v = false; if (asciiInvertRef && setAsciiInvert) { asciiInvertRef.current = v; setAsciiInvert(v); } draw(); requestAnimationFrame(() => draw());
+      break;
+    }
+    case 'asciiColor': {
+      const v = false; if (asciiColorRef && setAsciiColor) { asciiColorRef.current = v; setAsciiColor(v); } draw(); requestAnimationFrame(() => draw());
       break;
     }
     default:

@@ -101,6 +101,47 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setOverlay,
     frameOverlay,
     setFrameOverlay,
+    // special effects state
+    ditherMethod,
+    setDitherMethod,
+    ditherLevels,
+    setDitherLevels,
+    ditherColorMode,
+    setDitherColorMode,
+    ditherPalette,
+    setDitherPalette,
+    ditherCustomPalette,
+    setDitherCustomPalette,
+    pixelSize,
+    setPixelSize,
+    pixelShape,
+    setPixelShape,
+    pixelSample,
+    setPixelSample,
+    asciiEnabled,
+    setAsciiEnabled,
+    asciiCellSize,
+    setAsciiCellSize,
+    asciiCharset,
+    setAsciiCharset,
+    asciiInvert,
+    setAsciiInvert,
+    asciiColor,
+    setAsciiColor,
+    asciiOpacity,
+    setAsciiOpacity,
+    asciiBackground,
+    setAsciiBackground,
+    asciiFont,
+    setAsciiFont,
+    asciiGamma,
+    setAsciiGamma,
+    asciiBold,
+    setAsciiBold,
+    asciiEdge,
+    setAsciiEdge,
+    asciiCharsetPreset,
+    setAsciiCharsetPreset,
     exposureRef,
     contrastRef,
     saturationRef,
@@ -115,6 +156,26 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     fadeRef,
     overlayRef,
     frameOverlayRef,
+    // special refs
+    ditherMethodRef,
+    ditherLevelsRef,
+    ditherColorModeRef,
+    ditherPaletteRef,
+    ditherCustomPaletteRef,
+    pixelSizeRef,
+    pixelShapeRef,
+    pixelSampleRef,
+    asciiEnabledRef,
+    asciiCellSizeRef,
+    asciiCharsetRef,
+    asciiInvertRef,
+    asciiColorRef,
+    asciiOpacityRef,
+    asciiBackgroundRef,
+    asciiFontRef,
+    asciiGammaRef,
+    asciiBoldRef,
+    asciiEdgeRef,
     filtersContainerRef,
     filterHighlight,
     setFilterHighlight,
@@ -159,6 +220,26 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     rotationRef,
     dashOffsetRef,
     computeImageLayoutRef.current || (() => ({})),
+    // special effects
+    ditherMethodRef,
+    ditherLevelsRef,
+    ditherColorModeRef,
+    ditherPaletteRef,
+    ditherCustomPaletteRef,
+    pixelSizeRef,
+    pixelShapeRef,
+    pixelSampleRef,
+    asciiEnabledRef,
+    asciiCellSizeRef,
+    asciiCharsetRef,
+    asciiInvertRef,
+    asciiColorRef,
+    asciiOpacityRef,
+    asciiBackgroundRef,
+    asciiFontRef,
+    asciiGammaRef,
+    asciiBoldRef,
+    asciiEdgeRef,
     frameOverlayRef
   );
 
@@ -252,7 +333,47 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     overlay,
     overlayRef,
     frameOverlay,
-    frameOverlayRef
+    frameOverlayRef,
+    // special
+    ditherMethod,
+    ditherMethodRef,
+    ditherLevels,
+    ditherLevelsRef,
+    pixelSize,
+    pixelSizeRef,
+    asciiEnabled,
+    asciiEnabledRef,
+    asciiCellSize,
+    asciiCellSizeRef,
+    asciiCharset,
+    asciiCharsetRef,
+    asciiInvert,
+    asciiInvertRef,
+    asciiColor,
+    asciiColorRef,
+    // new specials
+    ditherColorMode,
+    ditherColorModeRef,
+    ditherPalette,
+    ditherPaletteRef,
+    ditherCustomPalette,
+    ditherCustomPaletteRef,
+    pixelShape,
+    pixelShapeRef,
+    pixelSample,
+    pixelSampleRef,
+    asciiOpacity,
+    asciiOpacityRef,
+    asciiBackground,
+    asciiBackgroundRef,
+    asciiFont,
+    asciiFontRef,
+    asciiGamma,
+    asciiGammaRef,
+    asciiBold,
+    asciiBoldRef,
+    asciiEdge,
+    asciiEdgeRef
   );
 
   const setSelectedCategoryWithHistory = useCallback((category: typeof selectedCategory) => {
@@ -280,6 +401,27 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     grain,
     softFocus,
     fade,
+    // special effects state
+    ditherMethod,
+    ditherLevels,
+    ditherColorMode,
+    ditherPalette,
+    ditherCustomPalette,
+    pixelSize,
+    pixelShape,
+    pixelSample,
+    asciiEnabled,
+    asciiCellSize,
+    asciiCharset,
+    asciiInvert,
+    asciiColor,
+    asciiOpacity,
+    asciiBackground,
+    asciiFont,
+    asciiGamma,
+    asciiBold,
+    asciiEdge,
+    asciiCharsetPreset,
     rotation,
     rotationRef,
     onApply,
@@ -307,6 +449,46 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     softFocusRef,
     setFade,
     fadeRef,
+    // special setters/refs
+    setDitherMethod,
+    ditherMethodRef,
+    setDitherLevels,
+    ditherLevelsRef,
+    setDitherColorMode,
+    ditherColorModeRef,
+    setDitherPalette,
+    ditherPaletteRef,
+    setDitherCustomPalette,
+    ditherCustomPaletteRef,
+    setPixelSize,
+    pixelSizeRef,
+    setPixelShape,
+    pixelShapeRef,
+    setPixelSample,
+    pixelSampleRef,
+    setAsciiEnabled,
+    asciiEnabledRef,
+    setAsciiCellSize,
+    asciiCellSizeRef,
+    setAsciiCharset,
+    asciiCharsetRef,
+    setAsciiInvert,
+    asciiInvertRef,
+    setAsciiColor,
+    asciiColorRef,
+    setAsciiOpacity,
+    asciiOpacityRef,
+    setAsciiBackground,
+    asciiBackgroundRef,
+    setAsciiFont,
+    asciiFontRef,
+    setAsciiGamma,
+    asciiGammaRef,
+    setAsciiBold,
+    asciiBoldRef,
+    setAsciiEdge,
+    asciiEdgeRef,
+    setAsciiCharsetPreset,
     overlay,
     setOverlay,
     overlayRef,
@@ -438,6 +620,66 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           frameOverlay={frameOverlay}
           setFrameOverlay={setFrameOverlay}
           frameOverlayRef={frameOverlayRef}
+          // Special
+          ditherMethod={ditherMethod}
+          setDitherMethod={setDitherMethod}
+          ditherMethodRef={ditherMethodRef}
+          ditherLevels={ditherLevels}
+          setDitherLevels={setDitherLevels}
+          ditherLevelsRef={ditherLevelsRef}
+          ditherColorMode={ditherColorMode}
+          setDitherColorMode={setDitherColorMode}
+          ditherColorModeRef={ditherColorModeRef}
+          ditherPalette={ditherPalette}
+          setDitherPalette={setDitherPalette}
+          ditherPaletteRef={ditherPaletteRef}
+          ditherCustomPalette={ditherCustomPalette}
+          setDitherCustomPalette={setDitherCustomPalette}
+          ditherCustomPaletteRef={ditherCustomPaletteRef}
+          pixelSize={pixelSize}
+          setPixelSize={setPixelSize}
+          pixelSizeRef={pixelSizeRef}
+          pixelShape={pixelShape}
+          setPixelShape={setPixelShape}
+          pixelShapeRef={pixelShapeRef}
+          pixelSample={pixelSample}
+          setPixelSample={setPixelSample}
+          pixelSampleRef={pixelSampleRef}
+          asciiEnabled={asciiEnabled}
+          setAsciiEnabled={setAsciiEnabled}
+          asciiEnabledRef={asciiEnabledRef}
+          asciiCellSize={asciiCellSize}
+          setAsciiCellSize={setAsciiCellSize}
+          asciiCellSizeRef={asciiCellSizeRef}
+          asciiCharset={asciiCharset}
+          setAsciiCharset={setAsciiCharset}
+          asciiCharsetRef={asciiCharsetRef}
+          asciiInvert={asciiInvert}
+          setAsciiInvert={setAsciiInvert}
+          asciiInvertRef={asciiInvertRef}
+          asciiColor={asciiColor}
+          setAsciiColor={setAsciiColor}
+          asciiColorRef={asciiColorRef}
+          asciiOpacity={asciiOpacity}
+          setAsciiOpacity={setAsciiOpacity}
+          asciiOpacityRef={asciiOpacityRef}
+          asciiBackground={asciiBackground}
+          setAsciiBackground={setAsciiBackground}
+          asciiBackgroundRef={asciiBackgroundRef}
+          asciiFont={asciiFont}
+          setAsciiFont={setAsciiFont}
+          asciiFontRef={asciiFontRef}
+          asciiGamma={asciiGamma}
+          setAsciiGamma={setAsciiGamma}
+          asciiGammaRef={asciiGammaRef}
+          asciiBold={asciiBold}
+          setAsciiBold={setAsciiBold}
+          asciiBoldRef={asciiBoldRef}
+          asciiEdge={asciiEdge}
+          setAsciiEdge={setAsciiEdge}
+          asciiEdgeRef={asciiEdgeRef}
+          asciiCharsetPreset={asciiCharsetPreset}
+          setAsciiCharsetPreset={setAsciiCharsetPreset}
         />
       </aside>
       {/* debug overlay removed */}

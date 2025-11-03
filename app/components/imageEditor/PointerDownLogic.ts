@@ -4,7 +4,7 @@ export function handlePointerDown(
   ev: PointerEvent,
   canvas: HTMLCanvasElement,
   sel: { x: number; y: number; w: number; h: number } | null,
-  selectedCategory: 'basic' | 'color' | 'effects' | 'crop' | 'frame' | 'lightleak' | 'overlays',
+    selectedCategory: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'lightleak' | 'overlays',
   dragging: React.MutableRefObject<null | {
     startX: number;
     startY: number;

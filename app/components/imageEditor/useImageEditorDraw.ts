@@ -23,7 +23,28 @@ export function useImageEditorDraw(
   overlayRef: React.MutableRefObject<{ img: HTMLImageElement; blendMode: string; opacity: number } | null>,
   rotationRef: React.MutableRefObject<number>,
   dashOffsetRef: React.MutableRefObject<number>,
-  computeImageLayout: () => void
+  computeImageLayout: () => void,
+  // special effects
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>,
+  ditherLevelsRef?: React.MutableRefObject<number>,
+  ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>,
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64'>,
+  ditherCustomPaletteRef?: React.MutableRefObject<string>,
+  pixelSizeRef?: React.MutableRefObject<number>,
+  pixelShapeRef?: React.MutableRefObject<'square' | 'circle'>,
+  pixelSampleRef?: React.MutableRefObject<'average' | 'nearest'>,
+  asciiEnabledRef?: React.MutableRefObject<boolean>,
+  asciiCellSizeRef?: React.MutableRefObject<number>,
+  asciiCharsetRef?: React.MutableRefObject<string>,
+  asciiInvertRef?: React.MutableRefObject<boolean>,
+  asciiColorRef?: React.MutableRefObject<boolean>,
+  asciiOpacityRef?: React.MutableRefObject<number>,
+  asciiBackgroundRef?: React.MutableRefObject<string>,
+  asciiFontRef?: React.MutableRefObject<string>,
+  asciiGammaRef?: React.MutableRefObject<number>,
+  asciiBoldRef?: React.MutableRefObject<boolean>,
+  asciiEdgeRef?: React.MutableRefObject<'none' | 'stroke'>,
+  frameOverlayRef?: React.MutableRefObject<{ img: HTMLImageElement; opacity: number } | null>
 ) {
   const draw = useCallback((info?: any, overrides?: any) => {
     drawImage(
@@ -49,8 +70,29 @@ export function useImageEditorDraw(
       rotationRef,
       dashOffsetRef,
       computeImageLayout,
+      ditherMethodRef,
+      ditherLevelsRef,
+      ditherColorModeRef,
+      ditherPaletteRef,
+      ditherCustomPaletteRef,
+      pixelSizeRef,
+      pixelShapeRef,
+      pixelSampleRef,
+      asciiEnabledRef,
+      asciiCellSizeRef,
+      asciiCharsetRef,
+      asciiInvertRef,
+      asciiColorRef,
+      asciiOpacityRef,
+      asciiBackgroundRef,
+      asciiFontRef,
+      asciiGammaRef,
+      asciiBoldRef,
+      asciiEdgeRef,
       info,
-      overrides
+      overrides,
+      undefined,
+      frameOverlayRef
     );
   }, [
     canvasRef,
@@ -74,7 +116,27 @@ export function useImageEditorDraw(
     overlayRef,
     rotationRef,
     dashOffsetRef,
-    computeImageLayout
+    computeImageLayout,
+    ditherMethodRef,
+    ditherLevelsRef,
+    ditherColorModeRef,
+    ditherPaletteRef,
+    ditherCustomPaletteRef,
+    pixelSizeRef,
+    pixelShapeRef,
+    pixelSampleRef,
+    asciiEnabledRef,
+    asciiCellSizeRef,
+    asciiCharsetRef,
+    asciiInvertRef,
+    asciiColorRef,
+    asciiOpacityRef,
+    asciiBackgroundRef,
+    asciiFontRef,
+    asciiGammaRef,
+    asciiBoldRef,
+    asciiEdgeRef,
+    frameOverlayRef
   ]);
 
   return draw;

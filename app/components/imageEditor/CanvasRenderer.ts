@@ -1,7 +1,7 @@
 import { DrawParams, LayoutInfo, DrawOverrides } from "./CanvasRendererCore";
 import { computeFrameAdjustedLayout } from "./CanvasRendererLayout";
 import { computeFilterValues } from "./CanvasRendererFilters";
-import { applySoftFocusEffect, applyFadeEffect, applyVignetteEffect, applyGrainEffect, applyOverlayEffect, applyFrameOverlayEffect } from "./CanvasRendererEffects";
+import { applySoftFocusEffect, applyFadeEffect, applyVignetteEffect, applyGrainEffect, applyOverlayEffect, applyFrameOverlayEffect, applyPixelateEffect, applyDitherEffect, applyAsciiEffect } from "./CanvasRendererEffects";
 import { drawFrame } from "./CanvasRendererFrame";
 import { drawSelection } from "./CanvasRendererSelection";
 import { generateNoiseCanvas } from "./utils";
@@ -53,6 +53,68 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   }
   if (filterValues.curGrain > 0.001) {
     applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
+  }
+  // New: Special Effects category
+  const pixelSize = params.pixelSizeRef?.current ?? 1;
+  if (pixelSize && pixelSize > 1) {
+    applyPixelateEffect(
+      ctx,
+      img as HTMLImageElement,
+      imgLeft,
+      imgTop,
+      imgW,
+      imgH,
+      angleRad,
+      pixelSize,
+      filterValues,
+      params.pixelShapeRef?.current ?? 'square',
+      params.pixelSampleRef?.current ?? 'average'
+    );
+  }
+  const ditherMethod = params.ditherMethodRef?.current || 'none';
+  const ditherLevels = params.ditherLevelsRef?.current || 2;
+  if (ditherMethod !== 'none') {
+    applyDitherEffect(
+      ctx,
+      img as HTMLImageElement,
+      imgLeft,
+      imgTop,
+      imgW,
+      imgH,
+      angleRad,
+      ditherMethod as any,
+      ditherLevels,
+      filterValues,
+      params.ditherColorModeRef?.current ?? 'bw',
+      params.ditherPaletteRef?.current ?? 'auto',
+      params.ditherCustomPaletteRef?.current ?? ''
+    );
+  }
+  const asciiEnabled = params.asciiEnabledRef?.current ?? false;
+  if (asciiEnabled) {
+    applyAsciiEffect(
+      ctx,
+      img as HTMLImageElement,
+      imgLeft,
+      imgTop,
+      imgW,
+      imgH,
+      angleRad,
+      true,
+      params.asciiCellSizeRef?.current ?? 8,
+      params.asciiCharsetRef?.current ?? "@%#*+=-:. ",
+      params.asciiInvertRef?.current ?? false,
+      params.asciiColorRef?.current ?? false,
+      filterValues,
+      {
+        opacity: params.asciiOpacityRef?.current ?? 1,
+        background: params.asciiBackgroundRef?.current ?? 'transparent',
+        font: params.asciiFontRef?.current ?? 'monospace',
+        gamma: params.asciiGammaRef?.current ?? 1,
+        bold: params.asciiBoldRef?.current ?? false,
+        edge: params.asciiEdgeRef?.current ?? 'none'
+      }
+    );
   }
   if (params.overlayRef.current) {
     applyOverlayEffect(ctx, params.overlayRef.current, imgLeft, imgTop, imgW, imgH);

@@ -47,6 +47,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   basic: '#2d9cff',    // blue
   color: '#ff6b6b',    // red/pink
   effects: '#9b5cff',  // purple
+  special: '#00bcd4',  // teal/cyan
   crop: '#00c48c',     // green
   frame: '#ffb703'     // warm yellow
 };

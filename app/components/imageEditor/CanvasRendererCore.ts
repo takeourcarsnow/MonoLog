@@ -25,6 +25,26 @@ export interface DrawParams {
   rotationRef: React.MutableRefObject<number>;
   dashOffsetRef: React.MutableRefObject<number>;
   computeImageLayout: () => { rect: DOMRect; baseScale: number; dispW: number; dispH: number; left: number; top: number } | null;
+  // Special effects refs
+  ditherMethodRef?: React.MutableRefObject<'none' | 'floyd-steinberg' | 'ordered' | 'bayer8' | 'atkinson' | 'burkes' | 'stucki' | 'sierra' | 'jjn'>;
+  ditherLevelsRef?: React.MutableRefObject<number>;
+  ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>;
+  ditherPaletteRef?: React.MutableRefObject<'auto' | 'websafe' | 'cga16' | 'ega64'>;
+  ditherCustomPaletteRef?: React.MutableRefObject<string>;
+  pixelSizeRef?: React.MutableRefObject<number>;
+  pixelShapeRef?: React.MutableRefObject<'square' | 'circle'>;
+  pixelSampleRef?: React.MutableRefObject<'average' | 'nearest'>;
+  asciiEnabledRef?: React.MutableRefObject<boolean>;
+  asciiCellSizeRef?: React.MutableRefObject<number>;
+  asciiCharsetRef?: React.MutableRefObject<string>;
+  asciiInvertRef?: React.MutableRefObject<boolean>;
+  asciiColorRef?: React.MutableRefObject<boolean>;
+  asciiOpacityRef?: React.MutableRefObject<number>;
+  asciiBackgroundRef?: React.MutableRefObject<string>;
+  asciiFontRef?: React.MutableRefObject<string>;
+  asciiGammaRef?: React.MutableRefObject<number>;
+  asciiBoldRef?: React.MutableRefObject<boolean>;
+  asciiEdgeRef?: React.MutableRefObject<'none' | 'stroke'>;
 }
 
 export interface LayoutInfo {

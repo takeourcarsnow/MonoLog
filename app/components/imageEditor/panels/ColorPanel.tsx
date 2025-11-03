@@ -1,6 +1,5 @@
 import { FILTER_PRESETS, FILTER_ICONS, FILTER_COLORS } from "../constants";
 import { rangeBg } from "../utils";
-import { Sliders } from "lucide-react";
 
 interface ColorPanelProps {
   selectedFilter: string;
@@ -65,15 +64,12 @@ export default function ColorPanel({
       <nav ref={filtersContainerRef} style={{ position: 'relative' }}>
         {/* animated highlight pill sits behind buttons and moves between them */}
         <div aria-hidden style={{ position: 'absolute', left: filterHighlight?.left ?? 0, top: filterHighlight?.top ?? 0, width: filterHighlight?.width ?? 0, height: filterHighlight?.height ?? 0, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', transition: 'left 220ms cubic-bezier(.2,.9,.2,1), width 220ms cubic-bezier(.2,.9,.2,1), top 220ms cubic-bezier(.2,.9,.2,1), height 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease', pointerEvents: 'none', opacity: filterHighlight ? 0.95 : 0, boxShadow: 'none', border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)' }} />
-        {renderFilterGroup(colorFilters, 'nowrap')}
-        {renderFilterGroup(bwFilters, 'nowrap')}
+        {renderFilterGroup(colorFilters, 'wrap')}
+        {renderFilterGroup(bwFilters, 'wrap')}
         {renderFilterGroup(otherFilters)}
       </nav>
 
       <label style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 2 }}>
-        <span style={{ width: 24, display: 'flex', alignItems: 'center' }}>
-          <Sliders size={16} strokeWidth={2} aria-hidden />
-        </span>
         <input
           className="imgedit-range"
           type="range"

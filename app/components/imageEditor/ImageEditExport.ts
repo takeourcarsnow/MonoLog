@@ -56,7 +56,7 @@ export function createSettings(
   asciiGamma: number | undefined,
   asciiBold: boolean | undefined,
   asciiEdge: 'none' | 'stroke' | undefined,
-  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots'
+  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters'
 ): EditorSettings {
   return {
     exposure,

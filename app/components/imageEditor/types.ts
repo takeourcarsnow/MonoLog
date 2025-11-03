@@ -34,7 +34,7 @@ export type EditorSettings = {
   asciiGamma?: number; // luminance mapping gamma
   asciiBold?: boolean;
   asciiEdge?: 'none' | 'stroke';
-  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots';
+  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters';
 };
 
 export type ImageEditorProps = {

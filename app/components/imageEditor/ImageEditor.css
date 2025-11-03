@@ -158,7 +158,20 @@
 .cat-btn[data-active="true"] .cat-label {
   max-width: 80px;
   opacity: 1;
-  margin-left: 8px;
+  margin-left: 2px;
+}
+@media (max-width: 639px) {
+  .cat-btn[data-active="true"] .cat-label {
+    font-size: 12px;
+    max-width: 60px;
+  }
+  .cat-btn {
+    padding: 4px 6px !important;
+  }
+  .cat-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
 }
 
 .imgedit-range {

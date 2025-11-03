@@ -103,7 +103,8 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       params.ditherColorModeRef?.current ?? 'bw',
       params.ditherPaletteRef?.current ?? 'auto',
       params.ditherCustomPaletteRef?.current ?? '',
-      effectScale
+      effectScale,
+      { preview: !targetCanvas, maxPreviewPixels: undefined }
     );
   }
   const asciiEnabled = params.asciiEnabledRef?.current ?? false;

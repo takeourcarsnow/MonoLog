@@ -1,5 +1,6 @@
 import { drawRotated } from "./CanvasRendererUtils";
 import { mapBasicAdjustments } from './filterUtils';
+import { getTempCanvas, releaseTempCanvas } from './tempCanvasPool';
 
 function renderProcessedSourceCanvas(
   img: HTMLImageElement,
@@ -212,6 +213,8 @@ export function applyPixelateEffect(
   pixelSample: 'average' | 'nearest' = 'average',
   effectScale: number = 1
 ) {
+  // Respect A/B (press-and-hold to show original): skip special effects when previewing original
+  if (filterValues?.isPreviewOrig) return;
   if (!pixelSize || pixelSize <= 1) return;
   try {
     const processed = renderProcessedSourceCanvas(img, filterValues);
@@ -271,18 +274,33 @@ export function applyDitherEffect(
   colorMode: 'bw' | 'color' = 'bw',
   paletteName: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii' = 'auto',
   customPaletteStr?: string,
-  effectScale: number = 1
+  effectScale: number = 1,
+  opts?: { preview?: boolean; maxPreviewPixels?: number }
 ) {
+  // Respect A/B original preview: skip dithering entirely
+  if (filterValues?.isPreviewOrig) return;
   if (!method || method === 'none') return;
   const L = Math.max(3, Math.min(31, Math.round(levels || 3)));
+  // Ensure srcCanvas is visible to finally{} for cleanup
+  let srcCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
   try {
     const processed = renderProcessedSourceCanvas(img, filterValues);
     // Downsample to preview-equivalent resolution so pattern density matches
-    const scale = Math.max(1, effectScale);
+    let scale = Math.max(1, effectScale);
+    // Hard cap processing pixels for responsiveness in interactive previews (device-agnostic)
+    // Use a unified default cap that works well across devices; callers may override via opts.maxPreviewPixels
+    const maxPreviewPixels = Math.max(64_000, Math.min(600_000, opts?.maxPreviewPixels ?? 250_000));
+    const estPixels = (imgW * imgH) / (scale * scale);
+    if (opts?.preview !== false && estPixels > maxPreviewPixels) {
+      const neededScale = Math.sqrt((imgW * imgH) / maxPreviewPixels);
+      if (isFinite(neededScale) && neededScale > scale) scale = neededScale;
+    }
+
     const w = Math.max(1, Math.round(imgW / scale));
     const h = Math.max(1, Math.round(imgH / scale));
-    const src = document.createElement('canvas'); src.width = w; src.height = h;
-    const sctx = src.getContext('2d')!;
+    const src = getTempCanvas(w, h) as any as HTMLCanvasElement; (src as any).width = w; (src as any).height = h;
+    srcCanvas = src as any;
+    const sctx = (src as any).getContext('2d')!;
     // draw processed scaled to display size to keep dither density consistent
     sctx.drawImage(processed, 0, 0, processed.width, processed.height, 0, 0, w, h);
     const imgData = sctx.getImageData(0, 0, w, h);
@@ -446,7 +464,13 @@ export function applyDitherEffect(
     drawRotated(src, imgLeft, imgTop, imgW, imgH, angleRad, ctx);
     (ctx as any).imageSmoothingEnabled = prevSmooth;
     ctx.restore();
-  } catch {}
+    // release temp canvas back to pool
+    if (srcCanvas) releaseTempCanvas(srcCanvas as any);
+  } catch {
+    // ensure temp canvas is released if allocated
+  } finally {
+    try { if (typeof (srcCanvas as any) !== 'undefined' && srcCanvas) releaseTempCanvas(srcCanvas as any); } catch {}
+  }
 }
 
 // ASCII art: draw text cells over image
@@ -474,6 +498,8 @@ export function applyAsciiEffect(
   },
   effectScale: number = 1
 ) {
+  // Respect A/B original preview: skip ASCII overlay entirely
+  if (filterValues?.isPreviewOrig) return;
   if (!enabled) return;
   try {
     const processed = renderProcessedSourceCanvas(img, filterValues);

@@ -72,7 +72,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [asciiGamma, setAsciiGamma] = useState<number>(initialSettings?.asciiGamma ?? 1);
   const [asciiBold, setAsciiBold] = useState<boolean>(initialSettings?.asciiBold ?? false);
   const [asciiEdge, setAsciiEdge] = useState<'none' | 'stroke'>(initialSettings?.asciiEdge ?? 'none');
-  const [asciiCharsetPreset, setAsciiCharsetPreset] = useState<'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots'>(initialSettings?.asciiCharsetPreset ?? 'custom');
+  const [asciiCharsetPreset, setAsciiCharsetPreset] = useState<'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters'>(initialSettings?.asciiCharsetPreset ?? 'custom');
   // refs mirror state for immediate reads inside draw() to avoid stale-state draws
   const exposureRef = useRef<number>(exposure);
   const contrastRef = useRef<number>(contrast);

@@ -1,6 +1,7 @@
-import React from 'react';
-import { Wand2, Grid, Type } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Wand2, Grid, Type, Palette, Contrast } from 'lucide-react';
 import { rangeBg } from '../utils';
+import { throttle } from '@/src/lib/utils';
 
 interface SpecialPanelProps {
   // Dither
@@ -63,216 +64,724 @@ interface SpecialPanelProps {
   asciiEdge?: 'none' | 'stroke';
   setAsciiEdge?: (v: 'none' | 'stroke') => void;
   asciiEdgeRef?: React.MutableRefObject<'none' | 'stroke'>;
-  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots';
-  setAsciiCharsetPreset?: (v: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots') => void;
+  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters';
+  setAsciiCharsetPreset?: (v: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters') => void;
   // shared
   draw: (overrides?: any) => void;
   resetControlToDefault?: (control: string) => void;
 }
 
 export default function SpecialPanel(props: SpecialPanelProps) {
+  // Throttle heavy redraws (particularly dithering/pixelate/ASCII) to avoid pegging CPU on mobile while dragging
+  const scheduleDraw = useMemo(() => throttle(() => props.draw(), 80), [props]);
+
+  const pixelateEnabled = props.pixelSize > 1;
+  const ditherEnabled = props.ditherMethod !== 'none';
+  const asciiEnabled = props.asciiEnabled;
+  const anyEnabled = pixelateEnabled || ditherEnabled || asciiEnabled;
+
   return (
     <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%', gap: 8 }}>
       {/* Pixelate */}
-      <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 140, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Grid size={18} strokeWidth={2} aria-hidden />
-          <span>Pixelate</span>
-        </span>
-        <input
-          className="imgedit-range"
-          type="range"
-          min={1}
-          max={100}
-          step={1}
-          value={props.pixelSize}
-          onInput={(e: any) => {
-            const v = Number(e.target.value);
-            props.pixelSizeRef.current = v;
-            props.setPixelSize(v);
-            requestAnimationFrame(() => props.draw());
-          }}
-          style={{ flex: 1, background: rangeBg(props.pixelSize, 1, 100, '#334155', '#38bdf8') }}
-          aria-label="Pixel size"
-        />
-      </label>
+      {(!anyEnabled || pixelateEnabled) && (
+        <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          <span style={{ width: 140, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+            <Grid size={18} strokeWidth={2} aria-hidden />
+            <span>Pixelate</span>
+          </span>
+          <input
+            className="imgedit-range"
+            type="range"
+            min={1}
+            max={100}
+            step={1}
+            value={props.pixelSize}
+            onInput={(e: any) => {
+              const v = Number(e.target.value);
+              props.pixelSizeRef.current = v;
+              props.setPixelSize(v);
+              scheduleDraw();
+            }}
+            style={{ flex: 1, background: rangeBg(props.pixelSize, 1, 100, '#334155', '#38bdf8') }}
+            aria-label="Pixel size"
+          />
+        </label>
+      )}
 
       {/* Dithering */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <span style={{ width: 140, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Wand2 size={18} strokeWidth={2} aria-hidden />
-          <span>Dithering</span>
-        </span>
-        <select
-          value={props.ditherMethod}
-          onChange={(e) => { const v = e.target.value as any; props.ditherMethodRef.current = v; props.setDitherMethod(v); requestAnimationFrame(() => props.draw()); }}
-          style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', background: 'var(--bg-elev)', color: 'var(--text)' }}
-          aria-label="Dither method"
-        >
-          <option value="none">Off</option>
-          {props.ditherPalette === 'gameboy' ? (
-            <>
-              <option value="ordered">Ordered (Bayer 4x4)</option>
-              <option value="atkinson">Atkinson</option>
-            </>
-          ) : (
-            <>
-              <option value="floyd-steinberg">Floyd–Steinberg</option>
-              <option value="ordered">Ordered (Bayer 4x4)</option>
-              <option value="atkinson">Atkinson</option>
-              <option value="burkes">Burkes</option>
-            </>
-          )}
-        </select>
-        {props.ditherMethod !== 'none' && (
-          <>
-            <div style={{ flex: 1, minWidth: 220, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <input
-                className="imgedit-range"
-                type="range"
-                min={3}
-                max={31}
-                step={1}
-                value={props.ditherLevels}
-                onInput={(e: any) => { const v = Number(e.target.value); props.ditherLevelsRef.current = v; props.setDitherLevels(v); requestAnimationFrame(() => props.draw()); }}
-                onDoubleClick={() => props.resetControlToDefault && props.resetControlToDefault('ditherLevels')}
-                style={{ flex: 1, background: rangeBg(props.ditherLevels, 3, 31, '#0f172a', '#a78bfa') }}
-                aria-label="Dither levels"
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12, opacity: 0.8 }}>Mode</span>
+      {(!anyEnabled || ditherEnabled) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ width: 140, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+            <Wand2 size={18} strokeWidth={2} aria-hidden />
+            <span>Dithering</span>
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {props.ditherMethod !== 'none' && (
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = props.ditherColorMode === 'bw' ? 'color' : 'bw';
+                    props.ditherColorModeRef && (props.ditherColorModeRef.current = v);
+                    props.setDitherColorMode && props.setDitherColorMode(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherColorMode === 'bw' ? 'var(--bg-elev)' : 'color-mix(in srgb, var(--primary) 10%, transparent)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease',
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  aria-label={`Dither mode: ${props.ditherColorMode === 'bw' ? 'B/W' : 'Color'}`}
+                >
+                  <Palette 
+                    size={16} 
+                    strokeWidth={2} 
+                    style={{ 
+                      color: props.ditherColorMode === 'color' ? '#ff6b6b' : 'var(--text)',
+                      fill: 'none'
+                    }} 
+                    aria-hidden 
+                  />
+                </button>
+                <input
+                  className="imgedit-range"
+                  type="range"
+                  min={3}
+                  max={31}
+                  step={1}
+                  value={props.ditherLevels}
+                  onInput={(e: any) => { const v = Number(e.target.value); props.ditherLevelsRef.current = v; props.setDitherLevels(v); scheduleDraw(); }}
+                  onDoubleClick={() => props.resetControlToDefault && props.resetControlToDefault('ditherLevels')}
+                  style={{ flex: 1, minWidth: 120, background: rangeBg(props.ditherLevels, 3, 31, '#0f172a', '#a78bfa') }}
+                  aria-label="Dither levels"
+                />
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               <button
                 type="button"
                 onClick={() => {
-                  const v = props.ditherColorMode === 'bw' ? 'color' : 'bw';
-                  props.ditherColorModeRef && (props.ditherColorModeRef.current = v);
-                  props.setDitherColorMode && props.setDitherColorMode(v);
-                  requestAnimationFrame(() => props.draw());
+                  props.ditherMethodRef.current = 'none';
+                  props.setDitherMethod('none');
+                  scheduleDraw();
                 }}
                 style={{
-                  padding: '6px 12px',
-                  borderRadius: 8,
+                  padding: '4px 8px',
+                  borderRadius: 6,
                   border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
-                  background: props.ditherColorMode === 'bw' ? 'var(--bg-elev)' : 'color-mix(in srgb, var(--primary) 10%, transparent)',
+                  background: props.ditherMethod === 'none' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
                   color: 'var(--text)',
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: 500,
                   cursor: 'pointer',
                   transition: 'background 0.2s ease'
                 }}
-                aria-label={`Dither mode: ${props.ditherColorMode === 'bw' ? 'B/W' : 'Color'}`}
+                aria-label="Dither method: Off"
               >
-                {props.ditherColorMode === 'bw' ? 'B/W' : 'Color'}
+                Off
+              </button>
+              <button
+                type="button"
+                disabled={props.ditherPalette === 'gameboy'}
+                onClick={() => {
+                  if (props.ditherPalette !== 'gameboy') {
+                    props.ditherMethodRef.current = 'floyd-steinberg';
+                    props.setDitherMethod('floyd-steinberg');
+                    scheduleDraw();
+                  }
+                }}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                  background: props.ditherMethod === 'floyd-steinberg' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                  color: props.ditherPalette === 'gameboy' ? 'color-mix(in srgb, var(--text) 50%, transparent)' : 'var(--text)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: props.ditherPalette === 'gameboy' ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s ease'
+                }}
+                aria-label="Dither method: Floyd"
+              >
+                Floyd
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  props.ditherMethodRef.current = 'ordered';
+                  props.setDitherMethod('ordered');
+                  scheduleDraw();
+                }}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                  background: props.ditherMethod === 'ordered' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                  color: 'var(--text)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s ease'
+                }}
+                aria-label="Dither method: Ordered (Bayer 4x4)"
+              >
+                Ordered
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  props.ditherMethodRef.current = 'atkinson';
+                  props.setDitherMethod('atkinson');
+                  scheduleDraw();
+                }}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                  background: props.ditherMethod === 'atkinson' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                  color: 'var(--text)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s ease'
+                }}
+                aria-label="Dither method: Atkinson"
+              >
+                Atkinson
+              </button>
+              <button
+                type="button"
+                disabled={props.ditherPalette === 'gameboy'}
+                onClick={() => {
+                  if (props.ditherPalette !== 'gameboy') {
+                    props.ditherMethodRef.current = 'burkes';
+                    props.setDitherMethod('burkes');
+                    scheduleDraw();
+                  }
+                }}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                  background: props.ditherMethod === 'burkes' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                  color: props.ditherPalette === 'gameboy' ? 'color-mix(in srgb, var(--text) 50%, transparent)' : 'var(--text)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: props.ditherPalette === 'gameboy' ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s ease'
+                }}
+                aria-label="Dither method: Burkes"
+              >
+                Burkes
               </button>
             </div>
-            {props.ditherColorMode === 'color' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, opacity: 0.8 }}>Palette</span>
-                <select
-                  value={props.ditherPalette}
-                  onChange={(e) => { 
-                    const v = e.target.value as any; 
-                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v); 
-                    props.setDitherPalette && props.setDitherPalette(v); 
+          </div>
+          {props.ditherMethod !== 'none' && props.ditherColorMode === 'color' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, opacity: 0.8 }}>Palette</span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = 'auto';
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v);
+                    props.setDitherPalette && props.setDitherPalette(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherPalette === 'auto' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  aria-label="Dither palette: Auto"
+                >
+                  Auto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = 'gameboy';
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v);
+                    props.setDitherPalette && props.setDitherPalette(v);
                     // If switching to gameboy and current method is not ordered or atkinson, set to ordered
-                    if (v === 'gameboy' && !['ordered', 'atkinson'].includes(props.ditherMethod)) {
+                    if (!['ordered', 'atkinson'].includes(props.ditherMethod)) {
                       props.ditherMethodRef.current = 'ordered';
                       props.setDitherMethod('ordered');
                     }
-                    requestAnimationFrame(() => props.draw()); 
+                    scheduleDraw();
                   }}
-                  style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', background: 'var(--bg-elev)', color: 'var(--text)' }}
-                  aria-label="Dither palette"
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherPalette === 'gameboy' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  aria-label="Dither palette: Game Boy"
                 >
-                  <option value="auto">Auto</option>
-                  <option value="gameboy">Game Boy</option>
-                  <option value="pico8">PICO-8</option>
-                  <option value="nes">NES</option>
-                  <option value="zx_spectrum">ZX Spectrum</option>
-                  <option value="atari_2600">Atari 2600</option>
-                  <option value="commodore64">Commodore 64</option>
-                  <option value="apple_ii">Apple II</option>
-                </select>
+                  Game Boy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = 'pico8';
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v);
+                    props.setDitherPalette && props.setDitherPalette(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherPalette === 'pico8' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  aria-label="Dither palette: PICO-8"
+                >
+                  PICO-8
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = 'nes';
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v);
+                    props.setDitherPalette && props.setDitherPalette(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherPalette === 'nes' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  aria-label="Dither palette: NES"
+                >
+                  NES
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = 'zx_spectrum';
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v);
+                    props.setDitherPalette && props.setDitherPalette(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherPalette === 'zx_spectrum' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  aria-label="Dither palette: ZX Spectrum"
+                >
+                  ZX
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = 'atari_2600';
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v);
+                    props.setDitherPalette && props.setDitherPalette(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherPalette === 'atari_2600' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  aria-label="Dither palette: Atari 2600"
+                >
+                  Atari 2600
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = 'commodore64';
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v);
+                    props.setDitherPalette && props.setDitherPalette(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherPalette === 'commodore64' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  aria-label="Dither palette: Commodore 64"
+                >
+                  C64
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = 'apple_ii';
+                    props.ditherPaletteRef && (props.ditherPaletteRef.current = v);
+                    props.setDitherPalette && props.setDitherPalette(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.ditherPalette === 'apple_ii' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  aria-label="Dither palette: Apple II"
+                >
+                  Apple II
+                </button>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ASCII */}
-      <div style={{ display: 'grid', gap: 8 }}>
-        <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-          <span style={{ width: 140, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-            <Type size={18} strokeWidth={2} aria-hidden />
-            <span>ASCII Art</span>
-          </span>
-          <input
-            type="checkbox"
-            checked={props.asciiEnabled}
-            onChange={(e) => { const v = e.target.checked; props.asciiEnabledRef.current = v; props.setAsciiEnabled(v); requestAnimationFrame(() => props.draw()); }}
-            aria-label="Enable ASCII art"
-          />
-        </label>
-        {props.asciiEnabled && (
-          <>
-            <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 140 }} />
-              <span style={{ fontSize: 12, opacity: 0.8, width: 60 }}>Cell</span>
-              <input
-                className="imgedit-range"
-                type="range"
-                min={2}
-                max={36}
-                step={1}
-                value={props.asciiCellSize}
-                onInput={(e: any) => { const v = Number(e.target.value); props.asciiCellSizeRef.current = v; props.setAsciiCellSize(v); requestAnimationFrame(() => props.draw()); }}
-                style={{ flex: 1, background: rangeBg(props.asciiCellSize, 2, 36, '#1f2937', '#f59e0b') }}
-                aria-label="ASCII cell size"
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 140 }} />
-              <input
-                type="text"
-                value={props.asciiCharset}
-                onChange={(e) => { const v = e.target.value; props.asciiCharsetRef.current = v; props.setAsciiCharset(v); requestAnimationFrame(() => props.draw()); }}
-                placeholder="Charset e.g. @%#*+=-:. "
-                style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', background: 'var(--bg-elev)', color: 'var(--text)' }}
-                aria-label="ASCII charset"
-              />
-              <select
-                value={props.asciiCharsetPreset ?? 'custom'}
-                onChange={(e) => {
-                  const preset = e.target.value as any;
-                  props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
-                  let set = props.asciiCharset;
-                  if (preset === 'dense') set = '@%#*+=-:. ';
-                  if (preset === 'medium') set = '#&@%$*+=-:. ';
-                  if (preset === 'sparse') set = '@%#*:. ';
-                  if (preset === 'blocks') set = '█▓▒░ ';
-                  if (preset === 'dots') set = '●◉○· ';
-                  props.asciiCharsetRef.current = set;
-                  props.setAsciiCharset(set);
-                  requestAnimationFrame(() => props.draw());
-                }}
-                style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', background: 'var(--bg-elev)', color: 'var(--text)' }}
-              >
-                <option value="custom">Custom</option>
-                <option value="dense">Dense</option>
-                <option value="medium">Medium</option>
-                <option value="sparse">Sparse</option>
-                <option value="blocks">Blocks</option>
-                <option value="dots">Dots</option>
-              </select>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <input type="checkbox" checked={props.asciiInvert} onChange={(e) => { const v = e.target.checked; props.asciiInvertRef.current = v; props.setAsciiInvert(v); requestAnimationFrame(() => props.draw()); }} />
-                <span style={{ fontSize: 13 }}>Invert</span>
-              </label>
-            </div>
-          </>
-        )}
-      </div>
+      {(!anyEnabled || asciiEnabled) && (
+        <div style={{ display: 'grid', gap: 4 }}>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+              <Type size={18} strokeWidth={2} aria-hidden />
+              <span>ASCII Art</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={props.asciiEnabled}
+              onChange={(e) => { const v = e.target.checked; props.asciiEnabledRef.current = v; props.setAsciiEnabled(v); scheduleDraw(); }}
+              aria-label="Enable ASCII art"
+            />
+          </label>
+          {props.asciiEnabled && (
+            <>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ width: 100, fontSize: 12, opacity: 0.8 }}>Cell Size</span>
+                <input
+                  className="imgedit-range"
+                  type="range"
+                  min={2}
+                  max={36}
+                  step={1}
+                  value={props.asciiCellSize}
+                  onInput={(e: any) => { const v = Number(e.target.value); props.asciiCellSizeRef.current = v; props.setAsciiCellSize(v); scheduleDraw(); }}
+                  style={{ flex: 1, maxWidth: 180, background: rangeBg(props.asciiCellSize, 2, 36, '#1f2937', '#f59e0b') }}
+                  aria-label="ASCII cell size"
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ width: 100, fontSize: 12, opacity: 0.8 }}>Charset</span>
+                <input
+                  type="text"
+                  value={props.asciiCharset}
+                  onChange={(e) => { const v = e.target.value; props.asciiCharsetRef.current = v; props.setAsciiCharset(v); scheduleDraw(); }}
+                  placeholder="Charset e.g. @%#*+=-:. "
+                  style={{ flex: 1, maxWidth: 180, padding: '4px 6px', borderRadius: 6, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', background: 'var(--bg-elev)', color: 'var(--text)', fontSize: 12 }}
+                  aria-label="ASCII charset"
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ width: 100, fontSize: 12, opacity: 0.8 }}>Preset</span>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const preset = 'custom';
+                      props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
+                      let set = ' .:-=+*#%@';
+                      props.asciiCharsetRef.current = set;
+                      props.setAsciiCharset(set);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                      border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      background: (props.asciiCharsetPreset ?? 'custom') === 'custom' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    aria-label="ASCII preset: Custom"
+                  >
+                    Custom
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const preset = 'dense';
+                      props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
+                      let set = '@%#*+=-:.ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                      props.asciiCharsetRef.current = set;
+                      props.setAsciiCharset(set);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                      border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      background: props.asciiCharsetPreset === 'dense' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    aria-label="ASCII preset: Dense"
+                  >
+                    Dense
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const preset = 'sparse';
+                      props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
+                      let set = '@%#*:. ';
+                      props.asciiCharsetRef.current = set;
+                      props.setAsciiCharset(set);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                      border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      background: props.asciiCharsetPreset === 'sparse' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    aria-label="ASCII preset: Sparse"
+                  >
+                    Sparse
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const preset = 'dots';
+                      props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
+                      let set = '●◉○· ';
+                      props.asciiCharsetRef.current = set;
+                      props.setAsciiCharset(set);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                      border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      background: props.asciiCharsetPreset === 'dots' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    aria-label="ASCII preset: Dots"
+                  >
+                    Dots
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const preset = 'blocks';
+                      props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
+                      let set = '█▓▒░ ';
+                      props.asciiCharsetRef.current = set;
+                      props.setAsciiCharset(set);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                      border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      background: props.asciiCharsetPreset === 'blocks' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    aria-label="ASCII preset: Blocks"
+                  >
+                    Blocks
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const preset = 'lines';
+                      props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
+                      let set = '│─┼┌┐└┘';
+                      props.asciiCharsetRef.current = set;
+                      props.setAsciiCharset(set);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                      border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      background: props.asciiCharsetPreset === 'lines' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    aria-label="ASCII preset: Lines"
+                  >
+                    Lines
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const preset = 'numbers';
+                      props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
+                      let set = '0123456789';
+                      props.asciiCharsetRef.current = set;
+                      props.setAsciiCharset(set);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                      border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      background: props.asciiCharsetPreset === 'numbers' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    aria-label="ASCII preset: Numbers"
+                  >
+                    Numbers
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const preset = 'letters';
+                      props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
+                      let set = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                      props.asciiCharsetRef.current = set;
+                      props.setAsciiCharset(set);
+                      scheduleDraw();
+                    }}
+                    style={{
+                      padding: '2px 4px',
+                      borderRadius: 4,
+                      border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                      background: props.asciiCharsetPreset === 'letters' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                      color: 'var(--text)',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                    aria-label="ASCII preset: Letters"
+                  >
+                    Letters
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ width: 100, fontSize: 12, opacity: 0.8 }}>Invert</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = !props.asciiInvert;
+                    props.asciiInvertRef.current = v;
+                    props.setAsciiInvert(v);
+                    scheduleDraw();
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                    background: props.asciiInvert ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
+                    color: 'var(--text)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease',
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  aria-label={`ASCII invert: ${props.asciiInvert ? 'On' : 'Off'}`}
+                >
+                  <Contrast 
+                    size={16} 
+                    strokeWidth={2} 
+                    style={{ 
+                      color: props.asciiInvert ? '#ff6b6b' : 'var(--text)',
+                      fill: 'none'
+                    }} 
+                    aria-hidden 
+                  />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </section>
   );
 }

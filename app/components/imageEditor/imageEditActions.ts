@@ -51,7 +51,7 @@ export async function applyEdit(
   asciiGamma: number | undefined,
   asciiBold: boolean | undefined,
   asciiEdge: 'none' | 'stroke' | undefined,
-  asciiCharsetPreset: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | undefined,
+  asciiCharsetPreset: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters' | undefined,
   onApply: (dataUrl: string, settings: EditorSettings) => Promise<void>
 ) {
   const img = imgRef.current; if (!img) return;

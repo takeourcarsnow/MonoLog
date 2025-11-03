@@ -74,7 +74,6 @@ function ImageEditorToolbarCategories({
           }}
         >
           <Check size={20} strokeWidth={2} aria-hidden />
-          <span style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Confirm</span>
         </button>
 
         <button
@@ -104,7 +103,6 @@ function ImageEditorToolbarCategories({
           }}
         >
           <RefreshCw size={20} strokeWidth={2} aria-hidden />
-          <span style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Reset</span>
         </button>
 
         <button
@@ -134,7 +132,6 @@ function ImageEditorToolbarCategories({
           }}
         >
           <X size={20} strokeWidth={2} aria-hidden />
-          <span style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Cancel</span>
         </button>
       </nav>
     );
@@ -145,11 +142,11 @@ function ImageEditorToolbarCategories({
     <nav ref={categoriesContainerRef} className="categories-scroll" style={{
       position: 'relative',
       display: 'flex',
-      gap: 3,
+      gap: 2,
       marginTop: 8,
       justifyContent: 'center',
       flexWrap: 'wrap',
-      overflowX: 'visible',
+      overflowX: 'hidden',
       maxWidth: 'none',
       margin: '16px auto 0',
       padding: '4px 5px',
@@ -158,7 +155,7 @@ function ImageEditorToolbarCategories({
       background: 'color-mix(in srgb, var(--bg-elev) 70%, transparent)',
       borderRadius: 12,
       boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
-      height: 48
+      height: 'auto'
     }}>
       <div aria-hidden style={{
         position: 'absolute',

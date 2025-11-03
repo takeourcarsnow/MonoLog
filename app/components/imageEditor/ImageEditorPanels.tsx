@@ -134,15 +134,15 @@ interface ImageEditorPanelsProps {
   asciiEdge?: 'none' | 'stroke';
   setAsciiEdge?: (v: 'none' | 'stroke') => void;
   asciiEdgeRef?: React.MutableRefObject<'none' | 'stroke'>;
-  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots';
-  setAsciiCharsetPreset?: (v: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots') => void;
+  asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters';
+  setAsciiCharsetPreset?: (v: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters') => void;
 }
 
 export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsProps) {
   return (
     <section className="imgedit-panels" style={{
       maxWidth: 820,
-      margin: '8px auto 0',
+      margin: '8px 0 0 auto',
       position: 'relative',
       borderRadius: 12,
       minHeight: 100

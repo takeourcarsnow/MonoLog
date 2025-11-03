@@ -136,15 +136,29 @@ export default function SpecialPanel(props: SpecialPanelProps) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 12, opacity: 0.8 }}>Mode</span>
-              <select
-                value={props.ditherColorMode}
-                onChange={(e) => { const v = e.target.value as any; props.ditherColorModeRef && (props.ditherColorModeRef.current = v); props.setDitherColorMode && props.setDitherColorMode(v); requestAnimationFrame(() => props.draw()); }}
-                style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', background: 'var(--bg-elev)', color: 'var(--text)' }}
-                aria-label="Dither mode"
+              <button
+                type="button"
+                onClick={() => {
+                  const v = props.ditherColorMode === 'bw' ? 'color' : 'bw';
+                  props.ditherColorModeRef && (props.ditherColorModeRef.current = v);
+                  props.setDitherColorMode && props.setDitherColorMode(v);
+                  requestAnimationFrame(() => props.draw());
+                }}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
+                  background: props.ditherColorMode === 'bw' ? 'var(--bg-elev)' : 'color-mix(in srgb, var(--primary) 10%, transparent)',
+                  color: 'var(--text)',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s ease'
+                }}
+                aria-label={`Dither mode: ${props.ditherColorMode === 'bw' ? 'B/W' : 'Color'}`}
               >
-                <option value="bw">B/W</option>
-                <option value="color">Color</option>
-              </select>
+                {props.ditherColorMode === 'bw' ? 'B/W' : 'Color'}
+              </button>
             </div>
             {props.ditherColorMode === 'color' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -233,9 +247,6 @@ export default function SpecialPanel(props: SpecialPanelProps) {
                 <option value="blocks">Blocks</option>
                 <option value="dots">Dots</option>
               </select>
-            </div>
-            <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ width: 140 }} />
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <input type="checkbox" checked={props.asciiInvert} onChange={(e) => { const v = e.target.checked; props.asciiInvertRef.current = v; props.setAsciiInvert(v); requestAnimationFrame(() => props.draw()); }} />
                 <span style={{ fontSize: 13 }}>Invert</span>

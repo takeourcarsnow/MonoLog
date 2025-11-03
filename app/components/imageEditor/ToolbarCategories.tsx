@@ -244,8 +244,8 @@ function ImageEditorToolbarCategories({
         data-cat="effects"
         data-active={category === 'effects'}
         type="button"
-        aria-label="Effects"
-        title="Effects"
+        aria-label="FX"
+        title="FX"
         className="cat-btn"
         onClick={(e: any) => {
           try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
@@ -269,15 +269,15 @@ function ImageEditorToolbarCategories({
         }}
       >
         <Sparkles size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'effects' ? CATEGORY_COLORS.effects : undefined }} />
-        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Effects</span>
+        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>FX</span>
       </button>
 
       <button
         data-cat="special"
         data-active={category === 'special'}
         type="button"
-        aria-label="Special Effects"
-        title="Special Effects"
+        aria-label="SFX"
+        title="SFX"
         className="cat-btn"
         onClick={(e: any) => {
           try { e.currentTarget.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.9,.2,1)' }); } catch {}
@@ -301,7 +301,7 @@ function ImageEditorToolbarCategories({
         }}
       >
         <Wand2 size={20} strokeWidth={2} aria-hidden style={{ flexShrink: 0, color: category === 'special' ? CATEGORY_COLORS.special : undefined }} />
-        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Special</span>
+        <span className="cat-label" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>SFX</span>
       </button>
 
       <button

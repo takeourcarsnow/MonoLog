@@ -523,7 +523,7 @@ export function applyAsciiEffect(
         const r = data[i], g = data[i+1], b = data[i+2];
         const v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
         const chStr = pickChar(v);
-        if (colorize) octx.fillStyle = `rgb(${r},${g},${b})`; else octx.fillStyle = invert ? '#000' : '#000';
+        if (colorize) octx.fillStyle = `rgb(${r},${g},${b})`; else octx.fillStyle = invert ? '#fff' : '#000';
         if (options?.edge === 'stroke') {
           octx.lineWidth = 1; octx.strokeStyle = invert ? '#fff' : '#000';
           octx.strokeText(chStr, (x + 0.5) * cw, (y + 0.5) * ch);

@@ -65,7 +65,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [asciiCellSize, setAsciiCellSize] = useState<number>(initialSettings?.asciiCellSize ?? 8);
   const [asciiCharset, setAsciiCharset] = useState<string>(initialSettings?.asciiCharset ?? "@%#*+=-:. ");
   const [asciiInvert, setAsciiInvert] = useState<boolean>(initialSettings?.asciiInvert ?? false);
-  const [asciiColor, setAsciiColor] = useState<boolean>(initialSettings?.asciiColor ?? false);
+  const [asciiColor, setAsciiColor] = useState<boolean>(initialSettings?.asciiColor ?? true);
   const [asciiOpacity, setAsciiOpacity] = useState<number>(initialSettings?.asciiOpacity ?? 1);
   const [asciiBackground, setAsciiBackground] = useState<string>(initialSettings?.asciiBackground ?? 'transparent');
   const [asciiFont, setAsciiFont] = useState<string>(initialSettings?.asciiFont ?? 'monospace');

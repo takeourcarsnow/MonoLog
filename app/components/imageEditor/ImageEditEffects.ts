@@ -154,8 +154,10 @@ export function applyPixelateExport(
 ) {
   if (!pixelSize || pixelSize <= 1) return;
   const processed = renderProcessedForExport(img, srcX, srcY, srcW, srcH, baseFilter, presetFilter, filterStrength);
-  const w = Math.max(1, Math.round(drawW / pixelSize));
-  const h = Math.max(1, Math.round(drawH / pixelSize));
+  // Scale pixel size to match preview density
+  const effPixelSize = pixelSize * 6;
+  const w = Math.max(1, Math.round(drawW / effPixelSize));
+  const h = Math.max(1, Math.round(drawH / effPixelSize));
   if (pixelShape === 'square') {
     const tiny = document.createElement('canvas'); tiny.width = w; tiny.height = h;
     const tctx = tiny.getContext('2d')!; tctx.imageSmoothingEnabled = (pixelSample === 'average');
@@ -437,13 +439,16 @@ export function applyAsciiExport(
   if (!enabled) return;
   const processed = renderProcessedForExport(img, srcX, srcY, srcW, srcH, baseFilter, presetFilter, filterStrength);
   const w = Math.max(1, Math.round(drawW)); const h = Math.max(1, Math.round(drawH));
-  const cols = Math.max(1, Math.floor(w / Math.max(2, cellSize || 8))); const rows = Math.max(1, Math.floor(h / Math.max(2, cellSize || 8)));
+  // Scale cell size to match preview density
+  const scaleFactor = 6;
+  const effCell = Math.max(2, (cellSize || 8) * scaleFactor);
+  const cols = Math.max(1, Math.floor(w / effCell)); const rows = Math.max(1, Math.floor(h / effCell));
   const out = document.createElement('canvas'); out.width = w; out.height = h; const ctx = out.getContext('2d')!;
   const bg = options?.background ?? 'transparent';
   if (bg !== 'transparent') { ctx.fillStyle = bg; ctx.fillRect(0,0,w,h); } else { ctx.clearRect(0,0,w,h); }
   const bold = options?.bold ? 'bold ' : '';
   const fontFam = options?.font || 'monospace';
-  ctx.font = `${bold}${Math.max(4, cellSize || 8)}px ${fontFam}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+  ctx.font = `${bold}${Math.max(4, Math.floor(effCell))}px ${fontFam}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
   const tmp = document.createElement('canvas'); tmp.width = cols; tmp.height = rows; const tctx = tmp.getContext('2d')!;
   tctx.drawImage(processed, 0, 0, processed.width, processed.height, 0, 0, cols, rows);
   const id = tctx.getImageData(0,0,cols,rows); const data = id.data;
@@ -461,7 +466,7 @@ export function applyAsciiExport(
     for (let x = 0; x < cols; x++) {
       const i = (y * cols + x) * 4; const r = data[i], g = data[i+1], b = data[i+2];
       const v = 0.2126*r + 0.7152*g + 0.0722*b; const chStr = pick(v);
-      ctx.fillStyle = colorize ? `rgb(${r},${g},${b})` : '#000';
+      ctx.fillStyle = colorize ? `rgb(${r},${g},${b})` : invert ? '#fff' : '#000';
       if (options?.edge === 'stroke') {
         ctx.lineWidth = 1; ctx.strokeStyle = invert ? '#fff' : '#000';
         ctx.strokeText(chStr, (x + 0.5) * cw, (y + 0.5) * ch);

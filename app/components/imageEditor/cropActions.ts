@@ -13,37 +13,70 @@ export async function applyCropOnly(
 ) {
   const img = imgRef.current; if (!img) return;
   const canvas = canvasRef.current; if (!canvas) return;
+  // Use current layout for precise mapping between canvas CSS px and natural pixels
+  const layout = typeof computeImageLayout === 'function' ? computeImageLayout() : null;
   const rect = canvas.getBoundingClientRect();
-  const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+  const baseScale = layout ? (layout.dispW / img.naturalWidth) : Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
 
   if (!sel) return; // nothing to crop
 
-  // Map selection (canvas coords) back to source image pixels
-  const srcX = Math.max(0, Math.round((sel.x - offset.x) / baseScale));
-  const srcY = Math.max(0, Math.round((sel.y - offset.y) / baseScale));
-  const srcW = Math.max(1, Math.round(sel.w / baseScale));
-  const srcH = Math.max(1, Math.round(sel.h / baseScale));
-
-  // Handle rotation: bake rotation into the new image and then reset the rotation slider
+  // Handle rotation by first rendering the full image rotated at 1:1 natural pixel scale,
+  // then cutting the axis-aligned crop rectangle from that rotated canvas. This matches
+  // what the user sees in the crop preview and avoids internal empty triangles.
   const rot = rotationRef.current ?? rotation;
   const angle = (rot * Math.PI) / 180;
   const absCos = Math.abs(Math.cos(angle));
   const absSin = Math.abs(Math.sin(angle));
-  const outW = Math.max(1, Math.round((srcW) * absCos + (srcH) * absSin));
-  const outH = Math.max(1, Math.round((srcW) * absSin + (srcH) * absCos));
+  const rotW = Math.max(1, Math.round(img.naturalWidth * absCos + img.naturalHeight * absSin));
+  const rotH = Math.max(1, Math.round(img.naturalWidth * absSin + img.naturalHeight * absCos));
 
+  // 1) Render full rotated image at natural resolution
+  const rotCanvas = document.createElement('canvas');
+  rotCanvas.width = rotW; rotCanvas.height = rotH;
+  const rctx = rotCanvas.getContext('2d')!;
+  rctx.imageSmoothingEnabled = true;
+  rctx.imageSmoothingQuality = 'high';
+  rctx.save();
+  rctx.translate(rotW / 2, rotH / 2);
+  rctx.rotate(angle);
+  rctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+  rctx.restore();
+
+  // 2) Compute crop rect in the rotated canvas' coordinate space (natural pixels)
+  // Map canvas CSS-px selection to rotated-1x coordinates using centers and baseScale.
+  // Canvas preview center of the drawn image:
+  const dispLeft = layout ? layout.left : offset.x;
+  const dispTop = layout ? layout.top : offset.y;
+  const dispW = layout ? layout.dispW : img.naturalWidth * baseScale;
+  const dispH = layout ? layout.dispH : img.naturalHeight * baseScale;
+  const CcX = dispLeft + dispW / 2;
+  const CcY = dispTop + dispH / 2;
+  const CrX = rotW / 2;
+  const CrY = rotH / 2;
+
+  // Since (Q - Cc) = Rθ(v * s), the rotated-1x coordinate is simply Cr + (Q - Cc)/s
+  let cropX = CrX + (sel.x - CcX) / baseScale;
+  let cropY = CrY + (sel.y - CcY) / baseScale;
+  let cropW = sel.w / baseScale;
+  let cropH = sel.h / baseScale;
+
+  // Clamp crop rectangle to rotated canvas bounds
+  cropX = Math.max(0, Math.min(rotW - 1, cropX));
+  cropY = Math.max(0, Math.min(rotH - 1, cropY));
+  cropW = Math.max(1, Math.min(rotW - cropX, cropW));
+  cropH = Math.max(1, Math.min(rotH - cropY, cropH));
+
+  // 3) Extract that region without any rotation — axis-aligned result matching the preview selection
   const out = document.createElement('canvas');
-  out.width = outW; out.height = outH;
+  out.width = Math.round(cropW);
+  out.height = Math.round(cropH);
   const octx = out.getContext('2d')!;
-  octx.imageSmoothingQuality = 'high';
-
-  // Draw the selected source region into the center of the output canvas with rotation applied.
-  octx.save();
-  octx.translate(outW / 2, outH / 2);
-  octx.rotate(angle);
-  // draw the selected region centered
-  octx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH);
-  octx.restore();
+  octx.imageSmoothingEnabled = true; octx.imageSmoothingQuality = 'high';
+  octx.drawImage(
+    rotCanvas,
+    Math.floor(cropX), Math.floor(cropY), Math.round(cropW), Math.round(cropH),
+    0, 0, Math.round(cropW), Math.round(cropH)
+  );
 
   // Replace working image with the cropped version (keep adjustments intact)
   const dataUrl = out.toDataURL('image/png');

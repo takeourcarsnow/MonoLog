@@ -46,6 +46,91 @@ export default function CropPanel({
   bakeRotate90,
   bakeRotateMinus90,
 }: CropPanelProps) {
+  // Compute the largest axis-aligned rectangle centered on the displayed image
+  // that fully fits inside the rotated image quad. We keep the image center as
+  // the selection center (simple + intuitive) and, when an aspect preset is
+  // active, we fit that aspect inside the maximal rect.
+  function autoCropSelectionForRotation(angleDeg: number) {
+    try {
+      const info = computeImageLayout();
+      const canvas = canvasRef.current;
+      if (!info || !canvas) return;
+      const left = info.left, top = info.top, dispW = info.dispW, dispH = info.dispH;
+      const cx = left + dispW / 2;
+      const cy = top + dispH / 2;
+      const ang = (angleDeg * Math.PI) / 180;
+
+      // Build rotated image polygon (four corners rotated around center)
+      const corners = [
+        { x: left, y: top },
+        { x: left + dispW, y: top },
+        { x: left + dispW, y: top + dispH },
+        { x: left, y: top + dispH }
+      ].map(p => rotatePoint(p.x, p.y, cx, cy, ang));
+
+      // Binary search scale k for axis-aligned rect with same aspect as the image (dispW:dispH)
+      // so that rect centered at (cx, cy), w = dispW*k, h = dispH*k fits into the rotated polygon.
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 32; i++) {
+        const mid = (lo + hi) / 2;
+        const w = dispW * mid;
+        const h = dispH * mid;
+        const rectCorners = [
+          { x: cx - w / 2, y: cy - h / 2 },
+          { x: cx + w / 2, y: cy - h / 2 },
+          { x: cx + w / 2, y: cy + h / 2 },
+          { x: cx - w / 2, y: cy + h / 2 }
+        ];
+        const inside = rectCorners.every(pt => pointInConvexPolygon(pt, corners));
+        if (inside) lo = mid; else hi = mid;
+      }
+
+      // Base maximal rect
+      let maxW = dispW * lo;
+      let maxH = dispH * lo;
+
+      // If an aspect preset is active, fit that inside the maximal rect
+      const ratio = cropRatio.current;
+      if (ratio && ratio > 0) {
+        // Fit rect of aspect `ratio` inside maxW x maxH, centered
+        const fitWFirst = maxW;
+        let w = fitWFirst;
+        let h = w / ratio;
+        if (h > maxH) {
+          h = maxH;
+          w = h * ratio;
+        }
+        maxW = w; maxH = h;
+      }
+
+      const x = cx - maxW / 2;
+      const y = cy - maxH / 2;
+      if (!isFinite(x) || !isFinite(y) || maxW <= 0 || maxH <= 0) return;
+      setSel({ x, y, w: maxW, h: maxH });
+    } catch {}
+  }
+
+  function rotatePoint(x: number, y: number, cx: number, cy: number, ang: number) {
+    const dx = x - cx, dy = y - cy;
+    const c = Math.cos(ang), s = Math.sin(ang);
+    return { x: cx + dx * c - dy * s, y: cy + dx * s + dy * c };
+  }
+
+  // Convex polygon point inclusion via signed area (CCW polygon assumed)
+  function pointInConvexPolygon(pt: { x: number; y: number }, poly: Array<{ x: number; y: number }>) {
+    const n = poly.length;
+    let sign = 0;
+    for (let i = 0; i < n; i++) {
+      const a = poly[i];
+      const b = poly[(i + 1) % n];
+      const cross = (b.x - a.x) * (pt.y - a.y) - (b.y - a.y) * (pt.x - a.x);
+      if (cross === 0) continue;
+      const s = cross > 0 ? 1 : -1;
+      if (sign === 0) sign = s; else if (s !== sign) return false;
+    }
+    return true;
+  }
+
   return (
     <section className="imgedit-panel-inner" style={{ display: 'grid', width: '100%' }}>
       <fieldset style={{ border: 'none' }}>
@@ -229,7 +314,8 @@ export default function CropPanel({
             <span className="sr-only">Straighten</span>
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
-            <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')}             style={{ flex: 1, background: rangeBg(rotation, -30, 30, '#ef4444', '#f87171') }} />
+            <input className="imgedit-range" type="range" min={-30} max={30} step={0.1} value={rotation} onInput={(e:any) => { const v = Number(e.target.value); rotationRef.current = v; setRotation(v); // Auto-fit crop to avoid empty triangles
+              autoCropSelectionForRotation(v); draw(); }} onDoubleClick={() => resetControlToDefault('rotation')}             style={{ flex: 1, background: rangeBg(rotation, -30, 30, '#ef4444', '#f87171') }} />
           </div>
         </label>
       </fieldset>

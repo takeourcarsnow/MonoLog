@@ -22,7 +22,7 @@ import { Sparkles, Grid3x3, Type, X } from "lucide-react";
 interface LiveCameraViewProps {
   isOpen: boolean;
   onClose: () => void;
-  onCapture: (imageDataUrl: string) => void;
+  onCapture: (blob: Blob) => void;
   processing: boolean;
 }
 
@@ -122,11 +122,52 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
   // Handle capture
   const handleCapture = useCallback(() => {
-    if (!displayCanvasRef.current) return;
+    const canvas = displayCanvasRef.current;
+    if (!canvas) return;
 
-    // Capture the canvas with applied effects
-    const dataUrl = displayCanvasRef.current.toDataURL('image/jpeg', 0.95);
-    onCapture(dataUrl);
+    // Prefer toBlob to avoid data: URL fetch issues
+    if (canvas.toBlob) {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          onCapture(blob);
+        } else {
+          // Fallback: use dataURL conversion if toBlob returned null
+          try {
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            // Convert dataURL to Blob without fetch
+            const arr = dataUrl.split(',');
+            const mimeMatch = arr[0].match(/:(.*?);/);
+            const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+              u8arr[n] = bstr.charCodeAt(n);
+            }
+            onCapture(new Blob([u8arr], { type: mime }));
+          } catch (e) {
+            console.error('Capture fallback failed', e);
+          }
+        }
+      }, 'image/jpeg', 0.95);
+    } else {
+      // Very old browsers: fallback to dataURL conversion
+      try {
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const arr = dataUrl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        onCapture(new Blob([u8arr], { type: mime }));
+      } catch (e) {
+        console.error('Legacy capture failed', e);
+      }
+    }
   }, [onCapture]);
 
   // Handle close

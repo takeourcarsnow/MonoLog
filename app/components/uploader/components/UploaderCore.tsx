@@ -173,14 +173,11 @@ export function UploaderCore() {
   };
 
   // Handle camera capture from live camera view
-  const handleCameraCapture = async (imageDataUrl: string) => {
+  const handleCameraCapture = async (blob: Blob) => {
     setLiveCameraOpen(false);
-    
-    // Convert data URL to File
-    const response = await fetch(imageDataUrl);
-    const blob = await response.blob();
-    const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-    
+    // Directly create File from Blob (no fetch of data URLs)
+    const file = new File([blob], 'camera-capture.jpg', { type: blob.type || 'image/jpeg' });
+
     await handleFile(file);
   };
 

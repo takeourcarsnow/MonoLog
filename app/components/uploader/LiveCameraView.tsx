@@ -17,7 +17,9 @@ import { Button } from "../Button";
 import Portal from "../Portal";
 import LogoLoader from "./LogoLoader";
 import { applyCameraEffect, CameraEffectSettings, CameraEffectType } from "./cameraEffects";
-import { Sparkles, Grid3x3, Type, X } from "lucide-react";
+import { Sparkles, Grid3x3, Type, X, Frame, Layers } from "lucide-react";
+import { getFrameFiles } from "@/app/components/imageEditor/framesPreload";
+import { getOverlayFiles } from "@/app/components/imageEditor/overlaysPreload";
 
 interface LiveCameraViewProps {
   isOpen: boolean;
@@ -45,11 +47,20 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     asciiCharset: ' .:-=+*#%@',
     asciiInvert: false,
     asciiCharsetPreset: 'custom',
+    frameOverlay: null,
+    overlay: null,
   });
 
   const [showSettings, setShowSettings] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [showProcessingOverlay, setShowProcessingOverlay] = useState(false);
+
+  // Frame and overlay state
+  const [frameFiles, setFrameFiles] = useState<string[]>([]);
+  const [overlayFiles, setOverlayFiles] = useState<string[]>([]);
+  const [selectedFrame, setSelectedFrame] = useState<string | null>(null);
+  const [selectedOverlay, setSelectedOverlay] = useState<string | null>(null);
 
   // Start camera and video stream
   const startCamera = useCallback(async () => {
@@ -131,27 +142,136 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     // Prevent multiple captures
     if (isCapturing || processing) return;
 
-    const canvas = displayCanvasRef.current;
-    if (!canvas) return;
+    const sourceCanvas = sourceCanvasRef.current;
+    const displayCanvas = displayCanvasRef.current;
+    if (!sourceCanvas || !displayCanvas) return;
 
-    // Stop the render loop immediately to freeze the view
+    // Set capturing state FIRST to stop render loop immediately
+    setIsCapturing(true);
+    setShowProcessingOverlay(true);
+    
+    // Stop the render loop to freeze the view - this happens in useEffect
+    // when isCapturing changes, but also cancel here for immediate effect
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
 
-    // Set capturing state immediately to disable button and show loading
-    setIsCapturing(true);
+    // If frame is selected, we need to reprocess with proper cropping
+    let finalCanvas: HTMLCanvasElement;
+    
+    if (effectSettings.frameOverlay?.bounds) {
+      console.log('[Camera Capture] Frame detected, cropping to bounds:', effectSettings.frameOverlay.bounds);
+      
+      const bounds = effectSettings.frameOverlay.bounds;
+      const frameImg = effectSettings.frameOverlay.img;
+      const frameW = frameImg.naturalWidth || frameImg.width;
+      const frameH = frameImg.naturalHeight || frameImg.height;
+      
+      // Calculate the aspect ratio of the inner transparent area
+      const innerW = bounds.maxX - bounds.minX;
+      const innerH = bounds.maxY - bounds.minY;
+      const innerAspectRatio = innerW / innerH;
+      
+      console.log('[Camera Capture] Frame inner dimensions:', { innerW, innerH, innerAspectRatio });
+      
+      // Calculate video aspect ratio
+      const videoW = sourceCanvas.width;
+      const videoH = sourceCanvas.height;
+      const videoAspectRatio = videoW / videoH;
+      
+      // Determine how to fit the video into the inner area
+      let srcX = 0, srcY = 0, srcW = videoW, srcH = videoH;
+      
+      if (videoAspectRatio > innerAspectRatio) {
+        // Video is wider - crop sides
+        srcW = videoH * innerAspectRatio;
+        srcX = (videoW - srcW) / 2;
+      } else {
+        // Video is taller - crop top/bottom
+        srcH = videoW / innerAspectRatio;
+        srcY = (videoH - srcH) / 2;
+      }
+      
+      console.log('[Camera Capture] Video crop region:', { srcX, srcY, srcW, srcH });
+      
+      // Create output canvas with inner dimensions
+      finalCanvas = document.createElement('canvas');
+      finalCanvas.width = Math.round(innerW);
+      finalCanvas.height = Math.round(innerH);
+      const finalCtx = finalCanvas.getContext('2d', { willReadFrequently: true });
+      
+      console.log('[Camera Capture] Final canvas size:', finalCanvas.width, 'x', finalCanvas.height);
+      
+      if (finalCtx) {
+        // Create a temporary canvas for the cropped source
+        const tempSourceCanvas = document.createElement('canvas');
+        tempSourceCanvas.width = Math.round(innerW);
+        tempSourceCanvas.height = Math.round(innerH);
+        const tempSourceCtx = tempSourceCanvas.getContext('2d', { willReadFrequently: true });
+        
+        if (tempSourceCtx) {
+          // Draw cropped video to temp source
+          tempSourceCtx.drawImage(
+            sourceCanvas,
+            Math.round(srcX),
+            Math.round(srcY),
+            Math.round(srcW),
+            Math.round(srcH),
+            0,
+            0,
+            Math.round(innerW),
+            Math.round(innerH)
+          );
+          
+          // Apply effects to the cropped area (without frame overlay to avoid duplication)
+          const settingsWithoutFrame = { ...effectSettings, frameOverlay: null };
+          console.log('[Camera Capture] Applying effects without frame');
+          applyCameraEffect(tempSourceCanvas, finalCanvas, settingsWithoutFrame);
+          
+          // Now create a new canvas that includes the frame
+          const frameW = frameImg.naturalWidth || frameImg.width;
+          const frameH = frameImg.naturalHeight || frameImg.height;
+          
+          const outputCanvas = document.createElement('canvas');
+          outputCanvas.width = frameW;
+          outputCanvas.height = frameH;
+          const outputCtx = outputCanvas.getContext('2d');
+          
+          if (outputCtx) {
+            // Draw the processed photo in the inner area
+            outputCtx.drawImage(
+              finalCanvas,
+              bounds.minX,
+              bounds.minY,
+              innerW,
+              innerH
+            );
+            
+            // Draw the frame on top
+            outputCtx.globalAlpha = effectSettings.frameOverlay.opacity || 1;
+            outputCtx.drawImage(frameImg, 0, 0, frameW, frameH);
+            
+            console.log('[Camera Capture] Final output with frame:', outputCanvas.width, 'x', outputCanvas.height);
+            finalCanvas = outputCanvas;
+          }
+        }
+      }
+    } else {
+      console.log('[Camera Capture] No frame, using display canvas');
+      // No frame - use the display canvas as-is
+      finalCanvas = displayCanvas;
+    }
 
     // Prefer toBlob to avoid data: URL fetch issues
-    if (canvas.toBlob) {
-      canvas.toBlob((blob) => {
+    if (finalCanvas.toBlob) {
+      finalCanvas.toBlob((blob) => {
         if (blob) {
           onCapture(blob);
         } else {
           // Fallback: use dataURL conversion if toBlob returned null
           try {
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.95);
             // Convert dataURL to Blob without fetch
             const arr = dataUrl.split(',');
             const mimeMatch = arr[0].match(/:(.*?);/);
@@ -166,13 +286,14 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
           } catch (e) {
             console.error('Capture fallback failed', e);
             setIsCapturing(false);
+            setShowProcessingOverlay(false);
           }
         }
       }, 'image/jpeg', 0.95);
     } else {
       // Very old browsers: fallback to dataURL conversion
       try {
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.95);
         const arr = dataUrl.split(',');
         const mimeMatch = arr[0].match(/:(.*?);/);
         const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
@@ -186,22 +307,132 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
       } catch (e) {
         console.error('Legacy capture failed', e);
         setIsCapturing(false);
+        setShowProcessingOverlay(false);
       }
     }
-  }, [isCapturing, processing, onCapture]);
+  }, [isCapturing, processing, onCapture, effectSettings]);
 
   // Handle close
   const handleClose = useCallback(() => {
     stopCamera();
     setIsCapturing(false);
+    setShowProcessingOverlay(false);
     onClose();
   }, [stopCamera, onClose]);
+
+  // Handle frame selection
+  const handleSelectFrame = useCallback((file: string) => {
+    const url = `/frames/${file}`;
+    if (selectedFrame === file) {
+      // Toggle off
+      setSelectedFrame(null);
+      setEffectSettings(prev => ({ ...prev, frameOverlay: null }));
+      return;
+    }
+
+    setSelectedFrame(file);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    img.onload = () => {
+      // Compute bounds using the same logic as cameraEffects.ts
+      const frameW = img.naturalWidth || img.width;
+      const frameH = img.naturalHeight || img.height;
+
+      const frameTemp = document.createElement('canvas');
+      frameTemp.width = frameW;
+      frameTemp.height = frameH;
+      const fctx = frameTemp.getContext('2d')!;
+      fctx.drawImage(img, 0, 0);
+      const frameData = fctx.getImageData(0, 0, frameW, frameH);
+      const data = frameData.data;
+
+      const ALPHA_THRESHOLD = 16;
+      const visited = new Uint8Array(frameW * frameH);
+      const stack: number[] = [];
+      
+      // Start flood fill from borders
+      for (let x = 0; x < frameW; x++) {
+        stack.push(x, 0);
+        stack.push(x, frameH - 1);
+      }
+      for (let y = 1; y < frameH - 1; y++) {
+        stack.push(0, y);
+        stack.push(frameW - 1, y);
+      }
+      
+      while (stack.length > 0) {
+        const y = stack.pop()!;
+        const x = stack.pop()!;
+        if (x < 0 || x >= frameW || y < 0 || y >= frameH) continue;
+        const idx = y * frameW + x;
+        if (visited[idx]) continue;
+        const alpha = data[(idx * 4) + 3];
+        if (alpha <= ALPHA_THRESHOLD) {
+          visited[idx] = 1;
+          if (x > 0) stack.push(x - 1, y);
+          if (x < frameW - 1) stack.push(x + 1, y);
+          if (y > 0) stack.push(x, y - 1);
+          if (y < frameH - 1) stack.push(x, y + 1);
+        }
+      }
+
+      let minX = frameW, minY = frameH, maxX = -1, maxY = -1;
+      for (let y = 0; y < frameH; y++) {
+        for (let x = 0; x < frameW; x++) {
+          const idx = y * frameW + x;
+          const alpha = data[(idx * 4) + 3];
+          const isOutside = visited[idx] === 1;
+          if (alpha === 0 && !isOutside) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      const bounds = { minX, minY, maxX, maxY };
+      console.log('[Frame Selection] Computed bounds:', bounds);
+      
+      setEffectSettings(prev => ({
+        ...prev,
+        frameOverlay: { img, opacity: 1, bounds }
+      }));
+    };
+  }, [selectedFrame]);
+
+  // Handle overlay selection
+  const handleSelectOverlay = useCallback((file: string) => {
+    const url = `/overlays/${file}`;
+    if (selectedOverlay === file) {
+      // Toggle off
+      setSelectedOverlay(null);
+      setEffectSettings(prev => ({ ...prev, overlay: null }));
+      return;
+    }
+
+    setSelectedOverlay(file);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    img.onload = () => {
+      setEffectSettings(prev => ({
+        ...prev,
+        overlay: { img, blendMode: 'screen', opacity: 0.85 }
+      }));
+    };
+  }, [selectedOverlay]);
 
   // Setup camera when modal opens
   useEffect(() => {
     if (isOpen) {
       setIsCapturing(false); // Reset capturing state when modal opens
+      setShowProcessingOverlay(false);
       startCamera();
+      // Load frames and overlays
+      getFrameFiles().then(setFrameFiles).catch(() => setFrameFiles([]));
+      getOverlayFiles().then(setOverlayFiles).catch(() => setOverlayFiles([]));
     } else {
       stopCamera();
     }
@@ -253,6 +484,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
           padding: 12,
           zIndex: 20,
           background: 'rgba(0,0,0,0.85)',
+          overflowY: 'auto',
         }}
         onClick={handleClose}
       >
@@ -260,12 +492,15 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
           style={{
             width: '100%',
             maxWidth: 720,
+            maxHeight: 'calc(100vh - 24px)',
             background: 'var(--bg)',
             borderRadius: 8,
             padding: 12,
             display: 'flex',
             flexDirection: 'column',
             gap: 12,
+            margin: 'auto',
+            overflowY: 'auto',
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -291,6 +526,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 height: 'auto',
                 display: 'block',
                 borderRadius: 6,
+                filter: showProcessingOverlay ? 'blur(8px) brightness(0.7)' : 'none',
+                transition: 'filter 0.2s ease',
               }}
             />
 
@@ -302,9 +539,31 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
                   color: '#fff',
+                  zIndex: 2,
                 }}
               >
                 <LogoLoader size={40} variant="other" />
+              </div>
+            )}
+
+            {showProcessingOverlay && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(0,0,0,0.6)',
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: 6,
+                  zIndex: 1,
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                  <LogoLoader size={48} variant="other" />
+                  <span style={{ color: '#fff', fontSize: '0.875rem', fontWeight: 500 }}>Processing...</span>
+                </div>
               </div>
             )}
           </div>
@@ -346,6 +605,24 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               disabled={isCapturing || processing}
             >
               <Type size={16} />
+            </button>
+            <button
+              type="button"
+              className={`btn mini ${effectSettings.type === 'frame' ? 'active' : ''}`}
+              onClick={() => setEffectSettings({ ...effectSettings, type: 'frame' })}
+              title="Frame"
+              disabled={isCapturing || processing}
+            >
+              <Frame size={16} />
+            </button>
+            <button
+              type="button"
+              className={`btn mini ${effectSettings.type === 'overlay' ? 'active' : ''}`}
+              onClick={() => setEffectSettings({ ...effectSettings, type: 'overlay' })}
+              title="Overlay"
+              disabled={isCapturing || processing}
+            >
+              <Layers size={16} />
             </button>
           </div>
 
@@ -693,6 +970,124 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   Inverted
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Frame selection panel */}
+          {effectSettings.type === 'frame' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 8 }}>
+                {frameFiles.map((file) => {
+                  const thumbUrl = `/frames/${file}`;
+                  return (
+                    <button
+                      key={file}
+                      type="button"
+                      onClick={() => handleSelectFrame(file)}
+                      disabled={isCapturing || processing}
+                      style={{
+                        width: 60,
+                        height: 60,
+                        border: 'none',
+                        borderRadius: 8,
+                        backgroundImage: `url("${thumbUrl}")`,
+                        backgroundPosition: 'center',
+                        backgroundSize: 'cover',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'var(--muted-bg)',
+                        boxShadow: selectedFrame === file ? '0 0 0 2px var(--primary)' : 'none',
+                        opacity: (isCapturing || processing) ? 0.5 : 1,
+                      }}
+                      title={file}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Overlay selection panel */}
+          {effectSettings.type === 'overlay' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 8 }}>
+                {overlayFiles.map((file) => {
+                  const thumbUrl = `/overlays/thumbs/${file}`;
+                  return (
+                    <button
+                      key={file}
+                      type="button"
+                      onClick={() => handleSelectOverlay(file)}
+                      disabled={isCapturing || processing}
+                      style={{
+                        width: 60,
+                        height: 60,
+                        border: 'none',
+                        borderRadius: 8,
+                        backgroundImage: `url("${thumbUrl}")`,
+                        backgroundPosition: 'center',
+                        backgroundSize: 'cover',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'var(--muted-bg)',
+                        boxShadow: selectedOverlay === file ? '0 0 0 2px var(--primary)' : 'none',
+                        opacity: (isCapturing || processing) ? 0.5 : 1,
+                      }}
+                      title={file}
+                    />
+                  );
+                })}
+              </div>
+              {effectSettings.overlay && (
+                <>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
+                    {['multiply', 'screen', 'overlay', 'soft-light'].map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        className={`btn mini ${effectSettings.overlay?.blendMode === mode ? 'active' : ''}`}
+                        onClick={() => {
+                          if (effectSettings.overlay) {
+                            setEffectSettings({
+                              ...effectSettings,
+                              overlay: { ...effectSettings.overlay, blendMode: mode }
+                            });
+                          }
+                        }}
+                        disabled={isCapturing || processing}
+                        style={{ fontSize: '0.7rem', padding: '3px 6px', textTransform: 'capitalize' }}
+                      >
+                        {mode}
+                      </button>
+                    ))}
+                  </div>
+                  <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ minWidth: 60 }}>Opacity:</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={effectSettings.overlay?.opacity || 0.85}
+                      onChange={(e) => {
+                        if (effectSettings.overlay) {
+                          setEffectSettings({
+                            ...effectSettings,
+                            overlay: { ...effectSettings.overlay, opacity: parseFloat(e.target.value) }
+                          });
+                        }
+                      }}
+                      style={{ flex: 1 }}
+                      disabled={isCapturing || processing}
+                    />
+                    <span style={{ minWidth: 30, textAlign: 'right' }}>{Math.round((effectSettings.overlay?.opacity || 0.85) * 100)}%</span>
+                  </label>
+                </>
+              )}
             </div>
           )}
 

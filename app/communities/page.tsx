@@ -11,9 +11,10 @@ import { Button } from "@/app/components/ui/Button";
 import NextImage from 'next/image';
 import { currentTheme } from '@/lib/theme';
 import { LoadingIndicator } from "@/app/components/ui/LoadingIndicator";
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import ScrollingHint from "@/app/components/ui/ScrollingHint";
 import SkeletonCard from "@/app/components/ui/SkeletonCard";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 export const dynamic = 'force-dynamic';
 
@@ -23,8 +24,11 @@ export default function CommunitiesPage() {
   const [error, setError] = useState<string | null>(null);
   const [showMessage, setShowMessage] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(currentTheme());
+  const { me } = useAuth();
 
   const loadCommunities = async () => {
+    if (!me) return; // Skip loading if not authenticated
+
     try {
       setLoading(true);
       setError(null);
@@ -39,7 +43,7 @@ export default function CommunitiesPage() {
 
   useEffect(() => {
     loadCommunities();
-  }, []);
+  }, [me]); // Depend on me to reload when authentication changes
 
   useEffect(() => {
     const timer = setTimeout(() => setShowMessage(true), 1000);
@@ -51,6 +55,36 @@ export default function CommunitiesPage() {
     window.addEventListener('theme:changed', handleThemeChange);
     return () => window.removeEventListener('theme:changed', handleThemeChange);
   }, []);
+
+  // Show empty state for unauthenticated users
+  if (me === undefined) {
+    return (
+      <CommunitiesClient>
+        <div className="view-fade">
+          <div className="card skeleton" style={{ height: 200, maxWidth: 600, margin: '24px auto' }} />
+        </div>
+      </CommunitiesClient>
+    );
+  }
+
+  if (!me) {
+    return (
+      <CommunitiesClient>
+        <div className="view-fade">
+          <div className="empty feed-empty" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+            <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
+                <Users size={56} strokeWidth={1.5} />
+              </div>
+              <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>Join Communities</h2>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Sign in to discover and join communities, follow conversations, and connect with people who share your interests.</p>
+              <Link href="/explore" className="btn" style={{ marginTop: 8 }}>Explore posts</Link>
+            </div>
+          </div>
+        </div>
+      </CommunitiesClient>
+    );
+  }
 
   if (loading) {
     return (

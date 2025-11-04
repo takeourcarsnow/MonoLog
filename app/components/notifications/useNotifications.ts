@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import type { Notification } from "@/lib/types";
 import { getNotificationMessage } from "@/app/components/notifications/notificationMessageUtils";
 
-export function useNotifications(pageSize: number = 10) {
+export function useNotifications(pageSize: number = 10, me?: any) {
   const [loadedNotifications, setLoadedNotifications] = useState<Array<{ notification: Notification; messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string } }>>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -13,6 +13,9 @@ export function useNotifications(pageSize: number = 10) {
   const [error, setError] = useState<string | null>(null);
 
   const loadInitialNotifications = useCallback(async () => {
+    // Skip if no user is authenticated
+    if (!me) return;
+
     setLoading(true);
     setError(null);
     try {
@@ -32,10 +35,10 @@ export function useNotifications(pageSize: number = 10) {
     } finally {
       setLoading(false);
     }
-  }, [pageSize]);
+  }, [pageSize, me]);
 
   const loadMoreNotifications = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
+    if (loadingMore || !hasMore || !me) return;
 
     setLoadingMore(true);
     setError(null);
@@ -59,7 +62,7 @@ export function useNotifications(pageSize: number = 10) {
     } finally {
       setLoadingMore(false);
     }
-  }, [loadedNotifications, loadingMore, hasMore, pageSize]);
+  }, [loadedNotifications, loadingMore, hasMore, pageSize, me]);
 
   const markAsRead = async (ids: string[]) => {
     try {

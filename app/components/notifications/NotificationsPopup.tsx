@@ -10,6 +10,8 @@ import { useNotifications } from "@/app/components/notifications/useNotification
 import { api } from "@/lib/api";
 import NotificationItem from "@/app/components/notifications/NotificationItem";
 import { SpinningLogo } from "@/app/components/ui/SpinningLogo";
+import { useAuth } from "@/lib/hooks/useAuth";
+import Link from "next/link";
 
 type Props = {
   open: boolean;
@@ -17,6 +19,7 @@ type Props = {
 };
 
 export function NotificationsPopup({ open, onClose }: Props) {
+  const { me } = useAuth();
   const [theme, setTheme] = useState<"light" | "dark">(currentTheme());
   const pageSize = 10;
 
@@ -30,7 +33,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
     loadMoreNotifications,
     markAsRead,
     markAllAsRead,
-  } = useNotifications(pageSize);
+  } = useNotifications(pageSize, me);
 
   const setSentinel = useCallback((el: HTMLDivElement | null) => {
     if (!el || !hasMore) return;
@@ -50,7 +53,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
 
   // On open: immediately mark all notifications read on the server (one-shot)
   useEffect(() => {
-    if (!open) return;
+    if (!open || !me) return;
     try {
       const anyApi: any = api as any;
       anyApi.markAllNotificationsRead?.()
@@ -61,7 +64,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
         })
         .catch(() => {});
     } catch (_) {}
-  }, [open]);
+  }, [open, me]);
 
   useEffect(() => {
     if (open) {
@@ -71,14 +74,14 @@ export function NotificationsPopup({ open, onClose }: Props) {
 
   // After list loads, mark currently loaded items as read in UI
   useEffect(() => {
-    if (!open) return;
+    if (!open || !me) return;
     if (loading) return;
     const hasUnread = loadedNotifications.some(n => !n.notification.read);
     if (hasUnread) {
       // Local UI: mark the currently loaded page as read immediately for responsiveness
       markAllAsRead();
     }
-  }, [open, loading, loadedNotifications, markAllAsRead]);
+  }, [open, me, loading, loadedNotifications, markAllAsRead]);
 
   useEffect(() => {
     const handleThemeChange = () => setTheme(currentTheme());
@@ -124,7 +127,14 @@ export function NotificationsPopup({ open, onClose }: Props) {
           </button>
         </div>
         <div className="notifications-popup-content">
-          {loading ? (
+          {!me ? (
+            <div className="text-center py-8 notifications-empty-state">
+              <Bell size={48} style={{ color: 'var(--muted)', marginBottom: '12px' }} />
+              <h3 style={{ fontSize: '1.1rem', margin: '0 0 8px 0' }}>Stay Connected</h3>
+              <p style={{ color: 'var(--text-secondary)', margin: '0 0 16px 0', maxWidth: 320 }}>Sign in to get notified about likes, comments, mentions, and more.</p>
+              <Link href="/explore" onClick={onClose} className="btn">Explore posts</Link>
+            </div>
+          ) : loading ? (
             <div className="text-center py-8" style={{ paddingTop: '60px' }}>
               <SpinningLogo invertInLight={theme === 'light'} />
             </div>

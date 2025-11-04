@@ -282,12 +282,17 @@ export function HeaderInteractive() {
             <Bell size={20} strokeWidth={2} />
           </button>
         ) : (
-          <Link href="/profile" className="btn icon notifications-btn no-tap-effects" aria-label="Notifications">
+          <button
+            className="btn icon notifications-btn no-tap-effects"
+            title="Notifications"
+            aria-label="Notifications"
+            onClick={() => setShowNotificationsPopup(true)}
+          >
             <Bell size={20} strokeWidth={2} />
-          </Link>
+          </button>
         )}
         {/* Search button */}
-        <Link href={mounted && me ? "/search" : "/profile"} className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
+        <Link href="/search" className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
           <Search size={20} strokeWidth={2} />
         </Link>
         {/* Shell reserves space for the profile button so the header doesn't

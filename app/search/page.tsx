@@ -6,6 +6,7 @@ import Image from 'next/image';
 import TimeDisplay from "@/app/components/ui/TimeDisplay";
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import Link from 'next/link';
 
 interface SearchResult {
   posts: any[];
@@ -32,7 +33,22 @@ export default async function SearchPage({ searchParams }: { searchParams: any }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/profile');
+    return (
+      <SearchClient>
+        <div className="view-fade">
+          <div className="empty feed-empty" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+            <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
+                <Search size={56} strokeWidth={1.5} />
+              </div>
+              <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>Discover Content</h2>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Sign in to search for posts, users, and communities. Find people with similar interests and explore trending content.</p>
+              <Link href="/explore" className="btn" style={{ marginTop: 8 }}>Explore posts</Link>
+            </div>
+          </div>
+        </div>
+      </SearchClient>
+    );
   }
 
   // In some Next.js versions `searchParams` may be a Promise that must be awaited

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { slugify } from '@/src/lib/utils';
+import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { makeWeakETag } from '@/src/lib/api/utils';
 
 async function getReplyCount(sb: any, threadId: string): Promise<number> {
   const { count } = await sb
@@ -65,7 +67,7 @@ async function getCommunityThreads(sb: any, communityId: string) {
 
   if (error) {
     // Fallback to simple ordering if RPC doesn't exist
-    const { data: fallbackThreads, error: fallbackError } = await sb
+      const { data: fallbackThreads, error: fallbackError } = await sb
       .from('threads')
       .select(`
         *,
@@ -91,10 +93,17 @@ async function getCommunityThreads(sb: any, communityId: string) {
       })
     );
 
-    return NextResponse.json(threadsWithReplyCounts);
+      const etag = makeWeakETag(threadsWithReplyCounts);
+      const headers: HeadersInit = { ETag: etag };
+      const cacheSeconds = 20;
+      return apiSuccess(threadsWithReplyCounts, 200, { headers, cacheSeconds });
   }
 
-  return NextResponse.json(threads);
+    // RPC returned threads, cacheable list
+    const etag = makeWeakETag(threads);
+    const headers: HeadersInit = { ETag: etag };
+    const cacheSeconds = 20;
+    return apiSuccess(threads, 200, { headers, cacheSeconds });
 }
 
 export async function GET(req: Request) {
@@ -112,9 +121,9 @@ export async function GET(req: Request) {
     } else if (communityId) {
       return await getCommunityThreads(sb, communityId);
     } else {
-      return NextResponse.json({ error: 'Either id, slug, or communityId parameter is required' }, { status: 400 });
+        return apiError('Either id, slug, or communityId parameter is required', 400);
     }
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+      return apiError(e?.message || String(e), 500);
   }
 }

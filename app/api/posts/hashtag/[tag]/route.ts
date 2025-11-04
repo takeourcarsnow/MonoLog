@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { mapRowToHydratedPost } from '@/src/lib/api/utils';
+import { mapRowToHydratedPost, makeWeakETag } from '@/src/lib/api/utils';
 import { getServerCache, setServerCache } from '@/src/lib/serverCache';
+import { apiError, apiSuccess } from '@/lib/apiResponse';
 
 export async function GET(req: Request, context: any) {
   // Next's route handler context may provide `params` as a plain
@@ -13,7 +14,7 @@ export async function GET(req: Request, context: any) {
   try {
     const tag = params?.tag?.toLowerCase();
     if (!tag || tag.trim() === '') {
-      return NextResponse.json({ error: 'Valid tag required' }, { status: 400 });
+      return apiError('Valid tag required', 400);
     }
 
     const url = new URL(req.url);
@@ -25,7 +26,16 @@ export async function GET(req: Request, context: any) {
     const cacheKey = `hashtag:${tag}:limit=${limit}:before=${before || 'none'}`;
     const cached = getServerCache(cacheKey);
     if (cached) {
-      return NextResponse.json({ ok: true, posts: cached });
+      const etag = makeWeakETag(cached);
+      const inm = req.headers.get('if-none-match');
+      const headers: HeadersInit = { ETag: etag };
+      const cacheSeconds = 20;
+      if (inm && inm === etag) {
+        const h = new Headers(headers);
+        h.set('Cache-Control', `public, max-age=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`);
+        return new NextResponse(null as any, { status: 304, headers: h });
+      }
+      return apiSuccess({ ok: true, posts: cached }, 200, { headers, cacheSeconds });
     }
 
     let q: any = sb.from('posts').select('*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)').eq('public', true).contains('hashtags', [tag]).order('created_at', { ascending: false }).limit(limit);
@@ -34,14 +44,17 @@ export async function GET(req: Request, context: any) {
 
     const { data, error } = await q;
     if (error) {
-      return NextResponse.json({ error: error.message || error }, { status: 500 });
+      return apiError(error.message || String(error), 500);
     }
 
     const rows = (data || []).map((r: any) => mapRowToHydratedPost(r));
     // Cache the result
     try { setServerCache(cacheKey, rows, 10000); } catch (_) {}
-    return NextResponse.json({ ok: true, posts: rows });
+    const etag = makeWeakETag(rows);
+    const headers: HeadersInit = { ETag: etag };
+    const cacheSeconds = 20;
+    return apiSuccess({ ok: true, posts: rows }, 200, { headers, cacheSeconds });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+    return apiError(e?.message || String(e), 500);
   }
 }

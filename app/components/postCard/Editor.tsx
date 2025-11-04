@@ -97,7 +97,6 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
           placeholder="Tell your story (if you feel like it)"
           value={caption}
           onChange={e => setCaption(e.target.value)}
-          autoFocus
           rows={3}
           maxLength={2000}
           style={{ resize: 'vertical', minHeight: '60px', paddingBottom: '24px' }}

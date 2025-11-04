@@ -5,7 +5,8 @@ import { getUserFromAuthHeader, getTokenFromAuthHeader } from '@/src/lib/api/ser
 import { checkComment } from '@/src/lib/moderation';
 import { apiRateLimiter } from '@/src/lib/rateLimiter';
 import { extractUserProfile } from '@/src/lib/api/userProfile';
-import { checkRateLimitResponse } from '@/src/lib/api/utils';
+import { checkRateLimitResponse, getClientIp } from '@/src/lib/api/utils';
+import { apiError, apiSuccess } from '@/lib/apiResponse';
 
 function extractUserProfileFromAuth(authUser: any) {
   return extractUserProfile(authUser);
@@ -14,35 +15,35 @@ function extractUserProfileFromAuth(authUser: any) {
 export async function POST(req: Request) {
   try {
     // Rate limiting: moderate limits for comment creation
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    const rateLimitRes = checkRateLimitResponse(apiRateLimiter, ip, false);
+    const ip = getClientIp(req);
+    const rateLimitRes = checkRateLimitResponse(apiRateLimiter, ip, true);
     if (rateLimitRes) return rateLimitRes;
 
     const body = await req.json();
     const postId = body.postId;
     const text = body.text;
     const parentId = body.parentId;
-    if (!postId || !text) return NextResponse.json({ error: 'Missing postId or text' }, { status: 400 });
+    if (!postId || !text) return apiError('Missing postId or text', 400);
     const authUser = await getUserFromAuthHeader(req);
-    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!authUser) return apiError('Unauthorized', 401);
     const actorId = authUser.id;
     const token = getTokenFromAuthHeader(req);
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!token) return apiError('Unauthorized', 401);
     const userSb = await getUserSupabase(token);
     const sb = getServiceSupabase();
     const COMMENT_MAX = 500;
-    if (typeof text === 'string' && text.trim().length > COMMENT_MAX) return NextResponse.json({ error: `Comment exceeds ${COMMENT_MAX} characters` }, { status: 400 });
+    if (typeof text === 'string' && text.trim().length > COMMENT_MAX) return apiError(`Comment exceeds ${COMMENT_MAX} characters`, 400);
     // run automod checks
     try {
       const mod = checkComment(String(text));
       if (mod.action === 'reject') {
-        return NextResponse.json({ error: 'Comment rejected by moderation', reasons: mod.reasons, score: mod.score }, { status: 400 });
+        return apiError('Comment rejected by moderation', 400, { reasons: mod.reasons, score: mod.score });
       }
       if (mod.action === 'flag') {
         // For now treat flagged comments as rejected; alternatively we could
         // insert with a 'flagged' column or moderation queue. This is a
         // conservative default to avoid posting spam/links immediately.
-        return NextResponse.json({ error: 'Comment flagged by moderation', reasons: mod.reasons, score: mod.score }, { status: 400 });
+        return apiError('Comment flagged by moderation', 400, { reasons: mod.reasons, score: mod.score });
       }
     } catch (e) {
       // If moderation util throws for unexpected reason, allow the comment
@@ -97,7 +98,7 @@ export async function POST(req: Request) {
     console.log('Insert result:', res);
     if (res.error) {
       console.log('Insert error:', res.error);
-      return NextResponse.json({ error: String(res.error.message || res.error) }, { status: 500 });
+      return apiError(String(res.error.message || res.error), 500);
     }
     // Try to create a notification for the post owner and all previous commenters. This is best-effort
     // — if the notifications table doesn't exist or the insert fails, we
@@ -148,8 +149,8 @@ export async function POST(req: Request) {
       }
     })();
 
-    return NextResponse.json({ ok: true, id, created_at });
+    return apiSuccess({ ok: true, id, created_at });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+    return apiError(e?.message || String(e), 500);
   }
 }

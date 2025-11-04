@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { makeWeakETag } from '@/src/lib/api/utils';
 
 export async function GET(req: Request) {
   try {
@@ -20,7 +22,7 @@ export async function GET(req: Request) {
         .single();
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 404 });
+        return apiError(error.message, 404);
       }
 
       // Get member and thread counts
@@ -83,7 +85,7 @@ export async function GET(req: Request) {
           .range(offset, offset + limit - 1);
 
         if (fallbackError) {
-          return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+          return apiError(fallbackError.message, 500);
         }
 
         communities = fallbackCommunities || [];
@@ -151,17 +153,14 @@ export async function GET(req: Request) {
         }
       }
 
-      const res = NextResponse.json(communitiesWithCounts);
-      // Attach total count header for client pagination controls
-      try {
-        res.headers.set('X-Total-Count', String(totalCount));
-      } catch (e) {
-        // NextResponse.headers may be read-only in some runtimes; ignore if set fails
-      }
-      return res;
+      // Add brief caching + ETag for the list branch only (no user-dependent values)
+      const etag = makeWeakETag({ communities: communitiesWithCounts, page, limit, offset });
+      const headers: HeadersInit = { ETag: etag, 'X-Total-Count': String(totalCount) };
+      const cacheSeconds = 20;
+      return apiSuccess(communitiesWithCounts, 200, { headers, cacheSeconds });
     }
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+    return apiError(e?.message || String(e), 500);
   }
 }
 
@@ -169,10 +168,10 @@ export async function DELETE(req: Request) {
   try {
     const url = new URL(req.url);
     const slug = url.searchParams.get('slug');
-    if (!slug) return NextResponse.json({ error: 'Community slug is required' }, { status: 400 });
+    if (!slug) return apiError('Community slug is required', 400);
 
     const authUser = await getUserFromAuthHeader(req);
-    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!authUser) return apiError('Unauthorized', 401);
 
     const sb = getServiceSupabase();
 
@@ -184,11 +183,11 @@ export async function DELETE(req: Request) {
       .single();
 
     if (!community) {
-      return NextResponse.json({ error: 'Community not found' }, { status: 404 });
+      return apiError('Community not found', 404);
     }
 
     if (community.creator_id !== authUser.id) {
-      return NextResponse.json({ error: 'Only the community creator can delete it' }, { status: 403 });
+      return apiError('Only the community creator can delete it', 403);
     }
 
     // Delete the community (CASCADE will handle threads, replies, members)
@@ -199,13 +198,13 @@ export async function DELETE(req: Request) {
 
     if (error) {
       console.error('Delete community error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (e: any) {
     console.error('Delete community exception:', e);
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+    return apiError(e?.message || String(e), 500);
   }
 }
 
@@ -213,10 +212,10 @@ export async function PUT(req: Request) {
   try {
     const url = new URL(req.url);
     const slug = url.searchParams.get('slug');
-    if (!slug) return NextResponse.json({ error: 'Community slug is required' }, { status: 400 });
+    if (!slug) return apiError('Community slug is required', 400);
 
     const authUser = await getUserFromAuthHeader(req);
-    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!authUser) return apiError('Unauthorized', 401);
 
     const body = await req.json();
     const { name, description, imageUrl } = body;
@@ -231,11 +230,11 @@ export async function PUT(req: Request) {
       .single();
 
     if (!existingCommunity) {
-      return NextResponse.json({ error: 'Community not found' }, { status: 404 });
+      return apiError('Community not found', 404);
     }
 
     if (existingCommunity.creator_id !== authUser.id) {
-      return NextResponse.json({ error: 'Only the community creator can edit it' }, { status: 403 });
+      return apiError('Only the community creator can edit it', 403);
     }
 
     // Prepare update data
@@ -260,7 +259,7 @@ export async function PUT(req: Request) {
 
     if (error) {
       console.error('Update community error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
     // Get member and thread counts
@@ -288,6 +287,6 @@ export async function PUT(req: Request) {
     });
   } catch (e: any) {
     console.error('Update community exception:', e);
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
+    return apiError(e?.message || String(e), 500);
   }
 }

@@ -199,6 +199,34 @@ export async function selectUserFields(sb: any, id: string, fields: string) {
 import { NextResponse } from 'next/server';
 import { apiError } from '../../../lib/apiResponse';
 
+// Extract best-effort client IP from common proxy headers
+export function getClientIp(req: Request): string {
+  const fwd = req.headers.get('x-forwarded-for') || '';
+  if (fwd) {
+    // XFF may contain a list: client, proxy1, proxy2
+    const first = fwd.split(',')[0].trim();
+    if (first) return first;
+  }
+  const real = req.headers.get('x-real-ip');
+  if (real) return real;
+  return 'unknown';
+}
+
+// Generate a weak ETag from a JSON-serializable body
+export function makeWeakETag(data: any): string {
+  // lightweight non-cryptographic hash
+  const str = (() => {
+    try { return JSON.stringify(data); } catch { return String(data); }
+  })();
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    // hash * 33 ^ char
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+  }
+  const h = (hash >>> 0).toString(16);
+  return `W/"${str.length.toString(16)}-${h}"`;
+}
+
 export function checkRateLimitResponse(limiter: any, ip: string, useApiError = false) {
   const rateLimit = limiter.checkLimit(ip);
   if (!rateLimit.allowed) {

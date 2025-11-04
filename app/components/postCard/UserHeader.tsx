@@ -224,6 +224,7 @@ export const UserHeader = memo(function UserHeader({
               <>
                 <button
                   className={`btn icon-reveal edit-btn ${editExpanded ? 'expanded' : ''} ${editing ? 'active' : ''} ${editorSaving ? 'saving' : ''}`}
+                  disabled={editing}
                   onClick={async (e) => {
                     // Guard against rapid double-clicks that can immediately trigger the
                     // save branch right after opening. If a click occurred very recently,
@@ -257,25 +258,10 @@ export const UserHeader = memo(function UserHeader({
                       return;
                     }
 
-                    // When already editing, try to save via editorRef (if provided)
-                    try {
-                      // If the editor is still opening, ignore the save click to avoid
-                      // triggering an immediate close via the save path.
-                      if (editorOpeningRef && editorOpeningRef.current) {
-                        // save ignored while opening
-                        return;
-                      }
-                      if (editorRef && editorRef.current && typeof editorRef.current.save === 'function') {
-                        // invoking editorRef.save()
-                        await editorRef.current.save();
-                      }
-                    } catch (e) {
-                      // ignore — parent hook will show toast on failure
-                    }
+                    // When already editing, do nothing
                   }}
                 >
                   <span className="icon" aria-hidden="true"><Edit size={16} /></span>
-                  <span className="reveal label">{editorSaving ? 'Saving…' : 'Edit'}</span>
                 </button>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <button

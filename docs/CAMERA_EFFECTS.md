@@ -35,7 +35,7 @@ Each effect has customizable parameters matching the full image editor:
   - Apple II (16-color palette)
 
 #### ASCII
-- **Cell Size**: 4-20px character cells
+- **Cell Size**: 10-50px character cells
 - **Charset**: Custom character string or presets
 - **Character Presets**:
   - Custom: ` .:-=+*#%@`

@@ -41,7 +41,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     ditherLevels: 3,
     ditherColorMode: 'bw',
     ditherPalette: 'auto',
-    asciiCellSize: 8,
+    asciiCellSize: 10,
     asciiCharset: ' .:-=+*#%@',
     asciiInvert: false,
     asciiCharsetPreset: 'custom',
@@ -573,9 +573,9 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 <span style={{ minWidth: 80 }}>Cell Size:</span>
                 <input
                   type="range"
-                  min="4"
-                  max="20"
-                  value={effectSettings.asciiCellSize || 8}
+                  min="10"
+                  max="50"
+                  value={effectSettings.asciiCellSize || 10}
                   onChange={(e) => setEffectSettings({ ...effectSettings, asciiCellSize: parseInt(e.target.value) })}
                   style={{ flex: 1 }}
                   disabled={isCapturing || processing}
@@ -698,7 +698,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-            <Button onClick={handleCapture} loading={isCapturing || processing} disabled={!cameraReady || isCapturing}>
+            <Button onClick={handleCapture} disabled={!cameraReady || isCapturing || processing}>
               {(isCapturing || processing) ? (
                 <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                   <LogoLoader size={20} variant="other" />

@@ -97,7 +97,7 @@ export function SearchLive({ initialQuery = '', initialResults = null as any, sh
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search posts, users, communities..."
+          placeholder="Type to search"
           className="search-input"
           style={{ flex: 1, width: '100%', paddingLeft: '32px', paddingRight: inputPaddingRight }}
           aria-label="Search"

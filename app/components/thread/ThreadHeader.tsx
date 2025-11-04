@@ -20,10 +20,10 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
   return (
     <>
       {/* Back Navigation */}
-      <div className="mb-4">
+      <div style={{ marginBottom: '0.5rem', textAlign: 'center' }}>
         <Link href={`/communities/${communitySlug}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
           <ArrowLeft size={16} />
-          Back to {thread.community.name}
+          Back
         </Link>
       </div>
 

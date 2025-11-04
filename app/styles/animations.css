@@ -348,3 +348,59 @@
 .invite-panel-enter {
   animation: invitePanelEnter 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Minimal CSS-only marquee (replaces the older JS-driven approach).
+   Duplicate the content (two copies) and animate translateX(-50%).
+   Use a stationary mask on the wrapper for consistent edge fades on mobile.
+*/
+.scrolling-text-wrapper {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 0; /* collapse inter-element gaps */
+  -webkit-mask-image: linear-gradient(to right, transparent 0px, black 50px, black calc(100% - 50px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0px, black 50px, black calc(100% - 50px), transparent 100%);
+}
+.scrolling-text-wrapper {
+  /* Ensure the wrapper uses border-box sizing so the mask and any
+     overlays align with the visible content area on mobile devices. */
+  box-sizing: border-box;
+}
+.scrolling-text-wrapper::before,
+.scrolling-text-wrapper::after {
+  /* Fallback fade overlays for browsers that don't fully support
+     mask-image/-webkit-mask-image. These gradients visually mask
+     the left and right edges so the marquee doesn't appear to bleed
+     past the viewport on mobile. */
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50px;
+  pointer-events: none;
+  z-index: 2;
+}
+.scrolling-text-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg) 0%, transparent 100%);
+}
+.scrolling-text-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg) 0%, transparent 100%);
+}
+.scrolling-text {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 14px;
+  color: var(--text);
+  animation: simple-marquee var(--marquee-duration, 12s) linear infinite;
+}
+.scrolling-text > span { display: inline-block; padding-right: 2.25rem; }
+@keyframes simple-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .scrolling-text { animation: none !important; } }
+
+/* Mobile-specific behavior removed: marquee will animate on all viewports.
+   If you prefer to disable animation on small screens again, we can add
+   a small tweak later, but for now the marquee scrolls everywhere. */

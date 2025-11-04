@@ -1,22 +1,17 @@
 "use client";
 
-import Image from 'next/image';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { Button } from "@/app/components/Button";
 import Link from "next/link";
-import { compressImage } from "@/src/lib/image";
-import { getSupabaseClient, getAccessToken } from "@/src/lib/api/client";
-import { AuthRequired } from "./AuthRequired";
-import { AuthForm } from "./AuthForm";
-import { ArrowLeft } from "lucide-react";
 import type { HydratedCommunity } from "@/src/lib/types";
 
 export function EditCommunityView() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -24,30 +19,20 @@ export function EditCommunityView() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
   const [community, setCommunity] = useState<HydratedCommunity | null>(null);
-  const [communityLoading, setCommunityLoading] = useState(true);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const user = await api.getCurrentUser();
-        setCurrentUser(user);
-      } catch (e) {
-        // User not authenticated
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
 
   useEffect(() => {
     const loadCommunity = async () => {
       if (!slug) return;
       try {
-        setCommunityLoading(true);
         const communityData = await api.getCommunity(slug);
         if (!communityData) {
           setError('Community not found');
@@ -61,56 +46,10 @@ export function EditCommunityView() {
         }
       } catch (e: any) {
         setError(e?.message || 'Failed to load community');
-      } finally {
-        setCommunityLoading(false);
       }
     };
     loadCommunity();
   }, [slug]);
-
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      // Compress the image
-      const compressed = await compressImage(file);
-      setImageFile(file);
-      setImagePreview(compressed);
-    } catch (err) {
-      setError("Failed to process image");
-    }
-  };
-
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile || !imagePreview) return null;
-
-    try {
-      const sb = getSupabaseClient();
-      const token = await getAccessToken(sb);
-
-      const response = await fetch('/api/storage/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          dataUrl: imagePreview,
-          filename: imageFile.name
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const result = await response.json();
-      return result.publicUrl;
-    } catch (err) {
-      throw new Error('Failed to upload image');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,13 +59,29 @@ export function EditCommunityView() {
       setLoading(true);
       setError(null);
 
-      // Upload image if selected
-      let imageUrl: string | undefined = undefined;
+      let imageUrl: string | undefined;
       if (imageFile) {
-        imageUrl = await uploadImage() || undefined;
-      } else if (imagePreview && !imageFile) {
-        // Keep existing image if no new file selected but preview exists
-        imageUrl = imagePreview;
+        // Convert file to data URL
+        const reader = new FileReader();
+        reader.readAsDataURL(imageFile);
+        await new Promise((resolve, reject) => {
+          reader.onload = resolve;
+          reader.onerror = reject;
+        });
+        const dataUrl = reader.result as string;
+
+        // Upload to storage
+        const uploadRes = await fetch('/api/storage/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dataUrl })
+        });
+        if (!uploadRes.ok) throw new Error('Failed to upload image');
+        const uploadData = await uploadRes.json();
+        imageUrl = uploadData.url;
+      } else if (community?.imageUrl && !imagePreview) {
+        // If there was an image but user removed it, set to undefined to remove
+        imageUrl = undefined;
       }
 
       const updatedCommunity = await api.updateCommunity(slug, {
@@ -143,152 +98,102 @@ export function EditCommunityView() {
     }
   };
 
-  if (authLoading || communityLoading) {
-    return (
-      <div className="content">
-        <div className="card max-w-2xl">
-          <div className="animate-pulse space-y-6">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <AuthRequired>
-        <AuthForm onClose={async () => {
-          const user = await api.getCurrentUser();
-          setCurrentUser(user);
-        }} />
-      </AuthRequired>
-    );
-  }
-
   if (!community) {
-    return (
-      <div className="content">
-        <div className="card">
-          <p className="text-red-500">{error || 'Community not found'}</p>
-          <Link href="/communities">
-            <Button>Back to Communities</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if user is the creator
-  if (community.creator.id !== currentUser.id) {
-    return (
-      <div className="content">
-        <div className="card">
-          <p className="text-red-500">You can only edit communities you created</p>
-          <Link href={`/communities/${community.slug}`}>
-            <Button>Back to Community</Button>
-          </Link>
-        </div>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="content">
-      {/* Back Navigation */}
-      <div className="mb-4">
-        <Link href={`/communities/${community.slug}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-          <ArrowLeft size={16} />
-          Back to Community
-        </Link>
-      </div>
+      <div style={{ maxWidth: '42rem', margin: '1rem auto', borderRadius: '0.5rem', padding: '1.5rem', border: '1px solid var(--border)' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: '0.25rem', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
+          placeholder="Enter community name"
+          maxLength={50}
+          required
+        />
 
-      <div className="card max-w-2xl community">
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="sr-only">
-                Community Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                placeholder="Enter community name"
-                maxLength={50}
-                required
-              />
-              <p className="text-sm text-gray-500 mt-1">{name.length}/50 characters</p>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: '0.25rem', resize: 'none', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
+          placeholder="Describe what this community is about"
+          rows={4}
+          maxLength={500}
+          required
+        />
+
+        <div>
+          {!imagePreview && (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                display: 'block',
+                margin: '0 auto 0.5rem auto',
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--bg-elev)',
+                color: 'var(--text)',
+                border: '1px solid var(--border)',
+                borderRadius: '0.25rem',
+                cursor: 'pointer'
+              }}
+            >
+              Upload Community Image
+            </button>
+          )}
+          {imagePreview && (
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '0.25rem', border: '1px solid var(--border)', cursor: 'pointer' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  style={{
+                    position: 'absolute',
+                    top: '5px',
+                    right: '5px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--danger)',
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
             </div>
-
-            <div>
-              <label htmlFor="description" className="sr-only">
-                Description *
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md resize-none bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                placeholder="Describe what this community is about"
-                rows={4}
-                maxLength={500}
-                required
-              />
-              <p className="text-sm text-gray-500 mt-1">{description.length}/500 characters</p>
-            </div>
-
-            <div>
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Community Image (optional)
-              </label>
-              <input
-                type="file"
-                id="image"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-              />
-              {imagePreview && (
-                <div className="mt-3">
-                  <Image
-                    src={imagePreview}
-                    alt="Community preview"
-                    width={128}
-                    height={128}
-                    className="w-32 h-32 object-cover rounded-md border"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                    className="ml-2 text-red-500 hover:text-red-700 text-sm"
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {error && (
-              <div className="text-red-500 text-sm">{error}</div>
-            )}
-
-            <div className="flex gap-3">
-              <Button type="submit" disabled={!name.trim() || !description.trim() || loading} loading={loading}>
-                Update Community
-              </Button>
-              <Link href={`/communities/${community.slug}`}>
-                <Button variant="ghost">Cancel</Button>
-              </Link>
-            </div>
-          </form>
+          )}
         </div>
+
+        {error && (
+          <div style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{error}</div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+          <Button type="submit" variant="ghost" disabled={!name.trim() || !description.trim() || loading} loading={loading}>
+            Update Community
+          </Button>
+          <Link href={`/communities/${community.slug}`}>
+            <Button variant="ghost">Cancel</Button>
+          </Link>
+        </div>
+      </form>
     </div>
   );
 }

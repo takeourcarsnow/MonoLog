@@ -12,6 +12,7 @@ import NextImage from 'next/image';
 import { currentTheme } from '@/src/lib/theme';
 import { LoadingIndicator } from '@/app/components/LoadingIndicator';
 import { Plus } from 'lucide-react';
+import ScrollingHint from '@/app/components/ScrollingHint';
 import SkeletonCard from '@/app/components/SkeletonCard';
 
 export const dynamic = 'force-dynamic';
@@ -55,11 +56,6 @@ export default function CommunitiesPage() {
     return (
       <CommunitiesClient>
         <div className="communities">
-          <div className="content-actions my-8 flex justify-center w-full">
-            <Button variant="icon" title="Create Community" className="no-effects">
-              <Plus size={16} />
-            </Button>
-          </div>
           <div className="content-header mt-8 mb-6">
             <div className="text-center w-full">
               <h1 className="content-title inline-flex items-center justify-center gap-2">
@@ -67,6 +63,9 @@ export default function CommunitiesPage() {
                 <span className="dim">Communities and threads with latest activity are displayed first</span>
               </h1>
             </div>
+          </div>
+          <div className="content-actions mt-6 mb-10 flex justify-center w-full">
+            <Button title="Create a Community" variant="ghost" className="btn-no-bg keep-border">Create a Community</Button>
           </div>
           <div className="content-body space-y-6">
             {[...Array(6)].map((_, i) => (
@@ -103,20 +102,28 @@ export default function CommunitiesPage() {
   return (
     <CommunitiesClient>
       <div className="communities">
-        <div className="content-actions my-8 flex justify-center w-full">
-          <Link href="/communities/create">
-            <Button variant="icon" title="Create Community">
-              <Plus size={16} />
-            </Button>
-          </Link>
-        </div>
         <div className="content-header mt-8 mb-6">
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
               <span className="sr-only">Communities</span>
-              <span className={`dim transition-opacity duration-1000 ${showMessage ? 'opacity-100' : 'opacity-0'}`}>Communities and threads with latest activity are displayed first</span>
+              <ScrollingHint
+                messages={[
+                  'Communities and threads with latest activity are displayed first',
+                  'Join communities to follow conversations you care about',
+                  'Create a community to start new discussions with others',
+                ]}
+                interval={4500}
+                fadeMs={600}
+                className={`dim transition-opacity duration-300 ${showMessage ? 'opacity-100' : 'opacity-0'}`}
+              />
             </h1>
           </div>
+        </div>
+
+        <div className="content-actions mt-6 mb-10 flex justify-center w-full">
+          <Link href="/communities/create">
+            <Button title="Create a Community" variant="ghost" className="btn-no-bg keep-border">Create a Community</Button>
+          </Link>
         </div>
 
         <div className="content-body space-y-6">

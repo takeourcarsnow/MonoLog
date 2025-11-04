@@ -6,6 +6,8 @@ import { Users } from "lucide-react";
 import type { HydratedCommunity } from "@/src/lib/types";
 import { Button } from "./Button";
 import Link from "next/link";
+// ScrollingHint removed — use plain text
+import ScrollingHint from "./ScrollingHint";
 import { useAuth } from "@/src/lib/hooks/useAuth";
 import { useCommunities } from "@/lib/hooks";
 import CommunityCard from "./CommunityCard";
@@ -45,7 +47,16 @@ export function CommunitiesView() {
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
               <strong><Users size={18} strokeWidth={2} /></strong>
-              <span className="dim">Communities and threads with latest activity are displayed first</span>
+              <ScrollingHint
+                messages={[
+                  'Communities and threads with latest activity are displayed first',
+                  'Join communities to follow conversations you care about',
+                  'Create a community to start new discussions with others',
+                ]}
+                interval={4500}
+                fadeMs={600}
+                className="dim"
+              />
             </h1>
           </div>
         </div>
@@ -65,7 +76,15 @@ export function CommunitiesView() {
           <div className="text-center w-full">
             <h1 className="content-title inline-flex items-center justify-center gap-2">
               <strong><Users size={18} strokeWidth={2} /></strong>
-              <span className="dim">Communities and threads with latest activity are displayed first</span>
+              <ScrollingHint
+                messages={[
+                  'Communities and threads with latest activity are displayed first',
+                  'Join communities to follow conversations you care about',
+                ]}
+                interval={4500}
+                fadeMs={600}
+                className="dim"
+              />
             </h1>
           </div>
         </div>
@@ -85,15 +104,23 @@ export function CommunitiesView() {
         <div className="text-center w-full">
           <h1 className="content-title inline-flex items-center justify-center gap-2">
             <strong><Users size={18} strokeWidth={2} /></strong>
-            <span className="dim">Communities and threads with latest activity are displayed first</span>
+            <ScrollingHint
+              messages={[
+                'Communities and threads with latest activity are displayed first',
+                'Join communities to follow conversations you care about',
+              ]}
+              interval={4500}
+              fadeMs={600}
+              className="dim"
+            />
           </h1>
         </div>
-        <div className="content-actions my-8 flex justify-center w-full">
+      </div>
+        <div className="content-actions mt-6 mb-10 flex justify-center w-full">
           <Link href="/communities/create">
-            <Button title="Create Community">Create Community</Button>
+            <Button title="Create a Community" variant="ghost" className="btn-no-bg keep-border">Create a Community</Button>
           </Link>
         </div>
-      </div>
       <div className="content-body space-y-10">
         {(!communities || communities.length === 0) ? (
           <div className="card">

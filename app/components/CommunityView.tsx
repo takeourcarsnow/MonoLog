@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/src/lib/api";
-import { Users, MessageSquare, Plus, Trash2, UserMinus, UserPlus, ArrowLeft, User as UserIcon, Clock } from "lucide-react";
+import { Users, MessageSquare, Trash2, UserMinus, UserPlus, ArrowLeft, User as UserIcon, Clock } from "lucide-react";
 import { useRef } from "react";
 import type { HydratedCommunity, HydratedThread } from "@/src/lib/types";
 import { Button } from "./Button";
@@ -249,11 +249,20 @@ export function CommunityView() {
   return (
     // add top padding on md+ to avoid header overlap on desktop
     <div className="community pt-0 md:pt-20">
-  {/* Back Navigation */}
-  <div className="mt-8 mb-4">
+      {/* Create Thread Button */}
+      {community?.isMember && (
+        <div style={{ marginTop: '1.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'center', width: '100%' }}>
+          <Link href={`/communities/${community.slug}/create-thread`}>
+            <Button title="Create a Thread" variant="ghost" className="btn-no-bg keep-border">Create a Thread</Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Back Navigation */}
+      <div style={{ marginTop: '2rem', marginBottom: '1rem', textAlign: 'center' }}>
         <Link href="/communities" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
           <ArrowLeft size={16} />
-          Back to Communities
+          Back
         </Link>
       </div>
 
@@ -318,13 +327,6 @@ export function CommunityView() {
                   <Trash2 size={16} />
                 </Button>
               </>
-            )}
-            {community.isMember && (
-              <Link href={`/communities/${community.slug}/create-thread`}>
-                <Button size="sm" className="small-min" aria-label="New thread" title="Create a new thread in this community">
-                  <Plus size={16} />
-                </Button>
-              </Link>
             )}
 
             {/* Don't show join button for community creators */}

@@ -103,51 +103,41 @@ export function CreateThreadView() {
   }
 
   return (
-    <div className="content create-thread">
-      <div className="content-body">
-        <div className="card max-w-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="input mb-4"
-              style={{ marginBottom: '1rem' }}
-              placeholder="Enter thread title"
-              maxLength={200}
-              required
-            />
+    <div style={{ maxWidth: '42rem', margin: '1rem auto', borderRadius: '0.5rem', padding: '1.5rem', border: '1px solid var(--border)' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: '0.25rem', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
+          placeholder="Enter thread title"
+          maxLength={200}
+          required
+        />
 
-            <div className="input-wrapper">
-              <textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="input has-counter resize-none"
-                placeholder="Write your thread content here..."
-                rows={8}
-                maxLength={10000}
-                required
-              />
-              <div className="field-counter">{content.length}/10,000</div>
-            </div>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: '0.25rem', resize: 'none', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
+          placeholder="Write your thread content here..."
+          rows={8}
+          maxLength={10000}
+          required
+        />
 
-            {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
-            )}
+        {error && (
+          <div style={{ color: 'var(--danger)', fontSize: '0.875rem', textAlign: 'center' }}>{error}</div>
+        )}
 
-            <div className="flex gap-3 justify-center">
-              <Button type="submit" disabled={!title.trim() || !content.trim() || loading} loading={loading}>
-                Create Thread
-              </Button>
-              <Link href={`/communities/${communitySlug}`}>
-                <Button variant="ghost">Cancel</Button>
-              </Link>
-            </div>
-          </form>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+          <Button type="submit" variant="ghost" disabled={!title.trim() || !content.trim() || loading} loading={loading}>
+            Create Thread
+          </Button>
+          <Link href={`/communities/${communitySlug}`}>
+            <Button variant="ghost">Cancel</Button>
+          </Link>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

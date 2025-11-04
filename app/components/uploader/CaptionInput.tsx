@@ -77,15 +77,34 @@ export function CaptionInput({
   user,
   setUser
 }: CaptionInputProps) {
+  // Local buffered states to avoid tight parent re-render loops when typing fast.
+  // We propagate changes to parent with a small debounce and always flush on blur.
+  const [localCaption, setLocalCaption] = useState<string>(caption || "");
+  const [localSpotify, setLocalSpotify] = useState<string>(spotifyLink || "");
+  const captionDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const spotifyDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingCaptionRef = useRef(false);
+  const isTypingSpotifyRef = useRef(false);
+
+  // Keep local state in sync if parent clears/loads draft etc.
+  useEffect(() => {
+    if (isTypingCaptionRef.current) return; // skip while user is typing
+    setLocalCaption(caption || "");
+  }, [caption]);
+
+  useEffect(() => {
+    if (isTypingSpotifyRef.current) return;
+    setLocalSpotify(spotifyLink || "");
+  }, [spotifyLink]);
   // keep typing animation local (placeholder only). Render a CSS-only
   // typewriter animation using the placeholder string to avoid JS-driven
   // high-frequency updates which can affect focus.
-  const { placeholder, startIndex, setPlaceholder } = useTypingAnimation(caption, !hasPreview && !captionFocused, PHRASES);
+  const { placeholder, startIndex, setPlaceholder } = useTypingAnimation(localCaption, !hasPreview && !captionFocused, PHRASES);
   const [localIndex, setLocalIndex] = useState<number>(startIndex >= 0 ? startIndex : 0);
 
   const [spotifyFocused, setSpotifyFocused] = useState(false);
   // Spotify typing animation
-  const { placeholder: spotifyPlaceholder, startIndex: spotifyStartIndex, setPlaceholder: setSpotifyPlaceholder } = useTypingAnimation(spotifyLink, !hasPreview && !spotifyFocused, PHRASES_SPOTIFY);
+  const { placeholder: spotifyPlaceholder, startIndex: spotifyStartIndex, setPlaceholder: setSpotifyPlaceholder } = useTypingAnimation(localSpotify, !hasPreview && !spotifyFocused, PHRASES_SPOTIFY);
   const [spotifyLocalIndex, setSpotifyLocalIndex] = useState<number>(spotifyStartIndex >= 0 ? spotifyStartIndex : 0);
 
   // Rotate the placeholder in-page while caption is empty and unfocused.
@@ -94,9 +113,9 @@ export function CaptionInput({
   useEffect(() => {
     // continue rotating placeholders while the caption is empty and the
     // input is not focused (preview presence shouldn't stop the ghost).
-    if (caption || captionFocused || processing) return;
-    // mirror the duration calculation used in the style (ms)
-    const duration = 6000;
+    if (localCaption || captionFocused || processing) return;
+    // Simple fade duration (ms)
+    const duration = 3000;
     const timer = setTimeout(() => {
       setLocalIndex((s) => {
         const next = (s + 1) % PHRASES.length;
@@ -105,12 +124,12 @@ export function CaptionInput({
       });
     }, duration + 200); // small buffer to ensure animation finished
     return () => clearTimeout(timer);
-  }, [caption, captionFocused, processing, placeholder, setPlaceholder]);
+  }, [localCaption, captionFocused, processing, placeholder, setPlaceholder]);
 
   // Rotate Spotify placeholders
   useEffect(() => {
-    if (spotifyLink || spotifyFocused || processing) return;
-    const duration = 6000;
+    if (localSpotify || spotifyFocused || processing) return;
+    const duration = 3000;
     const timer = setTimeout(() => {
       setSpotifyLocalIndex((s) => {
         const next = (s + 1) % PHRASES_SPOTIFY.length;
@@ -119,8 +138,8 @@ export function CaptionInput({
       });
     }, duration + 200);
     return () => clearTimeout(timer);
-  }, [spotifyLink, spotifyFocused, processing, spotifyPlaceholder, setSpotifyPlaceholder]);
-  const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
+  }, [localSpotify, spotifyFocused, processing, spotifyPlaceholder, setSpotifyPlaceholder]);
+  const captionRemaining = Math.max(0, CAPTION_MAX - (localCaption?.length || 0));
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const spotifyRef = useRef<HTMLInputElement | null>(null);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -157,7 +176,7 @@ export function CaptionInput({
   }, [captionFocused, spotifyFocused]);
 
   // Determine if counter should be visible: only when focused and has text
-  const counterVisible = captionFocused && caption.trim();
+  const counterVisible = captionFocused && localCaption.trim();
 
   // Simplified focus management - prevent focus when not allowed
   // Removed complex overrides and event listeners to reduce DOM interference
@@ -184,23 +203,39 @@ export function CaptionInput({
           textarea.style.paddingBottom = originalPadding + 'px';
         }
         // Avoid showing a vertical scrollbar when the content fits within
-        // the computed height (e.g., single-line captions). Only allow
-        // vertical scrolling when the content truly overflows.
-        try {
-          // Use clientHeight (actual layout height) rather than the style string
-          // which can differ across browsers. Add a small tolerance to avoid
-          // showing a scrollbar for negligible differences (1px gap).
-          const currentH = textarea.clientHeight || parseInt(textarea.style.height || '0', 10) || 0;
-          textarea.style.overflowY = scrollH > (currentH + 1) ? 'auto' : 'hidden';
-        } catch (_) {
-          // ignore and leave browser default if any issue
-        }
+        // the computed height (e.g., single-line captions). Since the textarea
+        // resizes to fit the content, scrolling is never needed.
+        textarea.style.overflowY = 'hidden';
       }
     }, 300); // 300ms debounce to prevent excessive DOM updates during typing
     return () => {
       if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
     };
-  }, [caption]);
+  }, [localCaption]);
+
+  // Debounce propagation of caption to parent to avoid nested update chains
+  useEffect(() => {
+    if (!isTypingCaptionRef.current) return;
+    if (captionDebounceRef.current) clearTimeout(captionDebounceRef.current);
+    captionDebounceRef.current = setTimeout(() => {
+      try { setCaption(localCaption); } finally { isTypingCaptionRef.current = false; }
+    }, 120);
+    return () => {
+      if (captionDebounceRef.current) clearTimeout(captionDebounceRef.current);
+    };
+  }, [localCaption, setCaption]);
+
+  // Debounce propagation of spotify link
+  useEffect(() => {
+    if (!isTypingSpotifyRef.current) return;
+    if (spotifyDebounceRef.current) clearTimeout(spotifyDebounceRef.current);
+    spotifyDebounceRef.current = setTimeout(() => {
+      try { setSpotifyLink?.(localSpotify); } finally { isTypingSpotifyRef.current = false; }
+    }, 120);
+    return () => {
+      if (spotifyDebounceRef.current) clearTimeout(spotifyDebounceRef.current);
+    };
+  }, [localSpotify, setSpotifyLink]);
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexDirection: 'column' }}>
@@ -216,11 +251,11 @@ export function CaptionInput({
          *  but prevent the input from being focused/edited until an image exists */}
         {/* CSS-driven typewriter ghost. Only show when caption is empty and
             the input is not focused (so it won't run while user types). */}
-        {(!caption && placeholder && !captionFocused) ? (
+        {(!localCaption && placeholder && !captionFocused) ? (
           <span
             className="input-ghost-placeholder"
             aria-hidden="true"
-            style={{ ['--len' as any]: String(placeholder.length), ['--duration' as any]: `6000ms` }}
+            style={{ ['--duration' as any]: `3000ms` }}
           >
             {/* give the inner span a key tied to localIndex so React remounts it when
                 the placeholder rotates — this restarts the CSS animation reliably */}
@@ -232,13 +267,14 @@ export function CaptionInput({
         <textarea
           className="input"
           aria-label="Caption"
-          placeholder={caption ? undefined : ''}
-          value={caption}
+          placeholder={localCaption ? undefined : ''}
+          value={localCaption}
           maxLength={CAPTION_MAX}
           ref={inputRef}
           onChange={e => {
             const v = e.target.value;
-            if (v.length <= CAPTION_MAX) setCaption(v);
+            isTypingCaptionRef.current = true;
+            if (v.length <= CAPTION_MAX) setLocalCaption(v);
             else console.warn(`Captions are limited to ${CAPTION_MAX} characters`);
           }}
           readOnly={!hasPreview || processing}
@@ -262,7 +298,12 @@ export function CaptionInput({
             setCaptionFocused(true);
             e.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}
-          onBlur={() => setCaptionFocused(false)}
+          onBlur={() => {
+            // Flush local changes immediately on blur
+            if (captionDebounceRef.current) { clearTimeout(captionDebounceRef.current); captionDebounceRef.current = null; }
+            try { setCaption(localCaption); } finally { isTypingCaptionRef.current = false; }
+            setCaptionFocused(false);
+          }}
           style={{ width: '100%', cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', paddingRight: counterVisible ? 72 : 32, paddingLeft: 32 }}
           rows={1}
         />
@@ -288,7 +329,7 @@ export function CaptionInput({
           }}
         >
           {(() => {
-            const len = caption?.length || 0;
+            const len = localCaption?.length || 0;
             const remaining = CAPTION_MAX - len;
             const showRemaining = remaining <= 30; // threshold to switch to remaining-only
             return showRemaining ? String(remaining) : `${len}/${CAPTION_MAX}`;
@@ -298,11 +339,11 @@ export function CaptionInput({
       {/* Spotify link input - optional */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
         <div className="input-container" style={{ position: 'relative', width: '100%' }}>
-          {(!spotifyLink && spotifyPlaceholder && !spotifyFocused) ? (
+          {(!localSpotify && spotifyPlaceholder && !spotifyFocused) ? (
             <span
               className="input-ghost-placeholder"
               aria-hidden="true"
-              style={{ ['--len' as any]: String(spotifyPlaceholder.length), ['--duration' as any]: `6000ms` }}
+              style={{ ['--duration' as any]: `3000ms` }}
             >
               <span key={spotifyLocalIndex} className="typewriter">{spotifyPlaceholder}</span>
             </span>
@@ -321,9 +362,9 @@ export function CaptionInput({
             spellCheck={false}
             autoCapitalize="none"
             aria-label="Spotify link (optional)"
-            placeholder={spotifyLink ? undefined : ''}
-            value={spotifyLink || ''}
-            onChange={e => setSpotifyLink?.(e.target.value)}
+            placeholder={localSpotify ? undefined : ''}
+            value={localSpotify}
+            onChange={e => { isTypingSpotifyRef.current = true; setLocalSpotify(e.target.value); }}
             readOnly={!hasPreview || processing}
             tabIndex={hasPreview ? 0 : -1}
             ref={spotifyRef}
@@ -343,10 +384,14 @@ export function CaptionInput({
               setSpotifyFocused(true);
               e.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
-            onBlur={() => setSpotifyFocused(false)}
+            onBlur={() => {
+              if (spotifyDebounceRef.current) { clearTimeout(spotifyDebounceRef.current); spotifyDebounceRef.current = null; }
+              try { setSpotifyLink?.(localSpotify); } finally { isTypingSpotifyRef.current = false; }
+              setSpotifyFocused(false);
+            }}
             style={{ width: '100%', paddingRight: 72, paddingLeft: 32, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)' }}
           />
-          <SpotifyIcon size={16} className={`input-icon ${spotifyLink?.trim() && (spotifyLink.includes('spotify.com') || spotifyLink.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />
+          <SpotifyIcon size={16} className={`input-icon ${localSpotify?.trim() && (localSpotify.includes('spotify.com') || localSpotify.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />
         </div>
       </div>
       {/* Weather and location inputs - optional */}

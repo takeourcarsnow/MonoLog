@@ -28,11 +28,24 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
   const inputRef = externalInputRef || internalInputRef;
   const listRef = useRef<HTMLUListElement>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const changeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const suppressOpenRef = useRef(false);
+  const isTypingRef = useRef(false);
+  const prevValueRef = useRef(value);
 
   useEffect(() => {
-    setInputValue(value);
-  }, [value]);
+    // Only sync from parent if:
+    // 1. User isn't actively typing
+    // 2. The parent value actually changed (not just a re-render)
+    // 3. The new value differs from current input value
+    if (!isTypingRef.current && prevValueRef.current !== value && inputValue !== value) {
+      setInputValue(value);
+      prevValueRef.current = value;
+    } else if (prevValueRef.current !== value) {
+      // Always update prevValueRef even if we don't sync, to track the latest prop
+      prevValueRef.current = value;
+    }
+  }, [value, inputValue]);
 
   // Auto-open dropdown when expanded
   useEffect(() => {
@@ -43,31 +56,38 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
 
   // Update filtered options when the available options or input value changes.
   useEffect(() => {
+    // Skip filtering during typing bursts to prevent excessive re-renders
     if (expanded) {
       setFilteredOptions(options || []);
       return;
     }
-    const q = (inputValue || '').trim().toLowerCase();
-    if (!q) {
-      setFilteredOptions(options || []);
-      return;
-    }
-    const starts: string[] = [];
-    const contains: string[] = [];
-    const separators: string[] = [];
     
-    for (const opt of options || []) {
-      if (opt.startsWith('───')) {
-        separators.push(opt);
-      } else {
-        const low = opt.toLowerCase();
-        if (low.startsWith(q)) starts.push(opt);
-        else if (low.includes(q)) contains.push(opt);
+    // Use a microtask to batch rapid input changes
+    const timeoutId = setTimeout(() => {
+      const q = (inputValue || '').trim().toLowerCase();
+      if (!q) {
+        setFilteredOptions(options || []);
+        return;
       }
-    }
+      const starts: string[] = [];
+      const contains: string[] = [];
+      const separators: string[] = [];
+      
+      for (const opt of options || []) {
+        if (opt.startsWith('───')) {
+          separators.push(opt);
+        } else {
+          const low = opt.toLowerCase();
+          if (low.startsWith(q)) starts.push(opt);
+          else if (low.includes(q)) contains.push(opt);
+        }
+      }
+      
+      // Include separators and matching options
+      setFilteredOptions([...separators, ...starts, ...contains]);
+    }, 0);
     
-    // Include separators and matching options
-    setFilteredOptions([...separators, ...starts, ...contains]);
+    return () => clearTimeout(timeoutId);
   }, [inputValue, options, expanded]);
 
   useEffect(() => {
@@ -102,16 +122,34 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    
+    // Set typing flag to prevent parent sync
+    isTypingRef.current = true;
+    
+    // Batch state updates to prevent cascading re-renders
     setInputValue(newValue);
-    onChange(newValue);
-    setIsOpen(true);
+    if (!isOpen) {
+      setIsOpen(true);
+    }
+    
+    // Don't call onChange during typing - wait for blur or selection
+    // This prevents parent re-renders on every keystroke
   };
 
   const handleClear = () => {
+    isTypingRef.current = true;
+    
+    // Clear pending timers
+    if (changeTimeoutRef.current) {
+      clearTimeout(changeTimeoutRef.current);
+      changeTimeoutRef.current = null;
+    }
+    
     // If the dropdown is closed, just clear the value and don't focus
     if (!isOpen) {
       setInputValue('');
       onChange('');
+      setTimeout(() => { isTypingRef.current = false; }, 0);
       return;
     }
 
@@ -125,10 +163,21 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
     onChange('');
     inputRef.current?.focus();
     // Clear the suppression on the next tick so future focuses behave normally
-    setTimeout(() => { suppressOpenRef.current = false; }, 0);
+    setTimeout(() => { 
+      suppressOpenRef.current = false;
+      isTypingRef.current = false;
+    }, 0);
   };
 
   const handleOptionSelect = (option: string) => {
+    isTypingRef.current = false;
+    
+    // Clear any pending change
+    if (changeTimeoutRef.current) {
+      clearTimeout(changeTimeoutRef.current);
+      changeTimeoutRef.current = null;
+    }
+    
     if (blurTimeoutRef.current) {
       clearTimeout(blurTimeoutRef.current);
       blurTimeoutRef.current = null;
@@ -198,6 +247,9 @@ export function Combobox({ value, onChange, options, placeholder, disabled, clas
   const handleBlur = (e: React.FocusEvent) => {
     // Delay the blur to allow clicks on options to be processed first
     blurTimeoutRef.current = setTimeout(() => {
+      // Notify parent of final value on blur
+      onChange(inputValue);
+      isTypingRef.current = false;
       setIsOpen(false);
       onBlur?.();
     }, 150);

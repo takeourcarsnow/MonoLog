@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Combobox } from "../Combobox";
 import { CameraScopeSelector } from "./CameraScopeSelector";
 import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS, getMergedExifPresets } from "@/src/lib/exifPresets";
@@ -108,41 +108,41 @@ export function ExifInputs({
     }
   };
 
-  const handleCameraChange = (value: string) => {
+  const handleCameraChange = useCallback((value: string) => {
     setCamera?.(value);
-  };
+  }, [setCamera]);
 
-  const handleCameraBlur = () => {
+  const handleCameraBlur = useCallback(() => {
     if (camera) saveNewPreset('cameras', camera);
     setActiveExifField(null);
-  };
+  }, [camera]);
 
-  const handleLensChange = (value: string) => {
+  const handleLensChange = useCallback((value: string) => {
     setLens?.(value);
-  };
+  }, [setLens]);
 
-  const handleLensBlur = () => {
+  const handleLensBlur = useCallback(() => {
     if (lens) saveNewPreset('lenses', lens);
     setActiveExifField(null);
-  };
+  }, [lens]);
 
-  const handleFilmTypeChange = (value: string) => {
+  const handleFilmTypeChange = useCallback((value: string) => {
     setFilmType?.(value);
-  };
+  }, [setFilmType]);
 
-  const handleFilmTypeBlur = () => {
+  const handleFilmTypeBlur = useCallback(() => {
     if (filmType) saveNewPreset('filmTypes', filmType);
     setActiveExifField(null);
-  };
+  }, [filmType]);
 
-  const handleFilmIsoChange = (value: string) => {
+  const handleFilmIsoChange = useCallback((value: string) => {
     setFilmIso?.(value);
-  };
+  }, [setFilmIso]);
 
-  const handleFilmIsoBlur = () => {
+  const handleFilmIsoBlur = useCallback(() => {
     if (filmIso) saveNewPreset('filmIsos', filmIso);
     setActiveExifField(null);
-  };
+  }, [filmIso]);
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8, flexWrap: 'wrap' }}>

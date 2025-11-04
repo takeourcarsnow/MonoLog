@@ -54,37 +54,31 @@
   color: var(--muted);
 }
 .input-ghost-placeholder .typewriter {
-  /* CSS-only typewriter: reveal by animating width in ch units.
-     We run the animation once per mount (no infinite loop). The parent
-     remounts the span when the placeholder changes so the animation
-     will restart on rotation. */
+  /* Simple fade in/out animation for placeholder text */
   white-space: nowrap;
   display: inline-block;
   vertical-align: middle;
   overflow: hidden;
-  box-sizing: content-box;
-  width: 0ch; /* start closed */
-  max-width: none;
-  animation-name: typeReveal;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  animation-name: fadeInOut;
   animation-duration: var(--duration, 3000ms);
-  animation-timing-function: steps(var(--len, 20), end);
+  animation-timing-function: ease-in-out;
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
 }
 
-@keyframes typeReveal {
+@keyframes fadeInOut {
   /*
-    0%   -> start closed
-    30%  -> fully typed
-    90%  -> hold fully typed (pause)
-    100% -> erased (shrink back to 0)
-    The steps() timing function gives a per-character jump for both
-    the typing and backspacing phases.
+    0%   -> invisible
+    10%  -> fade in
+    90%  -> stay visible
+    100% -> fade out
   */
-  0% { width: 0ch; }
-  30% { width: calc(var(--len, 20) * 1ch); }
-  90% { width: calc(var(--len, 20) * 1ch); }
-  100% { width: 0ch; }
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
 }
 .input-ghost-placeholder .caret {
   color: var(--muted);
@@ -99,7 +93,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .input-ghost-placeholder .typewriter { animation: none; border-right: none; }
+  .input-ghost-placeholder .typewriter { animation: none; opacity: 1; }
 }
 
 /* Disable the native textarea resize handle for the uploader's caption only.

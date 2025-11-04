@@ -7,6 +7,7 @@ import { apiRateLimiter } from '@/src/lib/rateLimiter';
 import { extractUserProfile } from '@/src/lib/api/userProfile';
 import { checkRateLimitResponse, getClientIp } from '@/src/lib/api/utils';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { parseMentions } from '@/src/lib/mentions';
 
 function extractUserProfileFromAuth(authUser: any) {
   return extractUserProfile(authUser);
@@ -146,6 +147,41 @@ export async function POST(req: Request) {
       } catch (e) {
         console.log('[addComment] Notification creation error:', e);
         // ignore notification errors
+      }
+    })();
+
+    // Process mentions in comment text
+    (async () => {
+      try {
+        const mentions = parseMentions(text.trim());
+        if (mentions.length > 0) {
+          // Get user IDs for mentioned usernames
+          const { data: mentionedUsers, error: usersErr } = await sb
+            .from('users')
+            .select('id, username')
+            .in('username', mentions);
+          if (!usersErr && mentionedUsers) {
+            const mentionedUserIds = mentionedUsers.map((u: any) => u.id);
+            // Create notifications for mentions
+            const notifInserts = mentionedUserIds.map((mentionedId: string) => ({
+              id: uid(),
+              user_id: mentionedId,
+              actor_id: actorId,
+              post_id: postId,
+              type: 'mention',
+              text: `You were mentioned in a comment`,
+              created_at,
+              read: false,
+            }));
+
+            if (notifInserts.length > 0) {
+              await sb.from('notifications').insert(notifInserts);
+            }
+          }
+        }
+      } catch (e) {
+        console.log('[addComment] Mention processing error:', e);
+        // ignore mention processing errors
       }
     })();
 

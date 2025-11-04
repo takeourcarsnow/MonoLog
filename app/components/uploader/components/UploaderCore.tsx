@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { preloadOverlayThumbnails } from '../../imageEditor/overlaysPreload';
 import { useAuth } from "@/src/lib/hooks/useAuth";
 import { CONFIG } from "@/src/lib/config";
 import { DropZone } from "../DropZone";
-import Portal from "../../Portal";
 import { FileInputs } from "../FileInputs";
 import { PreviewSection } from "../PreviewSection";
 import { CaptionInput } from "../CaptionInput";
@@ -16,15 +15,14 @@ import { ImageEditorModal } from "./ImageEditorModal";
 import { PhotoActionRow } from "./PhotoActionRow";
 import { SizeWarning } from "./SizeWarning";
 import { LiveCameraView } from "../LiveCameraView";
+import { usePhotoMovement } from "../hooks/usePhotoMovement";
+import { useAddPhoto } from "../hooks/useAddPhoto";
+import { AddPhotoMenu } from "./AddPhotoMenu";
 
 export function UploaderCore() {
   // Dev helper to trace focus events; no-op in production
   initFocusDebug();
   const { me, setMe } = useAuth();
-
-  // State for live camera with effects
-  const [liveCameraOpen, setLiveCameraOpen] = useState(false);
-  const [showAddPhotoMenu, setShowAddPhotoMenu] = useState(false);
 
   const {
     // State
@@ -110,103 +108,44 @@ export function UploaderCore() {
     handleFileInputChange,
   } = useUploader();
 
-  const handleMoveLeft = () => {
-    if (index === 0) return;
-    const newIndex = index - 1;
-    // Swap dataUrls
-    const newDataUrls = [...dataUrls];
-    [newDataUrls[index], newDataUrls[newIndex]] = [newDataUrls[newIndex], newDataUrls[index]];
-    setDataUrls(newDataUrls);
-    // Swap originalDataUrls
-    const newOriginalDataUrls = [...originalDataUrls];
-    [newOriginalDataUrls[index], newOriginalDataUrls[newIndex]] = [newOriginalDataUrls[newIndex], newOriginalDataUrls[index]];
-    setOriginalDataUrls(newOriginalDataUrls);
-    // Swap editorSettings
-    const newEditorSettings = [...editorSettings];
-    [newEditorSettings[index], newEditorSettings[newIndex]] = [newEditorSettings[newIndex], newEditorSettings[index]];
-    setEditorSettings(newEditorSettings);
-    // Swap alt if it's an array
-    if (Array.isArray(alt)) {
-      const newAlt = [...alt];
-      [newAlt[index], newAlt[newIndex]] = [newAlt[newIndex], newAlt[index]];
-      setAlt(newAlt);
-    }
-    setIndex(newIndex);
-  };
+  // State for live camera with effects
+  const [liveCameraOpen, setLiveCameraOpen] = useState(false);
 
-  const handleMoveRight = () => {
-    if (index === dataUrls.length - 1) return;
-    const newIndex = index + 1;
-    // Swap dataUrls
-    const newDataUrls = [...dataUrls];
-    [newDataUrls[index], newDataUrls[newIndex]] = [newDataUrls[newIndex], newDataUrls[index]];
-    setDataUrls(newDataUrls);
-    // Swap originalDataUrls
-    const newOriginalDataUrls = [...originalDataUrls];
-    [newOriginalDataUrls[index], newOriginalDataUrls[newIndex]] = [newOriginalDataUrls[newIndex], newOriginalDataUrls[index]];
-    setOriginalDataUrls(newOriginalDataUrls);
-    // Swap editorSettings
-    const newEditorSettings = [...editorSettings];
-    [newEditorSettings[index], newEditorSettings[newIndex]] = [newEditorSettings[newIndex], newEditorSettings[index]];
-    setEditorSettings(newEditorSettings);
-    // Swap alt if it's an array
-    if (Array.isArray(alt)) {
-      const newAlt = [...alt];
-      [newAlt[index], newAlt[newIndex]] = [newAlt[newIndex], newAlt[index]];
-      setAlt(newAlt);
-    }
-    setIndex(newIndex);
-  };
+  const { handleMoveLeft, handleMoveRight } = usePhotoMovement({
+    dataUrls,
+    originalDataUrls,
+    editorSettings,
+    alt,
+    index,
+    setDataUrls,
+    setOriginalDataUrls,
+    setEditorSettings,
+    setAlt,
+    setIndex,
+  });
+
+  const {
+    showAddPhotoMenu: showMenu,
+    setShowAddPhotoMenu,
+    handleAddPhotos,
+    handleAddFromFile,
+    handleAddFromCamera,
+    handleAddFromCameraEffects,
+    handleCameraCapture,
+  } = useAddPhoto({
+    dataUrls,
+    processing,
+    fileActionRef,
+    fileInputRef,
+    cameraInputRef,
+    setLiveCameraOpen,
+    handleFile,
+  });
 
   const handleEditPhoto = async () => {
     setEditingIndex(index);
     try { await preloadOverlayThumbnails(); } catch {}
     setEditing(true);
-  };
-
-  const handleAddPhotos = () => {
-    if (dataUrls.length >= 5) {
-      return;
-    }
-    setShowAddPhotoMenu(true);
-  };
-
-  const handleAddFromFile = () => {
-    setShowAddPhotoMenu(false);
-    fileActionRef.current = 'append';
-    try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-    try { fileInputRef.current?.click(); } catch (_) {}
-  };
-
-  const handleAddFromCamera = () => {
-    setShowAddPhotoMenu(false);
-    fileActionRef.current = 'append';
-    try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-    try { cameraInputRef.current?.click(); } catch (_) {}
-  };
-
-  const handleAddFromCameraEffects = () => {
-    setShowAddPhotoMenu(false);
-    if (navigator.mediaDevices) {
-      setLiveCameraOpen(true);
-    } else {
-      // Fallback to file input if getUserMedia not available
-      fileActionRef.current = 'append';
-      try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-      try { cameraInputRef.current?.click(); } catch (_) {}
-    }
-  };
-
-  // Handle camera capture from live camera view
-  const handleCameraCapture = async (blob: Blob) => {
-    // Keep modal open during processing - it will show loading state
-    // Directly create File from Blob (no fetch of data URLs)
-    const file = new File([blob], 'camera-capture.jpg', { type: blob.type || 'image/jpeg' });
-
-    await handleFile(file);
-    
-    // Close modal after processing is complete
-    setLiveCameraOpen(false);
   };
 
   return (
@@ -220,90 +159,14 @@ export function UploaderCore() {
       />
 
       {/* Add photo source selection */}
-      {showAddPhotoMenu && (
-        <Portal>
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 12,
-              zIndex: 20,
-              background: 'rgba(0,0,0,0.85)',
-            }}
-            onClick={() => setShowAddPhotoMenu(false)}
-          >
-            <div
-              style={{
-                width: '100%',
-                maxWidth: 400,
-                background: 'var(--bg)',
-                borderRadius: 8,
-                padding: 20,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, textAlign: 'center' }}>Add Photo</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleAddFromCameraEffects}
-                  disabled={processing}
-                  style={{ width: '100%', justifyContent: 'flex-start', gap: 12 }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M17 3l2 2m0 0l-2 2m2-2h-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span>Camera with Effects</span>
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleAddFromCamera}
-                  disabled={processing}
-                  style={{ width: '100%', justifyContent: 'flex-start', gap: 12 }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span>Quick Camera</span>
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleAddFromFile}
-                  disabled={processing}
-                  style={{ width: '100%', justifyContent: 'flex-start', gap: 12 }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  <span>Choose from Device</span>
-                </button>
-              </div>
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() => setShowAddPhotoMenu(false)}
-                style={{ width: '100%', marginTop: 4 }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </Portal>
-      )}
+      <AddPhotoMenu
+        isOpen={showMenu}
+        onClose={() => setShowAddPhotoMenu(false)}
+        onAddFromCameraEffects={handleAddFromCameraEffects}
+        onAddFromCamera={handleAddFromCamera}
+        onAddFromFile={handleAddFromFile}
+        processing={processing}
+      />
 
       <ImageEditorModal
         editing={editing}
@@ -351,28 +214,9 @@ export function UploaderCore() {
       {!dataUrls.length && (
         <DropZone
           processing={processing}
-          onCameraSelect={() => {
-            // Direct camera access (no effects) - use traditional file input
-            fileActionRef.current = 'append';
-            try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-            try { cameraInputRef.current?.click(); } catch (_) {}
-          }}
-          onCameraEffectsSelect={() => {
-            // Live camera with effects modal
-            if (navigator.mediaDevices) {
-              setLiveCameraOpen(true);
-            } else {
-              // Fallback to file input if getUserMedia not available
-              fileActionRef.current = 'append';
-              try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-              try { cameraInputRef.current?.click(); } catch (_) {}
-            }
-          }}
-          onFileSelect={() => {
-            fileActionRef.current = 'append';
-            try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
-            try { fileInputRef.current?.click(); } catch (_) {}
-          }}
+          onCameraSelect={handleAddFromCamera}
+          onCameraEffectsSelect={handleAddFromCameraEffects}
+          onFileSelect={handleAddFromFile}
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
           onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
           onDrop={async (e) => {

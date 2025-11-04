@@ -37,6 +37,16 @@ export function ExifInputs({
 }: ExifInputsProps) {
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Track values the user explicitly removed this session so blur-based
+  // auto-save does not immediately re-add them. This fixes the issue where
+  // deleting a preset while the same value is currently typed causes it to
+  // reappear after the input blurs.
+  const recentlyRemovedRef = useRef<{
+    cameras: Set<string>;
+    lenses: Set<string>;
+    filmTypes: Set<string>;
+    filmIsos: Set<string>;
+  }>({ cameras: new Set(), lenses: new Set(), filmTypes: new Set(), filmIsos: new Set() });
 
   useEffect(() => {
     if (activeExifField && inputRef.current) {
@@ -60,6 +70,8 @@ export function ExifInputs({
 
   const handleRemovePreset = async (field: 'cameras' | 'lenses' | 'filmTypes' | 'filmIsos', value: string) => {
     if (!user) return;
+    // Mark as recently removed to prevent blur handlers from re-adding it
+    try { recentlyRemovedRef.current[field].add(value); } catch (_) {}
     const currentClean = getSafeExifPresets(user);
     const current = currentClean[field] || [];
     const updated = { ...currentClean, [field]: current.filter(o => o !== value) };
@@ -74,6 +86,8 @@ export function ExifInputs({
   const saveNewPreset = async (field: 'cameras' | 'lenses' | 'filmTypes' | 'filmIsos', value: string) => {
     if (!user || !value.trim()) return;
     const trimmed = value.trim();
+    // Do not re-add a value that the user just removed in this session.
+    if (recentlyRemovedRef.current[field].has(trimmed)) return;
     const defaults = {
       cameras: CAMERA_DIGITAL_PRESETS,
       lenses: LENS_PRESETS,

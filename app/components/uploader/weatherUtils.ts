@@ -37,15 +37,33 @@ export const WEATHER_CODE_MAP: Record<number, string> = {
   99: 'Thunderstorm with heavy hail'
 };
 
-export const parseCombinedWeather = (value: string, setWeatherCondition?: (condition: string) => void, setWeatherTemperature?: (temperature: number | undefined) => void) => {
-  const match = value.match(/^(.+?)\s+(\d+(?:\.\d+)?)°C$/);
+export const parseCombinedWeather = (
+  value: string,
+  setWeatherCondition?: (condition: string) => void,
+  setWeatherTemperature?: (temperature: number | undefined) => void
+) => {
+  const trimmed = value.trim();
+  // Match formats like "25°C" or "25" (number only)
+  const tempOnly = trimmed.match(/^(?:([-+]?[0-9]+(?:\.[0-9]+)?)(?:°C)?)$/i);
+  if (tempOnly) {
+    const num = parseFloat(tempOnly[1]);
+    setWeatherTemperature?.(isNaN(num) ? undefined : num);
+    // Do not set textual condition when only a temperature is provided
+    setWeatherCondition?.('');
+    return;
+  }
+
+  // Match formats like "Partly Cloudy 25°C"
+  const match = trimmed.match(/^(.+?)\s+([-+]?[0-9]+(?:\.[0-9]+)?)°C$/i);
   if (match) {
     setWeatherCondition?.(match[1].trim());
     setWeatherTemperature?.(parseFloat(match[2]));
-  } else {
-    setWeatherCondition?.(value.trim());
-    setWeatherTemperature?.(undefined);
+    return;
   }
+
+  // Fallback: treat the whole value as textual condition and clear temperature
+  setWeatherCondition?.(trimmed);
+  setWeatherTemperature?.(undefined);
 };
 
 export const fetchWeatherForCurrentLocation = async (

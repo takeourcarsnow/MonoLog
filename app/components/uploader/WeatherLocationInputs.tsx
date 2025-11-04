@@ -41,11 +41,8 @@ export function WeatherLocationInputs({
 
   // Update combined weather when condition or temperature changes
   useEffect(() => {
-    if (weatherCondition && weatherTemperature !== undefined) {
-      setCombinedWeather(`${weatherCondition} ${Math.round(weatherTemperature)}°C`);
-    } else if (weatherCondition) {
-      setCombinedWeather(weatherCondition);
-    } else if (weatherTemperature !== undefined) {
+    // Only display temperature in the combined string; the icon will represent condition
+    if (weatherTemperature !== undefined) {
       setCombinedWeather(`${Math.round(weatherTemperature)}°C`);
     } else {
       setCombinedWeather('');

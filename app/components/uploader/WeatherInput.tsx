@@ -33,16 +33,14 @@ export function WeatherInput({
   const [fetchingWeather, setFetchingWeather] = useState(false);
 
   useEffect(() => {
-    if (weatherCondition && weatherTemperature !== undefined) {
-      setCombinedWeather(`${weatherCondition} ${Math.round(weatherTemperature)}°C`);
-    } else if (weatherCondition) {
-      setCombinedWeather(weatherCondition);
-    } else if (weatherTemperature !== undefined) {
+    // Show only the temperature in the input (icon will represent the condition)
+    if (weatherTemperature !== undefined) {
       setCombinedWeather(`${Math.round(weatherTemperature)}°C`);
     } else {
+      // Do not display textual conditions in the input; rely on iconography instead
       setCombinedWeather('');
     }
-  }, [weatherCondition, weatherTemperature, setCombinedWeather]);
+  }, [weatherTemperature, setCombinedWeather]);
 
   const handleCombinedWeatherChange = (value: string) => {
     setCombinedWeather(value);
@@ -79,7 +77,7 @@ export function WeatherInput({
           <input
             ref={inputRef}
             type="text"
-            placeholder="Weather condition and temperature (e.g., Sunny 25°C)"
+            placeholder="Temperature (e.g., 25°C)"
             value={combinedWeather}
             onChange={(e) => handleCombinedWeatherChange(e.target.value)}
             disabled={!hasPreview || processing}
@@ -137,7 +135,7 @@ export function WeatherInput({
     <div style={{ position: 'relative', flex: 1, minWidth: '120px' }}>
       <input
         type="text"
-        placeholder="Tap to add Weather"
+        placeholder="Tap to add temperature"
         value={combinedWeather}
         onChange={(e) => handleCombinedWeatherChange(e.target.value)}
         disabled={!hasPreview || processing}
@@ -166,7 +164,7 @@ export function WeatherInput({
         type="button"
         onClick={handleFetchWeather}
         disabled={!hasPreview || processing || fetchingWeather}
-        title="Fetch current weather for this location"
+        title="Fetch current temperature for this location"
         style={{
           position: 'absolute',
           left: 8,

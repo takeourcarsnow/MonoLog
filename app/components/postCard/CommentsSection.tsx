@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Comments } from "../Comments";
+import { Comments } from "@/app/components/comments/Comments";
 
 interface CommentsSectionProps {
   postId: string;

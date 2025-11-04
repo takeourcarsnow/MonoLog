@@ -1,5 +1,5 @@
 "use client";
-import { FeedView } from "@/app/components/FeedView";
+import { FeedView } from "@/app/components/feed/FeedView";
 
 export const dynamic = 'force-dynamic';
 

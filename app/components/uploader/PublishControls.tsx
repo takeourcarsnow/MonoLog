@@ -1,4 +1,4 @@
-import { PublishButton } from "../PublishButton";
+import { PublishButton } from "@/app/components/publish/PublishButton";
 import { Trash } from "lucide-react";
 
 interface PublishControlsProps {

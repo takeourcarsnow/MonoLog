@@ -1,5 +1,5 @@
 import { memo } from "react";
-import ImageZoom from "../ImageZoom";
+import ImageZoom from "@/app/components/media/ImageZoom";
 import { useMediaClick } from "./hooks/useMediaClick";
 
 interface SingleMediaProps {

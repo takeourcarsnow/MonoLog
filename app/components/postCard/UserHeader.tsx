@@ -7,10 +7,10 @@ import { api } from "@/lib/api";
 import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import Image from "next/image";
-import { OptimizedImage } from "@/app/components/OptimizedImage";
+import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
-import ToggleActionButton from "../ToggleActionButton";
-import { AuthForm } from "../AuthForm";
+import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
+import { AuthForm } from "@/app/components/auth/AuthForm";
 import AutoScroll from "../AutoScroll";
 import { usePathname, useRouter } from "next/navigation";
 

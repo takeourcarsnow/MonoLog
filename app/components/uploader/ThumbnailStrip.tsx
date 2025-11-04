@@ -1,4 +1,4 @@
-import { OptimizedImage } from "@/app/components/OptimizedImage";
+import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { EditorSettings } from "../imageEditor/types";
 
 interface ThumbnailStripProps {

@@ -1,7 +1,7 @@
 "use client";
 
 import { lazy, Suspense } from "react";
-import { LoadingIndicator } from "@/app/components/LoadingIndicator";
+import { LoadingIndicator } from "@/app/components/ui/LoadingIndicator";
 
 // Lazy load the heavy Uploader component
 const Uploader = lazy(() => import("@/app/components/Uploader").then(mod => ({ default: mod.Uploader })));

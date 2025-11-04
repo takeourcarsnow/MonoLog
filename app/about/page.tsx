@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { InstallButton } from "../components/InstallButton";
+import { InstallButton } from "@/app/components/pwa/InstallButton";
 import styles from './about.module.css';
 import { useEffect, useRef } from 'react';
 import { Brain, Lock, Archive, Sparkles, Music } from "lucide-react";

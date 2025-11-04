@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/api/supabase";
-import { Button } from "@/app/components/Button";
+import { Button } from "@/app/components/ui/Button";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");

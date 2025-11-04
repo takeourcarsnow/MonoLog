@@ -1,5 +1,5 @@
 "use client";
-import { CommunityView } from '@/app/components/CommunityView';
+import { CommunityView } from "@/app/components/communities/CommunityView";
 import { usePageScroll } from '@/lib/hooks/usePageScroll';
 
 export default function CommunityPage() {

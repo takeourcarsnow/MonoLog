@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState, useCallback } from "react";
-import { ImageZoom } from '../ImageZoom';
+import { ImageZoom } from "@/app/components/media/ImageZoom";
 import { useCarousel } from "./hooks/useCarousel";
 import { useMediaClick } from "./hooks/useMediaClick";
 

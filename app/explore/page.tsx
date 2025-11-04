@@ -1,5 +1,5 @@
 "use client";
-import { ExploreView } from "@/app/components/ExploreView";
+import { ExploreView } from "@/app/components/explore/ExploreView";
 
 export const dynamic = 'force-dynamic';
 

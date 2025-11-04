@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Preloader from "./Preloader";
+import Preloader from "@/app/components/ui/Preloader";
 
 export default function AppPreloader() {
   const [hasShown, setHasShown] = useState(() => {

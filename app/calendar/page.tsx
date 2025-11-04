@@ -1,5 +1,5 @@
 "use client";
-import { CalendarView } from "@/app/components/CalendarView";
+import { CalendarView } from "@/app/components/calendar/CalendarView";
 
 export const dynamic = 'force-dynamic';
 

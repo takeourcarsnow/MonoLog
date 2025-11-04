@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems, isNavItemActive } from "./nav/navHelpers";
-import { StaticContainer } from "./StaticContainer";
+import { StaticContainer } from "@/app/components/ui/StaticContainer";
 
 interface NavbarProps {
   activeIndex?: number;

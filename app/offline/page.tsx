@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import React from 'react';
-import OfflineButton from '../components/OfflineButton';
+import OfflineButton from "@/app/components/pwa/OfflineButton";
 
 export const metadata = {
   title: 'Offline - MonoLog',

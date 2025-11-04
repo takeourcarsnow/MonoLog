@@ -4,12 +4,12 @@ import type { Metadata } from "next";
 // Patrick Hand font removed per request
 import React from "react";
 import dynamic from "next/dynamic";
-import { Header } from '@/app/components/Header';
+import { Header } from "@/app/components/layout/Header";
 import { CONFIG } from '@/lib/config';
-import ClientErrorBoundary from '@/app/components/ClientErrorBoundary';
+import ClientErrorBoundary from "@/app/components/layout/ClientErrorBoundary";
 import { isInAppBrowser } from '@/lib/detectWebview';
 import { SWRConfig } from 'swr';
-import ClientInit from '@/app/components/ClientInit';
+import ClientInit from "@/app/components/layout/ClientInit";
 
 // No custom Google fonts are loaded here to keep the bundle minimal.
 

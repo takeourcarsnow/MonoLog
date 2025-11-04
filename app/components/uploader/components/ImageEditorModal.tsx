@@ -2,10 +2,10 @@
 
 import { lazy, Suspense } from "react";
 import { compressImage, approxDataUrlBytes } from "@/lib/image";
-import Portal from "../../Portal";
+import Portal from "@/app/components/ui/Portal";
 
 // Lazy load the heavy ImageEditor component
-const ImageEditor = lazy(() => import("../../ImageEditor"));
+const ImageEditor = lazy(() => import("@/app/components/media/ImageEditor"));
 
 interface ImageEditorModalProps {
   editing: boolean;

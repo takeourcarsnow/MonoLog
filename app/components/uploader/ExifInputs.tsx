@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Combobox } from "../Combobox";
+import { Combobox } from "@/app/components/ui/Combobox";
 import { CameraScopeSelector } from "./CameraScopeSelector";
 import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS, getMergedExifPresets } from "@/lib/exifPresets";
 import { Settings, Image, Gauge } from "lucide-react";

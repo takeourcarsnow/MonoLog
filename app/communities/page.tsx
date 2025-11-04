@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import CommunityCardServer from '@/app/components/CommunityCardServer';
-import CommunityCardClient from '@/app/components/CommunityCardClient';
+import CommunityCardServer from "@/app/components/communities/CommunityCardServer";
+import CommunityCardClient from "@/app/components/communities/CommunityCardClient";
 import CommunitiesClient from './CommunitiesClient';
 import type { HydratedCommunity } from '@/lib/types';
 import Link from 'next/link';
-import { Button } from '@/app/components/Button';
+import { Button } from "@/app/components/ui/Button";
 import NextImage from 'next/image';
 import { currentTheme } from '@/lib/theme';
-import { LoadingIndicator } from '@/app/components/LoadingIndicator';
+import { LoadingIndicator } from "@/app/components/ui/LoadingIndicator";
 import { Plus } from 'lucide-react';
-import ScrollingHint from '@/app/components/ScrollingHint';
-import SkeletonCard from '@/app/components/SkeletonCard';
+import ScrollingHint from "@/app/components/ui/ScrollingHint";
+import SkeletonCard from "@/app/components/ui/SkeletonCard";
 
 export const dynamic = 'force-dynamic';
 

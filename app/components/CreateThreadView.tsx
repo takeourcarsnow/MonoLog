@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { Button } from "@/app/components/Button";
+import { Button } from "@/app/components/ui/Button";
 import Link from "next/link";
 import type { HydratedCommunity } from "@/lib/types";
-import { AuthRequired } from "./AuthRequired";
-import { AuthForm } from "./AuthForm";
+import { AuthRequired } from "@/app/components/auth/AuthRequired";
+import { AuthForm } from "@/app/components/auth/AuthForm";
 import { useCommunity } from "@/lib/hooks/useCommunity";
 import { useAuthState } from "@/lib/hooks/useAuthState";
 

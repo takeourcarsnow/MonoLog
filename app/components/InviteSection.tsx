@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "./Button";
+import { Button } from "@/app/components/ui/Button";
 
 interface InviteSectionProps {
   isVisible?: boolean;

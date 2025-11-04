@@ -1,5 +1,5 @@
 "use client";
-import { EditCommunityView } from '@/app/components/EditCommunityView';
+import { EditCommunityView } from "@/app/components/communities/EditCommunityView";
 import { usePageScroll } from '@/lib/hooks/usePageScroll';
 
 export default function EditCommunityPage() {

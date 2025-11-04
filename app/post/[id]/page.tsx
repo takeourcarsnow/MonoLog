@@ -4,7 +4,7 @@ import type { HydratedPost } from '@/lib/types';
 import { DEFAULT_AVATAR } from '@/lib/api/utils';
 
 // Lazy load the PostView component
-const PostView = lazy(() => import("@/app/components/PostView").then(mod => ({ default: mod.PostView })));
+const PostView = lazy(() => import("@/app/components/post/PostView").then(mod => ({ default: mod.PostView })));
 
 // Helper to map database row to HydratedPost
 function mapRowToHydratedPost(row: any): HydratedPost {

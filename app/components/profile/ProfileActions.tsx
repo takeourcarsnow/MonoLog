@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { SignOutButton } from "@/app/components/SignOut";
+import { SignOutButton } from "@/app/components/auth/SignOut";
 import Link from "next/link";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
-import ToggleActionButton from "../ToggleActionButton";
+import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { BarChart3 } from "lucide-react";
 import { Bell } from "lucide-react";
 import { Star } from "lucide-react";

@@ -5,9 +5,9 @@ import { User as UserIcon } from "lucide-react";
 import { api } from "@/lib/api";
 import type { User } from "@/lib/types";
 import Link from "next/link";
-import { AuthForm } from "@/app/components/AuthForm";
-import { SkeletonCard } from "@/app/components/Skeleton";
-import { AuthRequired } from "@/app/components/AuthRequired";
+import { AuthForm } from "@/app/components/auth/AuthForm";
+import { SkeletonCard } from "@/app/components/ui/Skeleton";
+import { AuthRequired } from "@/app/components/auth/AuthRequired";
 import { usePageScroll } from "@/lib/hooks/usePageScroll";
 
 export default function FollowingPage() {

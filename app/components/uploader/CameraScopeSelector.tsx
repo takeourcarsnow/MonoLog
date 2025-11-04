@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Combobox } from "../Combobox";
+import { Combobox } from "@/app/components/ui/Combobox";
 import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, getMergedExifPresets } from "@/lib/exifPresets";
 import { Camera, Monitor, Film } from "lucide-react";
 import type { User } from "@/lib/types";

@@ -1,0 +1,43 @@
+import { GridView } from "@/app/components/feed/GridView";
+import Link from "next/link";
+import type { HydratedPost } from "@/lib/types";
+import { FeedUnauthCTA } from "@/app/components/feed/FeedUnauthCTA";
+
+interface FeedGridViewProps {
+  posts: HydratedPost[];
+  hasMore: boolean;
+  loadingMore: boolean;
+  error: any;
+  setSentinel: (el: HTMLDivElement | null) => void;
+  isExploreUnauthed: boolean;
+  showEndMessage: boolean;
+  onRetry: () => void;
+}
+
+export function FeedGridView({
+  posts,
+  hasMore,
+  loadingMore,
+  error,
+  setSentinel,
+  isExploreUnauthed,
+  showEndMessage,
+  onRetry,
+}: FeedGridViewProps) {
+  return (
+    <>
+      <GridView
+        posts={posts}
+        hasMore={hasMore}
+        setSentinel={setSentinel}
+        loadingMore={loadingMore}
+        active={true}
+        showEndMessage={showEndMessage}
+        onRetry={onRetry}
+        error={error}
+      />
+
+      {isExploreUnauthed && posts.length >= 8 && <FeedUnauthCTA />}
+    </>
+  );
+}

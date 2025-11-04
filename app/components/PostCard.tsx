@@ -3,7 +3,7 @@
 
 import { memo, useState, useRef, lazy, Suspense } from "react";
 import type { HydratedPost } from "@/lib/types";
-import { AuthForm } from "./AuthForm";
+import { AuthForm } from "@/app/components/auth/AuthForm";
 import { UserHeader } from "./postCard/UserHeader";
 import { MediaSection } from "./postCard/MediaSection";
 import { usePostState } from "./postCard/hooks/usePostState";
@@ -23,7 +23,7 @@ import { api } from "@/lib/api";
 import { PostCardBody } from "./PostCardBody";
 
 // Lazy load heavy components
-const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
+const FullscreenViewer = lazy(() => import("@/app/components/media/FullscreenViewer"));
 const Editor = lazy(() => import("./postCard/Editor").then(mod => ({ default: mod.Editor })));
 
 // Memoize PostCard to prevent unnecessary re-renders when parent updates

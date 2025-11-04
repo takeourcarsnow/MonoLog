@@ -3,7 +3,7 @@ import { api, getSupabaseClient } from "@/lib/api";
 import { compressImage } from "@/lib/image";
 import { uid } from "@/lib/id";
 import Image from "next/image";
-import { OptimizedImage } from "../OptimizedImage";
+import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@/lib/types";
 

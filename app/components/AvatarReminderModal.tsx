@@ -1,7 +1,7 @@
 "use client";
 
-import Portal from "./Portal";
-import { Button } from "./Button";
+import Portal from "@/app/components/ui/Portal";
+import { Button } from "@/app/components/ui/Button";
 import { useEffect, useRef } from "react";
 
 type Props = {

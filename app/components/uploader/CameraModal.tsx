@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "../Button";
-import Portal from "../Portal";
+import { Button } from "@/app/components/ui/Button";
+import Portal from "@/app/components/ui/Portal";
 import LogoLoader from "./LogoLoader";
 
 interface CameraModalProps {

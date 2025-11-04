@@ -9,7 +9,7 @@ import { LocationSection } from "./postCard/LocationSection";
 import { EditorWrap } from "./postCard/EditorWrap";
 
 // Lazy load heavy components
-const FullscreenViewer = lazy(() => import("./FullscreenViewer"));
+const FullscreenViewer = lazy(() => import("@/app/components/media/FullscreenViewer"));
 
 interface PostCardBodyProps {
   post: HydratedPost;

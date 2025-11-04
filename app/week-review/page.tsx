@@ -5,9 +5,9 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { renderCaption } from "@/lib/hashtags";
 import { Calendar, Image, MessageCircle, ChevronDown, ChartBar } from "lucide-react";
-import { OptimizedImage } from "@/app/components/OptimizedImage";
+import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import type { WeekReviewStats } from "@/lib/types";
-import { StatCard } from "@/app/components/StatCard";
+import { StatCard } from "@/app/components/ui/StatCard";
 
 export default function WeekReviewPage() {
   const [stats, setStats] = useState<WeekReviewStats | null>(null);

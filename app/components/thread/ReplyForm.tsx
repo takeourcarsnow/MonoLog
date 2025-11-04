@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { Button } from "../Button";
+import { Button } from "@/app/components/ui/Button";
 
 interface ReplyFormProps {
   threadId: string;

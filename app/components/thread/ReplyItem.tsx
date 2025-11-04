@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Trash2, Edit3, Check, X, Clock } from "lucide-react";
 import type { HydratedThreadReply } from "@/lib/types";
-import { Button } from "../Button";
-import TimeDisplay from "../TimeDisplay";
+import { Button } from "@/app/components/ui/Button";
+import TimeDisplay from "@/app/components/ui/TimeDisplay";
 import Link from "next/link";
-import { OptimizedImage } from "../OptimizedImage";
+import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { renderCaption } from "@/lib/hashtags";
 import { api } from "@/lib/api";
 

@@ -1,4 +1,4 @@
-import { HashtagView } from "@/app/components/HashtagView";
+import { HashtagView } from "@/app/components/hashtag/HashtagView";
 import { Hash } from "lucide-react";
 
 interface HashtagPageProps {

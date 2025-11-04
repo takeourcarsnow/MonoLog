@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import React, { ReactNode } from 'react';
-import { SpinningLogo } from './SpinningLogo';
+import { SpinningLogo } from "@/app/components/ui/SpinningLogo";
 
 interface PullToRefreshIndicatorProps {
   isRefreshing: boolean;

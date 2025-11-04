@@ -1,5 +1,5 @@
 import { Check, X } from "lucide-react";
-import { DeleteAccountButton } from "@/app/components/DeleteAccount";
+import { DeleteAccountButton } from "@/app/components/account/DeleteAccount";
 
 interface ProfileEditFormActionsProps {
   editProcessing: boolean;

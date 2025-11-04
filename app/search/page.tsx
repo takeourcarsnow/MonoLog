@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { Search, Clock } from 'lucide-react';
-import { SearchClient } from '@/app/components/SearchClient';
-import { SearchLive } from '@/app/components/SearchLive';
+import { SearchClient } from "@/app/components/search/SearchClient";
+import { SearchLive } from "@/app/components/search/SearchLive";
 import Image from 'next/image';
-import TimeDisplay from '@/app/components/TimeDisplay';
+import TimeDisplay from "@/app/components/ui/TimeDisplay";
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 

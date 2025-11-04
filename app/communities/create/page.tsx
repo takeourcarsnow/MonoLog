@@ -1,5 +1,5 @@
 "use client";
-import { CreateCommunityView } from '@/app/components/CreateCommunityView';
+import { CreateCommunityView } from "@/app/components/communities/CreateCommunityView";
 import { useEffect } from 'react';
 
 export const dynamic = 'force-dynamic';

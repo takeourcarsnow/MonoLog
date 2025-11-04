@@ -1,4 +1,4 @@
-import Portal from "../../Portal";
+import Portal from "@/app/components/ui/Portal";
 
 interface AddPhotoMenuProps {
   isOpen: boolean;

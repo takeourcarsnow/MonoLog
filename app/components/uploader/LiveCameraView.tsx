@@ -49,6 +49,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
   const [showSettings, setShowSettings] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   // Start camera and video stream
   const startCamera = useCallback(async () => {
@@ -89,6 +90,11 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
   // Render loop: draw video frame with effects
   const renderFrame = useCallback(() => {
+    // Stop rendering when capturing to freeze the view
+    if (isCapturing) {
+      return;
+    }
+
     if (!videoRef.current || !sourceCanvasRef.current || !displayCanvasRef.current) {
       animationFrameRef.current = requestAnimationFrame(renderFrame);
       return;
@@ -118,12 +124,24 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     }
 
     animationFrameRef.current = requestAnimationFrame(renderFrame);
-  }, [effectSettings]);
+  }, [effectSettings, isCapturing]);
 
   // Handle capture
   const handleCapture = useCallback(() => {
+    // Prevent multiple captures
+    if (isCapturing || processing) return;
+
     const canvas = displayCanvasRef.current;
     if (!canvas) return;
+
+    // Stop the render loop immediately to freeze the view
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    // Set capturing state immediately to disable button and show loading
+    setIsCapturing(true);
 
     // Prefer toBlob to avoid data: URL fetch issues
     if (canvas.toBlob) {
@@ -147,6 +165,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
             onCapture(new Blob([u8arr], { type: mime }));
           } catch (e) {
             console.error('Capture fallback failed', e);
+            setIsCapturing(false);
           }
         }
       }, 'image/jpeg', 0.95);
@@ -166,19 +185,22 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         onCapture(new Blob([u8arr], { type: mime }));
       } catch (e) {
         console.error('Legacy capture failed', e);
+        setIsCapturing(false);
       }
     }
-  }, [onCapture]);
+  }, [isCapturing, processing, onCapture]);
 
   // Handle close
   const handleClose = useCallback(() => {
     stopCamera();
+    setIsCapturing(false);
     onClose();
   }, [stopCamera, onClose]);
 
   // Setup camera when modal opens
   useEffect(() => {
     if (isOpen) {
+      setIsCapturing(false); // Reset capturing state when modal opens
       startCamera();
     } else {
       stopCamera();
@@ -189,9 +211,9 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     };
   }, [isOpen, startCamera, stopCamera]);
 
-  // Start render loop when camera is ready
+  // Start render loop when camera is ready and not capturing
   useEffect(() => {
-    if (cameraReady) {
+    if (cameraReady && !isCapturing) {
       renderFrame();
     }
 
@@ -200,7 +222,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [cameraReady, renderFrame]);
+  }, [cameraReady, isCapturing, renderFrame]);
 
   // Add modal blur effect
   useEffect(() => {
@@ -294,7 +316,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               className={`btn mini ${effectSettings.type === 'none' ? 'active' : ''}`}
               onClick={() => setEffectSettings({ ...effectSettings, type: 'none' })}
               title="No effect"
-              disabled={processing}
+              disabled={isCapturing || processing}
             >
               <X size={16} />
               <span style={{ fontSize: '0.875rem' }}>None</span>
@@ -304,7 +326,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               className={`btn mini ${effectSettings.type === 'pixelate' ? 'active' : ''}`}
               onClick={() => setEffectSettings({ ...effectSettings, type: 'pixelate' })}
               title="Pixelate"
-              disabled={processing}
+              disabled={isCapturing || processing}
             >
               <Grid3x3 size={16} />
               <span style={{ fontSize: '0.875rem' }}>Pixel</span>
@@ -314,7 +336,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               className={`btn mini ${effectSettings.type === 'dither' ? 'active' : ''}`}
               onClick={() => setEffectSettings({ ...effectSettings, type: 'dither' })}
               title="Dither"
-              disabled={processing}
+              disabled={isCapturing || processing}
             >
               <Sparkles size={16} />
               <span style={{ fontSize: '0.875rem' }}>Dither</span>
@@ -324,7 +346,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               className={`btn mini ${effectSettings.type === 'ascii' ? 'active' : ''}`}
               onClick={() => setEffectSettings({ ...effectSettings, type: 'ascii' })}
               title="ASCII"
-              disabled={processing}
+              disabled={isCapturing || processing}
             >
               <Type size={16} />
               <span style={{ fontSize: '0.875rem' }}>ASCII</span>
@@ -343,7 +365,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   value={effectSettings.pixelSize || 8}
                   onChange={(e) => setEffectSettings({ ...effectSettings, pixelSize: parseInt(e.target.value) })}
                   style={{ flex: 1 }}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                 />
                 <span style={{ minWidth: 30, textAlign: 'right' }}>{effectSettings.pixelSize}</span>
               </label>
@@ -352,7 +374,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.pixelShape === 'square' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, pixelShape: 'square' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Square
@@ -361,7 +383,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.pixelShape === 'circle' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, pixelShape: 'circle' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Circle
@@ -381,7 +403,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   value={effectSettings.ditherLevels || 3}
                   onChange={(e) => setEffectSettings({ ...effectSettings, ditherLevels: parseInt(e.target.value) })}
                   style={{ flex: 1 }}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                 />
                 <span style={{ minWidth: 30, textAlign: 'right' }}>{effectSettings.ditherLevels}</span>
               </label>
@@ -390,7 +412,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.ditherColorMode === 'bw' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, ditherColorMode: 'bw' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   B&W
@@ -399,7 +421,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.ditherColorMode === 'color' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, ditherColorMode: 'color' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Color
@@ -410,7 +432,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.ditherMethod === 'floyd-steinberg' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, ditherMethod: 'floyd-steinberg' })}
-                  disabled={processing || effectSettings.ditherPalette === 'gameboy'}
+                  disabled={isCapturing || processing || effectSettings.ditherPalette === 'gameboy'}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Floyd
@@ -419,7 +441,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.ditherMethod === 'ordered' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, ditherMethod: 'ordered' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Ordered
@@ -428,7 +450,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.ditherMethod === 'atkinson' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, ditherMethod: 'atkinson' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Atkinson
@@ -437,7 +459,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.ditherMethod === 'burkes' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, ditherMethod: 'burkes' })}
-                  disabled={processing || effectSettings.ditherPalette === 'gameboy'}
+                  disabled={isCapturing || processing || effectSettings.ditherPalette === 'gameboy'}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Burkes
@@ -449,7 +471,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                     type="button"
                     className={`btn mini ${effectSettings.ditherPalette === 'auto' ? 'active' : ''}`}
                     onClick={() => setEffectSettings({ ...effectSettings, ditherPalette: 'auto' })}
-                    disabled={processing}
+                    disabled={isCapturing || processing}
                     style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                   >
                     Auto
@@ -464,7 +486,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                       }
                       setEffectSettings(newSettings);
                     }}
-                    disabled={processing}
+                    disabled={isCapturing || processing}
                     style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                   >
                     Game Boy
@@ -473,7 +495,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                     type="button"
                     className={`btn mini ${effectSettings.ditherPalette === 'pico8' ? 'active' : ''}`}
                     onClick={() => setEffectSettings({ ...effectSettings, ditherPalette: 'pico8' })}
-                    disabled={processing}
+                    disabled={isCapturing || processing}
                     style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                   >
                     PICO-8
@@ -482,7 +504,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                     type="button"
                     className={`btn mini ${effectSettings.ditherPalette === 'nes' ? 'active' : ''}`}
                     onClick={() => setEffectSettings({ ...effectSettings, ditherPalette: 'nes' })}
-                    disabled={processing}
+                    disabled={isCapturing || processing}
                     style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                   >
                     NES
@@ -491,7 +513,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                     type="button"
                     className={`btn mini ${effectSettings.ditherPalette === 'zx_spectrum' ? 'active' : ''}`}
                     onClick={() => setEffectSettings({ ...effectSettings, ditherPalette: 'zx_spectrum' })}
-                    disabled={processing}
+                    disabled={isCapturing || processing}
                     style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                   >
                     ZX
@@ -500,7 +522,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                     type="button"
                     className={`btn mini ${effectSettings.ditherPalette === 'atari_2600' ? 'active' : ''}`}
                     onClick={() => setEffectSettings({ ...effectSettings, ditherPalette: 'atari_2600' })}
-                    disabled={processing}
+                    disabled={isCapturing || processing}
                     style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                   >
                     Atari
@@ -509,7 +531,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                     type="button"
                     className={`btn mini ${effectSettings.ditherPalette === 'commodore64' ? 'active' : ''}`}
                     onClick={() => setEffectSettings({ ...effectSettings, ditherPalette: 'commodore64' })}
-                    disabled={processing}
+                    disabled={isCapturing || processing}
                     style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                   >
                     C64
@@ -518,7 +540,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                     type="button"
                     className={`btn mini ${effectSettings.ditherPalette === 'apple_ii' ? 'active' : ''}`}
                     onClick={() => setEffectSettings({ ...effectSettings, ditherPalette: 'apple_ii' })}
-                    disabled={processing}
+                    disabled={isCapturing || processing}
                     style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                   >
                     Apple II
@@ -539,7 +561,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   value={effectSettings.asciiCellSize || 8}
                   onChange={(e) => setEffectSettings({ ...effectSettings, asciiCellSize: parseInt(e.target.value) })}
                   style={{ flex: 1 }}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                 />
                 <span style={{ minWidth: 30, textAlign: 'right' }}>{effectSettings.asciiCellSize}</span>
               </label>
@@ -558,14 +580,14 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   color: 'var(--text)', 
                   fontSize: 12 
                 }}
-                disabled={processing}
+                disabled={isCapturing || processing}
               />
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button
                   type="button"
                   className={`btn mini ${effectSettings.asciiCharsetPreset === 'custom' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiCharset: ' .:-=+*#%@', asciiCharsetPreset: 'custom' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                 >
                   Custom
@@ -574,7 +596,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.asciiCharsetPreset === 'dense' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiCharset: '@%#*+=-:.ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', asciiCharsetPreset: 'dense' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                 >
                   Dense
@@ -583,7 +605,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.asciiCharsetPreset === 'sparse' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiCharset: '@%#*:. ', asciiCharsetPreset: 'sparse' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                 >
                   Sparse
@@ -592,7 +614,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.asciiCharsetPreset === 'blocks' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiCharset: '█▓▒░ ', asciiCharsetPreset: 'blocks' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                 >
                   Blocks
@@ -601,7 +623,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.asciiCharsetPreset === 'dots' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiCharset: '●◉○· ', asciiCharsetPreset: 'dots' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                 >
                   Dots
@@ -610,7 +632,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.asciiCharsetPreset === 'lines' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiCharset: '│─┼┌┐└┘', asciiCharsetPreset: 'lines' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                 >
                   Lines
@@ -619,7 +641,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.asciiCharsetPreset === 'numbers' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiCharset: '0123456789', asciiCharsetPreset: 'numbers' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                 >
                   Numbers
@@ -628,7 +650,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.asciiCharsetPreset === 'letters' ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiCharset: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', asciiCharsetPreset: 'letters' })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.7rem', padding: '3px 6px' }}
                 >
                   Letters
@@ -639,7 +661,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${!effectSettings.asciiInvert ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiInvert: false })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Normal
@@ -648,7 +670,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                   type="button"
                   className={`btn mini ${effectSettings.asciiInvert ? 'active' : ''}`}
                   onClick={() => setEffectSettings({ ...effectSettings, asciiInvert: true })}
-                  disabled={processing}
+                  disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
                   Inverted
@@ -659,8 +681,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-            <Button onClick={handleCapture} loading={processing} disabled={!cameraReady}>
-              {processing ? (
+            <Button onClick={handleCapture} loading={isCapturing || processing} disabled={!cameraReady || isCapturing}>
+              {(isCapturing || processing) ? (
                 <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                   <LogoLoader size={20} variant="other" />
                   <span>Processing</span>
@@ -669,7 +691,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 'Capture'
               )}
             </Button>
-            <Button variant="ghost" onClick={handleClose} disabled={processing}>
+            <Button variant="ghost" onClick={handleClose} disabled={isCapturing || processing}>
               Close
             </Button>
           </div>

@@ -537,6 +537,8 @@
   text-decoration: none;
   font-size: 0.85rem;
   animation: fadeInUp 0.8s ease-out 0.8s both;
+  height: 36px;
+  width: 36px;
 }
 
 /* Small screens (phones) */

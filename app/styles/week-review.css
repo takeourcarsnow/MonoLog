@@ -16,7 +16,6 @@
 }
 
 .stat-card {
-  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px 16px;
@@ -59,7 +58,6 @@
 
 /* Highlight Sections */
 .highlight-section {
-  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
@@ -96,7 +94,6 @@
   align-items: flex-start;
   gap: 12px;
   padding: 12px;
-  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
 }
@@ -129,7 +126,6 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
-  background: var(--bg-elev);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -246,7 +242,6 @@
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }

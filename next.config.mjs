@@ -84,6 +84,8 @@ const nextConfig = {
   // Optimize package imports
   experimental: {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js', '@supabase/ssr'],
+    // Enable optimized CSS loading
+    optimizeCss: true,
   },
   // Production optimizations
   compiler: {
@@ -95,35 +97,60 @@ const nextConfig = {
   webpack: (config, { dev, isServer }) => {
     // Production optimizations
     if (!dev && !isServer) {
-      // Enable tree shaking
+      // Enable tree shaking and module concatenation
       config.optimization = {
         ...config.optimization,
         usedExports: true,
         sideEffects: false,
+        concatenateModules: true,
+        moduleIds: 'deterministic',
         // Split chunks more aggressively
         splitChunks: {
           ...config.optimization.splitChunks,
+          chunks: 'all',
+          maxInitialRequests: 25,
+          maxAsyncRequests: 25,
+          minSize: 20000,
           cacheGroups: {
             ...config.optimization.splitChunks?.cacheGroups,
-            // Separate vendor chunks
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
+            // Framework bundle
+            framework: {
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+              name: 'framework',
+              priority: 40,
+              enforce: true,
             },
             // Separate large libraries
             supabase: {
               test: /[\\/]node_modules[\\/]@supabase[\\/]/,
               name: 'supabase',
-              chunks: 'all',
-              priority: 20,
+              priority: 30,
+              reuseExistingChunk: true,
             },
             lucide: {
               test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
               name: 'lucide',
-              chunks: 'all',
-              priority: 20,
+              priority: 30,
+              reuseExistingChunk: true,
+            },
+            swiper: {
+              test: /[\\/]node_modules[\\/]swiper[\\/]/,
+              name: 'swiper',
+              priority: 30,
+              reuseExistingChunk: true,
+            },
+            // Common vendor chunks
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: 10,
+              reuseExistingChunk: true,
+            },
+            // Common code shared between pages
+            common: {
+              minChunks: 2,
+              priority: 5,
+              reuseExistingChunk: true,
             },
           },
         },

@@ -3,6 +3,10 @@ import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 import { mapRowToHydratedPost } from '@/lib/api/utils';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);

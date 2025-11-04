@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const urlParam = req.nextUrl.searchParams.get('url');
   if (!urlParam) {
@@ -63,7 +66,11 @@ export async function GET(req: NextRequest) {
     }
 
     const meta = { title, author_name, thumbnail_url };
-    return NextResponse.json(meta);
+    return NextResponse.json(meta, {
+      headers: {
+        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+      },
+    });
   } catch (e) {
     return NextResponse.json({ error: 'Failed to fetch spotify metadata' }, { status: 500 });
   }

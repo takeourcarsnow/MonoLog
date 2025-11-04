@@ -52,7 +52,14 @@ export async function GET(req: Request) {
 
   const postRows = deduped.map((r: any) => mapRowToHydratedPost(r));
   try { setServerCache(cacheKey, postRows, 10000); } catch (_) {}
-  return NextResponse.json({ ok: true, posts: postRows });
+  return NextResponse.json(
+    { ok: true, posts: postRows },
+    {
+      headers: {
+        'Cache-Control': 'private, max-age=10, stale-while-revalidate=30',
+      },
+    }
+  );
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

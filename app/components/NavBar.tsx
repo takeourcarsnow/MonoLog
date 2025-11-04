@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems, isNavItemActive } from "./nav/navHelpers";
@@ -42,32 +42,33 @@ export function Navbar({ activeIndex }: NavbarProps) {
     setActiveIndexState(index);
   }, [pathname]);
 
+  const positionIndicator = useCallback(() => {
+    const container = indicatorRef.current?.parentElement;
+    if (!container || activeIndexState < 0) {
+      if (indicatorRef.current) indicatorRef.current.style.opacity = '0';
+      return;
+    }
+
+    const activeItem = container.querySelector(`.tab-item-static[data-index="${activeIndexState}"]`) as HTMLElement;
+    if (!activeItem || !indicatorRef.current) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = activeItem.getBoundingClientRect();
+    const left = itemRect.left - containerRect.left + (container as HTMLElement).scrollLeft;
+    const itemCenter = left + itemRect.width / 2;
+    const width = 28;
+    const indicatorLeft = Math.round(itemCenter - width / 2);
+
+    const color = activeItem.style.getPropertyValue('--tab-color') || '#000';
+
+    indicatorRef.current.style.transform = `translate3d(${indicatorLeft}px,0,0)`;
+    indicatorRef.current.style.width = `${width}px`;
+    indicatorRef.current.style.backgroundColor = color;
+    indicatorRef.current.style.opacity = '1';
+  }, [activeIndexState]);
+
   useEffect(() => {
     // Positioning logic extracted so it can be called on resize/orientation change
-    function positionIndicator() {
-      const container = indicatorRef.current?.parentElement;
-      if (!container || activeIndexState < 0) {
-        if (indicatorRef.current) indicatorRef.current.style.opacity = '0';
-        return;
-      }
-
-      const activeItem = container.querySelector(`.tab-item-static[data-index="${activeIndexState}"]`) as HTMLElement;
-      if (!activeItem || !indicatorRef.current) return;
-
-      const containerRect = container.getBoundingClientRect();
-      const itemRect = activeItem.getBoundingClientRect();
-      const left = itemRect.left - containerRect.left + (container as HTMLElement).scrollLeft;
-      const itemCenter = left + itemRect.width / 2;
-      const width = 28;
-      const indicatorLeft = Math.round(itemCenter - width / 2);
-
-      const color = activeItem.style.getPropertyValue('--tab-color') || '#000';
-
-      indicatorRef.current.style.transform = `translate3d(${indicatorLeft}px,0,0)`;
-      indicatorRef.current.style.width = `${width}px`;
-      indicatorRef.current.style.backgroundColor = color;
-      indicatorRef.current.style.opacity = '1';
-    }
 
     // Reposition immediately and also when viewport/layout changes
     positionIndicator();
@@ -88,7 +89,7 @@ export function Navbar({ activeIndex }: NavbarProps) {
         window.removeEventListener('monolog:navbar_shown', positionIndicator as any);
       }
     };
-  }, [activeIndexState]);
+  }, [activeIndexState, positionIndicator]);
 
   if (!show) return null;
 

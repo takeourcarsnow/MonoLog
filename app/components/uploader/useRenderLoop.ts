@@ -1,0 +1,73 @@
+"use client";
+
+import { useRef, useCallback } from "react";
+import { applyCameraEffect, CameraEffectSettings } from "./cameraEffects";
+
+export function useRenderLoop() {
+  const sourceCanvasRef = useRef<HTMLCanvasElement>(null);
+  const displayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const renderLoopRunning = useRef(false);
+
+  const renderFrame = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>) => {
+    // Stop rendering if loop is disabled, capturing, camera stopped, or no video
+    if (!renderLoopRunning.current || isCapturing || !streamRef.current || !videoRef.current) {
+      return;
+    }
+
+    if (!sourceCanvasRef.current || !displayCanvasRef.current) {
+      if (renderLoopRunning.current) {
+        animationFrameRef.current = requestAnimationFrame(() => renderFrame(effectSettings, isCapturing, videoRef, streamRef));
+      }
+      return;
+    }
+
+    const video = videoRef.current;
+    const sourceCanvas = sourceCanvasRef.current;
+    const displayCanvas = displayCanvasRef.current;
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      // Set canvas dimensions to match video
+      if (sourceCanvas.width !== video.videoWidth || sourceCanvas.height !== video.videoHeight) {
+        sourceCanvas.width = video.videoWidth;
+        sourceCanvas.height = video.videoHeight;
+        displayCanvas.width = video.videoWidth;
+        displayCanvas.height = video.videoHeight;
+      }
+
+      // Draw current video frame to source canvas
+      const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+      if (sourceCtx) {
+        sourceCtx.drawImage(video, 0, 0, sourceCanvas.width, sourceCanvas.height);
+      }
+
+      // Apply effect to display canvas
+      applyCameraEffect(sourceCanvas, displayCanvas, effectSettings);
+    }
+
+    if (renderLoopRunning.current) {
+      animationFrameRef.current = requestAnimationFrame(() => renderFrame(effectSettings, isCapturing, videoRef, streamRef));
+    }
+  }, []);
+
+  const startRenderLoop = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>) => {
+    renderLoopRunning.current = true;
+    renderFrame(effectSettings, isCapturing, videoRef, streamRef);
+  }, [renderFrame]);
+
+  const stopRenderLoop = useCallback(() => {
+    renderLoopRunning.current = false;
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+  }, []);
+
+  return {
+    sourceCanvasRef,
+    displayCanvasRef,
+    renderFrame,
+    startRenderLoop,
+    stopRenderLoop,
+  };
+}

@@ -275,14 +275,14 @@ html[class*="post-page-scroll"] .content {
   --auth-toggle-indicator: rgba(255,255,255,0.04);
 }
 
-/* Dice icon 180deg spin animation for username generator */
-@keyframes dice-spin-180 {
+/* Dice icon 360deg spin animation for username generator */
+@keyframes dice-spin-360 {
   from { transform: rotate(0deg); }
-  to { transform: rotate(180deg); }
+  to { transform: rotate(360deg); }
 }
 .dice-spin {
   display: inline-block;
-  animation: dice-spin-180 600ms cubic-bezier(.2,.8,.2,1) both;
+  animation: dice-spin-360 600ms cubic-bezier(.2,.8,.2,1) both;
 }
 
 /* Custom scrollbar styling - minimalistic and modern */

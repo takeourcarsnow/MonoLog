@@ -26,40 +26,18 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
   const isPasswordValid = password && password.length >= 8;
   const isEmailValid = email && /\S+@\S+\.\S+/.test(email);
 
-  // local spinning state so the dice icon can finish its rotation after generating flips to false
+  // local spinning state so the dice icon can spin on click
   const [spinning, setSpinning] = useState(false);
   const spinTimeoutRef = useRef<number | null>(null);
   const [spinKey, setSpinKey] = useState(0);
 
   useEffect(() => {
-    // when generation starts, begin spinning immediately
-    if (generating) {
-      if (spinTimeoutRef.current) {
-        clearTimeout(spinTimeoutRef.current);
-        spinTimeoutRef.current = null;
-      }
-      // bump key so the icon remounts and restarts animation even if class already present
-      setSpinKey(k => k + 1);
-      setSpinning(true);
-      return;
-    }
-
-    // when generation stops, allow the icon to animate a bit longer so it completes rotation
-    if (!generating && spinning) {
-      // keep spinning for another 600ms (one rotation + buffer)
-      spinTimeoutRef.current = window.setTimeout(() => {
-        setSpinning(false);
-        spinTimeoutRef.current = null;
-      }, 600);
-    }
-
     return () => {
       if (spinTimeoutRef.current) {
         clearTimeout(spinTimeoutRef.current);
-        spinTimeoutRef.current = null;
       }
     };
-  }, [generating]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="w-full flex flex-col gap-2 inputs-wrap" style={{ maxWidth: 400 }}>
@@ -162,10 +140,30 @@ export function AuthInputs({ email, setEmail, password, setPassword, username, s
               {mode === 'signup' ? (
                 <button
                   type="button"
-                  className="btn small dim"
+                  style={{
+                    appearance: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    color: 'var(--dim)',
+                    padding: '8px 12px',
+                    borderRadius: '999px',
+                    fontSize: '14px',
+                    lineHeight: 1,
+                    cursor: 'pointer',
+                    transition: 'none'
+                  }}
                   disabled={Boolean(generating)}
                   onClick={async () => {
                     if (!generateUsername) return;
+                    // Spin for 600ms on click
+                    if (spinTimeoutRef.current) clearTimeout(spinTimeoutRef.current);
+                    setSpinKey(k => k + 1);
+                    setSpinning(true);
+                    spinTimeoutRef.current = window.setTimeout(() => {
+                      setSpinning(false);
+                      spinTimeoutRef.current = null;
+                    }, 600);
                     try {
                       await generateUsername();
                     } catch (_) {

@@ -330,7 +330,7 @@ export function useAuthForm(onClose?: () => void) {
           const ok = await checkUsernameAvailability(candidate);
           if (ok) {
             setUsername(createDisplayVersion(candidate));
-            showHeaderNotice({ title: 'Generated username', subtitle: `Using "${createDisplayVersion(candidate)}". You can change it before continuing.`, variant: 'info' }, 5000);
+            // showHeaderNotice({ title: 'Generated username', subtitle: `Using "${createDisplayVersion(candidate)}". You can change it before continuing.`, variant: 'info' }, 5000);
             return candidate;
           }
         } catch (e) {

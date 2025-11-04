@@ -54,31 +54,27 @@
   color: var(--muted);
 }
 .input-ghost-placeholder .typewriter {
-  /* Simple fade in/out animation for placeholder text */
   white-space: nowrap;
   display: inline-block;
-  vertical-align: middle;
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  animation-name: fadeInOut;
-  animation-duration: var(--duration, 3000ms);
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
+  animation: typing 2s steps(40) forwards, 
+             hold 2s 2s forwards,
+             backspace 1.5s 4s steps(40) forwards;
 }
 
-@keyframes fadeInOut {
-  /*
-    0%   -> invisible
-    10%  -> fade in
-    90%  -> stay visible
-    100% -> fade out
-  */
-  0% { opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { opacity: 0; }
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes hold {
+  from { width: 100%; }
+  to { width: 100%; }
+}
+
+@keyframes backspace {
+  from { width: 100%; }
+  to { width: 0; }
 }
 .input-ghost-placeholder .caret {
   color: var(--muted);
@@ -93,7 +89,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .input-ghost-placeholder .typewriter { animation: none; opacity: 1; }
+  .input-ghost-placeholder .typewriter { 
+    animation: none; 
+    width: 100%;
+  }
 }
 
 /* Disable the native textarea resize handle for the uploader's caption only.

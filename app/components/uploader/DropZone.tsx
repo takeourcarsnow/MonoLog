@@ -31,7 +31,7 @@ export function DropZone({
       )}
 
       <div className="drop-zone-content" style={{ opacity: processing ? 1 : 1, pointerEvents: processing ? 'none' : 'auto', filter: processing ? 'blur(1px)' : 'none' }}>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
           <button
             type="button"
             className="drop-zone-camera-button"
@@ -47,7 +47,6 @@ export function DropZone({
                 <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span style={{ fontSize: '0.75rem', marginTop: 4 }}>Camera</span>
           </button>
 
           <button
@@ -59,14 +58,9 @@ export function DropZone({
             title="Camera with real-time effects"
             style={{ position: 'relative' }}
           >
-            <div className="drop-zone-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M17 3l2 2m0 0l-2 2m2-2h-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+            <div className="drop-zone-icon" style={{ fontSize: '0.875rem', fontWeight: 'bold', color: '#3b82f6' }}>
+              FX
             </div>
-            <span style={{ fontSize: '0.75rem', marginTop: 4 }}>Effects</span>
           </button>
         </div>
 

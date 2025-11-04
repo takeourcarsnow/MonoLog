@@ -133,24 +133,44 @@ export function applyDitherToFrame(
   const usePalette = colorMode === 'color' && palette !== 'auto' && COLOR_PALETTES[palette];
   const paletteColors = usePalette ? COLOR_PALETTES[palette] : null;
 
-  // Helper function to find nearest palette color
+  // Cache for palette lookups - huge performance boost for color dithering
+  const paletteCache = paletteColors ? new Map<number, [number, number, number]>() : null;
+
+  // Helper function to find nearest palette color (optimized with cache and no sqrt)
   const findNearestPaletteColor = (r: number, g: number, b: number): [number, number, number] => {
     if (!paletteColors) return [r, g, b];
+    
+    // Clamp values
+    r = Math.max(0, Math.min(255, Math.round(r)));
+    g = Math.max(0, Math.min(255, Math.round(g)));
+    b = Math.max(0, Math.min(255, Math.round(b)));
+    
+    // Create cache key (24-bit RGB)
+    const key = (r << 16) | (g << 8) | b;
+    
+    // Check cache
+    if (paletteCache!.has(key)) {
+      return paletteCache!.get(key)!;
+    }
     
     let minDist = Infinity;
     let nearestColor: [number, number, number] = [r, g, b];
     
+    // Use squared distance to avoid expensive sqrt
     for (const pColor of paletteColors) {
-      const dist = Math.sqrt(
-        Math.pow(r - pColor[0], 2) +
-        Math.pow(g - pColor[1], 2) +
-        Math.pow(b - pColor[2], 2)
-      );
+      const dr = r - pColor[0];
+      const dg = g - pColor[1];
+      const db = b - pColor[2];
+      const dist = dr * dr + dg * dg + db * db;
+      
       if (dist < minDist) {
         minDist = dist;
         nearestColor = [pColor[0], pColor[1], pColor[2]];
       }
     }
+    
+    // Cache result
+    paletteCache!.set(key, nearestColor);
     
     return nearestColor;
   };
@@ -178,7 +198,7 @@ export function applyDitherToFrame(
         } else {
           // Color dithering
           if (paletteColors) {
-            // Quantize to palette
+            // Quantize to palette - optimized to do once per pixel
             const [nr, ng, nb] = findNearestPaletteColor(data[idx], data[idx + 1], data[idx + 2]);
             data[idx] = nr;
             data[idx + 1] = ng;
@@ -219,34 +239,66 @@ export function applyDitherToFrame(
             if (x + 1 < width) errors[((y + 1) * width + x + 1) * 3] += error * 1 / 16;
           }
         } else {
-          for (let c = 0; c < 3; c++) {
-            const oldPixel = data[idx + c] + errors[errIdx + c];
-            let newPixel: number;
+          // Color dithering - optimized to process RGB together
+          if (paletteColors) {
+            // Get old pixel with errors
+            const oldR = data[idx] + errors[errIdx];
+            const oldG = data[idx + 1] + errors[errIdx + 1];
+            const oldB = data[idx + 2] + errors[errIdx + 2];
             
-            if (paletteColors) {
-              const tempR = c === 0 ? oldPixel : data[idx];
-              const tempG = c === 1 ? oldPixel : data[idx + 1];
-              const tempB = c === 2 ? oldPixel : data[idx + 2];
-              const [nr, ng, nb] = findNearestPaletteColor(
-                Math.max(0, Math.min(255, tempR)),
-                Math.max(0, Math.min(255, tempG)),
-                Math.max(0, Math.min(255, tempB))
-              );
-              newPixel = c === 0 ? nr : c === 1 ? ng : nb;
-            } else {
-              const quantized = Math.round((oldPixel / 255) * (levels - 1)) / (levels - 1);
-              newPixel = Math.round(quantized * 255);
-            }
+            // Find nearest palette color once
+            const [newR, newG, newB] = findNearestPaletteColor(oldR, oldG, oldB);
             
-            const error = oldPixel - newPixel;
-            data[idx + c] = newPixel;
+            // Calculate errors for each channel
+            const errorR = oldR - newR;
+            const errorG = oldG - newG;
+            const errorB = oldB - newB;
+            
+            data[idx] = newR;
+            data[idx + 1] = newG;
+            data[idx + 2] = newB;
 
-            // Distribute error
-            if (x + 1 < width) errors[(y * width + x + 1) * 3 + c] += error * 7 / 16;
+            // Distribute errors
+            if (x + 1 < width) {
+              const nextIdx = (y * width + x + 1) * 3;
+              errors[nextIdx] += errorR * 7 / 16;
+              errors[nextIdx + 1] += errorG * 7 / 16;
+              errors[nextIdx + 2] += errorB * 7 / 16;
+            }
             if (y + 1 < height) {
-              if (x > 0) errors[((y + 1) * width + x - 1) * 3 + c] += error * 3 / 16;
-              errors[((y + 1) * width + x) * 3 + c] += error * 5 / 16;
-              if (x + 1 < width) errors[((y + 1) * width + x + 1) * 3 + c] += error * 1 / 16;
+              if (x > 0) {
+                const blIdx = ((y + 1) * width + x - 1) * 3;
+                errors[blIdx] += errorR * 3 / 16;
+                errors[blIdx + 1] += errorG * 3 / 16;
+                errors[blIdx + 2] += errorB * 3 / 16;
+              }
+              const bIdx = ((y + 1) * width + x) * 3;
+              errors[bIdx] += errorR * 5 / 16;
+              errors[bIdx + 1] += errorG * 5 / 16;
+              errors[bIdx + 2] += errorB * 5 / 16;
+              if (x + 1 < width) {
+                const brIdx = ((y + 1) * width + x + 1) * 3;
+                errors[brIdx] += errorR * 1 / 16;
+                errors[brIdx + 1] += errorG * 1 / 16;
+                errors[brIdx + 2] += errorB * 1 / 16;
+              }
+            }
+          } else {
+            // Standard quantization per channel
+            for (let c = 0; c < 3; c++) {
+              const oldPixel = data[idx + c] + errors[errIdx + c];
+              const quantized = Math.round((oldPixel / 255) * (levels - 1)) / (levels - 1);
+              const newPixel = Math.round(quantized * 255);
+              const error = oldPixel - newPixel;
+              data[idx + c] = newPixel;
+
+              // Distribute error
+              if (x + 1 < width) errors[(y * width + x + 1) * 3 + c] += error * 7 / 16;
+              if (y + 1 < height) {
+                if (x > 0) errors[((y + 1) * width + x - 1) * 3 + c] += error * 3 / 16;
+                errors[((y + 1) * width + x) * 3 + c] += error * 5 / 16;
+                if (x + 1 < width) errors[((y + 1) * width + x + 1) * 3 + c] += error * 1 / 16;
+              }
             }
           }
         }
@@ -281,38 +333,78 @@ export function applyDitherToFrame(
             errors[((y + 2) * width + x) * 3] += error;
           }
         } else {
-          for (let c = 0; c < 3; c++) {
-            const oldPixel = data[idx + c] + errors[errIdx + c];
-            let newPixel: number;
+          // Color dithering - optimized to process RGB together
+          if (paletteColors) {
+            const oldR = data[idx] + errors[errIdx];
+            const oldG = data[idx + 1] + errors[errIdx + 1];
+            const oldB = data[idx + 2] + errors[errIdx + 2];
             
-            if (paletteColors) {
-              const tempR = c === 0 ? oldPixel : data[idx];
-              const tempG = c === 1 ? oldPixel : data[idx + 1];
-              const tempB = c === 2 ? oldPixel : data[idx + 2];
-              const [nr, ng, nb] = findNearestPaletteColor(
-                Math.max(0, Math.min(255, tempR)),
-                Math.max(0, Math.min(255, tempG)),
-                Math.max(0, Math.min(255, tempB))
-              );
-              newPixel = c === 0 ? nr : c === 1 ? ng : nb;
-            } else {
-              const quantized = Math.round((oldPixel / 255) * (levels - 1)) / (levels - 1);
-              newPixel = Math.round(quantized * 255);
-            }
+            const [newR, newG, newB] = findNearestPaletteColor(oldR, oldG, oldB);
             
-            const error = (oldPixel - newPixel) / 8;
-            data[idx + c] = newPixel;
+            const errorR = (oldR - newR) / 8;
+            const errorG = (oldG - newG) / 8;
+            const errorB = (oldB - newB) / 8;
+            
+            data[idx] = newR;
+            data[idx + 1] = newG;
+            data[idx + 2] = newB;
 
             // Distribute error (Atkinson)
-            if (x + 1 < width) errors[(y * width + x + 1) * 3 + c] += error;
-            if (x + 2 < width) errors[(y * width + x + 2) * 3 + c] += error;
+            if (x + 1 < width) {
+              const idx1 = (y * width + x + 1) * 3;
+              errors[idx1] += errorR;
+              errors[idx1 + 1] += errorG;
+              errors[idx1 + 2] += errorB;
+            }
+            if (x + 2 < width) {
+              const idx2 = (y * width + x + 2) * 3;
+              errors[idx2] += errorR;
+              errors[idx2 + 1] += errorG;
+              errors[idx2 + 2] += errorB;
+            }
             if (y + 1 < height) {
-              if (x > 0) errors[((y + 1) * width + x - 1) * 3 + c] += error;
-              errors[((y + 1) * width + x) * 3 + c] += error;
-              if (x + 1 < width) errors[((y + 1) * width + x + 1) * 3 + c] += error;
+              if (x > 0) {
+                const idxBL = ((y + 1) * width + x - 1) * 3;
+                errors[idxBL] += errorR;
+                errors[idxBL + 1] += errorG;
+                errors[idxBL + 2] += errorB;
+              }
+              const idxB = ((y + 1) * width + x) * 3;
+              errors[idxB] += errorR;
+              errors[idxB + 1] += errorG;
+              errors[idxB + 2] += errorB;
+              if (x + 1 < width) {
+                const idxBR = ((y + 1) * width + x + 1) * 3;
+                errors[idxBR] += errorR;
+                errors[idxBR + 1] += errorG;
+                errors[idxBR + 2] += errorB;
+              }
             }
             if (y + 2 < height) {
-              errors[((y + 2) * width + x) * 3 + c] += error;
+              const idxB2 = ((y + 2) * width + x) * 3;
+              errors[idxB2] += errorR;
+              errors[idxB2 + 1] += errorG;
+              errors[idxB2 + 2] += errorB;
+            }
+          } else {
+            for (let c = 0; c < 3; c++) {
+              const oldPixel = data[idx + c] + errors[errIdx + c];
+              const quantized = Math.round((oldPixel / 255) * (levels - 1)) / (levels - 1);
+              const newPixel = Math.round(quantized * 255);
+              const error = (oldPixel - newPixel) / 8;
+              data[idx + c] = newPixel;
+
+              // Distribute error (Atkinson)
+              if (x + 1 < width) errors[(y * width + x + 1) * 3 + c] += error;
+              if (x + 2 < width) errors[(y * width + x + 2) * 3 + c] += error;
+              if (y + 1 < height) {
+                if (x > 0) errors[((y + 1) * width + x - 1) * 3 + c] += error;
+                errors[((y + 1) * width + x) * 3 + c] += error;
+                if (x + 1 < width) errors[((y + 1) * width + x + 1) * 3 + c] += error;
+              }
+              if (y + 2 < height) {
+                errors[((y + 2) * width + x) * 3 + c] += error;
+              }
             }
           }
         }
@@ -346,37 +438,83 @@ export function applyDitherToFrame(
             if (x + 2 < width) errors[((y + 1) * width + x + 2) * 3] += error * 2 / 32;
           }
         } else {
-          for (let c = 0; c < 3; c++) {
-            const oldPixel = data[idx + c] + errors[errIdx + c];
-            let newPixel: number;
+          // Color dithering - optimized to process RGB together
+          if (paletteColors) {
+            const oldR = data[idx] + errors[errIdx];
+            const oldG = data[idx + 1] + errors[errIdx + 1];
+            const oldB = data[idx + 2] + errors[errIdx + 2];
             
-            if (paletteColors) {
-              const tempR = c === 0 ? oldPixel : data[idx];
-              const tempG = c === 1 ? oldPixel : data[idx + 1];
-              const tempB = c === 2 ? oldPixel : data[idx + 2];
-              const [nr, ng, nb] = findNearestPaletteColor(
-                Math.max(0, Math.min(255, tempR)),
-                Math.max(0, Math.min(255, tempG)),
-                Math.max(0, Math.min(255, tempB))
-              );
-              newPixel = c === 0 ? nr : c === 1 ? ng : nb;
-            } else {
-              const quantized = Math.round((oldPixel / 255) * (levels - 1)) / (levels - 1);
-              newPixel = Math.round(quantized * 255);
-            }
+            const [newR, newG, newB] = findNearestPaletteColor(oldR, oldG, oldB);
             
-            const error = oldPixel - newPixel;
-            data[idx + c] = newPixel;
+            const errorR = oldR - newR;
+            const errorG = oldG - newG;
+            const errorB = oldB - newB;
+            
+            data[idx] = newR;
+            data[idx + 1] = newG;
+            data[idx + 2] = newB;
 
             // Distribute error (Burkes)
-            if (x + 1 < width) errors[(y * width + x + 1) * 3 + c] += error * 8 / 32;
-            if (x + 2 < width) errors[(y * width + x + 2) * 3 + c] += error * 4 / 32;
+            if (x + 1 < width) {
+              const idx1 = (y * width + x + 1) * 3;
+              errors[idx1] += errorR * 8 / 32;
+              errors[idx1 + 1] += errorG * 8 / 32;
+              errors[idx1 + 2] += errorB * 8 / 32;
+            }
+            if (x + 2 < width) {
+              const idx2 = (y * width + x + 2) * 3;
+              errors[idx2] += errorR * 4 / 32;
+              errors[idx2 + 1] += errorG * 4 / 32;
+              errors[idx2 + 2] += errorB * 4 / 32;
+            }
             if (y + 1 < height) {
-              if (x > 1) errors[((y + 1) * width + x - 2) * 3 + c] += error * 2 / 32;
-              if (x > 0) errors[((y + 1) * width + x - 1) * 3 + c] += error * 4 / 32;
-              errors[((y + 1) * width + x) * 3 + c] += error * 8 / 32;
-              if (x + 1 < width) errors[((y + 1) * width + x + 1) * 3 + c] += error * 4 / 32;
-              if (x + 2 < width) errors[((y + 1) * width + x + 2) * 3 + c] += error * 2 / 32;
+              if (x > 1) {
+                const idxBL2 = ((y + 1) * width + x - 2) * 3;
+                errors[idxBL2] += errorR * 2 / 32;
+                errors[idxBL2 + 1] += errorG * 2 / 32;
+                errors[idxBL2 + 2] += errorB * 2 / 32;
+              }
+              if (x > 0) {
+                const idxBL = ((y + 1) * width + x - 1) * 3;
+                errors[idxBL] += errorR * 4 / 32;
+                errors[idxBL + 1] += errorG * 4 / 32;
+                errors[idxBL + 2] += errorB * 4 / 32;
+              }
+              const idxB = ((y + 1) * width + x) * 3;
+              errors[idxB] += errorR * 8 / 32;
+              errors[idxB + 1] += errorG * 8 / 32;
+              errors[idxB + 2] += errorB * 8 / 32;
+              if (x + 1 < width) {
+                const idxBR = ((y + 1) * width + x + 1) * 3;
+                errors[idxBR] += errorR * 4 / 32;
+                errors[idxBR + 1] += errorG * 4 / 32;
+                errors[idxBR + 2] += errorB * 4 / 32;
+              }
+              if (x + 2 < width) {
+                const idxBR2 = ((y + 1) * width + x + 2) * 3;
+                errors[idxBR2] += errorR * 2 / 32;
+                errors[idxBR2 + 1] += errorG * 2 / 32;
+                errors[idxBR2 + 2] += errorB * 2 / 32;
+              }
+            }
+          } else {
+            for (let c = 0; c < 3; c++) {
+              const oldPixel = data[idx + c] + errors[errIdx + c];
+              const quantized = Math.round((oldPixel / 255) * (levels - 1)) / (levels - 1);
+              const newPixel = Math.round(quantized * 255);
+              const error = oldPixel - newPixel;
+              data[idx + c] = newPixel;
+
+              // Distribute error (Burkes)
+              if (x + 1 < width) errors[(y * width + x + 1) * 3 + c] += error * 8 / 32;
+              if (x + 2 < width) errors[(y * width + x + 2) * 3 + c] += error * 4 / 32;
+              if (y + 1 < height) {
+                if (x > 1) errors[((y + 1) * width + x - 2) * 3 + c] += error * 2 / 32;
+                if (x > 0) errors[((y + 1) * width + x - 1) * 3 + c] += error * 4 / 32;
+                errors[((y + 1) * width + x) * 3 + c] += error * 8 / 32;
+                if (x + 1 < width) errors[((y + 1) * width + x + 1) * 3 + c] += error * 4 / 32;
+                if (x + 2 < width) errors[((y + 1) * width + x + 2) * 3 + c] += error * 2 / 32;
+              }
             }
           }
         }

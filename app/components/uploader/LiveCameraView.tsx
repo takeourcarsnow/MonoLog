@@ -319,7 +319,6 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               disabled={isCapturing || processing}
             >
               <X size={16} />
-              <span style={{ fontSize: '0.875rem' }}>None</span>
             </button>
             <button
               type="button"
@@ -329,7 +328,6 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               disabled={isCapturing || processing}
             >
               <Grid3x3 size={16} />
-              <span style={{ fontSize: '0.875rem' }}>Pixel</span>
             </button>
             <button
               type="button"
@@ -339,7 +337,6 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               disabled={isCapturing || processing}
             >
               <Sparkles size={16} />
-              <span style={{ fontSize: '0.875rem' }}>Dither</span>
             </button>
             <button
               type="button"
@@ -349,7 +346,6 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               disabled={isCapturing || processing}
             >
               <Type size={16} />
-              <span style={{ fontSize: '0.875rem' }}>ASCII</span>
             </button>
           </div>
 
@@ -398,10 +394,13 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 <span style={{ minWidth: 80 }}>Levels:</span>
                 <input
                   type="range"
-                  min="2"
+                  min={effectSettings.ditherMethod === 'ordered' ? "2" : "3"}
                   max="8"
                   value={effectSettings.ditherLevels || 3}
-                  onChange={(e) => setEffectSettings({ ...effectSettings, ditherLevels: parseInt(e.target.value) })}
+                  onChange={(e) => {
+                    const newLevels = parseInt(e.target.value);
+                    setEffectSettings({ ...effectSettings, ditherLevels: newLevels });
+                  }}
                   style={{ flex: 1 }}
                   disabled={isCapturing || processing}
                 />
@@ -431,7 +430,13 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 <button
                   type="button"
                   className={`btn mini ${effectSettings.ditherMethod === 'floyd-steinberg' ? 'active' : ''}`}
-                  onClick={() => setEffectSettings({ ...effectSettings, ditherMethod: 'floyd-steinberg' })}
+                  onClick={() => {
+                    const newSettings = { ...effectSettings, ditherMethod: 'floyd-steinberg' as const };
+                    if ((effectSettings.ditherLevels || 3) < 3) {
+                      newSettings.ditherLevels = 3;
+                    }
+                    setEffectSettings(newSettings);
+                  }}
                   disabled={isCapturing || processing || effectSettings.ditherPalette === 'gameboy'}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
@@ -449,7 +454,13 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 <button
                   type="button"
                   className={`btn mini ${effectSettings.ditherMethod === 'atkinson' ? 'active' : ''}`}
-                  onClick={() => setEffectSettings({ ...effectSettings, ditherMethod: 'atkinson' })}
+                  onClick={() => {
+                    const newSettings = { ...effectSettings, ditherMethod: 'atkinson' as const };
+                    if ((effectSettings.ditherLevels || 3) < 3) {
+                      newSettings.ditherLevels = 3;
+                    }
+                    setEffectSettings(newSettings);
+                  }}
                   disabled={isCapturing || processing}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >
@@ -458,7 +469,13 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 <button
                   type="button"
                   className={`btn mini ${effectSettings.ditherMethod === 'burkes' ? 'active' : ''}`}
-                  onClick={() => setEffectSettings({ ...effectSettings, ditherMethod: 'burkes' })}
+                  onClick={() => {
+                    const newSettings = { ...effectSettings, ditherMethod: 'burkes' as const };
+                    if ((effectSettings.ditherLevels || 3) < 3) {
+                      newSettings.ditherLevels = 3;
+                    }
+                    setEffectSettings(newSettings);
+                  }}
                   disabled={isCapturing || processing || effectSettings.ditherPalette === 'gameboy'}
                   style={{ fontSize: '0.75rem', padding: '4px 8px' }}
                 >

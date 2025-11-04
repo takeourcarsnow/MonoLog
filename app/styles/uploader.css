@@ -409,15 +409,15 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   align-items: center;
   gap: 8px;
   padding: 0;
-  border-radius: 50%;
+  border-radius: 0;
   background: transparent;
   border: none;
   color: var(--text);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   min-width: auto;
-  width: 48px;
-  height: 48px;
+  width: auto;
+  height: auto;
 }
 
 .drop-zone-camera-button:hover,
@@ -453,6 +453,8 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   border: 1px solid color-mix(in srgb, var(--primary), transparent 95%);
   color: var(--primary);
   transition: all 0.3s ease;
+  aspect-ratio: 1;
+  flex-shrink: 0;
 }
 
 .drop-zone-camera-button:hover .drop-zone-icon,

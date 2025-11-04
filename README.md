@@ -20,16 +20,17 @@ A modern, performant daily photo journal built with Next.js. Create a single pos
 
 ## 🚀 Tech Stack
 
-- **Framework**: Next.js 14.2.33 with App Router
-- **Language**: TypeScript 5.5.3
-- **Styling**: Tailwind CSS 3.4.10
+- **Framework**: Next.js 16.0.1 with App Router
+- **Language**: TypeScript 5.9.3
+- **UI Library**: React 19.2.0
+- **Styling**: Tailwind CSS 4.1.16
 - **Backend**: Supabase (PostgreSQL + Storage)
-- **State Management**: SWR 2.2.0 for server state
-- **Icons**: Lucide React 0.544.0
+- **State Management**: SWR 2.3.6 for server state
+- **Icons**: Lucide React 0.552.0
 - **Image Processing**: Sharp 0.34.4 for optimization
 - **PWA**: Service Worker with Workbox
-- **Testing**: Jest 29.7.0, Playwright 1.56.1
-- **Linting**: ESLint 8.57.0 with TypeScript rules
+- **Testing**: Jest 30.2.0, Playwright 1.56.1
+- **Linting**: ESLint 9.39.0 with TypeScript rules
 
 ## 📦 Installation
 
@@ -112,7 +113,7 @@ MonoLog is optimized for deployment on Vercel, the platform built by the creator
    - `SUPABASE_SERVICE_ROLE_KEY=your_service_role_key`
 3. **Deploy** - Vercel will automatically build and deploy your app
 
-For other platforms, ensure they support Next.js 14+ with Node.js runtime.
+For other platforms, ensure they support Next.js 16+ with Node.js runtime.
 
 ## 📱 Progressive Web App
 

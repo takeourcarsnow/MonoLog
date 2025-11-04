@@ -27,6 +27,8 @@ export async function POST(req: Request) {
         // lookup post owner
         const { data: post, error: postErr } = await sb.from('posts').select('id, user_id').eq('id', postId).limit(1).single();
         if (!post || postErr) return;
+        // Don't send notification if user is favoriting their own post
+        if (actorId === post.user_id) return;
         const notifId = uid();
         const notif = {
           id: notifId,

@@ -7,11 +7,15 @@ import { useRouter } from "next/navigation";
 import { api } from "@/src/lib/api";
 import { PostCard } from "./PostCard";
 import type { HydratedPost } from "@/src/lib/types";
+import { usePageScroll } from "@/src/lib/hooks/usePageScroll";
 
 export function PostView({ id, initialPost }: { id: string; initialPost?: HydratedPost | null }) {
   const [post, setPost] = useState<HydratedPost | null>(initialPost || null);
   const [loading, setLoading] = useState(!initialPost);
   const router = useRouter();
+  
+  // Enable page scrolling for the post view
+  usePageScroll('post-page-scroll');
 
   useEffect(() => {
     // If we already have initialPost, skip fetching

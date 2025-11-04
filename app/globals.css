@@ -53,7 +53,8 @@ html[class*="page-scroll"] {
 .content:has(.create-thread),
 .content:has(.feed),
 .content:has(.search-page),
-.content:has(.notifications) {
+.content:has(.notifications),
+.content:has(.post-view-wrap) {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;
@@ -113,7 +114,9 @@ html[class*="search-page-scroll"] .content,
 body[class*="communities-page-scroll"] .content,
 html[class*="communities-page-scroll"] .content,
 body[class*="notifications-page-scroll"] .content,
-html[class*="notifications-page-scroll"] .content {
+html[class*="notifications-page-scroll"] .content,
+body[class*="post-page-scroll"] .content,
+html[class*="post-page-scroll"] .content {
   overflow: auto !important;
   height: auto !important;
   min-height: auto !important;

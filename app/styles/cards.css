@@ -804,7 +804,13 @@
 /* Caption/actions wrap: animate collapse/fade to avoid sudden content jump when editor opens */
 .caption-wrap {
   overflow: hidden;
-  max-height: 1000px; /* large default so visible state expands to content */
+  /* Use a very large max-height so long mobile captions don't get clipped.
+     On narrow screens captions wrap to many more lines than desktop; the
+     previous 1000px cap could truncate the bottom of the card (actions,
+     spotify, comments) once expanded. Keeping a finite but huge value
+     preserves the smooth editor-open collapse animation while effectively
+     behaving like “no limit” for real-world content sizes. */
+  max-height: 9999px; /* was 1000px */
   opacity: 1;
   transition: max-height 260ms var(--transition-mid), opacity 220ms var(--transition-mid);
 }

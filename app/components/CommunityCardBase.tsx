@@ -55,20 +55,23 @@ export default function CommunityCardBase({
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 max-w-[40ch]">{description}</p>
 
         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
-          <span className="inline-flex items-center gap-1" title={`${memberCount || 0} members`} aria-label={`${memberCount || 0} members`}>
+          <span className="inline-flex items-center gap-2" title={`${memberCount || 0} members`} aria-label={`${memberCount || 0} members`}>
             <Users size={14} />
-            <span>{memberCount || 0}</span>
+            {"\u00A0"}
+            <span className="ml-0.5">{memberCount || 0}</span>{"\u00A0"}
           </span>
 
-          <span className="inline-flex items-center gap-1" title={`${threadCount || 0} threads`} aria-label={`${threadCount || 0} threads`}>
+          <span className="inline-flex items-center gap-2" title={`${threadCount || 0} threads`} aria-label={`${threadCount || 0} threads`}>
             <MessageSquare size={14} />
-            <span>{threadCount || 0}</span>
+            {"\u00A0"}
+            <span className="ml-0.5">{threadCount || 0}</span>{"\u00A0"}
           </span>
 
           {lastActivity && (
-            <span className="inline-flex items-center gap-1" title={`${formatRelative(lastActivity)}`} aria-label={`${formatRelative(lastActivity)}`}>
+            <span className="inline-flex items-center gap-2" title={`${formatRelative(lastActivity)}`} aria-label={`${formatRelative(lastActivity)}`}>
               <Clock size={14} />
-              <span>{formatRelative(lastActivity)}</span>
+              {"\u00A0"}
+              <span className="ml-0.5">{formatRelative(lastActivity)}</span>{"\u00A0"}
             </span>
           )}
 

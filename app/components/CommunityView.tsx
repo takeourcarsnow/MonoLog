@@ -276,18 +276,21 @@ export function CommunityView() {
           </p>
 
           <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
-            <span className="inline-flex items-center gap-1" title={`${community.memberCount || 0} members`} aria-label={`${community.memberCount || 0} members`}>
+            <span className="inline-flex items-center gap-2" title={`${community.memberCount || 0} members`} aria-label={`${community.memberCount || 0} members`}>
               <Users size={14} />
-              <span>{community.memberCount || 0}</span>
+              {"\u00A0"}
+              <span>{community.memberCount || 0}</span>{"\u00A0"}
             </span>
 
-            <span className="inline-flex items-center gap-1" title={`${community.threadCount || 0} threads`} aria-label={`${community.threadCount || 0} threads`}>
+            <span className="inline-flex items-center gap-2" title={`${community.threadCount || 0} threads`} aria-label={`${community.threadCount || 0} threads`}>
               <MessageSquare size={14} />
-              <span>{community.threadCount || 0}</span>
+              {"\u00A0"}
+              <span>{community.threadCount || 0}</span>{"\u00A0"}
             </span>
 
-            <span className="inline-flex items-center gap-1" title={`@${community.creator.username}`} aria-label={`${community.creator.username}`}>
+            <span className="inline-flex items-center gap-2" title={`@${community.creator.username}`} aria-label={`${community.creator.username}`}>
               <UserIcon size={14} />
+              {"\u00A0"}
               <span>@{community.creator.username}</span>
             </span>
           </div>
@@ -375,18 +378,18 @@ export function CommunityView() {
                     {thread.content}
                   </p>
                   <div className="flex items-center justify-center gap-4 mt-2 text-sm text-gray-500">
-                    <span className="inline-flex items-center gap-1 truncate" title={`@${thread.user.username}`} aria-label={`${thread.user.username}`}>
-                      <UserIcon size={14} />
-                      <span className="truncate">@{thread.user.username}</span>
+                    <span className="inline-flex items-center gap-2 truncate" title={`@${thread.user.username}`} aria-label={`${thread.user.username}`}>
+                      <UserIcon size={14} />{"\u00A0"}
+                      <span className="truncate">@{thread.user.username}</span>{"\u00A0"}
                     </span>
 
-                    <span className="inline-flex items-center gap-1" title={`${thread.replyCount || 0}`} aria-label={`${thread.replyCount || 0}`}>
-                      <MessageSquare size={14} />
-                      <span>{thread.replyCount || 0}</span>
+                    <span className="inline-flex items-center gap-2" title={`${thread.replyCount || 0}`} aria-label={`${thread.replyCount || 0}`}>
+                      <MessageSquare size={14} />{"\u00A0"}
+                      <span>{thread.replyCount || 0}</span>{"\u00A0"}
                     </span>
 
-                    <span className="inline-flex items-center gap-1" title={`${thread.createdAt}`} aria-label={`${thread.createdAt}`}>
-                      <Clock size={14} />
+                    <span className="inline-flex items-center gap-2" title={`${thread.createdAt}`} aria-label={`${thread.createdAt}`}>
+                      <Clock size={14} />{"\u00A0"}
                       <TimeDisplay date={thread.createdAt} />
                     </span>
                   </div>

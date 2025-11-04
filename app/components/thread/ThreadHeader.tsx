@@ -63,11 +63,11 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
             </div>
             <span className="inline-flex items-center gap-2">
               <Clock size={14} className="mr-1" />{"\u00A0"}
-              <TimeDisplay date={thread.createdAt} />
+              <TimeDisplay date={thread.createdAt} />{"\u00A0"}
             </span>
-            <span className="flex items-center gap-1">
-              <MessageSquare size={14} />
-              {thread.replyCount || 0}
+            <span className="flex items-center gap-2">
+              <MessageSquare size={14} />{"\u00A0"}
+              <span>{thread.replyCount || 0}</span>{"\u00A0"}
             </span>
           </div>
         </div>

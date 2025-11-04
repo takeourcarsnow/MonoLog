@@ -216,6 +216,12 @@
 /* Content while preloader is active */
 .preloader-active body { overflow: hidden; }
 
+/* Hide content immediately when preloader-active class is added to prevent FOUC */
+.preloader-active #app-root {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* Ensure the navigation (and header if present outside .app-content) also
    blurs while the preloader is active so they unblur in sync with the page
    content. Define the same transition on the nav/header so the removal of
@@ -224,14 +230,28 @@
 .preloader-active .tabbar,
 .preloader-active .header {
   pointer-events: none; /* keep nav non-interactive while preloading */
+  opacity: 0;
+  visibility: hidden;
 }
 
 /* Hide navbar initially, show after preloader finishes */
 .tabbar {
   opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms ease, visibility 200ms ease;
 }
 .preloader-finished .tabbar {
   opacity: 1;
+  visibility: visible;
+}
+
+/* Ensure #app-root transitions back to visible when preloader finishes */
+#app-root {
+  transition: opacity 200ms ease, visibility 200ms ease;
+}
+.preloader-finished #app-root {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* When .preloader-active is removed the filter transition back to none creates the unblur effect */

@@ -125,13 +125,15 @@
      the `.preloader-active` class animates the change (otherwise the
      transition is removed at the same moment the class is removed and it
      snaps). Use a slightly longer duration for a subtle unblur. */
-  transition: filter 1000ms cubic-bezier(.2,.65,.2,1);
+  transition: filter 1000ms cubic-bezier(.2,.65,.2,1), opacity 400ms ease, visibility 400ms ease;
   will-change: filter;
 }
 
 .preloader-active .app-content {
   filter: blur(var(--preloader-blur)) saturate(0.95);
   pointer-events: none; /* prevent interaction with app during preload */
+  opacity: 0;
+  visibility: hidden;
 }
 .preloader-active body { overflow: hidden; }
 
@@ -140,13 +142,22 @@
    content. Define the same transition on the nav/header so the removal of
    the `.preloader-active` class animates the filter change. */
 .header {
-  transition: filter 1000ms cubic-bezier(.2,.65,.2,1);
+  transition: filter 1000ms cubic-bezier(.2,.65,.2,1), opacity 400ms ease, visibility 400ms ease;
   will-change: filter;
 }
 
 .preloader-active .header {
   filter: blur(var(--preloader-blur)) saturate(0.95);
   pointer-events: none; /* keep nav non-interactive while preloading */
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Ensure content becomes visible when preloader finishes */
+.preloader-finished .app-content,
+.preloader-finished .header {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* When .preloader-active is removed the filter transition back to none creates the unblur effect */

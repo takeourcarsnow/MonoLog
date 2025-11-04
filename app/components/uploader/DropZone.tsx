@@ -4,6 +4,7 @@ import LogoLoader from "./LogoLoader";
 interface DropZoneProps {
   processing: boolean;
   onCameraSelect: () => void;
+  onCameraEffectsSelect: () => void;
   onFileSelect: () => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: (e: React.DragEvent) => void;
@@ -14,6 +15,7 @@ interface DropZoneProps {
 export function DropZone({
   processing,
   onCameraSelect,
+  onCameraEffectsSelect,
   onFileSelect,
   onDragOver,
   onDragLeave,
@@ -29,25 +31,48 @@ export function DropZone({
       )}
 
       <div className="drop-zone-content" style={{ opacity: processing ? 1 : 1, pointerEvents: processing ? 'none' : 'auto', filter: processing ? 'blur(1px)' : 'none' }}>
-        <button
-          type="button"
-          className="drop-zone-camera-button"
-          aria-label="Take photo with camera"
-          onClick={() => { if (!processing) onCameraSelect(); }}
-          disabled={processing}
-          title="Take photo with camera"
-        >
-          <div className="drop-zone-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        </button>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <button
+            type="button"
+            className="drop-zone-camera-button"
+            aria-label="Take photo with camera"
+            onClick={() => { if (!processing) onCameraSelect(); }}
+            disabled={processing}
+            title="Quick camera (no effects)"
+            style={{ position: 'relative' }}
+          >
+            <div className="drop-zone-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span style={{ fontSize: '0.75rem', marginTop: 4 }}>Camera</span>
+          </button>
+
+          <button
+            type="button"
+            className="drop-zone-camera-button"
+            aria-label="Take photo with effects"
+            onClick={() => { if (!processing) onCameraEffectsSelect(); }}
+            disabled={processing}
+            title="Camera with real-time effects"
+            style={{ position: 'relative' }}
+          >
+            <div className="drop-zone-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M4 7h3l2-2h6l2 2h3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M17 3l2 2m0 0l-2 2m2-2h-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span style={{ fontSize: '0.75rem', marginTop: 4 }}>Effects</span>
+          </button>
+        </div>
 
         <div className="drop-zone-text">
           <h3 className="drop-zone-title">Take a photo</h3>
-          <p className="drop-zone-subtitle">or select it from your device</p>
+          <p className="drop-zone-subtitle">or select from your device</p>
         </div>
 
         <button

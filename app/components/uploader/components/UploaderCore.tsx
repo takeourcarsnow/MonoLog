@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { preloadOverlayThumbnails } from '../../imageEditor/overlaysPreload';
 import { useAuth } from "@/src/lib/hooks/useAuth";
 import { CONFIG } from "@/src/lib/config";
@@ -15,11 +15,15 @@ import { initFocusDebug } from "../focusDebug";
 import { ImageEditorModal } from "./ImageEditorModal";
 import { PhotoActionRow } from "./PhotoActionRow";
 import { SizeWarning } from "./SizeWarning";
+import { LiveCameraView } from "../LiveCameraView";
 
 export function UploaderCore() {
   // Dev helper to trace focus events; no-op in production
   initFocusDebug();
   const { me, setMe } = useAuth();
+
+  // State for live camera with effects
+  const [liveCameraOpen, setLiveCameraOpen] = useState(false);
 
   const {
     // State
@@ -168,8 +172,28 @@ export function UploaderCore() {
     try { fileInputRef.current?.click(); } catch (_) {}
   };
 
+  // Handle camera capture from live camera view
+  const handleCameraCapture = async (imageDataUrl: string) => {
+    setLiveCameraOpen(false);
+    
+    // Convert data URL to File
+    const response = await fetch(imageDataUrl);
+    const blob = await response.blob();
+    const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+    
+    await handleFile(file);
+  };
+
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''} ${justDiscarded ? 'just-discarded' : ''} ${processing ? 'processing' : ''}`}>
+      {/* Live camera with effects */}
+      <LiveCameraView
+        isOpen={liveCameraOpen}
+        onClose={() => setLiveCameraOpen(false)}
+        onCapture={handleCameraCapture}
+        processing={processing}
+      />
+
       <ImageEditorModal
         editing={editing}
         editingIndex={editingIndex}
@@ -217,9 +241,21 @@ export function UploaderCore() {
         <DropZone
           processing={processing}
           onCameraSelect={() => {
+            // Direct camera access (no effects) - use traditional file input
             fileActionRef.current = 'append';
             try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
             try { cameraInputRef.current?.click(); } catch (_) {}
+          }}
+          onCameraEffectsSelect={() => {
+            // Live camera with effects modal
+            if (navigator.mediaDevices) {
+              setLiveCameraOpen(true);
+            } else {
+              // Fallback to file input if getUserMedia not available
+              fileActionRef.current = 'append';
+              try { if (cameraInputRef.current) (cameraInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
+              try { cameraInputRef.current?.click(); } catch (_) {}
+            }
           }}
           onFileSelect={() => {
             fileActionRef.current = 'append';

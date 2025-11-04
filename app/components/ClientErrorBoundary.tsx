@@ -29,6 +29,12 @@ export default class ClientErrorBoundary extends React.Component<React.PropsWith
   state: State = { error: null, info: null, visibleStack: false };
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
+    // Ignore benign browser ResizeObserver errors that can surface during layout
+    // These are Chrome/Safari quirks and not actionable app errors
+    const msg = error?.message || '';
+    if (/ResizeObserver loop (limit exceeded|completed with undelivered notifications)/i.test(msg)) {
+      return;
+    }
     const payload = {
       type: 'react-error',
       message: error?.message,
@@ -105,6 +111,10 @@ function ClientErrorHandlerWrapper({ children }: { children: React.ReactNode }) 
 
     const handleError = (ev: ErrorEvent) => {
       try {
+        // Filter out benign ResizeObserver errors that can be emitted during layout
+        if (typeof ev.message === 'string' && /ResizeObserver loop (limit exceeded|completed with undelivered notifications)/i.test(ev.message)) {
+          return;
+        }
         const payload = {
           type: 'window-error',
           message: ev.message,
@@ -127,6 +137,11 @@ function ClientErrorHandlerWrapper({ children }: { children: React.ReactNode }) 
     const handleRejection = (ev: PromiseRejectionEvent) => {
       try {
         const reason = ev.reason;
+        // Some browsers wrap ResizeObserver issues as promise rejections; guard as well
+        const reasonMsg = typeof reason === 'string' ? reason : (reason && reason.message) ? String(reason.message) : '';
+        if (/ResizeObserver loop (limit exceeded|completed with undelivered notifications)/i.test(reasonMsg)) {
+          return;
+        }
         const payload = {
           type: 'unhandledrejection',
           reason: typeof reason === 'object' ? JSON.stringify(reason, Object.getOwnPropertyNames(reason)) : String(reason),

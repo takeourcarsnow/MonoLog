@@ -172,7 +172,10 @@
 }
 
 .caption-content.expanded {
-  max-height: 800px; /* large enough for most captions */
+  /* Ensure expanded captions in week review are never clipped. Use a very
+     large max-height to keep the transition while effectively removing the
+     cap for real content sizes. */
+  max-height: 9999px;
   opacity: 1;
 }
 

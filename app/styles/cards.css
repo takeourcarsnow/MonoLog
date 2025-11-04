@@ -678,7 +678,10 @@
 }
 
 .caption-content.expanded {
-  max-height: 800px; /* large enough for most captions */
+  /* Use a very large max-height so extremely long captions are never clipped
+     when expanded. Keeping a finite value preserves the smooth max-height
+     animation while effectively behaving like "no limit" for real content. */
+  max-height: 9999px;
   opacity: 1;
 }
 

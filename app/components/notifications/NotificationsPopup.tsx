@@ -131,8 +131,7 @@ export function NotificationsPopup({ open, onClose }: Props) {
             <div className="text-center py-8 notifications-empty-state">
               <Bell size={48} style={{ color: 'var(--muted)', marginBottom: '12px' }} />
               <h3 style={{ fontSize: '1.1rem', margin: '0 0 8px 0' }}>Stay Connected</h3>
-              <p style={{ color: 'var(--text-secondary)', margin: '0 0 16px 0', maxWidth: 320 }}>Sign in to get notified about likes, comments, mentions, and more.</p>
-              <Link href="/explore" onClick={onClose} className="btn">Explore posts</Link>
+              <p style={{ color: 'var(--text-secondary)', margin: '0 0 16px 0', textAlign: 'center' }}>Sign in to get notified about likes, comments, mentions, and more.</p>
             </div>
           ) : loading ? (
             <div className="text-center py-8" style={{ paddingTop: '60px' }}>

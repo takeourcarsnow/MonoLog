@@ -78,7 +78,6 @@ export default function CommunitiesPage() {
               </div>
               <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>Join Communities</h2>
               <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Sign in to discover and join communities, follow conversations, and connect with people who share your interests.</p>
-              <Link href="/explore" className="btn" style={{ marginTop: 8 }}>Explore posts</Link>
             </div>
           </div>
         </div>

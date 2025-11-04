@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { getSupabaseClient } from "@/src/lib/api";
+import { getSupabaseClient } from "@/lib/api";
 
 export function NotificationListener() {
   // No-op: Toasts and active client notifications are removed.

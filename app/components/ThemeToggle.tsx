@@ -1,5 +1,5 @@
 "use client";
-import { currentTheme, toggleTheme } from "@/src/lib/theme";
+import { currentTheme, toggleTheme } from "@/lib/theme";
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "./Button";

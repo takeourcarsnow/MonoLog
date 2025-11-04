@@ -2,10 +2,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { Compass } from "lucide-react";
 import { FeedPage } from "./FeedPage";
-import { useAuthChange } from "@/src/lib/hooks/useAuthChange";
+import { useAuthChange } from "@/lib/hooks/useAuthChange";
 
 export function ExploreView() {
   const fetchExploreFeed = useCallback((opts: { limit: number; before?: string }) => api.getExploreFeedPage(opts), []);

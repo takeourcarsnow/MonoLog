@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { isInAppBrowser } from '@/src/lib/detectWebview';
+import { isInAppBrowser } from '@/lib/detectWebview';
 
 type State = {
   error: Error | null;

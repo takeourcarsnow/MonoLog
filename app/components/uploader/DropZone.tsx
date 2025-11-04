@@ -1,4 +1,4 @@
-import { CONFIG } from "@/src/lib/config";
+import { CONFIG } from "@/lib/config";
 import LogoLoader from "./LogoLoader";
 
 interface DropZoneProps {

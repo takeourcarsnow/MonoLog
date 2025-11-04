@@ -2,7 +2,7 @@ import { CaptionTextarea } from "./CaptionTextarea";
 import { SpotifyInput } from "./SpotifyInput";
 import { ExifInputs } from "./ExifInputs";
 import { WeatherLocationInputs } from "./WeatherLocationInputs";
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 
 interface CaptionInputProps {
   caption: string;

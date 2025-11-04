@@ -1,4 +1,4 @@
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 
 // Simple in-memory cache for calendar data and loaded image tracking.
 // Persists for the lifetime of the page (until reload).

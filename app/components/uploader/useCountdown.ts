@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 
 export function useCountdown() {
   const [canPost, setCanPost] = useState<boolean | null>(null);

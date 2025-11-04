@@ -1,7 +1,7 @@
 import React from "react";
 import { Twitter, Instagram, Globe, Facebook } from "lucide-react";
 import { SpotifyIcon } from "../uploader/SpotifyIcon";
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 
 function maybeUrl(platform: string, val?: string): string | undefined {
   if (!val) return undefined;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
-import { getClientIp, makeWeakETag } from '@/src/lib/api/utils';
+import { getClientIp, makeWeakETag } from '@/lib/api/utils';
 
 export async function GET(req: Request) {
   try {

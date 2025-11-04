@@ -1,5 +1,5 @@
 import { lazy, Suspense, RefObject } from "react";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 
 const Editor = lazy(() => import("./Editor").then(mod => ({ default: mod.Editor })));
 

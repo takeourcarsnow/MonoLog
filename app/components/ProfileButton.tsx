@@ -2,9 +2,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { api, getSupabaseClient } from "@/src/lib/api";
+import { api, getSupabaseClient } from "@/lib/api";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import AvatarReminderModal from "./AvatarReminderModal";
 

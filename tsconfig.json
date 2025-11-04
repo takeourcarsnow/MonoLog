@@ -43,6 +43,8 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "backups/**",
+    "src/lib__migrated_*/**"
   ]
 }

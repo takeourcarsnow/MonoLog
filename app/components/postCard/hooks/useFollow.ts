@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { api } from "@/src/lib/api";
-import { useToggle } from "@/src/lib/hooks/useToggle";
+import { api } from "@/lib/api";
+import { useToggle } from "@/lib/hooks/useToggle";
 
 export function useFollow(userId: string) {
   const [followAnim, setFollowAnim] = useState<'following-anim' | 'unfollow-anim' | null>(null);

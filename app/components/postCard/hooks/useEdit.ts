@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { preloadOverlayThumbnails } from "../../imageEditor/overlaysPreload";
-import { api } from "@/src/lib/api";
-import type { HydratedPost } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { HydratedPost } from "@/lib/types";
 
 export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => void) {
   const [editing, _setEditing] = useState(false);

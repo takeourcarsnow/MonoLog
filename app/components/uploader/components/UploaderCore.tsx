@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { preloadOverlayThumbnails } from '../../imageEditor/overlaysPreload';
-import { useAuth } from "@/src/lib/hooks/useAuth";
-import { CONFIG } from "@/src/lib/config";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { CONFIG } from "@/lib/config";
 import { DropZone } from "../DropZone";
 import { FileInputs } from "../FileInputs";
 import { PreviewSection } from "../PreviewSection";

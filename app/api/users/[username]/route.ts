@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { mapProfileToUser } from '@/src/lib/api/utils';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { mapProfileToUser } from '@/lib/api/utils';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
 
 function looksLikeUuid(s: string) {

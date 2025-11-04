@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { Button } from "@/app/components/Button";
 import Link from "next/link";
-import type { HydratedCommunity } from "@/src/lib/types";
+import type { HydratedCommunity } from "@/lib/types";
 import { AuthRequired } from "./AuthRequired";
 import { AuthForm } from "./AuthForm";
-import { useCommunity } from "@/src/lib/hooks/useCommunity";
-import { useAuthState } from "@/src/lib/hooks/useAuthState";
+import { useCommunity } from "@/lib/hooks/useCommunity";
+import { useAuthState } from "@/lib/hooks/useAuthState";
 
 export function CreateThreadView() {
   const params = useParams();

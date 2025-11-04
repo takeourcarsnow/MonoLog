@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { lazy } from "react";
-import { RESERVED_ROUTES } from "@/src/lib/types";
-import { isUsernameRoute } from "@/src/lib/routeUtils";
+import { RESERVED_ROUTES } from "@/lib/types";
+import { isUsernameRoute } from "@/lib/routeUtils";
 
 // Lazy load view components to reduce initial bundle size
 const FeedView = lazy(() => import("./FeedView").then(mod => ({ default: mod.FeedView })));

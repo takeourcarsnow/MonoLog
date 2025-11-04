@@ -1,4 +1,4 @@
-import { RESERVED_ROUTES } from "@/src/lib/types";
+import { RESERVED_ROUTES } from "@/lib/types";
 
 export function isUsernameRoute(pathname: string): boolean {
   const pathSegments = pathname.split('/').filter(Boolean);

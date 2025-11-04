@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useDebouncedValue } from '@/src/lib/hooks/useDebouncedValue';
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import { Image as ImageIcon, User, Users as UsersIcon, Search, MapPin, Clock } from 'lucide-react';
 import Image from 'next/image';
 import { useCurrentUser } from '@/lib/hooks';
-import { getAccessToken, getSupabaseClient } from '@/src/lib/api/client';
+import { getAccessToken, getSupabaseClient } from '@/lib/api/client';
 import { SpinningLogo } from './SpinningLogo';
 import TimeDisplay from './TimeDisplay';
 

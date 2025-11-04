@@ -2,12 +2,12 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { getSlideState, setSlideState } from '@/src/lib/slideStateCache';
-import type { HydratedPost } from "@/src/lib/types";
+import { getSlideState, setSlideState } from '@/lib/slideStateCache';
+import type { HydratedPost } from "@/lib/types";
 import { PostCard } from "./PostCard";
 import { ViewToggle } from "./ViewToggle";
-import { useFeed } from "@/src/lib/hooks/useFeed";
-import { usePullToRefresh } from "@/src/lib/hooks/usePullToRefresh";
+import { useFeed } from "@/lib/hooks/useFeed";
+import { usePullToRefresh } from "@/lib/hooks/usePullToRefresh";
 import { PullToRefreshWrapper } from "./PullToRefresh";
 import Link from "next/link";
 import { User as UserIcon } from "lucide-react";
@@ -15,14 +15,14 @@ import { InfiniteScrollLoader } from "./LoadingIndicator";
 import { SkeletonCard } from "./Skeleton";
 import { PostCardSkeleton } from "./SkeletonCard";
 import { GridView } from "./GridView";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { useAuth } from "@/lib/hooks/useAuth";
 import dynamic from "next/dynamic";
 import { FeedEmptyState } from "./FeedEmptyState";
 import { FeedListView } from "./FeedListView";
 import { FeedGridView } from "./FeedGridView";
-import { useScrollPersistence } from "@/src/lib/hooks/useScrollPersistence";
-import { useBodyClass } from "@/src/lib/hooks/useBodyClass";
-import { useAuthChange } from "@/src/lib/hooks/useAuthChange";
+import { useScrollPersistence } from "@/lib/hooks/useScrollPersistence";
+import { useBodyClass } from "@/lib/hooks/useBodyClass";
+import { useAuthChange } from "@/lib/hooks/useAuthChange";
 
 function useViewTransition(viewStorageKey: string) {
   const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");

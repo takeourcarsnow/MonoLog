@@ -1,14 +1,14 @@
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { uid } from '@/src/lib/id';
-import { logger } from '@/src/lib/logger';
-import { parseMentions } from '@/src/lib/mentions';
-import { parseHashtags } from '@/src/lib/hashtags';
-import { clearServerCachePrefix } from '@/src/lib/serverCache';
-import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
-import { strictRateLimiter } from '@/src/lib/rateLimiter';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { uid } from '@/lib/id';
+import { logger } from '@/lib/logger';
+import { parseMentions } from '@/lib/mentions';
+import { parseHashtags } from '@/lib/hashtags';
+import { clearServerCachePrefix } from '@/lib/serverCache';
+import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
+import { strictRateLimiter } from '@/lib/rateLimiter';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
 import { z } from 'zod';
-import { checkRateLimitResponse } from '@/src/lib/api/utils';
+import { checkRateLimitResponse } from '@/lib/api/utils';
 
 const createPostSchema = z.object({
   imageUrls: z.array(z.string()).optional(),

@@ -1,7 +1,7 @@
 import { PostCard } from "./PostCard";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
 import Link from "next/link";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 import { FeedUnauthCTA } from "./FeedUnauthCTA";
 
 interface FeedListViewProps {

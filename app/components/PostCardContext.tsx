@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from "react";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 
 interface PostCardState {
   post: HydratedPost;

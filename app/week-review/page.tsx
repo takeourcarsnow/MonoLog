@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { api } from "@/src/lib/api";
-import { renderCaption } from "@/src/lib/hashtags";
+import { api } from "@/lib/api";
+import { renderCaption } from "@/lib/hashtags";
 import { Calendar, Image, MessageCircle, ChevronDown, ChartBar } from "lucide-react";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
-import type { WeekReviewStats } from "@/src/lib/types";
+import type { WeekReviewStats } from "@/lib/types";
 import { StatCard } from "@/app/components/StatCard";
 
 export default function WeekReviewPage() {

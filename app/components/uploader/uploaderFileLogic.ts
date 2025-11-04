@@ -1,6 +1,6 @@
 "use client";
 
-import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
+import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import exifr from 'exifr';
 
 export function createFileHandlers(

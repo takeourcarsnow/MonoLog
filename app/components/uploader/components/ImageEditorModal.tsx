@@ -1,7 +1,7 @@
 "use client";
 
 import { lazy, Suspense } from "react";
-import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
+import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import Portal from "../../Portal";
 
 // Lazy load the heavy ImageEditor component

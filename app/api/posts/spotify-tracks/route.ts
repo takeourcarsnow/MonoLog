@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { mapRowToHydratedPost } from '@/src/lib/api/utils';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { mapRowToHydratedPost } from '@/lib/api/utils';
 
 export async function GET(req: Request) {
   try {

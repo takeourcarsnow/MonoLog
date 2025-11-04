@@ -1,5 +1,5 @@
-import type { User } from "@/src/lib/types";
-import { RESERVED_ROUTES } from "@/src/lib/types";
+import type { User } from "@/lib/types";
+import { RESERVED_ROUTES } from "@/lib/types";
 
 export const validateUsername = (username: string): string | null => {
   const uname = username.trim();

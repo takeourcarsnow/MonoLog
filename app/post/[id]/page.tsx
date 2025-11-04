@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import type { HydratedPost } from '@/src/lib/types';
-import { DEFAULT_AVATAR } from '@/src/lib/api/utils';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import type { HydratedPost } from '@/lib/types';
+import { DEFAULT_AVATAR } from '@/lib/api/utils';
 
 // Lazy load the PostView component
 const PostView = lazy(() => import("@/app/components/PostView").then(mod => ({ default: mod.PostView })));

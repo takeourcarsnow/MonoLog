@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { parseMentions } from '@/src/lib/mentions';
-import { parseHashtags } from '@/src/lib/hashtags';
-import { uid } from '@/src/lib/id';
-import { clearServerCachePrefix } from '@/src/lib/serverCache';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { parseMentions } from '@/lib/mentions';
+import { parseHashtags } from '@/lib/hashtags';
+import { uid } from '@/lib/id';
+import { clearServerCachePrefix } from '@/lib/serverCache';
 
 export async function POST(req: Request) {
   try {

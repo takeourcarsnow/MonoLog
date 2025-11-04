@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { api } from "@/src/lib/api";
-import { CONFIG } from "@/src/lib/config";
+import { api } from "@/lib/api";
+import { CONFIG } from "@/lib/config";
 
 export function createPublishHandler(
   toast: { show: (msg: unknown) => void } | undefined,

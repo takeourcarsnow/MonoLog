@@ -2,7 +2,7 @@ import { memo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LazyImage } from "./LazyImage";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 import { InfiniteScrollLoader } from "./LoadingIndicator";
 
 interface GridViewProps {

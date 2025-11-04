@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { mapRowToHydratedPost, makeWeakETag } from '@/src/lib/api/utils';
-import { getServerCache, setServerCache } from '@/src/lib/serverCache';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { mapRowToHydratedPost, makeWeakETag } from '@/lib/api/utils';
+import { getServerCache, setServerCache } from '@/lib/serverCache';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
 
 export async function GET(req: Request, context: any) {

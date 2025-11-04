@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Combobox } from "../Combobox";
-import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, getMergedExifPresets } from "@/src/lib/exifPresets";
+import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, getMergedExifPresets } from "@/lib/exifPresets";
 import { Camera, Monitor, Film } from "lucide-react";
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 
 // Small scoped selector component for picking between All/Digital/Film cameras
 function CameraScopeSelector({ camera, setCamera, disabled, onFocus, onBlur, expanded, user, removableOptions, onRemoveOption, inputRef }: { camera?: string; setCamera?: (c: string) => void; disabled?: boolean; onFocus?: () => void; onBlur?: () => void; expanded?: boolean; user?: User | null; removableOptions?: string[]; onRemoveOption?: (option: string) => void; inputRef?: React.RefObject<HTMLInputElement | null> }) {

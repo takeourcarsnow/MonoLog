@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { slugify } from '@/src/lib/utils';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { slugify } from '@/lib/utils';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
-import { makeWeakETag } from '@/src/lib/api/utils';
+import { makeWeakETag } from '@/lib/api/utils';
 
 async function getReplyCount(sb: any, threadId: string): Promise<number> {
   const { count } = await sb

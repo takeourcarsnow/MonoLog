@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ProfileView } from "@/app/components/ProfileView";
-import { supabaseApi } from "@/src/lib/api/supabase";
+import { supabaseApi } from "@/lib/api/supabase";
 import { notFound } from "next/navigation";
 import { SkeletonCard, SkeletonTile } from "@/app/components/Skeleton";
-import { RESERVED_ROUTES } from "@/src/lib/types";
+import { RESERVED_ROUTES } from "@/lib/types";
 
 export const dynamic = 'force-dynamic';
 

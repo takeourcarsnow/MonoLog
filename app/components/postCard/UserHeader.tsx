@@ -2,9 +2,9 @@
 
 import { memo, useRef, useState, useEffect } from "react";
 import { preloadOverlayThumbnails } from "../imageEditor/overlaysPreload";
-import type { HydratedPost } from "@/src/lib/types";
-import { api } from "@/src/lib/api";
-import { formatRelative } from "@/src/lib/date";
+import type { HydratedPost } from "@/lib/types";
+import { api } from "@/lib/api";
+import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import Image from "next/image";
 import { OptimizedImage } from "@/app/components/OptimizedImage";

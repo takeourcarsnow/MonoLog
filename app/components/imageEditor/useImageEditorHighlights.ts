@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { throttle } from '@/src/lib/utils';
+import { throttle } from '@/lib/utils';
 
 export function useImageEditorHighlights(
   selectedCategory: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'lightleak' | 'overlays',

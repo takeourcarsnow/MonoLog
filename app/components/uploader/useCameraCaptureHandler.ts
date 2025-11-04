@@ -1,4 +1,4 @@
-import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
+import { compressImage, approxDataUrlBytes } from "@/lib/image";
 
 interface UseCameraCaptureHandlerProps {
   dataUrls: string[];

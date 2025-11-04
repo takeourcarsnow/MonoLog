@@ -1,4 +1,4 @@
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 
 interface ProfileStaticViewProps {
   user: User;

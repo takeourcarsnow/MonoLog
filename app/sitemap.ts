@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
-import { api } from '@/src/lib/api';
-import { CONFIG } from '@/src/lib/config';
+import { api } from '@/lib/api';
+import { CONFIG } from '@/lib/config';
 
 // Generate a sitemap containing static pages plus dynamic user profiles and
 // recent public posts. This runs on the server and uses the server-side API

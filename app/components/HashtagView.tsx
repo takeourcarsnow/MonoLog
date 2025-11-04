@@ -2,7 +2,7 @@
 "use client";
 
 import { useCallback, memo } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { Hash } from "lucide-react";
 import { FeedPage } from "./FeedPage";
 

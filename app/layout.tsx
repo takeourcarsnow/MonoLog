@@ -5,9 +5,9 @@ import type { Metadata } from "next";
 import React from "react";
 import dynamic from "next/dynamic";
 import { Header } from '@/app/components/Header';
-import { CONFIG } from '@/src/lib/config';
+import { CONFIG } from '@/lib/config';
 import ClientErrorBoundary from '@/app/components/ClientErrorBoundary';
-import { isInAppBrowser } from '@/src/lib/detectWebview';
+import { isInAppBrowser } from '@/lib/detectWebview';
 import { SWRConfig } from 'swr';
 import ClientInit from '@/app/components/ClientInit';
 

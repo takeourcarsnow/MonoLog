@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Flag } from "lucide-react";
-import { getClient, getAccessToken } from '@/src/lib/api/client';
+import { getClient, getAccessToken } from '@/lib/api/client';
 
 interface ReportButtonProps {
   postId?: string;

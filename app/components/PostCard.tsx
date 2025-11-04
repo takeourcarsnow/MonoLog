@@ -2,7 +2,7 @@
 "use client";
 
 import { memo, useState, useRef, lazy, Suspense } from "react";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 import { AuthForm } from "./AuthForm";
 import { UserHeader } from "./postCard/UserHeader";
 import { MediaSection } from "./postCard/MediaSection";
@@ -17,9 +17,9 @@ import { useSpotifyMeta } from "./postCard/hooks/useSpotifyMeta";
 import { useEditorAnimation } from "./postCard/hooks/useEditorAnimation";
 import { useFullscreen } from "./postCard/hooks/useFullscreen";
 import { useCardNavigation } from "./postCard/hooks/useCardNavigation";
-import { useIsMe, useAuth } from "@/src/lib/hooks/useAuth";
+import { useIsMe, useAuth } from "@/lib/hooks/useAuth";
 import { usePathname, useRouter } from "next/navigation";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { PostCardBody } from "./PostCardBody";
 
 // Lazy load heavy components

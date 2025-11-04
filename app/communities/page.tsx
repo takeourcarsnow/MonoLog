@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { api } from '@/src/lib/api';
+import { api } from '@/lib/api';
 import CommunityCardServer from '@/app/components/CommunityCardServer';
 import CommunityCardClient from '@/app/components/CommunityCardClient';
 import CommunitiesClient from './CommunitiesClient';
-import type { HydratedCommunity } from '@/src/lib/types';
+import type { HydratedCommunity } from '@/lib/types';
 import Link from 'next/link';
 import { Button } from '@/app/components/Button';
 import NextImage from 'next/image';
-import { currentTheme } from '@/src/lib/theme';
+import { currentTheme } from '@/lib/theme';
 import { LoadingIndicator } from '@/app/components/LoadingIndicator';
 import { Plus } from 'lucide-react';
 import ScrollingHint from '@/app/components/ScrollingHint';

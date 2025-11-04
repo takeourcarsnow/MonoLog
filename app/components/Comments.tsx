@@ -4,8 +4,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/src/lib/api";
-import { getCachedComments, setCachedComments } from "@/src/lib/commentCache";
+import { api } from "@/lib/api";
+import { getCachedComments, setCachedComments } from "@/lib/commentCache";
 import { CommentItem } from "./CommentItem";
 import { CommentInput } from "./CommentInput";
 import { LoadingIndicator } from "./LoadingIndicator";

@@ -1,6 +1,6 @@
 "use client";
 
-import { CONFIG } from "@/src/lib/config";
+import { CONFIG } from "@/lib/config";
 
 interface SizeWarningProps {
   compressedSize: number | null;

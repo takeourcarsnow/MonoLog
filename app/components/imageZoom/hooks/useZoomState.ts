@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { throttle } from '@/src/lib/utils';
+import { throttle } from '@/lib/utils';
 
 export const useZoomState = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);

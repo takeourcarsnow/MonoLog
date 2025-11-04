@@ -1,17 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { Users, MessageSquare, Trash2, UserMinus, UserPlus, ArrowLeft, User as UserIcon, Clock } from "lucide-react";
 import { useRef } from "react";
-import type { HydratedCommunity, HydratedThread } from "@/src/lib/types";
+import type { HydratedCommunity, HydratedThread } from "@/lib/types";
 import { Button } from "./Button";
 import ToggleActionButton from "./ToggleActionButton";
 import TimeDisplay from "./TimeDisplay";
 import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { useErrorState } from "@/lib/hooks/useErrorState";
 import { CommunityHeaderSkeleton, ThreadCardSkeleton } from "./SkeletonCard";
 

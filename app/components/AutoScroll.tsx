@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { throttle } from "@/src/lib/utils";
+import { throttle } from "@/lib/utils";
 
 interface AutoScrollProps {
   children: React.ReactNode;

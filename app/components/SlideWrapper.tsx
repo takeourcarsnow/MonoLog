@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { disableFocusWithin, restoreFocusWithin } from '@/src/lib/focusUtils';
+import { disableFocusWithin, restoreFocusWithin } from '@/lib/focusUtils';
 
 // Small wrapper used around each slide to ensure inactive slides are removed
 // from the accessibility tree and tab order. This avoids focus leaking into

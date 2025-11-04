@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useHeaderNotice } from "./authHooks";
 import { validUsername, isTempEmail } from "./authUtils";
-import { isAllowedEmailDomain } from "@/src/lib/utils";
+import { isAllowedEmailDomain } from "@/lib/utils";
 import { signIn, signUp, checkUsernameAvailability, resetPassword } from "./authActions";
 
 export function useAuthForm(onClose?: () => void) {

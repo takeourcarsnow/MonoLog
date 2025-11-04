@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
 
 function normalizeImageUrls(raw: any): string[] | undefined {
   if (raw == null) return undefined;

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { views } from "./AppShellViews";
-import { RESERVED_ROUTES } from "@/src/lib/types";
+import { RESERVED_ROUTES } from "@/lib/types";
 
 export function useAppShellNavigation(
   currentIndex: number,

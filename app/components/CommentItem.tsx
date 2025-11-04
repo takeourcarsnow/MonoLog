@@ -4,7 +4,7 @@ import Link from "next/link";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import TimeDisplay from "./TimeDisplay";
 import { Clock } from 'lucide-react';
-import { renderCaption } from "@/src/lib/hashtags";
+import { renderCaption } from "@/lib/hashtags";
 import { CommentActions } from "./CommentActions";
 import { ReplyInput } from "./ReplyInput";
 import { Comment, CommentContext } from "./comments-types";
@@ -41,7 +41,7 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
 
       setTimeout(async () => {
         try {
-          const { getClient, getAccessToken } = await import('@/src/lib/api/client');
+          const { getClient, getAccessToken } = await import('@/lib/api/client');
           const sb = getClient();
           const token = await getAccessToken(sb);
           const res = await fetch('/api/comments/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ commentId: comment.id }) });

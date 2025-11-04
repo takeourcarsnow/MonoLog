@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Type, Lightbulb } from 'lucide-react';
 import { rangeBg } from '../utils';
-import { throttle } from '@/src/lib/utils';
+import { throttle } from '@/lib/utils';
 
 interface AsciiPanelProps {
   asciiEnabled: boolean;

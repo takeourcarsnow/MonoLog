@@ -197,7 +197,7 @@ export async function selectUserFields(sb: any, id: string, fields: string) {
 }
 
 import { NextResponse } from 'next/server';
-import { apiError } from '../../../lib/apiResponse';
+import { apiError } from '@/lib/apiResponse';
 
 // Extract best-effort client IP from common proxy headers
 export function getClientIp(req: Request): string {

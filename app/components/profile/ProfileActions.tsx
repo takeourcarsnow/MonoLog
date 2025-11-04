@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { SignOutButton } from "@/app/components/SignOut";
 import Link from "next/link";
 import { User } from "lucide-react";
@@ -8,7 +8,7 @@ import ToggleActionButton from "../ToggleActionButton";
 import { BarChart3 } from "lucide-react";
 import { Bell } from "lucide-react";
 import { Star } from "lucide-react";
-import type { User as UserType } from "@/src/lib/types";
+import type { User as UserType } from "@/lib/types";
 
 interface ProfileActionsProps {
   user: UserType;

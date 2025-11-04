@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { monthMatrix, toDateKey } from "@/src/lib/date";
-import { api } from "@/src/lib/api";
+import { monthMatrix, toDateKey } from "@/lib/date";
+import { api } from "@/lib/api";
 import { PostCard } from "./PostCard";
 import InlinePreloader from "./InlinePreloader";
 import { ViewToggle } from "./ViewToggle";
 import { GridView } from "./GridView";
 import { Calendar } from "lucide-react";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 import { MiniSlideshow } from "./MiniSlideshow";
-import { getStats as cacheGetStats, setStats as cacheSetStats, getPosts as cacheGetPosts, setPosts as cacheSetPosts, anyImageLoaded as cacheAnyImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/src/lib/cache/calendarCache";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { getStats as cacheGetStats, setStats as cacheSetStats, getPosts as cacheGetPosts, setPosts as cacheSetPosts, anyImageLoaded as cacheAnyImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/lib/cache/calendarCache";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const weekdays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 

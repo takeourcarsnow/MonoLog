@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 export const dynamic = 'force-dynamic';
 

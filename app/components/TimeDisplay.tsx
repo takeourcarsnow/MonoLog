@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { formatRelative } from '@/src/lib/date';
+import { formatRelative } from '@/lib/date';
 
 interface TimeDisplayProps {
   date: string | number | Date;

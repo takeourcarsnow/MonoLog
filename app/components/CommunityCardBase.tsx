@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { OptimizedImage } from "./OptimizedImage";
-import { formatRelative } from "@/src/lib/date";
+import { formatRelative } from "@/lib/date";
 import { Users, MessageSquare, Clock } from "lucide-react";
 
 type Props = {

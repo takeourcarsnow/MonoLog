@@ -1,6 +1,6 @@
 import { RefreshCw, X, Check, Download, Fullscreen, Sun, Moon } from "lucide-react";
 import React from 'react';
-import { currentTheme } from '@/src/lib/theme';
+import { currentTheme } from '@/lib/theme';
 
 interface ToolbarHeaderProps {
   onCancel: () => void;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 
 export function useThreadActions(threadId: string | undefined, onSuccess: () => void) {
   const [deleteArmed, setDeleteArmed] = useState(false);

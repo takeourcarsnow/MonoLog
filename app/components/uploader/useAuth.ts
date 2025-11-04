@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 
 export function useAuth() {
   const [me, setMe] = useState<any | null | undefined>(undefined);

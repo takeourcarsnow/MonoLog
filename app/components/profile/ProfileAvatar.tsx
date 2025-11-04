@@ -1,11 +1,11 @@
 import { useRef, useState, useEffect } from "react";
-import { api, getSupabaseClient } from "@/src/lib/api";
-import { compressImage } from "@/src/lib/image";
-import { uid } from "@/src/lib/id";
+import { api, getSupabaseClient } from "@/lib/api";
+import { compressImage } from "@/lib/image";
+import { uid } from "@/lib/id";
 import Image from "next/image";
 import { OptimizedImage } from "../OptimizedImage";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 
 interface ProfileAvatarProps {
   user: User;

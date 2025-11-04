@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { useCurrentUser } from "@/lib/hooks";
-import { storage } from "@/src/lib/storage";
+import { storage } from "@/lib/storage";
 
 interface UseToggleOptions<T> {
   id: string;

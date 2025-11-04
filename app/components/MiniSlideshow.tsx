@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect } from "react";
 import { OptimizedImage } from "./OptimizedImage";
-import { isImageLoaded as cacheIsImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/src/lib/cache/calendarCache";
+import { isImageLoaded as cacheIsImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/lib/cache/calendarCache";
 
 interface MiniSlideshowProps {
   imageUrls: string[];

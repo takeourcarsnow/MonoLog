@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { api } from "@/src/lib/api";
-import type { User } from "@/src/lib/types";
-import { storage } from "@/src/lib/storage";
+import { api } from "@/lib/api";
+import type { User } from "@/lib/types";
+import { storage } from "@/lib/storage";
 import { useCurrentUser } from "@/lib/hooks";
 
 export function useAuth() {

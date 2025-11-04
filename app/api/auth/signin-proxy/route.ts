@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
 
 // Simple in-memory rate limiter. This is per-server-process and will reset
 // when the process restarts. For production scale use a shared store (Redis).

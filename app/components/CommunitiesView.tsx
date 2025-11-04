@@ -1,20 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { Users } from "lucide-react";
-import type { HydratedCommunity } from "@/src/lib/types";
+import type { HydratedCommunity } from "@/lib/types";
 import { Button } from "./Button";
 import Link from "next/link";
 // ScrollingHint removed — use plain text
 import ScrollingHint from "./ScrollingHint";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { useCommunities } from "@/lib/hooks";
 import CommunityCard from "./CommunityCard";
 import LazyMount from "./LazyMount";
 import SkeletonCard from "./SkeletonCard";
 import { useErrorState } from "@/lib/hooks/useErrorState";
-import { useCommunityMembership } from "@/src/lib/hooks/useCommunityMembership";
+import { useCommunityMembership } from "@/lib/hooks/useCommunityMembership";
 
 export function CommunitiesView() {
   const { me } = useAuth();

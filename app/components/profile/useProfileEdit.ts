@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/src/lib/api";
-import type { User } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { User } from "@/lib/types";
 import { validateUsername, normalizeDisplayName, normalizeBio, normalizeSocialLinks } from "./profileUtils";
 
 export const useProfileEdit = (

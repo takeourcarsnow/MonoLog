@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { api } from "@/src/lib/api";
-import { storage } from "@/src/lib/storage";
+import { api } from "@/lib/api";
+import { storage } from "@/lib/storage";
 
 export function useAuth() {
   const initialCachedId = (typeof window !== 'undefined') ? storage.get<string | null>('currentUserId', null) : null;

@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { Button } from "./Button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { PostCard } from "./PostCard";
-import type { HydratedPost } from "@/src/lib/types";
-import { usePageScroll } from "@/src/lib/hooks/usePageScroll";
+import type { HydratedPost } from "@/lib/types";
+import { usePageScroll } from "@/lib/hooks/usePageScroll";
 
 export function PostView({ id, initialPost }: { id: string; initialPost?: HydratedPost | null }) {
   const [post, setPost] = useState<HydratedPost | null>(initialPost || null);

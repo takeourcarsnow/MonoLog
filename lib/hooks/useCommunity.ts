@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api } from '@/src/lib/api';
-import type { HydratedCommunity } from '@/src/lib/types';
+import { api } from '@/lib/api';
+import type { HydratedCommunity } from '@/lib/types';
 
 export function useCommunity(communitySlug: string | null) {
   const [community, setCommunity] = useState<HydratedCommunity | null>(null);

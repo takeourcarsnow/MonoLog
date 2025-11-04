@@ -1,6 +1,6 @@
 "use client";
 import React, { PropsWithChildren, useEffect } from 'react';
-import { usePageScroll } from "@/src/lib/hooks/usePageScroll";
+import { usePageScroll } from "@/lib/hooks/usePageScroll";
 
 export default function CommunitiesClient({ children }: PropsWithChildren) {
   usePageScroll('communities-page-scroll');

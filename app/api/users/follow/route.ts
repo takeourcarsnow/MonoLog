@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
-import { apiRateLimiter } from '@/src/lib/rateLimiter';
-import { uid } from '@/src/lib/id';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
+import { apiRateLimiter } from '@/lib/rateLimiter';
+import { uid } from '@/lib/id';
 
 export async function POST(req: Request) {
   try {

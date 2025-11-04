@@ -4,7 +4,7 @@ import { useProfileEdit } from "./useProfileEdit";
 import { ProfileStaticView } from "./ProfileStaticView";
 import { ProfileEditFields } from "./ProfileEditFields";
 import { ProfileEditFormActions } from "./ProfileEditFormActions";
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 
 interface ProfileEditFormProps {
   user: User;

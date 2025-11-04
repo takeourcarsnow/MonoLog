@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 
 export function useDelete(postId: string) {
   const [deleteExpanded, setDeleteExpanded] = useState(false);

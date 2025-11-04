@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import { api } from "@/src/lib/api";
-import { useToggle } from "@/src/lib/hooks/useToggle";
+import { api } from "@/lib/api";
+import { useToggle } from "@/lib/hooks/useToggle";
 
 export function useFavorite(postId: string) {
   const [favoriteOverlayState, setFavoriteOverlayState] = useState<'adding' | 'removing' | null>(null);

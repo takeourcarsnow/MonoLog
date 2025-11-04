@@ -3,7 +3,7 @@ import { ProfileAvatar } from "./ProfileAvatar";
 import { ProfileEditForm, ProfileEditFormRef } from "./ProfileEditForm";
 import ProfileSocialLinks from "./ProfileSocialLinks";
 import { ProfileActions } from "./ProfileActions";
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 
 interface ProfileHeaderProps {
   user: User;

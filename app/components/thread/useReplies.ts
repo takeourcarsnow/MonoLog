@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@/src/lib/api";
-import type { HydratedThreadReply } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { HydratedThreadReply } from "@/lib/types";
 
 export function useReplies(threadId: string | undefined) {
   const [replies, setReplies] = useState<HydratedThreadReply[]>([]);

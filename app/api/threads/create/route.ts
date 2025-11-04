@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { uid } from '@/src/lib/id';
-import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
-import { slugify } from '@/src/lib/utils';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { uid } from '@/lib/id';
+import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
+import { slugify } from '@/lib/utils';
 
 export async function POST(req: Request) {
   try {

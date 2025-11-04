@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Combobox } from "../Combobox";
 import { CameraScopeSelector } from "./CameraScopeSelector";
-import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS, getMergedExifPresets } from "@/src/lib/exifPresets";
+import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS, getMergedExifPresets } from "@/lib/exifPresets";
 import { Settings, Image, Gauge } from "lucide-react";
-import type { User } from "@/src/lib/types";
-import { api } from "@/src/lib/api";
+import type { User } from "@/lib/types";
+import { api } from "@/lib/api";
 
 interface ExifInputsProps {
   camera?: string;

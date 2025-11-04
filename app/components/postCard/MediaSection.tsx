@@ -1,5 +1,5 @@
 import { memo } from "react";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 import { Carousel } from "./Carousel";
 import { SingleMedia } from "./SingleMedia";
 

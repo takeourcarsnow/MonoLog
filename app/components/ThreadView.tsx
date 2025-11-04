@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { Button } from "./Button";
 import Link from "next/link";
 import { useThread } from "./thread/useThread";

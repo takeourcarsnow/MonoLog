@@ -1,8 +1,8 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeOff, Monitor, Film } from "lucide-react";
 import { Combobox } from "../Combobox";
-import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/src/lib/exifPresets";
+import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/lib/exifPresets";
 import { useSpotifyMeta } from "./hooks/useSpotifyMeta";
 import { SpotifySection } from "./SpotifySection";
 

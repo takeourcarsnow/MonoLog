@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
-import { mapRowToHydratedPost, makeWeakETag } from '@/src/lib/api/utils';
-import { getServerCache, setServerCache, clearServerCachePrefix } from '@/src/lib/serverCache';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
+import { mapRowToHydratedPost, makeWeakETag } from '@/lib/api/utils';
+import { getServerCache, setServerCache, clearServerCachePrefix } from '@/lib/serverCache';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
-import { withHandler } from '@/src/lib/api/withHandler';
+import { withHandler } from '@/lib/api/withHandler';
 import { z } from 'zod';
 
 const querySchema = z.object({

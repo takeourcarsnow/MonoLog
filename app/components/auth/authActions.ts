@@ -1,5 +1,5 @@
 // authActions.ts
-import { getSupabaseClient } from "@/src/lib/api/supabase";
+import { getSupabaseClient } from "@/lib/api/supabase";
 
 export async function signIn(identifier: string, password: string) {
   const sb = getSupabaseClient();

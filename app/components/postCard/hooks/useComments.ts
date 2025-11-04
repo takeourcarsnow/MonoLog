@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { api } from "@/src/lib/api";
-import { prefetchComments, hasCachedComments, getCachedComments } from "@/src/lib/commentCache";
+import { api } from "@/lib/api";
+import { prefetchComments, hasCachedComments, getCachedComments } from "@/lib/commentCache";
 
 export function useComments(postId: string, initialCount: number) {
   const [commentsOpen, setCommentsOpen] = useState(false);

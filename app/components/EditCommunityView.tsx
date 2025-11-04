@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from "next/navigation";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { Button } from "@/app/components/Button";
 import Link from "next/link";
-import type { HydratedCommunity } from "@/src/lib/types";
+import type { HydratedCommunity } from "@/lib/types";
 
 export function EditCommunityView() {
   const router = useRouter();

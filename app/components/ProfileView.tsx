@@ -4,8 +4,8 @@
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "./Button";
-import { api } from "@/src/lib/api";
-import type { HydratedPost, User } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { HydratedPost, User } from "@/lib/types";
 import Link from "next/link";
 import dynamic from 'next/dynamic';
 const ImageZoom = dynamic(() => import('./ImageZoom'), { ssr: false });

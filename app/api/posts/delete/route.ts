@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
-import { clearServerCachePrefix } from '@/src/lib/serverCache';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
+import { clearServerCachePrefix } from '@/lib/serverCache';
 
 export async function POST(req: Request) {
   try {

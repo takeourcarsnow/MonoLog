@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase, getUserSupabase } from '@/src/lib/api/serverSupabase';
-import { uid } from '@/src/lib/id';
-import { getUserFromAuthHeader, getTokenFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
-import { checkComment } from '@/src/lib/moderation';
-import { apiRateLimiter } from '@/src/lib/rateLimiter';
-import { extractUserProfile } from '@/src/lib/api/userProfile';
-import { checkRateLimitResponse, getClientIp } from '@/src/lib/api/utils';
+import { getServiceSupabase, getUserSupabase } from '@/lib/api/serverSupabase';
+import { uid } from '@/lib/id';
+import { getUserFromAuthHeader, getTokenFromAuthHeader } from '@/lib/api/serverVerifyAuth';
+import { checkComment } from '@/lib/moderation';
+import { apiRateLimiter } from '@/lib/rateLimiter';
+import { extractUserProfile } from '@/lib/api/userProfile';
+import { checkRateLimitResponse, getClientIp } from '@/lib/api/utils';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
-import { parseMentions } from '@/src/lib/mentions';
+import { parseMentions } from '@/lib/mentions';
 
 function extractUserProfileFromAuth(authUser: any) {
   return extractUserProfile(authUser);

@@ -2,7 +2,7 @@ import Link from "next/link";
 import TimeDisplay from "./TimeDisplay";
 import { Clock } from 'lucide-react';
 import { OptimizedImage } from "./OptimizedImage";
-import type { Notification } from "@/src/lib/types";
+import type { Notification } from "@/lib/types";
 
 function NotificationItem({
   notification,

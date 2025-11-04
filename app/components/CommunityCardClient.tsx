@@ -3,8 +3,8 @@
 import React, { useCallback, useState } from 'react';
 import ToggleActionButton from './ToggleActionButton';
 import { UserMinus, UserPlus } from 'lucide-react';
-import { api } from '@/src/lib/api';
-import { useAuth } from '@/src/lib/hooks/useAuth';
+import { api } from '@/lib/api';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
 type Props = {

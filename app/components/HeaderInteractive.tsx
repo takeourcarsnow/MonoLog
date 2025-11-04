@@ -8,8 +8,8 @@ import { Info, Star, Search } from "lucide-react";
 import { Users } from "lucide-react";
 import { Bell } from "lucide-react";
 import Link from "next/link";
-import { api } from "@/src/lib/api";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { NotificationsPopup } from "./NotificationsPopup";
 
 // Non-critical header components loaded dynamically

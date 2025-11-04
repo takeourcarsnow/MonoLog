@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { api } from "@/src/lib/api";
-import type { HydratedPost } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { HydratedPost } from "@/lib/types";
 import { PostCard } from "./PostCard";
 import { SkeletonCard, SkeletonTile } from "./Skeleton";
-import { useEventListener } from "@/src/lib/hooks/useEventListener";
-import { useDataFetch } from "@/src/lib/hooks/useDataFetch";
-import { usePageScroll } from "@/src/lib/hooks/usePageScroll";
+import { useEventListener } from "@/lib/hooks/useEventListener";
+import { useDataFetch } from "@/lib/hooks/useDataFetch";
+import { usePageScroll } from "@/lib/hooks/usePageScroll";
 import { Star as StarIcon } from "lucide-react";
 import Link from "next/link";
 import { ViewToggle } from "./ViewToggle";

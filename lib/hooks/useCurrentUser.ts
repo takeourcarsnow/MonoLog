@@ -1,6 +1,6 @@
 import useSWR from 'swr';
-import { api } from '@/src/lib/api';
-import type { User } from '@/src/lib/types';
+import { api } from '@/lib/api';
+import type { User } from '@/lib/types';
 import { defaultSWRConfig } from './swrConfig';
 
 export function useCurrentUser() {

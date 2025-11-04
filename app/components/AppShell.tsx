@@ -10,10 +10,10 @@ import { useAppShellInit } from "./AppShellInit";
 import { useAppShellViews, views } from "./AppShellViews";
 import { useHeaderHeightMeasurement, useTabbarHeightMeasurement } from "./AppShellLayout";
 import { useAppShellNavigation } from "./AppShellNavigation";
-import { RESERVED_ROUTES } from "@/src/lib/types";
-import { getUsernameFromRoute } from "@/src/lib/routeUtils";
+import { RESERVED_ROUTES } from "@/lib/types";
+import { getUsernameFromRoute } from "@/lib/routeUtils";
 import { SlideWrapper } from "./SlideWrapper";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const NotificationListener = dynamic(() => import("./NotificationListener").then(mod => mod.NotificationListener), { ssr: false });
 const InstallPrompt = dynamic(() => import("./InstallPrompt").then(mod => mod.InstallPrompt), { ssr: false });

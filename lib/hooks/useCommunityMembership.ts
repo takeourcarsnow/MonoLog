@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { api } from '@/src/lib/api';
-import type { HydratedCommunity } from '@/src/lib/types';
+import { api } from '@/lib/api';
+import type { HydratedCommunity } from '@/lib/types';
 
 export function useCommunityMembership() {
   const [pending, setPending] = useState<Set<string>>(new Set());

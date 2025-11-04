@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { User } from "@/src/lib/types";
+import type { User } from "@/lib/types";
 import { SocialLinksFields } from "./SocialLinksFields";
 
 interface ProfileEditFieldsProps {

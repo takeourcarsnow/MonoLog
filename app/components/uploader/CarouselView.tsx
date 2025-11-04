@@ -3,7 +3,7 @@ import Image from "next/image";
 import { LoadingBadge } from "./LoadingBadge";
 import { useZoomState } from "../imageZoom/hooks/useZoomState";
 import { getBounds } from "../imageZoom/utils/zoomUtils";
-import { throttle } from "@/src/lib/utils";
+import { throttle } from "@/lib/utils";
 
 interface CarouselViewProps {
   dataUrls: string[];

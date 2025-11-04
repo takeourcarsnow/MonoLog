@@ -1,5 +1,5 @@
 // authUtils.ts
-import { isAllowedEmailDomain } from '@/src/lib/utils';
+import { isAllowedEmailDomain } from '@/lib/utils';
 export function normalizeUsername(v: string) {
   return v.trim().toLowerCase();
 }

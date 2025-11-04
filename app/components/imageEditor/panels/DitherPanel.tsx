@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { throttle } from '@/src/lib/utils';
+import { throttle } from '@/lib/utils';
 import DitherToggle from './dither/DitherToggle';
 import DitherControls from './dither/DitherControls';
 import DitherMethodSelector from './dither/DitherMethodSelector';

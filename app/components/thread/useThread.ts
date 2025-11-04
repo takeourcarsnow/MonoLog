@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@/src/lib/api";
-import type { HydratedThread } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { HydratedThread } from "@/lib/types";
 
 export function useThread(threadSlug: string, communitySlug: string) {
   const [thread, setThread] = useState<HydratedThread | null>(null);

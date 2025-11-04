@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 
 // Dev-only helper to verify that the server can read and validate the
 // Authorization: Bearer <token> header. Do NOT enable in production unless

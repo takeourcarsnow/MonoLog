@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { api, getSupabaseClient } from "@/src/lib/api";
-import { compressImage } from "@/src/lib/image";
-import { uid } from "@/src/lib/id";
-import { dedupe } from "@/src/lib/requestDeduplication";
-import type { HydratedPost, User } from "@/src/lib/types";
-import { useEventListener } from "@/src/lib/hooks/useEventListener";
+import { api, getSupabaseClient } from "@/lib/api";
+import { compressImage } from "@/lib/image";
+import { uid } from "@/lib/id";
+import { dedupe } from "@/lib/requestDeduplication";
+import type { HydratedPost, User } from "@/lib/types";
+import { useEventListener } from "@/lib/hooks/useEventListener";
 
 function looksLikeUuid(s: string) {
   return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);

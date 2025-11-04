@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { api } from "@/src/lib/api";
-import type { HydratedPost } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { HydratedPost } from "@/lib/types";
 import { useEventListener } from "./useEventListener";
 
 // Simplified infinite scroll logic

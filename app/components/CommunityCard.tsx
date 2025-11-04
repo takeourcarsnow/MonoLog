@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { HydratedCommunity } from "@/src/lib/types";
+import type { HydratedCommunity } from "@/lib/types";
 import CommunityCardBase from "./CommunityCardBase";
 import LazyMount from "./LazyMount";
 import ToggleActionButton from "./ToggleActionButton";

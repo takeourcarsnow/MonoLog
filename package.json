@@ -9,6 +9,7 @@
     "dev:turbo": "next dev --turbo",
     "build": "next build",
     "start": "next start",
+    "migrate:lib": "node ./scripts/convert/merge-lib-folders.js",
     "lint": "eslint app/",
     "analyze": "ANALYZE=true next build",
     "analyze-bundle": "node ./scripts/analyze-bundle.js",

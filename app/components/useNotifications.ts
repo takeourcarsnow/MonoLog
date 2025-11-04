@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { api } from "@/src/lib/api";
-import type { Notification } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { Notification } from "@/lib/types";
 import { getNotificationMessage } from "./notificationMessageUtils";
 
 export function useNotifications(pageSize: number = 10) {

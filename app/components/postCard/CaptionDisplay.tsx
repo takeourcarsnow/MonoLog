@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { renderCaption } from "@/src/lib/hashtags";
+import { renderCaption } from "@/lib/hashtags";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface CaptionDisplayProps {

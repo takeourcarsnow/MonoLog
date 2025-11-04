@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { getUserFromAuthHeader } from '@/src/lib/api/serverVerifyAuth';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 
 export async function GET(req: Request) {
   try {

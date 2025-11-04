@@ -1,6 +1,6 @@
 // AuthToggle.tsx
 import { useState, useRef, useEffect } from "react";
-import { throttle } from "@/src/lib/utils";
+import { throttle } from "@/lib/utils";
 
 interface AuthToggleProps {
   mode: "signin" | "signup";

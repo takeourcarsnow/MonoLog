@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import type { HydratedPost } from "@/src/lib/types";
-import { api } from "@/src/lib/api";
+import type { HydratedPost } from "@/lib/types";
+import { api } from "@/lib/api";
 
 export function usePostState(initialPost: HydratedPost) {
   const [post, setPost] = useState<HydratedPost>(initialPost);

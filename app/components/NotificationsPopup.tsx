@@ -3,11 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import Portal from "./Portal";
 import { Bell, X } from "lucide-react";
-import { currentTheme } from "@/src/lib/theme";
+import { currentTheme } from "@/lib/theme";
 import { LoadingIndicator } from "@/app/components/LoadingIndicator";
 import NextImage from 'next/image';
 import { useNotifications } from "./useNotifications";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import NotificationItem from "./NotificationItem";
 import { SpinningLogo } from "./SpinningLogo";
 

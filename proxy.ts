@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { RESERVED_ROUTES } from './src/lib/types';
+import { RESERVED_ROUTES } from '@/lib/types';
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({

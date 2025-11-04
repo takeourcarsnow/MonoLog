@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { api } from "@/src/lib/api";
-import type { HydratedThreadReply } from "@/src/lib/types";
+import { api } from "@/lib/api";
+import type { HydratedThreadReply } from "@/lib/types";
 import { ReplyItem } from "./ReplyItem";
 
 interface RepliesListProps {

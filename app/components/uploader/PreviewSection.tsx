@@ -3,7 +3,7 @@ import { usePathname } from "next/navigation";
 import { PreviewSectionProps } from "./types";
 import { LoadingBadge } from "./LoadingBadge";
 import { CarouselView } from "./CarouselView";
-import { compressImage, approxDataUrlBytes } from "@/src/lib/image";
+import { compressImage, approxDataUrlBytes } from "@/lib/image";
 
 
 export function PreviewSection({

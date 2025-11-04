@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { getSlideState, setSlideState } from '@/src/lib/slideStateCache';
+import { getSlideState, setSlideState } from '@/lib/slideStateCache';
 
 export function useScrollPersistence(scrollStateKey: string) {
   useEffect(() => {

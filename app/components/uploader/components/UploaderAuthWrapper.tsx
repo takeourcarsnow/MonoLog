@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@/src/lib/api";
-import { useAuth } from "@/src/lib/hooks/useAuth";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { AuthForm } from "../../AuthForm";
 import { AuthRequired } from "../../AuthRequired";
 import { UploaderCore } from "./UploaderCore";

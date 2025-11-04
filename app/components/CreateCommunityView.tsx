@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from "next/navigation";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { Button } from "@/app/components/Button";
 import Link from "next/link";
 

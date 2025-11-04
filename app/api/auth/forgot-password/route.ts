@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/src/lib/api/serverSupabase';
-import { isAllowedEmailDomain } from '@/src/lib/utils';
+import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { isAllowedEmailDomain } from '@/lib/utils';
 
 export async function POST(req: Request) {
   try {

@@ -30,7 +30,7 @@ import { useImageEditorDownload } from './imageEditor/ImageEditorDownload';
 import { useImageEditorRefs } from './imageEditor/ImageEditorRefs';
 import { useImageEditorEffects } from './imageEditor/ImageEditorEffects';
 
-import { toggleTheme } from '@/src/lib/theme';
+import { toggleTheme } from '@/lib/theme';
 
 type Props = {
   initialDataUrl: string;

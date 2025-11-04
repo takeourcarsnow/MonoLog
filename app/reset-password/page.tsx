@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getSupabaseClient } from "@/src/lib/api/supabase";
+import { getSupabaseClient } from "@/lib/api/supabase";
 import { Button } from "@/app/components/Button";
 
 export default function ResetPasswordPage() {

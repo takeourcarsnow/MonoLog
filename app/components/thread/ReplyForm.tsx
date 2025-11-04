@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/src/lib/api";
+import { api } from "@/lib/api";
 import { Button } from "../Button";
 
 interface ReplyFormProps {

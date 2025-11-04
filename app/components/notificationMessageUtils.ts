@@ -1,8 +1,8 @@
-import { api } from "@/src/lib/api";
-import type { Notification } from "@/src/lib/types";
-import { getPost } from '@/src/lib/api/posts/post';
-import { getUser } from '@/src/lib/api/users';
-import { getThread } from '@/src/lib/api/communities/threads';
+import { api } from "@/lib/api";
+import type { Notification } from "@/lib/types";
+import { getPost } from '@/lib/api/posts/post';
+import { getUser } from '@/lib/api/users';
+import { getThread } from '@/lib/api/communities/threads';
 
 export async function getNotificationMessage(notification: Notification): Promise<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string }> {
   try {

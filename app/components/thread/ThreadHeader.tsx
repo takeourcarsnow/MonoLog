@@ -1,12 +1,12 @@
 "use client";
 
 import { ArrowLeft, Trash2, MessageSquare, Clock } from "lucide-react";
-import type { HydratedThread } from "@/src/lib/types";
+import type { HydratedThread } from "@/lib/types";
 import { Button } from "../Button";
 import TimeDisplay from "../TimeDisplay";
 import Link from "next/link";
 import { OptimizedImage } from "../OptimizedImage";
-import { renderCaption } from "@/src/lib/hashtags";
+import { renderCaption } from "@/lib/hashtags";
 
 interface ThreadHeaderProps {
   thread: HydratedThread;

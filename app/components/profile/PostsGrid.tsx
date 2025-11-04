@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 const ImageZoom = dynamic(() => import('../ImageZoom'), { ssr: false });
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 
 interface PostsGridProps {
   posts: HydratedPost[];

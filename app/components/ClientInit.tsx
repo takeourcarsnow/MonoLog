@@ -1,8 +1,8 @@
 "use client";
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { CONFIG } from '@/src/lib/config';
-import { isInAppBrowser } from '@/src/lib/detectWebview';
+import { CONFIG } from '@/lib/config';
+import { isInAppBrowser } from '@/lib/detectWebview';
 
 const AppShell = dynamic(() => import('@/app/components/AppShell').then(mod => mod.AppShell), { ssr: false, loading: () => null });
 const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ssr: false, loading: () => null });

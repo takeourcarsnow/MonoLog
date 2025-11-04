@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { initTheme } from "@/src/lib/theme";
-import { api } from "@/src/lib/api";
+import { initTheme } from "@/lib/theme";
+import { api } from "@/lib/api";
 
 export function useAppShellInit() {
   const [ready, setReady] = useState(false);

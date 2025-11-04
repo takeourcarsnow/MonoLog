@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import type { HydratedPost } from "@/src/lib/types";
+import type { HydratedPost } from "@/lib/types";
 import { CaptionDisplay } from "./postCard/CaptionDisplay";
 import { ActionsSection } from "./postCard/ActionsSection";
 import { CommentsSection } from "./postCard/CommentsSection";

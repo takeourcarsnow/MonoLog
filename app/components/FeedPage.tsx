@@ -24,6 +24,63 @@ import { useScrollPersistence } from "@/src/lib/hooks/useScrollPersistence";
 import { useBodyClass } from "@/src/lib/hooks/useBodyClass";
 import { useAuthChange } from "@/src/lib/hooks/useAuthChange";
 
+function useViewTransition(viewStorageKey: string) {
+  const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [pendingView, setPendingView] = useState<"list" | "grid" | null>(null);
+  const fadeRef = useRef<HTMLDivElement | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  const handleViewChange = useCallback((v: "list" | "grid") => {
+    if (v === view) return;
+    setPendingView(v);
+    const el = fadeRef.current;
+    if (!el) {
+      setView(v);
+      setPendingView(null);
+      if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v);
+      return;
+    }
+
+    if (cleanupRef.current) {
+      try { cleanupRef.current(); } catch {}
+      cleanupRef.current = null;
+    }
+
+    setIsTransitioning(true);
+
+    const onEnd = (e: TransitionEvent) => {
+      if (e.target !== el || e.propertyName !== 'opacity') return;
+      el.removeEventListener('transitionend', onEnd as any);
+      setView(v);
+      setPendingView(null);
+      if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v);
+      requestAnimationFrame(() => {
+        setIsTransitioning(false);
+      });
+      cleanupRef.current = null;
+    };
+
+    el.addEventListener('transitionend', onEnd as any);
+    cleanupRef.current = () => {
+      try { el.removeEventListener('transitionend', onEnd as any); } catch {}
+      setIsTransitioning(false);
+    };
+
+    requestAnimationFrame(() => {});
+  }, [view, viewStorageKey]);
+
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        try { cleanupRef.current(); } catch {}
+      }
+    };
+  }, []);
+
+  return { view, isTransitioning, pendingView, fadeRef, handleViewChange };
+}
+
 interface FeedPageProps {
   fetchFunction: (opts: { limit: number; before?: string }) => Promise<HydratedPost[]>;
   title: React.ReactNode;
@@ -47,12 +104,7 @@ export function FeedPage({
   deferFollowChanges = false,
   showToggle = false,
 }: FeedPageProps) {
-  const [view, setView] = useState<"list" | "grid">((typeof window !== "undefined" && (localStorage.getItem(viewStorageKey) as any)) || "list");
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [pendingView, setPendingView] = useState<"list" | "grid" | null>(null);
-  // Ref to the fading container and a cleanup holder for transition listeners
-  const fadeRef = useRef<HTMLDivElement | null>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
+  const { view, isTransitioning, pendingView, fadeRef, handleViewChange } = useViewTransition(viewStorageKey);
 
   const { me } = useAuth();
 
@@ -145,62 +197,6 @@ export function FeedPage({
       </>
     );
   };
-
-  const handleViewChange = useCallback((v: "list" | "grid") => {
-    if (v === view) return;
-    // Immediately reflect the desired selection in the toggle UI
-    setPendingView(v);
-    const el = fadeRef.current;
-    // If no element yet, just swap immediately as a safe fallback
-    if (!el) {
-      setView(v);
-      setPendingView(null);
-      if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v);
-      return;
-    }
-
-    // If a previous transition is in progress, clean it up
-    if (cleanupRef.current) {
-      try { cleanupRef.current(); } catch {}
-      cleanupRef.current = null;
-    }
-
-    // Trigger fade-out
-    setIsTransitioning(true);
-
-    const onEnd = (e: TransitionEvent) => {
-      if (e.target !== el || e.propertyName !== 'opacity') return;
-      el.removeEventListener('transitionend', onEnd as any);
-      // Swap view after fade-out completes
-      setView(v);
-      setPendingView(null);
-      if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v);
-      // Next frame, fade back in to ensure style recalculation
-      requestAnimationFrame(() => {
-        setIsTransitioning(false);
-      });
-      cleanupRef.current = null;
-    };
-
-    el.addEventListener('transitionend', onEnd as any);
-    cleanupRef.current = () => {
-      try { el.removeEventListener('transitionend', onEnd as any); } catch {}
-      setIsTransitioning(false);
-    };
-
-    // Ensure the fade-hidden class is applied before listening completes
-    // by yielding to the next frame. This helps browsers reliably
-    // transition even when layout also changes (list <-> grid).
-    requestAnimationFrame(() => {});
-  }, [view, viewStorageKey]);
-
-  useEffect(() => {
-    return () => {
-      if (cleanupRef.current) {
-        try { cleanupRef.current(); } catch {}
-      }
-    };
-  }, []);
 
   return (
     <div className="view-fade">

@@ -105,38 +105,32 @@ export function CreateThreadView() {
   return (
     <div className="content create-thread">
       <div className="content-body">
-        <div className="card max-w-4xl">
+        <div className="card max-w-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="relative">
-              <input
-                type="text"
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-3 pr-16 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                placeholder="Enter thread title"
-                maxLength={200}
-                required
-              />
-              <div className="absolute right-3 top-3 text-sm text-gray-500 dark:text-gray-400">
-                {title.length}/200
-              </div>
-            </div>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="input mb-4"
+              style={{ marginBottom: '1rem' }}
+              placeholder="Enter thread title"
+              maxLength={200}
+              required
+            />
 
-            <div className="relative">
+            <div className="input-wrapper">
               <textarea
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full p-3 pr-16 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                className="input has-counter resize-none"
                 placeholder="Write your thread content here..."
                 rows={8}
                 maxLength={10000}
                 required
               />
-              <div className="absolute right-3 bottom-3 text-sm text-gray-500 dark:text-gray-400">
-                {content.length}/10,000
-              </div>
+              <div className="field-counter">{content.length}/10,000</div>
             </div>
 
             {error && (

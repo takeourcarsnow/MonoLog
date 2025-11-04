@@ -17,6 +17,21 @@
 }
 .input-wrapper { position: relative; }
 
+/* When an input/textarea needs a visible in-field counter, apply
+   the `has-counter` class to add bottom padding so the counter sits
+   inside the field without overlapping text. The `.field-counter`
+   is absolutely positioned inside the wrapper. */
+.input.has-counter { padding-bottom: 32px; }
+.input-wrapper .field-counter {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none;
+  background: transparent;
+}
+
 /* Compact row for photo action icons (add/edit/delete) with minimal vertical gaps */
 .photo-action-row {
   display: flex;

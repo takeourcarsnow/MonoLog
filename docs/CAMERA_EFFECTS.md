@@ -47,6 +47,7 @@ Each effect has customizable parameters matching the full image editor:
   - Numbers: `0123456789`
   - Letters: `ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 - **Invert**: Normal or inverted brightness mapping
+- **Color Mode**: Colored characters based on sampled pixel colors
 
 ## Technical Implementation
 

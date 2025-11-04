@@ -402,7 +402,6 @@ export function applyAsciiToFrame(
 
   targetCtx.fillStyle = '#000';
   targetCtx.fillRect(0, 0, width, height);
-  targetCtx.fillStyle = '#fff';
   targetCtx.font = `${cellSize}px monospace`;
   targetCtx.textAlign = 'center';
   targetCtx.textBaseline = 'middle';
@@ -415,8 +414,8 @@ export function applyAsciiToFrame(
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      // Sample average brightness of cell
-      let totalBrightness = 0;
+      // Sample average color of cell
+      let totalR = 0, totalG = 0, totalB = 0;
       let samples = 0;
 
       for (let dy = 0; dy < cellSize; dy++) {
@@ -426,18 +425,23 @@ export function applyAsciiToFrame(
 
           if (x < width && y < height) {
             const idx = (y * width + x) * 4;
-            const brightness = (data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114) / 255;
-            totalBrightness += brightness;
+            totalR += data[idx];
+            totalG += data[idx + 1];
+            totalB += data[idx + 2];
             samples++;
           }
         }
       }
 
-      const avgBrightness = totalBrightness / samples;
+      const avgR = Math.round(totalR / samples);
+      const avgG = Math.round(totalG / samples);
+      const avgB = Math.round(totalB / samples);
+      const avgBrightness = (avgR * 0.299 + avgG * 0.587 + avgB * 0.114) / 255;
       const adjustedBrightness = invert ? 1 - avgBrightness : avgBrightness;
       const charIndex = Math.floor(adjustedBrightness * charRange);
       const char = chars[charIndex];
 
+      targetCtx.fillStyle = `rgb(${avgR},${avgG},${avgB})`;
       targetCtx.fillText(
         char,
         col * cellSize + cellSize / 2,

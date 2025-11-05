@@ -1,4 +1,4 @@
-import { RefreshCw, X, Check, Download, Fullscreen, Sun, Moon } from "lucide-react";
+import { RefreshCw, X, Check, Download, Fullscreen, Sun, Moon, Camera } from "lucide-react";
 import React from 'react';
 import { currentTheme } from '@/lib/theme';
 
@@ -11,6 +11,7 @@ interface ToolbarHeaderProps {
   isFullscreen?: boolean;
   onDownload?: () => void;
   onToggleTheme?: () => void;
+  onCamera?: () => void;
 }
 
 function ImageEditorToolbarHeader({
@@ -21,7 +22,8 @@ function ImageEditorToolbarHeader({
   onToggleFullscreen,
   isFullscreen,
   onDownload,
-  onToggleTheme
+  onToggleTheme,
+  onCamera
 }: ToolbarHeaderProps) {
   const currentThemeValue = currentTheme();
   const ThemeIcon = currentThemeValue === 'light' ? Sun : Moon;
@@ -40,6 +42,13 @@ function ImageEditorToolbarHeader({
           <Download size={14} aria-hidden />
           <span className="sr-only">Download edited photo</span>
         </button>
+
+        {onCamera && (
+          <button type="button" className="btn icon ghost no-tap-effects" onClick={onCamera} aria-label="Take photo with camera" title="Take photo with camera">
+            <Camera size={14} aria-hidden />
+            <span className="sr-only">Take photo with camera</span>
+          </button>
+        )}
 
         <button type="button" className="btn icon ghost no-tap-effects" title="Reset adjustments" onClick={resetAdjustments} aria-label="Reset adjustments">
           <RefreshCw size={14} aria-hidden />

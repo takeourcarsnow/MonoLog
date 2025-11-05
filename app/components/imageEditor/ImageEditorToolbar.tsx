@@ -12,6 +12,7 @@ interface ImageEditorToolbarProps {
   isFullscreen?: boolean;
   onDownload?: () => void;
   onToggleTheme?: () => void;
+  onCamera?: () => void;
   categoriesContainerRef: React.RefObject<HTMLDivElement>;
   selectedCategory: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'overlays';
   setSelectedCategory: (category: 'basic' | 'color' | 'effects' | 'special' | 'crop' | 'frame' | 'overlays') => void;
@@ -35,6 +36,7 @@ export default function ImageEditorToolbar(props: ImageEditorToolbarProps) {
         isFullscreen={props.isFullscreen}
         onDownload={props.onDownload}
         onToggleTheme={props.onToggleTheme}
+        onCamera={props.onCamera}
       />
       <ToolbarCategories
         categoriesContainerRef={props.categoriesContainerRef}

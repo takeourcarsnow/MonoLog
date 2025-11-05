@@ -29,7 +29,9 @@ import { useImageEditorCrop } from '@/app/components/imageEditor/ImageEditorCrop
 import { useImageEditorDownload } from '@/app/components/imageEditor/ImageEditorDownload';
 import { useImageEditorRefs } from '@/app/components/imageEditor/ImageEditorRefs';
 import { useImageEditorEffects } from '@/app/components/imageEditor/ImageEditorEffects';
-
+import { useCameraCapture } from "@/app/components/uploader/useCameraCapture";
+import { CameraModal } from "@/app/components/uploader/CameraModal";
+import { compressImage } from '@/lib/image';
 import { toggleTheme } from '@/lib/theme';
 
 type Props = {
@@ -521,6 +523,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   const { handleDownload } = useImageEditorDownload(draw, imgRef);
 
+  const { cameraOpen, setCameraOpen, videoRef, streamRef, openCamera, closeCamera } = useCameraCapture();
+
 
 
 
@@ -539,6 +543,119 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
 
   useKeyboardEvents(applyEdit, onCancel);
 
+  const handleCameraCapture = async () => {
+    const v = videoRef.current;
+    if (!v) return;
+    setIsProcessing(true);
+    try {
+      const w = v.videoWidth || v.clientWidth;
+      const h = v.videoHeight || v.clientHeight || Math.round(w * 0.75);
+      const cnv = document.createElement('canvas');
+      cnv.width = w; cnv.height = h;
+      const ctx = cnv.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+      ctx.drawImage(v, 0, 0, w, h);
+      cnv.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `capture-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
+        const url = await compressImage(file);
+        // Set new image
+        setImageSrc(url);
+        originalRef.current = url;
+        // Reset all settings to default
+        setExposure(0);
+        setContrast(0);
+        setSaturation(0);
+        setTemperature(0);
+        setVignette(0);
+        setFrameColor('white');
+        setFrameThickness(0);
+        setSelectedFilter('none');
+        setFilterStrength(1);
+        setRotation(0);
+        setGrain(0);
+        setSoftFocus(0);
+        setFade(0);
+        setOverlay(null);
+        setFrameOverlay(null);
+        setDitherMethod('none');
+        setDitherLevels(8);
+        setDitherColorMode('bw');
+        setDitherPalette('auto');
+        setDitherCustomPalette('');
+        setPixelSize(1);
+        setPixelShape('square');
+        setPixelSample('average');
+        setAsciiEnabled(false);
+        setAsciiCellSize(8);
+        setAsciiCharset("@%#*+=-:. ");
+        setAsciiInvert(false);
+        setAsciiColor(true);
+        setAsciiOpacity(1);
+        setAsciiBackground('black');
+        setAsciiFont('monospace');
+        setAsciiGamma(1);
+        setAsciiBold(false);
+        setAsciiEdge('none');
+        setAsciiCharsetPreset('custom');
+        setSel(null);
+        setSelectedCategory('basic');
+        // Update refs
+        exposureRef.current = 0;
+        contrastRef.current = 0;
+        saturationRef.current = 0;
+        temperatureRef.current = 0;
+        vignetteRef.current = 0;
+        frameColorRef.current = 'white';
+        frameThicknessRef.current = 0;
+        selectedFilterRef.current = 'none';
+        filterStrengthRef.current = 1;
+        grainRef.current = 0;
+        softFocusRef.current = 0;
+        fadeRef.current = 0;
+        overlayRef.current = null;
+        frameOverlayRef.current = null;
+        ditherMethodRef.current = 'none';
+        ditherLevelsRef.current = 8;
+        ditherColorModeRef.current = 'bw';
+        ditherPaletteRef.current = 'auto';
+        ditherCustomPaletteRef.current = '';
+        pixelSizeRef.current = 1;
+        pixelShapeRef.current = 'square';
+        pixelSampleRef.current = 'average';
+        asciiEnabledRef.current = false;
+        asciiCellSizeRef.current = 8;
+        asciiCharsetRef.current = "@%#*+=-:. ";
+        asciiInvertRef.current = false;
+        asciiColorRef.current = true;
+        asciiOpacityRef.current = 1;
+        asciiBackgroundRef.current = 'black';
+        asciiFontRef.current = 'monospace';
+        asciiGammaRef.current = 1;
+        asciiBoldRef.current = false;
+        asciiEdgeRef.current = 'none';
+        rotationRef.current = 0;
+        // Recompute layout
+        if (computeImageLayoutRef.current) {
+          computeImageLayoutRef.current();
+        }
+        setIsProcessing(false);
+        closeCamera();
+      }, 'image/jpeg', 0.92);
+    } catch (e) {
+      console.error(e);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleOpenCamera = async () => {
+    try {
+      await openCamera();
+    } catch (e) {
+      console.error('Failed to open camera:', e);
+    }
+  };
+
   return (
     <main
       tabIndex={0}
@@ -555,6 +672,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         isFullscreen={isFullscreen}
         onDownload={handleDownload}
         onToggleTheme={toggleTheme}
+        onCamera={handleOpenCamera}
       />
 
       <figure className="image-editor-canvas-container" ref={containerRef}>
@@ -693,6 +811,15 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
         />
       </aside>
       {/* debug overlay removed */}
+      <CameraModal
+        cameraOpen={cameraOpen}
+        setCameraOpen={setCameraOpen}
+        videoRef={videoRef}
+        streamRef={streamRef}
+        processing={isProcessing}
+        onCapture={handleCameraCapture}
+        openCamera={openCamera}
+      />
       {isProcessing && <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backdropFilter: 'blur(5px)', zIndex: 9999, pointerEvents: 'none'}}></div>}
     </main>
   );

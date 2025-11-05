@@ -46,9 +46,7 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
     }
     _setEditing(false);
   };
-  const [editExpanded, setEditExpanded] = useState(false);
   const [editorSaving, setEditorSaving] = useState(false);
-  const editTimerRef = useRef<number | null>(null);
   const editorRef = useRef<{ save: () => Promise<void>; cancel?: () => void } | null>(null);
 
   const handleSave = async (patch: any) => {
@@ -86,9 +84,6 @@ export function useEdit(post: HydratedPost, setPost: (post: HydratedPost) => voi
   return {
     editing,
   setEditing,
-    editExpanded,
-    setEditExpanded,
-    editTimerRef,
     editorSaving,
     editorRef,
     editorOpeningRef,

@@ -8,7 +8,7 @@ import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import Image from "next/image";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
-import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
+import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, X } from "lucide-react";
 import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import AutoScroll from "../AutoScroll";
@@ -35,9 +35,6 @@ interface UserHeaderProps {
   setShowAuth: (value: boolean) => void;
   editing: boolean;
   setEditing: (value: boolean) => void;
-  editExpanded: boolean;
-  setEditExpanded: (value: boolean) => void;
-  editTimerRef: React.MutableRefObject<number | null>;
   editorSaving: boolean;
   deleteExpanded: boolean;
   setDeleteExpanded: (value: boolean) => void;
@@ -67,9 +64,6 @@ export const UserHeader = memo(function UserHeader({
   setShowAuth,
   editing,
   setEditing,
-  editExpanded,
-  setEditExpanded,
-  editTimerRef,
   editorSaving,
   deleteExpanded,
   setDeleteExpanded,
@@ -88,7 +82,6 @@ export const UserHeader = memo(function UserHeader({
   editorOpeningRef,
   toast: _toast,
 }: UserHeaderProps) {
-  const editClickLockRef = useRef<number | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const [showFullDate, setShowFullDate] = useState(false);
@@ -223,56 +216,14 @@ export const UserHeader = memo(function UserHeader({
             ) : (
               <>
                 <button
-                  className={`btn icon-reveal edit-btn ${editExpanded ? 'expanded' : ''} ${editing ? 'active' : ''} ${editorSaving ? 'saving' : ''}`}
-                  disabled={editing}
-                  onClick={async (e) => {
-                    // Guard against rapid double-clicks that can immediately trigger the
-                    // save branch right after opening. If a click occurred very recently,
-                    // ignore this one.
-                    const now = Date.now();
-                    const LOCK_MS = 400;
-                    if (editClickLockRef.current && (now - editClickLockRef.current) < LOCK_MS) {
-                      try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
-                      return;
-                    }
-
-                    if (!editing) {
-                      // Stop the click reaching parent handlers and causing other
-                      // side-effects (navigation, etc.) so the editor can open
-                      // immediately.
-                      try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
-
-                      // Record click time so a follow-up click is ignored briefly
-                      editClickLockRef.current = now;
-                      setTimeout(() => { editClickLockRef.current = null; }, LOCK_MS);
-
-                      setEditExpanded(true);
-                      if (editTimerRef.current) { window.clearTimeout(editTimerRef.current); editTimerRef.current = null; }
-                      editTimerRef.current = window.setTimeout(() => { setEditExpanded(false); editTimerRef.current = null; }, 3500);
-                      // Start preloading thumbnails but don't await — we want the
-                      // editor to open immediately on first click. The preload
-                      // can continue in the background.
-                      try { preloadOverlayThumbnails().catch(() => {}); } catch {}
-                      // set editing
-                      setEditing(true);
-                      return;
-                    }
-
-                    // When already editing, do nothing
-                  }}
+                  className={`btn ${editorSaving ? 'saving' : ''}`}
+                  onClick={() => setEditing(!editing)}
                 >
-                  <span className="icon" aria-hidden="true"><Edit size={16} /></span>
+                  <Edit size={16} />
                 </button>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <button
-                    className={`btn ghost small-min delete-btn ${deleteExpanded ? 'confirm' : ''}`}
-                    aria-label={deleteExpanded ? 'Confirm delete post' : 'Delete post'}
-                    onClick={handleDeleteActivation}
-                    style={{ position: 'relative' }}
-                  >
-                    <span aria-hidden><Trash size={16} /></span>
-                  </button>
-                </div>
+                <button className="btn" onClick={handleDeleteActivation}>
+                  <Trash size={16} />
+                </button>
               </>
             )}
           </>

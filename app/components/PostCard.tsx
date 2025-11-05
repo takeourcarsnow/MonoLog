@@ -82,9 +82,6 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   const {
     editing,
     setEditing,
-    editExpanded,
-    setEditExpanded,
-    editTimerRef,
     editorSaving,
     editorRef,
     handleSave,
@@ -123,9 +120,6 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         setShowAuth={setShowAuth}
         editing={editing}
         setEditing={setEditing}
-        editExpanded={editExpanded}
-        setEditExpanded={setEditExpanded}
-        editTimerRef={editTimerRef}
         editorSaving={editorSaving}
         editorRef={editorRef}
         editorOpeningRef={editorOpeningRef}

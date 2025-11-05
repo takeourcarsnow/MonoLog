@@ -402,7 +402,7 @@
 /* Icon reveal buttons: show a small icon and gently reveal the text on hover/focus
   or when JS toggles the `.expanded` class (used to reveal labels on click). */
 .icon-reveal { display: inline-flex; align-items: center; gap: 8px; overflow: hidden; }
-.icon-reveal .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; transition: transform 220ms var(--transition-mid), opacity 220ms var(--transition-fast); }
+.icon-reveal .icon { display: inline-grid; place-items: center; width: 18px; height: 18px; }
 .icon-reveal .reveal { display: inline-block; transform-origin: left center; transition: transform 260ms var(--transition-mid), opacity 220ms var(--transition-fast), max-width 260ms var(--transition-mid); opacity: 1; white-space: nowrap; max-width: 120px; overflow: hidden; }
 
 /* default: slightly hide the reveal label on compact buttons to emphasize the icon */
@@ -415,6 +415,35 @@
 
 /* Explicit expanded state: reveal label when JS toggles .expanded */
 .icon-reveal.expanded .reveal { transform: translateX(0) scale(1); opacity: 1; max-width: 220px; }
+
+.card-head button.btn {
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.card-head button.btn:hover {
+  background: transparent;
+  border-color: var(--border);
+  transform: none;
+  box-shadow: none;
+}
+
+@keyframes subtleSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.anim-btn .icon {
+  transition: none;
+}
+
+.anim-btn:active {
+  transform: none !important;
+}
+
+.anim-btn:active .icon {
+  animation: subtleSpin 0.3s ease-in-out;
+}
 
 /* make primary buttons slightly more pronounced */
 .btn.primary.icon-reveal .reveal { font-weight: 700; }
@@ -820,11 +849,12 @@
      behaving like “no limit” for real-world content sizes. */
   max-height: 9999px; /* was 1000px */
   opacity: 1;
-  transition: max-height 260ms var(--transition-mid), opacity 220ms var(--transition-mid);
+  max-height: 9999px; /* was 1000px */
+  opacity: 1;
+  transition: none;
 }
-.card.editor-opening .caption-wrap {
-  max-height: 0;
-  opacity: 0;
+.card.editor-open .caption-wrap {
+  display: none;
 }
 
 .actions {

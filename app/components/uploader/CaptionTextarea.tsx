@@ -223,7 +223,9 @@ export function CaptionTextarea({
           pointerEvents: 'none',
           padding: '4px 8px',
           borderRadius: 999,
-          background: 'color-mix(in srgb, var(--bg-elev) 75%, transparent)',
+          background: 'color-mix(in srgb, var(--bg-elev) 90%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--border) 50%, transparent)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           lineHeight: 1,
           fontVariantNumeric: 'tabular-nums',
           transition: 'opacity 160ms ease, transform 160ms ease'

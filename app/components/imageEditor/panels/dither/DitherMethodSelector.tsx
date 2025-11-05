@@ -16,95 +16,23 @@ export default function DitherMethodSelector({
   scheduleDraw,
 }: DitherMethodSelectorProps) {
   return (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-      <button
-        type="button"
-        onClick={() => {
-          ditherMethodRef.current = 'floyd-steinberg';
-          setDitherMethod('floyd-steinberg');
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%' }}>
+      <label style={{ fontSize: 11, minWidth: 60 }}>Method</label>
+      <select
+        value={ditherMethod}
+        onChange={(e) => {
+          const m = e.target.value as DitherMethodSelectorProps['ditherMethod'];
+          ditherMethodRef.current = m;
+          setDitherMethod(m);
           scheduleDraw();
         }}
-        style={{
-          padding: '4px 8px',
-          borderRadius: 6,
-          border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
-          background: ditherMethod === 'floyd-steinberg' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
-          color: 'var(--text)',
-          fontSize: 11,
-          fontWeight: 500,
-          cursor: 'pointer',
-          transition: 'background 0.2s ease'
-        }}
-        aria-label="Dither method: Floyd"
+        style={{ fontSize: 11, padding: '4px 6px', minWidth: 140 }}
       >
-        Floyd
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          ditherMethodRef.current = 'ordered';
-          setDitherMethod('ordered');
-          scheduleDraw();
-        }}
-        style={{
-          padding: '4px 8px',
-          borderRadius: 6,
-          border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
-          background: ditherMethod === 'ordered' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
-          color: 'var(--text)',
-          fontSize: 11,
-          fontWeight: 500,
-          cursor: 'pointer',
-          transition: 'background 0.2s ease'
-        }}
-        aria-label="Dither method: Ordered (Bayer 4x4)"
-      >
-        Ordered
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          ditherMethodRef.current = 'atkinson';
-          setDitherMethod('atkinson');
-          scheduleDraw();
-        }}
-        style={{
-          padding: '4px 8px',
-          borderRadius: 6,
-          border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
-          background: ditherMethod === 'atkinson' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
-          color: 'var(--text)',
-          fontSize: 11,
-          fontWeight: 500,
-          cursor: 'pointer',
-          transition: 'background 0.2s ease'
-        }}
-        aria-label="Dither method: Atkinson"
-      >
-        Atkinson
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          ditherMethodRef.current = 'burkes';
-          setDitherMethod('burkes');
-          scheduleDraw();
-        }}
-        style={{
-          padding: '4px 8px',
-          borderRadius: 6,
-          border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
-          background: ditherMethod === 'burkes' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
-          color: 'var(--text)',
-          fontSize: 11,
-          fontWeight: 500,
-          cursor: 'pointer',
-          transition: 'background 0.2s ease'
-        }}
-        aria-label="Dither method: Burkes"
-      >
-        Burkes
-      </button>
+        <option value="floyd-steinberg">Floyd</option>
+        <option value="ordered">Ordered</option>
+        <option value="atkinson">Atkinson</option>
+        <option value="burkes">Burkes</option>
+      </select>
     </div>
   );
 }

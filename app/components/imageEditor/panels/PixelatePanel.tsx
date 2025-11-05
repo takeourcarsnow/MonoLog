@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { Grid } from 'lucide-react';
-import { rangeBg } from '../utils';
+import PixelateControlsShared from '../../pixelate/PixelateControls';
 import { throttle } from '@/lib/utils';
 
 interface PixelatePanelProps {
@@ -20,46 +19,25 @@ interface PixelatePanelProps {
 }
 
 export default function PixelatePanel(props: PixelatePanelProps) {
+  // keep schedule draw throttle consistent with before
   const scheduleDraw = useMemo(() => throttle(() => props.draw(), 80), [props.draw]);
 
   return (
     <>
       {(!props.anyEnabled || props.pixelateEnabled) && (
-        <div style={{ display: 'grid', gap: 4, maxWidth: 720, margin: '0 auto', width: '100%' }}>
-          <label style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ width: 'auto', display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-              <Grid size={18} strokeWidth={2} aria-hidden />
-              <span>Pixelate</span>
-            </span>
-            <input
-              type="checkbox"
-              checked={props.pixelateEnabled}
-              onChange={(e) => props.onToggleEnabled(e.target.checked)}
-              aria-label="Enable pixelation"
-            />
-          </label>
-          {props.pixelateEnabled && (
-            <>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
-                <input
-                  className="imgedit-range"
-                  type="range"
-                  min={1}
-                  max={100}
-                  step={1}
-                  value={props.pixelSize}
-                  onInput={(e: any) => {
-                    const v = Number(e.target.value);
-                    props.pixelSizeRef.current = v;
-                    props.setPixelSize(v);
-                    scheduleDraw();
-                  }}
-                  style={{ flex: 1, background: rangeBg(props.pixelSize, 1, 100, '#334155', '#38bdf8') }}
-                  aria-label="Pixel size"
-                />
-              </div>
-            </>
-          )}
+        <div style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}>
+          <PixelateControlsShared
+            pixelSize={props.pixelSize}
+            pixelShape={props.pixelShape}
+            setPixelSize={(v) => { props.pixelSizeRef.current = v; props.setPixelSize(v); scheduleDraw(); }}
+            pixelSizeRef={props.pixelSizeRef}
+            setPixelShape={(s) => { props.pixelShapeRef && (props.pixelShapeRef.current = s); props.setPixelShape && props.setPixelShape(s); scheduleDraw(); }}
+            pixelShapeRef={props.pixelShapeRef}
+            draw={props.draw}
+            showToggle={true}
+            enabled={props.pixelateEnabled}
+            onToggleEnabled={props.onToggleEnabled}
+          />
         </div>
       )}
     </>

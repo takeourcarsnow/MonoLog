@@ -35,105 +35,36 @@ export default function EffectsPanel({
   resetControlToDefault,
 }: EffectsPanelProps) {
   return (
-    <section className="imgedit-panel-inner effects-panel" style={{ display: 'grid', width: '100%' }}>
-      <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Aperture size={18} strokeWidth={2} aria-hidden />
-          <span>Vignette</span>
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+    <section className="imgedit-panel-inner effects-panel" style={{ display: 'grid', width: '100%', gap: 6 }}>
+      {[
+        { key: 'vignette', icon: <Aperture size={14} strokeWidth={2} aria-hidden />, label: 'Vignette', value: vignette, ref: vignetteRef, set: setVignette, color: ['#001122', '#66d1ff'] },
+        { key: 'grain', icon: <Layers size={14} strokeWidth={2} aria-hidden />, label: 'Grain', value: grain, ref: grainRef, set: setGrain, color: ['#8b7355', '#ff9f43'] },
+        { key: 'softFocus', icon: <ZapOff size={14} strokeWidth={2} aria-hidden />, label: 'Soft', value: softFocus, ref: softFocusRef, set: setSoftFocus, color: ['#f0e6ff', '#c8a2ff'] },
+        { key: 'fade', icon: <Film size={14} strokeWidth={2} aria-hidden />, label: 'Fade', value: fade, ref: fadeRef, set: setFade, color: ['#fff9e6', '#ffdc99'] },
+      ].map((c) => (
+        <label key={c.key} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, fontWeight: 600, minWidth: 72 }}>
+            {c.icon}
+            <span style={{ whiteSpace: 'nowrap' }}>{c.label}</span>
+          </span>
           <input
             className="imgedit-range"
             type="range"
             min={0}
             max={1}
             step={0.01}
-            value={vignette}
+            value={c.value}
             onInput={(e: any) => {
               const v = Number(e.target.value);
-              vignetteRef.current = v;
-              setVignette(v);
+              c.ref.current = v;
+              c.set(v);
               requestAnimationFrame(() => draw());
             }}
-            onDoubleClick={() => resetControlToDefault('vignette')}
-            style={{ flex: 1, background: rangeBg(vignette, 0, 1, '#001122', '#66d1ff') }}
+            onDoubleClick={() => resetControlToDefault(c.key)}
+            style={{ flex: 1, minWidth: 0, background: rangeBg(c.value, 0, 1, c.color[0], c.color[1]) }}
           />
-        </span>
-      </label>
-      <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Layers size={18} strokeWidth={2} aria-hidden />
-          <span>Grain</span>
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-          <input
-            className="imgedit-range"
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={grain}
-            onInput={(e: any) => {
-              const v = Number(e.target.value);
-              grainRef.current = v;
-              setGrain(v);
-              requestAnimationFrame(() => draw());
-            }}
-            onDoubleClick={() => resetControlToDefault('grain')}
-            style={{ flex: 1, background: rangeBg(grain, 0, 1, '#8b7355', '#ff9f43') }}
-          />
-        </span>
-      </label>
-
-      <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
-          <ZapOff size={18} strokeWidth={2} aria-hidden />
-          <span>Soft Focus</span>
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-          <input
-            className="imgedit-range"
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={softFocus}
-            onInput={(e: any) => {
-              const v = Number(e.target.value);
-              softFocusRef.current = v;
-              setSoftFocus(v);
-              requestAnimationFrame(() => draw());
-            }}
-            onDoubleClick={() => resetControlToDefault('softFocus')}
-            style={{ flex: 1, background: rangeBg(softFocus, 0, 1, '#f0e6ff', '#c8a2ff') }}
-          />
-        </span>
-      </label>
-
-      <label style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <span style={{ width: 100, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Film size={18} strokeWidth={2} aria-hidden />
-          <span>Fade</span>
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-          <input
-            className="imgedit-range"
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={fade}
-            onInput={(e: any) => {
-              const v = Number(e.target.value);
-              fadeRef.current = v;
-              setFade(v);
-              requestAnimationFrame(() => draw());
-            }}
-            onDoubleClick={() => resetControlToDefault('fade')}
-            style={{ flex: 1, background: rangeBg(fade, 0, 1, '#fff9e6', '#ffdc99') }}
-          />
-        </span>
-      </label>
+        </label>
+      ))}
     </section>
   );
 }

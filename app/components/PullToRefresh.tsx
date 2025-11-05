@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import React, { ReactNode } from 'react';
 import { SpinningLogo } from "@/app/components/ui/SpinningLogo";
+import { currentTheme } from "@/lib/theme";
 
 interface PullToRefreshIndicatorProps {
   isRefreshing: boolean;
@@ -33,7 +34,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         }}
       >
         <div className="flex items-center space-x-2">
-          <SpinningLogo size={20} className="pull-to-refresh-logo" />
+          <SpinningLogo size={20} className="pull-to-refresh-logo" invertInLight={currentTheme() === 'light'} />
         </div>
       </div>
   );

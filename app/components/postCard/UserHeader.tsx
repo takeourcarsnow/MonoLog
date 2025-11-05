@@ -8,7 +8,7 @@ import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import Image from "next/image";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
-import { Lock, UserPlus, UserCheck, Edit, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, X } from "lucide-react";
+import { Lock, UserPlus, UserCheck, Edit, Pencil, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, X } from "lucide-react";
 import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import AutoScroll from "../AutoScroll";
@@ -214,17 +214,18 @@ export const UserHeader = memo(function UserHeader({
                 ) : null}
               </>
             ) : (
-              <>
+              <div style={{ display: 'flex', gap: 0 }}>
                 <button
-                  className={`btn ${editorSaving ? 'saving' : ''}`}
+                  className={`btn edit-btn ${editorSaving ? 'saving' : ''}`}
                   onClick={() => setEditing(!editing)}
+                  title="Edit post"
                 >
-                  <Edit size={16} />
+                  <Pencil size={16} />
                 </button>
-                <button className="btn" onClick={handleDeleteActivation}>
+                <button className="btn delete-btn" style={{ color: deleteExpanded ? 'red' : undefined }} onClick={handleDeleteActivation} title={deleteExpanded ? "Confirm delete" : "Delete post"}>
                   <Trash size={16} />
                 </button>
-              </>
+              </div>
             )}
           </>
         )}

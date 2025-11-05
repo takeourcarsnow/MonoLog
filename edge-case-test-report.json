@@ -1,0 +1,817 @@
+{
+  "passed": 30,
+  "failed": 15,
+  "warnings": 0,
+  "tests": [
+    {
+      "name": "User Login",
+      "passed": true,
+      "details": "Successfully authenticated",
+      "category": "auth",
+      "duration": 7701,
+      "timestamp": "2025-11-05T01:17:54.453Z"
+    },
+    {
+      "name": "Rapid Navigation Stress Test",
+      "passed": true,
+      "details": "Completed 15 rapid page switches",
+      "category": "navigation",
+      "duration": 20192,
+      "timestamp": "2025-11-05T01:18:06.943Z"
+    },
+    {
+      "name": "Back/Forward Navigation Spam",
+      "passed": true,
+      "details": "Survived 3 cycles",
+      "category": "navigation",
+      "duration": 30542,
+      "timestamp": "2025-11-05T01:18:17.293Z"
+    },
+    {
+      "name": "Invalid Route - /nonexistent-page",
+      "passed": false,
+      "details": "No error page shown",
+      "category": "navigation",
+      "duration": 31761,
+      "timestamp": "2025-11-05T01:18:18.512Z"
+    },
+    {
+      "name": "Invalid Route - /user/fake-user-12345",
+      "passed": true,
+      "details": "Handled gracefully",
+      "category": "navigation",
+      "duration": 33457,
+      "timestamp": "2025-11-05T01:18:20.208Z"
+    },
+    {
+      "name": "Invalid Route - /communities/nonexistent-community",
+      "passed": false,
+      "details": "No error page shown",
+      "category": "navigation",
+      "duration": 34422,
+      "timestamp": "2025-11-05T01:18:21.173Z"
+    },
+    {
+      "name": "Invalid Route - /post/invalid-post-id",
+      "passed": true,
+      "details": "Handled gracefully",
+      "category": "navigation",
+      "duration": 35922,
+      "timestamp": "2025-11-05T01:18:22.673Z"
+    },
+    {
+      "name": "Protected Route Access",
+      "passed": true,
+      "details": "Logged in user can access upload",
+      "category": "navigation",
+      "duration": 36323,
+      "timestamp": "2025-11-05T01:18:23.074Z"
+    },
+    {
+      "name": "Create Post",
+      "passed": true,
+      "details": "Post created successfully",
+      "category": "post",
+      "duration": 77907,
+      "timestamp": "2025-11-05T01:19:04.658Z"
+    },
+    {
+      "name": "View Post in Feed",
+      "passed": true,
+      "details": "Post visible in feed",
+      "category": "post",
+      "duration": 82739,
+      "timestamp": "2025-11-05T01:19:09.490Z"
+    },
+    {
+      "name": "View Single Post",
+      "passed": true,
+      "details": "Single post page loaded",
+      "category": "post",
+      "duration": 85783,
+      "timestamp": "2025-11-05T01:19:12.534Z"
+    },
+    {
+      "name": "Favorite Post",
+      "passed": true,
+      "details": "Post favorited",
+      "category": "post",
+      "duration": 86836,
+      "timestamp": "2025-11-05T01:19:13.587Z"
+    },
+    {
+      "name": "Unfavorite Post",
+      "passed": true,
+      "details": "Post unfavorited",
+      "category": "post",
+      "duration": 87387,
+      "timestamp": "2025-11-05T01:19:14.138Z"
+    },
+    {
+      "name": "Add Comment",
+      "passed": true,
+      "details": "Comment posted successfully",
+      "category": "post",
+      "duration": 91089,
+      "timestamp": "2025-11-05T01:19:17.840Z"
+    },
+    {
+      "name": "Reply to Comment",
+      "passed": true,
+      "details": "Reply posted successfully",
+      "category": "post",
+      "duration": 94720,
+      "timestamp": "2025-11-05T01:19:21.471Z"
+    },
+    {
+      "name": "Delete Reply",
+      "passed": true,
+      "details": "Delete button not found (acceptable)",
+      "category": "post",
+      "duration": 94723,
+      "timestamp": "2025-11-05T01:19:21.474Z"
+    },
+    {
+      "name": "Delete Comment",
+      "passed": true,
+      "details": "Delete button not found (acceptable)",
+      "category": "post",
+      "duration": 94726,
+      "timestamp": "2025-11-05T01:19:21.477Z"
+    },
+    {
+      "name": "Delete Post",
+      "passed": false,
+      "details": "Confirm button not found after clicking delete",
+      "category": "post",
+      "duration": 96849,
+      "timestamp": "2025-11-05T01:19:23.600Z"
+    },
+    {
+      "name": "Verify Post Deleted",
+      "passed": false,
+      "details": "Post still appears in feed/profile",
+      "category": "post",
+      "duration": 101873,
+      "timestamp": "2025-11-05T01:19:28.624Z"
+    },
+    {
+      "name": "Create Community",
+      "passed": true,
+      "details": "Community created successfully",
+      "category": "community",
+      "duration": 109957,
+      "timestamp": "2025-11-05T01:19:36.708Z"
+    },
+    {
+      "name": "View Community Page",
+      "passed": true,
+      "details": "Community page loaded",
+      "category": "community",
+      "duration": 109960,
+      "timestamp": "2025-11-05T01:19:36.711Z"
+    },
+    {
+      "name": "Create Thread",
+      "passed": true,
+      "details": "Thread created successfully",
+      "category": "community",
+      "duration": 115681,
+      "timestamp": "2025-11-05T01:19:42.432Z"
+    },
+    {
+      "name": "Reply to Thread",
+      "passed": true,
+      "details": "Reply posted successfully",
+      "category": "community",
+      "duration": 118242,
+      "timestamp": "2025-11-05T01:19:44.993Z"
+    },
+    {
+      "name": "Delete Thread Reply",
+      "passed": true,
+      "details": "Reply deletion attempted",
+      "category": "community",
+      "duration": 118792,
+      "timestamp": "2025-11-05T01:19:45.543Z"
+    },
+    {
+      "name": "Delete Thread",
+      "passed": false,
+      "details": "Thread deletion attempted",
+      "category": "community",
+      "duration": 120354,
+      "timestamp": "2025-11-05T01:19:47.105Z"
+    },
+    {
+      "name": "Delete Community",
+      "passed": false,
+      "details": "Community deletion attempted",
+      "category": "community",
+      "duration": 124529,
+      "timestamp": "2025-11-05T01:19:51.280Z"
+    },
+    {
+      "name": "Upload Valid Image",
+      "passed": true,
+      "details": "Logo.png uploaded successfully",
+      "category": "upload",
+      "duration": 174624,
+      "timestamp": "2025-11-05T01:20:41.375Z"
+    },
+    {
+      "name": "Photo Editor Opens",
+      "passed": true,
+      "details": "Editor canvas visible",
+      "category": "editor",
+      "duration": 178197,
+      "timestamp": "2025-11-05T01:20:44.948Z"
+    },
+    {
+      "name": "Photo Editor - Rapid Tool Switching",
+      "passed": true,
+      "details": "Survived tool spam",
+      "category": "editor",
+      "duration": 178669,
+      "timestamp": "2025-11-05T01:20:45.421Z"
+    },
+    {
+      "name": "Photo Editor - Canvas Interactions",
+      "passed": true,
+      "details": "Completed random clicks and drags",
+      "category": "editor",
+      "duration": 180345,
+      "timestamp": "2025-11-05T01:20:47.096Z"
+    },
+    {
+      "name": "Photo Editor - Close Without Save",
+      "passed": true,
+      "details": "Successfully closed editor",
+      "category": "editor",
+      "duration": 181449,
+      "timestamp": "2025-11-05T01:20:48.200Z"
+    },
+    {
+      "name": "Multiple Rapid Uploads",
+      "passed": true,
+      "details": "Handled rapid uploads",
+      "category": "upload",
+      "duration": 186496,
+      "timestamp": "2025-11-05T01:20:53.247Z"
+    },
+    {
+      "name": "Upload Form Interaction Stress",
+      "passed": true,
+      "details": "Survived rapid clicking",
+      "category": "upload",
+      "duration": 193210,
+      "timestamp": "2025-11-05T01:20:59.961Z"
+    },
+    {
+      "name": "Rapid Scrolling",
+      "passed": true,
+      "details": "Successfully scrolled to top",
+      "category": "scroll",
+      "duration": 197299,
+      "timestamp": "2025-11-05T01:21:04.050Z"
+    },
+    {
+      "name": "Scroll Stress Test",
+      "passed": true,
+      "details": "Completed 5 full-page scroll cycles",
+      "category": "scroll",
+      "duration": 200437,
+      "timestamp": "2025-11-05T01:21:07.188Z"
+    },
+    {
+      "name": "Momentum Scrolling",
+      "passed": true,
+      "details": "Completed momentum scroll simulation",
+      "category": "scroll",
+      "duration": 202410,
+      "timestamp": "2025-11-05T01:21:09.161Z"
+    },
+    {
+      "name": "Responsive - Extra Small Mobile (320px)",
+      "passed": false,
+      "details": "320x568 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Responsive",
+      "category": "responsive",
+      "duration": 203509,
+      "timestamp": "2025-11-05T01:21:10.260Z"
+    },
+    {
+      "name": "Responsive - Small Mobile (375px)",
+      "passed": false,
+      "details": "375x667 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Issues",
+      "category": "responsive",
+      "duration": 204661,
+      "timestamp": "2025-11-05T01:21:11.412Z"
+    },
+    {
+      "name": "Responsive - Tablet (768px)",
+      "passed": false,
+      "details": "768x1024 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+      "category": "responsive",
+      "duration": 205872,
+      "timestamp": "2025-11-05T01:21:12.623Z"
+    },
+    {
+      "name": "Responsive - Small Desktop (1024px)",
+      "passed": false,
+      "details": "1024x768 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+      "category": "responsive",
+      "duration": 207085,
+      "timestamp": "2025-11-05T01:21:13.836Z"
+    },
+    {
+      "name": "Responsive - Full HD Desktop (1920px)",
+      "passed": false,
+      "details": "1920x1080 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+      "category": "responsive",
+      "duration": 208352,
+      "timestamp": "2025-11-05T01:21:15.103Z"
+    },
+    {
+      "name": "Responsive - Extreme Tiny (1x1)",
+      "passed": false,
+      "details": "1x1 - Content: OK, Overflow: Yes, Images: Issues, Panels: Issues, Nav: Issues",
+      "category": "responsive",
+      "duration": 209568,
+      "timestamp": "2025-11-05T01:21:16.319Z"
+    },
+    {
+      "name": "Responsive - Ultra Wide (5000px)",
+      "passed": false,
+      "details": "5000x2000 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+      "category": "responsive",
+      "duration": 210706,
+      "timestamp": "2025-11-05T01:21:17.457Z"
+    },
+    {
+      "name": "Responsive - Extra Tall (3000px height)",
+      "passed": false,
+      "details": "800x3000 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+      "category": "responsive",
+      "duration": 212237,
+      "timestamp": "2025-11-05T01:21:18.988Z"
+    },
+    {
+      "name": "Responsive - Square-ish Tablet",
+      "passed": false,
+      "details": "600x800 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Responsive",
+      "category": "responsive",
+      "duration": 213485,
+      "timestamp": "2025-11-05T01:21:20.236Z"
+    }
+  ],
+  "errors": [
+    "Supabase error (getPostsByDate) {message: TypeError: Failed to fetch, code: null, details: TypeError: Failed to fetch\n    at http://localhost…3000/_next/static/chunks/_472665a6._.js:11376:35), data: null}",
+    "Error fetching user by username: TypeError: Failed to fetch\n    at Object.getUserByUsername (http://localhost:3000/_next/static/chunks/_970a3eb7._.js:1684:28)\n    at Proxy.<anonymous> (http://localhost:3000/_next/static/chunks/_970a3eb7._.js:3621:36)\n    at useUserData.useCallback[fetchUserData] (http://localhost:3000/_next/static/chunks/_7e652685._.js:2145:201)\n    at dedupe (http://localhost:3000/_next/static/chunks/_7e652685._.js:2045:21)\n    at useUserData.useCallback[fetchUserData] (http://localhost:3000/_next/static/chunks/_7e652685._.js:2144:176)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "TypeError: Failed to fetch\n    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:585:23\n    at _handleRequest (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:939:24)\n    at _request (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:926:24)\n    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:4089:220\n    at SupabaseAuthClient._useSession (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:3961:26)\n    at async SupabaseAuthClient._getUser (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:4074:20)\n    at async http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:4061:20",
+    "Supabase error (auth.getUser) {message: Failed to fetch, code: null, details: AuthRetryableFetchError: Failed to fetch\n    at _handleRequest (http://localhost:3000/_next/static/…, data: Object}",
+    "Forms: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"text\"], textarea').first()\u001b[22m\n\u001b[2m    - locator resolved to <textarea readonly rows=\"1\" class=\"input\" tabindex=\"-1\" placeholder=\"\" maxlength=\"2000\" aria-label=\"Caption\"></textarea>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"uploader view-fade   \">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div class=\"uploader view-fade   \">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  2 × retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"app-content\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  13 × retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"uploader view-fade   \">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"uploader view-fade   \">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"app-content\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"app-content\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  2 × retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"uploader view-fade   \">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n",
+    "Search: locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input').first()\u001b[22m\n\u001b[2m    - locator resolved to <input type=\"file\" accept=\"image/*\"/>\u001b[22m\n\u001b[2m    - fill(\"Vilnius\")\u001b[22m\n\u001b[2m  - attempting fill action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    59 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying fill action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+    "Responsive: page.waitForTimeout: Target page, context or browser has been closed",
+    "Interactions: page.goto: Target page, context or browser has been closed",
+    "Network: page.waitForTimeout: Target page, context or browser has been closed",
+    "Memory & Performance: page.goto: Target page, context or browser has been closed",
+    "Accessibility: page.goto: Target page, context or browser has been closed",
+    "Concurrent Actions: page.goto: Target page, context or browser has been closed"
+  ],
+  "screenshots": [
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305498513-Invalid-Route----nonexistent-page.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305501173-Invalid-Route----communities-nonexistent-community.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305563600-Delete-Post.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305568626-Verify-Post-Deleted.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305587105-Delete-Thread.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305591281-Delete-Community.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305670260-Responsive---Extra-Small-Mobile--320px-.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305671412-Responsive---Small-Mobile--375px-.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305672623-Responsive---Tablet--768px-.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305673836-Responsive---Small-Desktop--1024px-.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305675103-Responsive---Full-HD-Desktop--1920px-.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305676320-Responsive---Extreme-Tiny--1x1-.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305677457-Responsive---Ultra-Wide--5000px-.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305678988-Responsive---Extra-Tall--3000px-height-.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762305680236-Responsive---Square-ish-Tablet.png"
+  ],
+  "categories": {
+    "auth": {
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "User Login",
+          "passed": true,
+          "details": "Successfully authenticated",
+          "category": "auth",
+          "duration": 7701,
+          "timestamp": "2025-11-05T01:17:54.453Z"
+        }
+      ]
+    },
+    "navigation": {
+      "passed": 5,
+      "failed": 2,
+      "tests": [
+        {
+          "name": "Rapid Navigation Stress Test",
+          "passed": true,
+          "details": "Completed 15 rapid page switches",
+          "category": "navigation",
+          "duration": 20192,
+          "timestamp": "2025-11-05T01:18:06.943Z"
+        },
+        {
+          "name": "Back/Forward Navigation Spam",
+          "passed": true,
+          "details": "Survived 3 cycles",
+          "category": "navigation",
+          "duration": 30542,
+          "timestamp": "2025-11-05T01:18:17.293Z"
+        },
+        {
+          "name": "Invalid Route - /nonexistent-page",
+          "passed": false,
+          "details": "No error page shown",
+          "category": "navigation",
+          "duration": 31761,
+          "timestamp": "2025-11-05T01:18:18.512Z"
+        },
+        {
+          "name": "Invalid Route - /user/fake-user-12345",
+          "passed": true,
+          "details": "Handled gracefully",
+          "category": "navigation",
+          "duration": 33457,
+          "timestamp": "2025-11-05T01:18:20.208Z"
+        },
+        {
+          "name": "Invalid Route - /communities/nonexistent-community",
+          "passed": false,
+          "details": "No error page shown",
+          "category": "navigation",
+          "duration": 34422,
+          "timestamp": "2025-11-05T01:18:21.173Z"
+        },
+        {
+          "name": "Invalid Route - /post/invalid-post-id",
+          "passed": true,
+          "details": "Handled gracefully",
+          "category": "navigation",
+          "duration": 35922,
+          "timestamp": "2025-11-05T01:18:22.673Z"
+        },
+        {
+          "name": "Protected Route Access",
+          "passed": true,
+          "details": "Logged in user can access upload",
+          "category": "navigation",
+          "duration": 36323,
+          "timestamp": "2025-11-05T01:18:23.074Z"
+        }
+      ]
+    },
+    "post": {
+      "passed": 9,
+      "failed": 2,
+      "tests": [
+        {
+          "name": "Create Post",
+          "passed": true,
+          "details": "Post created successfully",
+          "category": "post",
+          "duration": 77907,
+          "timestamp": "2025-11-05T01:19:04.658Z"
+        },
+        {
+          "name": "View Post in Feed",
+          "passed": true,
+          "details": "Post visible in feed",
+          "category": "post",
+          "duration": 82739,
+          "timestamp": "2025-11-05T01:19:09.490Z"
+        },
+        {
+          "name": "View Single Post",
+          "passed": true,
+          "details": "Single post page loaded",
+          "category": "post",
+          "duration": 85783,
+          "timestamp": "2025-11-05T01:19:12.534Z"
+        },
+        {
+          "name": "Favorite Post",
+          "passed": true,
+          "details": "Post favorited",
+          "category": "post",
+          "duration": 86836,
+          "timestamp": "2025-11-05T01:19:13.587Z"
+        },
+        {
+          "name": "Unfavorite Post",
+          "passed": true,
+          "details": "Post unfavorited",
+          "category": "post",
+          "duration": 87387,
+          "timestamp": "2025-11-05T01:19:14.138Z"
+        },
+        {
+          "name": "Add Comment",
+          "passed": true,
+          "details": "Comment posted successfully",
+          "category": "post",
+          "duration": 91089,
+          "timestamp": "2025-11-05T01:19:17.840Z"
+        },
+        {
+          "name": "Reply to Comment",
+          "passed": true,
+          "details": "Reply posted successfully",
+          "category": "post",
+          "duration": 94720,
+          "timestamp": "2025-11-05T01:19:21.471Z"
+        },
+        {
+          "name": "Delete Reply",
+          "passed": true,
+          "details": "Delete button not found (acceptable)",
+          "category": "post",
+          "duration": 94723,
+          "timestamp": "2025-11-05T01:19:21.474Z"
+        },
+        {
+          "name": "Delete Comment",
+          "passed": true,
+          "details": "Delete button not found (acceptable)",
+          "category": "post",
+          "duration": 94726,
+          "timestamp": "2025-11-05T01:19:21.477Z"
+        },
+        {
+          "name": "Delete Post",
+          "passed": false,
+          "details": "Confirm button not found after clicking delete",
+          "category": "post",
+          "duration": 96849,
+          "timestamp": "2025-11-05T01:19:23.600Z"
+        },
+        {
+          "name": "Verify Post Deleted",
+          "passed": false,
+          "details": "Post still appears in feed/profile",
+          "category": "post",
+          "duration": 101873,
+          "timestamp": "2025-11-05T01:19:28.624Z"
+        }
+      ]
+    },
+    "community": {
+      "passed": 5,
+      "failed": 2,
+      "tests": [
+        {
+          "name": "Create Community",
+          "passed": true,
+          "details": "Community created successfully",
+          "category": "community",
+          "duration": 109957,
+          "timestamp": "2025-11-05T01:19:36.708Z"
+        },
+        {
+          "name": "View Community Page",
+          "passed": true,
+          "details": "Community page loaded",
+          "category": "community",
+          "duration": 109960,
+          "timestamp": "2025-11-05T01:19:36.711Z"
+        },
+        {
+          "name": "Create Thread",
+          "passed": true,
+          "details": "Thread created successfully",
+          "category": "community",
+          "duration": 115681,
+          "timestamp": "2025-11-05T01:19:42.432Z"
+        },
+        {
+          "name": "Reply to Thread",
+          "passed": true,
+          "details": "Reply posted successfully",
+          "category": "community",
+          "duration": 118242,
+          "timestamp": "2025-11-05T01:19:44.993Z"
+        },
+        {
+          "name": "Delete Thread Reply",
+          "passed": true,
+          "details": "Reply deletion attempted",
+          "category": "community",
+          "duration": 118792,
+          "timestamp": "2025-11-05T01:19:45.543Z"
+        },
+        {
+          "name": "Delete Thread",
+          "passed": false,
+          "details": "Thread deletion attempted",
+          "category": "community",
+          "duration": 120354,
+          "timestamp": "2025-11-05T01:19:47.105Z"
+        },
+        {
+          "name": "Delete Community",
+          "passed": false,
+          "details": "Community deletion attempted",
+          "category": "community",
+          "duration": 124529,
+          "timestamp": "2025-11-05T01:19:51.280Z"
+        }
+      ]
+    },
+    "upload": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Upload Valid Image",
+          "passed": true,
+          "details": "Logo.png uploaded successfully",
+          "category": "upload",
+          "duration": 174624,
+          "timestamp": "2025-11-05T01:20:41.375Z"
+        },
+        {
+          "name": "Multiple Rapid Uploads",
+          "passed": true,
+          "details": "Handled rapid uploads",
+          "category": "upload",
+          "duration": 186496,
+          "timestamp": "2025-11-05T01:20:53.247Z"
+        },
+        {
+          "name": "Upload Form Interaction Stress",
+          "passed": true,
+          "details": "Survived rapid clicking",
+          "category": "upload",
+          "duration": 193210,
+          "timestamp": "2025-11-05T01:20:59.961Z"
+        }
+      ]
+    },
+    "editor": {
+      "passed": 4,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Photo Editor Opens",
+          "passed": true,
+          "details": "Editor canvas visible",
+          "category": "editor",
+          "duration": 178197,
+          "timestamp": "2025-11-05T01:20:44.948Z"
+        },
+        {
+          "name": "Photo Editor - Rapid Tool Switching",
+          "passed": true,
+          "details": "Survived tool spam",
+          "category": "editor",
+          "duration": 178669,
+          "timestamp": "2025-11-05T01:20:45.421Z"
+        },
+        {
+          "name": "Photo Editor - Canvas Interactions",
+          "passed": true,
+          "details": "Completed random clicks and drags",
+          "category": "editor",
+          "duration": 180345,
+          "timestamp": "2025-11-05T01:20:47.096Z"
+        },
+        {
+          "name": "Photo Editor - Close Without Save",
+          "passed": true,
+          "details": "Successfully closed editor",
+          "category": "editor",
+          "duration": 181449,
+          "timestamp": "2025-11-05T01:20:48.200Z"
+        }
+      ]
+    },
+    "scroll": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Rapid Scrolling",
+          "passed": true,
+          "details": "Successfully scrolled to top",
+          "category": "scroll",
+          "duration": 197299,
+          "timestamp": "2025-11-05T01:21:04.050Z"
+        },
+        {
+          "name": "Scroll Stress Test",
+          "passed": true,
+          "details": "Completed 5 full-page scroll cycles",
+          "category": "scroll",
+          "duration": 200437,
+          "timestamp": "2025-11-05T01:21:07.188Z"
+        },
+        {
+          "name": "Momentum Scrolling",
+          "passed": true,
+          "details": "Completed momentum scroll simulation",
+          "category": "scroll",
+          "duration": 202410,
+          "timestamp": "2025-11-05T01:21:09.161Z"
+        }
+      ]
+    },
+    "responsive": {
+      "passed": 0,
+      "failed": 9,
+      "tests": [
+        {
+          "name": "Responsive - Extra Small Mobile (320px)",
+          "passed": false,
+          "details": "320x568 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Responsive",
+          "category": "responsive",
+          "duration": 203509,
+          "timestamp": "2025-11-05T01:21:10.260Z"
+        },
+        {
+          "name": "Responsive - Small Mobile (375px)",
+          "passed": false,
+          "details": "375x667 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Issues",
+          "category": "responsive",
+          "duration": 204661,
+          "timestamp": "2025-11-05T01:21:11.412Z"
+        },
+        {
+          "name": "Responsive - Tablet (768px)",
+          "passed": false,
+          "details": "768x1024 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+          "category": "responsive",
+          "duration": 205872,
+          "timestamp": "2025-11-05T01:21:12.623Z"
+        },
+        {
+          "name": "Responsive - Small Desktop (1024px)",
+          "passed": false,
+          "details": "1024x768 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+          "category": "responsive",
+          "duration": 207085,
+          "timestamp": "2025-11-05T01:21:13.836Z"
+        },
+        {
+          "name": "Responsive - Full HD Desktop (1920px)",
+          "passed": false,
+          "details": "1920x1080 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+          "category": "responsive",
+          "duration": 208352,
+          "timestamp": "2025-11-05T01:21:15.103Z"
+        },
+        {
+          "name": "Responsive - Extreme Tiny (1x1)",
+          "passed": false,
+          "details": "1x1 - Content: OK, Overflow: Yes, Images: Issues, Panels: Issues, Nav: Issues",
+          "category": "responsive",
+          "duration": 209568,
+          "timestamp": "2025-11-05T01:21:16.319Z"
+        },
+        {
+          "name": "Responsive - Ultra Wide (5000px)",
+          "passed": false,
+          "details": "5000x2000 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+          "category": "responsive",
+          "duration": 210706,
+          "timestamp": "2025-11-05T01:21:17.457Z"
+        },
+        {
+          "name": "Responsive - Extra Tall (3000px height)",
+          "passed": false,
+          "details": "800x3000 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive",
+          "category": "responsive",
+          "duration": 212237,
+          "timestamp": "2025-11-05T01:21:18.988Z"
+        },
+        {
+          "name": "Responsive - Square-ish Tablet",
+          "passed": false,
+          "details": "600x800 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Responsive",
+          "category": "responsive",
+          "duration": 213485,
+          "timestamp": "2025-11-05T01:21:20.236Z"
+        }
+      ]
+    }
+  },
+  "duration": 214730,
+  "testDate": "2025-11-05T01:21:21.481Z",
+  "environment": {
+    "baseUrl": "http://localhost:3000",
+    "testEmail": "ngi04j7n9f@daouse.com"
+  }
+}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Users, MessageSquare, Trash2, UserMinus, UserPlus, ArrowLeft, User as UserIcon, Clock } from "lucide-react";
+import { Users, MessageSquare, Trash2, UserMinus, UserPlus, ArrowLeft, User as UserIcon, Clock, Pencil } from "lucide-react";
 import { useRef } from "react";
 import type { HydratedCommunity, HydratedThread } from "@/lib/types";
 import { Button } from "@/app/components/ui/Button";
@@ -267,7 +267,27 @@ export function CommunityView() {
       </div>
 
       {/* Community Header - centered stacked layout */}
-      <div className="card">
+      <div className="card relative">
+        {/* Edit and delete buttons in top left for community owner */}
+        {currentUser && community.creator.id === currentUser.id && (
+          <div className="absolute left-3 top-3 flex gap-2">
+            <Link href={`/communities/${community.slug}/edit`}>
+              <Button variant="ghost" size="sm" className="small-min" aria-label="Edit community">
+                <Pencil size={16} />
+              </Button>
+            </Link>
+            <Button
+              variant="danger"
+              size="sm"
+              className={`small-min ${deleteArmed ? 'confirm' : ''}`}
+              onClick={handleDelete}
+              aria-label={deleteArmed ? 'Confirm delete community' : 'Delete community'}
+            >
+              <Trash2 size={16} />
+            </Button>
+          </div>
+        )}
+
         <div className="flex flex-col items-center text-center gap-4 py-4">
           {/* Community image */}
           <OptimizedImage
@@ -284,51 +304,44 @@ export function CommunityView() {
             {community.description}
           </p>
 
-          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 justify-center">
-            <span className="inline-flex items-center gap-2" title={`${community.memberCount || 0} members`} aria-label={`${community.memberCount || 0} members`}>
-              <Users size={14} />
-              {"\u00A0"}
-              <span>{community.memberCount || 0}</span>{"\u00A0"}
-            </span>
+          <div className="flex flex-col items-center gap-2 mt-2 text-sm text-gray-500">
+            <div className="flex items-center gap-4 justify-center">
+              <span className="inline-flex items-center gap-2" title={`${community.memberCount || 0} members`} aria-label={`${community.memberCount || 0} members`}>
+                <Users size={14} />
+                {"\u00A0"}
+                <span>{community.memberCount || 0}</span>{"\u00A0"}
+              </span>
 
-            <span className="inline-flex items-center gap-2" title={`${community.threadCount || 0} threads`} aria-label={`${community.threadCount || 0} threads`}>
-              <MessageSquare size={14} />
-              {"\u00A0"}
-              <span>{community.threadCount || 0}</span>{"\u00A0"}
-            </span>
+              <span className="inline-flex items-center gap-2" title={`${community.threadCount || 0} threads`} aria-label={`${community.threadCount || 0} threads`}>
+                <MessageSquare size={14} />
+                {"\u00A0"}
+                <span>{community.threadCount || 0}</span>{"\u00A0"}
+              </span>
+            </div>
 
-            <span className="inline-flex items-center gap-2" title={`@${community.creator.username}`} aria-label={`${community.creator.username}`}>
-              <UserIcon size={14} />
-              {"\u00A0"}
+            <span
+              role="link"
+              tabIndex={0}
+              className="inline-flex items-center justify-center cursor-pointer"
+              title={`@${community.creator.username}`}
+              aria-label={`${community.creator.username}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/${community.creator.username}`);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  router.push(`/${community.creator.username}`);
+                }
+              }}
+            >
               <span>@{community.creator.username}</span>
             </span>
           </div>
 
           <div className="flex flex-wrap gap-2 justify-center mt-3">
-            {currentUser && community.creator.id === currentUser.id && (
-              <>
-                <Link href={`/communities/${community.slug}/edit`}>
-                  <Button variant="ghost" size="sm" className="small-min" aria-label="Edit community">
-                    {/* tooltip */}
-                    {""}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                  </Button>
-                </Link>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  className={`small-min ${deleteArmed ? 'confirm' : ''}`}
-                  onClick={handleDelete}
-                  aria-label={deleteArmed ? 'Confirm delete community' : 'Delete community'}
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </>
-            )}
-
             {/* Don't show join button for community creators */}
             {currentUser?.id !== community.creator.id && (
               <ToggleActionButton
@@ -356,43 +369,65 @@ export function CommunityView() {
           </div>
         ) : (
           threads.map((thread, index) => (
-            <Link key={thread.id} href={`/communities/${community.slug}/thread/${thread.slug}`} className="card block thread-card" style={{ animationDelay: `${index * 0.15}s` }}>
+            <Link key={thread.id} href={`/communities/${community.slug}/thread/${thread.slug}`} className="card block thread-card relative" style={{ animationDelay: `${index * 0.15}s` }}>
+              {/* Put delete button in the top-left corner of the thread card for owners */}
+              {currentUser && thread.user.id === currentUser.id && (
+                <div className="absolute left-3 top-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`small-min ${threadDeleteArmedSet.has(thread.id) ? 'confirm' : ''}`}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await handleDeleteThread(thread.id);
+                    }}
+                    aria-label={threadDeleteArmedSet.has(thread.id) ? 'Confirm delete thread' : 'Delete thread'}
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              )}
+
               <div className="flex items-center justify-center">
                   <div className="flex-1 min-w-0 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <h3 className="font-semibold text-lg hover:underline">{thread.title}</h3>
-                      {currentUser && thread.user.id === currentUser.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={`small-min ${threadDeleteArmedSet.has(thread.id) ? 'confirm' : ''}`}
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            await handleDeleteThread(thread.id);
-                          }}
-                          aria-label={threadDeleteArmedSet.has(thread.id) ? 'Confirm delete thread' : 'Delete thread'}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      )}
                     </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                     {thread.content}
                   </p>
-                  <div className="flex items-center justify-center gap-4 mt-2 text-sm text-gray-500">
-                    <span className="inline-flex items-center gap-2 truncate" title={`@${thread.user.username}`} aria-label={`${thread.user.username}`}>
-                      <UserIcon size={14} />{"\u00A0"}
-                      <span className="truncate">@{thread.user.username}</span>{"\u00A0"}
-                    </span>
+                  <div className="flex flex-col items-center gap-2 mt-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-4 justify-center">
+                      <span className="inline-flex items-center gap-2" title={`${thread.replyCount || 0}`} aria-label={`${thread.replyCount || 0}`}>
+                        <MessageSquare size={14} />{"\u00A0"}
+                        <span>{thread.replyCount || 0}</span>{"\u00A0"}
+                      </span>
 
-                    <span className="inline-flex items-center gap-2" title={`${thread.replyCount || 0}`} aria-label={`${thread.replyCount || 0}`}>
-                      <MessageSquare size={14} />{"\u00A0"}
-                      <span>{thread.replyCount || 0}</span>{"\u00A0"}
-                    </span>
+                      <span className="inline-flex items-center gap-2" title={`${thread.createdAt}`} aria-label={`${thread.createdAt}`}>
+                        <Clock size={14} />{"\u00A0"}
+                        <TimeDisplay date={thread.createdAt} />
+                      </span>
+                    </div>
 
-                    <span className="inline-flex items-center gap-2" title={`${thread.createdAt}`} aria-label={`${thread.createdAt}`}>
-                      <Clock size={14} />{"\u00A0"}
-                      <TimeDisplay date={thread.createdAt} />
+                    <span
+                      role="link"
+                      tabIndex={0}
+                      className="inline-flex items-center justify-center cursor-pointer"
+                      title={`@${thread.user.username}`}
+                      aria-label={`${thread.user.username}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/${thread.user.username}`);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/${thread.user.username}`);
+                        }
+                      }}
+                    >
+                      <span>@{thread.user.username}</span>
                     </span>
                   </div>
                 </div>

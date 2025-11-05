@@ -31,7 +31,8 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
       <div className="card relative">
         {/* Delete button in corner for thread owner */}
         {currentUserId && thread.user.id === currentUserId && (
-          <div className="absolute right-3 top-3">
+          // Move delete button to the top-left corner to match community card placement
+          <div className="absolute left-3 top-3">
             <Button
               variant="danger"
               size="sm"
@@ -46,29 +47,20 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
 
         <div className="flex flex-col items-center text-center gap-3 py-3">
           <h1 className="text-2xl font-bold">{thread.title}</h1>
-            <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 justify-center">
-              <div className="flex items-center gap-2">
-              <div className="flex-shrink-0">
-                <Link href={`/${thread.user.username}`}>
-                  <OptimizedImage
-                    src={(thread.user.avatarUrl || "").trim() || "/logo.svg"}
-                    alt={thread.user.username}
-                    width={24}
-                    height={24}
-                    className="avatar rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                  />
-                </Link>
-              </div>
-              <span>@{thread.user.username}</span>
+          <div className="flex flex-col items-center gap-2 mt-1 text-sm text-gray-500">
+            <div className="flex items-center gap-4 justify-center">
+              <span className="inline-flex items-center gap-2">
+                <Clock size={14} className="mr-1" />{"\u00A0"}
+                <TimeDisplay date={thread.createdAt} />{"\u00A0"}
+              </span>
+              <span className="flex items-center gap-2">
+                <MessageSquare size={14} />{"\u00A0"}
+                <span>{thread.replyCount || 0}</span>{"\u00A0"}
+              </span>
             </div>
-            <span className="inline-flex items-center gap-2">
-              <Clock size={14} className="mr-1" />{"\u00A0"}
-              <TimeDisplay date={thread.createdAt} />{"\u00A0"}
-            </span>
-            <span className="flex items-center gap-2">
-              <MessageSquare size={14} />{"\u00A0"}
-              <span>{thread.replyCount || 0}</span>{"\u00A0"}
-            </span>
+            <Link href={`/${thread.user.username}`} className="inline-flex items-center justify-center" title={`@${thread.user.username}`} aria-label={`${thread.user.username}`}>
+              <span>@{thread.user.username}</span>
+            </Link>
           </div>
         </div>
 

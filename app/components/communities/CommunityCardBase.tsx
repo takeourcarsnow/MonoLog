@@ -34,7 +34,11 @@ export default function CommunityCardBase({
   lastActivity,
 }: Props) {
   return (
-    <div className="card">
+    <div className="card relative">
+      {/* client-side children (eg. join/leave button) positioned at top left */}
+      <div className="absolute top-4 left-4 z-10">
+        {children}
+      </div>
       <div className="flex flex-col items-center text-center gap-3 py-4">
         {imageNode || (
           <OptimizedImage
@@ -77,9 +81,6 @@ export default function CommunityCardBase({
 
           {showCreator && <span>@{creator?.username}</span>}
         </div>
-
-        {/* client-side children (eg. join/leave button) */}
-        {children}
       </div>
     </div>
   );

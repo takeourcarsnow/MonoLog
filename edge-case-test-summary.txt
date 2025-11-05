@@ -1,0 +1,299 @@
+
+╔════════════════════════════════════════════════════════════════╗
+║           🔥 MONOLOG EDGE CASE TEST REPORT 🔥                 ║
+╚════════════════════════════════════════════════════════════════╝
+
+Generated: 2025-11-05T01:21:21.483Z
+Duration: 214.73s
+Test Account: ngi04j7n9f@daouse.com
+
+╔════════════════════════════════════════════════════════════════╗
+║                         📊 SUMMARY                             ║
+╚════════════════════════════════════════════════════════════════╝
+
+Total Tests: 45
+✅ Passed: 30
+❌ Failed: 15
+⚠️ Console Errors: 15
+📷 Screenshots: 15
+
+Success Rate: 66.7%
+
+╔════════════════════════════════════════════════════════════════╗
+║                    📋 TESTS BY CATEGORY                        ║
+╚════════════════════════════════════════════════════════════════╝
+
+
+AUTH:
+  ✅ Passed: 1/1
+  ❌ Failed: 0/1
+  Success: 100.0%
+
+
+NAVIGATION:
+  ✅ Passed: 5/7
+  ❌ Failed: 2/7
+  Success: 71.4%
+
+
+POST:
+  ✅ Passed: 9/11
+  ❌ Failed: 2/11
+  Success: 81.8%
+
+
+COMMUNITY:
+  ✅ Passed: 5/7
+  ❌ Failed: 2/7
+  Success: 71.4%
+
+
+UPLOAD:
+  ✅ Passed: 3/3
+  ❌ Failed: 0/3
+  Success: 100.0%
+
+
+EDITOR:
+  ✅ Passed: 4/4
+  ❌ Failed: 0/4
+  Success: 100.0%
+
+
+SCROLL:
+  ✅ Passed: 3/3
+  ❌ Failed: 0/3
+  Success: 100.0%
+
+
+RESPONSIVE:
+  ✅ Passed: 0/9
+  ❌ Failed: 9/9
+  Success: 0.0%
+
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                       ❌ FAILED TESTS                          ║
+╚════════════════════════════════════════════════════════════════╝
+
+• Invalid Route - /nonexistent-page
+  Category: navigation
+  Details: No error page shown
+
+• Invalid Route - /communities/nonexistent-community
+  Category: navigation
+  Details: No error page shown
+
+• Delete Post
+  Category: post
+  Details: Confirm button not found after clicking delete
+
+• Verify Post Deleted
+  Category: post
+  Details: Post still appears in feed/profile
+
+• Delete Thread
+  Category: community
+  Details: Thread deletion attempted
+
+• Delete Community
+  Category: community
+  Details: Community deletion attempted
+
+• Responsive - Extra Small Mobile (320px)
+  Category: responsive
+  Details: 320x568 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Responsive
+
+• Responsive - Small Mobile (375px)
+  Category: responsive
+  Details: 375x667 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Issues
+
+• Responsive - Tablet (768px)
+  Category: responsive
+  Details: 768x1024 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive
+
+• Responsive - Small Desktop (1024px)
+  Category: responsive
+  Details: 1024x768 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive
+
+• Responsive - Full HD Desktop (1920px)
+  Category: responsive
+  Details: 1920x1080 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive
+
+• Responsive - Extreme Tiny (1x1)
+  Category: responsive
+  Details: 1x1 - Content: OK, Overflow: Yes, Images: Issues, Panels: Issues, Nav: Issues
+
+• Responsive - Ultra Wide (5000px)
+  Category: responsive
+  Details: 5000x2000 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive
+
+• Responsive - Extra Tall (3000px height)
+  Category: responsive
+  Details: 800x3000 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Responsive, Nav: Responsive
+
+• Responsive - Square-ish Tablet
+  Category: responsive
+  Details: 600x800 - Content: OK, Overflow: Yes, Images: Responsive, Panels: Issues, Nav: Responsive
+
+
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                    ⚠️ CONSOLE ERRORS                           ║
+╚════════════════════════════════════════════════════════════════╝
+
+• Supabase error (getPostsByDate) {message: TypeError: Failed to fetch, code: null, details: TypeError: Failed to fetch
+    at http://localhost…3000/_next/static/chunks/_472665a6._.js:11376:35), data: null}
+• Error fetching user by username: TypeError: Failed to fetch
+    at Object.getUserByUsername (http://localhost:3000/_next/static/chunks/_970a3eb7._.js:1684:28)
+    at Proxy.<anonymous> (http://localhost:3000/_next/static/chunks/_970a3eb7._.js:3621:36)
+    at useUserData.useCallback[fetchUserData] (http://localhost:3000/_next/static/chunks/_7e652685._.js:2145:201)
+    at dedupe (http://localhost:3000/_next/static/chunks/_7e652685._.js:2045:21)
+    at useUserData.useCallback[fetchUserData] (http://localhost:3000/_next/static/chunks/_7e652685._.js:2144:176)
+• Failed to load resource: the server responded with a status of 404 (Not Found)
+• Failed to load resource: the server responded with a status of 404 (Not Found)
+• Failed to load resource: the server responded with a status of 404 (Not Found)
+• TypeError: Failed to fetch
+    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:585:23
+    at _handleRequest (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:939:24)
+    at _request (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:926:24)
+    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:4089:220
+    at SupabaseAuthClient._useSession (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:3961:26)
+    at async SupabaseAuthClient._getUser (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:4074:20)
+    at async http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js:4061:20
+• Supabase error (auth.getUser) {message: Failed to fetch, code: null, details: AuthRetryableFetchError: Failed to fetch
+    at _handleRequest (http://localhost:3000/_next/static/…, data: Object}
+• Forms: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input[type="text"], textarea').first()[22m
+[2m    - locator resolved to <textarea readonly rows="1" class="input" tabindex="-1" placeholder="" maxlength="2000" aria-label="Caption"></textarea>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div class="uploader view-fade   ">…</div> intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    - waiting for element to be visible, enabled and stable[22m
+[2m    - element is visible, enabled and stable[22m
+[2m    - scrolling into view if needed[22m
+[2m    - done scrolling[22m
+[2m    - <div class="uploader view-fade   ">…</div> intercepts pointer events[22m
+[2m  2 × retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div class="app-content">…</div> intercepts pointer events[22m
+[2m  13 × retrying click action[22m
+[2m       - waiting 500ms[22m
+[2m       - waiting for element to be visible, enabled and stable[22m
+[2m       - element is visible, enabled and stable[22m
+[2m       - scrolling into view if needed[22m
+[2m       - done scrolling[22m
+[2m       - <div class="uploader view-fade   ">…</div> intercepts pointer events[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+[2m       - waiting for element to be visible, enabled and stable[22m
+[2m       - element is visible, enabled and stable[22m
+[2m       - scrolling into view if needed[22m
+[2m       - done scrolling[22m
+[2m       - <div class="uploader view-fade   ">…</div> intercepts pointer events[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+[2m       - waiting for element to be visible, enabled and stable[22m
+[2m       - element is visible, enabled and stable[22m
+[2m       - scrolling into view if needed[22m
+[2m       - done scrolling[22m
+[2m       - <div class="app-content">…</div> intercepts pointer events[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+[2m       - waiting for element to be visible, enabled and stable[22m
+[2m       - element is visible, enabled and stable[22m
+[2m       - scrolling into view if needed[22m
+[2m       - done scrolling[22m
+[2m       - <div class="app-content">…</div> intercepts pointer events[22m
+[2m  2 × retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div class="uploader view-fade   ">…</div> intercepts pointer events[22m
+[2m  - retrying click action[22m
+[2m    - waiting 500ms[22m
+
+• Search: locator.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input').first()[22m
+[2m    - locator resolved to <input type="file" accept="image/*"/>[22m
+[2m    - fill("Vilnius")[22m
+[2m  - attempting fill action[22m
+[2m    2 × waiting for element to be visible, enabled and editable[22m
+[2m      - element is not visible[22m
+[2m    - retrying fill action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and editable[22m
+[2m      - element is not visible[22m
+[2m    - retrying fill action[22m
+[2m      - waiting 100ms[22m
+[2m    59 × waiting for element to be visible, enabled and editable[22m
+[2m       - element is not visible[22m
+[2m     - retrying fill action[22m
+[2m       - waiting 500ms[22m
+
+• Responsive: page.waitForTimeout: Target page, context or browser has been closed
+
+... and 5 more errors
+
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                     📷 SCREENSHOTS                             ║
+╚════════════════════════════════════════════════════════════════╝
+
+Error screenshots saved to:
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305498513-Invalid-Route----nonexistent-page.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305501173-Invalid-Route----communities-nonexistent-community.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305563600-Delete-Post.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305568626-Verify-Post-Deleted.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305587105-Delete-Thread.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305591281-Delete-Community.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305670260-Responsive---Extra-Small-Mobile--320px-.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305671412-Responsive---Small-Mobile--375px-.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305672623-Responsive---Tablet--768px-.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305673836-Responsive---Small-Desktop--1024px-.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305675103-Responsive---Full-HD-Desktop--1920px-.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305676320-Responsive---Extreme-Tiny--1x1-.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305677457-Responsive---Ultra-Wide--5000px-.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305678988-Responsive---Extra-Tall--3000px-height-.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762305680236-Responsive---Square-ish-Tablet.png
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                      📁 REPORT FILES                           ║
+╚════════════════════════════════════════════════════════════════╝
+
+• Full Report: C:\Users\i\Desktop\webdev\MonoLog\edge-case-test-report.json
+• Summary: C:\Users\i\Desktop\webdev\MonoLog\edge-case-test-summary.txt
+
+╔════════════════════════════════════════════════════════════════╗
+║                    💡 RECOMMENDATIONS                          ║
+╚════════════════════════════════════════════════════════════════╝
+
+⚠️  Some edge cases failed. Review the failed tests and consider:
+   • Adding better error handling
+   • Improving input validation
+   • Optimizing performance for edge conditions
+   • Enhancing user feedback for error states
+
+⚠️  Console errors detected. Consider:
+   • Fixing JavaScript errors
+   • Handling missing resources gracefully
+   • Adding proper error boundaries
+
+════════════════════════════════════════════════════════════════

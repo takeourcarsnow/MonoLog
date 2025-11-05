@@ -63,7 +63,9 @@ export function ReplyItem({ reply, currentUserId, onUpdate, onDelete }: ReplyIte
                 />
               </Link>
             </div>
-            <span className="font-medium">@{reply.user.username}</span>
+            <Link href={`/${reply.user.username}`} className="font-medium" title={`@${reply.user.username}`} aria-label={`${reply.user.username}`}>
+              @{reply.user.username}
+            </Link>
             <span className="inline-flex items-center gap-2"><Clock size={12} className="mr-1" />{"\u00A0"}<TimeDisplay date={reply.createdAt} /></span>
           </div>
           {currentUserId && reply.user.id === currentUserId && (

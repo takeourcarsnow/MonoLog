@@ -1281,12 +1281,6 @@
   margin-bottom: 0;
 }
 
-/* Avoid a hairline appearing between the last card and the fixed tabbar by
-   hiding the card's bottom border when it's the last card in the content area. */
-.content .card:last-child {
-  border-bottom-color: transparent;
-}
-
 /* Single-post page wrapper: give a bit more breathing room so the
    full-post view doesn't butt up against the header or the bottom
    navbar/tabbar. Uses safe-area variables when available. */

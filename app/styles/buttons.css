@@ -132,7 +132,15 @@
 }
 
 .btn { transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 180ms cubic-bezier(0.4, 0, 0.2, 1); }
-.btn:active { transform: translateY(0.5px) scale(0.995); }
+.btn:active { transform: translateY(0.5px) scale(0.995); box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+
+.delete-btn:active {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.8) !important;
+}
+
+.edit-btn {
+  border: none;
+}
 
 .btn-group { display: flex; gap: 8px; align-items: center; }
 .btn:focus-visible {

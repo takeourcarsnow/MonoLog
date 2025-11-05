@@ -28,23 +28,25 @@ export default function AvatarReminderModal({ open, onChangeNow, onRemindLater }
 
   return (
     <Portal>
-      <div className="auth-dialog-backdrop" onClick={onRemindLater} />
+      {/* No backdrop for this lightweight reminder - render only the dialog so the
+          page background is not dimmed or blurred. */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Avatar Reminder"
-        className="auth-dialog"
+        className="auth-dialog avatar-reminder-dialog"
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", width: "100%" }}>
-          <h3 style={{ margin: 0, textAlign: "center" }}>Update Your Avatar</h3>
-          <div className="confirm-message" style={{ textAlign: "center" }}>
+        <div className="avatar-reminder-inner">
+          <h3 className="avatar-reminder-title">Update Your Avatar</h3>
+          <div className="confirm-message avatar-reminder-message">
             You&apos;re currently using the default avatar. Personalize your profile by uploading a custom one!
           </div>
-          <div className="confirm-actions" style={{ justifyContent: "center !important" }}>
-            <Button onClick={onRemindLater} aria-label="Remind me later">
+          <div className="confirm-actions avatar-reminder-actions">
+            <Button size="sm" onClick={onRemindLater} aria-label="Remind me later">
               Remind Me Later
             </Button>
             <Button
+              size="sm"
               ref={changeRef as any}
               onClick={onChangeNow}
               aria-label="Change avatar now"

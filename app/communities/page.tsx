@@ -184,6 +184,7 @@ export default function CommunitiesPage() {
                     initialIsMember={c.isMember || false}
                     initialMemberCount={c.memberCount || 0}
                     creatorId={c.creator?.id}
+                    hideInlineJoin={true}
                   />
                 </CommunityCardServer>
               </div>

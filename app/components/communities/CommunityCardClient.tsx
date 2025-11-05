@@ -12,9 +12,11 @@ type Props = {
   initialIsMember?: boolean;
   initialMemberCount?: number;
   creatorId?: string;
+  /** When true the inline join/leave button is hidden (used on communities list) */
+  hideInlineJoin?: boolean;
 };
 
-export default function CommunityCardClient({ communityId, initialIsMember = false, initialMemberCount = 0, creatorId }: Props) {
+export default function CommunityCardClient({ communityId, initialIsMember = false, initialMemberCount = 0, creatorId, hideInlineJoin = false }: Props) {
   const { me } = useAuth();
   const router = useRouter();
   const [isMember, setIsMember] = useState<boolean>(initialIsMember);
@@ -56,8 +58,8 @@ export default function CommunityCardClient({ communityId, initialIsMember = fal
     }
   }, [communityId, isMember, pending, me, router]);
 
-  // Hide join button for creator
-  if (me?.id === creatorId) return null;
+  // Hide join button for creator or when explicitly hidden by parent
+  if (me?.id === creatorId || hideInlineJoin) return null;
 
   return (
     <div>

@@ -337,7 +337,10 @@
 .auth-dialog-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  /* Ensure the backdrop sits above the fixed bottom navbar (which uses a
+     very high z-index). Use values aligned with other high-priority overlays
+     (e.g., notifications popup) so stacking order is predictable. */
+  z-index: 2147483000;
   background: rgba(0,0,0,0.4);
   backdrop-filter: blur(4px);
 }
@@ -347,7 +350,8 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 50;
+  /* Keep dialog above its backdrop */
+  z-index: 2147483001;
   background: var(--bg);
   padding: 16px;
   border-radius: 12px;
@@ -360,6 +364,71 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+/* Avatar reminder modal: do not alter or blur the underlying page; use a
+   smaller dialog so the prompt is unobtrusive on mobile. We scope these
+   rules to `.avatar-reminder-*` to avoid changing global auth dialogs. */
+.avatar-reminder-backdrop {
+  /* make backdrop transparent and remove any backdrop-filter so the page
+     background doesn't blur or dim */
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  pointer-events: auto; /* still catch clicks to close */
+}
+
+
+.avatar-reminder-dialog{
+  /* slightly more breathing room for text */
+  max-width: min(340px, 88vw) !important;
+  padding: 12px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.14) !important;
+  width: auto !important;
+  height: auto !important;
+  max-height: 80vh !important;
+  overflow: visible !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%,-50%) !important;
+}
+
+.avatar-reminder-inner{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:center;
+  width:100%;
+  padding:6px 8px;
+}
+
+.avatar-reminder-title{ font-size:16px; margin:0; text-align:center; font-weight:700; }
+.avatar-reminder-message{
+  font-size:14px;
+  text-align:center;
+  margin:0;
+  line-height:1.35;
+  max-width:94%;
+  /* Allow message to wrap naturally instead of clamping/cutting off */
+  display:block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  overflow: visible;
+  text-overflow: initial;
+  white-space: normal;
+}
+
+.avatar-reminder-actions{ display:flex; gap:10px; justify-content:center; width:100%; }
+
+/* slightly larger buttons for readability */
+.avatar-reminder-dialog .btn{ padding:8px 14px; font-size:14px; }
+.avatar-reminder-dialog .btn[disabled]{ opacity:0.95; }
+
+/* tighten up mobile spacing further */
+@media (max-width:420px){
+  .avatar-reminder-dialog{ max-width: 92vw !important; padding:8px !important; }
+  .avatar-reminder-inner{ gap:6px; padding:4px 8px; }
 }
 
 @keyframes authDialogIn {

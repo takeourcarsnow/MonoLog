@@ -288,6 +288,24 @@ export function CommunityView() {
           </div>
         )}
 
+        {/* Join/Leave button positioned top-left for non-creators (matches other community buttons) */}
+        {currentUser && community.creator.id !== currentUser.id && (
+          <div className="absolute left-3 top-3">
+            <ToggleActionButton
+              active={!!community.isMember}
+              pending={pendingJoin}
+              onClick={handleJoinLeave}
+              className="small-min"
+              activeIcon={<UserMinus size={16} />}
+              inactiveIcon={<UserPlus size={16} />}
+              ariaActiveLabel="Leave community"
+              ariaInactiveLabel="Join community"
+              titleActive="Leave community"
+              titleInactive="Join community"
+            />
+          </div>
+        )}
+
         <div className="flex flex-col items-center text-center gap-4 py-4">
           {/* Community image */}
           <OptimizedImage
@@ -341,23 +359,8 @@ export function CommunityView() {
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-2 justify-center mt-3">
-            {/* Don't show join button for community creators */}
-            {currentUser?.id !== community.creator.id && (
-              <ToggleActionButton
-                active={!!community.isMember}
-                pending={pendingJoin}
-                onClick={handleJoinLeave}
-                className="small-min"
-                activeIcon={<UserMinus size={16} />}
-                inactiveIcon={<UserPlus size={16} />}
-                ariaActiveLabel="Leave community"
-                ariaInactiveLabel="Join community"
-                titleActive="Leave community"
-                titleInactive="Join community"
-              />
-            )}
-          </div>
+          {/* inline action area (buttons moved to top-left) */}
+          <div className="flex flex-wrap gap-2 justify-center mt-3" />
         </div>
       </div>
 

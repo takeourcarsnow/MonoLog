@@ -17,29 +17,42 @@ export function applyDitherEffect(
   paletteName: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii' = 'auto',
   customPaletteStr?: string,
   effectScale: number = 1,
-  opts?: { preview?: boolean; maxPreviewPixels?: number }
+  opts?: { preview?: boolean; maxPreviewPixels?: number; targetLongEdge?: number }
 ) {
   // Respect A/B original preview: skip dithering entirely
   if (filterValues?.isPreviewOrig) return;
   if (!method || method === 'none') return;
-  const L = Math.max(3, Math.min(31, Math.round(levels || 3)));
+  const L = Math.max(2, Math.min(31, Math.round(levels || 4)));
   // Ensure srcCanvas is visible to finally{} for cleanup
   let srcCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
   try {
     const processed = renderProcessedSourceCanvas(img, filterValues);
-    // Downsample to preview-equivalent resolution so pattern density matches
-    let scale = Math.max(1, effectScale);
-    // Hard cap processing pixels for responsiveness in interactive previews (device-agnostic)
-    // Use a unified default cap that works well across devices; callers may override via opts.maxPreviewPixels
-    const maxPreviewPixels = Math.max(64_000, Math.min(600_000, opts?.maxPreviewPixels ?? 250_000));
-    const estPixels = (imgW * imgH) / (scale * scale);
-    if (opts?.preview !== false && estPixels > maxPreviewPixels) {
-      const neededScale = Math.sqrt((imgW * imgH) / maxPreviewPixels);
-      if (isFinite(neededScale) && neededScale > scale) scale = neededScale;
+    // New: force a distinctly low-res look by dithering at a fixed, small base size
+    // similar to classic 8-bit photo apps, then upscale without smoothing.
+    // Use the longer image edge as the control dimension.
+    const targetLong = Math.max(48, Math.min(1024, opts?.targetLongEdge ?? 150));
+    const aspect = imgW / Math.max(1, imgH);
+    let desiredW: number, desiredH: number;
+    if (imgW >= imgH) {
+      desiredW = targetLong;
+      desiredH = Math.round(targetLong / Math.max(1e-6, aspect));
+    } else {
+      desiredH = targetLong;
+      desiredW = Math.round(targetLong * aspect);
+    }
+    // Never upsample the tiny working canvas beyond the current draw size (no benefit)
+    desiredW = Math.max(1, Math.min(Math.round(imgW), desiredW));
+    desiredH = Math.max(1, Math.min(Math.round(imgH), desiredH));
+    // Additionally, keep a pixel cap for interactive preview responsiveness
+    const maxPreviewPixels = Math.max(16_000, Math.min(300_000, opts?.maxPreviewPixels ?? 25_000)); // ~150x150 default
+    if (opts?.preview !== false && desiredW * desiredH > maxPreviewPixels) {
+      const scaleDown = Math.sqrt((desiredW * desiredH) / maxPreviewPixels);
+      desiredW = Math.max(1, Math.round(desiredW / scaleDown));
+      desiredH = Math.max(1, Math.round(desiredH / scaleDown));
     }
 
-    const w = Math.max(1, Math.round(imgW / scale));
-    const h = Math.max(1, Math.round(imgH / scale));
+    const w = desiredW;
+    const h = desiredH;
     const src = getTempCanvas(w, h) as any as HTMLCanvasElement; (src as any).width = w; (src as any).height = h;
     srcCanvas = src as any;
     const sctx = (src as any).getContext('2d')!;

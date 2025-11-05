@@ -10,6 +10,9 @@ interface DitherControlsProps {
   ditherLevels: number;
   setDitherLevels: (v: number) => void;
   ditherLevelsRef: React.MutableRefObject<number>;
+  targetLongEdge?: number;
+  setTargetLongEdge?: (v: number) => void;
+  targetLongEdgeRef?: React.MutableRefObject<number>;
   draw: (overrides?: any) => void;
   resetControlToDefault?: (control: string) => void;
   scheduleDraw: () => void;
@@ -23,6 +26,9 @@ export default function DitherControls({
   ditherLevels,
   setDitherLevels,
   ditherLevelsRef,
+  targetLongEdge,
+  setTargetLongEdge,
+  targetLongEdgeRef,
   draw,
   resetControlToDefault,
   scheduleDraw,
@@ -30,7 +36,30 @@ export default function DitherControls({
   if (ditherMethod === 'none') return null;
 
   return (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Resolution control */}
+      {setTargetLongEdge && targetLongEdgeRef && (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', minWidth: 60 }}>Res</span>
+          <input
+            className="imgedit-range"
+            type="range"
+            min={50}
+            max={400}
+            step={10}
+            value={targetLongEdge || 150}
+            onInput={(e: any) => { const v = Number(e.target.value); targetLongEdgeRef.current = v; setTargetLongEdge(v); scheduleDraw(); }}
+            onDoubleClick={() => resetControlToDefault && resetControlToDefault('targetLongEdge')}
+            style={{ flex: 1, minWidth: 120, background: rangeBg(targetLongEdge || 150, 50, 400, '#0f172a', '#a78bfa') }}
+            aria-label="Dither resolution"
+          />
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', minWidth: 30, textAlign: 'center' }}>
+            {targetLongEdge || 150}
+          </span>
+        </div>
+      )}
+      {/* Levels and color mode controls */}
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: 2, borderRadius: 6, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', overflow: 'hidden' }}>
         <button
           type="button"
@@ -99,6 +128,7 @@ export default function DitherControls({
       <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', minWidth: 20, textAlign: 'center' }}>
         {ditherLevels}
       </span>
+      </div>
     </div>
   );
 }

@@ -58,6 +58,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const [ditherColorMode, setDitherColorMode] = useState<'bw' | 'color'>(initialSettings?.ditherColorMode ?? 'bw');
   const [ditherPalette, setDitherPalette] = useState<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>(initialSettings?.ditherPalette ?? 'auto');
   const [ditherCustomPalette, setDitherCustomPalette] = useState<string>(initialSettings?.ditherCustomPalette ?? '');
+  const [targetLongEdge, setTargetLongEdge] = useState<number>(150); // resolution for dither effect
   const [pixelSize, setPixelSize] = useState<number>(initialSettings?.pixelSize ?? 1);
   const [pixelShape, setPixelShape] = useState<'square' | 'circle'>(initialSettings?.pixelShape ?? 'square');
   const [pixelSample, setPixelSample] = useState<'average' | 'nearest'>(initialSettings?.pixelSample ?? 'average');
@@ -94,6 +95,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
   const ditherColorModeRef = useRef<'bw' | 'color'>(ditherColorMode);
   const ditherPaletteRef = useRef<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>(ditherPalette);
   const ditherCustomPaletteRef = useRef<string>(ditherCustomPalette);
+  const targetLongEdgeRef = useRef<number>(targetLongEdge);
   const pixelSizeRef = useRef<number>(pixelSize);
   const pixelShapeRef = useRef<'square' | 'circle'>(pixelShape);
   const pixelSampleRef = useRef<'average' | 'nearest'>(pixelSample);
@@ -190,6 +192,8 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
     setDitherPalette,
     ditherCustomPalette,
     setDitherCustomPalette,
+    targetLongEdge,
+    setTargetLongEdge,
     pixelSize,
     setPixelSize,
     pixelShape,
@@ -240,6 +244,7 @@ export function useImageEditorState(initialDataUrl: string, initialSettings?: Ed
     ditherColorModeRef,
     ditherPaletteRef,
     ditherCustomPaletteRef,
+    targetLongEdgeRef,
     pixelSizeRef,
     pixelShapeRef,
     pixelSampleRef,

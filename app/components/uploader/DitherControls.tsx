@@ -13,6 +13,23 @@ export function DitherControls({ effectSettings, onSettingsChange, disabled }: D
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 0', alignItems: 'center' }}>
       <label style={{ fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8, width: '100%', maxWidth: 400 }}>
+        <span style={{ minWidth: 80 }}>Resolution:</span>
+        <input
+          type="range"
+          min="50"
+          max="400"
+          step="10"
+          value={effectSettings.targetLongEdge || 150}
+          onChange={(e) => {
+            const newRes = parseInt(e.target.value);
+            onSettingsChange({ ...effectSettings, targetLongEdge: newRes });
+          }}
+          style={{ flex: 1 }}
+          disabled={disabled}
+        />
+        <span style={{ minWidth: 30, textAlign: 'right' }}>{effectSettings.targetLongEdge || 150}</span>
+      </label>
+      <label style={{ fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8, width: '100%', maxWidth: 400 }}>
         <span style={{ minWidth: 80 }}>Levels:</span>
         <input
           type="range"

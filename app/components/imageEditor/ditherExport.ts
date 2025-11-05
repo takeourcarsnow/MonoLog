@@ -24,14 +24,14 @@ export function applyDitherExport(
   if (!method || method === 'none') return;
   const processed = renderProcessedForExport(img, srcX, srcY, srcW, srcH, baseFilter, presetFilter, filterStrength);
   // Simplify: dither at fixed width based on mode, scaled aspect
-  const ditherW = 300;
+  const ditherW = 150;
   const ditherH = Math.round(ditherW * (drawH / drawW));
   const w = Math.max(1, ditherW);
   const h = Math.max(1, ditherH);
   const src = document.createElement('canvas'); src.width = w; src.height = h; const sctx = src.getContext('2d')!;
   sctx.drawImage(processed, 0, 0, processed.width, processed.height, 0, 0, w, h);
   const id = sctx.getImageData(0, 0, w, h); const data = id.data;
-  const L = Math.max(2, Math.min(32, Math.round(levels || 2)));
+  const L = Math.max(2, Math.min(32, Math.round(levels || 4)));
   const quantScalar = (v: number) => Math.round((v / 255) * (L - 1)) * (255 / (L - 1));
   const bayer4 = [0,8,2,10, 12,4,14,6, 3,11,1,9, 15,7,13,5];
   const bayer8 = [

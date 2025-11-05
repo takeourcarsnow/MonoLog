@@ -16,6 +16,7 @@ export interface CameraEffectSettings {
   ditherLevels?: number;
   ditherColorMode?: 'bw' | 'color';
   ditherPalette?: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii';
+  targetLongEdge?: number; // Resolution for dither effect (smaller = chunkier pixels)
   // ASCII settings
   asciiCellSize?: number;
   asciiCharset?: string;

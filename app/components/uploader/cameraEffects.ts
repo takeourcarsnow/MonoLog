@@ -36,16 +36,46 @@ export function applyCameraEffect(
       break;
 
     case 'dither':
-      applyDitherToFrame(
-        sourceCtx,
-        targetCtx,
-        width,
-        height,
-        settings.ditherLevels || 3,
-        settings.ditherColorMode || 'bw',
-        settings.ditherMethod || 'ordered',
-        settings.ditherPalette || 'auto'
-      );
+      // For live camera we prefer a chunkier, retro look and better performance.
+      // Downscale the source to a small working resolution (controlled by targetLongEdge)
+      // then run the dithering on that small canvas and upscale without smoothing.
+      try {
+        const targetLongEdge = (settings as any).targetLongEdge ?? 150; // pixels on the long edge
+        // compute downscaled size preserving aspect
+        let w = width; let h = height;
+        if (width >= height) { w = Math.max(1, Math.round(targetLongEdge)); h = Math.max(1, Math.round(targetLongEdge * (height / width))); }
+        else { h = Math.max(1, Math.round(targetLongEdge)); w = Math.max(1, Math.round(targetLongEdge * (width / height))); }
+
+        // create small source and output canvases
+        const smallSrc = document.createElement('canvas'); smallSrc.width = w; smallSrc.height = h;
+        const ssrc = smallSrc.getContext('2d', { willReadFrequently: true })!;
+        // draw and downscale
+        ssrc.drawImage(sourceCtx.canvas, 0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height, 0, 0, w, h);
+
+        const smallOut = document.createElement('canvas'); smallOut.width = w; smallOut.height = h;
+        const sout = smallOut.getContext('2d')!;
+
+        // perform dithering at small size
+        applyDitherToFrame(ssrc, sout, w, h, settings.ditherLevels || 3, settings.ditherColorMode || 'bw', settings.ditherMethod || 'ordered', settings.ditherPalette || 'auto');
+
+        // draw back to target with smoothing disabled to preserve pixel blocks
+        const prev = (targetCtx as any).imageSmoothingEnabled;
+        (targetCtx as any).imageSmoothingEnabled = false;
+        targetCtx.drawImage(smallOut, 0, 0, w, h, 0, 0, targetCtx.canvas.width, targetCtx.canvas.height);
+        (targetCtx as any).imageSmoothingEnabled = prev;
+      } catch (e) {
+        // fallback to direct full-size dithering if anything fails
+        applyDitherToFrame(
+          sourceCtx,
+          targetCtx,
+          width,
+          height,
+          settings.ditherLevels || 3,
+          settings.ditherColorMode || 'bw',
+          settings.ditherMethod || 'ordered',
+          settings.ditherPalette || 'auto'
+        );
+      }
       break;
 
     case 'ascii':

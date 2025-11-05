@@ -146,43 +146,64 @@ export function ProfileView({ userId }: { userId?: string }) {
         setShowInvites={setShowInvites}
       />
       {showInvites && currentUserId && user && currentUserId === user.id && <InviteSection />}
-      {posts.length > 0 && (
-        (() => {
-          const subtitle = (currentUserId && user && currentUserId === user.id) ? 'Your posts' : `${user?.username || 'User'}'s posts`;
+      {posts.length > 0 ? (
+        <>
+          {(() => {
+            const subtitle = (currentUserId && user && currentUserId === user.id) ? 'Your posts' : `${user?.username || 'User'}'s posts`;
             return (
-            <ViewToggle
-              title={<UserIcon size={20} strokeWidth={2} />}
-              subtitle={subtitle}
-              selected={pendingView ?? view}
-              onSelect={handleViewChange}
-            />
-          );
-        })()
-      )}
-      {
-        // Render both grid and list variants and toggle their visibility with
-        // inline display styles. This mirrors the FeedPage pattern so the
-        // existing CSS animations for .card and .grid .tile run when switching.
-      }
-      {(() => {
-        const gridView = <PostsGrid posts={posts} />;
-        const listView = (
-          <>
-            {posts.map(p => <PostCard key={p.id} post={p} disableCardNavigation={true} />)}
-          </>
-        );
+              <ViewToggle
+                title={<UserIcon size={20} strokeWidth={2} />}
+                subtitle={subtitle}
+                selected={pendingView ?? view}
+                onSelect={handleViewChange}
+              />
+            );
+          })()}
+          {
+            // Render both grid and list variants and toggle their visibility with
+            // inline display styles. This mirrors the FeedPage pattern so the
+            // existing CSS animations for .card and .grid .tile run when switching.
+          }
+          {(() => {
+            const gridView = <PostsGrid posts={posts} />;
+            const listView = (
+              <>
+                {posts.map(p => <PostCard key={p.id} post={p} disableCardNavigation={true} />)}
+              </>
+            );
 
-        return (
-          <div ref={fadeRef} className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
-            <div style={{ display: view === 'grid' ? 'block' : 'none' }}>
-              {gridView}
+            return (
+              <div ref={fadeRef} className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
+                <div style={{ display: view === 'grid' ? 'block' : 'none' }}>
+                  {gridView}
+                </div>
+                <div style={{ display: view === 'list' ? 'block' : 'none' }}>
+                  {listView}
+                </div>
+              </div>
+            );
+          })()}
+        </>
+      ) : (
+        <div className="empty feed-empty" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16 }}>
+          <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', borderRadius: 16 }} aria-hidden>
+              <UserIcon size={56} strokeWidth={2} />
             </div>
-            <div style={{ display: view === 'list' ? 'block' : 'none' }}>
-              {listView}
+            <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>No posts yet</h2>
+            <div style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>
+              {currentUserId && user && currentUserId === user.id ? (
+                <>
+                  <p style={{ margin: 0 }}>You haven't posted anything yet.</p>
+                  <p style={{ margin: 0 }}>Share your first post!</p>
+                </>
+              ) : (
+                <p style={{ margin: 0 }}>This user hasn't posted anything yet.</p>
+              )}
             </div>
           </div>
-        );
-      })()}
+        </div>
+      )}
     </div>
   );
 }

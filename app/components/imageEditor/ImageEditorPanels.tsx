@@ -145,7 +145,7 @@ export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsPro
   return (
     <section className="imgedit-panels" style={{
       maxWidth: 820,
-      margin: '8px 0 0 auto',
+      margin: '8px auto 0',
       position: 'relative',
       borderRadius: 12,
       minHeight: 100

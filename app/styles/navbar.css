@@ -18,6 +18,7 @@
 
 .tab-item-static.active {
   color: var(--tab-color);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .tab-item-static .tab-icon {
@@ -34,27 +35,6 @@
   position: relative;
   z-index: 1;
 }
-
-/* Subtle expansion effect for the active tab: scale the icon and lift it slightly.
-   Also draw a faint circular background 'bubble' behind the active icon. These
-   styles are kept performant (transform/opacity only) and respect reduced-motion. */
-.tab-item-static .tab-icon {
-  transition: transform 260ms cubic-bezier(.2,1,.25,1), color 260ms ease;
-  transform-origin: center center;
-}
-
-.tab-item-static.active {
-  /* Slightly lift the active item (reduced to be less pronounced) */
-  transform: translateY(-1px);
-}
-
-.tab-item-static.active .tab-icon {
-  /* Reduce lift and scale so the effect is more subtle */
-  transform: translateY(-2px) scale(1.12);
-}
-
-/* Background bubble behind icon to accent the active state. Kept subtle. */
-/* Background bubble removed per request: no additional background behind active icon. */
 
 /* Ensure SVGs inside the icon container size to the box */
 .tab-item-static .tab-icon svg {
@@ -165,30 +145,6 @@
 .tab-item-static:focus-visible {
   outline: 2px solid var(--tab-color);
   outline-offset: 2px;
-}
-
-/* Animated tab indicator sitting under the active tab. Color/position/width animate. */
-.tab-indicator {
-  position: absolute;
-  height: 4px;
-  bottom: 8px;
-  left: 0;
-  width: 28px;
-  border-radius: 999px;
-  background: var(--tab-color);
-  transform: translateX(0);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 0;
-  transition: transform 300ms cubic-bezier(.2,1.1,.25,1), width 300ms cubic-bezier(.2,1.1,.25,1), opacity 220ms ease, background-color 200ms ease;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.02) inset;
-  /* Performance optimizations */
-  will-change: transform, width, background-color, opacity;
-  contain: layout style paint;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tab-indicator { transition: none !important; }
 }
 
 /* When the image editor is open, ensure the tabbar and all its children

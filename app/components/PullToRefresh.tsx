@@ -34,7 +34,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         }}
       >
         <div className="flex items-center space-x-2">
-          <SpinningLogo size={20} className="pull-to-refresh-logo" invertInLight={currentTheme() === 'light'} />
+          <SpinningLogo size={20} className="pull-to-refresh-logo" invertInLight={currentTheme() === 'light'} noScale={true} />
         </div>
       </div>
   );

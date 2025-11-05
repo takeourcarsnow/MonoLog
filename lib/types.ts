@@ -231,7 +231,7 @@ export interface Api {
   // sign out the current user (client-side)
   signOut(): Promise<void>;
 
-  calendarStats(opts: { year: number; monthIdx: number; offset: number }): Promise<CalendarStats>;
+  calendarStats(opts: { year: number; monthIdx: number; timeZone: string }): Promise<CalendarStats>;
 
   // Week review statistics
   weekReviewStats(): Promise<WeekReviewStats>;

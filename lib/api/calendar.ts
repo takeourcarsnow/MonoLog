@@ -1,8 +1,30 @@
 import type { CalendarStats } from "../types";
 import { getClient, ensureAuthListener, getCachedAuthUser } from "./client";
-import { toDateKey } from "../date";
 
-export async function calendarStats({ year, monthIdx, offset }: { year: number; monthIdx: number; offset: number }) {
+// Build a YYYY-MM-DD key in a specific IANA timezone using Intl formatter parts
+function dateKeyInTimeZone(d: Date, timeZone: string): string {
+  try {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const parts = fmt.formatToParts(d);
+    const y = parts.find(p => p.type === "year")?.value ?? String(d.getFullYear());
+    const m = parts.find(p => p.type === "month")?.value ?? String(d.getMonth() + 1).padStart(2, "0");
+    const day = parts.find(p => p.type === "day")?.value ?? String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  } catch {
+    // Fallback to local timezone if Intl fails (should be rare)
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+}
+
+export async function calendarStats({ year, monthIdx, timeZone }: { year: number; monthIdx: number; timeZone: string }) {
   const sb = getClient();
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
@@ -15,9 +37,8 @@ export async function calendarStats({ year, monthIdx, offset }: { year: number; 
   const mine = new Set<string>();
   for (const p of data || []) {
     const created = new Date(p.created_at);
-    const localTimestamp = created.getTime() - offset * 60 * 1000;
-    const localDate = new Date(localTimestamp);
-    const dk = toDateKey(localDate);
+    // Derive the user's local calendar date using the supplied IANA timezone
+    const dk = dateKeyInTimeZone(created, timeZone);
     map[dk] = (map[dk] || 0) + 1;
     if (me && p.user_id === me.id) {
       mine.add(dk);

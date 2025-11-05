@@ -54,8 +54,8 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
     if (!shouldLoad) return;
     let cancelled = false;
 
-    const offset = new Date().getTimezoneOffset();
-    const cacheKey = `${curYear}-${curMonth}-${offset}`;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const cacheKey = `${curYear}-${curMonth}-${tz}`;
 
     (async () => {
       try {
@@ -66,7 +66,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
         if (cachedStats) {
           setStats({ counts: cachedStats.counts, mine: new Set(cachedStats.mine) });
         } else {
-          const s = await api.calendarStats({ year: curYear, monthIdx: curMonth, offset });
+          const s = await api.calendarStats({ year: curYear, monthIdx: curMonth, timeZone: tz });
           if (cancelled) return;
           setStats({ counts: s.counts, mine: new Set(s.mine) });
           // store in module cache

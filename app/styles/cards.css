@@ -17,6 +17,8 @@
      `scrollbar-gutter`. Keep overflow:auto as the interactive scrolling
      container. */
   scrollbar-gutter: stable both-edges;
+  /* Center grid items (cards in list view) */
+  justify-items: center;
 }
 
 /* Add extra top space when viewing the Favorites page so posts don't butt up
@@ -928,7 +930,11 @@
 
 /* Also provide a tiny hover/press lift on pointer devices */
 /* Grid view: layout grid and square tiles */
-.feed.grid-view { padding: 4px 0; }
+.feed.grid-view { 
+  padding: 4px 0; 
+  /* Reset justify-items for grid view so tiles stretch to fill columns */
+  justify-items: stretch;
+}
 .feed.grid-view .grid { display: grid; gap: 2px; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; align-items: start; }
 .feed.grid-view .grid .tile {
   position: relative;
@@ -1249,12 +1255,28 @@
 }
 
 /* The PullToRefreshWrapper renders an outer container and places the
-   actual feed children inside a second inner <div>. Target that inner
-   wrapper so grid layout/gap applies to the posts themselves. */
+   actual feed children inside a second inner <div>. Target both the wrapper
+   and its inner container to properly center and constrain the feed content. */
 .feed:not(.grid-view) > div:last-child {
   display: grid;
   /* keep the inner wrapper gap consistent with the feed gap */
   gap: 26px;
+  /* Center grid items */
+  justify-items: center;
+  /* Constrain wrapper width */
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Target the inner div that actually contains the posts */
+.feed:not(.grid-view) > div:last-child > div {
+  display: grid;
+  gap: 26px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  justify-items: center;
 }
 
 /* Fallback: some feed renderers wrap posts inside an extra inner <div> that
@@ -1264,6 +1286,9 @@
    themselves when in list view. */
 .feed:not(.grid-view) .card {
   margin-bottom: 26px;
+  /* Ensure cards take full width of their container (which is already constrained) */
+  width: 100%;
+  max-width: 100%;
 }
 .feed:not(.grid-view) .card:last-child {
   margin-bottom: 0;

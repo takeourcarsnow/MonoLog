@@ -15,9 +15,9 @@ export function SpinningLogo({ size = 24, className = '', invertInLight = false 
           to { opacity: 1; }
         }
         @keyframes subtleSpin {
-          0% { transform: rotate(0deg) scale(1); }
-          50% { transform: rotate(180deg) scale(1.1); }
-          100% { transform: rotate(360deg) scale(1); }
+          0% { transform: rotate(0deg); }
+          50% { transform: rotate(180deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
       <Image

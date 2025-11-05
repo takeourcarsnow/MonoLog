@@ -19,23 +19,20 @@ export default function DitherMethodSelector({
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
       <button
         type="button"
-        disabled={ditherPalette === 'gameboy'}
         onClick={() => {
-          if (ditherPalette !== 'gameboy') {
-            ditherMethodRef.current = 'floyd-steinberg';
-            setDitherMethod('floyd-steinberg');
-            scheduleDraw();
-          }
+          ditherMethodRef.current = 'floyd-steinberg';
+          setDitherMethod('floyd-steinberg');
+          scheduleDraw();
         }}
         style={{
           padding: '4px 8px',
           borderRadius: 6,
           border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
           background: ditherMethod === 'floyd-steinberg' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
-          color: ditherPalette === 'gameboy' ? 'color-mix(in srgb, var(--text) 50%, transparent)' : 'var(--text)',
+          color: 'var(--text)',
           fontSize: 11,
           fontWeight: 500,
-          cursor: ditherPalette === 'gameboy' ? 'not-allowed' : 'pointer',
+          cursor: 'pointer',
           transition: 'background 0.2s ease'
         }}
         aria-label="Dither method: Floyd"
@@ -88,23 +85,20 @@ export default function DitherMethodSelector({
       </button>
       <button
         type="button"
-        disabled={ditherPalette === 'gameboy'}
         onClick={() => {
-          if (ditherPalette !== 'gameboy') {
-            ditherMethodRef.current = 'burkes';
-            setDitherMethod('burkes');
-            scheduleDraw();
-          }
+          ditherMethodRef.current = 'burkes';
+          setDitherMethod('burkes');
+          scheduleDraw();
         }}
         style={{
           padding: '4px 8px',
           borderRadius: 6,
           border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)',
           background: ditherMethod === 'burkes' ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--bg-elev)',
-          color: ditherPalette === 'gameboy' ? 'color-mix(in srgb, var(--text) 50%, transparent)' : 'var(--text)',
+          color: 'var(--text)',
           fontSize: 11,
           fontWeight: 500,
-          cursor: ditherPalette === 'gameboy' ? 'not-allowed' : 'pointer',
+          cursor: 'pointer',
           transition: 'background 0.2s ease'
         }}
         aria-label="Dither method: Burkes"

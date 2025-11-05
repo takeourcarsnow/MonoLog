@@ -20,6 +20,9 @@ interface SpecialPanelProps {
   ditherCustomPalette?: string;
   setDitherCustomPalette?: (v: string) => void;
   ditherCustomPaletteRef?: React.MutableRefObject<string>;
+  targetLongEdge?: number;
+  setTargetLongEdge?: (v: number) => void;
+  targetLongEdgeRef?: React.MutableRefObject<number>;
   // Pixelate
   pixelSize: number;
   setPixelSize: (v: number) => void;
@@ -122,6 +125,9 @@ export default function SpecialPanel(props: SpecialPanelProps) {
         ditherCustomPalette={props.ditherCustomPalette}
         setDitherCustomPalette={props.setDitherCustomPalette}
         ditherCustomPaletteRef={props.ditherCustomPaletteRef}
+        targetLongEdge={props.targetLongEdge}
+        setTargetLongEdge={props.setTargetLongEdge}
+        targetLongEdgeRef={props.targetLongEdgeRef}
         draw={props.draw}
         resetControlToDefault={props.resetControlToDefault}
         ditherEnabled={ditherEnabled}

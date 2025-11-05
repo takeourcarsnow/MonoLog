@@ -114,6 +114,8 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     setDitherPalette,
     ditherCustomPalette,
     setDitherCustomPalette,
+    targetLongEdge,
+    setTargetLongEdge,
     pixelSize,
     setPixelSize,
     pixelShape,
@@ -164,6 +166,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     ditherColorModeRef,
     ditherPaletteRef,
     ditherCustomPaletteRef,
+    targetLongEdgeRef,
     pixelSizeRef,
     pixelShapeRef,
     pixelSampleRef,
@@ -228,6 +231,7 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
     ditherColorModeRef,
     ditherPaletteRef,
     ditherCustomPaletteRef,
+    targetLongEdgeRef,
     pixelSizeRef,
     pixelShapeRef,
     pixelSampleRef,
@@ -639,6 +643,9 @@ export default function ImageEditor({ initialDataUrl, initialSettings, onCancel,
           ditherCustomPalette={ditherCustomPalette}
           setDitherCustomPalette={setDitherCustomPalette}
           ditherCustomPaletteRef={ditherCustomPaletteRef}
+          targetLongEdge={targetLongEdge}
+          setTargetLongEdge={setTargetLongEdge}
+          targetLongEdgeRef={targetLongEdgeRef}
           pixelSize={pixelSize}
           setPixelSize={setPixelSize}
           pixelSizeRef={pixelSizeRef}

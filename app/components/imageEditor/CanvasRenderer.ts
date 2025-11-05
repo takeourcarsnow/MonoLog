@@ -104,7 +104,7 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
       params.ditherPaletteRef?.current ?? 'auto',
       params.ditherCustomPaletteRef?.current ?? '',
       effectScale,
-      { preview: !targetCanvas, maxPreviewPixels: undefined }
+      { preview: !targetCanvas, maxPreviewPixels: undefined, targetLongEdge: params.targetLongEdgeRef?.current ?? 150 }
     );
   }
   const asciiEnabled = params.asciiEnabledRef?.current ?? false;

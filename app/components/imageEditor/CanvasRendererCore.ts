@@ -31,6 +31,7 @@ export interface DrawParams {
   ditherColorModeRef?: React.MutableRefObject<'bw' | 'color'>;
   ditherPaletteRef?: React.MutableRefObject<'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii'>;
   ditherCustomPaletteRef?: React.MutableRefObject<string>;
+  targetLongEdgeRef?: React.MutableRefObject<number>;
   pixelSizeRef?: React.MutableRefObject<number>;
   pixelShapeRef?: React.MutableRefObject<'square' | 'circle'>;
   pixelSampleRef?: React.MutableRefObject<'average' | 'nearest'>;

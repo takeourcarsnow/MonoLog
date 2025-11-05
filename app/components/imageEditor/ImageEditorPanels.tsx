@@ -92,6 +92,9 @@ interface ImageEditorPanelsProps {
   ditherCustomPalette?: string;
   setDitherCustomPalette?: (v: string) => void;
   ditherCustomPaletteRef?: React.MutableRefObject<string>;
+  targetLongEdge?: number;
+  setTargetLongEdge?: (v: number) => void;
+  targetLongEdgeRef?: React.MutableRefObject<number>;
   pixelSize: number;
   setPixelSize: (v: number) => void;
   pixelSizeRef: React.MutableRefObject<number>;
@@ -217,6 +220,9 @@ export default React.memo(function ImageEditorPanels(props: ImageEditorPanelsPro
           ditherCustomPalette={props.ditherCustomPalette}
           setDitherCustomPalette={props.setDitherCustomPalette!}
           ditherCustomPaletteRef={props.ditherCustomPaletteRef}
+          targetLongEdge={props.targetLongEdge}
+          setTargetLongEdge={props.setTargetLongEdge!}
+          targetLongEdgeRef={props.targetLongEdgeRef}
           pixelSize={props.pixelSize}
           setPixelSize={props.setPixelSize}
           pixelSizeRef={props.pixelSizeRef}

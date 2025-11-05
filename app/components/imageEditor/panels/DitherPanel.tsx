@@ -21,6 +21,9 @@ interface DitherPanelProps {
   ditherCustomPalette?: string;
   setDitherCustomPalette?: (v: string) => void;
   ditherCustomPaletteRef?: React.MutableRefObject<string>;
+  targetLongEdge?: number;
+  setTargetLongEdge?: (v: number) => void;
+  targetLongEdgeRef?: React.MutableRefObject<number>;
   draw: (overrides?: any) => void;
   resetControlToDefault?: (control: string) => void;
   ditherEnabled: boolean;
@@ -46,6 +49,9 @@ export default function DitherPanel(props: DitherPanelProps) {
                 ditherLevels={props.ditherLevels}
                 setDitherLevels={props.setDitherLevels}
                 ditherLevelsRef={props.ditherLevelsRef}
+                targetLongEdge={props.targetLongEdge}
+                setTargetLongEdge={props.setTargetLongEdge}
+                targetLongEdgeRef={props.targetLongEdgeRef}
                 draw={props.draw}
                 resetControlToDefault={props.resetControlToDefault}
                 scheduleDraw={scheduleDraw}

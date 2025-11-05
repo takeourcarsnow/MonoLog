@@ -76,7 +76,7 @@ export function DitherControls({ effectSettings, onSettingsChange, disabled }: D
             }
             onSettingsChange(newSettings);
           }}
-          disabled={disabled || effectSettings.ditherPalette === 'gameboy'}
+          disabled={disabled}
           style={{ fontSize: '0.75rem', padding: '4px 8px' }}
         >
           Floyd
@@ -115,7 +115,7 @@ export function DitherControls({ effectSettings, onSettingsChange, disabled }: D
             }
             onSettingsChange(newSettings);
           }}
-          disabled={disabled || effectSettings.ditherPalette === 'gameboy'}
+          disabled={disabled}
           style={{ fontSize: '0.75rem', padding: '4px 8px' }}
         >
           Burkes

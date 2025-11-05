@@ -156,11 +156,9 @@ logger.debug("users.upsert payload", safe(upsertObj));
     throw new Error(`Server update failed: ${resp.status} ${resp.statusText} ${bodyText || ''}`);
   }
   let profile: any = await resp.json();
-  try { } catch (_) {}
   // Some server endpoints historically returned { user: { ... } } wrappers.
   // Be tolerant: if we received an envelope, unwrap it.
   if (profile && profile.user && typeof profile.user === 'object') {
-    try { } catch (_) {}
     profile = profile.user;
   }
   if (!profile) {

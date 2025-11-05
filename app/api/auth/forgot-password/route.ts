@@ -5,7 +5,7 @@ import { isAllowedEmailDomain } from '@/lib/utils';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const email = (body?.email || '').toString().trim();
+    const email = (body?.email || '').trim();
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       return NextResponse.json({ error: 'Valid email address required' }, { status: 400 });
     }

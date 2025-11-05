@@ -33,12 +33,11 @@ const LEET_MAP: [RegExp, string][] = [
 ];
 
 function normalizeText(s: string) {
-  let out = s.normalize('NFKD').replace(/\p{Diacritic}/gu, '');
-  out = out.toLowerCase();
-  for (const [re, r] of LEET_MAP) out = out.replace(re, r);
-  // collapse repeated punctuation and whitespace
-  out = out.replace(/[\p{P}\p{S}]+/gu, ' ').replace(/\s+/g, ' ').trim();
-  return out;
+  let out = s.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  // Apply leet-speak substitutions
+  out = LEET_MAP.reduce((text, [re, replacement]) => text.replace(re, replacement), out);
+  // Collapse repeated punctuation and whitespace
+  return out.replace(/[\p{P}\p{S}]+/gu, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function checkBannedWords(norm: string): string | null {

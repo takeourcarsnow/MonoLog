@@ -4,7 +4,7 @@ import { getServiceSupabase } from '@/lib/api/serverSupabase';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const username = (body?.username || '').toString().trim();
+    const username = (body?.username || '').trim();
     if (!username) return NextResponse.json({ error: 'Missing username' }, { status: 400 });
 
     const sb = getServiceSupabase();

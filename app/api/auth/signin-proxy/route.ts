@@ -48,8 +48,8 @@ function resetRecord(map: Map<string, AttemptRecord>, key: string) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const identifier = (body?.identifier || '').toString().trim();
-    const password = (body?.password || '').toString();
+    const identifier = (body?.identifier || '').trim();
+    const password = body?.password || '';
     if (!identifier || !password) return NextResponse.json({ error: 'Missing identifier or password' }, { status: 400 });
 
     // identify client IP (best-effort). If behind a proxy, ensure X-Forwarded-For
@@ -71,12 +71,17 @@ export async function POST(req: Request) {
     } else {
       // try to find profile id then fetch auth user email
       const tryFindProfile = async () => {
-        let res: any = await sb.from('users').select('id').eq('username', identifier).limit(1).maybeSingle();
-        if (res && res.data && res.data.id) return res.data.id;
-        res = await sb.from('users').select('id').eq('user_name', identifier).limit(1).maybeSingle();
-        if (res && res.data && res.data.id) return res.data.id;
-        res = await sb.from('users').select('id').ilike('username', identifier).limit(1).maybeSingle();
-        if (res && res.data && res.data.id) return res.data.id;
+        // Try exact match first, then case-insensitive
+        const queries = [
+          sb.from('users').select('id').eq('username', identifier).limit(1).maybeSingle(),
+          sb.from('users').select('id').eq('user_name', identifier).limit(1).maybeSingle(),
+          sb.from('users').select('id').ilike('username', identifier).limit(1).maybeSingle()
+        ];
+        
+        for (const query of queries) {
+          const res: any = await query;
+          if (res?.data?.id) return res.data.id;
+        }
         return null;
       };
 

@@ -46,15 +46,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate a unique invite code that hasn't been used
-    let code;
-    let attempts = 0;
+    let code: string | null = null;
     const maxAttempts = 20; // Prevent infinite loop
-    do {
-      code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    for (let attempts = 0; attempts < maxAttempts; attempts++) {
+      const candidate = Math.random().toString(36).substring(2, 8).toUpperCase();
       const { data: existing, error: checkError } = await sb
         .from('invites')
         .select('used_by')
-        .eq('code', code);
+        .eq('code', candidate);
 
       if (checkError) {
         console.error('Error checking invite:', checkError);
@@ -63,14 +63,14 @@ export async function POST(req: NextRequest) {
 
       // If no existing invite with this code, or it exists but is unused, use it
       if (!existing || existing.length === 0 || existing[0].used_by == null) {
+        code = candidate;
         break;
       }
-
-      attempts++;
-      if (attempts >= maxAttempts) {
-        return NextResponse.json({ error: 'Failed to generate unique invite code' }, { status: 500 });
-      }
-    } while (true);
+    }
+    
+    if (!code) {
+      return NextResponse.json({ error: 'Failed to generate unique invite code' }, { status: 500 });
+    }
 
     // Insert into invites table
     const { data, error } = await sb

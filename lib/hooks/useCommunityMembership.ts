@@ -14,6 +14,11 @@ export function useCommunityMembership() {
     if (pending.has(communityId)) return;
     setPending((s) => new Set(s).add(communityId));
 
+    // Helper to update member count
+    const updateMemberCount = (currentCount: number, joining: boolean) => {
+      return joining ? currentCount + 1 : Math.max(0, currentCount - 1);
+    };
+
     // Optimistic update
     mutate(
       (prev: any) => prev?.map((c: any) => {
@@ -21,7 +26,7 @@ export function useCommunityMembership() {
         return {
           ...c,
           isMember: !isMember,
-          memberCount: isMember ? Math.max(0, (c.memberCount || 1) - 1) : (c.memberCount || 0) + 1
+          memberCount: updateMemberCount(c.memberCount || 0, !isMember)
         };
       }),
       false // don't revalidate
@@ -38,7 +43,10 @@ export function useCommunityMembership() {
     } catch (e: any) {
       // Revert optimistic update
       mutate(
-        (prev: any) => prev?.map((c: any) => c.id === communityId ? { ...c, isMember, memberCount: isMember ? (c.memberCount || 0) + 1 : Math.max(0, (c.memberCount || 1) - 1) } : c),
+        (prev: any) => prev?.map((c: any) => {
+          if (c.id !== communityId) return c;
+          return { ...c, isMember, memberCount: updateMemberCount(c.memberCount || 0, isMember) };
+        }),
         false
       );
       onError(e);

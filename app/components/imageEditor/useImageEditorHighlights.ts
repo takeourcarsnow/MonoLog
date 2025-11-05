@@ -15,13 +15,19 @@ export function useImageEditorHighlights(
     let alive = true;
     const compute = () => {
       const cont = categoriesContainerRef.current;
-      if (!cont) { if (alive) setCategoryHighlight(null); return; }
+      if (!cont) {
+        if (alive) setCategoryHighlight(null);
+        return;
+      }
       // Use the actual selectedCategory value for the data-cat selector.
       // Previous logic accidentally mapped several categories to 'frame',
       // which prevented 'overlays' from being selected properly.
       const selKey = selectedCategory;
       const btn = cont.querySelector<HTMLButtonElement>(`button[data-cat="${selKey}"]`);
-      if (!btn) { if (alive) setCategoryHighlight(null); return; }
+      if (!btn) {
+        if (alive) setCategoryHighlight(null);
+        return;
+      }
       const left = Math.round((btn as HTMLElement).offsetLeft - 4);
       const top = Math.round((btn as HTMLElement).offsetTop - 4);
       const width = Math.round((btn as HTMLElement).offsetWidth + 8);
@@ -45,9 +51,15 @@ export function useImageEditorHighlights(
     let mountedFlag = true;
     const compute = () => {
       const cont = filtersContainerRef.current;
-      if (!cont) { if (mountedFlag) setFilterHighlight(null); return; }
+      if (!cont) {
+        if (mountedFlag) setFilterHighlight(null);
+        return;
+      }
       const btn = cont.querySelector<HTMLButtonElement>(`button[data-filter="${selectedFilter}"]`);
-      if (!btn) { if (mountedFlag) setFilterHighlight(null); return; }
+      if (!btn) {
+        if (mountedFlag) setFilterHighlight(null);
+        return;
+      }
       // prefer offset measurements (position relative to container) for stable alignment
       const left = Math.round((btn as HTMLElement).offsetLeft - 3);
       const top = Math.round((btn as HTMLElement).offsetTop - 4);

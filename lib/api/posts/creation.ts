@@ -45,7 +45,7 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
   if (!cur) throw new Error('Not logged in');
 
   // For uploads, convert any data URLs via the server storage endpoint so the server can store via service role
-  const inputs: string[] = imageUrls && imageUrls.length ? imageUrls.slice(0, 5) : imageUrl ? [imageUrl] : [];
+  const inputs: string[] = imageUrls?.length ? imageUrls.slice(0, 5) : imageUrl ? [imageUrl] : [];
   const finalUrls: string[] = [];
   const finalThumbUrls: string[] = [];
   for (const img of inputs) {

@@ -83,7 +83,11 @@ export function renderCaption(text: string): React.ReactNode {
           </a>
         );
       } else if (m.type === 'url') {
-        const href = m.value.startsWith('http') ? m.value : (m.value.startsWith('//') ? m.value : `//${m.value}`);
+        // Normalize URL to include protocol
+        let href = m.value;
+        if (!href.startsWith('http') && !href.startsWith('//')) {
+          href = `//${href}`;
+        }
         // Display shorter text for very long urls
         const display = m.value.length > 60 ? m.value.slice(0, 50) + '…' : m.value;
         parts.push(

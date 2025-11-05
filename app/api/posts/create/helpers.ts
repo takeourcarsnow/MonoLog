@@ -86,14 +86,19 @@ export async function checkCalendarRule(userId: string, sb: any) {
     const now = new Date();
     const startOfDayUTC = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000);
-    const { data: todays } = await sb.from('posts').select('created_at').eq('user_id', userId).gte('created_at', startOfDayUTC.toISOString()).lt('created_at', endOfDayUTC.toISOString());
-    if ((todays || []).length) {
-      // find most recent post timestamp
-      let lastMs = 0;
-      for (const p of (todays || [])) {
-        try { const t = new Date(p.created_at).getTime(); if (t > lastMs) lastMs = t; } catch (e) {}
-      }
-      return { error: 'You already posted today', nextAllowedAt: endOfDayUTC.getTime(), lastPostedAt: lastMs || null };
+    const { data: latestPost } = await sb
+      .from('posts')
+      .select('created_at')
+      .eq('user_id', userId)
+      .gte('created_at', startOfDayUTC.toISOString())
+      .lt('created_at', endOfDayUTC.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (latestPost) {
+      const lastPostedAt = new Date(latestPost.created_at).getTime();
+      return { error: 'You already posted today', nextAllowedAt: endOfDayUTC.getTime(), lastPostedAt };
     }
   } else {
     try { logger.debug('[posts.create] upload limit disabled by NEXT_PUBLIC_DISABLE_UPLOAD_LIMIT'); } catch (e) {}
@@ -104,7 +109,7 @@ export async function checkCalendarRule(userId: string, sb: any) {
 export async function insertPost(sb: any, userId: string, imageUrls: any, thumbnailUrls: any, caption: string, alt: any, isPublic: boolean, spotifyLink: string, camera: string, lens: string, filmType: string, weather?: { condition?: string; temperature?: number; location?: string }, location?: { latitude?: number; longitude?: number; address?: string }) {
   const id = uid();
   const created_at = new Date().toISOString();
-  const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: !!isPublic };
+  const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: Boolean(isPublic) };
   if (spotifyLink) insertObj.spotify_link = spotifyLink;
   if (camera) insertObj.camera = camera;
   if (lens) insertObj.lens = lens;
@@ -183,9 +188,6 @@ export async function insertPost(sb: any, userId: string, imageUrls: any, thumbn
   } catch (e: any) {
     throw new Error(`Database error: ${e?.message || String(e)}`);
   }
-
-  // Ensure the public field is set correctly
-  await sb.from('posts').update({ public: !!isPublic }).eq('id', id);
 
   return { id, insertData };
 }

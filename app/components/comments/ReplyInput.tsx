@@ -28,6 +28,8 @@ export function ReplyInput({
   placeholder,
   COMMENT_MAX
 }: ReplyInputProps) {
+  const hasContent = replyText.trim().length > 0;
+  
   return (
     <div className="reply-box" style={{ marginLeft: 20, marginTop: 8 }}>
       <div style={{ position: 'relative', flex: 1 }}>
@@ -75,7 +77,7 @@ export function ReplyInput({
       </div>
       <button
         className={`btn follow-btn icon-reveal ${sendAnim || ''}`}
-        style={{ opacity: replyText.trim() ? 1 : 0, pointerEvents: replyText.trim() ? 'auto' : 'none' }}
+        style={{ opacity: hasContent ? 1 : 0, pointerEvents: hasContent ? 'auto' : 'none' }}
         onClick={onSend}
         disabled={sending}
         aria-label={sending ? "Sending reply" : "Send reply"}

@@ -43,25 +43,19 @@ export const parseCombinedWeather = (
   setWeatherTemperature?: (temperature: number | undefined) => void
 ) => {
   const trimmed = value.trim();
-  // Match formats like "25°C" or "25" (number only)
-  const tempOnly = trimmed.match(/^(?:([-+]?[0-9]+(?:\.[0-9]+)?)(?:°C)?)$/i);
-  if (tempOnly) {
-    const num = parseFloat(tempOnly[1]);
-    setWeatherTemperature?.(isNaN(num) ? undefined : num);
-    // Do not set textual condition when only a temperature is provided
-    setWeatherCondition?.('');
-    return;
-  }
-
-  // Match formats like "Partly Cloudy 25°C"
-  const match = trimmed.match(/^(.+?)\s+([-+]?[0-9]+(?:\.[0-9]+)?)°C$/i);
+  
+  // Match formats: "25°C", "25", or "Partly Cloudy 25°C"
+  const match = trimmed.match(/^(?:(.+?)\s+)?([-+]?[0-9]+(?:\.[0-9]+)?)(?:°C)?$/i);
+  
   if (match) {
-    setWeatherCondition?.(match[1].trim());
-    setWeatherTemperature?.(parseFloat(match[2]));
+    const condition = match[1]?.trim() || '';
+    const temp = parseFloat(match[2]);
+    setWeatherCondition?.(condition);
+    setWeatherTemperature?.(isNaN(temp) ? undefined : temp);
     return;
   }
 
-  // Fallback: treat the whole value as textual condition and clear temperature
+  // No temperature found: treat as textual condition only
   setWeatherCondition?.(trimmed);
   setWeatherTemperature?.(undefined);
 };

@@ -5,10 +5,10 @@ import { apiError, apiSuccess } from '@/lib/apiResponse';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const email = (body?.email || '').toString().trim();
-    const password = (body?.password || '').toString();
-    const username = (body?.username || '').toString().trim().toLowerCase();
-    const inviteCode = (body?.inviteCode || '').toString().trim();
+    const email = (body?.email || '').trim();
+    const password = body?.password || '';
+    const username = (body?.username || '').trim().toLowerCase();
+    const inviteCode = (body?.inviteCode || '').trim();
 
     if (!email || !password || !username || !inviteCode) {
       return apiError('Missing required fields', 400);

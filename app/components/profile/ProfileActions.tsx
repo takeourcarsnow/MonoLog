@@ -162,12 +162,18 @@ export function ProfileActions({
     <>
       <style>{`
         .profile-actions .btn:hover .icon svg {
-          color: lightblue !important;
+          color: var(--primary) !important;
         }
         .profile-actions .delete-account-btn:hover .icon svg {
           color: red !important;
         }
-        .profile-actions .btn:hover {
+        .profile-actions .signout-btn:hover .icon svg {
+          color: red !important;
+        }
+        .profile-actions .signout-btn.confirm .icon svg {
+          color: white !important;
+        }
+        .profile-actions .btn:not(.signout-btn):hover {
           background: transparent !important;
         }
         .profile-actions .btn:hover::before {

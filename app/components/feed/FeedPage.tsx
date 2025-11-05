@@ -49,9 +49,9 @@ function useViewTransition(viewStorageKey: string) {
 
     setIsTransitioning(true);
 
-    const onEnd = (e: TransitionEvent) => {
-      if (e.target !== el || e.propertyName !== 'opacity') return;
-      el.removeEventListener('transitionend', onEnd as any);
+    const onEnd = (e: AnimationEvent) => {
+      if (e.target !== el) return;
+      el.removeEventListener('animationend', onEnd as any);
       setView(v);
       setPendingView(null);
       if (typeof window !== "undefined") localStorage.setItem(viewStorageKey, v);
@@ -61,9 +61,9 @@ function useViewTransition(viewStorageKey: string) {
       cleanupRef.current = null;
     };
 
-    el.addEventListener('transitionend', onEnd as any);
+    el.addEventListener('animationend', onEnd as any);
     cleanupRef.current = () => {
-      try { el.removeEventListener('transitionend', onEnd as any); } catch {}
+      try { el.removeEventListener('animationend', onEnd as any); } catch {}
       setIsTransitioning(false);
     };
 
@@ -203,14 +203,14 @@ export function FeedPage({
       {(posts.length > 0 || viewStorageKey === 'hashtagView' || showToggle) && (
         <ViewToggle title={title} subtitle={subtitle} selected={pendingView ?? view} onSelect={handleViewChange} />
       )}
-      <div ref={fadeRef} className={`fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
+      <div ref={fadeRef} className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
         <PullToRefreshWrapper
           isRefreshing={isRefreshing}
           pullDistance={pullDistance}
           threshold={80}
           containerRef={containerRef}
           getPullStyles={getPullStyles}
-          className={`feed ${view === 'grid' ? 'grid-view' : ''}`}
+          className={``}
         >
           {renderContent()}
         </PullToRefreshWrapper>

@@ -393,3 +393,8 @@
   outline: none !important;
   animation: none !important;
 }
+
+.profile-actions .signout-btn.no-effects:not(.confirm):hover {
+  background: transparent !important;
+  color: var(--text) !important;
+}

@@ -49,18 +49,18 @@ export function FavoritesView() {
       cleanupRef.current = null;
     }
     setIsTransitioning(true);
-    const onEnd = (e: TransitionEvent) => {
-      if (e.target !== el || e.propertyName !== 'opacity') return;
-      el.removeEventListener('transitionend', onEnd as any);
+    const onEnd = (e: AnimationEvent) => {
+      if (e.target !== el) return;
+      el.removeEventListener('animationend', onEnd as any);
       setView(v);
       setPendingView(null);
       if (typeof window !== "undefined") localStorage.setItem("favoritesView", v);
       requestAnimationFrame(() => { setIsTransitioning(false); });
       cleanupRef.current = null;
     };
-    el.addEventListener('transitionend', onEnd as any);
+    el.addEventListener('animationend', onEnd as any);
     cleanupRef.current = () => {
-      try { el.removeEventListener('transitionend', onEnd as any); } catch {}
+      try { el.removeEventListener('animationend', onEnd as any); } catch {}
       setIsTransitioning(false);
     };
     requestAnimationFrame(() => {});

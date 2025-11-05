@@ -92,7 +92,7 @@ function ClientErrorUI({ error, info, visibleStack, onToggle }: { error: Error; 
         )}
       </div>
       {visibleStack ? (
-        <pre className="mt-4 whitespace-pre-wrap text-left max-w-[90%] overflow-x-auto bg-[var(--bg-elev)] p-3 rounded border border-[var(--border)] text-[var(--text)]">
+        <pre className="mt-4 whitespace-pre-wrap text-left max-w-[90%] max-h-[50vh] overflow-auto bg-[var(--bg-elev)] p-3 rounded border border-[var(--border)] text-[var(--text)]">
           {error?.message}
           {info ? '\n\n' + info : ''}
           {error && (error as any).stack ? '\n\nStack:\n' + (error as any).stack : ''}
@@ -173,7 +173,7 @@ function ClientErrorHandlerWrapper({ children }: { children: React.ReactNode }) 
     return (
       <div className="p-6 min-h-[60vh] flex flex-col items-center justify-center bg-[var(--bg)] text-[var(--text)]">
         <h1 className="text-lg mb-2">Application error: a client-side exception has occurred</h1>
-        <pre className="mt-3 whitespace-pre-wrap max-w-[90%] overflow-x-auto bg-[var(--bg-elev)] p-3 rounded border border-[var(--border)] text-[var(--text)]">
+        <pre className="mt-3 whitespace-pre-wrap max-w-[90%] max-h-[50vh] overflow-auto bg-[var(--bg-elev)] p-3 rounded border border-[var(--border)] text-[var(--text)]">
           {caughtError?.message}
           {(caughtError as any)?.stack ? '\n\n' + (caughtError as any).stack : ''}
         </pre>

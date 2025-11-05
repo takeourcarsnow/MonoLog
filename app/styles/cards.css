@@ -229,6 +229,17 @@
   animation: viewFade 260ms var(--transition-mid) both;
 }
 
+/* Fade animation classes used by view toggle components */
+.fade-anim {
+  will-change: opacity, transform;
+}
+.fade-anim.fade-hidden {
+  animation: viewFadeOut 220ms var(--transition-mid) both;
+}
+.fade-anim.fade-visible {
+  animation: viewFade 260ms var(--transition-mid) both;
+}
+
 .comment-item.new { animation: commentIn 360ms cubic-bezier(.2,.8,.2,1); }
 @keyframes commentIn { from { opacity: 0; transform: translateY(6px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 

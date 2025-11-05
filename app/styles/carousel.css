@@ -106,11 +106,11 @@
    inline styles applied by ImageZoom but gives a CSS fallback and keeps
    behavior consistent across browsers. */
 .post-view-wrap .monolog-image-zoom img {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  object-fit: contain !important;
-  object-position: center center !important;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  object-position: center center;
 }
 
 /* keep carousel slides vertically centered when images are constrained */

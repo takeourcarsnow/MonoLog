@@ -43,28 +43,28 @@
 
 /* Very small, minimal icon style for in-line controls (add/edit/delete) */
 .btn.small-min {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 0 !important;
-  padding: 4px !important;
-  border-radius: 8px !important;
-  background: transparent !important;
-  border: 1px solid color-mix(in srgb, var(--border), transparent 50%) !important;
-  color: var(--primary) !important;
-  box-shadow: none !important;
+  width: 28px;
+  height: 28px;
+  min-width: 0;
+  padding: 4px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 50%);
+  color: var(--primary);
+  box-shadow: none;
 }
-.btn.small-min:hover { background: color-mix(in srgb, var(--primary), transparent 85%) !important; transform: none !important; }
-.btn.small-min svg { width: 16px !important; height: 16px !important; }
+.btn.small-min:hover { background: color-mix(in srgb, var(--primary), transparent 85%); transform: none; }
+.btn.small-min svg { width: 16px; height: 16px; }
 
 /* Confirm visual state for small-min icon buttons (two-step confirms) */
 .btn.small-min.confirm {
-  border-color: var(--danger) !important;
-  color: var(--danger) !important;
-  background: color-mix(in srgb, var(--danger), transparent 96%) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 90%) !important;
+  border-color: var(--danger);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger), transparent 96%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 90%);
 }
 .btn.small-min.confirm:hover {
-  background: color-mix(in srgb, var(--danger), transparent 92%) !important;
+  background: color-mix(in srgb, var(--danger), transparent 92%);
 }
 
 /* Touch-specific: enlarge icon buttons for comfortable tap targets and
@@ -73,12 +73,12 @@
 @media (pointer: coarse) {
   .btn.icon {
     /* Increase to ~44-48px touch area while preserving visual centering */
-    min-width: 44px !important;
-    min-height: 44px !important;
-    width: auto !important;
-    height: auto !important;
-    padding: 10px !important;
-    border-radius: 10px !important;
+    min-width: 44px;
+    min-height: 44px;
+    width: auto;
+    height: auto;
+    padding: 10px;
+    border-radius: 10px;
   }
 
   /* Provide a subtle background feedback on tap for touch devices.

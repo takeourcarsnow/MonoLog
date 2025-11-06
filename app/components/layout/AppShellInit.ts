@@ -22,7 +22,6 @@ export function useAppShellInit() {
 
   useEffect(() => {
     initTheme();
-    let removeListeners: (() => void) | null = null;
     (async () => {
       try {
         await api.init();
@@ -64,163 +63,16 @@ export function useAppShellInit() {
       }
     } catch (_) {}
 
-      // Keep a CSS variable in sync with the actual visual viewport height.
-      // Prefer visualViewport when available (reports the visible area on
-      // many mobile browsers). Also run a short delayed re-check after
-      // initial load to catch cases where the browser chrome changes size
-      // shortly after render.
+      // Simplified viewport handling: rely on CSS dynamic viewport units (dvh)
+      // for modern browsers. As a very small safeguard, set the CSS custom
+      // property to 1dvh so existing styles using var(--viewport-height)
+      // continue to work without JS listeners.
       try {
         if (typeof window !== 'undefined') {
-          const getVisualHeight = () => {
-            try {
-              // visualViewport may be undefined in some browsers.
-              // Use the best available measurement.
-              const vv = (window as any).visualViewport;
-              return (vv && vv.height) ? vv.height : window.innerHeight;
-            } catch (e) {
-              return window.innerHeight;
-            }
-          };
-
-          const setViewportVar = () => {
-            try {
-              const height = getVisualHeight();
-              const vh = height * 0.01;
-              const vhValue = `${vh}px`;
-              document.documentElement.style.setProperty('--viewport-height', vhValue);
-            } catch (e) {
-              // non-critical
-            }
-          };
-
-          const isPinchZoomActive = () => {
-            try {
-              const vv = (window as any).visualViewport;
-              return !!(vv && typeof vv.scale === 'number' && Math.abs(vv.scale - 1) > 0.01);
-            } catch (_) {
-              return false;
-            }
-          };
-
-          // Debug logging (enabled by ?debugViewport=1 or localStorage 'monolog.debugViewport')
-          const debugEnabled = (() => {
-            try {
-              const params = new URL(window.location.href).searchParams;
-              if (params.get('debugViewport') === '1') return true;
-              if (window.localStorage && window.localStorage.getItem('monolog.debugViewport') === '1') return true;
-            } catch (e) {}
-            return false;
-          })();
-
-          let debugTimer: any = null;
-          const debugLog = () => {
-            if (!debugEnabled) return;
-            try {
-              const style = getComputedStyle(document.documentElement);
-              const viewportVar = style.getPropertyValue('--viewport-height');
-              const tabbarVar = style.getPropertyValue('--tabbar-height');
-              const innerH = window.innerHeight;
-              const clientH = document.documentElement.clientHeight;
-              const vv = (window as any).visualViewport;
-              const vvH = vv ? vv.height : undefined;
-              const tabbarEl = document.querySelector<HTMLElement>('.tabbar');
-              const contentEl = document.querySelector<HTMLElement>('.content');
-              const tabRect = tabbarEl ? tabbarEl.getBoundingClientRect() : null;
-              const contentRect = contentEl ? contentEl.getBoundingClientRect() : null;
-              console.info('[monolog-debug] viewport innerHeight=', innerH, 'clientHeight=', clientH, 'visualViewport=', vvH);
-              console.info('[monolog-debug] css --viewport-height=', viewportVar.trim(), ' --tabbar-height=', tabbarVar.trim());
-              console.info('[monolog-debug] .tabbar rect=', tabRect, '.content rect=', contentRect);
-              if (tabbarEl) {
-                const cs = getComputedStyle(tabbarEl);
-                console.info('[monolog-debug] .tabbar padding-bottom=', cs.paddingBottom, 'height=', tabbarEl.offsetHeight);
-              }
-            } catch (e) { console.warn('[monolog-debug] log failed', e); }
-          };
-
-          setViewportVar();
-          // run again after short delay to catch late chrome transitions.
-          // Reduced delays improve responsiveness while still catching most cases.
-          setTimeout(setViewportVar, 120);
-          // a slightly longer, but small, retry for flaky webviews
-          setTimeout(setViewportVar, 380);
-
-          const onResize = () => {
-            // If user is actively pinch-zooming, skip syncing the CSS vh variable
-            if (!isPinchZoomActive()) {
-              setViewportVar();
-            }
-            if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); }
-          };
-          const onOrientation = () => {
-            // Temporarily disable transitions to avoid slow animated layout changes
-            try { document.documentElement.classList.add('monolog-disable-transitions'); } catch(_) {}
-            setViewportVar();
-            try { requestAnimationFrame(() => document.documentElement.classList.remove('monolog-disable-transitions')); } catch(_) { setTimeout(() => { try { document.documentElement.classList.remove('monolog-disable-transitions'); } catch(_) {} }, 160); }
-            // Notify other components that viewport changed
-            try { window.dispatchEvent(new CustomEvent('monolog-viewport-changed')); } catch(_) {}
-            if (debugEnabled) { setTimeout(debugLog, 160); }
-          };
-          // Throttled handler for visual viewport resizes (pinch/keyboard zoom,
-          // on-screen UI showing/hiding, virtual keyboard, etc.). We DO update
-          // --viewport-height here so containers sized via the variable keep
-          // matching the visible area. A small throttle + temporarily disabling
-          // transitions prevents janky animated reflows while zooming.
-          let vvTimer: any = null;
-          const onVisualViewportResize = () => {
-            try { clearTimeout(vvTimer); } catch(_) {}
-            vvTimer = setTimeout(() => {
-              try {
-                const vv = (window as any).visualViewport;
-                const isPinchZoom = isPinchZoomActive();
-                if (!isPinchZoom) {
-                  // Only adjust the CSS variable when not actively pinch-zooming
-                  // (e.g., browser UI showing/hiding, virtual keyboard, etc.).
-                  document.documentElement.classList.add('monolog-disable-transitions');
-                  setViewportVar();
-                  try {
-                    requestAnimationFrame(() => {
-                      try { document.documentElement.classList.remove('monolog-disable-transitions'); } catch(_) {}
-                    });
-                  } catch(_) {
-                    setTimeout(() => { try { document.documentElement.classList.remove('monolog-disable-transitions'); } catch(_) {} }, 120);
-                  }
-                }
-              } catch(_) {}
-              // Always notify listeners that something changed so components can react.
-              try { window.dispatchEvent(new CustomEvent('monolog-viewport-changed')); } catch(_) {}
-              if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 60); }
-            }, 60);
-          };
-          window.addEventListener('resize', onResize, { passive: true });
-          window.addEventListener('orientationchange', onOrientation);
-          if ((window as any).visualViewport && (window as any).visualViewport.addEventListener) {
-            (window as any).visualViewport.addEventListener('resize', onVisualViewportResize);
-          }
-
-          // Remove listeners on unmount to prevent leaks or duplicate handlers during HMR
-          removeListeners = () => {
-            try { window.removeEventListener('resize', onResize); } catch(_) {}
-            try { window.removeEventListener('orientationchange', onOrientation); } catch(_) {}
-            try { if ((window as any).visualViewport && (window as any).visualViewport.removeEventListener) (window as any).visualViewport.removeEventListener('resize', onVisualViewportResize); } catch(_) {}
-          };
-
-          // Ensure we remove listeners when the module is unloaded/reloaded
-          // using beforeunload as a best-effort cleanup. Register the
-          // listener after `removeListeners` is defined so we don't pass
-          // a null reference.
-          window.addEventListener('beforeunload', removeListeners as any);
-          // Also call removeListeners inside the effect cleanup by returning it
-          // from the outer try block below.
-
-          if (debugEnabled) {
-            // initial log after styling applied
-            setTimeout(debugLog, 120);
-          }
+          document.documentElement.style.setProperty('--viewport-height', '1dvh');
         }
-      } catch (e) {}
-    return () => {
-      try { if (removeListeners) removeListeners(); } catch (_) {}
-    };
+      } catch (_) {}
+    return () => {};
   }, []);
 
   return { ready, isTouchDevice, forceTouch };

@@ -2,6 +2,10 @@
 /* Global font variable: change this to pick a single typeface for the whole app. */
 :root {
   --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  /* Provide a safe default for runtime viewport height consumers.
+     JS will update this to the visual viewport, but when unavailable
+     use dynamic viewport units to avoid 100vh bugs and zoom cut-offs. */
+  --viewport-height: 1dvh;
 }
 /* Prevent any accidental horizontal overflow (fixes unwanted horizontal scrollbar on desktop) */
 html, body { 
@@ -11,6 +15,8 @@ html, body {
 }
 html {
   -webkit-overflow-scrolling: touch;
+  /* Prevent iOS from text-zooming which can shift layout on refresh */
+  -webkit-text-size-adjust: 100%;
 }
 body {
   margin: 0; 
@@ -57,6 +63,12 @@ body {
   -webkit-overflow-scrolling: touch;
   position: relative;
 }
+
+/* When the browser is zoomed (pinch-zoom active), avoid fixing the
+   app to a strict viewport-sized container. Allow normal scrolling
+   so content isn't clipped after a refresh at non-1.0 scale. */
+/* No additional zoom-state overrides needed; we keep layout simple
+   by relying on dvh units and natural document flow. */
 
 /* Allow body scrolling on desktop so mousewheel works on sides of screen */
 @media (min-width: 900px) {

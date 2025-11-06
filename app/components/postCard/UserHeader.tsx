@@ -174,7 +174,7 @@ export const UserHeader = memo(function UserHeader({
                 <ScrollIfTruncated className="meta-combined">
                   {post.locationAddress && (
                     <Link href={`/search?q=${encodeURIComponent(post.locationAddress.split(',')[0]?.trim() || post.locationAddress)}`} className="location-meta" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-                      <MapPin size={12} style={{ marginRight: '4px' }} />
+                      <MapPin size={12} className="dim" style={{ marginRight: '4px' }} />
                       <span className="location-text dim">{(() => {
                         const city = post.locationAddress?.split(',')[0]?.trim();
                         return city || post.locationAddress;
@@ -185,7 +185,7 @@ export const UserHeader = memo(function UserHeader({
                     <span className="weather-meta" style={{ display: 'inline-flex', alignItems: 'center', marginLeft: post.locationAddress ? '8px' : undefined }}>
                       {(() => {
                         const IconComponent = getWeatherIcon(post.weatherCondition || '');
-                        return <IconComponent size={12} style={{ marginRight: '4px' }} />;
+                        return <IconComponent size={12} className="dim" style={{ marginRight: '4px' }} />;
                       })()}
                       <span className="weather-text dim">{Math.round(post.weatherTemperature)}°C</span>
                     </span>

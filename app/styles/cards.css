@@ -384,6 +384,31 @@
   justify-content: flex-end;
 }
 
+/* Ensure all inline icon/text inside the header align to the middle baseline */
+.card-head .user-and-meta,
+.card-head .user-and-meta > * {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+/* Make SVG icons inherit the current text color and sit centered */
+.card-head svg {
+  display: inline-block;
+  vertical-align: middle;
+  color: inherit; /* lucide icons use stroke/currentColor */
+  width: auto; height: auto;
+}
+
+/* Target small icons used in the header to keep consistent sizing */
+.card-head .user-and-meta svg { width: 12px; height: 12px; }
+
+/* Remove the small optical nudge for muted text/icons inside card headers
+   so time and icons share an exact baseline instead of being shifted. */
+.card-head .dim {
+  transform: none !important;
+}
+
 /* Combined meta wrapper used by the header component. Keep it inline so
    the text flows next to the username; hide overflow and allow the
    inner auto-scroll to animate when needed. */

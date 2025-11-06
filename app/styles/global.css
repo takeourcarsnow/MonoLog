@@ -30,6 +30,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
   /* Optimize text rendering */
   text-rendering: optimizeLegibility;
+  /* Smooth theme transitions */
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth theme transitions for all elements */
+body * {
+  transition: background 0.3s ease !important, color 0.3s ease !important, border-color 0.3s ease !important, fill 0.3s ease !important, stroke 0.3s ease !important;
 }
 
 a { color: inherit; text-decoration: none; }

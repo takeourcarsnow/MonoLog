@@ -26,8 +26,12 @@ export function HeaderInteractive() {
   const [mounted, setMounted] = useState(false);
   const [showNotificationsPopup, setShowNotificationsPopup] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+  const [aboutAnimating, setAboutAnimating] = useState(false);
+  const [communitiesAnimating, setCommunitiesAnimating] = useState(false);
+  const [notificationsAnimating, setNotificationsAnimating] = useState(false);
+  const [searchAnimating, setSearchAnimating] = useState(false);
 
-  // Define checkForNewThreads function outside useEffect so it can be exposed globally
+  const aboutToggle = usePrevPathToggle('/about', 'monolog:prev-path-before-about').toggle;
   const checkForNewThreads = useCallback(async (forceToast = false) => {
     if (!me) {
       setHasNewThreads(false);
@@ -255,11 +259,15 @@ export function HeaderInteractive() {
       </button>
       <div className="header-actions" id="header-actions" ref={actionsRef}>
         <button
-          className={`btn icon about-btn no-tap-effects ${pathname === '/about' ? 'active' : ''}`}
+          className={`btn icon about-btn no-tap-effects no-effects ${pathname === '/about' ? 'active' : ''} ${aboutAnimating ? 'animating' : ''}`}
           title="About MonoLog"
           aria-label="About MonoLog"
           aria-current={pathname === '/about' ? 'page' : undefined}
-          onClick={usePrevPathToggle('/about', 'monolog:prev-path-before-about').toggle}
+          onClick={() => {
+            setAboutAnimating(true);
+            setTimeout(() => setAboutAnimating(false), 500);
+            aboutToggle();
+          }}
         >
           <Info size={20} strokeWidth={2} />
         </button>
@@ -268,31 +276,46 @@ export function HeaderInteractive() {
           <ThemeToggle />
         </div>
         {/* Communities button */}
-        <Link href="/communities" className={`btn icon about-btn no-tap-effects ${pathname === '/communities' ? 'active' : ''} ${hasNewThreads ? 'communities-pulse' : ''}`} aria-label="Communities">
+        <Link href="/communities" className={`btn icon about-btn no-tap-effects no-effects ${pathname === '/communities' ? 'active' : ''} ${hasNewThreads ? 'communities-pulse' : ''} ${communitiesAnimating ? 'animating' : ''}`} aria-label="Communities" onClick={() => {
+          setCommunitiesAnimating(true);
+          setTimeout(() => setCommunitiesAnimating(false), 500);
+        }}>
           <Users size={20} strokeWidth={2} />
         </Link>
         {/* Notifications button */}
         {mounted && me ? (
           <button
-            className={`btn icon notifications-btn no-tap-effects ${hasUnreadNotifications ? 'unread' : ''}`}
+            className={`btn icon notifications-btn no-tap-effects no-effects ${hasUnreadNotifications ? 'unread' : ''} ${notificationsAnimating ? 'animating' : ''}`}
             title="Notifications"
             aria-label="Notifications"
-            onClick={() => { setShowNotificationsPopup(true); setHasUnreadNotifications(false); }}
+            onClick={() => {
+              setNotificationsAnimating(true);
+              setTimeout(() => setNotificationsAnimating(false), 500);
+              setShowNotificationsPopup(true);
+              setHasUnreadNotifications(false);
+            }}
           >
             <Bell size={20} strokeWidth={2} />
           </button>
         ) : (
           <button
-            className="btn icon notifications-btn no-tap-effects"
+            className={`btn icon notifications-btn no-tap-effects no-effects ${notificationsAnimating ? 'animating' : ''}`}
             title="Notifications"
             aria-label="Notifications"
-            onClick={() => setShowNotificationsPopup(true)}
+            onClick={() => {
+              setNotificationsAnimating(true);
+              setTimeout(() => setNotificationsAnimating(false), 500);
+              setShowNotificationsPopup(true);
+            }}
           >
             <Bell size={20} strokeWidth={2} />
           </button>
         )}
         {/* Search button */}
-        <Link href="/search" className={`btn icon search-btn no-tap-effects ${pathname === '/search' ? 'active' : ''}`} aria-label="Search">
+        <Link href="/search" className={`btn icon search-btn no-tap-effects no-effects ${pathname === '/search' ? 'active' : ''} ${searchAnimating ? 'animating' : ''}`} aria-label="Search" onClick={() => {
+          setSearchAnimating(true);
+          setTimeout(() => setSearchAnimating(false), 500);
+        }}>
           <Search size={20} strokeWidth={2} />
         </Link>
         {/* Shell reserves space for the profile button so the header doesn't

@@ -2,7 +2,9 @@ const KEY = "monolog_theme";
 
 function apply(mode: "light" | "dark") {
   if (typeof document === "undefined") return;
-  document.documentElement.setAttribute("data-theme", mode);
+  document.documentElement.classList.remove("theme-light", "theme-dark");
+  document.documentElement.classList.add(`theme-${mode}`);
+  document.documentElement.setAttribute("data-theme", mode); // keep for compatibility
   if (mode === "dark") {
     document.documentElement.classList.add("dark");
   } else {

@@ -7,15 +7,32 @@ import { Button } from "@/app/components/ui/Button";
 export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   useEffect(() => setTheme(currentTheme()), []);
-  const Icon = theme === "light" ? Sun : Moon;
   return (
     <Button
-      className="icon"
+      className="icon no-effects"
       title="Toggle theme"
       aria-label="Toggle theme"
-      onClick={() => { const newTheme = toggleTheme(); setTheme(newTheme); }}
+      onClick={() => {
+        const newTheme = toggleTheme();
+        setTheme(newTheme);
+      }}
     >
-      <Icon size={20} strokeWidth={2} />
+      <Sun
+        size={20}
+        strokeWidth={2}
+        style={{
+          opacity: theme === "light" ? 1 : 0,
+          position: 'absolute'
+        }}
+      />
+      <Moon
+        size={20}
+        strokeWidth={2}
+        style={{
+          opacity: theme === "dark" ? 1 : 0,
+          position: 'absolute'
+        }}
+      />
     </Button>
   );
 }

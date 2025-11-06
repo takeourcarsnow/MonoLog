@@ -90,20 +90,7 @@
   display: none !important;
 }
 
-/* Restore hover effects for about and favorites buttons */
-.about-btn:hover,
-.favorites-btn:hover,
-.notifications-btn:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-  transition: transform 200ms ease, box-shadow 200ms ease !important;
-}
-.about-btn:hover svg,
-.favorites-btn:hover svg,
-.notifications-btn:hover svg {
-  transform: scale(1.05) !important;
-  transition: transform 200ms ease !important;
-}
+/* Hover effects removed for header buttons */
 
 .btn { transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 180ms cubic-bezier(0.4, 0, 0.2, 1); }
 .btn:active { transform: translateY(0.5px) scale(0.995); box-shadow: 0 0 10px rgba(0,0,0,0.3); }
@@ -338,6 +325,7 @@
 }
 .no-effects::before { display: none !important; }
 .no-effects:hover { transform: none !important; box-shadow: none !important; }
+.no-effects:hover svg { transform: none !important; }
 .no-effects:active { transform: none !important; }
 .no-effects:focus { box-shadow: none !important; }
 
@@ -371,4 +359,9 @@
 .profile-actions .signout-btn.no-effects:not(.confirm):hover {
   background: transparent !important;
   color: var(--text) !important;
+}
+
+/* Remove hover scaling for theme toggle */
+.theme-toggle-shell .btn:hover svg {
+  transform: none !important;
 }

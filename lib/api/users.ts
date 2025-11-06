@@ -62,7 +62,7 @@ export async function updateUser(id: string, patch: Partial<User>) {
   if (patch.displayName !== undefined) upd.display_name = patch.displayName;
   if (patch.avatarUrl !== undefined) upd.avatar_url = patch.avatarUrl;
   if (patch.bio !== undefined) upd.bio = patch.bio;
-  if (patch.socialLinks !== undefined) upd.socialLinks = patch.socialLinks ? JSON.stringify(patch.socialLinks) : null;
+  if (patch.socialLinks !== undefined) upd.social_links = patch.socialLinks ? JSON.stringify(patch.socialLinks) : null;
   const { error, data } = await sb.from("users").update(upd).eq("id", id).select("*").limit(1).single();
   if (error) throw error;
   const profile = data as any;

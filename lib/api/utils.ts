@@ -42,7 +42,7 @@ function sanitizeDisplayName(value: any): string | undefined {
 export function mapProfileToUser(profile: any) {
   if (!profile) return null;
 
-  const socialLinks = tryParseJSON(pick(profile, 'socialLinks', 'social_links'));
+  const socialLinks = tryParseJSON(pick(profile, 'social_links', 'socialLinks'));
   const exifPresets = tryParseJSON(pick(profile, 'exifPresets', 'exif_presets'), true);
 
   return {

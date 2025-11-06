@@ -18,7 +18,6 @@
 
 .tab-item-static.active {
   color: var(--tab-color);
-  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .tab-item-static .tab-icon {
@@ -31,9 +30,13 @@
   width: 20px;
   height: 20px;
   margin-bottom: 6px;
-  transition: color 260ms ease;
+  transition: color 260ms ease, transform 260ms ease;
   position: relative;
   z-index: 1;
+}
+
+.tab-item-static.active .tab-icon {
+  transform: scale(1.2);
 }
 
 /* Ensure SVGs inside the icon container size to the box */

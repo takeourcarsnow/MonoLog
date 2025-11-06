@@ -260,6 +260,16 @@ If performance checks fail, review:
 - Search results may not show accurate comment counts (optimization pending)
 - Some React Hook warnings in development (safe to ignore, related to image zoom complexity)
 
+### Viewport sizing (mobile)
+
+As of Nov 2025 the app uses CSS dynamic viewport units (dvh) instead of JavaScript to track the visible viewport height. A single CSS custom property is defined in `app/styles/global.css`:
+
+```
+:root { --viewport-height: 1dvh; }
+```
+
+Existing styles keep using `var(--viewport-height)` so no runtime listeners are required. The `<meta name="viewport">` in `app/layout.tsx` specifies `viewport-fit=cover` for proper safe-area insets. If you encounter clipping after a pinch-zoom + refresh on very old iOS Safari versions that lack `dvh`, please update iOS; older browsers are not officially supported.
+
 ## 📄 License
 
 This project is private and proprietary.

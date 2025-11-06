@@ -11,6 +11,12 @@ interface Props {
 // Typewriter hint: cycles through short messages by typing them out, holding, then backspacing.
 export default function ScrollingHint({ messages, interval = 5500, className = '' }: Props) {
   const [index, setIndex] = useState(0);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShow(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!messages || messages.length <= 1) return;
@@ -20,6 +26,8 @@ export default function ScrollingHint({ messages, interval = 5500, className = '
     }, interval);
     return () => clearInterval(id);
   }, [messages, interval]);
+
+  if (!show) return null;
 
   return (
     <span className={className} aria-live="polite" style={{ textAlign: 'left' }}>

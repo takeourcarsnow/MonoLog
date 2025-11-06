@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Combobox } from "@/app/components/ui/Combobox";
 import { CameraScopeSelector } from "./CameraScopeSelector";
-import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS, getMergedExifPresets } from "@/lib/exifPresets";
+import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS, getMergedExifPresets, normalizeExifPresets } from "@/lib/exifPresets";
 import { Settings, Image, Gauge } from "lucide-react";
 import type { User } from "@/lib/types";
 import { api } from "@/lib/api";
@@ -60,12 +60,14 @@ export function ExifInputs({
 
   const mergedPresets = getMergedExifPresets(user);
 
-  const getSafeExifPresets = (user: User | null) => ({
-    cameras: Array.isArray(user?.exifPresets?.cameras) ? user.exifPresets.cameras : [],
-    lenses: Array.isArray(user?.exifPresets?.lenses) ? user.exifPresets.lenses : [],
-    filmTypes: Array.isArray(user?.exifPresets?.filmTypes) ? user.exifPresets.filmTypes : [],
-    filmIsos: Array.isArray(user?.exifPresets?.filmIsos) ? user.exifPresets.filmIsos : [],
-  });
+  const getSafeExifPresets = (user: User | null) => {
+    // Normalize any legacy/snake_case shapes stored on the profile
+    try {
+      return normalizeExifPresets(user?.exifPresets || {});
+    } catch (_) {
+      return { cameras: [], lenses: [], filmTypes: [], filmIsos: [] };
+    }
+  };
 
   const handleRemovePreset = async (field: 'cameras' | 'lenses' | 'filmTypes' | 'filmIsos', value: string) => {
     if (!user) return;
@@ -73,7 +75,7 @@ export function ExifInputs({
     try { recentlyRemovedRef.current[field].add(value); } catch (_) {}
     const currentClean = getSafeExifPresets(user);
     const current = currentClean[field] || [];
-    const updated = { ...currentClean, [field]: current.filter(o => o !== value) };
+    const updated = { ...currentClean, [field]: current.filter((o: string) => o !== value) };
     try {
       const updatedUser = await api.updateCurrentUser({ exifPresets: updated });
       setUser?.(updatedUser);

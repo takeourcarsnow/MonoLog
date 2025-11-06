@@ -34,7 +34,7 @@
   flex-direction: column;
   gap: 12px; /* 12px vertical space between each input */
 }
-.auth-form.enhanced { max-width: 480px; width: 100%; margin: 0 auto; }
+.auth-form.enhanced { max-width: clamp(300px, 90vw, 480px); width: 100%; margin: 0 auto; }
 .auth-form.enhanced .field-group { width: 100%; }
 .auth-form.enhanced .fancy-input { 
   background: var(--bg);
@@ -597,7 +597,6 @@ body.notifications-popup-open .tabbar {
   position: fixed;
   left: 50%;
   top: 60px;
-  bottom: 20px;
   transform: translateX(-50%);
   /* Keep popup above the backdrop */
   z-index: 2147483001;
@@ -605,12 +604,11 @@ body.notifications-popup-open .tabbar {
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   border: 1px solid var(--border);
-  width: 360px;
-  max-width: calc(100vw - 40px);
+  width: clamp(300px, 90vw, 360px);
+  height: clamp(400px, 70vh, 600px);
   animation: notificationsPopupIn 200ms var(--transition-mid) both;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 @keyframes notificationsPopupIn {
@@ -730,31 +728,4 @@ body.notifications-popup-open .tabbar {
 
 .notification-action {
   margin-top: 8px;
-}
-
-/* Mobile adjustments */
-@media (max-width: 640px) {
-  .notifications-popup {
-    /* Position the popup at the top on mobile, centered horizontally */
-    top: 70px;
-    bottom: 20px;
-    /* Center the popup while keeping a consistent horizontal gap on
-       small screens. Use left:50% + translateX(-50%) so it remains
-       centered even if the viewport width changes (avoids left-only
-       inset issues). Use a width limited by the viewport minus 20px
-       to maintain ~10px gutters on each side. */
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: min(360px, calc(100vw - 20px));
-    box-sizing: border-box;
-  }
-}
-
-/* Desktop adjustments */
-@media (min-width: 641px) {
-  .notifications-popup {
-    width: 340px;
-    max-width: 340px;
-  }
 }

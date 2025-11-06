@@ -229,7 +229,7 @@
   border: 1px solid color-mix(in srgb, var(--border), transparent 40%);
   padding: 8px 10px;
   border-radius: 12px;
-  max-width: 640px;
+  max-width: clamp(280px, 85vw, 640px);
   margin: 0 auto 12px;
   opacity: 0;
   transform: translateY(4px) scale(.985);

@@ -54,7 +54,7 @@
 @media (min-width: 900px) {
   .post-editor,
   .uploader {
-    max-width: 600px;
+    max-width: clamp(300px, 90vw, 600px);
     margin: 0 auto;
     padding-left: 12px;
     padding-right: 12px;
@@ -64,7 +64,7 @@
 
   /* Ensure the toolbar inside post pages also aligns visually with the content */
   .uploader .toolbar {
-    max-width: 600px;
+    max-width: clamp(300px, 90vw, 600px);
     margin: 0 auto;
     padding-left: 12px;
     padding-right: 12px;
@@ -129,7 +129,7 @@
   /* Override global .dim single-line rules so bio can span multiple lines */
   overflow: visible;
   text-overflow: clip;
-  max-width: 280px; /* constrain width to break lines sooner */
+  max-width: clamp(200px, 80vw, 280px); /* constrain width to break lines sooner */
 }
 
 

@@ -404,17 +404,10 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 .drop-zone-camera-button,
 .drop-zone-gallery-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
   padding: 0;
   border-radius: 0;
   background: transparent;
   border: none;
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   min-width: auto;
   width: auto;
   height: auto;
@@ -608,26 +601,17 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   background: rgba(255, 255, 255, 0.7);
 }
 
-:root[data-theme="light"] .drop-zone-loader {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-:root[data-theme="light"] .drop-zone-loader::before {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  opacity: 1;
-}
-
-/* Dark theme adjustments for drop-zone-loader */
-:root[data-theme="dark"] .drop-zone-loader {
-  background: transparent;
-}
-
+:root[data-theme="light"] .drop-zone-loader,
+:root[data-theme="light"] .drop-zone-loader::before,
+:root[data-theme="dark"] .drop-zone-loader,
 :root[data-theme="dark"] .drop-zone-loader::before {
   background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-theme="light"] .drop-zone-loader::before,
+:root[data-theme="dark"] .drop-zone-loader::before {
   opacity: 1;
 }
 
@@ -892,7 +876,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   pointer-events: auto;
   overflow: auto;
 }
-#camera-root > * { pointer-events: auto; width: 100%; max-width: 720px; }
+#camera-root > * { pointer-events: auto; width: 100%; max-width: clamp(300px, 90vw, 720px); }
 
 /* Full-screen editor mode */
 .upload-editor-fullscreen {

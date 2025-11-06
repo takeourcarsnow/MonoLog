@@ -105,7 +105,7 @@
 @media (min-width: 992px) {
   /* Limit community card width on desktop so panels aren't too wide */
   .communities .content-body .card {
-    max-width: 720px; /* narrower panels on desktop */
+    max-width: clamp(300px, 90vw, 720px); /* narrower panels on desktop */
     width: 100%;
   }
 }
@@ -118,12 +118,12 @@
 
 @media (min-width: 992px) {
   .community .card {
-    max-width: 720px;
+    max-width: clamp(300px, 90vw, 720px);
     width: 100%;
   }
   /* Also constrain thread cards inside content-body for consistent layout */
   .community .content-body .card {
-    max-width: 720px;
+    max-width: clamp(300px, 90vw, 720px);
     width: 100%;
   }
 }
@@ -139,7 +139,7 @@
   .content.thread .card,
   .thread .card,
   .content.thread .content-body .card {
-    max-width: 720px;
+    max-width: clamp(300px, 90vw, 720px);
     width: 100%;
   }
   /* Ensure the main thread container doesn't force full-bleed width */
@@ -181,14 +181,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-    max-width: 720px;
+    max-width: clamp(300px, 90vw, 720px);
     padding-left: 0; /* let the link align flush with the card */
     /* Keep community header a bit lower on desktop so it has breathing room */
     margin-top: 1.5rem; /* ~24px spacing on desktop */
   }
 
   .content.thread > :first-child {
-    max-width: 720px;
+    max-width: clamp(300px, 90vw, 720px);
     padding-left: 0; /* let the link align flush with the card */
     /* Thread view should sit closer to the site header — pull it up slightly */
     margin-top: -0.75rem; /* bring thread header closer to fixed header on desktop */
@@ -284,44 +284,6 @@
   flex-wrap: nowrap; /* force single-line */
 }
 
-/* Default spacing between buttons */
-.card-head .post-actions {
-  display: flex;
-  align-items: center;
-  position: relative;
-  z-index: 3;
-  margin-left: auto;
-  padding-right: 0;
-}
-
-/* Ensure the edit/delete button group remains on a single row even when
-   the header is narrow. The markup renders a wrapper <div> containing the
-   two buttons when the post belongs to the current user; force that
-   wrapper to be an inline-flex row that does not wrap. This keeps both
-   buttons visible on a single line and lets the rest of the header
-   shrink/overflow instead. */
-.card-head .post-actions > div {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-
-/* Ensure the buttons themselves don't expand and instead stay compact so
-   they can remain side-by-side on constrained widths. */
-.card-head .post-actions > div .btn {
-  flex: 0 0 auto;
-}
-
-/* Group user link and meta together */
-.card-head .user-and-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
 /* When the post belongs to the current user, no gap between edit and delete buttons */
 .card-head .post-actions.is-me {
   gap: 0px;
@@ -336,35 +298,6 @@
   min-width: 0;
   /* Keep the avatar + username compact: do not allow it to force a wrap.
      Let the meta area take remaining space. */
-  flex: 0 0 auto;
-}
-
-/* In card headers, keep username centered with avatar */
-.card-head .username {
-  font-size: 14px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  min-width: 0;
-  overflow: visible; /* allow full username to show */
-  text-overflow: clip;
-}
-
-.card-head .dim {
-  font-size: 12px;
-  line-height: 1;
-  color: var(--muted);
-  display: inline-block;
-  vertical-align: middle;
-}
-
-/* Wrapper for avatar + username in the card header */
-.card-head .user-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  /* Keep avatar + username compact and never clip the username */
   flex: 0 0 auto;
   overflow: visible;
 }
@@ -1013,8 +946,6 @@
      behaving like “no limit” for real-world content sizes. */
   max-height: 9999px; /* was 1000px */
   opacity: 1;
-  max-height: 9999px; /* was 1000px */
-  opacity: 1;
   transition: none;
 }
 .card.editor-open .caption-wrap {
@@ -1514,11 +1445,7 @@
   }
 }
 
-.spotify-link .spotify-preview-link {
-  display: inline-flex; /* ensure anchor sizes to content when centered */
-  align-items: center;
-  gap: 8px;
-}
+
 
 /* Spotify preview crossfade/translate animation between loading and loaded states */
 .spotify-info { position: relative; }
@@ -1601,29 +1528,7 @@
   .spotify-section { transition: none; max-height: none; opacity: 1; }
 }
 
-/*
-   EXIF section animation: animate max-height and opacity for smooth expand/collapse
-*/
-.exif-section {
-  /* collapsed by default */
-  max-height: 0px;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-.exif-section > * {
-  /* ensure inner wrapper doesn't overflow visually during the transition */
-  overflow: hidden;
-}
-.exif-section.open {
-  /* visible state */
-  opacity: 1;
-  max-height: 60px; /* enough for the exif info content */
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .exif-section { transition: none; max-height: none; opacity: 1; }
-}
 
 /* EXIF auto-scroll animation */
 .exif-info {

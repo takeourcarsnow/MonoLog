@@ -170,7 +170,7 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 720px;
+  max-width: clamp(300px, 90vw, 720px);
 }
 
 .inline-edit-card.visible {

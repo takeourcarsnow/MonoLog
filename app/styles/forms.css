@@ -57,6 +57,7 @@
   white-space: nowrap;
   display: inline-block;
   overflow: hidden;
+  width: 0;
   animation: typing 2s steps(40) forwards, 
              hold 2s 2s forwards,
              backspace 1.5s 4s steps(40) forwards;

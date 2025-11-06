@@ -79,6 +79,7 @@
   color: var(--muted);
   font-weight: normal;
   text-align: left;
+  width: 0;
   animation: typing 2s steps(60) forwards, 
              hold 2s 2s forwards,
              backspace 1.5s 4s steps(60) forwards;
@@ -359,7 +360,7 @@
 
 .invite-panel {
   margin: 20px auto;
-  max-width: 600px;
+  max-width: clamp(280px, 85vw, 600px);
   padding: 16px;
   background: var(--card-bg);
   border-radius: 12px;
@@ -387,7 +388,7 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  max-width: 720px;
+  max-width: clamp(300px, 90vw, 720px);
   margin: 0 auto;
   font-size: 0; /* collapse inter-element gaps */
   -webkit-mask-image: linear-gradient(to right, transparent 0px, black 50px, black calc(100% - 50px), transparent 100%);

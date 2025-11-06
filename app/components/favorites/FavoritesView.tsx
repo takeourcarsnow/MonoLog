@@ -74,10 +74,10 @@ export function FavoritesView() {
   useEventListener('monolog:favorite_changed', (e: any) => {
     console.log('Favorite changed event:', e?.detail);
     const changedPostId = e?.detail?.postId;
-    const favorited = e?.detail?.favorited;
+    const favorites = e?.detail?.favorites;
     if (!changedPostId) return;
 
-    if (!favorited) {
+    if (!favorites) {
       // Unfavorited: remove from list
       setPosts(prev => prev.filter(p => p.id !== changedPostId));
     } else {

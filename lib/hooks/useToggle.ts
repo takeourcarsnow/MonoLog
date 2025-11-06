@@ -29,7 +29,7 @@ export function useToggle<T = any>({
   // Try to derive initial state synchronously from the cached currentUser
   // (SWR). This avoids a visible flicker when toggles mount after a
   // view switch because we can initialize to the correct value immediately.
-  const valueKeySync = eventValueKey || (eventDetailKey.includes('follow') ? 'following' : 'favorited');
+  const valueKeySync = eventValueKey || (eventName.includes('follow') ? 'following' : 'favorites');
   const { data: currentUser, mutate: mutateCurrentUser } = useCurrentUser();
   const derivedInitial = (() => {
     try {
@@ -38,7 +38,8 @@ export function useToggle<T = any>({
     } catch (_) {}
     try {
       // Fall back to synchronous client cache if SWR hasn't hydrated yet
-      const cached: string[] = (typeof window !== 'undefined') ? (storage.get<string[]>('currentUserFollowing', []) as string[]) : [];
+      const cacheKey = eventName.includes('follow') ? 'currentUserFollowing' : 'currentUserFavorites';
+      const cached: string[] = (typeof window !== 'undefined') ? (storage.get<string[]>(cacheKey, []) as string[]) : [];
       if (Array.isArray(cached)) return cached.includes(id);
     } catch (_) {}
     return initialState;
@@ -92,7 +93,7 @@ export function useToggle<T = any>({
 
   // Listen for external changes
   useEffect(() => {
-    const valueKey = eventValueKey || (eventDetailKey.includes('follow') ? 'following' : 'favorited');
+    const valueKey = eventValueKey || (eventName.includes('follow') ? 'following' : 'favorites');
     const onChanged = (e: any) => {
       const changedId = e?.detail?.[eventDetailKey];
       const newState = e?.detail?.[valueKey];
@@ -131,7 +132,7 @@ export function useToggle<T = any>({
       // single network request instead of many per-item calls.
       try { mutateCurrentUser?.(); } catch (_) {}
       // Dispatch event
-      const valueKey = eventValueKey || (eventDetailKey.includes('follow') ? 'following' : 'favorited');
+      const valueKey = eventValueKey || (eventName.includes('follow') ? 'following' : 'favorites');
       const eventDetail = { [eventDetailKey]: id, [valueKey]: !prev };
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(eventName, { detail: eventDetail }));

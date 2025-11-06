@@ -1,15 +1,5 @@
-import { Cloud, Thermometer, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
-
-function getWeatherIcon(condition: string) {
-  const lower = condition.toLowerCase();
-  if (lower.includes('clear') || lower.includes('sunny')) return Sun;
-  if (lower.includes('rain') || lower.includes('shower')) return CloudRain;
-  if (lower.includes('snow') || lower.includes('freezing')) return CloudSnow;
-  if (lower.includes('thunder') || lower.includes('storm')) return CloudLightning;
-  if (lower.includes('drizzle')) return CloudDrizzle;
-  if (lower.includes('fog') || lower.includes('overcast') || lower.includes('cloud')) return Cloud;
-  return Cloud; // default
-}
+import { Cloud, Thermometer, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Moon } from "lucide-react";
+import { getWeatherIcon } from "@/lib/weatherIcons";
 
 interface WeatherSectionProps {
   showWeather: boolean;

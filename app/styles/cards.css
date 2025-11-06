@@ -1384,8 +1384,10 @@
   gap: 26px;
   /* Center grid items */
   justify-items: center;
-  /* Constrain wrapper width */
-  max-width: 640px;
+  /* Constrain wrapper width to follow the global app max width so list
+     panels expand naturally on larger screens while staying readable on
+     mobile. Uses the global --maxw which defaults to clamp(640px, 90vw, 1100px). */
+  max-width: var(--maxw);
   margin: 0 auto;
   width: 100%;
 }
@@ -1394,7 +1396,9 @@
 .feed:not(.grid-view) > div:last-child > div {
   display: grid;
   gap: 26px;
-  max-width: 640px;
+  /* match the outer wrapper's max-width so cards align with the header
+     and other centered content across the app */
+  max-width: var(--maxw);
   margin: 0 auto;
   width: 100%;
   justify-items: center;

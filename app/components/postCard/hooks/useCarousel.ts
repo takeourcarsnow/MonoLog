@@ -14,6 +14,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [isZooming, setIsZooming] = useState(false);
   const isZoomingRef = useRef(false);
+  const lengthRef = useRef(imageUrls.length);
 
   // Gesture state
   const startX = useRef<number | null>(null);
@@ -24,6 +25,7 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   const rafRef = useRef<number | null>(null);
   const pointerTypeRef = useRef<string>('');
 
+  useEffect(() => { lengthRef.current = imageUrls.length; }, [imageUrls.length]);
   useEffect(() => { if (index >= imageUrls.length) setIndex(Math.max(0, imageUrls.length - 1)); }, [imageUrls.length, setIndex]);
   useEffect(() => { indexRef.current = index; }, [index]);
   useEffect(() => { onIndexChange?.(index); }, [index, onIndexChange]);
@@ -43,8 +45,19 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   const applyTransform = (x: number) => {
     const el = trackRef.current;
     if (!el) return;
+    // clamp x to prevent overscroll beyond first and last images, but allow some drag
+    const overscrollLimit = 50; // pixels
+    let minX = -Infinity;
+    let maxX = Infinity;
+    if (indexRef.current === 0) {
+      maxX = overscrollLimit; // allow some drag right from first image
+    }
+    if (indexRef.current === lengthRef.current - 1) {
+      minX = -overscrollLimit; // allow some drag left from last image
+    }
+    const clampedX = Math.max(minX, Math.min(maxX, x));
     // translate relative to current index
-    el.style.transform = `translate3d(calc(-${indexRef.current * 100}% + ${x}px), 0, 0)`;
+    el.style.transform = `translate3d(calc(-${indexRef.current * 100}% + ${clampedX}px), 0, 0)`;
   };
 
   const scheduleTransform = (x: number) => {
@@ -106,8 +119,8 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
     const containerWidth = el ? el.getBoundingClientRect().width : 0;
     const ratio = containerWidth ? Math.abs(dx) / containerWidth : 0;
     const isMouse = pointerTypeRef.current === 'mouse';
-    const pxThreshold = isMouse ? 20 : 40; // lower pixel threshold for mouse
-    const ratioThreshold = isMouse ? 0.1 : 0.18; // lower ratio threshold for mouse
+    const pxThreshold = isMouse ? 100 : 40; // higher pixel threshold for mouse to make it easier on wide panels
+    const ratioThreshold = isMouse ? 0.05 : 0.18; // lower ratio threshold for mouse
     let target = indexRef.current;
     if ((Math.abs(dx) > pxThreshold) && (ratio > ratioThreshold || Math.abs(dx) > containerWidth * 0.35)) {
       if (dx > 0) target = Math.max(0, indexRef.current - 1);

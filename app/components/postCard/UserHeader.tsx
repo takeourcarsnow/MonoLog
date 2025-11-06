@@ -6,22 +6,12 @@ import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
-import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Clock, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
+import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Clock, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Moon } from "lucide-react";
 import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import { usePathname, useRouter } from "next/navigation";
 import TimeDisplay from "@/app/components/ui/TimeDisplay";
-
-function getWeatherIcon(condition: string) {
-  const lower = condition.toLowerCase();
-  if (lower.includes('clear') || lower.includes('sunny')) return Sun;
-  if (lower.includes('rain') || lower.includes('shower')) return CloudRain;
-  if (lower.includes('snow') || lower.includes('freezing')) return CloudSnow;
-  if (lower.includes('thunder') || lower.includes('storm')) return CloudLightning;
-  if (lower.includes('drizzle')) return CloudDrizzle;
-  if (lower.includes('fog') || lower.includes('overcast') || lower.includes('cloud')) return Cloud;
-  return Cloud; // default
-}
+import { getWeatherIcon } from "@/lib/weatherIcons";
 
 interface UserHeaderProps {
   post: HydratedPost;
@@ -184,7 +174,7 @@ export const UserHeader = memo(function UserHeader({
                   {post.weatherTemperature !== undefined && (
                     <span className="weather-meta" style={{ display: 'inline-flex', alignItems: 'center', marginLeft: post.locationAddress ? '8px' : undefined }}>
                       {(() => {
-                        const IconComponent = getWeatherIcon(post.weatherCondition || '');
+                        const IconComponent = getWeatherIcon(post.weatherCondition || '', new Date(post.createdAt));
                         return <IconComponent size={12} className="dim" style={{ marginRight: '4px' }} />;
                       })()}
                       <span className="weather-text dim">{Math.round(post.weatherTemperature)}°C</span>

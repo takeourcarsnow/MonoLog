@@ -55,12 +55,22 @@ export function CommentActions({
             if (confirmingIds instanceof Set && confirmingIds.has(commentId)) {
               onDelete();
               setConfirmingIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(commentId);
-                return newSet;
+                if (prev instanceof Set) {
+                  const newSet = new Set(prev);
+                  newSet.delete(commentId);
+                  return newSet;
+                } else {
+                  return new Set();
+                }
               });
             } else {
-              setConfirmingIds(prev => new Set(prev).add(commentId));
+              setConfirmingIds(prev => {
+                if (prev instanceof Set) {
+                  return new Set(prev).add(commentId);
+                } else {
+                  return new Set([commentId]);
+                }
+              });
             }
           }}
         >

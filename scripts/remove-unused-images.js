@@ -13,9 +13,18 @@
  *   --verbose: Show detailed progress information
  */
 
-const { createClient } = require('@supabase/supabase-js');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
+import { createClient } from '@supabase/supabase-js';
+import path from 'path';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
 // Configuration
 const BUCKET_NAME = 'posts';
@@ -233,13 +242,16 @@ async function restoreMissingAvatars(missingPaths) {
 }
 
 async function deleteUnusedImages(usedPaths, bucketFiles) {
-  const unusedFiles = bucketFiles.filter(file => !usedPaths.has(file));
+  let unusedFiles = bucketFiles.filter(file => !usedPaths.has(file));
+
+  // NEVER delete avatar files, even if they're not referenced
+  unusedFiles = unusedFiles.filter(file => !file.startsWith('avatars/'));
 
   if (verbose) {
     console.log(`\n📊 Summary:`);
     console.log(`   Used images: ${usedPaths.size}`);
     console.log(`   Total files in bucket: ${bucketFiles.length}`);
-    console.log(`   Unused files: ${unusedFiles.length}`);
+    console.log(`   Unused files (excluding avatars): ${unusedFiles.length}`);
   }
 
   if (unusedFiles.length === 0) {

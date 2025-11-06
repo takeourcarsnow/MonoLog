@@ -63,31 +63,17 @@ export async function GET(req: Request) {
     const locationsCount = uniquePosts.filter((post: any) => post.weather_location && post.weather_location.toLowerCase().includes(q.toLowerCase())).length;
 
     // Search users
-    const { data: usernameUsers, error: usernameError } = await sb
+    const { data: usersData, error: usersError } = await sb
       .from('public_profiles')
       .select('id, username, display_name, avatar_url, bio')
-      .filter('username', 'ilike', `%${escapedQ}%`)
+      .or(`username.ilike.%${escapedQ}%,display_name.ilike.%${escapedQ}%,bio.ilike.%${escapedQ}%`)
       .limit(limit);
 
-    const { data: displayNameUsers, error: displayNameError } = await sb
-      .from('public_profiles')
-      .select('id, username, display_name, avatar_url, bio')
-      .filter('display_name', 'ilike', `%${escapedQ}%`)
-      .limit(limit);
-
-    const { data: bioUsers, error: bioError } = await sb
-      .from('public_profiles')
-      .select('id, username, display_name, avatar_url, bio')
-      .filter('bio', 'ilike', `%${escapedQ}%`)
-      .limit(limit);
-
-    if (usernameError || displayNameError || bioError) {
-      return NextResponse.json({ error: usernameError?.message || displayNameError?.message || bioError?.message }, { status: 500 });
+    if (usersError) {
+      return NextResponse.json({ error: usersError.message }, { status: 500 });
     }
 
-    const allUsers = [...(usernameUsers || []), ...(displayNameUsers || []), ...(bioUsers || [])];
-    const uniqueUsers = allUsers.filter((user, index, arr) => arr.findIndex(u => u.id === user.id) === index);
-    const users = uniqueUsers.slice(0, limit).map((row: any) => ({
+    const users = (usersData || []).slice(0, limit).map((row: any) => ({
       id: row.id,
       username: row.username,
       displayName: row.display_name,
@@ -96,33 +82,21 @@ export async function GET(req: Request) {
     }));
 
     // Search communities
-    const { data: nameCommunities, error: nameError } = await sb
+    const { data: communitiesData, error: communitiesError } = await sb
       .from('communities')
       .select(`
         *,
         users!communities_creator_id_fkey(id, username, display_name, avatar_url)
       `)
-      .filter('name', 'ilike', `%${escapedQ}%`)
+      .or(`name.ilike.%${escapedQ}%,description.ilike.%${escapedQ}%`)
       .limit(limit);
 
-    const { data: descCommunities, error: descError } = await sb
-      .from('communities')
-      .select(`
-        *,
-        users!communities_creator_id_fkey(id, username, display_name, avatar_url)
-      `)
-      .filter('description', 'ilike', `%${escapedQ}%`)
-      .limit(limit);
-
-    if (nameError || descError) {
-      return NextResponse.json({ error: nameError?.message || descError?.message }, { status: 500 });
+    if (communitiesError) {
+      return NextResponse.json({ error: communitiesError.message }, { status: 500 });
     }
 
-    const allCommunities = [...(nameCommunities || []), ...(descCommunities || [])];
-    const uniqueCommunities = allCommunities.filter((community, index, arr) => arr.findIndex(c => c.id === c.id) === index);
-
     // Fetch member counts in a single batched query
-    const communityIds = uniqueCommunities.map(c => c.id);
+    const communityIds = (communitiesData || []).map(c => c.id);
     let memberCounts: Record<string, number> = {};
     if (communityIds.length > 0) {
       const { data: membersData, error: membersError } = await sb
@@ -137,7 +111,7 @@ export async function GET(req: Request) {
       }
     }
 
-    const communities = uniqueCommunities.slice(0, limit).map((row: any) => ({
+    const communities = (communitiesData || []).slice(0, limit).map((row: any) => ({
       id: row.id,
       name: row.name,
       slug: row.slug,

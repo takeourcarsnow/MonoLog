@@ -78,22 +78,17 @@ export const ActionsSection = function ActionsSection({
   locationAddress,
 }: ActionsSectionProps) {
   const [copied, setCopied] = useState(false);
-  const [favoriteAnimating, setFavoriteAnimating] = useState(false);
-  const [spotifyAnimating, setSpotifyAnimating] = useState(false);
-  const [exifAnimating, setExifAnimating] = useState(false);
-  const [commentsAnimating, setCommentsAnimating] = useState(false);
-  const [fullscreenAnimating, setFullscreenAnimating] = useState(false);
-  const [shareAnimating, setShareAnimating] = useState(false);
+  const [animatingButton, setAnimatingButton] = useState<string | null>(null);
 
   return (
     <div className="actions">
       <button
-        className={`action share ${shareAnimating ? 'animating' : ''}`}
+        className={`action share ${animatingButton === 'share' ? 'animating' : ''}`}
         title="Share link"
         aria-label="Share post"
         onClick={async () => {
-          setShareAnimating(true);
-          setTimeout(() => setShareAnimating(false), 500);
+          setAnimatingButton('share');
+          setTimeout(() => setAnimatingButton(null), 500);
           const success = await sharePost();
           if (success) {
             setCopied(true);
@@ -122,15 +117,15 @@ export const ActionsSection = function ActionsSection({
       </button>
       {setShowExif && (
         <button
-          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''} ${exifAnimating ? 'animating' : ''}`}
+          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''} ${animatingButton === 'exif' ? 'animating' : ''}`}
           title={`Show EXIF info ${showExif ? "(active)" : ""}`}
           aria-label="Toggle EXIF information"
           aria-pressed={showExif}
           onClick={(e) => { 
             e.stopPropagation(); 
             e.preventDefault(); 
-            setExifAnimating(true);
-            setTimeout(() => setExifAnimating(false), 500);
+            setAnimatingButton('exif');
+            setTimeout(() => setAnimatingButton(null), 500);
             console.log('EXIF button clicked, current state:', showExif);
             setShowExif(!showExif); 
           }}
@@ -139,12 +134,12 @@ export const ActionsSection = function ActionsSection({
         </button>
       )}
       <button
-        className={`action comments-toggle ${commentsAnimating ? 'animating' : ''}`}
+        className={`action comments-toggle ${animatingButton === 'comments' ? 'animating' : ''}`}
         aria-expanded={commentsOpen}
         aria-controls={`comments-${postId}`}
         onClick={() => {
-          setCommentsAnimating(true);
-          setTimeout(() => setCommentsAnimating(false), 500);
+          setAnimatingButton('comments');
+          setTimeout(() => setAnimatingButton(null), 500);
           if (!commentsMounted) {
             setCommentsMounted(true);
             setCommentsOpen(true);
@@ -168,12 +163,12 @@ export const ActionsSection = function ActionsSection({
       </button>
       {setShowExif && (
         <button
-          className={`action fullscreen ${fullscreenAnimating ? 'animating' : ''}`}
+          className={`action fullscreen ${animatingButton === 'fullscreen' ? 'animating' : ''}`}
           title="View photo"
           aria-label="View photo fullscreen"
           onClick={() => { 
-            setFullscreenAnimating(true);
-            setTimeout(() => setFullscreenAnimating(false), 500);
+            setAnimatingButton('fullscreen');
+            setTimeout(() => setAnimatingButton(null), 500);
             openFullscreen?.(); 
           }}
         >
@@ -181,12 +176,12 @@ export const ActionsSection = function ActionsSection({
         </button>
       )}
       <button
-        className={`action favorite ${isFavorite ? "active" : ""} ${favoriteAnimating ? "animating" : ""}`}
+        className={`action favorite ${isFavorite ? "active" : ""} ${animatingButton === 'favorite' ? "animating" : ""}`}
         aria-pressed={isFavorite}
         title={isFavorite ? "Remove from favorites" : "Add to favorites"}
         onClick={async () => {
-          setFavoriteAnimating(true);
-          setTimeout(() => setFavoriteAnimating(false), 500);
+          setAnimatingButton('favorite');
+          setTimeout(() => setAnimatingButton(null), 500);
           showFavoriteFeedback(isFavorite ? 'removing' : 'adding');
           const success = await toggleFavoriteWithAuth();
           if (!success) {
@@ -199,15 +194,15 @@ export const ActionsSection = function ActionsSection({
       {/* Weather & Location buttons intentionally removed — info is shown in header */}
       {setShowSpotify && (
         <button
-          className={`action spotify-info ${spotifyLink ? 'spotify-has-link' : ''} ${spotifyAnimating ? 'animating' : ''}`}
+          className={`action spotify-info ${spotifyLink ? 'spotify-has-link' : ''} ${animatingButton === 'spotify' ? 'animating' : ''}`}
           title={`Show Spotify info ${showSpotify ? "(active)" : ""}`}
           aria-label="Toggle Spotify information"
           aria-pressed={showSpotify}
           onClick={(e) => { 
             e.stopPropagation(); 
             e.preventDefault(); 
-            setSpotifyAnimating(true);
-            setTimeout(() => setSpotifyAnimating(false), 500);
+            setAnimatingButton('spotify');
+            setTimeout(() => setAnimatingButton(null), 500);
             console.log('Spotify button clicked, current state:', showSpotify);
             setShowSpotify(!showSpotify); 
           }}

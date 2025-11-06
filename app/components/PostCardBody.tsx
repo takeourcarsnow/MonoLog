@@ -37,14 +37,8 @@ interface PostCardBodyProps {
   api: any;
   toast: any;
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
-  showExif: boolean;
-  setShowExif: (show: boolean) => void;
-  showSpotify: boolean;
-  setShowSpotify: (show: boolean) => void;
-  showWeather: boolean;
-  setShowWeather: (show: boolean) => void;
-  showLocation: boolean;
-  setShowLocation: (show: boolean) => void;
+  activeSection: 'exif' | 'spotify' | 'weather' | 'location' | null;
+  setActiveSection: (section: 'exif' | 'spotify' | 'weather' | 'location' | null) => void;
   spotifyLink?: string;
   camera?: string;
   lens?: string;
@@ -93,14 +87,8 @@ export function PostCardBody({
   api,
   toast,
   showFavoriteFeedback,
-  showExif,
-  setShowExif,
-  showSpotify,
-  setShowSpotify,
-  showWeather,
-  setShowWeather,
-  showLocation,
-  setShowLocation,
+  activeSection,
+  setActiveSection,
   spotifyLink,
   camera,
   lens,
@@ -122,6 +110,11 @@ export function PostCardBody({
   isAuthed,
   onSignIn,
 }: PostCardBodyProps) {
+  const showExif = activeSection === 'exif';
+  const showSpotify = activeSection === 'spotify';
+  const showWeather = activeSection === 'weather';
+  const showLocation = activeSection === 'location';
+
   return (
     <div className="card-body">
       {/* Caption/actions are always rendered but visually hidden when editor is entering.
@@ -135,10 +128,7 @@ export function PostCardBody({
           commentsOpen={commentsOpen}
           setCommentsOpen={(value: boolean) => {
             setCommentsOpen(value);
-            if (value) setShowExif(false); // Close EXIF when opening comments
-            if (value) setShowSpotify(false); // Close Spotify when opening comments
-            if (value) setShowWeather(false); // Close Weather when opening comments
-            if (value) setShowLocation(false); // Close Location when opening comments
+            if (value) setActiveSection(null); // Close active section when opening comments
           }}
           commentsMounted={commentsMounted}
           setCommentsMounted={setCommentsMounted}
@@ -154,47 +144,19 @@ export function PostCardBody({
           showFavoriteFeedback={showFavoriteFeedback}
           showExif={showExif}
           setShowExif={(value: boolean) => {
-            setShowExif(value);
-            if (value) {
-              setCommentsOpen(false); // Close comments when opening EXIF
-              setCommentsMounted(false);
-              setShowSpotify(false); // Close Spotify when opening EXIF
-              setShowWeather(false); // Close Weather when opening EXIF
-              setShowLocation(false); // Close Location when opening EXIF
-            }
+            setActiveSection(value ? 'exif' : null);
           }}
           showSpotify={showSpotify}
           setShowSpotify={(value: boolean) => {
-            setShowSpotify(value);
-            if (value) {
-              setCommentsOpen(false); // Close comments when opening Spotify
-              setCommentsMounted(false);
-              setShowExif(false); // Close EXIF when opening Spotify
-              setShowWeather(false); // Close Weather when opening Spotify
-              setShowLocation(false); // Close Location when opening Spotify
-            }
+            setActiveSection(value ? 'spotify' : null);
           }}
           showWeather={showWeather}
           setShowWeather={(value: boolean) => {
-            setShowWeather(value);
-            if (value) {
-              setCommentsOpen(false); // Close comments when opening Weather
-              setCommentsMounted(false);
-              setShowExif(false); // Close EXIF when opening Weather
-              setShowSpotify(false); // Close Spotify when opening Weather
-              setShowLocation(false); // Close Location when opening Weather
-            }
+            setActiveSection(value ? 'weather' : null);
           }}
           showLocation={showLocation}
           setShowLocation={(value: boolean) => {
-            setShowLocation(value);
-            if (value) {
-              setCommentsOpen(false); // Close comments when opening Location
-              setCommentsMounted(false);
-              setShowExif(false); // Close EXIF when opening Location
-              setShowSpotify(false); // Close Spotify when opening Location
-              setShowWeather(false); // Close Weather when opening Location
-            }
+            setActiveSection(value ? 'location' : null);
           }}
           spotifyLink={spotifyLink}
           camera={camera}

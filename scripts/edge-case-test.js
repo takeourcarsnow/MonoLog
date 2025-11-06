@@ -19,8 +19,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const BASE_URL = 'http://localhost:3000';
-const TEST_EMAIL = 'ngi04j7n9f@daouse.com';
-const TEST_PASSWORD = 'asdngi04j7n9f@daouse.com';
+const TEST_EMAIL = '2ucmbma6qf@yzcalo.com';
+const TEST_PASSWORD = 'asd2ucmbma6qf@yzcalo.com';
 const LOGO_PATH = path.join(process.cwd(), 'public', 'logo.png');
 
 class EdgeCaseTester {

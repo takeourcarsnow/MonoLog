@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { mapRowToHydratedPost } from '@/lib/api/utils';
+import { SELECT_POST_WITH_PROFILES } from '@/lib/api/sql';
 
 export async function GET(req: Request) {
   try {
@@ -9,7 +10,7 @@ export async function GET(req: Request) {
     // Query posts with non-null spotify_link
     const { data, error } = await sb
       .from('posts')
-      .select('*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)')
+      .select(SELECT_POST_WITH_PROFILES)
       .not('spotify_link', 'is', null)
       .order('created_at', { ascending: false });
 

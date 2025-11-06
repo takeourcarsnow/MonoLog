@@ -1,6 +1,6 @@
 import { getClient, logSupabaseError, getAccessToken } from "./client";
 import { DEFAULT_AVATAR } from "./utils";
-import { extractUserProfile } from "./userProfile";
+import { extractUserProfile, ensureProfileForAuthUser } from "./userProfile";
 
 export async function getComments(postId: string) {
   // Use the public API route to allow access for non-logged-in users
@@ -39,37 +39,5 @@ async function getCurrentUser() {
   const sb = getClient();
   const user = await (await import("./client")).getCachedAuthUser(sb);
   if (!user) return null;
-  // try to find a matching profile in users table
-  const { data: profile, error: profErr } = await sb.from("users").select("*").eq("id", user.id).limit(1).maybeSingle();
-  if (profErr) {
-    // Real query error (e.g. permissions); fall back to synthesized profile (no DB write)
-    const { username: synthUsername, displayName: synthDisplay, avatarUrl: synthAvatar } = extractUserProfile(user);
-    const joinedAt = new Date().toISOString();
-    return { id: user.id, username: synthUsername, displayName: synthDisplay, avatarUrl: synthAvatar, joinedAt } as any;
-  }
-
-  if (!profile) {
-    // Row truly missing. Insert a minimal profile.
-    const { username: synthUsername, displayName: synthDisplayName, avatarUrl: synthAvatar } = extractUserProfile(user);
-    const joinedAt = new Date().toISOString();
-    const insertObj: any = { id: user.id, username: synthUsername, display_name: null, joined_at: joinedAt };
-    if (synthAvatar) insertObj.avatar_url = synthAvatar;
-    try {
-      await sb.from("users").insert(insertObj);
-    } catch (e) {
-      // ignore duplicate or RLS failures; we still return synthesized profile
-    }
-    return { id: user.id, username: synthUsername, displayName: synthDisplayName, avatarUrl: synthAvatar, joinedAt } as any;
-  }
-  return {
-    id: profile.id,
-    username: profile.username || profile.user_name || "",
-    displayName: profile.displayName || profile.display_name || "",
-    avatarUrl: profile.avatarUrl || profile.avatar_url || "/logo.svg",
-    bio: profile.bio,
-    joinedAt: profile.joinedAt || profile.joined_at,
-    following: profile.following,
-    favorites: profile.favorites,
-    usernameChangedAt: profile.username_changed_at || profile.usernameChangedAt,
-  } as any;
+  return await ensureProfileForAuthUser(sb, user);
 }

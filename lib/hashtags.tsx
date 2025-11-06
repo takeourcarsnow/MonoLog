@@ -1,62 +1,32 @@
 import React from 'react';
+import { collectInlineTokens } from './textTokens';
 
 /**
  * Parse hashtags from text and return array of tags
  */
 export function parseHashtags(text: string): string[] {
-  const hashtagRegex = /#([a-zA-Z0-9_-]+)/g;
-  const hashtags: string[] = [];
-  let match;
-  while ((match = hashtagRegex.exec(text)) !== null) {
-    hashtags.push(match[1].toLowerCase());
-  }
-  return [...new Set(hashtags)]; // deduplicate
+  const tokens = collectInlineTokens(text);
+  const tags = tokens.filter(t => t.type === 'hashtag').map(t => t.value.toLowerCase());
+  return [...new Set(tags)];
 }
 
 /**
  * Render text with hashtags and mentions as links
  */
 export function renderCaption(text: string): React.ReactNode {
-  const urlRegex = /https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*/gi;
-  const hashtagRegex = /#([a-zA-Z0-9_-]+)/g;
-  const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+  const tokens = collectInlineTokens(text);
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
-  const matches: Array<{ index: number; end: number; type: 'hashtag' | 'mention' | 'url'; value: string }> = [];
-
-  // Collect all matches
-  let match;
-
-  // URLs first
-  while ((match = urlRegex.exec(text)) !== null) {
-    matches.push({ index: match.index, end: match.index + match[0].length, type: 'url', value: match[0] });
-  }
-  urlRegex.lastIndex = 0;
-
-  // Hashtags
-  while ((match = hashtagRegex.exec(text)) !== null) {
-    matches.push({ index: match.index, end: match.index + match[0].length, type: 'hashtag', value: match[1].toLowerCase() });
-  }
-  hashtagRegex.lastIndex = 0; // reset
-
-  // Mentions
-  while ((match = mentionRegex.exec(text)) !== null) {
-    matches.push({ index: match.index, end: match.index + match[0].length, type: 'mention', value: match[1] });
-  }
-
-  // Sort by index
-  matches.sort((a, b) => a.index - b.index);
-
-  for (const m of matches) {
+  for (const m of tokens) {
     // Add text before
-    if (m.index > lastIndex) {
-      parts.push(text.slice(lastIndex, m.index));
+    if (m.start > lastIndex) {
+      parts.push(text.slice(lastIndex, m.start));
     }
     // Add link
     if (m.type === 'hashtag') {
       parts.push(
         <a
-          key={`${m.type}-${m.index}`}
+          key={`${m.type}-${m.start}`}
           href={`/hashtags/${encodeURIComponent(m.value)}`}
           className="hashtag-link"
           onClick={(e) => {
@@ -67,11 +37,10 @@ export function renderCaption(text: string): React.ReactNode {
           #{m.value}
         </a>
       );
-    } else {
-      if (m.type === 'mention') {
+    } else if (m.type === 'mention') {
         parts.push(
           <a
-            key={`${m.type}-${m.index}`}
+            key={`${m.type}-${m.start}`}
             href={`/profile/${m.value}`}
             className="mention-link"
             onClick={(e) => {
@@ -92,7 +61,7 @@ export function renderCaption(text: string): React.ReactNode {
         const display = m.value.length > 60 ? m.value.slice(0, 50) + '…' : m.value;
         parts.push(
           <a
-            key={`${m.type}-${m.index}`}
+            key={`${m.type}-${m.start}`}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
@@ -103,7 +72,6 @@ export function renderCaption(text: string): React.ReactNode {
             {display}
           </a>
         );
-      }
     }
     lastIndex = m.end;
   }

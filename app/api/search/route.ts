@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 import { mapRowToHydratedPost } from '@/lib/api/utils';
+import { SELECT_POST_WITH_PROFILES, SELECT_COMMUNITY_WITH_CREATOR } from '@/lib/api/sql';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,7 +30,7 @@ export async function GET(req: Request) {
     // Search posts
     let postsQuery = sb
       .from('posts')
-      .select('*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)')
+      .select(SELECT_POST_WITH_PROFILES)
       .eq('public', true)
       .or(`caption.ilike.%${escapedQ}%`)
       .order('created_at', { ascending: false })
@@ -39,7 +40,7 @@ export async function GET(req: Request) {
     try {
       const { data: weatherData } = await sb
         .from('posts')
-        .select('*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)')
+        .select(SELECT_POST_WITH_PROFILES)
         .eq('public', true)
         .filter('weather_location', 'ilike', `%${escapedQ}%`)
         .order('created_at', { ascending: false })
@@ -84,10 +85,7 @@ export async function GET(req: Request) {
     // Search communities
     const { data: communitiesData, error: communitiesError } = await sb
       .from('communities')
-      .select(`
-        *,
-        users!communities_creator_id_fkey(id, username, display_name, avatar_url)
-      `)
+      .select(SELECT_COMMUNITY_WITH_CREATOR)
       .or(`name.ilike.%${escapedQ}%,description.ilike.%${escapedQ}%`)
       .limit(limit);
 

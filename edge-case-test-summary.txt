@@ -3,21 +3,21 @@
 ║           🔥 MONOLOG EDGE CASE TEST REPORT 🔥                 ║
 ╚════════════════════════════════════════════════════════════════╝
 
-Generated: 2025-11-05T03:18:00.337Z
-Duration: 105.63s
-Test Account: ngi04j7n9f@daouse.com
+Generated: 2025-11-06T02:34:11.648Z
+Duration: 64.98s
+Test Account: 2ucmbma6qf@yzcalo.com
 
 ╔════════════════════════════════════════════════════════════════╗
 ║                         📊 SUMMARY                             ║
 ╚════════════════════════════════════════════════════════════════╝
 
-Total Tests: 22
-✅ Passed: 18
-❌ Failed: 4
+Total Tests: 11
+✅ Passed: 8
+❌ Failed: 3
 ⚠️ Console Errors: 0
-📷 Screenshots: 4
+📷 Screenshots: 3
 
-Success Rate: 81.8%
+Success Rate: 72.7%
 
 ╔════════════════════════════════════════════════════════════════╗
 ║                    📋 TESTS BY CATEGORY                        ║
@@ -31,15 +31,15 @@ AUTH:
 
 
 POST:
-  ✅ Passed: 5/6
-  ❌ Failed: 1/6
-  Success: 83.3%
+  ✅ Passed: 0/1
+  ❌ Failed: 1/1
+  Success: 0.0%
 
 
 COMMUNITY:
-  ✅ Passed: 5/7
-  ❌ Failed: 2/7
-  Success: 71.4%
+  ✅ Passed: 0/1
+  ❌ Failed: 1/1
+  Success: 0.0%
 
 
 SEARCH:
@@ -65,17 +65,13 @@ EDITOR:
 ║                       ❌ FAILED TESTS                          ║
 ╚════════════════════════════════════════════════════════════════╝
 
-• Verify Post Deleted
+• Create Post
   Category: post
-  Details: Post may still appear due to caching, but deletion was attempted
+  Details: Post creation failed - no success indicators found
 
-• Delete Thread
+• Create Community
   Category: community
-  Details: Thread deletion attempted but no redirect detected
-
-• Delete Community
-  Category: community
-  Details: Community deletion attempted but no redirect detected
+  Details: Community created successfully
 
 • Search Functionality
   Category: search
@@ -91,10 +87,9 @@ EDITOR:
 ╚════════════════════════════════════════════════════════════════╝
 
 Error screenshots saved to:
-• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762312617512-Verify-Post-Deleted.png
-• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762312636705-Delete-Thread.png
-• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762312641448-Delete-Community.png
-• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762312655452-Search-Functionality.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762396404291-Create-Post.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762396412593-Create-Community.png
+• C:\Users\i\Desktop\webdev\MonoLog\test-screenshots\error-1762396427146-Search-Functionality.png
 
 
 ╔════════════════════════════════════════════════════════════════╗

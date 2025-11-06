@@ -2,6 +2,7 @@ import { getClient, ensureAuthListener, getCachedAuthUser, logSupabaseError, get
 import { mapRowToHydratedPost } from "../utils";
 import { logger } from "../../logger";
 import { getCachedFollowingIds, dedupePostsById } from "./helpers";
+import { SELECT_POST_WITH_PROFILES } from "../sql";
 
 export async function getExploreFeed() {
   logger.debug("supabaseApi.getExploreFeed called");
@@ -24,7 +25,7 @@ export async function getExploreFeed() {
   // view only shows other people's public posts that you aren't following.
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
-  let q: any = sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("public", true).order("created_at", { ascending: false });
+  let q: any = sb.from("posts").select(SELECT_POST_WITH_PROFILES).eq("public", true).order("created_at", { ascending: false });
   if (me) {
     const followingIds = await getCachedFollowingIds(sb, me.id);
     const excludeIds = [me.id, ...followingIds];
@@ -56,7 +57,7 @@ export async function getExploreFeedPage({ limit, before }: { limit: number; bef
   // Exclude current user's posts and posts from followed users from explore results.
   ensureAuthListener(sb);
   const me = await getCachedAuthUser(sb);
-  let q: any = sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("public", true).order("created_at", { ascending: false }).limit(limit);
+  let q: any = sb.from("posts").select(SELECT_POST_WITH_PROFILES).eq("public", true).order("created_at", { ascending: false }).limit(limit);
   if (me) {
     const followingIds = await getCachedFollowingIds(sb, me.id);
     const excludeIds = [me.id, ...followingIds];
@@ -93,11 +94,7 @@ export async function getFollowingFeed() {
 
   // Single query to get posts from followed users + own posts
   const allUserIds = [...followingIds, me.id];
-  const { data: rows, error } = await sb.from("posts").select(`
-    *,
-    users!left(id, username, display_name, avatar_url),
-    public_profiles!left(id, username, display_name, avatar_url)
-  `).in("user_id", allUserIds).order("created_at", { ascending: false }).limit(50);
+  const { data: rows, error } = await sb.from("posts").select(SELECT_POST_WITH_PROFILES).in("user_id", allUserIds).order("created_at", { ascending: false }).limit(50);
 
   logSupabaseError("getFollowingFeed", { data: rows, error });
   if (error) throw error;
@@ -106,11 +103,7 @@ export async function getFollowingFeed() {
   const publicRows = rows || [];
   let ownPosts: any[] = [];
   if (me) {
-    const { data: myRows, error: myErr } = await sb.from("posts").select(`
-      *,
-      users!left(id, username, display_name, avatar_url),
-      public_profiles!left(id, username, display_name, avatar_url)
-    `).eq("user_id", me.id).order("created_at", { ascending: false });
+    const { data: myRows, error: myErr } = await sb.from("posts").select(SELECT_POST_WITH_PROFILES).eq("user_id", me.id).order("created_at", { ascending: false });
     if (!myErr && myRows) {
       ownPosts = myRows;
     }
@@ -151,11 +144,7 @@ export async function getFollowingFeedPage({ limit, before }: { limit: number; b
   // Single query to get posts from followed users + own posts
   // Use a more efficient query that avoids unnecessary joins for comments
   const allUserIds = [...followingIds, me.id];
-  let query = sb.from("posts").select(`
-    *,
-    users!left(id, username, display_name, avatar_url),
-    public_profiles!left(id, username, display_name, avatar_url)
-  `).in("user_id", allUserIds).order("created_at", { ascending: false }).limit(limit * 2); // Fetch more to account for deduping
+  let query = sb.from("posts").select(SELECT_POST_WITH_PROFILES).in("user_id", allUserIds).order("created_at", { ascending: false }).limit(limit * 2); // Fetch more to account for deduping
 
   if (before) query = query.lt("created_at", before);
 
@@ -209,7 +198,7 @@ export async function getHashtagFeedPage(tag: string, { limit, before }: { limit
     return (json.posts || []).map((p: any) => p);
   }
   const sb = getClient();
-  let q: any = sb.from("posts").select("*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)").eq("public", true).contains("hashtags", [tag.toLowerCase()]).order("created_at", { ascending: false }).limit(limit);
+  let q: any = sb.from("posts").select(SELECT_POST_WITH_PROFILES).eq("public", true).contains("hashtags", [tag.toLowerCase()]).order("created_at", { ascending: false }).limit(limit);
   if (before) q = q.lt("created_at", before);
   const { data, error } = await q;
   logSupabaseError("getHashtagFeedPage", { data, error });

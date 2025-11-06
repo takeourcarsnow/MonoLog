@@ -12,79 +12,45 @@ export function safeStringify(v: any) {
   }
 }
 
+// ---------- Small normalization helpers (reduce repetition) ----------
+function pick<T = any>(obj: any, ...keys: string[]): T | undefined {
+  for (const k of keys) {
+    if (obj && obj[k] !== undefined) return obj[k] as T;
+  }
+  return undefined;
+}
+
+function tryParseJSON(value: any, allowDouble = false): any {
+  if (typeof value !== 'string') return value;
+  try {
+    const once = JSON.parse(value);
+    if (allowDouble && typeof once === 'string') {
+      try { return JSON.parse(once); } catch { return once; }
+    }
+    return once;
+  } catch {
+    return value;
+  }
+}
+
+function sanitizeDisplayName(value: any): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  const s = String(value);
+  return s.trim() === '' ? undefined : s;
+}
+
 export function mapProfileToUser(profile: any) {
   if (!profile) return null;
-  let socialLinks: any = undefined;
-  if (profile.socialLinks) {
-    if (typeof profile.socialLinks === 'string') {
-      try {
-        socialLinks = JSON.parse(profile.socialLinks);
-      } catch (e) {
-        // ignore
-      }
-    } else {
-      socialLinks = profile.socialLinks;
-    }
-  } else if (profile.social_links) {
-    if (typeof profile.social_links === 'string') {
-      try {
-        socialLinks = JSON.parse(profile.social_links);
-      } catch (e) {
-        // ignore
-      }
-    } else {
-      socialLinks = profile.social_links;
-    }
-  }
-  let exifPresets: any = undefined;
-  if (profile.exifPresets) {
-    if (typeof profile.exifPresets === 'string') {
-      try {
-        exifPresets = JSON.parse(profile.exifPresets);
-        // If parsing resulted in a string, it might be double-encoded
-        if (typeof exifPresets === 'string') {
-          try {
-            exifPresets = JSON.parse(exifPresets);
-          } catch (e2) {
-            // ignore
-          }
-        }
-      } catch (e) {
-        // ignore
-      }
-    } else {
-      exifPresets = profile.exifPresets;
-    }
-  } else if (profile.exif_presets) {
-    if (typeof profile.exif_presets === 'string') {
-      try {
-        exifPresets = JSON.parse(profile.exif_presets);
-        // If parsing resulted in a string, it might be double-encoded
-        if (typeof exifPresets === 'string') {
-          try {
-            exifPresets = JSON.parse(exifPresets);
-          } catch (e2) {
-            // ignore
-          }
-        }
-      } catch (e) {
-        // ignore
-      }
-    } else {
-      exifPresets = profile.exif_presets;
-    }
-  }
+
+  const socialLinks = tryParseJSON(pick(profile, 'socialLinks', 'social_links'));
+  const exifPresets = tryParseJSON(pick(profile, 'exifPresets', 'exif_presets'), true);
+
   return {
     id: profile.id,
     username: profile.username || profile.user_name || "",
     // Treat explicit NULL or empty-string display names as absent so callers
     // can rely on `undefined` and fall back to username when rendering.
-    displayName: (() => {
-      const raw = profile.displayName ?? profile.display_name;
-      if (raw === undefined || raw === null) return undefined;
-      const s = String(raw);
-      return s.trim() === '' ? undefined : s;
-    })(),
+    displayName: sanitizeDisplayName(pick(profile, 'displayName', 'display_name')),
     avatarUrl: profile.avatarUrl || profile.avatar_url || DEFAULT_AVATAR,
     bio: profile.bio,
     socialLinks,
@@ -96,55 +62,34 @@ export function mapProfileToUser(profile: any) {
   } as any;
 }
 
-export function mapRowToHydratedPost(row: any): HydratedPost {
-  // Normalize imageUrls into a predictable array shape and provide
-  // lightweight debug logging when unusual shapes are encountered.
-  const raw = row.image_urls ?? row.image_urls_json ?? row.image_urls_jsonb ?? row.image_url ?? row.imageUrl ?? undefined;
-  let imageUrls: string[] | undefined = undefined;
-  if (raw !== undefined && raw !== null) {
-    if (Array.isArray(raw)) imageUrls = raw.map(String);
-    else if (typeof raw === 'string') {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) imageUrls = parsed.map(String);
-        else imageUrls = [raw];
-      } catch (e) {
-        imageUrls = [raw];
-      }
-    } else {
-      try {
-        const maybe = Array.from(raw as any);
-        if (Array.isArray(maybe)) imageUrls = maybe.map(String);
-        else imageUrls = [String(raw)];
-      } catch (e) {
-        imageUrls = [String(raw)];
-      }
+function toStringArray(value: any): string[] | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value === 'string') {
+    // If it looks like a JSON array, try to parse; otherwise treat as single URL
+    const s = value.trim();
+    if (s.startsWith('[') && s.endsWith(']')) {
+      const parsed = tryParseJSON(s);
+      return Array.isArray(parsed) ? parsed.map(String) : [value];
     }
+    return [value];
   }
+  try {
+    const maybe = Array.from(value as any);
+    return Array.isArray(maybe) ? maybe.map(String) : [String(value)];
+  } catch {
+    return [String(value)];
+  }
+}
+
+export function mapRowToHydratedPost(row: any): HydratedPost {
+  // Normalize imageUrls into a predictable array shape
+  const raw = row.image_urls ?? row.image_urls_json ?? row.image_urls_jsonb ?? row.image_url ?? row.imageUrl ?? undefined;
+  const imageUrls = toStringArray(raw);
 
   // Normalize thumbnailUrls into a predictable array shape
   const thumbRaw = row.thumbnail_urls ?? row.thumbnail_urls_json ?? row.thumbnail_urls_jsonb ?? row.thumbnail_url ?? row.thumbnailUrl ?? undefined;
-  let thumbnailUrls: string[] | undefined = undefined;
-  if (thumbRaw !== undefined && thumbRaw !== null) {
-    if (Array.isArray(thumbRaw)) thumbnailUrls = thumbRaw.map(String);
-    else if (typeof thumbRaw === 'string') {
-      try {
-        const parsed = JSON.parse(thumbRaw);
-        if (Array.isArray(parsed)) thumbnailUrls = parsed.map(String);
-        else thumbnailUrls = [thumbRaw];
-      } catch (e) {
-        thumbnailUrls = [thumbRaw];
-      }
-    } else {
-      try {
-        const maybe = Array.from(thumbRaw as any);
-        if (Array.isArray(maybe)) thumbnailUrls = maybe.map(String);
-        else thumbnailUrls = [String(thumbRaw)];
-      } catch (e) {
-        thumbnailUrls = [String(thumbRaw)];
-      }
-    }
-  }
+  const thumbnailUrls = toStringArray(thumbRaw);
 
   return {
     id: row.id,
@@ -176,7 +121,7 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
     },
     // If the server query included a `comments` array, use its length. Otherwise
     // fall back to common count columns or 0.
-    commentsCount: (row.comments && Array.isArray(row.comments) ? row.comments.length : (row.comments_count || row.commentsCount || 0)),
+    commentsCount: (Array.isArray(row.comments) ? row.comments.length : (row.comments_count || row.commentsCount || 0)),
   } as HydratedPost;
 }
 

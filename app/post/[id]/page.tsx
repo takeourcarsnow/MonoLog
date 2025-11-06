@@ -1,64 +1,13 @@
 import { lazy, Suspense } from "react";
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import type { HydratedPost } from '@/lib/types';
-import { DEFAULT_AVATAR } from '@/lib/api/utils';
+import { DEFAULT_AVATAR, mapRowToHydratedPost } from '@/lib/api/utils';
+import { resolvePostId } from '@/lib/api/posts/helpers';
 
 // Lazy load the PostView component
 const PostView = lazy(() => import("@/app/components/post/PostView").then(mod => ({ default: mod.PostView })));
 
-// Helper to map database row to HydratedPost
-function mapRowToHydratedPost(row: any): HydratedPost {
-  // Normalize imageUrls into a predictable array shape
-  const raw = row.image_urls ?? row.image_urls_json ?? row.image_urls_jsonb ?? row.image_url ?? row.imageUrl ?? undefined;
-  let imageUrls: string[] | undefined = undefined;
-  if (raw !== undefined && raw !== null) {
-    if (Array.isArray(raw)) imageUrls = raw.map(String);
-    else if (typeof raw === 'string') {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) imageUrls = parsed.map(String);
-        else imageUrls = [raw];
-      } catch (e) {
-        imageUrls = [raw];
-      }
-    } else {
-      try {
-        const maybe = Array.from(raw as any);
-        if (Array.isArray(maybe)) imageUrls = maybe.map(String);
-        else imageUrls = [String(raw)];
-      } catch (e) {
-        imageUrls = [String(raw)];
-      }
-    }
-  }
-
-  return {
-    id: row.id,
-    userId: row.user_id || row.userId,
-    imageUrls,
-    alt: row.alt,
-    caption: row.caption || '',
-    spotifyLink: row.spotify_link || row.spotifyLink || undefined,
-    createdAt: row.created_at || row.createdAt,
-    public: row.public ?? true,
-    camera: row.camera || undefined,
-    lens: row.lens || undefined,
-    filmType: row.film_type || row.filmType || undefined,
-    weatherCondition: row.weather_condition || row.weatherCondition || undefined,
-    weatherTemperature: row.weather_temperature || row.weatherTemperature || undefined,
-    weatherLocation: row.weather_location || row.weatherLocation || undefined,
-    locationLatitude: row.location_latitude || row.locationLatitude || undefined,
-    locationLongitude: row.location_longitude || row.locationLongitude || undefined,
-    locationAddress: row.location_address || row.locationAddress || undefined,
-    user: {
-      id: row.users?.id || row.user_id,
-      username: row.users?.username || '',
-      displayName: row.users?.display_name || row.users?.displayName || '',
-      avatarUrl: row.users?.avatar_url || row.users?.avatarUrl || DEFAULT_AVATAR,
-    },
-    commentsCount: Array.isArray(row.comments) ? row.comments.length : 0,
-  };
-}
+// Use the shared mapper from lib to keep normalization consistent
 
 // Server-rendered page: resolve slug/short-id to the canonical full post id
 // using the server service-role client so direct refreshes work reliably.
@@ -85,12 +34,7 @@ export default async function PostIdPage({ params }: { params: any }) {
   const sb = getServiceSupabase();
 
   // Extract trailing token from slug like `username-abcdef12` or use raw
-  let candidate = raw;
-  const dash = raw.lastIndexOf('-');
-  if (dash > 0) {
-    const trailing = raw.slice(dash + 1);
-    if (/^[0-9a-fA-F]{6,}$/.test(trailing)) candidate = trailing;
-  }
+  const { candidateId: candidate } = resolvePostId(raw);
 
   // Try exact id, then prefix match for short tokens
   // Fetch full post data including user and comments count

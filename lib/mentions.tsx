@@ -1,56 +1,40 @@
 import React from 'react';
+import { collectInlineTokens } from './textTokens';
 
 /**
  * Parse mentions from text and return array of usernames
  */
 export function parseMentions(text: string): string[] {
-  const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-  const mentions: string[] = [];
-  let match;
-  while ((match = mentionRegex.exec(text)) !== null) {
-    mentions.push(match[1]);
-  }
-  return [...new Set(mentions)]; // deduplicate
+  const tokens = collectInlineTokens(text);
+  const names = tokens.filter(t => t.type === 'mention').map(t => t.value);
+  return [...new Set(names)];
 }
 
 /**
  * Render text with mentions as links
  */
 export function renderMentions(text: string): React.ReactNode {
-  const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+  const tokens = collectInlineTokens(text);
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
-  let match;
 
-  while ((match = mentionRegex.exec(text)) !== null) {
-    // Add text before the mention
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
-    // Add the mention as a link
-    const username = match[1];
+  for (const t of tokens) {
+    if (t.type !== 'mention') continue;
+    if (t.start > lastIndex) parts.push(text.slice(lastIndex, t.start));
+    const username = t.value;
     parts.push(
       <a
-        key={match.index}
+        key={t.start}
         href={`/profile/${username}`}
         className="mention-link"
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
+        onClick={(e) => { e.stopPropagation(); }}
       >
         @{username}
       </a>
     );
-    lastIndex = match.index + match[0].length;
+    lastIndex = t.end;
   }
 
-  // Add remaining text
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
-  // Return a React node: if we built any parts (with links) return them,
-  // otherwise return the original text. Wrapping both branches in a
-  // fragment keeps the return type consistent as ReactNode.
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
   return <>{parts.length > 0 ? parts : text}</>;
 }

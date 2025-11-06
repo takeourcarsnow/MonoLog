@@ -1,6 +1,6 @@
 {
-  "passed": 18,
-  "failed": 4,
+  "passed": 8,
+  "failed": 3,
   "warnings": 0,
   "tests": [
     {
@@ -8,184 +8,95 @@
       "passed": true,
       "details": "Successfully authenticated",
       "category": "auth",
-      "duration": 8182,
-      "timestamp": "2025-11-05T03:16:22.886Z"
+      "duration": 7056,
+      "timestamp": "2025-11-06T02:33:13.718Z"
     },
     {
       "name": "Create Post",
-      "passed": true,
-      "details": "Post created successfully",
-      "category": "post",
-      "duration": 19416,
-      "timestamp": "2025-11-05T03:16:34.120Z"
-    },
-    {
-      "name": "View Post in Feed",
-      "passed": true,
-      "details": "Post visible in feed",
-      "category": "post",
-      "duration": 24346,
-      "timestamp": "2025-11-05T03:16:39.050Z"
-    },
-    {
-      "name": "View Single Post",
-      "passed": true,
-      "details": "Single post page loaded",
-      "category": "post",
-      "duration": 27319,
-      "timestamp": "2025-11-05T03:16:42.023Z"
-    },
-    {
-      "name": "Add Comment",
-      "passed": true,
-      "details": "Comment posted successfully",
-      "category": "post",
-      "duration": 31027,
-      "timestamp": "2025-11-05T03:16:45.731Z"
-    },
-    {
-      "name": "Delete Post",
-      "passed": true,
-      "details": "Post successfully deleted",
-      "category": "post",
-      "duration": 33111,
-      "timestamp": "2025-11-05T03:16:47.815Z"
-    },
-    {
-      "name": "Verify Post Deleted",
       "passed": false,
-      "details": "Post may still appear due to caching, but deletion was attempted",
+      "details": "Post creation failed - no success indicators found",
       "category": "post",
-      "duration": 42808,
-      "timestamp": "2025-11-05T03:16:57.512Z"
+      "duration": 17629,
+      "timestamp": "2025-11-06T02:33:24.291Z"
     },
     {
       "name": "Create Community",
-      "passed": true,
+      "passed": false,
       "details": "Community created successfully",
       "category": "community",
-      "duration": 51095,
-      "timestamp": "2025-11-05T03:17:05.799Z"
-    },
-    {
-      "name": "View Community Page",
-      "passed": true,
-      "details": "Community page loaded",
-      "category": "community",
-      "duration": 51098,
-      "timestamp": "2025-11-05T03:17:05.802Z"
-    },
-    {
-      "name": "Create Thread",
-      "passed": true,
-      "details": "Thread created successfully",
-      "category": "community",
-      "duration": 56844,
-      "timestamp": "2025-11-05T03:17:11.549Z"
-    },
-    {
-      "name": "Reply to Thread",
-      "passed": true,
-      "details": "Reply posted successfully",
-      "category": "community",
-      "duration": 59400,
-      "timestamp": "2025-11-05T03:17:14.104Z"
-    },
-    {
-      "name": "Delete Thread Reply",
-      "passed": true,
-      "details": "Reply deletion attempted",
-      "category": "community",
-      "duration": 59945,
-      "timestamp": "2025-11-05T03:17:14.649Z"
-    },
-    {
-      "name": "Delete Thread",
-      "passed": false,
-      "details": "Thread deletion attempted but no redirect detected",
-      "category": "community",
-      "duration": 62001,
-      "timestamp": "2025-11-05T03:17:16.705Z"
-    },
-    {
-      "name": "Delete Community",
-      "passed": false,
-      "details": "Community deletion attempted but no redirect detected",
-      "category": "community",
-      "duration": 66744,
-      "timestamp": "2025-11-05T03:17:21.448Z"
+      "duration": 25927,
+      "timestamp": "2025-11-06T02:33:32.589Z"
     },
     {
       "name": "Search Functionality",
       "passed": false,
       "details": "Search input not found on search page after waiting",
       "category": "search",
-      "duration": 80748,
-      "timestamp": "2025-11-05T03:17:35.452Z"
+      "duration": 40483,
+      "timestamp": "2025-11-06T02:33:47.145Z"
     },
     {
       "name": "Upload Valid Image",
       "passed": true,
       "details": "Logo.png uploaded successfully",
       "category": "upload",
-      "duration": 86762,
-      "timestamp": "2025-11-05T03:17:41.466Z"
+      "duration": 46154,
+      "timestamp": "2025-11-06T02:33:52.816Z"
     },
     {
       "name": "Photo Editor Opens",
       "passed": true,
       "details": "Editor canvas visible",
       "category": "editor",
-      "duration": 90338,
-      "timestamp": "2025-11-05T03:17:45.042Z"
+      "duration": 49718,
+      "timestamp": "2025-11-06T02:33:56.380Z"
     },
     {
       "name": "Photo Editor - Rapid Tool Switching",
       "passed": true,
       "details": "Survived tool spam",
       "category": "editor",
-      "duration": 90879,
-      "timestamp": "2025-11-05T03:17:45.583Z"
+      "duration": 50175,
+      "timestamp": "2025-11-06T02:33:56.837Z"
     },
     {
       "name": "Photo Editor - Canvas Interactions",
       "passed": true,
       "details": "Completed random clicks and drags",
       "category": "editor",
-      "duration": 92662,
-      "timestamp": "2025-11-05T03:17:47.366Z"
+      "duration": 51996,
+      "timestamp": "2025-11-06T02:33:58.658Z"
     },
     {
       "name": "Photo Editor - Close Without Save",
       "passed": true,
       "details": "Successfully closed editor",
       "category": "editor",
-      "duration": 93753,
-      "timestamp": "2025-11-05T03:17:48.457Z"
+      "duration": 53083,
+      "timestamp": "2025-11-06T02:33:59.745Z"
     },
     {
       "name": "Multiple Rapid Uploads",
       "passed": true,
       "details": "Handled rapid uploads",
       "category": "upload",
-      "duration": 98887,
-      "timestamp": "2025-11-05T03:17:53.591Z"
+      "duration": 58030,
+      "timestamp": "2025-11-06T02:34:04.692Z"
     },
     {
       "name": "Upload Form Interaction Stress",
       "passed": true,
       "details": "Survived rapid clicking",
       "category": "upload",
-      "duration": 105629,
-      "timestamp": "2025-11-05T03:18:00.333Z"
+      "duration": 64984,
+      "timestamp": "2025-11-06T02:34:11.646Z"
     }
   ],
   "errors": [],
   "screenshots": [
-    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762312617512-Verify-Post-Deleted.png",
-    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762312636705-Delete-Thread.png",
-    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762312641448-Delete-Community.png",
-    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762312655452-Search-Functionality.png"
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762396404291-Create-Post.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762396412593-Create-Community.png",
+    "C:\\Users\\i\\Desktop\\webdev\\MonoLog\\test-screenshots\\error-1762396427146-Search-Functionality.png"
   ],
   "categories": {
     "auth": {
@@ -197,124 +108,36 @@
           "passed": true,
           "details": "Successfully authenticated",
           "category": "auth",
-          "duration": 8182,
-          "timestamp": "2025-11-05T03:16:22.886Z"
+          "duration": 7056,
+          "timestamp": "2025-11-06T02:33:13.718Z"
         }
       ]
     },
     "post": {
-      "passed": 5,
+      "passed": 0,
       "failed": 1,
       "tests": [
         {
           "name": "Create Post",
-          "passed": true,
-          "details": "Post created successfully",
-          "category": "post",
-          "duration": 19416,
-          "timestamp": "2025-11-05T03:16:34.120Z"
-        },
-        {
-          "name": "View Post in Feed",
-          "passed": true,
-          "details": "Post visible in feed",
-          "category": "post",
-          "duration": 24346,
-          "timestamp": "2025-11-05T03:16:39.050Z"
-        },
-        {
-          "name": "View Single Post",
-          "passed": true,
-          "details": "Single post page loaded",
-          "category": "post",
-          "duration": 27319,
-          "timestamp": "2025-11-05T03:16:42.023Z"
-        },
-        {
-          "name": "Add Comment",
-          "passed": true,
-          "details": "Comment posted successfully",
-          "category": "post",
-          "duration": 31027,
-          "timestamp": "2025-11-05T03:16:45.731Z"
-        },
-        {
-          "name": "Delete Post",
-          "passed": true,
-          "details": "Post successfully deleted",
-          "category": "post",
-          "duration": 33111,
-          "timestamp": "2025-11-05T03:16:47.815Z"
-        },
-        {
-          "name": "Verify Post Deleted",
           "passed": false,
-          "details": "Post may still appear due to caching, but deletion was attempted",
+          "details": "Post creation failed - no success indicators found",
           "category": "post",
-          "duration": 42808,
-          "timestamp": "2025-11-05T03:16:57.512Z"
+          "duration": 17629,
+          "timestamp": "2025-11-06T02:33:24.291Z"
         }
       ]
     },
     "community": {
-      "passed": 5,
-      "failed": 2,
+      "passed": 0,
+      "failed": 1,
       "tests": [
         {
           "name": "Create Community",
-          "passed": true,
+          "passed": false,
           "details": "Community created successfully",
           "category": "community",
-          "duration": 51095,
-          "timestamp": "2025-11-05T03:17:05.799Z"
-        },
-        {
-          "name": "View Community Page",
-          "passed": true,
-          "details": "Community page loaded",
-          "category": "community",
-          "duration": 51098,
-          "timestamp": "2025-11-05T03:17:05.802Z"
-        },
-        {
-          "name": "Create Thread",
-          "passed": true,
-          "details": "Thread created successfully",
-          "category": "community",
-          "duration": 56844,
-          "timestamp": "2025-11-05T03:17:11.549Z"
-        },
-        {
-          "name": "Reply to Thread",
-          "passed": true,
-          "details": "Reply posted successfully",
-          "category": "community",
-          "duration": 59400,
-          "timestamp": "2025-11-05T03:17:14.104Z"
-        },
-        {
-          "name": "Delete Thread Reply",
-          "passed": true,
-          "details": "Reply deletion attempted",
-          "category": "community",
-          "duration": 59945,
-          "timestamp": "2025-11-05T03:17:14.649Z"
-        },
-        {
-          "name": "Delete Thread",
-          "passed": false,
-          "details": "Thread deletion attempted but no redirect detected",
-          "category": "community",
-          "duration": 62001,
-          "timestamp": "2025-11-05T03:17:16.705Z"
-        },
-        {
-          "name": "Delete Community",
-          "passed": false,
-          "details": "Community deletion attempted but no redirect detected",
-          "category": "community",
-          "duration": 66744,
-          "timestamp": "2025-11-05T03:17:21.448Z"
+          "duration": 25927,
+          "timestamp": "2025-11-06T02:33:32.589Z"
         }
       ]
     },
@@ -327,8 +150,8 @@
           "passed": false,
           "details": "Search input not found on search page after waiting",
           "category": "search",
-          "duration": 80748,
-          "timestamp": "2025-11-05T03:17:35.452Z"
+          "duration": 40483,
+          "timestamp": "2025-11-06T02:33:47.145Z"
         }
       ]
     },
@@ -341,24 +164,24 @@
           "passed": true,
           "details": "Logo.png uploaded successfully",
           "category": "upload",
-          "duration": 86762,
-          "timestamp": "2025-11-05T03:17:41.466Z"
+          "duration": 46154,
+          "timestamp": "2025-11-06T02:33:52.816Z"
         },
         {
           "name": "Multiple Rapid Uploads",
           "passed": true,
           "details": "Handled rapid uploads",
           "category": "upload",
-          "duration": 98887,
-          "timestamp": "2025-11-05T03:17:53.591Z"
+          "duration": 58030,
+          "timestamp": "2025-11-06T02:34:04.692Z"
         },
         {
           "name": "Upload Form Interaction Stress",
           "passed": true,
           "details": "Survived rapid clicking",
           "category": "upload",
-          "duration": 105629,
-          "timestamp": "2025-11-05T03:18:00.333Z"
+          "duration": 64984,
+          "timestamp": "2025-11-06T02:34:11.646Z"
         }
       ]
     },
@@ -371,40 +194,40 @@
           "passed": true,
           "details": "Editor canvas visible",
           "category": "editor",
-          "duration": 90338,
-          "timestamp": "2025-11-05T03:17:45.042Z"
+          "duration": 49718,
+          "timestamp": "2025-11-06T02:33:56.380Z"
         },
         {
           "name": "Photo Editor - Rapid Tool Switching",
           "passed": true,
           "details": "Survived tool spam",
           "category": "editor",
-          "duration": 90879,
-          "timestamp": "2025-11-05T03:17:45.583Z"
+          "duration": 50175,
+          "timestamp": "2025-11-06T02:33:56.837Z"
         },
         {
           "name": "Photo Editor - Canvas Interactions",
           "passed": true,
           "details": "Completed random clicks and drags",
           "category": "editor",
-          "duration": 92662,
-          "timestamp": "2025-11-05T03:17:47.366Z"
+          "duration": 51996,
+          "timestamp": "2025-11-06T02:33:58.658Z"
         },
         {
           "name": "Photo Editor - Close Without Save",
           "passed": true,
           "details": "Successfully closed editor",
           "category": "editor",
-          "duration": 93753,
-          "timestamp": "2025-11-05T03:17:48.457Z"
+          "duration": 53083,
+          "timestamp": "2025-11-06T02:33:59.745Z"
         }
       ]
     }
   },
-  "duration": 105630,
-  "testDate": "2025-11-05T03:18:00.335Z",
+  "duration": 64985,
+  "testDate": "2025-11-06T02:34:11.647Z",
   "environment": {
     "baseUrl": "http://localhost:3000",
-    "testEmail": "ngi04j7n9f@daouse.com"
+    "testEmail": "2ucmbma6qf@yzcalo.com"
   }
 }

@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { mapRowToHydratedPost, makeWeakETag } from '@/lib/api/utils';
 import { getServerCache, setServerCache } from '@/lib/serverCache';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { SELECT_POST_WITH_PROFILES } from '@/lib/api/sql';
 
 export async function GET(req: Request, context: any) {
   // Next's route handler context may provide `params` as a plain
@@ -38,7 +39,7 @@ export async function GET(req: Request, context: any) {
       return apiSuccess({ ok: true, posts: cached }, 200, { headers, cacheSeconds });
     }
 
-    let q: any = sb.from('posts').select('*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)').eq('public', true).contains('hashtags', [tag]).order('created_at', { ascending: false }).limit(limit);
+    let q: any = sb.from('posts').select(SELECT_POST_WITH_PROFILES).eq('public', true).contains('hashtags', [tag]).order('created_at', { ascending: false }).limit(limit);
 
     if (before) q = q.lt('created_at', before);
 

@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 import { mapRowToHydratedPost } from '@/lib/api/utils';
 import { getServerCache, setServerCache, clearServerCachePrefix } from '@/lib/serverCache';
+import { SELECT_POST_WITH_PROFILES } from '@/lib/api/sql';
 
 export async function GET(req: Request) {
   try {
@@ -25,11 +26,7 @@ export async function GET(req: Request) {
     const followingIds: string[] = (profile && profile.following) || [];
 
     const allUserIds = [...followingIds, authUser.id];
-    let query = sb.from('posts').select(`
-      *,
-      users!left(id, username, display_name, avatar_url),
-      public_profiles!left(id, username, display_name, avatar_url)
-    `).in('user_id', allUserIds).order('created_at', { ascending: false }).limit(limit * 2);
+    let query = sb.from('posts').select(SELECT_POST_WITH_PROFILES).in('user_id', allUserIds).order('created_at', { ascending: false }).limit(limit * 2);
 
     if (before) query = query.lt('created_at', before);
 

@@ -1,4 +1,6 @@
 import { getSupabaseClient } from "./client";
+import { SELECT_POST_WITH_PROFILES, SELECT_COMMUNITY_WITH_CREATOR } from "./sql";
+import { mapRowToHydratedPost } from "./utils";
 
 interface SearchOptions {
   minLength?: number; // minimum query length to execute a DB search
@@ -27,11 +29,7 @@ export async function search(query: string, options: SearchOptions = {}) {
   // Search posts
   const { data: postsData, error: postsError } = await sb
     .from('posts')
-    .select(`
-      *,
-      users!left(id, username, display_name, avatar_url),
-      public_profiles!left(id, username, display_name, avatar_url)
-    `)
+    .select(SELECT_POST_WITH_PROFILES)
     .eq('public', true)
     .or(`caption.ilike.%${safeQuery}%`)
     .order('created_at', { ascending: false })
@@ -40,25 +38,7 @@ export async function search(query: string, options: SearchOptions = {}) {
   if (postsError) throw postsError;
 
   // Map posts to hydrated format
-  const posts = (postsData || []).map((row: any) => ({
-    id: row.id,
-    userId: row.user_id,
-    imageUrls: row.image_urls,
-    imageUrl: row.image_url,
-    thumbnailUrls: row.thumbnail_urls,
-    thumbnailUrl: row.thumbnail_url,
-    alt: row.alt,
-    caption: row.caption || row.content || "",
-    hashtags: row.hashtags,
-    spotifyLink: row.spotify_link,
-    createdAt: row.created_at,
-    public: row.public,
-    camera: row.camera,
-    lens: row.lens,
-    filmType: row.film_type,
-    user: row.users || row.public_profiles || { id: '', username: '', displayName: '', avatarUrl: '' },
-    commentsCount: 0, // TODO: fetch comments count if needed
-  }));
+  const posts = (postsData || []).map((row: any) => mapRowToHydratedPost(row));
 
   // Search users
   const { data: usersData, error: usersError } = await sb
@@ -81,10 +61,7 @@ export async function search(query: string, options: SearchOptions = {}) {
   // Search communities
   const { data: communitiesData, error: communitiesError } = await sb
     .from('communities')
-    .select(`
-      *,
-      users!communities_creator_id_fkey(id, username, display_name, avatar_url)
-    `)
+    .select(SELECT_COMMUNITY_WITH_CREATOR)
     .or(`name.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`)
     .limit(limit);
 

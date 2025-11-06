@@ -6,6 +6,7 @@ import { getServerCache, setServerCache, clearServerCachePrefix } from '@/lib/se
 import { apiError, apiSuccess } from '@/lib/apiResponse';
 import { withHandler } from '@/lib/api/withHandler';
 import { z } from 'zod';
+import { SELECT_POST_WITH_PROFILES } from '@/lib/api/sql';
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(10),
@@ -34,7 +35,7 @@ export const GET = withHandler({ method: 'GET', querySchema })(async (req, ctx) 
     return apiSuccess({ ok: true, posts: cached }, 200, { headers, cacheSeconds });
   }
 
-  let q: any = sb.from('posts').select('*, users!left(id, username, display_name, avatar_url), public_profiles!left(id, username, display_name, avatar_url)').eq('public', true).order('created_at', { ascending: false }).limit(limit);
+  let q: any = sb.from('posts').select(SELECT_POST_WITH_PROFILES).eq('public', true).order('created_at', { ascending: false }).limit(limit);
 
   if (authUser && authUser.id) {
     const { data: profile } = await sb.from('users').select('following').eq('id', authUser.id).limit(1).maybeSingle();

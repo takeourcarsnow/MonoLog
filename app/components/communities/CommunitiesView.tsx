@@ -53,8 +53,7 @@ export function CommunitiesView() {
                   'Join communities to follow conversations you care about',
                   'Create a community to start new discussions with others',
                 ]}
-                interval={4500}
-                fadeMs={600}
+                interval={5500}
                 className="dim"
               />
             </h1>
@@ -81,8 +80,7 @@ export function CommunitiesView() {
                   'Communities and threads with latest activity are displayed first',
                   'Join communities to follow conversations you care about',
                 ]}
-                interval={4500}
-                fadeMs={600}
+                interval={5500}
                 className="dim"
               />
             </h1>
@@ -109,8 +107,7 @@ export function CommunitiesView() {
                 'Communities and threads with latest activity are displayed first',
                 'Join communities to follow conversations you care about',
               ]}
-              interval={4500}
-              fadeMs={600}
+              interval={5500}
               className="dim"
             />
           </h1>

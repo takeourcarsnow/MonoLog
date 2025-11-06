@@ -137,7 +137,7 @@ export default function CommunitiesPage() {
       <div className="communities">
         <div className="content-header mt-8 mb-6">
           <div className="text-center w-full">
-            <h1 className="content-title inline-flex items-center justify-center gap-2">
+            <h1 className="content-title inline-flex items-center justify-center gap-2 !font-normal">
               <span className="sr-only">Communities</span>
               <ScrollingHint
                 messages={[
@@ -145,9 +145,8 @@ export default function CommunitiesPage() {
                   'Join communities to follow conversations you care about',
                   'Create a community to start new discussions with others',
                 ]}
-                interval={4500}
-                fadeMs={600}
-                className={`dim transition-opacity duration-300 ${showMessage ? 'opacity-100' : 'opacity-0'}`}
+                interval={5500}
+                className={`dim !font-normal italic transition-opacity duration-300 ${showMessage ? 'opacity-100' : 'opacity-0'}`}
               />
             </h1>
           </div>

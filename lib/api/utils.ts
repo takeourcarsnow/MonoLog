@@ -43,7 +43,7 @@ export function mapProfileToUser(profile: any) {
   if (!profile) return null;
 
   const socialLinks = tryParseJSON(pick(profile, 'social_links', 'socialLinks'));
-  const exifPresets = tryParseJSON(pick(profile, 'exifPresets', 'exif_presets'), true);
+  const exifPresets = tryParseJSON(pick(profile, 'exif_presets', 'exifPresets'), true);
 
   return {
     id: profile.id,

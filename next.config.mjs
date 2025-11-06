@@ -81,11 +81,13 @@ const nextConfig = {
   // silences the build-time error when a custom webpack config is present.
   // If you need Turbopack-specific configuration, add it here.
   turbopack: {},
-  // Optimize package imports
+  // Optimize fonts
   experimental: {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js', '@supabase/ssr'],
     // Enable optimized CSS loading
     optimizeCss: true,
+    // Enable SWC minification
+    swcMinify: true,
   },
   // Production optimizations
   compiler: {
@@ -152,6 +154,13 @@ const nextConfig = {
               priority: 5,
               reuseExistingChunk: true,
             },
+            // Separate heavy components
+            heavyComponents: {
+              test: /[\\/]components[\\/](media|editor|fullscreen|camera)/,
+              name: 'heavy-components',
+              priority: 20,
+              enforce: true,
+            },
           },
         },
       };
@@ -163,6 +172,10 @@ const nextConfig = {
         hints: 'warning',
         maxAssetSize: 512000, // 512 KB
         maxEntrypointSize: 512000, // 512 KB
+        // Performance budgets
+        assetFilter: function(assetFilename) {
+          return assetFilename.endsWith('.js') || assetFilename.endsWith('.css');
+        },
       };
     }
 
@@ -197,6 +210,13 @@ const nextConfig = {
         source: '/public/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // Preload critical routes
+        source: '/feed',
+        headers: [
+          { key: 'Link', value: '</feed>; rel=preload; as=document' },
         ],
       },
     ];

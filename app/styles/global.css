@@ -82,13 +82,20 @@ body {
   min-height: calc(var(--viewport-height, 1vh) * 100);
   position: relative;
   z-index: 1;
-  contain: layout style;
+  contain: layout style paint;
 }
 
 .app-content {
   display: grid;
   grid-template-rows: auto 1fr;
   contain: layout;
+}
+
+/* Performance optimizations for long lists */
+.feed article {
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
 }
 
 /* Ensure the grid container fills the viewport so the 1fr row (main content)

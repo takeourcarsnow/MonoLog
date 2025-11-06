@@ -26,6 +26,7 @@
     "test:photo-editor-headless": "node ./scripts/edge-case-test.js --editor-only --headless",
     "check-env": "node ./scripts/check-env.js",
     "check-perf": "node ./scripts/check-performance.js",
+    "check-bundle": "npm run build && npm run analyze-bundle",
     "convert-logo": "node ./scripts/convert-logo.js",
     "convert-png-to-svg": "node ./scripts/convert-png-to-svg.js",
     "convert-posts-to-webp": "node ./scripts/convert-posts-to-webp.js",

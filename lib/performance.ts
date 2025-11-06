@@ -144,6 +144,20 @@ export function getMemoryUsage() {
 }
 
 /**
+ * Preload critical routes for better navigation performance
+ */
+export function preloadRoute(href: string) {
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = href;
+      document.head.appendChild(link);
+    });
+  }
+}
+
+/**
  * Monitor chunk loading times
  */
 export function monitorChunkLoading() {

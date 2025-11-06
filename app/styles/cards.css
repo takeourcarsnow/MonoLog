@@ -255,104 +255,89 @@
 }
 
 .card-head {
-  display: flex; 
-  align-items: center; 
-  gap: 14px; /* increased gap to give more space between avatar and text */
-  padding: 10px 12px; 
-  min-width: 0; /* Allow flex children to shrink */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px;
+  min-width: 0;
 }
 
-/* Post actions container (right side of header) - default spacing between buttons */
+/* Default spacing between buttons */
 .card-head .post-actions {
   display: flex;
-  gap: 8px;
   align-items: center;
-  /* Ensure action buttons (follow/edit/delete) sit above any
-     auto-scrolling metadata (location/weather) which may briefly
-     overflow or render fade overlays. Giving the container a
-     positioned stacking context and a higher z-index prevents
-     the metadata from visually overlapping the buttons. */
   position: relative;
   z-index: 3;
+  margin-left: auto;
+  padding-right: 0;
 }
 
-/* When the post belongs to the current user, tighten spacing between
-   edit and delete buttons to bring them closer together as requested. */
+/* Group user link and meta together */
+.card-head .user-and-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* When the post belongs to the current user, no gap between edit and delete buttons */
 .card-head .post-actions.is-me {
-  gap: 4px; /* smaller gap between edit and delete */
+  gap: 0px;
 }
 
-/* The avatar and user text are wrapped in a link which itself is a flex container
-   (set via inline styles). Add an explicit gap here so the avatar and text separate
-   even when the link is the immediate flex child. Keeping display/align-items here
-   is safe if inline styles are removed later. */
 .card-head .user-link {
   display: flex;
   align-items: center;
   gap: 6px;
   text-decoration: none;
   color: inherit;
-}
-
-/* In card headers, keep username and time on a single baseline and center-aligned */
-.card-head .user-line {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
   min-width: 0;
+  flex: 1;
 }
 
-.card-head .user-line .username {
+/* In card headers, keep username centered with avatar */
+.card-head .username {
   font-size: 14px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.card-head .user-line .dim {
+.card-head .dim {
   font-size: 12px;
   line-height: 1;
   color: var(--muted);
+  display: inline-block;
+  vertical-align: middle;
 }
 
-/* Wrapper for avatar + username + date in the card header */
-.card-head .user-meta {
+/* Wrapper for avatar + username in the card header */
+.card-head .user-link {
   display: inline-flex;
-  /* Center the avatar and the text block vertically. Using `center` here
-     is preferable to `baseline` because both the username and the time
-     should be visually centered relative to the avatar, and baseline
-     alignment can look off when using different font weights/sizes. */
   align-items: center;
   gap: 8px;
   min-width: 0;
-}
-
-/* Allow the user-meta area to grow so inline auto-scrolling content (weather,
-   location) can use any available space before the action buttons. Keeping
-   min-width:0 prevents overflow from forcing layout break. */
-.card-head .user-meta {
   flex: 1 1 auto;
-  min-width: 0;
+  overflow: hidden;
 }
 
 /* Post-meta inside the header (weather / location / small metadata). Give it
    the ability to expand and ensure its inner auto-scroll container can use
    the available width for longer scrolling text. */
-.card-head .post-meta {
+.card-head .user-meta {
   display: flex;
   gap: 8px;
   align-items: center;
   min-width: 0;
-  /* Let post-meta fill the available space between the date and the
-     action buttons so the scrolling track spans that gap (starts near
-     the actions and ends near the date). */
-  flex: 1 1 auto;
+  max-width: 100%;
 }
 
 /* Make the AutoScroll container flexible so it fills remaining inline space
    and provides a larger viewport for the scrolling track. */
-.card-head .post-meta .auto-scroll-container {
+.card-head .user-meta .auto-scroll-container {
   display: block; /* override inline-block to allow width:100% */
   width: 100%;
   min-width: 0;
@@ -360,7 +345,7 @@
 
 /* The inner auto-scroll element should preserve its inline layout but be able
    to expand to the container width. */
-.card-head .post-meta .auto-scroll-inner {
+.card-head .user-meta .auto-scroll-inner {
   display: inline-block;
   width: 100%;
 }
@@ -409,6 +394,7 @@
 .card-head button.btn {
   background: transparent;
   border: 1px solid var(--border);
+  padding: 2px 4px;
 }
 
 .card-head button.btn:hover {
@@ -416,6 +402,32 @@
   border-color: var(--border);
   transform: none;
   box-shadow: none;
+}
+
+/* Make follow button compact in card headers like other action buttons */
+.card-head .follow-btn {
+  --icon-size: 28px;
+  padding: 2px 6px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-width: 28px !important;
+  border: 1px solid var(--border) !important;
+  background: transparent !important;
+}
+
+.card-head .follow-btn .icon {
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: 2px !important;
+}
+
+.card-head .follow-btn .reveal.label {
+  margin-left: 4px !important;
+}
+
+.card-head .follow-btn.expanded {
+  max-width: 120px !important;
+  padding: 2px 8px 2px 10px !important;
 }
 
 @keyframes subtleSpin {
@@ -494,14 +506,11 @@
   overflow: visible;
 }
 
-/* Ensure headers keep username and time on one line inside card heads
-   (this overrides the default column layout used elsewhere). */
-.card-head .user-line {
-  display: inline-flex;
-  flex-direction: row;
-  gap: 8px;
-  align-items: center;
-  flex: initial;
+/* Ensure headers keep username on one line inside card heads */
+.card-head .username {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .username { 
   font-weight: 700; 
@@ -923,7 +932,7 @@
 }
 .action {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; gap: 0; color: var(--muted);
+  width: 32px; height: 32px; gap: 0; color: var(--muted);
   font-size: 13px; cursor: pointer; padding: 0 4px; border-radius: 8px;
   background: none; border: none; box-shadow: none;
   appearance: none; outline: none;

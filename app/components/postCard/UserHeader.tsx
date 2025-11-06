@@ -1,19 +1,27 @@
 "use client";
 
-import { memo, useRef, useState, useEffect } from "react";
+import { memo, useRef, useState } from "react";
 import { preloadOverlayThumbnails } from "../imageEditor/overlaysPreload";
 import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
-import { formatRelative } from "@/lib/date";
 import Link from "next/link";
-import Image from "next/image";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
-import { Lock, UserPlus, UserCheck, Edit, Pencil, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Moon, X } from "lucide-react";
+import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
 import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { AuthForm } from "@/app/components/auth/AuthForm";
-import AutoScroll from "../AutoScroll";
 import { usePathname, useRouter } from "next/navigation";
-import { getWeatherIcon } from "@/lib/weatherIcons";
+import TimeDisplay from "@/app/components/ui/TimeDisplay";
+
+function getWeatherIcon(condition: string) {
+  const lower = condition.toLowerCase();
+  if (lower.includes('clear') || lower.includes('sunny')) return Sun;
+  if (lower.includes('rain') || lower.includes('shower')) return CloudRain;
+  if (lower.includes('snow') || lower.includes('freezing')) return CloudSnow;
+  if (lower.includes('thunder') || lower.includes('storm')) return CloudLightning;
+  if (lower.includes('drizzle')) return CloudDrizzle;
+  if (lower.includes('fog') || lower.includes('overcast') || lower.includes('cloud')) return Cloud;
+  return Cloud; // default
+}
 
 interface UserHeaderProps {
   post: HydratedPost;
@@ -75,125 +83,100 @@ export const UserHeader = memo(function UserHeader({
   const pathname = usePathname();
   const router = useRouter();
   const [showFullDate, setShowFullDate] = useState(false);
-  const [currentText, setCurrentText] = useState(formatRelative(post.createdAt));
-  const [opacity, setOpacity] = useState(1);
+  const [showMeta, setShowMeta] = useState(true);
 
-  useEffect(() => {
-    setOpacity(0);
-    const timer = setTimeout(() => {
-      setCurrentText(showFullDate ? new Date(post.createdAt).toLocaleDateString() : formatRelative(post.createdAt));
-      setOpacity(1);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [showFullDate, post.createdAt]);
-
-  const IconComponent = getWeatherIcon(post.weatherCondition || '', new Date(post.createdAt));
-  const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
-  const userLine = (
-    <span
-      className="post-date"
-      onClick={() => setShowFullDate(!showFullDate)}
-      style={{ cursor: 'pointer', opacity, transition: 'opacity 0.3s ease-in-out' }}
-      title={showFullDate ? 'Click to show relative time' : 'Click to show full date'}
-    >
-      {currentText}
-    </span>
-  );
+  const handleToggle = (showingFull: boolean) => {
+    setShowFullDate(showingFull);
+    if (showingFull) {
+      setShowMeta(false);
+    } else {
+      setShowMeta(false);
+      setTimeout(() => setShowMeta(true), 150);
+    }
+  };
 
   return (
     <div className="card-head">
-      <div className="user-meta">
+      <div className="user-and-meta">
         <Link className="user-link" href={`/${post.user.username || post.user.id}`}>
           <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
-          <div className="user-line">
-            <span className="username" style={{ whiteSpace: 'nowrap' }}>@{post.user.username}</span>
-          </div>
+          <span className="username">@{post.user.username}</span>
         </Link>
-        <span className="dim">{userLine} {lockIcon}</span>
-        {(post.weatherCondition || post.weatherTemperature || post.weatherLocation || post.locationAddress) && (
-          <div className="post-meta dim">
-            <AutoScroll innerStyle={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+        <div className="user-meta">
+          <TimeDisplay date={post.createdAt} className="post-date dim" onToggle={handleToggle} />
+          {showMeta && (
+            <>
               {post.locationAddress && (
-                <Link href={`/search?q=${encodeURIComponent(post.locationAddress)}`} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13, textDecoration: 'none', color: 'inherit' }}>
-                  <MapPin size={14} aria-hidden />
-                  <span style={{ display: 'inline-block' }}>{post.locationAddress.split(',')[0]?.trim()}</span>
+                <Link href={`/search?q=${encodeURIComponent(post.locationAddress.split(',')[0]?.trim() || post.locationAddress)}`} className="location-meta" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <MapPin size={12} style={{ marginRight: '4px' }} />
+                  {(() => {
+                    const city = post.locationAddress?.split(',')[0]?.trim();
+                    return city || post.locationAddress;
+                  })()}
                 </Link>
               )}
-              {/* explicit spacer between location and temperature so copies and
-                  duplicate-track scenarios always have a visible gap */}
-              {post.weatherTemperature !== undefined && post.weatherLocation && (
-                <span className="auto-scroll-spacer" aria-hidden />
-              )}
               {post.weatherTemperature !== undefined && (
-                <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
-                  <IconComponent size={14} aria-hidden />
-                  <span style={{ display: 'inline-block' }}>{Math.round(post.weatherTemperature)}°C</span>
+                <span className="weather-meta">
+                  {(() => {
+                    const IconComponent = getWeatherIcon(post.weatherCondition || '');
+                    return <IconComponent size={12} style={{ marginRight: '4px' }} />;
+                  })()}
+                  {Math.round(post.weatherTemperature)}°C
                 </span>
               )}
-            </AutoScroll>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
-      <div className={`post-actions ${isMe ? 'is-me' : ''}`} style={{ marginLeft: "auto", position: "relative", flexShrink: 0, alignItems: "center" }}>
+      <div className={`post-actions ${isMe ? 'is-me' : ''}`}>
         {!authLoading && (
           <>
             {!isMe ? (
               <>
-                <>
-                  {/* follow/unfollow: use ToggleActionButton to DRY icon + reveal label */}
-                  <ToggleActionButton
-                    ref={followBtnRef as any}
-                    className={`btn follow-btn icon-reveal ${isFollowing ? 'following' : 'not-following'} ${followAnim || ''} ${followExpanded ? 'expanded' : ''}`}
-                    active={isFollowing}
-                    pending={!!followInFlightRef.current}
-                    onClick={async () => {
-                      const cur = await api.getCurrentUser();
-                      if (!cur) {
-                        try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
-                        setShowAuth(true);
-                        return;
+                <ToggleActionButton
+                  ref={followBtnRef as any}
+                  className={`btn follow-btn icon-reveal ${isFollowing ? 'following' : 'not-following'} ${followAnim || ''} ${followExpanded ? 'expanded' : ''}`}
+                  active={isFollowing}
+                  pending={!!followInFlightRef.current}
+                  onClick={async () => {
+                    const cur = await api.getCurrentUser();
+                    if (!cur) {
+                      try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+                      setShowAuth(true);
+                      return;
+                    }
+                    if (followInFlightRef.current) return;
+                    const prev = !!isFollowing;
+                    setIsFollowing(!prev);
+                    setFollowExpanded(true);
+                    if (followExpandTimerRef.current) { window.clearTimeout(followExpandTimerRef.current); followExpandTimerRef.current = null; }
+                    followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
+                    const willFollow = !prev;
+                    setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
+                    followInFlightRef.current = true;
+                    try {
+                      if (!prev) {
+                        await api.follow(post.userId);
+                      } else {
+                        await api.unfollow(post.userId);
                       }
-                      if (followInFlightRef.current) return;
-                      const prev = !!isFollowing;
-                      setIsFollowing(!prev);
-                      setFollowExpanded(true);
-                      if (followExpandTimerRef.current) { window.clearTimeout(followExpandTimerRef.current); followExpandTimerRef.current = null; }
-                      followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
-                      const willFollow = !prev;
-                      setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
-                      followInFlightRef.current = true;
-                      try {
-                        if (!prev) {
-                          await api.follow(post.userId);
-                        } else {
-                          await api.unfollow(post.userId);
-                        }
-                        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
-                      } catch (e: any) {
-                        setIsFollowing(prev);
-                        console.warn(e?.message || 'Failed to update follow');
-                      } finally {
-                        followInFlightRef.current = false;
-                        setTimeout(() => setFollowAnim(null), 520);
-                      }
-                    }}
-                    activeIcon={<UserCheck size={16} />}
-                    inactiveIcon={<UserPlus size={16} />}
-                    ariaActiveLabel="Unfollow"
-                    ariaInactiveLabel="Follow"
-                    titleActive="Unfollow"
-                    titleInactive="Follow"
-                    revealLabel={isFollowing ? 'Followed' : 'Unfollowed'}
-                  />
-                  {showAuth ? (
-                    <>
-                      <div className="auth-dialog-backdrop" onClick={() => setShowAuth(false)} />
-                      <div role="dialog" aria-modal="true" aria-label="Sign in or sign up" className="auth-dialog">
-                        <AuthForm onClose={() => setShowAuth(false)} />
-                      </div>
-                    </>
-                  ) : null}
-                </>
+                      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
+                    } catch (e: any) {
+                      setIsFollowing(prev);
+                      console.warn(e?.message || 'Failed to update follow');
+                    } finally {
+                      followInFlightRef.current = false;
+                      setTimeout(() => setFollowAnim(null), 520);
+                    }
+                  }}
+                  activeIcon={<UserCheck size={14} />}
+                  inactiveIcon={<UserPlus size={14} />}
+                  ariaActiveLabel="Unfollow"
+                  ariaInactiveLabel="Follow"
+                  titleActive="Unfollow"
+                  titleInactive="Follow"
+                  revealLabel={isFollowing ? 'Followed' : 'Unfollowed'}
+                />
                 {showAuth ? (
                   <>
                     <div className="auth-dialog-backdrop" onClick={() => setShowAuth(false)} />
@@ -204,16 +187,16 @@ export const UserHeader = memo(function UserHeader({
                 ) : null}
               </>
             ) : (
-              <div style={{ display: 'flex', gap: 0 }}>
+              <div>
                 <button
                   className={`btn edit-btn ${editorSaving ? 'saving' : ''}`}
                   onClick={() => setEditing(!editing)}
                   title="Edit post"
                 >
-                  <Pencil size={16} />
+                  {editing ? <X size={14} /> : <Pencil size={14} />}
                 </button>
                 <button className="btn delete-btn" style={{ color: deleteExpanded ? 'red' : undefined }} onClick={handleDeleteActivation} title={deleteExpanded ? "Confirm delete" : "Delete post"}>
-                  <Trash size={16} />
+                  <Trash size={14} />
                 </button>
               </div>
             )}

@@ -6,9 +6,10 @@ import { formatRelative } from '@/lib/date';
 interface TimeDisplayProps {
   date: string | number | Date;
   className?: string;
+  onToggle?: (showingFull: boolean) => void;
 }
 
-export default function TimeDisplay({ date, className = '' }: TimeDisplayProps) {
+export default function TimeDisplay({ date, className = '', onToggle }: TimeDisplayProps) {
   const [showFullDate, setShowFullDate] = useState(false);
   const [currentText, setCurrentText] = useState(formatRelative(date));
   const [opacity, setOpacity] = useState(1);
@@ -28,10 +29,16 @@ export default function TimeDisplay({ date, className = '' }: TimeDisplayProps) 
     return () => clearTimeout(timer);
   }, [showFullDate, date]);
 
+  const handleClick = () => {
+    const newState = !showFullDate;
+    setShowFullDate(newState);
+    onToggle?.(newState);
+  };
+
   return (
     <span
       className={`${className} cursor-pointer`}
-      onClick={() => setShowFullDate(!showFullDate)}
+      onClick={handleClick}
       title={showFullDate ? 'Click to show relative time' : 'Click to show full date'}
       style={{ opacity, transition: 'opacity 0.3s ease-in-out' }}
     >

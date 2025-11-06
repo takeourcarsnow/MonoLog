@@ -14,10 +14,9 @@ type CommentActionsProps = {
   commentUserId: string;
   confirmingIds: Set<string>;
   setConfirmingIds: React.Dispatch<React.SetStateAction<Set<string>>>;
-  confirmTimers: React.MutableRefObject<Map<string, number>>;
+  onDelete: () => void;
   setReplyingTo: (id: string | null) => void;
   setReplyText: (text: string) => void;
-  onDelete: () => void;
 };
 
 export function CommentActions({
@@ -27,10 +26,9 @@ export function CommentActions({
   commentUserId,
   confirmingIds,
   setConfirmingIds,
-  confirmTimers,
+  onDelete,
   setReplyingTo,
-  setReplyText,
-  onDelete
+  setReplyText
 }: CommentActionsProps) {
   return (
     <div className="comment-action-slot">
@@ -51,10 +49,20 @@ export function CommentActions({
       )}
       {currentUser && currentUser.id === commentUserId ? (
         <button
-          className={`comment-badge ${confirmingIds.has(commentId) ? 'confirming' : ''}`}
-          title={confirmingIds.has(commentId) ? 'Confirm delete' : 'Delete comment'}
-          aria-pressed={confirmingIds.has(commentId) ? 'true' : 'false'}
-          onClick={onDelete}
+          className={`comment-badge ${(confirmingIds instanceof Set && confirmingIds.has(commentId)) ? 'confirming' : ''}`}
+          title={(confirmingIds instanceof Set && confirmingIds.has(commentId)) ? 'Confirm delete' : 'Delete comment'}
+          onClick={() => {
+            if (confirmingIds instanceof Set && confirmingIds.has(commentId)) {
+              onDelete();
+              setConfirmingIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(commentId);
+                return newSet;
+              });
+            } else {
+              setConfirmingIds(prev => new Set(prev).add(commentId));
+            }
+          }}
         >
           <Suspense fallback={<span>×</span>}>
             <Trash2 size={14} />

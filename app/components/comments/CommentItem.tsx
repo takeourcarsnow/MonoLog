@@ -16,65 +16,21 @@ type CommentItemProps = {
 };
 
 export function CommentItem({ comment, isReply, context }: CommentItemProps) {
-  const replies = context.comments.filter(c => c.parentId === comment.id);
+  const replies = context.comments.filter(c => c.parentId === (comment.realId || comment.id));
 
   const handleDelete = async () => {
-    if (context.confirmingIds.has(comment.id)) {
-      const t = context.confirmTimers.current.get(comment.id);
-      if (t) { clearTimeout(t); context.confirmTimers.current.delete(comment.id); }
-
-      const backup = context.comments.slice();
-      context.setComments(prev => {
-        const next = prev.filter(x => x.id !== comment.id);
-        try { context.setCachedComments(context.postId, next); } catch (_) {}
-        context.notifyCount(next.length);
-        return next;
-      });
-
-      context.setConfirmingIds(prev => {
-        const n = new Set(prev);
-        n.delete(comment.id);
-        return n;
-      });
-
-      context.setRemovingIds(prev => new Set(prev).add(comment.id));
-
-      setTimeout(async () => {
-        try {
-          const { getClient, getAccessToken } = await import('@/lib/api/client');
-          const sb = getClient();
-          const token = await getAccessToken(sb);
-          const res = await fetch('/api/comments/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ commentId: comment.id }) });
-          const json = await res.json();
-          if (!res.ok) throw new Error(json?.error || 'Failed');
-          await context.load(true);
-        } catch (e: any) {
-          context.setComments(backup);
-          try { context.setCachedComments(context.postId, backup); } catch (_) {}
-          context.notifyCount(backup.length);
-          console.warn(e?.message || 'Failed to delete comment');
-        } finally {
-          context.setRemovingIds(prev => {
-            const n = new Set(prev);
-            n.delete(comment.id);
-            return n;
-          });
-        }
-      }, 320);
-
-      return;
+    try {
+      const commentId = comment.realId || comment.id;
+      const { getClient, getAccessToken } = await import('@/lib/api/client');
+      const sb = getClient();
+      const token = await getAccessToken(sb);
+      const res = await fetch('/api/comments/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ commentId }) });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Failed');
+      await context.load(true);
+    } catch (e: any) {
+      console.warn(e?.message || 'Failed to delete comment');
     }
-
-    context.setConfirmingIds(prev => new Set(prev).add(comment.id));
-    const timer = window.setTimeout(() => {
-      context.setConfirmingIds(prev => {
-        const n = new Set(prev);
-        n.delete(comment.id);
-        return n;
-      });
-      context.confirmTimers.current.delete(comment.id);
-    }, 3500);
-    context.confirmTimers.current.set(comment.id, timer);
   };
 
   const handleReplySend = async () => {
@@ -85,17 +41,12 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
     if (!context.replyText.trim()) return;
     if (context.replyText.length > 500) { console.warn(`Comments are limited to 500 characters`); return; }
     context.setReplyError(null);
-    context.setSending(true);
-    const sendText = context.replyText;
-    context.setReplyText("");
-    context.setReplyingTo(null);
-    await context.doOptimisticAdd(sendText, comment.id);
-    context.setSending(false);
+    await context.addComment(context.replyText.trim(), comment.realId || comment.id);
   };
 
   return (
     <div key={comment.id}>
-      <div className={`comment-item appear ${comment.id === context.newCommentId ? 'new' : ''} ${context.removingIds.has(comment.id) ? 'removing' : ''} ${isReply ? 'reply' : ''}`} style={{ animationDelay: `${context.comments.indexOf(comment) * 40}ms` }}>
+      <div className={`comment-item appear ${isReply ? 'reply' : ''}`} style={{ animationDelay: `${context.comments.indexOf(comment) * 40}ms` }}>
         <div className="comment-row">
           <Link
             href={`/${comment.user?.username || comment.user?.id}`}
@@ -129,10 +80,9 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
               commentUserId={comment.user?.id}
               confirmingIds={context.confirmingIds}
               setConfirmingIds={context.setConfirmingIds}
-              confirmTimers={context.confirmTimers}
+              onDelete={handleDelete}
               setReplyingTo={context.setReplyingTo}
               setReplyText={context.setReplyText}
-              onDelete={handleDelete}
             />
           </div>
         </div>
@@ -150,7 +100,7 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
           replyText={context.replyText}
           setReplyText={context.setReplyText}
           commentRemaining={context.commentRemaining}
-          sendAnim={context.sendAnim}
+          sendAnim={null}
           sending={context.sending}
           toast={context.toast}
           onSend={handleReplySend}

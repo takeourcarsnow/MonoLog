@@ -17,12 +17,8 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const [sendAnim, setSendAnim] = useState<'following-anim' | null>(null);
-  const [newCommentId, setNewCommentId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
-  const confirmTimers = useRef<Map<string, number>>(new Map());
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
@@ -82,7 +78,7 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
   const toast = { show: (_: unknown) => {} } as const;
   const commentRemaining = Math.max(0, COMMENT_MAX - (text?.length || 0));
 
-  const doOptimisticAdd = async (bodyText: string, parentId?: string) => {
+  const addComment = async (bodyText: string, parentId?: string) => {
     const tempId = `optimistic-${Date.now()}`;
     const optimistic: Comment = {
       id: tempId,
@@ -95,50 +91,43 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
     // Add optimistic comment
     setComments(prev => {
       const next = [...prev, optimistic];
-      try { setCachedComments(postId, next); } catch (_) {}
-      notifyCount(next.length);
+      setCachedComments(postId, next);
       return next;
     });
+    notifyCount(comments.length + 1);
 
-    setNewCommentId(tempId);
-
+    setSending(true);
     try {
       const added = await api.addComment(postId, bodyText, parentId);
       
-      // Replace optimistic with real comment without flickering
+      // Update optimistic with real data, keeping temp id for stable key
       setComments(prev => {
-        // If the optimistic comment is still there, replace it
-        const hasOptimistic = prev.some(c => c.id === tempId);
-        if (!hasOptimistic) {
-          // Already removed or replaced, just add the real one
-          const next = [...prev, added];
-          try { setCachedComments(postId, next); } catch (_) {}
-          return next;
-        }
-        
-        // Replace optimistic with real comment smoothly
-        const next = prev.map(c => c.id === tempId ? added : c);
-        try { setCachedComments(postId, next); } catch (_) {}
+        const next = prev.map(c => c.id === tempId ? { ...added, id: tempId, realId: added.id } : c);
+        setCachedComments(postId, next);
         return next;
       });
       
-      // Update the new comment ID to the real one for animation
-      setNewCommentId(added?.id ?? null);
-      setTimeout(() => setNewCommentId(null), 420);
+      if (parentId) {
+        setReplyText("");
+        setReplyingTo(null);
+      } else {
+        setText("");
+      }
     } catch (err: any) {
       // Remove optimistic comment on error
       setComments(prev => {
         const next = prev.filter(c => c.id !== tempId);
-        try { setCachedComments(postId, next); } catch (_) {}
+        setCachedComments(postId, next);
         notifyCount(next.length);
         return next;
       });
-      setNewCommentId(null);
       if (parentId) {
         setReplyError(err?.message || 'Failed to add reply');
       } else {
         setCommentError(err?.message || 'Failed to add comment');
       }
+    } finally {
+      setSending(false);
     }
   };
 
@@ -161,27 +150,21 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
               isReply={false}
               context={{
                 comments,
-                newCommentId,
-                removingIds,
                 currentUser,
                 replyingTo,
                 replyText,
                 commentRemaining,
-                sendAnim,
                 toast,
                 postId,
                 load,
-                doOptimisticAdd,
+                addComment,
                 setReplyingTo,
                 setReplyText,
                 setSending,
-                setSendAnim,
                 setConfirmingIds,
-                confirmTimers,
                 setComments,
                 setCachedComments,
                 notifyCount,
-                setRemovingIds,
                 sending,
                 confirmingIds,
                 router,
@@ -197,7 +180,7 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
         text={text}
         setText={setText}
         commentRemaining={commentRemaining}
-        sendAnim={sendAnim}
+        sendAnim={null}
         sending={sending}
         toast={toast}
         onSend={async () => {
@@ -210,13 +193,7 @@ export function Comments({ postId, onCountChange }: CommentsProps) {
           }
           if (text.length > COMMENT_MAX) { console.warn(`Comments are limited to ${COMMENT_MAX} characters`); return; }
           setCommentError(null);
-          setSending(true);
-          setSendAnim('following-anim');
-          const sendText = text;
-          setText("");
-          await doOptimisticAdd(sendText);
-          setTimeout(() => setSendAnim(null), 520);
-          setSending(false);
+          await addComment(text.trim());
         }}
         COMMENT_MAX={COMMENT_MAX}
       />

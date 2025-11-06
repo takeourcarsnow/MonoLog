@@ -618,6 +618,13 @@
   background-clip: border-box; /* ensure no rounding artifacts */
 }
 
+/* Explicitly set border-radius for ImageZoom containers inside card media
+   to ensure rounded corners work in all views including list view on desktop */
+.card-media .media-link .monolog-image-zoom {
+  border-radius: calc(var(--radius) - var(--photo-mat));
+  overflow: hidden;
+}
+
 /* Fullscreen image zoom should have black background to prevent white flash */
 .fullscreen-viewer .monolog-image-zoom,
 .fullscreen-viewer .monolog-image-zoom img {
@@ -628,8 +635,15 @@
    and grid tiles) are clipped to rounded corners even if an inner element
    or inline style tries to override rounding. This keeps post images
    consistently rounded across renderers (next/image, native img, zoom). */
-.card-media, .card-media .media-link, .card-media .media-link > div, .grid .tile {
+.card-media, .card-media .media-link, .grid .tile {
   border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* The immediate child div of .media-link (which is .monolog-image-zoom)
+   should use the inner radius to account for the matte padding */
+.card-media .media-link > div {
+  border-radius: calc(var(--radius) - var(--photo-mat));
   overflow: hidden;
 }
 

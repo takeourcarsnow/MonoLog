@@ -162,8 +162,9 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
             objectPosition: "center center",
             userSelect: "none",
             pointerEvents: "auto",
-            // remove image rounding so the outer container's border-radius clips the image
-            borderRadius: 0,
+              // allow the image to inherit the container's rounding so corners
+              // are visible even when transforms occur (container still clips)
+              borderRadius: 'inherit',
             background: isFullscreen ? "#000" : undefined,
             // Hint to browsers to avoid special low-quality resampling while
             // animating transforms. Keep image-rendering default (auto) but
@@ -216,7 +217,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
             width: "100%",
             height: isFullscreen ? "100%" : (state.isTile ? "100%" : "auto"),
             backgroundColor: "var(--bg-elev)",
-            borderRadius: 0,
+            borderRadius: 'inherit',
           }}
         />
       )}

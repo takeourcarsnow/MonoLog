@@ -25,6 +25,9 @@ export async function POST(req: Request) {
     if (patch.lens !== undefined) updates.lens = patch.lens;
   if (patch.filmType !== undefined) updates.film_type = patch.filmType === '' ? null : patch.filmType;
   if (patch.spotifyLink !== undefined) updates.spotify_link = patch.spotifyLink === '' ? null : patch.spotifyLink;
+  if (patch.weatherCondition !== undefined) updates.weather_condition = patch.weatherCondition === '' ? null : patch.weatherCondition;
+  if (patch.weatherTemperature !== undefined) updates.weather_temperature = patch.weatherTemperature === '' ? null : patch.weatherTemperature;
+  if (patch.locationAddress !== undefined) updates.location_address = patch.locationAddress === '' ? null : patch.locationAddress;
   // Return the updated post row along with the related user/profile fields
   // so the client can hydrate the post.user properly (username, avatar).
   const { data: updatedRows, error } = await sb

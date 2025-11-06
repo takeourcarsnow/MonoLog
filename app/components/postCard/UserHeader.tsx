@@ -8,22 +8,12 @@ import { formatRelative } from "@/lib/date";
 import Link from "next/link";
 import Image from "next/image";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
-import { Lock, UserPlus, UserCheck, Edit, Pencil, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, X } from "lucide-react";
+import { Lock, UserPlus, UserCheck, Edit, Pencil, Trash, Cloud, MapPin, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Moon, X } from "lucide-react";
 import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import AutoScroll from "../AutoScroll";
 import { usePathname, useRouter } from "next/navigation";
-
-function getWeatherIcon(condition: string) {
-  const lower = condition.toLowerCase();
-  if (lower.includes('clear') || lower.includes('sunny')) return Sun;
-  if (lower.includes('rain') || lower.includes('shower')) return CloudRain;
-  if (lower.includes('snow') || lower.includes('freezing')) return CloudSnow;
-  if (lower.includes('thunder') || lower.includes('storm')) return CloudLightning;
-  if (lower.includes('drizzle')) return CloudDrizzle;
-  if (lower.includes('fog') || lower.includes('overcast') || lower.includes('cloud')) return Cloud;
-  return Cloud; // default
-}
+import { getWeatherIcon } from "@/lib/weatherIcons";
 
 interface UserHeaderProps {
   post: HydratedPost;
@@ -97,7 +87,7 @@ export const UserHeader = memo(function UserHeader({
     return () => clearTimeout(timer);
   }, [showFullDate, post.createdAt]);
 
-  const IconComponent = getWeatherIcon(post.weatherCondition || '');
+  const IconComponent = getWeatherIcon(post.weatherCondition || '', new Date(post.createdAt));
   const lockIcon = post.public ? null : <Lock size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />;
   const userLine = (
     <span
@@ -120,13 +110,13 @@ export const UserHeader = memo(function UserHeader({
           </div>
         </Link>
         <span className="dim">{userLine} {lockIcon}</span>
-        {(post.weatherCondition || post.weatherTemperature || post.weatherLocation) && (
+        {(post.weatherCondition || post.weatherTemperature || post.weatherLocation || post.locationAddress) && (
           <div className="post-meta dim">
             <AutoScroll innerStyle={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
-              {post.weatherLocation && (
-                <Link href={`/search?q=${encodeURIComponent(post.weatherLocation)}`} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13, textDecoration: 'none', color: 'inherit' }}>
+              {post.locationAddress && (
+                <Link href={`/search?q=${encodeURIComponent(post.locationAddress)}`} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13, textDecoration: 'none', color: 'inherit' }}>
                   <MapPin size={14} aria-hidden />
-                  <span style={{ display: 'inline-block' }}>{post.weatherLocation}</span>
+                  <span style={{ display: 'inline-block' }}>{post.locationAddress.split(',')[0]?.trim()}</span>
                 </Link>
               )}
               {/* explicit spacer between location and temperature so copies and

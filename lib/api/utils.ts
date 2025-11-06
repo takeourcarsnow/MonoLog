@@ -162,8 +162,6 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
     weatherCondition: row.weather_condition || row.weatherCondition || undefined,
     weatherTemperature: row.weather_temperature || row.weatherTemperature || undefined,
     weatherLocation: row.weather_location || row.weatherLocation || undefined,
-    locationLatitude: row.location_latitude || row.locationLatitude || undefined,
-    locationLongitude: row.location_longitude || row.locationLongitude || undefined,
     locationAddress: row.location_address || row.locationAddress || undefined,
     user: {
       id: (row.users || row.public_profiles)?.id || row.user_id,

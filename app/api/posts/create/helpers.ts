@@ -26,8 +26,6 @@ const createPostSchema = z.object({
     location: z.string().optional(),
   }).optional(),
   location: z.object({
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
     address: z.string().optional(),
   }).optional(),
 });
@@ -48,7 +46,7 @@ export async function fetchWeather(ip: string) {
     const condition = current.weatherDesc[0].value;
     const temperature = parseFloat(current.temp_C);
 
-    return { condition, temperature, location, latitude: lat, longitude: lon, address: location };
+    return { condition, temperature, location, address: location };
   } catch (e) {
     try { logger.debug('[fetchWeather] error', { error: String(e) }); } catch (e) {}
     return null;
@@ -106,7 +104,7 @@ export async function checkCalendarRule(userId: string, sb: any) {
   return null;
 }
 
-export async function insertPost(sb: any, userId: string, imageUrls: any, thumbnailUrls: any, caption: string, alt: any, isPublic: boolean, spotifyLink: string, camera: string, lens: string, filmType: string, weather?: { condition?: string; temperature?: number; location?: string }, location?: { latitude?: number; longitude?: number; address?: string }) {
+export async function insertPost(sb: any, userId: string, imageUrls: any, thumbnailUrls: any, caption: string, alt: any, isPublic: boolean, spotifyLink: string, camera: string, lens: string, filmType: string, weather?: { condition?: string; temperature?: number; location?: string }, location?: { address?: string }) {
   const id = uid();
   const created_at = new Date().toISOString();
   const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: Boolean(isPublic) };
@@ -120,8 +118,6 @@ export async function insertPost(sb: any, userId: string, imageUrls: any, thumbn
     if (weather.location) insertObj.weather_location = weather.location;
   }
   if (location) {
-    if (location.latitude !== undefined) insertObj.location_latitude = location.latitude;
-    if (location.longitude !== undefined) insertObj.location_longitude = location.longitude;
     if (location.address) insertObj.location_address = location.address;
   }
 
@@ -363,7 +359,7 @@ export async function createPost(req: Request) {
     const fetched = await fetchWeather(ip);
     if (fetched) {
       weather = weather || { condition: fetched.condition, temperature: fetched.temperature, location: fetched.location };
-      location = location || { latitude: fetched.latitude, longitude: fetched.longitude, address: fetched.address };
+      location = location || { address: fetched.address };
     }
   }
 

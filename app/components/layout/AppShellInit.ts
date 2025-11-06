@@ -93,6 +93,15 @@ export function useAppShellInit() {
             }
           };
 
+          const isPinchZoomActive = () => {
+            try {
+              const vv = (window as any).visualViewport;
+              return !!(vv && typeof vv.scale === 'number' && Math.abs(vv.scale - 1) > 0.01);
+            } catch (_) {
+              return false;
+            }
+          };
+
           // Debug logging (enabled by ?debugViewport=1 or localStorage 'monolog.debugViewport')
           const debugEnabled = (() => {
             try {
@@ -135,7 +144,13 @@ export function useAppShellInit() {
           // a slightly longer, but small, retry for flaky webviews
           setTimeout(setViewportVar, 380);
 
-          const onResize = () => { setViewportVar(); if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); } };
+          const onResize = () => {
+            // If user is actively pinch-zooming, skip syncing the CSS vh variable
+            if (!isPinchZoomActive()) {
+              setViewportVar();
+            }
+            if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); }
+          };
           const onOrientation = () => {
             // Temporarily disable transitions to avoid slow animated layout changes
             try { document.documentElement.classList.add('monolog-disable-transitions'); } catch(_) {}
@@ -145,11 +160,36 @@ export function useAppShellInit() {
             try { window.dispatchEvent(new CustomEvent('monolog-viewport-changed')); } catch(_) {}
             if (debugEnabled) { setTimeout(debugLog, 160); }
           };
+          // Throttled handler for visual viewport resizes (pinch/keyboard zoom,
+          // on-screen UI showing/hiding, virtual keyboard, etc.). We DO update
+          // --viewport-height here so containers sized via the variable keep
+          // matching the visible area. A small throttle + temporarily disabling
+          // transitions prevents janky animated reflows while zooming.
+          let vvTimer: any = null;
           const onVisualViewportResize = () => {
-            // On zoom, don't update --viewport-height to avoid layout shifts that cause bars
-            // But notify components like swiper to update
-            try { window.dispatchEvent(new CustomEvent('monolog-viewport-changed')); } catch(_) {}
-            if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 80); }
+            try { clearTimeout(vvTimer); } catch(_) {}
+            vvTimer = setTimeout(() => {
+              try {
+                const vv = (window as any).visualViewport;
+                const isPinchZoom = isPinchZoomActive();
+                if (!isPinchZoom) {
+                  // Only adjust the CSS variable when not actively pinch-zooming
+                  // (e.g., browser UI showing/hiding, virtual keyboard, etc.).
+                  document.documentElement.classList.add('monolog-disable-transitions');
+                  setViewportVar();
+                  try {
+                    requestAnimationFrame(() => {
+                      try { document.documentElement.classList.remove('monolog-disable-transitions'); } catch(_) {}
+                    });
+                  } catch(_) {
+                    setTimeout(() => { try { document.documentElement.classList.remove('monolog-disable-transitions'); } catch(_) {} }, 120);
+                  }
+                }
+              } catch(_) {}
+              // Always notify listeners that something changed so components can react.
+              try { window.dispatchEvent(new CustomEvent('monolog-viewport-changed')); } catch(_) {}
+              if (debugEnabled) { clearTimeout(debugTimer); debugTimer = setTimeout(debugLog, 60); }
+            }, 60);
           };
           window.addEventListener('resize', onResize, { passive: true });
           window.addEventListener('orientationchange', onOrientation);

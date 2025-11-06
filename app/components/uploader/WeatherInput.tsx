@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Cloud, X } from "lucide-react";
 import { parseCombinedWeather, fetchWeatherForCurrentLocation } from "./weatherUtils";
 import { getCurrentPosition } from "./locationUtils";
+import { getWeatherIcon } from "@/lib/weatherIcons";
 
 interface WeatherInputProps {
   weatherCondition?: string;
@@ -31,6 +32,8 @@ export function WeatherInput({
   inputRef,
 }: WeatherInputProps) {
   const [fetchingWeather, setFetchingWeather] = useState(false);
+
+  const IconComponent = getWeatherIcon(weatherCondition || '');
 
   useEffect(() => {
     // Show only the temperature in the input (icon will represent the condition)
@@ -113,7 +116,7 @@ export function WeatherInput({
             cursor: (!hasPreview || processing || fetchingWeather) ? 'not-allowed' : 'pointer'
           }}
         >
-          <Cloud size={14} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
+          <IconComponent size={14} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
         </button>
         {combinedWeather && !processing && hasPreview && (
           <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>
@@ -179,7 +182,7 @@ export function WeatherInput({
           cursor: (!hasPreview || processing || fetchingWeather) ? 'not-allowed' : 'pointer'
         }}
       >
-            <Cloud size={14} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
+            <IconComponent size={14} className={`input-icon ${combinedWeather ? 'input-filled' : ''}`} />
       </button>
       {combinedWeather && !processing && hasPreview && (
         <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>

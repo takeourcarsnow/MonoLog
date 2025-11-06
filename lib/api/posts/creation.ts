@@ -40,7 +40,7 @@ export async function canPostToday() {
   return { allowed: true };
 }
 
-export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType, weatherCondition, weatherTemperature, weatherLocation, locationLatitude, locationLongitude, locationAddress }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; public?: boolean; spotifyLink?: string; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; weatherLocation?: string; locationLatitude?: number; locationLongitude?: number; locationAddress?: string }) {
+export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType, weatherCondition, weatherTemperature, weatherLocation, locationAddress }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; public?: boolean; spotifyLink?: string; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; weatherLocation?: string; locationAddress?: string }) {
   const cur = await getCurrentUser();
   if (!cur) throw new Error('Not logged in');
 
@@ -94,10 +94,8 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
       location: weatherLocation,
     };
   }
-  if (locationLatitude !== undefined || locationLongitude !== undefined || locationAddress !== undefined) {
+  if (locationAddress !== undefined) {
     payload.location = {
-      latitude: locationLatitude,
-      longitude: locationLongitude,
       address: locationAddress,
     };
   }

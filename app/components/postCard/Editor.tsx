@@ -1,16 +1,22 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/lib/types";
 import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeOff, Monitor, Film } from "lucide-react";
+import { MapPin } from "lucide-react";
+import { Cloud, Sun, CloudRain } from "lucide-react";
 import { Combobox } from "@/app/components/ui/Combobox";
 import { CAMERA_PRESETS, CAMERA_DIGITAL_PRESETS, CAMERA_FILM_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS } from "@/lib/exifPresets";
 import { useSpotifyMeta } from "./hooks/useSpotifyMeta";
 import { SpotifySection } from "./SpotifySection";
+import { getWeatherIcon } from "@/lib/weatherIcons";
+import { fetchLocationForCurrentCoords } from "@/app/components/uploader/locationUtils";
 
-export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
+interface EditorProps {
   post: HydratedPost;
   onCancel: () => void;
-  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string }) => Promise<void>;
-}, ref: any) {
+  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string }) => Promise<void>;
+}
+
+export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCancel, onSave }, ref) {
   const [caption, setCaption] = useState(post.caption || "");
   const [camera, setCamera] = useState(post.camera || "");
   const [lens, setLens] = useState(post.lens || "");
@@ -18,6 +24,13 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
   const [filmIso, setFilmIso] = useState("");
   const [isPublic, setIsPublic] = useState(post.public);
   const [spotifyLink, setSpotifyLink] = useState(post.spotifyLink || "");
+  const [weatherCondition, setWeatherCondition] = useState(post.weatherCondition || "");
+  const [weatherTemperature, setWeatherTemperature] = useState(post.weatherTemperature?.toString() || "");
+  const [weatherLocation, setWeatherLocation] = useState(post.weatherLocation || "");
+  const [locationLatitude, setLocationLatitude] = useState(post.locationLatitude?.toString() || "");
+  const [locationLongitude, setLocationLongitude] = useState(post.locationLongitude?.toString() || "");
+  const [locationAddress, setLocationAddress] = useState(post.locationAddress || "");
+  const [fetchingLocation, setFetchingLocation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -43,6 +56,39 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
     }
   }, [post.filmType]);
 
+  // Initialize combined weather
+  useEffect(() => {
+    if (post.weatherCondition && post.weatherTemperature !== undefined) {
+      // No longer needed with separate inputs
+    } else if (post.weatherTemperature !== undefined) {
+      // No longer needed
+    } else if (post.weatherCondition) {
+      // No longer needed
+    } else {
+      // No longer needed
+    }
+  }, [post.weatherCondition, post.weatherTemperature]);
+
+  const handleCombinedWeatherChange = (value: string) => {
+    // No longer used
+  };
+
+  const handleFetchLocation = () => {
+    fetchLocationForCurrentCoords(
+      false, // not processing
+      fetchingLocation,
+      setFetchingLocation,
+      (lat) => {}, // not setting lat
+      (lon) => {}, // not setting lon
+      setLocationAddress,
+      (loc) => {} // not setting weatherLocation
+    );
+  };
+
+  const handleClearLocation = () => {
+    setLocationAddress('');
+  };
+
   const doSave = useCallback(async () => {
     if (saving) return;
     setSaving(true);
@@ -51,12 +97,22 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
       // server will update/clear the DB value. Previously we sent `undefined`
       // which meant "do not change" and prevented clearing.
   const combinedFilmType = (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || '';
-  const patch = { caption, public: isPublic, camera, lens, filmType: combinedFilmType, spotifyLink };
+  const patch = { 
+    caption, 
+    public: isPublic, 
+    camera, 
+    lens, 
+    filmType: combinedFilmType, 
+    spotifyLink, 
+    weatherCondition, 
+    weatherTemperature: weatherTemperature ? parseFloat(weatherTemperature) : undefined, 
+    locationAddress 
+  };
   await onSave(patch);
     } finally {
       setSaving(false);
     }
-  }, [caption, camera, lens, filmType, filmIso, isPublic, spotifyLink, onSave, saving]);
+  }, [caption, camera, lens, filmType, filmIso, isPublic, spotifyLink, weatherCondition, weatherTemperature, locationAddress, onSave, saving]);
 
   useImperativeHandle(ref, () => ({
     save: doSave,
@@ -137,6 +193,19 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
           <SpotifySection showSpotify={true} spotifyLink={spotifyLink} spotifyMeta={spotifyMeta} />
         </div>
       )}
+      <div style={{ marginTop: 8 }}>
+        <WeatherLocationSelector
+          condition={weatherCondition}
+          temperature={weatherTemperature}
+          locationAddress={locationAddress}
+          fetchingLocation={fetchingLocation}
+          onConditionChange={setWeatherCondition}
+          onTemperatureChange={setWeatherTemperature}
+          onLocationChange={setLocationAddress}
+          onFetchLocation={handleFetchLocation}
+          onClearLocation={handleClearLocation}
+        />
+      </div>
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         {activeExifField === null ? (
           // Show all fields when none is active
@@ -289,6 +358,121 @@ export const Editor = forwardRef(function Editor({ post, onCancel, onSave }: {
     </div>
   );
 });
+
+function WeatherLocationSelector({ 
+  condition, 
+  temperature, 
+  locationAddress,
+  fetchingLocation,
+  onConditionChange, 
+  onTemperatureChange,
+  onLocationChange,
+  onFetchLocation,
+  onClearLocation
+}: { 
+  condition: string; 
+  temperature: string; 
+  locationAddress: string;
+  fetchingLocation: boolean;
+  onConditionChange: (condition: string) => void; 
+  onTemperatureChange: (temperature: string) => void;
+  onLocationChange: (location: string) => void;
+  onFetchLocation: () => void;
+  onClearLocation: () => void;
+}) {
+  const WeatherIcon = getWeatherIcon(condition);
+
+  return (
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      {/* Temperature input */}
+      <div style={{ position: 'relative' }}>
+        <input
+          type="number"
+          className="input"
+          placeholder="°C"
+          value={temperature}
+          onChange={e => onTemperatureChange(e.target.value)}
+          style={{ 
+            width: '80px',
+            paddingLeft: '28px'
+          }}
+        />
+        <div style={{
+          position: 'absolute',
+          left: 6,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none'
+        }}>
+          <WeatherIcon size={14} className={`input-icon ${temperature ? 'input-filled' : ''}`} />
+        </div>
+      </div>
+
+      {/* Location input */}
+      <div style={{ position: 'relative', flex: 1 }}>
+        <input
+          type="text"
+          className="input"
+          placeholder="Location"
+          value={locationAddress}
+          onChange={e => onLocationChange(e.target.value)}
+          style={{ 
+            paddingLeft: '32px', 
+            paddingRight: locationAddress ? '32px' : '8px',
+            width: '100%'
+          }}
+        />
+        <button
+          type="button"
+          onClick={onFetchLocation}
+          disabled={fetchingLocation}
+          title="Fetch current location"
+          style={{
+            position: 'absolute',
+            left: 6,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 2,
+            border: 'none',
+            background: 'transparent',
+            cursor: fetchingLocation ? 'not-allowed' : 'pointer'
+          }}
+        >
+          <MapPin size={14} className={`input-icon ${locationAddress ? 'input-filled' : ''}`} />
+        </button>
+        {locationAddress && (
+          <button
+            type="button"
+            onClick={onClearLocation}
+            className="clear-button"
+            title="Remove location"
+            style={{
+              position: 'absolute',
+              right: 6,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 2,
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer'
+            }}
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function CameraScopeSelector({ camera, setCamera, onFocus, onBlur, expanded }: { camera: string; setCamera: (c: string) => void; onFocus?: () => void; onBlur?: () => void; expanded?: boolean }) {
   const [scope, setScope] = useState<'all' | 'digital' | 'film'>('all');

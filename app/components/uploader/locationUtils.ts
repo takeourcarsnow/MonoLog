@@ -82,16 +82,16 @@ export const fetchLocationForCurrentCoords = async (
   try {
     // Use unified position getter with IP fallback
     const { lat, lon } = await getCurrentPosition();
-    setLocationLatitude?.(lat);
-    setLocationLongitude?.(lon);
+    // For privacy, we don't store lat/lon - only get the city
     const addr = await reverseGeocode(lat, lon);
     if (addr) {
-      // Full address for post metadata
-      setLocationAddress?.(addr.display_name || addr.name || '');
-      // Concise label for the input chip
-      const label = buildLocationLabel(addr);
-      if (label) setWeatherLocation?.(label);
-      try { if (process.env.NODE_ENV !== 'production') console.debug('[uploader] reverse-geocode', { lat, lon, label }); } catch (_) {}
+      // Only store the city for privacy
+      const city = buildLocationLabel(addr);
+      if (city) {
+        setLocationAddress?.(city);
+        setWeatherLocation?.(city);
+      }
+      try { if (process.env.NODE_ENV !== 'production') console.debug('[uploader] reverse-geocode', { lat, lon, city }); } catch (_) {}
     }
   } catch (e: any) {
     console.warn('Failed to fetch location', e);

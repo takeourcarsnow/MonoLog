@@ -39,6 +39,7 @@ export function toggleTheme() {
   apply(next);
   try {
     window.localStorage.setItem(KEY, next);
+    window.dispatchEvent(new CustomEvent('theme:changed'));
   } catch {}
   return next;
 }

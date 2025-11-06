@@ -168,6 +168,19 @@
 
 @media (min-width: 992px) {
   .community > :first-child {
+
+/* Make the location and weather text match the subtle 'dim' style used for dates */
+.meta-combined .location-text,
+.meta-combined .weather-text {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
     max-width: 720px;
     padding-left: 0; /* let the link align flush with the card */
     /* Keep community header a bit lower on desktop so it has breathing room */
@@ -262,6 +275,15 @@
   min-width: 0;
 }
 
+/* Keep user-and-meta on a single row and vertically centered */
+.card-head .user-and-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: nowrap; /* force single-line */
+}
+
 /* Default spacing between buttons */
 .card-head .post-actions {
   display: flex;
@@ -270,6 +292,26 @@
   z-index: 3;
   margin-left: auto;
   padding-right: 0;
+}
+
+/* Ensure the edit/delete button group remains on a single row even when
+   the header is narrow. The markup renders a wrapper <div> containing the
+   two buttons when the post belongs to the current user; force that
+   wrapper to be an inline-flex row that does not wrap. This keeps both
+   buttons visible on a single line and lets the rest of the header
+   shrink/overflow instead. */
+.card-head .post-actions > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Ensure the buttons themselves don't expand and instead stay compact so
+   they can remain side-by-side on constrained widths. */
+.card-head .post-actions > div .btn {
+  flex: 0 0 auto;
 }
 
 /* Group user link and meta together */
@@ -286,13 +328,15 @@
 }
 
 .card-head .user-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   text-decoration: none;
   color: inherit;
   min-width: 0;
-  flex: 1;
+  /* Keep the avatar + username compact: do not allow it to force a wrap.
+     Let the meta area take remaining space. */
+  flex: 0 0 auto;
 }
 
 /* In card headers, keep username centered with avatar */
@@ -302,8 +346,8 @@
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible; /* allow full username to show */
+  text-overflow: clip;
 }
 
 .card-head .dim {
@@ -320,8 +364,9 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
+  /* Keep avatar + username compact and never clip the username */
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 /* Post-meta inside the header (weather / location / small metadata). Give it
@@ -332,7 +377,79 @@
   gap: 8px;
   align-items: center;
   min-width: 0;
-  max-width: 100%;
+  /* Let the meta area take remaining inline space so username/time stay
+     on a single line. */
+  flex: 1 1 auto;
+  max-width: 60%;
+  justify-content: flex-end;
+}
+
+/* Combined meta wrapper used by the header component. Keep it inline so
+   the text flows next to the username; hide overflow and allow the
+   inner auto-scroll to animate when needed. */
+.meta-combined {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+.meta-combined .auto-scroll-container {
+  display: inline-block; /* allow the container to size to available inline space */
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.meta-combined .auto-scroll-inner {
+  display: inline-block;
+  white-space: nowrap;
+}
+.meta-combined .auto-scroll-inner > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Fading masks at the left and right edges of the meta scroller. These
+   are only visible when the wrapper has the `is-scrolling` class (i.e.
+   content is overflowing and auto-scrolling). Using pseudo-elements
+   avoids extra markup and keeps pointer-events intact for inner links. */
+.meta-combined {
+  position: relative;
+}
+.meta-combined::before,
+.meta-combined::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 200ms var(--transition-mid);
+}
+.meta-combined::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--bg) 0%, rgba(255,255,255,0) 100%);
+}
+.meta-combined::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--bg) 0%, rgba(255,255,255,0) 100%);
+}
+/* In dark theme use a dark gradient */
+:root[data-theme="dark"] .meta-combined::before,
+:root[data-theme="dark"] .meta-combined::after {
+  background: none;
+}
+:root[data-theme="dark"] .meta-combined::before {
+  background: linear-gradient(90deg, rgba(20,20,20,1) 0%, rgba(20,20,20,0) 100%);
+}
+:root[data-theme="dark"] .meta-combined::after {
+  background: linear-gradient(270deg, rgba(20,20,20,1) 0%, rgba(20,20,20,0) 100%);
+}
+.meta-combined.is-scrolling::before,
+.meta-combined.is-scrolling::after {
+  opacity: 1;
 }
 
 /* Make the AutoScroll container flexible so it fills remaining inline space
@@ -486,7 +603,16 @@
 @media (prefers-reduced-motion: reduce) {
   .card .btn, .card .btn:hover, .card .btn:focus { transition: none; transform: none; box-shadow: none; }
 }
-.avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.avatar { 
+  width: 30px; height: 30px; 
+  min-width: 30px; min-height: 30px; 
+  border-radius: 50%; 
+  object-fit: cover; 
+  flex-shrink: 0; 
+  /* Ensure perfect circle even if layout tries to stretch the image */
+  aspect-ratio: 1 / 1;
+  display: inline-block;
+}
 /* larger avatar size used in profile lists (e.g. Following page) */
 .avatar.large {
   width: 48px;
@@ -1557,4 +1683,31 @@
   overflow: visible; /* make sure the full date is visible */
   text-overflow: clip;
   max-width: none;
+}
+
+/* Date wrapper: keep the date visually adjacent to the username and
+   fade its right edge so it never appears to overlap the username when
+   space is tight. We keep the date compact but allow it to expand if
+   there's room. */
+.date-wrap {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  /* allow the date to take its intrinsic size and avoid wrapping */
+  max-width: none;
+  min-width: 0;
+  margin-left: 6px;
+  overflow: visible;
+}
+.date-wrap::after {
+  /* remove decorative background overlay for simplicity; keep pseudo present
+     but invisible so it doesn't cover the username */
+  content: '';
+  display: none;
+}
+.date-wrap .post-date {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

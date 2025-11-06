@@ -6,41 +6,29 @@ import { formatRelative } from '@/lib/date';
 interface TimeDisplayProps {
   date: string | number | Date;
   className?: string;
+  // onToggle is accepted for backward-compat but is no longer used.
   onToggle?: (showingFull: boolean) => void;
 }
 
-export default function TimeDisplay({ date, className = '', onToggle }: TimeDisplayProps) {
-  const [showFullDate, setShowFullDate] = useState(false);
-  const [currentText, setCurrentText] = useState(formatRelative(date));
-  const [opacity, setOpacity] = useState(1);
+export default function TimeDisplay({ date, className = '' }: TimeDisplayProps) {
+  const [currentText, setCurrentText] = useState(() => formatRelative(date));
 
   useEffect(() => {
-    setOpacity(0);
-    const timer = setTimeout(() => {
-      setCurrentText(showFullDate ? new Date(date).toLocaleString([], { 
-        year: 'numeric', 
-        month: 'numeric', 
-        day: 'numeric', 
-        hour: 'numeric', 
-        minute: '2-digit' 
-      }) : formatRelative(date));
-      setOpacity(1);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [showFullDate, date]);
+    setCurrentText(formatRelative(date));
+    // keep updating reactively if `date` changes; no click toggle anymore
+  }, [date]);
 
-  const handleClick = () => {
-    const newState = !showFullDate;
-    setShowFullDate(newState);
-    onToggle?.(newState);
-  };
+  // full date string used for the hover tooltip/title
+  const fullDate = new Date(date).toLocaleString([], {
+    year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit'
+  });
 
   return (
     <span
-      className={`${className} cursor-pointer`}
-      onClick={handleClick}
-      title={showFullDate ? 'Click to show relative time' : 'Click to show full date'}
-      style={{ opacity, transition: 'opacity 0.3s ease-in-out' }}
+      className={className}
+      title={fullDate} /* hover shows full date */
+      aria-label={fullDate}
+      style={{ display: 'inline-block', lineHeight: 1, verticalAlign: 'middle', transform: 'none' }}
     >
       {currentText}
     </span>

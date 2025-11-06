@@ -1,12 +1,12 @@
 "use client";
 
-import { memo, useRef, useState } from "react";
+import { memo, useRef, useState, useEffect } from "react";
 import { preloadOverlayThumbnails } from "../imageEditor/overlaysPreload";
 import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
-import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
+import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Clock, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle } from "lucide-react";
 import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import { usePathname, useRouter } from "next/navigation";
@@ -82,18 +82,76 @@ export const UserHeader = memo(function UserHeader({
 }: UserHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [showFullDate, setShowFullDate] = useState(false);
   const [showMeta, setShowMeta] = useState(true);
 
-  const handleToggle = (showingFull: boolean) => {
-    setShowFullDate(showingFull);
-    if (showingFull) {
-      setShowMeta(false);
-    } else {
-      setShowMeta(false);
-      setTimeout(() => setShowMeta(true), 150);
-    }
-  };
+  // Small helper: if the text inside the header (location / weather) is
+  // too wide for the available space, enable a continuous horizontal
+  // auto-scroll. We implement a tiny local component to measure the
+  // content and duplicate it when scrolling is needed so the animation
+  // appears continuous.
+  function ScrollIfTruncated({ children, className }: { children: React.ReactNode; className?: string }) {
+    const wrapRef = useRef<HTMLSpanElement | null>(null);
+    const trackRef = useRef<HTMLDivElement | null>(null);
+    const [shouldScroll, setShouldScroll] = useState(false);
+
+    useEffect(() => {
+      const wrap = wrapRef.current;
+      const track = trackRef.current;
+      if (!wrap || !track) return;
+
+      const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let anim: Animation | null = null;
+
+      const check = () => {
+        const need = track.scrollWidth > wrap.clientWidth + 2;
+        setShouldScroll(!prefersReduced && need);
+
+        // toggle a class on the wrapper so CSS can show/hide fade masks
+        try { wrap.classList.toggle('is-scrolling', !prefersReduced && need); } catch (_) {}
+
+        if (!prefersReduced && need) {
+          // amount to translate left so the trailing edge becomes visible
+          const overflow = track.scrollWidth - wrap.clientWidth;
+          // pick a duration proportional to overflow (ms) with a sensible minimum
+          const durMs = Math.max(3000, Math.round(overflow * 28));
+
+          // cancel any previous animation
+          try { anim?.cancel(); } catch (_) {}
+
+          // Use the Web Animations API to animate a ping-pong (alternate)
+          // between 0 and -overflow, so the track moves left then back right.
+          anim = (track as any).animate(
+            [ { transform: 'translateX(0px)' }, { transform: `translateX(-${overflow}px)` } ],
+            { duration: durMs, iterations: Infinity, direction: 'alternate', easing: 'linear' }
+          );
+        } else {
+          try { anim?.cancel(); } catch (_) {}
+          anim = null;
+          track.style.transform = '';
+          try { wrap.classList.remove('is-scrolling'); } catch (_) {}
+        }
+      };
+
+      check();
+
+      const ro = new ResizeObserver(check);
+      ro.observe(wrap);
+      ro.observe(track);
+      window.addEventListener('resize', check);
+      return () => { ro.disconnect(); window.removeEventListener('resize', check); try { anim?.cancel(); } catch (_) {} };
+    }, []);
+
+    return (
+      <span ref={wrapRef} className={`auto-scroll-container ${className || ''}`} style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'middle', minWidth: 0 }}>
+        <div ref={trackRef} className="auto-scroll-inner" style={{ display: 'inline-block', whiteSpace: 'nowrap', minWidth: '100%' }}>
+          <span style={{ display: 'inline-block' }}>{children}</span>
+        </div>
+      </span>
+    );
+  }
+
+  // previously toggled meta visibility when full date was shown on click.
+  // TimeDisplay now shows full date on hover (tooltip) so no toggle handler is needed.
 
   return (
     <div className="card-head">
@@ -102,27 +160,37 @@ export const UserHeader = memo(function UserHeader({
           <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
           <span className="username">@{post.user.username}</span>
         </Link>
+        {/* render the date outside the link so toggling the full date doesn't
+            trigger navigation to the user's page. Wrap in .date-wrap so we
+            can show a subtle fade when it reaches the username. */}
+        <span className="date-wrap">
+          <Clock size={12} className="dim" aria-hidden="true" style={{ marginRight: 6 }} />
+          <TimeDisplay date={post.createdAt} className="post-date dim" />
+        </span>
         <div className="user-meta">
-          <TimeDisplay date={post.createdAt} className="post-date dim" onToggle={handleToggle} />
           {showMeta && (
             <>
-              {post.locationAddress && (
-                <Link href={`/search?q=${encodeURIComponent(post.locationAddress.split(',')[0]?.trim() || post.locationAddress)}`} className="location-meta" style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <MapPin size={12} style={{ marginRight: '4px' }} />
-                  {(() => {
-                    const city = post.locationAddress?.split(',')[0]?.trim();
-                    return city || post.locationAddress;
-                  })()}
-                </Link>
-              )}
-              {post.weatherTemperature !== undefined && (
-                <span className="weather-meta">
-                  {(() => {
-                    const IconComponent = getWeatherIcon(post.weatherCondition || '');
-                    return <IconComponent size={12} style={{ marginRight: '4px' }} />;
-                  })()}
-                  {Math.round(post.weatherTemperature)}°C
-                </span>
+              {(post.locationAddress || post.weatherTemperature !== undefined) && (
+                <ScrollIfTruncated className="meta-combined">
+                  {post.locationAddress && (
+                    <Link href={`/search?q=${encodeURIComponent(post.locationAddress.split(',')[0]?.trim() || post.locationAddress)}`} className="location-meta" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                      <MapPin size={12} style={{ marginRight: '4px' }} />
+                      <span className="location-text dim">{(() => {
+                        const city = post.locationAddress?.split(',')[0]?.trim();
+                        return city || post.locationAddress;
+                      })()}</span>
+                    </Link>
+                  )}
+                  {post.weatherTemperature !== undefined && (
+                    <span className="weather-meta" style={{ display: 'inline-flex', alignItems: 'center', marginLeft: post.locationAddress ? '8px' : undefined }}>
+                      {(() => {
+                        const IconComponent = getWeatherIcon(post.weatherCondition || '');
+                        return <IconComponent size={12} style={{ marginRight: '4px' }} />;
+                      })()}
+                      <span className="weather-text dim">{Math.round(post.weatherTemperature)}°C</span>
+                    </span>
+                  )}
+                </ScrollIfTruncated>
               )}
             </>
           )}

@@ -1199,7 +1199,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .input-icon {
   position: absolute;
   top: 50%;
-  left: 8px;
+  left: 2px;
   transform: translateY(-50%);
   color: var(--muted);
   pointer-events: none;

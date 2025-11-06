@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Pencil } from 'lucide-react';
+import { Download, Sparkles } from 'lucide-react';
 import { preloadOverlayThumbnails } from '../../imageEditor/overlaysPreload';
 import { EditorSettings } from '../../imageEditor/types';
 
@@ -98,7 +98,7 @@ export function PhotoActionRow({
         disabled={processing}
         title="Edit photo"
       >
-        <Pencil size={18} />
+        <Sparkles size={18} />
       </button>
       <button
         type="button"

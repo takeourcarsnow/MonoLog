@@ -134,7 +134,6 @@ export function SpotifyInput({
               return;
             }
             setSpotifyFocused(true);
-            e.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}
           onBlur={() => {
             if (spotifyDebounceRef.current) { clearTimeout(spotifyDebounceRef.current); spotifyDebounceRef.current = null; }

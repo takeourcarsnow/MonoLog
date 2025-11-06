@@ -54,7 +54,6 @@ export function ExifInputs({
       // Select all text for easy replacement
       requestAnimationFrame(() => {
         inputRef.current?.select();
-        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
   }, [activeExifField]);

@@ -85,10 +85,10 @@ export function WeatherInput({
             onChange={(e) => handleCombinedWeatherChange(e.target.value)}
             disabled={!hasPreview || processing}
             onBlur={handleCombinedWeatherBlur}
-            onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            onFocus={(e) => {}}
             style={{
               flex: 1,
-              padding: '8px 12px 8px 40px',
+              padding: '8px 12px 8px 32px',
               border: '1px solid var(--border)',
               borderRadius: '6px',
               background: 'var(--bg)',
@@ -104,7 +104,7 @@ export function WeatherInput({
           title="Fetch current weather for this location"
           style={{
             position: 'absolute',
-            left: 8,
+            left: 2,
             top: '50%',
             transform: 'translateY(-50%)',
             display: 'flex',
@@ -145,8 +145,6 @@ export function WeatherInput({
         onFocus={() => {
           if (!combinedWeather.trim()) {
             handleFetchWeather();
-            // Scroll the compact input
-            setTimeout(() => (document.activeElement as HTMLElement)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
           } else {
             setActiveField('combinedWeather');
           }
@@ -154,7 +152,7 @@ export function WeatherInput({
         onBlur={handleCombinedWeatherBlur}
         style={{
           width: '100%',
-          padding: '8px 12px 8px 40px',
+          padding: '8px 12px 8px 32px',
           border: '1px solid var(--border)',
           borderRadius: '6px',
           background: 'var(--bg)',
@@ -170,7 +168,7 @@ export function WeatherInput({
         title="Fetch current temperature for this location"
         style={{
           position: 'absolute',
-          left: 8,
+          left: 2,
           top: '50%',
           transform: 'translateY(-50%)',
           display: 'flex',

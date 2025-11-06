@@ -197,7 +197,6 @@ export function CaptionTextarea({
             return;
           }
           setCaptionFocused(true);
-          e.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }}
         onBlur={() => {
           // Flush local changes immediately on blur

@@ -342,6 +342,13 @@ textarea:focus-visible,
   border-color: var(--border) !important;
 }
 
+/* Remove focus outline for uploader input fields to match the caption textarea */
+.uploader input:focus,
+.uploader .input:focus {
+  outline: none !important;
+  border-color: var(--border) !important;
+}
+
 /* Blur everything in the uploader area except the upload field until a
    photo has been added. We use the presence of the `.has-preview` class on
    `.uploader` to know when a photo exists; when it's not present, blur

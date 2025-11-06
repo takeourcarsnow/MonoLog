@@ -9,7 +9,7 @@ export function ThemeToggle() {
   useEffect(() => setTheme(currentTheme()), []);
   return (
     <Button
-      className="icon no-effects"
+      className="icon no-effects no-tap-effects"
       title="Toggle theme"
       aria-label="Toggle theme"
       onClick={() => {

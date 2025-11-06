@@ -324,10 +324,16 @@
   box-shadow: none !important;
 }
 .no-effects::before { display: none !important; }
+.no-effects::after { display: none !important; }
 .no-effects:hover { transform: none !important; box-shadow: none !important; }
 .no-effects:hover svg { transform: none !important; }
 .no-effects:active { transform: none !important; }
 .no-effects:focus { box-shadow: none !important; }
+
+/* Remove tap highlight for buttons that should not have it */
+.no-tap-effects {
+  -webkit-tap-highlight-color: transparent;
+}
 
 /* Mobile adjustments for discard button */
 @media (max-width: 640px) {

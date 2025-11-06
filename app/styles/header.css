@@ -75,6 +75,11 @@
   is present). */
 .header-actions { min-width: 0; }
 
+/* Remove tap highlight for all header action elements */
+.header-actions * {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Pin the action group to the right edge of the header (viewport).
    Position absolutely so it sits at the far right even when the
    centered .header-inner has a max-width. Vertically center it. */
@@ -143,6 +148,7 @@
   border: none !important;
   box-shadow: none !important;
   transform: none !important;
+  -webkit-tap-highlight-color: transparent;
 }
 .header-actions .btn::before {
   display: none !important;
@@ -257,13 +263,14 @@
 }
 .theme-toggle-shell > * { width: 100%; height: 100%; display: inline-flex; align-items: center; justify-content: center; }
 
-.theme-toggle-shell > button { position: relative; z-index: 1; }
+.theme-toggle-shell > button { position: relative; z-index: 1; -webkit-tap-highlight-color: transparent; }
 
 /* Make the search button in the header consistent with other icon buttons: no background, icon in text color */
 .header .search-btn {
   background: transparent !important;
   color: var(--text) !important;
   border: none !important;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Notifications: highlight bell when there are unread items */

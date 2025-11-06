@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     
     // Generate thumbnail
     const thumbBuf = await generateThumbnail(buf, mime);
-    const thumbName = name.replace(/\.[^.]+$/, '_thumb.jpg');
+    const thumbName = name.replace(/\.[^.]+$/, '_thumb.webp');
     const thumbPath = `${userId}/${thumbName}`;
     
     // Upload both full image and thumbnail

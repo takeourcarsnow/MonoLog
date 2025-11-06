@@ -1,4 +1,5 @@
 .btn {
+  -webkit-appearance: none;
   appearance: none; border: 1px solid var(--border); background: var(--bg-elev);
   color: var(--text); padding: 8px 12px; border-radius: 999px;
   font-size: 14px; line-height: 1; cursor: pointer;

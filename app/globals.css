@@ -309,8 +309,18 @@ html[class*="post-page-scroll"] .content {
 
 /* Firefox scrollbar styling */
 * {
-  scrollbar-width: thin;
+  /* scrollbar-width: thin; */
   scrollbar-color: color-mix(in srgb, var(--border), transparent 40%) transparent;
+}
+
+/* Safari scrollbar styling */
+*::-webkit-scrollbar {
+  width: thin;
+}
+
+/* Override swiper scrollbar for Safari */
+.swiper-css-mode > .swiper-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 /* Debug helpers: add these classes in the console to visualize layout regions

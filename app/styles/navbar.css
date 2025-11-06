@@ -10,6 +10,8 @@
   position: relative;
   min-width: 60px;
   cursor: pointer;
+  -webkit-user-select: none;
+  -ms-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   color: var(--muted);
@@ -158,6 +160,8 @@
   pointer-events: none !important;
 }
 .imgedit-open .tabbar {
+  -webkit-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 

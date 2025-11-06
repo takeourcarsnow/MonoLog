@@ -153,10 +153,11 @@ button.delete-btn,
 .profile-actions .delete-btn {
   border: none !important;
   border-color: transparent !important;
-  box-shadow: none !important;
   -webkit-box-shadow: none !important;
+  box-shadow: none !important;
   background: transparent !important;
   outline: none !important;
+  -webkit-background-clip: padding-box !important;
   background-clip: padding-box !important;
 }
 

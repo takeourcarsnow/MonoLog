@@ -117,6 +117,8 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
               .account-options-summary {
                 padding: 12px 16px;
                 cursor: pointer;
+                -webkit-user-select: none;
+                -ms-user-select: none;
                 user-select: none;
                 font-weight: 500;
                 color: var(--text);

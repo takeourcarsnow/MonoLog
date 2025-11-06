@@ -39,6 +39,7 @@
 .auth-form.enhanced .fancy-input { 
   background: var(--bg);
   border: 1px solid color-mix(in srgb, var(--border), transparent 10%);
+  -webkit-backdrop-filter: saturate(140%) blur(4px);
   backdrop-filter: saturate(140%) blur(4px);
   transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform 160ms var(--transition-fast);
   text-align: center;
@@ -212,7 +213,7 @@
 .cancel-btn { position: relative; }
 .cancel-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-.card.minimal { box-shadow: none; border-style: dashed; backdrop-filter: saturate(120%) blur(4px); }
+.card.minimal { box-shadow: none; border-style: dashed; -webkit-backdrop-filter: saturate(120%) blur(4px); backdrop-filter: saturate(120%) blur(4px); }
 .auth-toggle { display: inline-flex; gap: 8px; align-items: center; }
 .auth-toggle .btn { border-radius: 999px; padding: 6px 12px; transition: transform 180ms var(--auth-toggle-transition), color 160ms ease; }
 .auth-toggle .btn:hover { transform: translateY(-1px); }
@@ -342,6 +343,7 @@
      (e.g., notifications popup) so stacking order is predictable. */
   z-index: 2147483000;
   background: rgba(0,0,0,0.4);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -590,6 +592,7 @@ body.notifications-popup-open .tabbar {
      components that set high z-index values. */
   z-index: 2147483000;
   background: rgba(0,0,0,0.4);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 

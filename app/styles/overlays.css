@@ -295,8 +295,9 @@
   padding: 8px;
   cursor: pointer;
   z-index: 1;
-  user-select: none;
   -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 :root[data-theme="light"] .fullscreen-viewer .fv-close {
   color: white;
@@ -322,8 +323,9 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  user-select: none;
   -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   opacity: 0;
   visibility: hidden;
 }

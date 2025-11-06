@@ -1,9 +1,10 @@
-const path = require('path');
-require('dotenv').config({ path: '.env.local' });
+import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
+import fs from 'fs';
+import dotenv from 'dotenv';
 
-const { createClient } = require('@supabase/supabase-js');
-const sharp = require('sharp');
-const fs = require('fs');
+dotenv.config({ path: '.env.local' });
 
 // Initialize Supabase client with service role key
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,7 +18,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const sb = createClient(supabaseUrl, supabaseServiceKey);
 
-async function generateThumbnail(imageBuffer, mime) {
+const dryRun = process.argv.includes('--dry-run');
+
+async function generateThumbnail(imageBuffer) {
   try {
     // Generate thumbnail with max 700px edge (reduced by 30% from 1000px), maintaining aspect ratio
     const thumbnail = await sharp(imageBuffer)
@@ -25,7 +28,7 @@ async function generateThumbnail(imageBuffer, mime) {
         fit: 'inside',
         withoutEnlargement: true
       })
-      .jpeg({ quality: 80 })
+      .webp({ quality: 80 })
       .toBuffer();
 
     return thumbnail;
@@ -37,7 +40,7 @@ async function generateThumbnail(imageBuffer, mime) {
 }
 
 async function regenerateThumbnails() {
-  console.log('Starting thumbnail regeneration...');
+  console.log(`Starting thumbnail regeneration... ${dryRun ? '(DRY RUN)' : ''}`);
 
   // Fetch all posts with image_urls
   const { data: posts, error } = await sb
@@ -52,6 +55,8 @@ async function regenerateThumbnails() {
 
   console.log(`Found ${posts.length} posts with images`);
 
+  let processed = 0;
+
   for (const post of posts) {
     const imageUrls = Array.isArray(post.image_urls) ? post.image_urls : [post.image_urls];
     const thumbnailUrls = Array.isArray(post.thumbnail_urls) ? post.thumbnail_urls : [];
@@ -62,10 +67,24 @@ async function regenerateThumbnails() {
       const imageUrl = imageUrls[i];
       if (!imageUrl || !imageUrl.includes('/storage/v1/object/public/posts/')) continue;
 
+      const currentThumbUrl = thumbnailUrls[i];
+      if (!currentThumbUrl || (!currentThumbUrl.endsWith('.jpg') && !currentThumbUrl.endsWith('.jpeg'))) {
+        console.log(`Skipping ${imageUrl}: thumbnail not JPG`);
+        newThumbnailUrls.push(currentThumbUrl || imageUrl);
+        continue;
+      }
+
       // Extract path from URL
       const urlParts = imageUrl.split('/storage/v1/object/public/posts/');
       if (urlParts.length < 2) continue;
       const imagePath = urlParts[1];
+
+      if (dryRun) {
+        console.log(`Would regenerate thumbnail for ${imagePath}`);
+        newThumbnailUrls.push(currentThumbUrl || imageUrl);
+        processed++;
+        continue;
+      }
 
       // Download the full image
       const { data: imageData, error: downloadError } = await sb.storage
@@ -81,13 +100,12 @@ async function regenerateThumbnails() {
 
       // Generate new thumbnail
       const buffer = Buffer.from(await imageData.arrayBuffer());
-      const mime = 'image/jpeg'; // Assume JPEG for simplicity
-      const thumbBuffer = await generateThumbnail(buffer, mime);
+      const thumbBuffer = await generateThumbnail(buffer);
 
   // Determine thumbnail path (use POSIX joins so we always store forward
   // slashes in Supabase storage paths even when running on Windows).
   const fileName = path.basename(imagePath);
-  const thumbName = fileName.replace(/\.[^.]+$/, '_thumb.jpg');
+  const thumbName = fileName.replace(/\.[^.]+$/, '_thumb.webp');
   // Use path.posix to avoid backslashes on Windows which would be encoded
   // into the public URL and break remote fetches (\ -> %5C).
   const thumbPath = path.posix.join(path.posix.dirname(imagePath), thumbName);
@@ -97,7 +115,7 @@ async function regenerateThumbnails() {
         .from('posts')
         .update(thumbPath, thumbBuffer, {
           upsert: true,
-          contentType: 'image/jpeg',
+          contentType: 'image/webp',
           // Set long-lived cache headers for versioned thumbnails so CDNs/browsers
           // can cache them aggressively and reduce origin egress.
           // Supabase storage accepts cacheControl as a string or number depending on client;
@@ -118,22 +136,26 @@ async function regenerateThumbnails() {
       newThumbnailUrls.push(newThumbUrl);
 
       console.log(`Regenerated thumbnail for ${imagePath}`);
+      processed++;
     }
 
     // Update the post with new thumbnail URLs
-    const { error: updateError } = await sb
-      .from('posts')
-      .update({ thumbnail_urls: newThumbnailUrls })
-      .eq('id', post.id);
+    if (!dryRun) {
+      const { error: updateError } = await sb
+        .from('posts')
+        .update({ thumbnail_urls: newThumbnailUrls })
+        .eq('id', post.id);
 
-    if (updateError) {
-      console.error(`Failed to update post ${post.id}:`, updateError);
-    } else {
-      console.log(`Updated post ${post.id}`);
+      if (updateError) {
+        console.error(`Failed to update post ${post.id}:`, updateError);
+      } else {
+        console.log(`Updated post ${post.id}`);
+      }
     }
   }
 
   console.log('Thumbnail regeneration completed');
+  console.log(`Processed ${processed} thumbnails`);
 }
 
 // Run the script

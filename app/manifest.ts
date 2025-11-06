@@ -66,27 +66,27 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
     // Enhanced PWA features
-    display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
+    // display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
     // edge_side_panel: {
     //   preferred_width: 400,
     // },
-    launch_handler: {
-      // client_mode: 'focus-existing',
-    },
+    // launch_handler: {
+    //   client_mode: 'focus-existing',
+    // },
     // handle_links: 'preferred',
     // File handlers must be an array of objects with an 'accept' mapping of media types to extensions
-    file_handlers: [
-      {
-        action: '/upload',
-        accept: {
-          'image/png': ['.png'],
-          'image/jpeg': ['.jpg', '.jpeg'],
-          'image/gif': ['.gif'],
-          'image/webp': ['.webp'],
-          'image/svg+xml': ['.svg'],
-        },
-      },
-    ],
+    // file_handlers: [
+    //   {
+    //     action: '/upload',
+    //     accept: {
+    //       'image/png': ['.png'],
+    //       'image/jpeg': ['.jpg', '.jpeg'],
+    //       'image/gif': ['.gif'],
+    //       'image/webp': ['.webp'],
+    //       'image/svg+xml': ['.svg'],
+    //     },
+    //   },
+    // ],
     // share_target expects params as an object mapping names to form field names
     share_target: {
       action: '/?share=true',

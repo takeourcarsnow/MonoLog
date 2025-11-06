@@ -257,8 +257,8 @@ button.follow-btn:not(.expanded),
 .follow-btn.icon-reveal:not(.expanded) {
   border: 0 !important;
   border-width: 0 !important;
-  box-shadow: none !important;
   -webkit-box-shadow: none !important;
+  box-shadow: none !important;
   background: transparent !important;
   outline: none !important;
 }
@@ -303,9 +303,10 @@ button.follow-btn:not(.expanded),
 .follow-btn.expanded[aria-pressed="true"] {
   border: none !important;
   border-color: transparent !important;
-  box-shadow: none !important;
   -webkit-box-shadow: none !important;
+  box-shadow: none !important;
   outline: none !important;
+  -webkit-background-clip: padding-box !important;
   background-clip: padding-box !important;
 }
 
@@ -380,8 +381,8 @@ button.follow-btn:not(.expanded),
 .follow-btn.following {
   transform: none !important;
   -webkit-transform: none !important;
-  box-shadow: none !important;
   -webkit-box-shadow: none !important;
+  box-shadow: none !important;
 }
 
 .follow-btn .icon,

@@ -5,6 +5,7 @@
      measure and update this variable at runtime when available. */
   height: var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px));
   --header-height: var(--header-height, 40px);
+  -webkit-backdrop-filter: saturate(180%) blur(8px);
   backdrop-filter: saturate(180%) blur(8px);
   background: color-mix(in srgb, var(--bg), transparent 10%);
   border-bottom: 1px solid var(--border);

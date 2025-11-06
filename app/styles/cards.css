@@ -275,6 +275,18 @@
   min-width: 0;
 }
 
+/* Actions area on the right side of the header (edit / delete / follow etc.)
+   Keep actions on a single line and prevent the edit/delete pair from
+   wrapping onto separate lines. */
+.card-head .post-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* prevent the actions block from shrinking and forcing wraps */
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 /* Keep user-and-meta on a single row and vertically centered */
 .card-head .user-and-meta {
   display: flex;

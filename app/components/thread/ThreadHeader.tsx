@@ -34,7 +34,7 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
           // Move delete button to the top-left corner to match community card placement
           <div className="absolute left-3 top-3">
             <Button
-              variant="danger"
+              variant="ghost"
               size="sm"
               className={`small-min ${deleteArmed ? 'confirm' : ''}`}
               onClick={onDelete}

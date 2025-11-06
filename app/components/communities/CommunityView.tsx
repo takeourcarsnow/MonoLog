@@ -277,7 +277,7 @@ export function CommunityView() {
               </Button>
             </Link>
             <Button
-              variant="danger"
+              variant="ghost"
               size="sm"
               className={`small-min ${deleteArmed ? 'confirm' : ''}`}
               onClick={handleDelete}

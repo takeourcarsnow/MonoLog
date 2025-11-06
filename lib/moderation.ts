@@ -23,8 +23,8 @@ const SCORES = {
 // Expanded (but still compact) banned words. Keep this list under
 // project control — it's intentionally conservative here.
 const BANNED_WORDS = [
-  // Direct profanity, sexual terms, and slurs only
-  'fuck', 'shit', 'bitch', 'bastard', 'asshole', 'damn', 'slut', 'dick', 'piss', 'crap', 'cock', 'pussy', 'cunt', 'twat', 'prick', 'wank', 'bollocks', 'bugger', 'arse', 'shag', 'tit', 'whore', 'motherfucker', 'fucker', 'shithead', 'shitface', 'douche', 'douchebag', 'cum', 'balls', 'nuts', 'fag', 'faggot', 'dyke', 'homo', 'queer', 'tranny', 'rape', 'rapist', 'molest', 'molester', 'pedophile', 'pedo', 'nigger', 'negro', 'chink', 'gook', 'spic', 'wetback', 'beaner', 'coon', 'towelhead', 'camel jockey', 'raghead', 'kike', 'hebe', 'yid', 'gypsy', 'gyp', 'retard', 'retarded'
+ // Direct profanity, sexual terms, and slurs only
+  'fuck', 'bitch', 'asshole', 'slut', 'dick', 'piss', 'cock', 'pussy', 'cunt', 'twat', 'prick', 'wank', 'bollocks', 'bugger', 'arse', 'shag', 'tit', 'whore', 'motherfucker', 'fucker', 'shithead', 'shitface', 'douche', 'douchebag', 'cum', 'balls', 'fag', 'faggot', 'dyke', 'homo', 'queer', 'tranny', 'rape', 'rapist', 'molest', 'molester', 'pedophile', 'pedo', 'nigger', 'negro', 'chink', 'gook', 'spic', 'wetback', 'beaner', 'coon', 'towelhead', 'camel jockey', 'raghead', 'kike', 'hebe', 'yid', 'gypsy', 'gyp', 'retard', 'retarded'
 ];
 
 // Map common leet substitution back to letters so "5h1t" becomes "shit"

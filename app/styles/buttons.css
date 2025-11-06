@@ -41,32 +41,6 @@
 .btn.icon svg { transition: transform 0.2s ease; }
 .btn.icon:hover svg { transform: scale(1.05); }
 
-/* Very small, minimal icon style for in-line controls (add/edit/delete) */
-.btn.small-min {
-  width: 28px;
-  height: 28px;
-  min-width: 0;
-  padding: 4px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--border), transparent 50%);
-  color: var(--primary);
-  box-shadow: none;
-}
-.btn.small-min:hover { background: color-mix(in srgb, var(--primary), transparent 85%); transform: none; }
-.btn.small-min svg { width: 16px; height: 16px; }
-
-/* Confirm visual state for small-min icon buttons (two-step confirms) */
-.btn.small-min.confirm {
-  border-color: var(--danger);
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger), transparent 96%);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger), transparent 90%);
-}
-.btn.small-min.confirm:hover {
-  background: color-mix(in srgb, var(--danger), transparent 92%);
-}
-
 /* Touch-specific: enlarge icon buttons for comfortable tap targets and
    provide a subtle tap feedback. Kept under pointer:coarse so desktop
    layout isn't affected. */

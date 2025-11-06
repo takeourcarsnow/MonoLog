@@ -82,7 +82,7 @@
   position: absolute;
   /* align with the inner container's right padding (keeps alignment with
      other controls inside the inner grid like the grid switcher) */
-  right: var(--page-side-padding);
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -232,6 +232,8 @@
   align-items: center;
   min-width: 56px; /* space for avatar + small gap */
   justify-content: center;
+  margin-left: auto;
+  margin-right: 5px;
 }
 :root:not(.has-profile-button) .profile-button-shell {
   /* Keep the shell present for layout but don't reserve visible space */
@@ -239,6 +241,8 @@
   align-items: center;
   min-width: 0;
   justify-content: center;
+  margin-left: auto;
+  margin-right: 5px;
 }
 .profile-button-shell .profile-button { width: 100%; }
 

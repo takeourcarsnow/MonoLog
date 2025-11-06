@@ -10,7 +10,6 @@ export function useUploaderState() {
   const [editorSettings, setEditorSettings] = useState<any[]>([]);
   const [alt, setAlt] = useState<string | string[]>("");
   const [caption, setCaption] = useState("");
-  const [captionFocused, setCaptionFocused] = useState(false);
   const [spotifyLink, setSpotifyLink] = useState("");
   const [camera, setCamera] = useState("");
   const [lens, setLens] = useState("");
@@ -58,7 +57,6 @@ export function useUploaderState() {
     locationLatitude,
     locationLongitude,
     locationAddress,
-    captionFocused,
     visibility,
     previewLoaded,
     editing,
@@ -86,7 +84,6 @@ export function useUploaderState() {
     setLocationLatitude,
     setLocationLongitude,
     setLocationAddress,
-    setCaptionFocused,
     setVisibility,
     setPreviewLoaded,
     setEditing,

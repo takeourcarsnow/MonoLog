@@ -41,7 +41,6 @@ export function useUploader() {
     locationLatitude,
     locationLongitude,
     locationAddress,
-    captionFocused,
     visibility,
     previewLoaded,
     editing,
@@ -69,7 +68,6 @@ export function useUploader() {
     setLocationLatitude,
     setLocationLongitude,
     setLocationAddress,
-    setCaptionFocused,
     setVisibility,
     setPreviewLoaded,
     setEditing,
@@ -232,8 +230,6 @@ export function useUploader() {
     index
   );
 
-  const captionRemaining = Math.max(0, CAPTION_MAX - (caption?.length || 0));
-
   const setDrag = (on: boolean) => {
     dropRef.current?.classList.toggle("dragover", on);
   };
@@ -257,7 +253,6 @@ export function useUploader() {
   locationLatitude,
   locationLongitude,
   locationAddress,
-    captionFocused,
     visibility,
     previewLoaded,
     editing,
@@ -287,7 +282,6 @@ export function useUploader() {
     confirmCancelTimerRef,
     justDiscarded,
     hasPreview,
-    captionRemaining,
     CAPTION_MAX,
 
   // Setters
@@ -308,7 +302,6 @@ export function useUploader() {
   setLocationLatitude,
   setLocationLongitude,
   setLocationAddress,
-    setCaptionFocused,
     setVisibility,
     setPreviewLoaded,
     setEditing,

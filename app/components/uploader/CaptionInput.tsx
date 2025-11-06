@@ -1,4 +1,4 @@
-import { CaptionTextarea } from "./CaptionTextarea";
+import { CaptionInputField } from "./CaptionInputField";
 import { SpotifyInput } from "./SpotifyInput";
 import { ExifInputs } from "./ExifInputs";
 import { WeatherLocationInputs } from "./WeatherLocationInputs";
@@ -30,11 +30,8 @@ interface CaptionInputProps {
   locationAddress?: string;
   setLocationAddress?: (address: string) => void;
   // typed removed - this component now owns the typing animation internally
-  captionFocused: boolean;
-  setCaptionFocused: (focused: boolean) => void;
   hasPreview: boolean;
   processing: boolean;
-  CAPTION_MAX: number;
   toast: any; // from useToast
   user?: User | null;
   setUser?: (user: User) => void;
@@ -43,8 +40,6 @@ interface CaptionInputProps {
 export function CaptionInput({
   caption,
   setCaption,
-  captionFocused,
-  setCaptionFocused,
   spotifyLink,
   setSpotifyLink,
   camera,
@@ -69,21 +64,17 @@ export function CaptionInput({
   setLocationAddress,
   hasPreview,
   processing,
-  CAPTION_MAX,
   toast,
   user,
   setUser
 }: CaptionInputProps) {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexDirection: 'column' }}>
-      <CaptionTextarea
+      <CaptionInputField
         caption={caption}
         setCaption={setCaption}
-        captionFocused={captionFocused}
-        setCaptionFocused={setCaptionFocused}
         hasPreview={hasPreview}
         processing={processing}
-        CAPTION_MAX={CAPTION_MAX}
       />
       <SpotifyInput
         spotifyLink={spotifyLink}

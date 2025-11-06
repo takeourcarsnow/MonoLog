@@ -42,7 +42,6 @@ export function UploaderCore() {
     locationLatitude,
     locationLongitude,
     locationAddress,
-    captionFocused,
     visibility,
     previewLoaded,
     editing,
@@ -69,7 +68,6 @@ export function UploaderCore() {
     confirmCancelTimerRef,
     justDiscarded,
     hasPreview,
-    captionRemaining,
     CAPTION_MAX,
 
     // Setters
@@ -86,7 +84,6 @@ export function UploaderCore() {
     setLocationLatitude,
     setLocationLongitude,
     setLocationAddress,
-    setCaptionFocused,
     setVisibility,
     setPreviewLoaded,
     setEditing,
@@ -323,11 +320,8 @@ export function UploaderCore() {
           setLocationLongitude={setLocationLongitude}
           locationAddress={locationAddress}
           setLocationAddress={setLocationAddress}
-          captionFocused={captionFocused}
-          setCaptionFocused={setCaptionFocused}
           hasPreview={hasPreview}
           processing={processing}
-          CAPTION_MAX={CAPTION_MAX}
           toast={toast}
           user={me}
           setUser={setMe}

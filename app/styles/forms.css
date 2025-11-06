@@ -95,6 +95,12 @@
   }
 }
 
+/* Adjust placeholder position in uploader to account for icons */
+.uploader .input-ghost-placeholder {
+  left: 35px;
+  right: 32px;
+}
+
 /* Disable the native textarea resize handle for the uploader's caption only.
    The caption textarea uses the shared `.input` class but lives inside
    `.uploader` -> `.input-wrapper`, so scope the rule to avoid globally

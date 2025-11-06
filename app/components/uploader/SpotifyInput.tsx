@@ -140,7 +140,7 @@ export function SpotifyInput({
             try { setSpotifyLink?.(localSpotify); } finally { isTypingSpotifyRef.current = false; }
             setSpotifyFocused(false);
           }}
-          style={{ width: '100%', paddingRight: 72, paddingLeft: 32, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)' }}
+          style={{ width: '100%', paddingRight: 32, paddingLeft: 35, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)' }}
         />
         <SpotifyIcon size={16} className={`input-icon ${localSpotify?.trim() && (localSpotify.includes('spotify.com') || localSpotify.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />
       </div>

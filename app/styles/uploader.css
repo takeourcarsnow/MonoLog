@@ -1203,6 +1203,12 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   transform: translateY(-50%);
   color: var(--muted);
   pointer-events: none;
+  z-index: 1;
+}
+
+.input-icon.right {
+  left: auto;
+  right: 16px;
 }
 
 .input-icon.spotify-filled {

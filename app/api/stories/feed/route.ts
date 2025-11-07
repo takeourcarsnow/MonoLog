@@ -30,7 +30,11 @@ export async function GET(req: Request) {
       user: { id: u.id, username: u.username, displayName: u.display_name, avatarUrl: u.avatar_url },
       stories: byUser[u.id] || [],
     }));
-    return NextResponse.json({ ok: true, items });
+    return NextResponse.json({ ok: true, items }, {
+      headers: {
+        'Cache-Control': 'private, s-maxage=60, stale-while-revalidate=180',
+      },
+    });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

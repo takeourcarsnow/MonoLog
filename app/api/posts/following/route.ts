@@ -48,12 +48,12 @@ export async function GET(req: Request) {
     }
 
   const postRows = deduped.map((r: any) => mapRowToHydratedPost(r));
-  try { setServerCache(cacheKey, postRows, 10000); } catch (_) {}
+  try { setServerCache(cacheKey, postRows, 30000); } catch (_) {}
   return NextResponse.json(
     { ok: true, posts: postRows },
     {
       headers: {
-        'Cache-Control': 'private, max-age=10, stale-while-revalidate=30',
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
       },
     }
   );

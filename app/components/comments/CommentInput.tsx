@@ -76,7 +76,7 @@ export function CommentInput({
         ) : null}
       </div>
 
-      <div style={{ width: text.trim() ? '48px' : '0px', overflow: 'hidden', transition: 'width 0.3s ease' }}>
+      <div className="send-button-container" style={{ width: text.trim() ? '48px' : '0px', overflow: 'hidden' }}>
         <button
           ref={sendBtnRef}
           className={`btn follow-btn icon-reveal ${sendAnim || ''}`}

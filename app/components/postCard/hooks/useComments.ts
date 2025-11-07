@@ -37,12 +37,22 @@ export function useComments(postId: string, initialCount: number) {
     // Notify listeners that layout change is starting
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: open ? 'opening' : 'closing' } })); } catch(_) {}
     if (open) {
-      // Let CSS handle the animation - just add the open class
+      // For opening, set max-height to 0 first, then to scrollHeight after a tick
+      el.style.maxHeight = '0px';
       el.classList.add('open');
+      // Use requestAnimationFrame to set the height after the class is added
+      requestAnimationFrame(() => {
+        el.style.maxHeight = el.scrollHeight + 'px';
+      });
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'opened' } })); } catch(_) {}
     } else {
-      // For closing, let CSS handle the transition
+      // For closing, set max-height to current scrollHeight, then to 0
+      el.style.maxHeight = el.scrollHeight + 'px';
       el.classList.remove('open');
+      // After a tick, set to 0
+      requestAnimationFrame(() => {
+        el.style.maxHeight = '0px';
+      });
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'closed' } })); } catch(_) {}
     }
   };

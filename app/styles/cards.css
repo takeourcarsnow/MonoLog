@@ -871,7 +871,7 @@
   border: none;
   color: var(--primary);
   cursor: pointer;
-  padding: 2px;
+  padding: 0 4px; /* match action button padding for visual alignment */
   margin-left: 0; /* remove left nudge so caret centers under caption */
   border-radius: 4px;
   display: inline-flex;
@@ -891,8 +891,26 @@
 }
 
 .caption-read-more svg {
-  display: block;
+  display: inline-block; /* match action svgs for consistent inline alignment */
+  vertical-align: middle;
+  width: 18px; /* match .action svg sizing */
+  height: 18px;
   transition: transform 0.2s ease;
+}
+
+/* Nudge fullscreen icon content slightly to optically center it against
+   other glyphs (chevrons tend to have different internal visual centers).
+   We apply the translate to the inner path(s) so sprite-level animations
+   on the <svg> (scale, rotate) aren't overridden. Adjust the x/y values
+   if your browser/platform renders differently. */
+.action.fullscreen svg > * {
+  transform-origin: center;
+  transform: translateX(2px);
+}
+
+.caption-read-more svg > * {
+  transform-origin: center;
+  transform: translateX(0);
 }
 
 .caption-read-more:hover svg {
@@ -1028,7 +1046,7 @@
 }
 .action {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; gap: 0; color: var(--muted);
+  width: 36px; height: 36px; gap: 0; color: var(--muted);
   font-size: 13px; cursor: pointer; padding: 0 4px; border-radius: 8px;
   background: none; border: none; box-shadow: none;
   -webkit-appearance: none;
@@ -1151,13 +1169,13 @@
   /* stroke-width: 1.8px; */
 }
 .action.favorite.animating .star {
-  animation: favoriteBounce 0.5s ease-in-out;
+  animation: favoriteBounce 0.3s ease-out;
 }
 
 @keyframes favoriteBounce {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(15deg); }
+  100% { transform: rotate(0deg); }
 }
 
 /* Prevent the favorite button from pressing down during animation */
@@ -1182,13 +1200,13 @@
 }
 
 .action.spotify-info.animating svg {
-  animation: spotifyPulse 0.5s ease-in-out;
+  animation: spotifyWiggle 0.3s ease-out;
 }
 
-@keyframes spotifyPulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes spotifyWiggle {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(15deg); }
+  100% { transform: rotate(0deg); }
 }
 
 .action.exif-info.animating svg {
@@ -1202,15 +1220,13 @@
 }
 
 .action.comments-toggle.animating svg {
-  animation: commentsBounce 0.5s ease-in-out;
+  animation: commentsSpin 0.3s ease-out;
 }
 
-@keyframes commentsBounce {
-  0% { transform: scale(1); }
-  25% { transform: scale(1.1); }
-  50% { transform: scale(1.2); }
-  75% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+@keyframes commentsSpin {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(15deg); }
+  100% { transform: rotate(0deg); }
 }
 
 .action.fullscreen.animating svg {
@@ -1230,31 +1246,68 @@
   filter: invert(100%) brightness(1.05) saturate(1.02);
   opacity: 0.98;
 }
-/* share action */
-.action.share { opacity: 0.82; transition: opacity 180ms var(--transition-mid), transform 200ms var(--transition-mid); }
+.action.share {
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+.action.share.animating {
+  transform: scale(1.05);
+}
+.action.share .share-link-icon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+}
+.action.share .share-link-icon.copied {
+  opacity: 0;
+  transform: scale(0.3) rotate(-180deg);
+  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+}
+.action.share .share-check-icon {
+  opacity: 0;
+  transform: scale(0.3) rotate(180deg);
+  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+}
+.action.share .share-check-icon.copied {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+.action.exif-info .exif-camera-icon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  transition: all 0.4s ease-in-out !important;
+}
+.action.exif-info .exif-camera-icon.active {
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+}
+.action.exif-info .exif-eye-icon {
+  opacity: 0;
+  transform: scale(0.5) rotate(90deg);
+  transition: all 0.4s ease-in-out !important;
+}
+.action.exif-info .exif-eye-icon.active {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action.share .share-link-icon,
+  .action.share .share-check-icon,
+  .action.exif-info .exif-camera-icon,
+  .action.exif-info .exif-eye-icon {
+    transition: none !important;
+  }
+}
 
 .action.share:active {
-  transform: none;
-}
-
-.action.share.animating svg {
-  animation: sharePulse 0.5s ease-in-out;
-}
-
-@keyframes sharePulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.25); }
-  100% { transform: scale(1); }
+  transform: none !important;
 }
 
 /* Spotify action with link - subtle green tint */
 .action.spotify-has-link {
   color: #1DB954;
   opacity: 0.9;
-}
-.action.spotify-info svg {
-  width: 14px;
-  height: 14px;
 }
 
 /* Spotify icons default (no link) - muted/grey */
@@ -1473,8 +1526,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: opacity 260ms cubic-bezier(0.2,0,0,1), transform 260ms cubic-bezier(0.2,0,0,1);
-  will-change: opacity, transform;
+  /* removed transition to prevent interference with parent animation */
+  /* transition: opacity 260ms cubic-bezier(0.2,0,0,1), transform 260ms cubic-bezier(0.2,0,0,1); */
+  /* will-change: opacity, transform; */
   opacity: 0;
   transform: translateY(6px);
 }
@@ -1494,7 +1548,7 @@
 
 /* Slightly reduce motion for prefers-reduced-motion users */
 @media (prefers-reduced-motion: reduce) {
-  .spotify-preview-link, .spotify-loading { transition: none; transform: none; }
+  .spotify-preview-link, .spotify-loading { /* transition: none; transform: none; */ }
 }
 
 /* EXIF section open/close animation
@@ -1524,25 +1578,26 @@
 /* Spotify section open/close animation
    Similar to exif animation: animate max-height and opacity for smooth expand/collapse
 */
-.spotify-section {
+.caption-wrap .spotify-section {
+  /* always expanded to contain the inner animation */
+  max-height: 1000px;
+  overflow: hidden;
+}
+.card-body .caption-wrap .spotify-section .spotify-info {
   /* collapsed by default */
   max-height: 0px;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 300ms ease !important, opacity 300ms ease !important;
 }
-.spotify-section > * {
-  /* ensure inner wrapper doesn't overflow visually during the transition */
-  overflow: hidden;
-}
-.spotify-section.open {
+.card-body .caption-wrap .spotify-section.open .spotify-info {
   /* visible state */
   opacity: 1;
-  max-height: 80px; /* enough for the spotify info content */
+  max-height: 1000px; /* large enough to accommodate any content height */
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .spotify-section { transition: none; max-height: none; opacity: 1; }
+  .card-body .caption-wrap .spotify-section .spotify-info { transition: none; max-height: none; opacity: 1; }
 }
 
 
@@ -1577,8 +1632,6 @@
 .action.exif-info svg,
 .action.exif-has-data svg {
   display: block;
-  width: 18px; /* match .action svg size */
-  height: 18px;
   max-width: none;
   max-height: none;
 }

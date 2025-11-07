@@ -6,23 +6,27 @@
    - JavaScript will set an inline `max-height` to the element's scrollHeight
      when opening/closing so the transition is accurate for content of any size.
 */
-.comments {
+.caption-wrap .comments {
   /* collapsed by default */
   max-height: 0px;
-  opacity: 0;
+  opacity: 1; /* keep visible during collapse */
   overflow: hidden;
-  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
-.comments > * {
+.caption-wrap .comments > * {
   /* ensure inner wrapper doesn't overflow visually during the transition */
   overflow: hidden;
 }
-.comments.open {
+.caption-wrap .comments.open {
   /* visible state; JS will typically set an inline max-height equal to the
      actual content height for a smooth transition. The CSS fallback max-height
      keeps things working even if JS is disabled. */
   opacity: 1;
-  max-height: 800px; /* fallback - should be larger than typical comment panes */
+  max-height: 5000px; /* fallback - should be larger than typical comment panes */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caption-wrap .comments { transition: none; max-height: none; opacity: 1; }
 }
 
 .comment-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
@@ -236,4 +240,10 @@
 .replies .replies { margin-left: 0; }
 
 /* Small tweak to ensure vertical spacing remains consistent */
-.replies { margin-top: 8px; }
+.comment-box .send-button-container {
+  transition: width 0.3s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comment-box .send-button-container { transition: none !important; }
+}

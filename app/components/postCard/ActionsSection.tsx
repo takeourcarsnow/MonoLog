@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Camera, Check } from "lucide-react";
+import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Camera, Check, Eye } from "lucide-react";
 import { ReportButton } from "../ReportButton";
 
 interface ActionsSectionProps {
@@ -98,19 +98,15 @@ export const ActionsSection = function ActionsSection({
       >
         <LinkIcon 
           size={16} 
+          className={`share-link-icon ${copied ? 'copied' : ''}`}
           style={{ 
-            opacity: copied ? 0 : 1, 
-            transform: copied ? 'scale(0.5) rotate(-90deg)' : 'scale(1) rotate(0deg)',
-            transition: 'all 0.4s ease-in-out',
             position: 'absolute'
           }} 
         />
         <Check 
           size={16} 
+          className={`share-check-icon ${copied ? 'copied' : ''}`}
           style={{ 
-            opacity: copied ? 1 : 0, 
-            transform: copied ? 'scale(1) rotate(0deg)' : 'scale(0.5) rotate(90deg)',
-            transition: 'all 0.4s ease-in-out',
             position: 'absolute'
           }} 
         />
@@ -127,10 +123,27 @@ export const ActionsSection = function ActionsSection({
             setAnimatingButton('exif');
             setTimeout(() => setAnimatingButton(null), 500);
             console.log('EXIF button clicked, current state:', showExif);
-            setShowExif(!showExif); 
+            const newValue = !showExif;
+            setShowExif(newValue);
+            if (newValue) {
+              setCommentsOpen(false); // Close comments when opening EXIF
+            }
           }}
         >
-          <Camera size={16} />
+          <Camera 
+            size={16} 
+            className={`exif-camera-icon ${showExif ? 'active' : ''}`}
+            style={{ 
+              position: 'absolute'
+            }} 
+          />
+          <Eye 
+            size={16} 
+            className={`exif-eye-icon ${showExif ? 'active' : ''}`}
+            style={{ 
+              position: 'absolute'
+            }} 
+          />
         </button>
       )}
       <button
@@ -143,6 +156,9 @@ export const ActionsSection = function ActionsSection({
           if (!commentsMounted) {
             setCommentsMounted(true);
             setCommentsOpen(true);
+            // Close other panels when opening comments
+            setShowExif?.(false);
+            setShowSpotify?.(false);
           } else {
             const willOpen = !commentsOpen;
             if (!willOpen) {
@@ -153,6 +169,9 @@ export const ActionsSection = function ActionsSection({
               }, 320);
             } else {
               setCommentsOpen(true);
+              // Close other panels when opening comments
+              setShowExif?.(false);
+              setShowSpotify?.(false);
             }
           }
         }}
@@ -204,7 +223,11 @@ export const ActionsSection = function ActionsSection({
             setAnimatingButton('spotify');
             setTimeout(() => setAnimatingButton(null), 500);
             console.log('Spotify button clicked, current state:', showSpotify);
-            setShowSpotify(!showSpotify); 
+            const newValue = !showSpotify;
+            setShowSpotify(newValue);
+            if (newValue) {
+              setCommentsOpen(false); // Close comments when opening Spotify
+            }
           }}
         >
           <svg

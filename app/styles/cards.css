@@ -2,7 +2,6 @@
   display: grid;
   gap: 22px;
   /* center feed/explore content to match the app's main max width */
-  max-width: var(--maxw);
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -1387,7 +1386,6 @@
   /* Constrain wrapper width to follow the global app max width so list
      panels expand naturally on larger screens while staying readable on
      mobile. Uses the global --maxw which defaults to clamp(640px, 90vw, 1100px). */
-  max-width: var(--maxw);
   margin: 0 auto;
   width: 100%;
 }
@@ -1398,7 +1396,6 @@
   gap: 26px;
   /* match the outer wrapper's max-width so cards align with the header
      and other centered content across the app */
-  max-width: var(--maxw);
   margin: 0 auto;
   width: 100%;
   justify-items: center;

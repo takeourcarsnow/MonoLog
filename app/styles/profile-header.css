@@ -10,6 +10,7 @@
   z-index: 60; /* sit above nearby cards but below modals/overlays */
   /* keep a small gutter on mobile and center the panel */
   width: calc(100% - 24px);
+  max-width: 600px;
   box-sizing: border-box;
   background: var(--bg-elev);
   border: 1px solid var(--border);
@@ -23,7 +24,7 @@
    the app's main content max width. */
 @media (min-width: 900px) {
   .profile-header {
-    max-width: 80vw;
+    max-width: 600px;
     /* keep a vertical gutter so header and profile content are visually separated */
     margin: 12px auto 12px;
     padding-left: 12px;
@@ -41,7 +42,6 @@
 }
 @media (min-width: 900px) {
   .profile-header ~ .feed.grid-view .grid {
-    max-width: 80vw;
     margin: 0 auto;
     padding-left: 12px;
     padding-right: 12px;

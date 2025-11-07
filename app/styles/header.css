@@ -13,7 +13,7 @@
 }
 .header-inner {
   position: relative;
-  max-width: var(--maxw); margin: 0 auto; padding: 8px var(--page-side-padding);
+  margin: 0 auto; padding: 8px var(--page-side-padding);
   display: flex; align-items: center; gap: 12px; justify-content: space-between;
   /* Ensure the header never expands beyond its container (prevents
      long inline labels from increasing the app width on small screens). */

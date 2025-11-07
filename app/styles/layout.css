@@ -1,5 +1,4 @@
 .content {
-  max-width: var(--maxw);
   margin: 0 auto;
   width: 100%;
   /* Make content scrollable within viewport */

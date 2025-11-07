@@ -58,15 +58,7 @@ export default function WeekReviewPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="week-review-page">
-        <div className="loading-skeleton">
-          <div className="skeleton-card"></div>
-          <div className="skeleton-card"></div>
-          <div className="skeleton-card"></div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (error) {

@@ -122,10 +122,6 @@
   transition: transform 240ms var(--transition-mid), box-shadow 220ms var(--transition-fast), border-color 220ms var(--transition-fast);
 }
 
-/* skeleton placeholder for stats loading */
-.day.skeleton { background: linear-gradient(90deg, color-mix(in srgb, var(--bg-elev), transparent 80%), color-mix(in srgb, var(--bg-elev), transparent 60%)); color: transparent; }
-.day.skeleton .dot, .day.skeleton .count { opacity: 0; }
-
 /* Today badge: small rounded pill near the date number to improve discoverability */
 .today-badge {
   font-size: 11px; color: var(--primary); background: color-mix(in srgb, var(--primary-weak), transparent 68%); padding: 4px 6px; border-radius: 999px; justify-self: start; align-self: start; margin-top: 4px; font-weight: 700;

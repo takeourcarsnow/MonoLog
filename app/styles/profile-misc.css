@@ -255,36 +255,6 @@
   opacity: 1;
 }
 
-/* Improved skeleton loading animation */
-@keyframes skeleton-shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--bg-elev) 0%,
-    color-mix(in srgb, var(--border), transparent 50%) 20%,
-    var(--bg-elev) 40%,
-    var(--bg-elev) 100%
-  );
-  background-size: 1000px 100%;
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
-}
-
-/* Reduce skeleton animation on slow connections or preference */
-@media (prefers-reduced-motion: reduce) {
-  .skeleton {
-    animation: none;
-    background: var(--bg-elev);
-  }
-}
-
 /* About card: constrain very long bios so they don't push header/avatar off-screen */
 .about-card .card-body { max-height: 220px; overflow: auto; }
 .about-card .card-body .dim { white-space: pre-wrap; }
@@ -370,15 +340,6 @@
 .feed.grid-view .grid .tile > * { width: 100% !important; height: 100% !important; }
 
 /* duplicate toast rules removed (consolidated earlier) */
-
-.skeleton {
-  background: linear-gradient(90deg, #0000, #0001, #0000);
-  background-size: 200% 100%;
-  animation: shimmer 1.1s infinite linear;
-}
-@keyframes shimmer {
-  to { background-position: -200% 0; }
-}
 
 .hidden { display: none !important; }
 

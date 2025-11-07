@@ -13,7 +13,6 @@ import { AuthForm } from "@/app/components/auth/AuthForm";
 import { useUserData } from "./useUserData";
 import { ProfileHeader } from "./ProfileHeader";
 import { PostsGrid } from "./PostsGrid";
-import { SkeletonAvatar, SkeletonText, SkeletonTile } from "@/app/components/ui/Skeleton";
 import { AuthRequired } from "@/app/components/auth/AuthRequired";
 import { ViewToggle } from "@/app/components/ui/ViewToggle";
 import { PostCard } from "@/app/components/PostCard";
@@ -75,26 +74,9 @@ export function ProfileView({ userId }: { userId?: string }) {
   
 
   if (!user) {
-    // while loading, show a proper skeleton with multiple placeholders
+    // while loading, show nothing
       if (loading) {
-      return (
-        <div className="view-fade">
-          <div className="profile-header toolbar">
-            <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", width: "100%" }}>
-              <SkeletonAvatar size={160} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', width: '100%' }}>
-                <SkeletonText width={180} height={20} borderRadius={8} />
-                <SkeletonText width={220} height={16} borderRadius={6} />
-              </div>
-            </div>
-          </div>
-          <div className="grid" aria-label="Loading posts">
-            {Array.from({ length: 6 }, (_, i) => (
-              <SkeletonTile key={i} height={200} />
-            ))}
-          </div>
-        </div>
-      );
+      return null;
     }
 
     // while not loading, prefer the upload-style sign-in prompt when the

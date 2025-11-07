@@ -98,11 +98,7 @@ export function ImageEditorModal({
 
   return (
     <Portal className="upload-editor-fullscreen">
-      <Suspense fallback={
-        <div className="upload-editor-loading">
-          <div className="card skeleton" style={{ height: 400, width: '100%', maxWidth: 600 }} />
-        </div>
-      }>
+      <Suspense fallback={null}>
         <ImageEditor
           initialDataUrl={currentDataUrl}
           initialSettings={currentSettings}

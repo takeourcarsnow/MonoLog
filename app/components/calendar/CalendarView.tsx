@@ -287,9 +287,6 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
               // Note: removed "has-posts" class so days with posts no longer
               // get a separate visual indicator (dot/background).
               count > 0 && dayPostsCache[dk] ? "has-slideshow" : "",
-              // don't apply the global skeleton to the whole day element —
-              // that made the date number text transparent while stats load.
-              // we'll apply skeleton only to the count/dot placeholders below.
               isSelected ? "selected" : "",
             ].join(" ").trim();
 

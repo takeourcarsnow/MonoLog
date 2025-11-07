@@ -51,21 +51,9 @@ export function CreateThreadView() {
     }
   };
 
-  // If auth check is still pending show skeleton
+  // If auth check is still pending show nothing
   if (authLoading) {
-    return (
-      <div className="content">
-        <div className="content-body">
-          <div className="card max-w-2xl communities">
-            <div className="animate-pulse space-y-6">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // If we were prompted to sign in (or user is not signed in) show auth UI
@@ -80,11 +68,7 @@ export function CreateThreadView() {
   }
 
   if (communityLoading) {
-    return (
-      <div className="content create-thread">
-        <div className="card skeleton" style={{ height: 100 }} />
-      </div>
-    );
+    return null;
   }
 
   if (communityError || !community) {

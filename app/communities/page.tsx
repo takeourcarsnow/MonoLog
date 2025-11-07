@@ -13,7 +13,6 @@ import { currentTheme } from '@/lib/theme';
 import { LoadingIndicator } from "@/app/components/ui/LoadingIndicator";
 import { Plus, Users } from 'lucide-react';
 import ScrollingHint from "@/app/components/ui/ScrollingHint";
-import SkeletonCard from "@/app/components/ui/SkeletonCard";
 import { useAuth } from "@/lib/hooks/useAuth";
 
 export const dynamic = 'force-dynamic';
@@ -61,7 +60,6 @@ export default function CommunitiesPage() {
     return (
       <CommunitiesClient>
         <div className="view-fade">
-          <div className="card skeleton" style={{ height: 200, maxWidth: 600, margin: '24px auto' }} />
         </div>
       </CommunitiesClient>
     );
@@ -86,27 +84,7 @@ export default function CommunitiesPage() {
   }
 
   if (loading) {
-    return (
-      <CommunitiesClient>
-        <div className="communities">
-          <div className="content-header mt-8 mb-6">
-            <div className="text-center w-full">
-              <h1 className="content-title inline-flex items-center justify-center gap-2">
-                <span className="sr-only">Communities</span>
-              </h1>
-            </div>
-          </div>
-          <div className="content-actions mt-6 mb-10 flex justify-center w-full">
-            <Button title="Create a Community" variant="ghost" className="btn-no-bg keep-border">Create a Community</Button>
-          </div>
-          <div className="content-body space-y-6">
-            {[...Array(6)].map((_, i) => (
-              <SkeletonCard key={i} height={180} />
-            ))}
-          </div>
-        </div>
-      </CommunitiesClient>
-    );
+    return null;
   }
 
   if (error) {

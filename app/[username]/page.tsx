@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { ProfileView } from "@/app/components/profile/ProfileView";
 import { supabaseApi } from "@/lib/api/supabase";
 import { notFound } from "next/navigation";
-import { SkeletonCard, SkeletonTile } from "@/app/components/ui/Skeleton";
 import { RESERVED_ROUTES } from "@/lib/types";
 
 export const dynamic = 'force-dynamic';
@@ -66,14 +65,7 @@ export default function UsernamePage({ params }: { params: { username: string } 
   }, [params.username]);
 
   if (loading) {
-    return (
-      <div className="view-fade">
-        <SkeletonCard height={120} maxWidth={800} margin="24px auto" />
-        <div className="grid" aria-label="Loading posts">
-          <SkeletonTile height={160} count={3} />
-        </div>
-      </div>
-    );
+    return null;
   }
   if (!resolvedId) return null; // notFound() will handle this
 

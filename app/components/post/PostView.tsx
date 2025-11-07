@@ -47,9 +47,7 @@ export function PostView({ id, initialPost }: { id: string; initialPost?: Hydrat
   return (
     <div className="post-view-wrap view-fade">
       {/* Back button removed to maximize media space in single-post view */}
-      {loading ? (
-        <div className="card skeleton" style={{ height: 400, maxWidth: 800, margin: '24px auto' }} />
-      ) : (
+      {loading ? null : (
   post ? <PostCard post={post} allowCarouselTouch={true} /> : <div className="empty">Post not found.</div>
       )}
     </div>

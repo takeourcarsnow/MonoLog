@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className="content"
         id="view"
       >
-        {!ready ? <div className="card skeleton" style={{ height: 240 }} /> : isMainView ? (
+        {!ready ? null : isMainView ? (
             <Swiper
             className="swipe-views"
             ref={swiperRef}
@@ -100,7 +100,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 return (
                   <SwiperSlide key={view.path} className={view.path === '/feed' ? 'slide-feed' : undefined}>
                     <div>
-                      <Suspense fallback={<div className="card skeleton" style={{ height: 240 }} />}>
+                      <Suspense fallback={null}>
                         {component}
                       </Suspense>
                     </div>

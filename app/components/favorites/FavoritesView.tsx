@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "@/lib/api";
 import type { HydratedPost } from "@/lib/types";
 import { PostCard } from "@/app/components/PostCard";
-import { SkeletonCard, SkeletonTile } from "@/app/components/ui/Skeleton";
 import { useEventListener } from "@/lib/hooks/useEventListener";
 import { useDataFetch } from "@/lib/hooks/useDataFetch";
 import { usePageScroll } from "@/lib/hooks/usePageScroll";
@@ -102,14 +101,7 @@ export function FavoritesView() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="view-fade">
-        <SkeletonCard height={120} maxWidth={800} margin="24px auto" />
-        <div className="grid" aria-label="Loading posts">
-          <SkeletonTile height={160} count={3} />
-        </div>
-      </div>
-    );
+    return null;
   }
   if (!posts.length) {
     return (

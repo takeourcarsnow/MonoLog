@@ -32,11 +32,7 @@ export function ThreadView() {
 
   // Show loading while determining auth status
   if (currentUser === undefined) {
-    return (
-      <div className="content">
-        <div className="card skeleton" style={{ height: 200 }} />
-      </div>
-    );
+    return null;
   }
 
   // Don't render anything if not authenticated (redirecting)
@@ -45,14 +41,7 @@ export function ThreadView() {
   }
 
   if (threadLoading) {
-    return (
-      <div className="content thread space-y-8">
-        <div className="card skeleton" style={{ height: 200 }} />
-        <div className="card skeleton" style={{ height: 100 }} />
-        <div className="card skeleton" style={{ height: 100 }} />
-        <div className="card skeleton" style={{ height: 100 }} />
-      </div>
-    );
+    return null;
   }
 
   if (threadError || !thread) {

@@ -12,11 +12,7 @@ export function UploaderAuthWrapper() {
   const { me, setMe } = useAuth();
 
   if (me === undefined) {
-    return (
-      <div className="view-fade">
-        <div className="card skeleton" style={{ height: 200, maxWidth: 600, margin: '24px auto' }} />
-      </div>
-    );
+    return null;
   }
 
   if (!me) {

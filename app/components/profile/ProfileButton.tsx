@@ -153,14 +153,7 @@ export function ProfileButton() {
         }}
         aria-label="Open profile"
       >
-        {me === undefined ? (
-          // small skeleton while loading to avoid layout shift until the
-          // client auth check finishes. Once we determine signed-out (null)
-          // the component will render nothing.
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }} aria-hidden>
-            <span style={{ width: 32, height: 32, borderRadius: 999, background: 'rgba(255,255,255,0.06)', display: 'inline-block' }} />
-          </span>
-        ) : current ? (
+        {me === undefined ? null : current ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             {/* Avatar first in the DOM; CSS will use row-reverse so the avatar stays at the far right
                 and the account name expands to the left pushing other header items. */}

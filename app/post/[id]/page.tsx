@@ -45,7 +45,7 @@ export default async function PostIdPage({ params }: { params: any }) {
     if (exact && !exact.error && exact.data) {
       const post = mapRowToHydratedPost(exact.data);
       return (
-        <Suspense fallback={<div className="card skeleton" style={{ height: 400 }} />}>
+        <Suspense>
           <PostView id={post.id} initialPost={post} />
         </Suspense>
       );
@@ -56,7 +56,7 @@ export default async function PostIdPage({ params }: { params: any }) {
         if (pref && !pref.error && pref.data) {
           const post = mapRowToHydratedPost(pref.data);
           return (
-            <Suspense fallback={<div className="card skeleton" style={{ height: 400 }} />}>
+            <Suspense>
               <PostView id={post.id} initialPost={post} />
             </Suspense>
           );
@@ -70,7 +70,7 @@ export default async function PostIdPage({ params }: { params: any }) {
     if (rawRes && !rawRes.error && rawRes.data) {
       const post = mapRowToHydratedPost(rawRes.data);
       return (
-        <Suspense fallback={<div className="card skeleton" style={{ height: 400 }} />}>
+        <Suspense>
           <PostView id={post.id} initialPost={post} />
         </Suspense>
       );

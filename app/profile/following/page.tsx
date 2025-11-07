@@ -6,7 +6,6 @@ import { api } from "@/lib/api";
 import type { User } from "@/lib/types";
 import Link from "next/link";
 import { AuthForm } from "@/app/components/auth/AuthForm";
-import { SkeletonCard } from "@/app/components/ui/Skeleton";
 import { AuthRequired } from "@/app/components/auth/AuthRequired";
 import { usePageScroll } from "@/lib/hooks/usePageScroll";
 
@@ -32,11 +31,7 @@ export default function FollowingPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="view-fade">
-        <SkeletonCard height={120} maxWidth={800} margin="24px auto" />
-      </div>
-    );
+    return null;
   }
 
   if (!currentUser) {

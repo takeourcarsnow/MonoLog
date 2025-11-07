@@ -264,26 +264,6 @@
   line-height: 1.5;
 }
 
-/* Loading Skeleton */
-.loading-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.skeleton-card {
-  height: 80px;
-  background: linear-gradient(90deg, var(--bg-elev) 25%, color-mix(in srgb, var(--bg-elev), transparent 80%) 50%, var(--bg-elev) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: var(--radius);
-}
-
-@keyframes skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
 /* Error Message */
 .error-message {
   text-align: center;

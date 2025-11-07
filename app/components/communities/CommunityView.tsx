@@ -12,6 +12,7 @@ import Link from "next/link";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { CommunitySkeleton } from "@/app/components/communities/CommunitySkeleton";
 import { useErrorState } from "@/lib/hooks/useErrorState";
 
 export function CommunityView() {
@@ -184,7 +185,7 @@ export function CommunityView() {
   };
 
   if (loading) {
-    return null;
+    return <CommunitySkeleton />;
   }
 
   if (error || !community) {

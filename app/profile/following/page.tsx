@@ -7,6 +7,7 @@ import type { User } from "@/lib/types";
 import Link from "next/link";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import { AuthRequired } from "@/app/components/auth/AuthRequired";
+import { FollowingSkeleton } from "@/app/components/profile/FollowingSkeleton";
 import { usePageScroll } from "@/lib/hooks/usePageScroll";
 
 export default function FollowingPage() {
@@ -31,7 +32,7 @@ export default function FollowingPage() {
   }, []);
 
   if (loading) {
-    return null;
+    return <FollowingSkeleton />;
   }
 
   if (!currentUser) {

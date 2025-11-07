@@ -10,6 +10,7 @@ import { usePageScroll } from "@/lib/hooks/usePageScroll";
 import { Star as StarIcon } from "lucide-react";
 import Link from "next/link";
 import { ViewToggle } from "@/app/components/ui/ViewToggle";
+import { FeedSkeleton } from "@/app/components/feed/FeedSkeleton";
 import { GridView } from "@/app/components/feed/GridView";
 
 export function FavoritesView() {
@@ -101,7 +102,7 @@ export function FavoritesView() {
   }, []);
 
   if (loading) {
-    return null;
+    return <FeedSkeleton view={view} />;
   }
   if (!posts.length) {
     return (

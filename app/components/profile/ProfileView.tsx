@@ -17,6 +17,7 @@ import { AuthRequired } from "@/app/components/auth/AuthRequired";
 import { ViewToggle } from "@/app/components/ui/ViewToggle";
 import { PostCard } from "@/app/components/PostCard";
 import { User as UserIcon } from "lucide-react";
+import { ProfileSkeleton } from "./ProfileSkeleton";
 import { InviteSection } from "@/app/components/InviteSection";
 
 export function ProfileView({ userId }: { userId?: string }) {
@@ -74,9 +75,9 @@ export function ProfileView({ userId }: { userId?: string }) {
   
 
   if (!user) {
-    // while loading, show nothing
-      if (loading) {
-      return null;
+    // while loading, show skeleton
+    if (loading) {
+      return <ProfileSkeleton />;
     }
 
     // while not loading, prefer the upload-style sign-in prompt when the

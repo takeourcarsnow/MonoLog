@@ -7,6 +7,7 @@ import { renderCaption } from "@/lib/hashtags";
 import { Calendar, Image, MessageCircle, ChevronDown, ChartBar } from "lucide-react";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import type { WeekReviewStats } from "@/lib/types";
+import { WeekReviewSkeleton } from "@/app/components/week-review/WeekReviewSkeleton";
 import { StatCard } from "@/app/components/ui/StatCard";
 
 export default function WeekReviewPage() {
@@ -58,7 +59,7 @@ export default function WeekReviewPage() {
   }, []);
 
   if (loading) {
-    return null;
+    return <WeekReviewSkeleton />;
   }
 
   if (error) {

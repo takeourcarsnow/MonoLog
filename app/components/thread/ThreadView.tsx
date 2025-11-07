@@ -11,6 +11,7 @@ import { useThreadActions } from "./useThreadActions";
 import { ThreadHeader } from "./ThreadHeader";
 import { ReplyForm } from "./ReplyForm";
 import { RepliesList } from "./RepliesList";
+import { ThreadSkeleton } from "./ThreadSkeleton";
 
 export function ThreadView() {
   const params = useParams();
@@ -41,7 +42,7 @@ export function ThreadView() {
   }
 
   if (threadLoading) {
-    return null;
+    return <ThreadSkeleton />;
   }
 
   if (threadError || !thread) {

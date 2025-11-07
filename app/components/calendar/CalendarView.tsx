@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { monthMatrix, toDateKey } from "@/lib/date";
 import { api } from "@/lib/api";
 import { PostCard } from "@/app/components/PostCard";
-import InlinePreloader from "@/app/components/ui/InlinePreloader";
 import { ViewToggle } from "@/app/components/ui/ViewToggle";
 import { GridView } from "@/app/components/feed/GridView";
 import { Calendar } from "lucide-react";
@@ -12,6 +11,7 @@ import type { HydratedPost } from "@/lib/types";
 import { MiniSlideshow } from "@/app/components/media/MiniSlideshow";
 import { getStats as cacheGetStats, setStats as cacheSetStats, getPosts as cacheGetPosts, setPosts as cacheSetPosts, anyImageLoaded as cacheAnyImageLoaded, markImageLoaded as cacheMarkImageLoaded } from "@/lib/cache/calendarCache";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { CalendarDaySkeleton } from "./CalendarDaySkeleton";
 
 const weekdays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
@@ -330,7 +330,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
   <div ref={fadeRef} className={`fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>
     <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`} id="day-feed" ref={feedRef}>
       {loadingDay ? (
-        <InlinePreloader />
+        <CalendarDaySkeleton view={view} />
       ) : (
         dayPosts ? (dayPosts.length ? (
           view === "grid" ? (

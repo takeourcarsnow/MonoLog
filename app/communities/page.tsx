@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { Button } from "@/app/components/ui/Button";
 import NextImage from 'next/image';
 import { currentTheme } from '@/lib/theme';
-import { LoadingIndicator } from "@/app/components/ui/LoadingIndicator";
+import { CommunitiesSkeleton } from "@/app/components/communities/CommunitiesSkeleton";
 import { Plus, Users } from 'lucide-react';
 import ScrollingHint from "@/app/components/ui/ScrollingHint";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -84,7 +84,13 @@ export default function CommunitiesPage() {
   }
 
   if (loading) {
-    return null;
+    return (
+      <CommunitiesClient>
+        <div className="view-fade">
+          <CommunitiesSkeleton />
+        </div>
+      </CommunitiesClient>
+    );
   }
 
   if (error) {

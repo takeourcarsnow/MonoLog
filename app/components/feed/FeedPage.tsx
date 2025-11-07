@@ -16,8 +16,9 @@ import { GridView } from "@/app/components/feed/GridView";
 import { useAuth } from "@/lib/hooks/useAuth";
 import dynamic from "next/dynamic";
 import { FeedEmptyState } from "@/app/components/feed/FeedEmptyState";
-import { FeedListView } from "@/app/components/feed/FeedListView";
+import { FeedSkeleton } from "@/app/components/feed/FeedSkeleton";
 import { FeedGridView } from "@/app/components/feed/FeedGridView";
+import { FeedListView } from "@/app/components/feed/FeedListView";
 import { useScrollPersistence } from "@/lib/hooks/useScrollPersistence";
 import { useBodyClass } from "@/lib/hooks/useBodyClass";
 import { useAuthChange } from "@/lib/hooks/useAuthChange";
@@ -141,7 +142,7 @@ export function FeedPage({
   // Simplified render - no need for memoization with complex dependencies
   const renderContent = () => {
     if (loading) {
-      return null;
+      return <FeedSkeleton view={view} />;
     }
     
     // Limit posts for unauthenticated users in explore view
@@ -192,7 +193,7 @@ export function FeedPage({
 
   return (
     <div className="view-fade">
-      {(posts.length > 0 || viewStorageKey === 'hashtagView' || showToggle) && (
+      {(posts.length > 0 || viewStorageKey === 'hashtagView' || showToggle || loading) && (
         <ViewToggle title={title} subtitle={subtitle} selected={pendingView ?? view} onSelect={handleViewChange} />
       )}
       <div ref={fadeRef} className={`feed ${view === 'grid' ? 'grid-view' : ''} fade-anim ${isTransitioning ? 'fade-hidden' : 'fade-visible'}`}>

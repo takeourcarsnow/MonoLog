@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ProfileView } from "@/app/components/profile/ProfileView";
 import { supabaseApi } from "@/lib/api/supabase";
 import { notFound } from "next/navigation";
+import { ProfileSkeleton } from "@/app/components/profile/ProfileSkeleton";
 import { RESERVED_ROUTES } from "@/lib/types";
 
 export const dynamic = 'force-dynamic';
@@ -65,7 +66,7 @@ export default function UsernamePage({ params }: { params: { username: string } 
   }, [params.username]);
 
   if (loading) {
-    return null;
+    return <ProfileSkeleton />;
   }
   if (!resolvedId) return null; // notFound() will handle this
 

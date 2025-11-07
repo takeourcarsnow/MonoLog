@@ -1,11 +1,12 @@
 import { useRef, useState, useEffect } from "react";
+import { createPortal } from 'react-dom';
 import { api, getSupabaseClient } from "@/lib/api";
 import { compressImage } from "@/lib/image";
 import { uid } from "@/lib/id";
 import Image from "next/image";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { User } from "@/lib/types";
+import type { User, Story } from "@/lib/types";
 
 interface ProfileAvatarProps {
   user: User;
@@ -15,11 +16,16 @@ interface ProfileAvatarProps {
 
 export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAvatarProps) {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const storyInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   // expanded controls in-place scale animation of avatar
   const [expanded, setExpanded] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [hasActiveStories, setHasActiveStories] = useState(false);
+  const [ownStories, setOwnStories] = useState<Story[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerIdx, setViewerIdx] = useState(0);
 
   useEffect(() => {
     if (!expanded) return;
@@ -38,6 +44,25 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
       }, 100);
     }
   }, [searchParams, router]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const stories = await api.getActiveStoriesForUser(user.id);
+        if (mounted) {
+          setHasActiveStories(stories.length > 0);
+          setOwnStories(stories);
+        }
+      } catch (_) {
+        if (mounted) {
+          setHasActiveStories(false);
+          setOwnStories([]);
+        }
+      }
+    })();
+    return () => { mounted = false; };
+  }, [user.id]);
 
   const handleAvatarChange = async () => {
     if (avatarUploading) return;
@@ -198,23 +223,105 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
     }
   };
 
+  const handleStoryChange = async () => {
+    const f = storyInputRef.current?.files?.[0];
+    if (!f) return;
+    try {
+      const dataUrl = await compressImage(f);
+      const parts = dataUrl.split(',');
+      const meta = parts[0];
+      const mime = meta.split(':')[1].split(';')[0];
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) u8arr[n] = bstr.charCodeAt(n);
+      const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
+
+      const sb = getSupabaseClient();
+      const userObj = await api.getCurrentUser();
+      if (!userObj) throw new Error("Not logged in");
+      const uploaderId = userObj.id || currentUserId;
+      if (!uploaderId) throw new Error("Cannot determine user id for story upload");
+      const path = `stories/${uploaderId}/${file.name}`;
+      const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true, contentType: file.type, cacheControl: 'public, max-age=31536000, immutable' });
+      if (uploadErr) throw uploadErr;
+      const urlRes = sb.storage.from("posts").getPublicUrl(path);
+      const publicUrl = urlRes.data.publicUrl;
+
+      await api.createStory({ mediaUrl: publicUrl, mediaType: 'image' });
+
+      // Refresh stories
+      const stories = await api.getActiveStoriesForUser(user.id);
+      setHasActiveStories(stories.length > 0);
+      setOwnStories(stories);
+    } catch (e: any) {
+      console.warn(e?.message || "Failed to upload story");
+    }
+  };
+
+  // Auto advance stories
+  useEffect(() => {
+    if (!viewerOpen || !ownStories.length) return;
+    const cur = ownStories[viewerIdx];
+    const dur = cur?.mediaType === 'video' ? Math.min(Math.max(cur.durationSeconds || 6, 3), 15) : 6;
+    const t = setTimeout(() => {
+      setViewerIdx(v => (v + 1) >= ownStories.length ? 0 : v + 1); // loop for own stories
+    }, dur * 1000);
+    return () => clearTimeout(t);
+  }, [viewerOpen, viewerIdx, ownStories]);
+
+  useEffect(() => {
+    if (!viewerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setViewerOpen(false);
+      else if (e.key === 'ArrowLeft') setViewerIdx(v => v === 0 ? ownStories.length - 1 : v - 1);
+      else if (e.key === 'ArrowRight') setViewerIdx(v => (v + 1) % ownStories.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [viewerOpen, viewerIdx, ownStories.length]);
+
+  // Prevent body scroll and scroll to top when viewer opens
+  useEffect(() => {
+    if (viewerOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('story-modal-open');
+      window.scrollTo(0, 0);
+    } else {
+      document.body.style.overflow = '';
+      document.body.classList.remove('story-modal-open');
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('story-modal-open');
+    };
+  }, [viewerOpen]);
+
   return (
     <>
       {currentUserId && user?.id === currentUserId ? (
         <>
           <button
             className="avatar-button"
-            aria-label="Change avatar"
-            onClick={() => avatarInputRef.current?.click()}
+            aria-label={hasActiveStories ? "View your stories or change avatar" : "Change avatar"}
+            onClick={() => {
+              if (hasActiveStories) {
+                setViewerOpen(true);
+                setViewerIdx(0);
+              } else {
+                avatarInputRef.current?.click();
+              }
+            }}
             disabled={avatarUploading}
             aria-busy={avatarUploading}
             type="button"
           >
-            <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 160, height: 160 }}>
+            <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 160, height: 160, outline: hasActiveStories ? '4px solid #ff7e39' : 'none', outlineOffset: 4, borderRadius: 9999 }}>
               <OptimizedImage key={user.avatarUrl} className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} priority loading="eager" disableLoadingTransition />
             </div>
           </button>
           <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} disabled={avatarUploading} />
+          <input type="file" accept="image/*,video/*" ref={storyInputRef} style={{ display: 'none' }} onChange={handleStoryChange} />
         </>
       ) : (
         <>
@@ -257,11 +364,34 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
                 priority
                 loading="eager"
                 disableLoadingTransition
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px', filter: expanded ? 'none' : 'none' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px', filter: expanded ? 'none' : 'none', outline: hasActiveStories ? '4px solid #ff7e39' : 'none', outlineOffset: 4 }}
               />
             </div>
           </button>
         </>
+      )}
+      {viewerOpen && ownStories.length > 0 && createPortal(
+        <div className="story-viewer-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10000, height: '100vh' }} onClick={() => setViewerOpen(false)}>
+          <div style={{ position: 'absolute', top: 12, left: 12 }} onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => setViewerOpen(false)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Close</button>
+          </div>
+          <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => setViewerIdx(v => v === 0 ? ownStories.length - 1 : v - 1)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Prev</button>
+            <button type="button" onClick={() => setViewerIdx(v => (v + 1) % ownStories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Next</button>
+            <button type="button" onClick={() => storyInputRef.current?.click()} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Add Story</button>
+          </div>
+          <div style={{ maxWidth: '90vw', maxHeight: '80vh', width: 'min(640px, 90vw)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+            {ownStories[viewerIdx].mediaType === 'video' ? (
+              <video src={ownStories[viewerIdx].mediaUrl} style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} autoPlay controls playsInline />
+            ) : (
+              <img src={ownStories[viewerIdx].mediaUrl} alt="Your story" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} />
+            )}
+          </div>
+          <div style={{ position: 'absolute', bottom: 28, fontSize: 14, color: '#fff' }} onClick={(e) => e.stopPropagation()}>
+            Your story • {viewerIdx + 1}/{ownStories.length}
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );

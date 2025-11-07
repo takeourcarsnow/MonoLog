@@ -509,6 +509,13 @@ body.modal-blur .tabbar {
   visibility: hidden !important;
 }
 
+/* Hide navbar and header when story modal is open */
+body.story-modal-open .tabbar,
+body.story-modal-open .header {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
 /* Respect reduced motion preference for modal blur */
 @media (prefers-reduced-motion: reduce) {
   body.modal-blur .app-content,

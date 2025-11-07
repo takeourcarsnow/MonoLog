@@ -244,6 +244,12 @@ export interface Api {
 
   // Search
   search(query: string): Promise<{ posts: HydratedPost[]; users: User[]; communities: HydratedCommunity[] }>;
+
+  // Stories (ephemeral 24h media attached to a user profile)
+  getActiveStoriesForUser(userId: string): Promise<Story[]>;
+  getFollowingStories(): Promise<{ user: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>; stories: Story[] }[]>;
+  createStory(input: { mediaUrl?: string; thumbnailUrl?: string; dataUrl?: string; mediaType: 'image' | 'video'; durationSeconds?: number }): Promise<Story>;
+  markStoryViewed(storyId: string): Promise<void>;
 }
 
 // Reserved route names that should not be treated as usernames
@@ -256,3 +262,17 @@ export const RESERVED_ROUTES = [
   'notifications',
   '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
 ];
+
+// Ephemeral story shown for 24 hours
+export type Story = {
+  id: string;
+  userId: string;
+  mediaUrl: string;
+  thumbnailUrl?: string;
+  mediaType: 'image' | 'video';
+  createdAt: string; // ISO timestamp
+  expiresAt: string; // ISO timestamp (createdAt + 24h)
+  viewCount?: number;
+  viewers?: string[]; // user ids that viewed (optional for privacy)
+  durationSeconds?: number; // for video
+};

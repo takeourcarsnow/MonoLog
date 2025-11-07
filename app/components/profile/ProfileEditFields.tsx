@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import Link from "next/link";
 import type { User } from "@/lib/types";
 import { SocialLinksFields } from "./SocialLinksFields";
 
@@ -47,6 +48,11 @@ export const ProfileEditFields = ({
 
   return (
     <>
+      <div style={{ display: 'flex', width: '100%', justifyContent: 'center', marginBottom: 8 }}>
+        <Link href="?changeAvatar=true" className="btn secondary" aria-label="Change avatar">
+          Change avatar
+        </Link>
+      </div>
       <label className="label-group">
         <div className="muted-label sr-only">@Username</div>
         <div className="input-container">

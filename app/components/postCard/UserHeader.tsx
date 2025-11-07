@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useRef, useState, useEffect } from "react";
+import { createPortal } from 'react-dom';
 import { preloadOverlayThumbnails } from "../imageEditor/overlaysPreload";
 import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
@@ -73,6 +74,68 @@ export const UserHeader = memo(function UserHeader({
   const pathname = usePathname();
   const router = useRouter();
   const [showMeta, setShowMeta] = useState(true);
+  const [hasStories, setHasStories] = useState(false);
+  const [stories, setStories] = useState<any[]>([]);
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
+  const [storyIdx, setStoryIdx] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const userStories = await api.getActiveStoriesForUser(post.user.id);
+        if (mounted) {
+          setHasStories(userStories.length > 0);
+          setStories(userStories);
+        }
+      } catch (_) {
+        if (mounted) {
+          setHasStories(false);
+          setStories([]);
+        }
+      }
+    })();
+    return () => { mounted = false; };
+  }, [post.user.id]);
+
+  // Auto advance stories
+  useEffect(() => {
+    if (!storyViewerOpen || !stories.length) return;
+    const cur = stories[storyIdx];
+    if (cur) api.markStoryViewed(cur.id).catch(() => {});
+    const dur = cur?.mediaType === 'video' ? Math.min(Math.max(cur.durationSeconds || 6, 3), 15) : 6;
+    const t = setTimeout(() => {
+      setStoryIdx(v => (v + 1) >= stories.length ? 0 : v + 1); // loop
+    }, dur * 1000);
+    return () => clearTimeout(t);
+  }, [storyViewerOpen, storyIdx, stories]);
+
+  useEffect(() => {
+    if (!storyViewerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setStoryViewerOpen(false);
+      else if (e.key === 'ArrowLeft') setStoryIdx(v => v === 0 ? stories.length - 1 : v - 1);
+      else if (e.key === 'ArrowRight') setStoryIdx(v => (v + 1) % stories.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [storyViewerOpen, storyIdx, stories.length]);
+
+  // Prevent body scroll and scroll to top when viewer opens
+  useEffect(() => {
+    if (storyViewerOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('story-modal-open');
+      window.scrollTo(0, 0);
+    } else {
+      document.body.style.overflow = '';
+      document.body.classList.remove('story-modal-open');
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('story-modal-open');
+    };
+  }, [storyViewerOpen]);
 
   // Small helper: if the text inside the header (location / weather) is
   // too wide for the available space, enable a continuous horizontal
@@ -146,8 +209,15 @@ export const UserHeader = memo(function UserHeader({
   return (
     <div className="card-head">
       <div className="user-and-meta">
-        <Link className="user-link" href={`/${post.user.username || post.user.id}`}>
-          <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" />
+        <Link className="user-link" href={`/${post.user.username || post.user.id}`} onClick={(e) => {
+          if (hasStories) {
+            e.preventDefault();
+            e.stopPropagation();
+            setStoryViewerOpen(true);
+            setStoryIdx(0);
+          }
+        }}>
+          <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" style={{ borderRadius: '50%', objectFit: 'cover', outline: hasStories ? '3px solid #ff7e39' : 'none', outlineOffset: hasStories ? 2 : 0, cursor: hasStories ? 'pointer' : 'default' }} />
           <span className="username">@{post.user.username}</span>
         </Link>
         {/* render the date outside the link so toggling the full date doesn't
@@ -261,6 +331,28 @@ export const UserHeader = memo(function UserHeader({
           </>
         )}
       </div>
+      {storyViewerOpen && stories.length > 0 && createPortal(
+        <div className="story-viewer-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10000, height: '100vh' }} onClick={() => setStoryViewerOpen(false)}>
+          <div style={{ position: 'absolute', top: 12, left: 12 }} onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => setStoryViewerOpen(false)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Close</button>
+          </div>
+          <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => setStoryIdx(v => v === 0 ? stories.length - 1 : v - 1)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Prev</button>
+            <button type="button" onClick={() => setStoryIdx(v => (v + 1) % stories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Next</button>
+          </div>
+          <div style={{ maxWidth: '90vw', maxHeight: '80vh', width: 'min(640px, 90vw)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+            {stories[storyIdx].mediaType === 'video' ? (
+              <video src={stories[storyIdx].mediaUrl} style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} autoPlay controls playsInline />
+            ) : (
+              <img src={stories[storyIdx].mediaUrl} alt="Story" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} />
+            )}
+          </div>
+          <div style={{ position: 'absolute', bottom: 28, fontSize: 14, color: '#fff' }} onClick={(e) => e.stopPropagation()}>
+            {post.user.username} • {storyIdx + 1}/{stories.length}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 });

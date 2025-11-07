@@ -14,7 +14,8 @@ export function applyAsciiToFrame(
   height: number,
   cellSize: number = 8,
   charset: string = DEFAULT_ASCII_CHARSET,
-  invert: boolean = false
+  invert: boolean = false,
+  useColor: boolean = true
 ): void {
   const cols = Math.floor(width / cellSize);
   const rows = Math.floor(height / cellSize);
@@ -60,7 +61,12 @@ export function applyAsciiToFrame(
       const charIndex = Math.floor(adjustedBrightness * charRange);
       const char = chars[charIndex];
 
-      targetCtx.fillStyle = `rgb(${avgR},${avgG},${avgB})`;
+      if (useColor) {
+        targetCtx.fillStyle = `rgb(${avgR},${avgG},${avgB})`;
+      } else {
+        const grayValue = Math.round(avgBrightness * 255);
+        targetCtx.fillStyle = `rgb(${grayValue},${grayValue},${grayValue})`;
+      }
       targetCtx.fillText(
         char,
         col * cellSize + cellSize / 2,

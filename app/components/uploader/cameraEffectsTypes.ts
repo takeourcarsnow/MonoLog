@@ -21,6 +21,7 @@ export interface CameraEffectSettings {
   asciiCellSize?: number;
   asciiCharset?: string;
   asciiInvert?: boolean;
+  asciiColor?: boolean;
   asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters';
   // Frame settings
   frameOverlay?: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null;

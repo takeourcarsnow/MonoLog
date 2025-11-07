@@ -8,16 +8,31 @@ export function useRenderLoop() {
   const displayCanvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const renderLoopRunning = useRef(false);
+  
+  // Frame rate limiting
+  const TARGET_FPS = 30;
+  const frameInterval = 1000 / TARGET_FPS;
+  const lastFrameTimeRef = useRef(0);
 
-  const renderFrame = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>) => {
+  const renderFrame = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>, applyZoom?: (canvas: HTMLCanvasElement) => void) => {
     // Stop rendering if loop is disabled, capturing, camera stopped, or no video
     if (!renderLoopRunning.current || isCapturing || !streamRef.current || !videoRef.current) {
       return;
     }
 
+    const now = performance.now();
+    if (now - lastFrameTimeRef.current < frameInterval) {
+      // Skip this frame to maintain target FPS
+      if (renderLoopRunning.current) {
+        animationFrameRef.current = requestAnimationFrame(() => renderFrame(effectSettings, isCapturing, videoRef, streamRef, applyZoom));
+      }
+      return;
+    }
+    lastFrameTimeRef.current = now;
+
     if (!sourceCanvasRef.current || !displayCanvasRef.current) {
       if (renderLoopRunning.current) {
-        animationFrameRef.current = requestAnimationFrame(() => renderFrame(effectSettings, isCapturing, videoRef, streamRef));
+        animationFrameRef.current = requestAnimationFrame(() => renderFrame(effectSettings, isCapturing, videoRef, streamRef, applyZoom));
       }
       return;
     }
@@ -41,18 +56,23 @@ export function useRenderLoop() {
         sourceCtx.drawImage(video, 0, 0, sourceCanvas.width, sourceCanvas.height);
       }
 
+      // Apply zoom to source canvas if needed
+      if (applyZoom) {
+        applyZoom(sourceCanvas);
+      }
+
       // Apply effect to display canvas
       applyCameraEffect(sourceCanvas, displayCanvas, effectSettings);
     }
 
     if (renderLoopRunning.current) {
-      animationFrameRef.current = requestAnimationFrame(() => renderFrame(effectSettings, isCapturing, videoRef, streamRef));
+      animationFrameRef.current = requestAnimationFrame(() => renderFrame(effectSettings, isCapturing, videoRef, streamRef, applyZoom));
     }
   }, []);
 
-  const startRenderLoop = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>) => {
+  const startRenderLoop = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>, applyZoom?: (canvas: HTMLCanvasElement) => void) => {
     renderLoopRunning.current = true;
-    renderFrame(effectSettings, isCapturing, videoRef, streamRef);
+    renderFrame(effectSettings, isCapturing, videoRef, streamRef, applyZoom);
   }, [renderFrame]);
 
   const stopRenderLoop = useCallback(() => {

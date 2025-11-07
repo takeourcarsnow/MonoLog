@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { Grid } from 'lucide-react';
 import { rangeBg } from '../imageEditor/utils';
 import { throttle } from '@/lib/utils';
 
@@ -39,16 +38,6 @@ export default function PixelateControlsShared(props: SharedPixelateProps) {
 
   return (
     <div style={{ display: 'grid', gap: 6, width: '100%', boxSizing: 'border-box' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
-        <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, fontWeight: 600 }}>
-          <Grid size={16} strokeWidth={2} aria-hidden />
-          <span>Pixelate</span>
-        </span>
-        {props.showToggle ? (
-          <input type="checkbox" checked={!!props.enabled} onChange={(e) => props.onToggleEnabled && props.onToggleEnabled(e.target.checked)} aria-label="Enable pixelation" />
-        ) : null}
-      </label>
-
       {props.enabled && (
         <>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -64,9 +53,6 @@ export default function PixelateControlsShared(props: SharedPixelateProps) {
               aria-label="Pixel size"
             />
             <span style={{ minWidth: 32, textAlign: 'right', fontSize: 12 }}>{props.pixelSize}</span>
-          </div>
-
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <select
               value={props.pixelShape ?? 'square'}
               onChange={(e) => onShapeChange(e.target.value as 'square' | 'circle')}

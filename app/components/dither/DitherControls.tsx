@@ -37,11 +37,8 @@ export default function DitherControlsShared({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', boxSizing: 'border-box' }}>
       {/* Two small sliders on one row */}
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', width: '100%' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-            <span style={{ opacity: 0.9 }}>Res</span>
-            <span style={{ opacity: 0.7 }}>{targetLongEdge || 150}</span>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
+          <span style={{ opacity: 0.9, fontSize: 11, whiteSpace: 'nowrap' }}>Res</span>
           <input
             type="range"
             min={50}
@@ -53,19 +50,17 @@ export default function DitherControlsShared({
               setTargetLongEdge && setTargetLongEdge(v);
               scheduleDraw && scheduleDraw();
             }}
-            style={{ width: '100%', minWidth: 0 }}
+            style={{ flex: 1, minWidth: 0 }}
             disabled={disabled}
             aria-label="Dither resolution"
           />
+          <span style={{ opacity: 0.7, fontSize: 11, whiteSpace: 'nowrap' }}>{targetLongEdge || 150}</span>
         </div>
 
         <div style={{ width: 12 }} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-            <span style={{ opacity: 0.9 }}>Lvl</span>
-            <span style={{ opacity: 0.7 }}>{ditherLevels}</span>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
+          <span style={{ opacity: 0.9, fontSize: 11, whiteSpace: 'nowrap' }}>Lvl</span>
           <input
             type="range"
             min={ditherMethod === 'ordered' ? 2 : 3}
@@ -77,15 +72,16 @@ export default function DitherControlsShared({
               setDitherLevels && setDitherLevels(v);
               scheduleDraw && scheduleDraw();
             }}
-            style={{ width: '100%', minWidth: 0 }}
+            style={{ flex: 1, minWidth: 0 }}
             disabled={disabled}
             aria-label="Dither levels"
           />
+          <span style={{ opacity: 0.7, fontSize: 11, whiteSpace: 'nowrap' }}>{ditherLevels}</span>
         </div>
       </div>
 
       {/* Compact control row: color toggle, method, optional palette */}
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center', width: '100%', flexWrap: 'nowrap' }}>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
         <button
           type="button"
           onClick={() => {
@@ -94,7 +90,7 @@ export default function DitherControlsShared({
             scheduleDraw && scheduleDraw();
           }}
           disabled={disabled}
-          style={{ padding: '6px 8px', fontSize: 11, whiteSpace: 'nowrap' }}
+          style={{ padding: '4px 6px', fontSize: 11, whiteSpace: 'nowrap' }}
           aria-label="Toggle color mode"
         >
           {ditherColorMode === 'color' ? 'Color' : 'B&W'}
@@ -112,7 +108,7 @@ export default function DitherControlsShared({
               scheduleDraw && scheduleDraw();
             }}
             disabled={disabled}
-            style={{ padding: '6px', fontSize: 12, minWidth: 0, width: 120 }}
+            style={{ padding: '4px', fontSize: 11, minWidth: 0, flex: 1 }}
             aria-label="Dither method"
           >
             <option value="floyd-steinberg">Floyd</option>
@@ -134,7 +130,7 @@ export default function DitherControlsShared({
               scheduleDraw && scheduleDraw();
             }}
             disabled={disabled}
-            style={{ padding: '6px', fontSize: 12, minWidth: 0, width: 140 }}
+            style={{ padding: '4px', fontSize: 11, minWidth: 0, flex: 1 }}
             aria-label="Dither palette"
           >
             <option value="auto">Auto</option>

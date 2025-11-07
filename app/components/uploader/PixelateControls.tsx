@@ -18,6 +18,7 @@ export function PixelateControls({ effectSettings, onSettingsChange, disabled }:
         pixelShape={(effectSettings.pixelShape as 'square' | 'circle') || 'square'}
         setPixelSize={(v) => onSettingsChange({ ...effectSettings, pixelSize: v })}
         setPixelShape={(s) => onSettingsChange({ ...effectSettings, pixelShape: s })}
+        enabled={true}
       />
     </div>
   );

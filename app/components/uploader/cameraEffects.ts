@@ -4,11 +4,36 @@
  * Orchestrates real-time video frame processing effects
  */
 
-import { CameraEffectSettings, CameraEffectType } from './cameraEffectsTypes';
+import { CameraEffectSettings, CameraEffectType, DEFAULT_ASCII_CHARSET } from './cameraEffectsTypes';
 import { applyPixelateToFrame } from './pixelateEffect';
 import { applyDitherToFrame } from './ditherEffect';
 import { applyAsciiToFrame } from './asciiEffect';
 import { applyFrameOverlay, applyOverlay } from './overlayEffects';
+
+// Canvas pooling for memory management
+const canvasPool: HTMLCanvasElement[] = [];
+const MAX_POOL_SIZE = 10;
+
+function getTempCanvas(width: number, height: number): HTMLCanvasElement {
+  let canvas = canvasPool.pop();
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+  }
+  canvas.width = width;
+  canvas.height = height;
+  return canvas;
+}
+
+function releaseTempCanvas(canvas: HTMLCanvasElement): void {
+  if (canvasPool.length < MAX_POOL_SIZE) {
+    // Clear the canvas before pooling
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    canvasPool.push(canvas);
+  }
+}
 
 // Main function to apply selected effect
 export function applyCameraEffect(
@@ -47,12 +72,12 @@ export function applyCameraEffect(
         else { h = Math.max(1, Math.round(targetLongEdge)); w = Math.max(1, Math.round(targetLongEdge * (width / height))); }
 
         // create small source and output canvases
-        const smallSrc = document.createElement('canvas'); smallSrc.width = w; smallSrc.height = h;
+        const smallSrc = getTempCanvas(w, h);
         const ssrc = smallSrc.getContext('2d', { willReadFrequently: true })!;
         // draw and downscale
         ssrc.drawImage(sourceCtx.canvas, 0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height, 0, 0, w, h);
 
-        const smallOut = document.createElement('canvas'); smallOut.width = w; smallOut.height = h;
+        const smallOut = getTempCanvas(w, h);
         const sout = smallOut.getContext('2d')!;
 
         // perform dithering at small size
@@ -63,6 +88,10 @@ export function applyCameraEffect(
         (targetCtx as any).imageSmoothingEnabled = false;
         targetCtx.drawImage(smallOut, 0, 0, w, h, 0, 0, targetCtx.canvas.width, targetCtx.canvas.height);
         (targetCtx as any).imageSmoothingEnabled = prev;
+
+        // Release canvases back to pool
+        releaseTempCanvas(smallSrc);
+        releaseTempCanvas(smallOut);
       } catch (e) {
         // fallback to direct full-size dithering if anything fails
         applyDitherToFrame(
@@ -85,8 +114,9 @@ export function applyCameraEffect(
         width,
         height,
         settings.asciiCellSize || 8,
-        settings.asciiCharset || ' .:-=+*#%@',
-        settings.asciiInvert || false
+        settings.asciiCharset || DEFAULT_ASCII_CHARSET,
+        settings.asciiInvert || false,
+        settings.asciiColor !== false // Default to true (color enabled)
       );
       break;
 

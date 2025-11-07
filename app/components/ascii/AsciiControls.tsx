@@ -29,21 +29,7 @@ export default function AsciiControlsShared(props: SharedAsciiProps) {
   const scheduleDraw = useMemo(() => props.draw ? throttle(() => props.draw!(), 80) : undefined, [props.draw]);
 
   const applyPreset = (preset: CharsetPreset) => {
-    let set = props.asciiCharset;
-    switch (preset) {
-      case 'custom': set = ' .:-=+*#%@'; break;
-      case 'dense': set = '@%#*+=-:.ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; break;
-      case 'sparse': set = '@%#*:. '; break;
-      case 'dots': set = '●◉○· '; break;
-      case 'blocks': set = '█▓▒░ '; break;
-      case 'lines': set = '│─┼┌┐└┘'; break;
-      case 'numbers': set = '0123456789'; break;
-      case 'letters': set = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; break;
-      default: set = props.asciiCharset; break;
-    }
-    props.setAsciiCharset && props.setAsciiCharset(set);
     props.setAsciiCharsetPreset && props.setAsciiCharsetPreset(preset);
-    if (props.asciiCharsetRef) props.asciiCharsetRef.current = set;
     scheduleDraw && scheduleDraw();
   };
 
@@ -76,20 +62,11 @@ export default function AsciiControlsShared(props: SharedAsciiProps) {
             <span style={{ minWidth: 32, textAlign: 'right', fontSize: 12 }}>{props.asciiCellSize}</span>
           </div>
 
-          <input
-            type="text"
-            value={props.asciiCharset}
-            onChange={(e) => { const v = e.target.value; props.asciiCharsetRef && (props.asciiCharsetRef.current = v); props.setAsciiCharset && props.setAsciiCharset(v); props.setAsciiCharsetPreset && props.setAsciiCharsetPreset('custom'); scheduleDraw && scheduleDraw(); }}
-            placeholder="Charset e.g. @%#*+=-:. "
-            style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid color-mix(in srgb, var(--text) 12%, transparent)', background: 'var(--bg-elev)', color: 'var(--text)', fontSize: 12 }}
-            aria-label="ASCII charset"
-          />
-
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <select
               value={props.asciiCharsetPreset ?? 'custom'}
               onChange={(e) => applyPreset(e.target.value as CharsetPreset)}
-              style={{ padding: '4px 6px', fontSize: 12, borderRadius: 6 }}
+              style={{ padding: '4px 6px', fontSize: 12, borderRadius: 6, flex: 1 }}
               aria-label="ASCII preset"
             >
               <option value="custom">Custom</option>
@@ -112,7 +89,7 @@ export default function AsciiControlsShared(props: SharedAsciiProps) {
               <option value="inverted">Inverted</option>
             </select>
 
-            <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <label style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <input type="checkbox" checked={!!props.asciiColor} onChange={(e) => { props.setAsciiColor && props.setAsciiColor(e.target.checked); scheduleDraw && scheduleDraw(); }} aria-label="ASCII color" />
               <span style={{ fontSize: 12 }}>Color</span>
             </label>

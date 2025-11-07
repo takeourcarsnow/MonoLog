@@ -13,6 +13,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from "react";
+import { RefreshCw, ZoomIn, ZoomOut, X, Camera as CameraIcon, Eye, EyeOff } from 'lucide-react';
 import { Button } from "@/app/components/ui/Button";
 import Portal from "@/app/components/ui/Portal";
 import LogoLoader from "./LogoLoader";
@@ -37,7 +38,7 @@ interface LiveCameraViewProps {
 }
 
 export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveCameraViewProps) {
-  const { videoRef, streamRef, startCamera, stopCamera } = useCamera();
+  const { videoRef, streamRef, facingMode, zoom, setZoom, torchEnabled, startCamera, stopCamera, switchCamera, toggleTorch, applyZoom } = useCamera();
   const { sourceCanvasRef, displayCanvasRef, startRenderLoop, stopRenderLoop } = useRenderLoop();
   const { handleCapture: performCapture } = useCapture();
 
@@ -60,6 +61,12 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
   const [cameraReady, setCameraReady] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [showProcessingOverlay, setShowProcessingOverlay] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [effectsLoaded, setEffectsLoaded] = useState(false);
+
+  // Overlay visibility
+  const [overlayVisible, setOverlayVisible] = useState(true);
+  const toggleOverlay = useCallback(() => setOverlayVisible(v => !v), []);
 
   // Track processing state changes
   const [wasProcessing, setWasProcessing] = useState(false);
@@ -70,17 +77,82 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
   const [selectedFrame, setSelectedFrame] = useState<string | null>(null);
   const [selectedOverlay, setSelectedOverlay] = useState<string | null>(null);
 
-  // Enhanced camera start with ready state
+  // Mobile touch handling
+  const [pinchDistance, setPinchDistance] = useState(0);
+
+  // Enhanced camera start with better error handling
   const startCameraEnhanced = useCallback(async () => {
     try {
+      setError(null);
+      // Start camera stream. We mark `cameraReady` only once the video
+      // element has emitted loadeddata/playing to avoid starting the
+      // render loop before frames are available (this caused the UI to
+      // remain blank until a zoom change forced a rerender).
       await startCamera();
-      setCameraReady(true);
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      alert('Could not access camera. Please grant camera permissions.');
-      onClose();
+
+      setCameraReady(false);
+
+      const video = videoRef.current;
+      let settled = false;
+      const onReady = () => {
+        if (settled) return;
+        settled = true;
+        setCameraReady(true);
+        if (video) {
+          video.removeEventListener('loadeddata', onReady);
+          video.removeEventListener('playing', onReady);
+        }
+      };
+
+      if (video) {
+        // If already have enough data, mark ready synchronously
+        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          onReady();
+        } else {
+          video.addEventListener('loadeddata', onReady, { once: true } as any);
+          video.addEventListener('playing', onReady, { once: true } as any);
+          // Fallback timeout: if the events don't fire within 1s, assume ready
+          setTimeout(() => onReady(), 1000);
+        }
+      } else {
+        // No video element available — mark ready to avoid locking UI
+        setCameraReady(true);
+      }
+    } catch (error: any) {
+      let errorMessage = 'Failed to access camera.';
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = 'No camera found. Please connect a camera and try again.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = 'Camera is being used by another application. Please close other apps using the camera.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = 'Camera does not support the required settings. Trying with basic settings...';
+        // Fallback to basic constraints
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+          if (videoRef.current) {
+            videoRef.current.srcObject = basicStream;
+            videoRef.current.onloadedmetadata = () => {
+              videoRef.current?.play();
+            };
+          }
+          setCameraReady(true);
+          return;
+        } catch (fallbackError) {
+          errorMessage = 'Unable to access camera with any settings.';
+        }
+      }
+      
+      setError(errorMessage);
+      console.error('Camera error:', error);
+      // Don't auto-close, let user try again or close manually
     }
-  }, [startCamera, onClose]);
+  }, [startCamera, videoRef]);
 
   // Handle capture
   const handleCapture = useCallback(() => {
@@ -267,7 +339,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
   // Start render loop when camera is ready and not capturing
   useEffect(() => {
     if (cameraReady && !isCapturing) {
-      startRenderLoop(effectSettings, isCapturing, videoRef, streamRef);
+      startRenderLoop(effectSettings, isCapturing, videoRef, streamRef, applyZoom);
     } else {
       stopRenderLoop();
     }
@@ -275,7 +347,102 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     return () => {
       stopRenderLoop();
     };
-  }, [cameraReady, isCapturing, effectSettings, startRenderLoop, stopRenderLoop, videoRef, streamRef]);
+  }, [cameraReady, isCapturing, effectSettings, startRenderLoop, stopRenderLoop, videoRef, streamRef, applyZoom]);
+
+  // Progressive loading of effects
+  useEffect(() => {
+    if (isOpen) {
+      // Load frames and overlays progressively
+      getFrameFiles().then(setFrameFiles).catch(() => setFrameFiles([]));
+      getOverlayFiles().then(setOverlayFiles).catch(() => setOverlayFiles([]));
+      
+      // Mark effects as loaded after a short delay to simulate loading
+      const timer = setTimeout(() => setEffectsLoaded(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  // Mobile touch handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      setPinchDistance(distance);
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchDistance > 0) {
+      e.preventDefault(); // Prevent scrolling
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scale = distance / pinchDistance;
+      setZoom(prev => Math.max(1, Math.min(5, prev * scale)));
+      setPinchDistance(distance);
+    }
+  }, [pinchDistance]);
+
+  const handleTouchEnd = useCallback(() => {
+    setPinchDistance(0);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      // Don't trigger shortcuts when typing in inputs
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.key) {
+        case ' ':
+        case 'Enter':
+          e.preventDefault();
+          if (cameraReady && !isCapturing && !processing) {
+            handleCapture();
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          handleClose();
+          break;
+        case 'c':
+        case 'C':
+          e.preventDefault();
+          switchCamera();
+          break;
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          toggleTorch();
+          break;
+        case 'o':
+        case 'O':
+          e.preventDefault();
+          toggleOverlay();
+          break;
+        case '+':
+        case '=':
+          e.preventDefault();
+          setZoom(prev => Math.min(5, prev + 0.5));
+          break;
+        case '-':
+        case '_':
+          e.preventDefault();
+          setZoom(prev => Math.max(1, prev - 0.5));
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, cameraReady, isCapturing, processing, handleCapture, handleClose, switchCamera, toggleTorch, toggleOverlay]);
 
   // Add modal blur effect
   useEffect(() => {
@@ -292,7 +459,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
   if (!isOpen) return null;
 
-  const disabled = isCapturing || processing;
+  const disabled = isCapturing || processing || !cameraReady;
 
   return (
     <Portal>
@@ -318,11 +485,11 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
             maxWidth: 720,
             maxHeight: 'calc(100vh - 24px)',
             background: 'var(--bg)',
-            borderRadius: 8,
-            padding: 12,
+            borderRadius: 6,
+            padding: 8,
             display: 'flex',
             flexDirection: 'column',
-            gap: 12,
+            gap: 8,
             margin: 'auto',
             overflowY: 'auto',
           }}
@@ -352,10 +519,185 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 borderRadius: 6,
                 filter: showProcessingOverlay ? 'blur(8px) brightness(0.7)' : 'none',
                 transition: 'filter 0.2s ease',
+                touchAction: 'none', // Prevent default touch behaviors
               }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              aria-label={`Live camera preview with ${effectSettings.type} effect applied`}
+              role="img"
             />
 
-            {!cameraReady && (
+            {/* Controls overlay at bottom of photo */}
+            {cameraReady && !showProcessingOverlay && overlayVisible && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 8,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  zIndex: 3,
+                  background: 'rgba(0,0,0,0.18)',
+                  padding: '6px 8px',
+                  borderRadius: 12,
+                }}>
+                {/* Switch camera (left) */}
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <button
+                      onClick={switchCamera}
+                      disabled={disabled}
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 8,
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#fff',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14,
+                        cursor: 'pointer'
+                      }}
+                      aria-label="Switch camera"
+                      title="Switch between front and back camera"
+                    >
+                      <RefreshCw size={14} />
+                    </button>
+                </div>
+
+                {/* Center group: zoom out, capture, zoom in */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    onClick={() => setZoom(prev => Math.max(1, prev - 0.5))}
+                    disabled={disabled || zoom <= 1}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 8,
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#fff',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 14,
+                      cursor: 'pointer'
+                    }}
+                    aria-label="Zoom out"
+                    title="Zoom out"
+                  >
+                    <ZoomOut size={14} />
+                  </button>
+
+                  <button
+                    onClick={handleCapture}
+                    disabled={!cameraReady || disabled}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 999,
+                      background: 'transparent',
+                      border: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: !cameraReady || disabled ? 'not-allowed' : 'pointer'
+                    }}
+                    aria-label="Capture photo"
+                    title="Capture"
+                  >
+                    {isCapturing || processing ? (
+                      <LogoLoader size={16} variant="other" />
+                    ) : (
+                      <CameraIcon size={16} color="#ff3b30" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setZoom(prev => Math.min(5, prev + 0.5))}
+                    disabled={disabled || zoom >= 5}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 8,
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#fff',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 14,
+                      cursor: 'pointer'
+                    }}
+                    aria-label="Zoom in"
+                    title="Zoom in"
+                  >
+                    <ZoomIn size={14} />
+                  </button>
+                </div>
+
+                {/* Close (right) */}
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <button
+                    onClick={handleClose}
+                    disabled={disabled}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 8,
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#fff',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 14,
+                      cursor: 'pointer'
+                    }}
+                    aria-label="Close camera"
+                    title="Close"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Error display */}
+            {error && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  background: 'rgba(0,0,0,0.8)',
+                  color: '#fff',
+                  padding: 16,
+                  borderRadius: 8,
+                  textAlign: 'center',
+                  maxWidth: '80%',
+                  zIndex: 4,
+                }}
+              >
+                <div style={{ fontSize: 18, marginBottom: 8 }}>📷</div>
+                <div style={{ fontSize: 14, marginBottom: 12 }}>{error}</div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                  <Button onClick={startCameraEnhanced} size="sm">
+                    Try Again
+                  </Button>
+                  <Button onClick={onClose} variant="ghost" size="sm">
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {!cameraReady && !error && (
               <div
                 style={{
                   position: 'absolute',
@@ -392,12 +734,24 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
             )}
           </div>
 
+          {/* Action buttons moved into bottom overlay for compact UI */}
+
+          {/* Status info removed for simplified layout */}
+
+          {/* Loading indicator removed for simplified layout */}
+
           {/* Effect selection buttons */}
-          <EffectControls
-            effectType={effectSettings.type}
-            onEffectChange={(type) => setEffectSettings({ ...effectSettings, type })}
-            disabled={disabled}
-          />
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ padding: 4, borderRadius: 8, background: 'rgba(0,0,0,0.14)', display: 'flex', gap: 6, alignItems: 'center' }}>
+              <EffectControls
+                effectType={effectSettings.type}
+                onEffectChange={(type) => setEffectSettings({ ...effectSettings, type })}
+                disabled={disabled}
+                overlayVisible={overlayVisible}
+                toggleOverlay={toggleOverlay}
+              />
+            </div>
+          </div>
 
           {/* Effect-specific controls */}
           {effectSettings.type === 'pixelate' && (
@@ -446,22 +800,6 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
             />
           )}
 
-          {/* Action buttons */}
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-            <Button onClick={handleCapture} disabled={!cameraReady || disabled}>
-              {(isCapturing || processing) ? (
-                <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-                  <LogoLoader size={20} variant="other" />
-                  <span>Processing</span>
-                </span>
-              ) : (
-                'Capture'
-              )}
-            </Button>
-            <Button variant="ghost" onClick={handleClose} disabled={disabled}>
-              Close
-            </Button>
-          </div>
         </div>
       </div>
     </Portal>

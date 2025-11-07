@@ -11,8 +11,8 @@ interface FrameSelectorProps {
 
 export function FrameSelector({ frameFiles, selectedFrame, onSelectFrame, disabled }: FrameSelectorProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 0' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 8 }}>
+    <div style={{ padding: '8px 0' }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
         {frameFiles.map((file) => {
           const thumbUrl = `/frames/${file}`;
           return (
@@ -22,10 +22,11 @@ export function FrameSelector({ frameFiles, selectedFrame, onSelectFrame, disabl
               onClick={() => onSelectFrame(file)}
               disabled={disabled}
               style={{
-                width: 60,
-                height: 60,
+                flexShrink: 0,
+                width: 48,
+                height: 48,
                 border: 'none',
-                borderRadius: 8,
+                borderRadius: 6,
                 backgroundImage: `url("${thumbUrl}")`,
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',

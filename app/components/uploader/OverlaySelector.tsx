@@ -21,8 +21,8 @@ export function OverlaySelector({
   disabled
 }: OverlaySelectorProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 0' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 8 }}>
+    <div style={{ padding: '8px 0' }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
         {overlayFiles.map((file) => {
           const thumbUrl = `/overlays/thumbs/${file}`;
           return (
@@ -32,10 +32,11 @@ export function OverlaySelector({
               onClick={() => onSelectOverlay(file)}
               disabled={disabled}
               style={{
-                width: 60,
-                height: 60,
+                flexShrink: 0,
+                width: 48,
+                height: 48,
                 border: 'none',
-                borderRadius: 8,
+                borderRadius: 6,
                 backgroundImage: `url("${thumbUrl}")`,
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',
@@ -52,52 +53,6 @@ export function OverlaySelector({
           );
         })}
       </div>
-      {effectSettings.overlay && (
-        <>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
-            {['multiply', 'screen', 'overlay', 'soft-light'].map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                className={`btn mini ${effectSettings.overlay?.blendMode === mode ? 'active' : ''}`}
-                onClick={() => {
-                  if (effectSettings.overlay) {
-                    onSettingsChange({
-                      ...effectSettings,
-                      overlay: { ...effectSettings.overlay, blendMode: mode }
-                    });
-                  }
-                }}
-                disabled={disabled}
-                style={{ fontSize: '0.7rem', padding: '3px 6px', textTransform: 'capitalize' }}
-              >
-                {mode}
-              </button>
-            ))}
-          </div>
-          <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ minWidth: 60 }}>Opacity:</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={effectSettings.overlay?.opacity || 0.85}
-              onChange={(e) => {
-                if (effectSettings.overlay) {
-                  onSettingsChange({
-                    ...effectSettings,
-                    overlay: { ...effectSettings.overlay, opacity: parseFloat(e.target.value) }
-                  });
-                }
-              }}
-              style={{ flex: 1 }}
-              disabled={disabled}
-            />
-            <span style={{ minWidth: 30, textAlign: 'right' }}>{Math.round((effectSettings.overlay?.opacity || 0.85) * 100)}%</span>
-          </label>
-        </>
-      )}
     </div>
   );
 }

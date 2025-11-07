@@ -8,7 +8,9 @@ interface ExifSectionProps {
 }
 
 export const ExifSection = ({ showExif, camera, lens, filmType }: ExifSectionProps) => {
-  if (!(camera || lens || filmType)) return null;
+  const hasData = !!(camera || lens || filmType);
+  
+  if (!hasData) return null;
 
   return (
     <div className={`exif-section ${showExif ? 'open' : ''}`}>

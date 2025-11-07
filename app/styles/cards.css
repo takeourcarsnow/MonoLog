@@ -1559,7 +1559,9 @@
   max-height: 0px;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 300ms ease !important, 
+              opacity 300ms ease !important;
+  margin-top: 0;
 }
 .exif-section > * {
   /* ensure inner wrapper doesn't overflow visually during the transition */
@@ -1569,6 +1571,7 @@
   /* visible state */
   opacity: 1;
   max-height: 120px; /* increased to accommodate vertical layout with multiple lines */
+  margin-top: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

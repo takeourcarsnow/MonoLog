@@ -25,8 +25,18 @@ export function useAddPhoto({
     if (dataUrls.length >= 5) {
       return;
     }
-    setShowAddPhotoMenu(true);
-  }, [dataUrls.length]);
+    // Open live camera immediately when user taps "Add Photos" when possible.
+    if (navigator.mediaDevices) {
+      setShowAddPhotoMenu(false);
+      setLiveCameraOpen(true);
+    } else {
+      // Fallback to file picker when getUserMedia is not available
+      setShowAddPhotoMenu(false);
+      fileActionRef.current = 'append';
+      try { if (fileInputRef.current) (fileInputRef.current as HTMLInputElement).value = ""; } catch (_) {}
+      try { fileInputRef.current?.click(); } catch (_) {}
+    }
+  }, [dataUrls.length, setLiveCameraOpen, fileActionRef, fileInputRef]);
 
   const handleAddFromFile = useCallback(() => {
     setShowAddPhotoMenu(false);

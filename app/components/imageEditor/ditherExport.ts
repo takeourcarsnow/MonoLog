@@ -1,4 +1,5 @@
 import { renderProcessedForExport, clamp255 } from './exportEffectUtils';
+import { getPaletteFromChoice } from './palettes';
 
 export function applyDitherExport(
   img: HTMLImageElement,
@@ -48,51 +49,7 @@ export function applyDitherExport(
   // palette for color mode
   let palette: number[] | null = null;
   if (colorMode === 'color') {
-    const palettes: Record<string, number[]> = {
-      gameboy: [155,188,15, 139,172,15, 48,98,48, 15,56,15],
-      pico8: [
-        0,0,0, 29,43,83, 126,37,83, 0,135,81, 171,82,54, 95,87,79, 194,195,199, 255,241,232,
-        255,0,77, 255,163,0, 255,236,39, 0,228,54, 41,173,255, 131,118,156, 255,119,168, 255,204,170
-      ],
-      nes: [
-        124,124,124, 0,0,252, 0,0,188, 68,40,188, 148,0,132, 168,0,32, 168,16,0, 136,20,0,
-        80,48,0, 0,120,0, 0,104,0, 0,88,0, 0,64,88, 0,0,0, 0,0,0, 0,0,0,
-        188,188,188, 0,120,248, 0,88,248, 104,68,252, 216,0,204, 228,0,88, 248,56,0, 228,92,16,
-        172,124,0, 0,184,0, 0,168,0, 0,168,68, 0,136,136, 0,0,0, 0,0,0, 0,0,0,
-        248,248,248, 60,188,252, 104,136,252, 152,120,248, 248,184,248, 248,88,152, 248,120,88, 252,160,68,
-        248,184,0, 184,248,24, 88,216,84, 88,248,152, 0,232,216, 120,120,120, 0,0,0, 0,0,0,
-        252,252,252, 164,228,252, 184,184,248, 216,184,248, 248,184,248, 248,164,192, 240,208,176, 252,224,168,
-        248,216,120, 216,248,120, 184,248,184, 184,248,216, 0,252,252, 248,216,248, 0,0,0, 0,0,0
-      ],
-      zx_spectrum: [0,0,0, 0,0,215, 215,0,0, 215,0,215, 0,215,0, 0,215,215, 0,0,255, 215,215,0, 215,215,215],
-      atari_2600: [0,0,0, 255,255,255, 255,0,0, 0,255,0, 0,0,255, 0,255,255, 255,0,255, 255,255,0],
-      commodore64: [
-        0,0,0, 255,255,255, 136,0,0, 170,255,238, 204,68,204, 0,204,85, 0,0,170, 238,238,119,
-        221,136,85, 102,68,0, 255,119,119, 51,51,51, 119,119,119, 170,255,102, 0,136,255, 187,187,187
-      ],
-      apple_ii: [
-        0,0,0, 221,0,51, 0,0,153, 170,0,204, 0,153,0, 0,153,153, 0,0,255, 170,170,255,
-        153,102,51, 255,102,0, 153,153,153, 255,153,153, 102,255,102, 255,255,102, 102,255,255, 255,255,255
-      ]
-    };
-    if (paletteName === 'gameboy') palette = palettes.gameboy;
-    else if (paletteName === 'pico8') palette = palettes.pico8;
-    else if (paletteName === 'nes') palette = palettes.nes;
-    else if (paletteName === 'zx_spectrum') palette = palettes.zx_spectrum;
-    else if (paletteName === 'atari_2600') palette = palettes.atari_2600;
-    else if (paletteName === 'commodore64') palette = palettes.commodore64;
-    else if (paletteName === 'apple_ii') palette = palettes.apple_ii;
-    else if (customPaletteStr) {
-      const parts = customPaletteStr.split(',').map(s=>s.trim()).filter(Boolean);
-      const arr: number[] = [];
-      for (const hex of parts) {
-        const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-        if (!m) continue;
-        const v = parseInt(m[1],16);
-        arr.push((v>>16)&255, (v>>8)&255, v&255);
-      }
-      if (arr.length>=3) palette = arr;
-    }
+    palette = getPaletteFromChoice(paletteName, customPaletteStr);
   }
 
   if (colorMode === 'bw') {

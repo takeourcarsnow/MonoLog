@@ -13,7 +13,14 @@ export function restoreFocusWithin(el: HTMLElement) {
   const nodes = el.querySelectorAll<HTMLElement>('a[href], button, input, textarea, select, [tabindex]');
   nodes.forEach((node) => {
     const orig = node.getAttribute('data-orig-tabindex');
-    if (orig === '') node.removeAttribute('tabindex'); else if (orig !== null) node.setAttribute('tabindex', orig);
+    if (orig === null) {
+      // No original value recorded; leave as-is
+    } else if (orig === '') {
+      // Original had no tabindex attribute
+      node.removeAttribute('tabindex');
+    } else {
+      node.setAttribute('tabindex', orig);
+    }
     node.removeAttribute('data-orig-tabindex');
   });
 }

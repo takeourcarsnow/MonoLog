@@ -2,9 +2,13 @@ import { getClient, logSupabaseError } from "../client";
 import { mapRowToHydratedPost } from "../utils";
 import { SELECT_POST_WITH_PROFILES } from "../sql";
 
-export async function getUserPosts(userId: string) {
+export async function getUserPosts(userId: string, limit?: number) {
   const sb = getClient();
-  const { data, error } = await sb.from("posts").select(SELECT_POST_WITH_PROFILES).eq("user_id", userId).order("created_at", { ascending: false });
+  let query = sb.from("posts").select(SELECT_POST_WITH_PROFILES).eq("user_id", userId).order("created_at", { ascending: false });
+  if (limit) {
+    query = query.limit(limit);
+  }
+  const { data, error } = await query;
   logSupabaseError("getUserPosts", { data, error });
   if (error) throw error;
   return (data || []).map((row: any) => mapRowToHydratedPost(row));

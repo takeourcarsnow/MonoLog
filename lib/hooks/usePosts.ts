@@ -11,8 +11,8 @@ export function useExploreFeed() {
   return useSWR<HydratedPost[]>('exploreFeed', () => api.getExploreFeed(), defaultSWRConfig);
 }
 
-export function useUserPosts(userId: string) {
-  return useSWR<HydratedPost[]>(`userPosts-${userId}`, () => api.getUserPosts(userId), defaultSWRConfig);
+export function useUserPosts(userId: string, limit?: number) {
+  return useSWR<HydratedPost[]>(`userPosts-${userId}-${limit || 'all'}`, () => api.getUserPosts(userId, limit), defaultSWRConfig);
 }
 
 export function usePost(postId: string) {

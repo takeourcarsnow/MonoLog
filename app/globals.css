@@ -355,6 +355,75 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
   }
 }
 
+/* Subtle pulse animation for avatar action buttons */
+@keyframes subtle-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Story ring animation for active stories indicator */
+@keyframes story-ring-pulse {
+  0%, 100% {
+    boxShadow:
+      0 0 0 0 rgba(255, 0, 150, 0.8),
+      0 0 0 0 rgba(0, 204, 255, 0.8),
+      0 0 0 4px rgba(255, 126, 57, 0.6);
+  }
+  33% {
+    boxShadow:
+      0 0 0 8px rgba(255, 0, 150, 0),
+      0 0 0 0 rgba(0, 204, 255, 0.8),
+      0 0 0 4px rgba(255, 126, 57, 0.6);
+  }
+  66% {
+    boxShadow:
+      0 0 0 8px rgba(255, 0, 150, 0),
+      0 0 0 8px rgba(0, 204, 255, 0),
+      0 0 0 4px rgba(255, 126, 57, 0.6);
+  }
+}
+
+/* Rainbow border rotation animation */
+@keyframes rainbow-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Active stories indicator styling */
+.has-stories {
+  animation:
+    story-ring-pulse 2s ease-in-out infinite,
+    rainbow-rotate 3s linear infinite;
+  border: 3px solid transparent;
+  background: linear-gradient(45deg, #ff0096, #00ccff, #ff7e39, #ffff00, #ff0096) border-box;
+  background-size: 400% 400%;
+  position: relative;
+  will-change: box-shadow, background-position;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .has-stories {
+    animation: none;
+  }
+  .subtle-pulse {
+    animation: none !important;
+  }
+}
+
 /* Invert default avatar (logo.svg) in light mode for better visibility */
 :root.theme-light .default-avatar {
   filter: invert(1);

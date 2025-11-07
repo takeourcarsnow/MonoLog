@@ -8,7 +8,7 @@ import { calendarStats } from "./calendar";
 import { weekReviewStats } from "./weekReview";
 import { getCommunities, getCommunity, createCommunity, updateCommunity, joinCommunity, leaveCommunity, deleteCommunity, isCommunityMember, getCommunityThreads, getThread, getThreadBySlug, createThread, updateThread, deleteThread, getThreadReplies, addThreadReply, deleteThreadReply, editThreadReply, hasNewThreads } from "./communities";
 import { search } from "./search";
-import { createStory, getActiveStoriesForUser, getFollowingStories, markStoryViewed } from './stories';
+import { createStory, getActiveStoriesForUser, getFollowingStories, markStoryViewed, deleteStory } from './stories';
 import { getNotifications, markNotificationsRead, getUnreadNotificationsCount, markAllNotificationsRead } from "./notifications";
 import type { Api } from "../types";
 
@@ -83,6 +83,7 @@ export const supabaseApi: Api = {
   getFollowingStories,
   createStory,
   markStoryViewed,
+  deleteStory,
 };
 
 // Re-export client accessors for direct use by components

@@ -7,6 +7,9 @@ import Image from "next/image";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User, Story } from "@/lib/types";
+import { Camera, Upload } from "lucide-react";
+import { LiveCameraView } from "@/app/components/uploader/LiveCameraView";
+import { dedupe } from "@/lib/requestDeduplication";
 
 interface ProfileAvatarProps {
   user: User;
@@ -17,6 +20,7 @@ interface ProfileAvatarProps {
 export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAvatarProps) {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const storyInputRef = useRef<HTMLInputElement | null>(null);
+  const avatarContainerRef = useRef<HTMLDivElement | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   // expanded controls in-place scale animation of avatar
   const [expanded, setExpanded] = useState(false);
@@ -26,6 +30,10 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
   const [ownStories, setOwnStories] = useState<Story[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIdx, setViewerIdx] = useState(0);
+  const [showLiveCamera, setShowLiveCamera] = useState(false);
+  const [showActionButtons, setShowActionButtons] = useState(false);
+  const [storyUploading, setStoryUploading] = useState(false);
+  const [deleteArmed, setDeleteArmed] = useState(false);
 
   useEffect(() => {
     if (!expanded) return;
@@ -49,7 +57,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
     let mounted = true;
     (async () => {
       try {
-        const stories = await api.getActiveStoriesForUser(user.id);
+        const stories = await dedupe(`getActiveStoriesForUser:${user.id}`, () => api.getActiveStoriesForUser(user.id));
         if (mounted) {
           setHasActiveStories(stories.length > 0);
           setOwnStories(stories);
@@ -223,11 +231,11 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
     }
   };
 
-  const handleStoryChange = async () => {
-    const f = storyInputRef.current?.files?.[0];
-    if (!f) return;
+  const handleStoryChangeFromFile = async (file: File) => {
+    setStoryUploading(true);
+    setHasActiveStories(true); // Optimistic update
     try {
-      const dataUrl = await compressImage(f);
+      const dataUrl = await compressImage(file);
       const parts = dataUrl.split(',');
       const meta = parts[0];
       const mime = meta.split(':')[1].split(';')[0];
@@ -235,15 +243,15 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
       let n = bstr.length;
       const u8arr = new Uint8Array(n);
       while (n--) u8arr[n] = bstr.charCodeAt(n);
-      const file = new File([u8arr], `${uid()}.jpg`, { type: mime });
+      const processedFile = new File([u8arr], `${uid()}.jpg`, { type: mime });
 
       const sb = getSupabaseClient();
       const userObj = await api.getCurrentUser();
       if (!userObj) throw new Error("Not logged in");
       const uploaderId = userObj.id || currentUserId;
       if (!uploaderId) throw new Error("Cannot determine user id for story upload");
-      const path = `stories/${uploaderId}/${file.name}`;
-      const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, file, { upsert: true, contentType: file.type, cacheControl: 'public, max-age=31536000, immutable' });
+      const path = `stories/${uploaderId}/${processedFile.name}`;
+      const { data: uploadData, error: uploadErr } = await sb.storage.from("posts").upload(path, processedFile, { upsert: true, contentType: processedFile.type, cacheControl: 'public, max-age=31536000, immutable' });
       if (uploadErr) throw uploadErr;
       const urlRes = sb.storage.from("posts").getPublicUrl(path);
       const publicUrl = urlRes.data.publicUrl;
@@ -251,12 +259,39 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
       await api.createStory({ mediaUrl: publicUrl, mediaType: 'image' });
 
       // Refresh stories
-      const stories = await api.getActiveStoriesForUser(user.id);
+      const stories = await dedupe(`getActiveStoriesForUser:${user.id}`, () => api.getActiveStoriesForUser(user.id));
       setHasActiveStories(stories.length > 0);
       setOwnStories(stories);
     } catch (e: any) {
       console.warn(e?.message || "Failed to upload story");
+      // Refresh to correct state on failure
+      try {
+        const stories = await dedupe(`getActiveStoriesForUser:${user.id}`, () => api.getActiveStoriesForUser(user.id));
+        setHasActiveStories(stories.length > 0);
+        setOwnStories(stories);
+      } catch (_) {
+        // ignore
+      }
+    } finally {
+      setStoryUploading(false);
     }
+  };
+
+  const handleLiveCameraCapture = async (blob: Blob) => {
+    setStoryUploading(true);
+    try {
+      const file = new File([blob], `story-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      await handleStoryChangeFromFile(file);
+    } catch (e: any) {
+      console.warn(e?.message || "Failed to process camera capture");
+      setStoryUploading(false);
+    }
+  };
+
+  const handleStoryChange = async () => {
+    const f = storyInputRef.current?.files?.[0];
+    if (!f) return;
+    await handleStoryChangeFromFile(f);
   };
 
   // Auto advance stories
@@ -297,29 +332,188 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
     };
   }, [viewerOpen]);
 
+  useEffect(() => {
+    if (!viewerOpen) {
+      setDeleteArmed(false);
+    }
+  }, [viewerOpen]);
+
+  useEffect(() => {
+    setDeleteArmed(false);
+  }, [viewerIdx]);
+
+  // Hide action buttons when clicking outside
+  useEffect(() => {
+    if (!showActionButtons) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (avatarContainerRef.current && !avatarContainerRef.current.contains(event.target as Node)) {
+        setShowActionButtons(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showActionButtons]);
+
   return (
     <>
       {currentUserId && user?.id === currentUserId ? (
         <>
-          <button
-            className="avatar-button"
-            aria-label={hasActiveStories ? "View your stories or change avatar" : "Change avatar"}
-            onClick={() => {
-              if (hasActiveStories) {
-                setViewerOpen(true);
-                setViewerIdx(0);
-              } else {
-                avatarInputRef.current?.click();
-              }
-            }}
-            disabled={avatarUploading}
-            aria-busy={avatarUploading}
-            type="button"
-          >
-            <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''}`} style={{ width: 160, height: 160, outline: hasActiveStories ? '4px solid #ff7e39' : 'none', outlineOffset: 4, borderRadius: 9999 }}>
-              <OptimizedImage key={user.avatarUrl} className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} priority loading="eager" disableLoadingTransition />
+          <div className="avatar-container" ref={avatarContainerRef} style={{ position: 'relative', display: 'inline-block' }}>
+            <div className="avatar-section">
+              <button
+                className="avatar-button"
+                aria-label={hasActiveStories ? "View your stories" : "Avatar"}
+                onClick={() => {
+                  if (hasActiveStories) {
+                    setViewerOpen(true);
+                    setViewerIdx(0);
+                  } else {
+                    setShowActionButtons(prev => !prev);
+                  }
+                }}
+                disabled={avatarUploading}
+                aria-busy={avatarUploading}
+                type="button"
+              >
+                <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''} ${hasActiveStories ? 'has-stories' : ''}`} style={{ width: 160, height: 160, outline: 'none', outlineOffset: 4, borderRadius: 9999, position: 'relative' }}>
+                  <OptimizedImage key={user.avatarUrl} className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} priority loading="eager" disableLoadingTransition style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px' }} />
+                  {!hasActiveStories && (
+                    <div className="camera-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 24, fontWeight: 'bold' }}>
+                      📷
+                    </div>
+                  )}
+                </div>
+              </button>
             </div>
-          </button>
+            {showActionButtons && !hasActiveStories && (
+              <div className="avatar-actions" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, zIndex: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowLiveCamera(true)}
+                  disabled={storyUploading}
+                  style={{
+                    padding: '16px',
+                    color: 'var(--text)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: storyUploading ? 'not-allowed' : 'pointer',
+                    background: 'transparent',
+                    outline: 'none',
+                    boxShadow: 'none',
+                    transition: 'var(--transition-fast)',
+                    animation: storyUploading ? 'none' : 'subtle-pulse 2s ease-in-out infinite',
+                    opacity: storyUploading ? 0.5 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!storyUploading) {
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!storyUploading) {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = '2px solid var(--primary)';
+                    e.currentTarget.style.outlineOffset = '2px';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.outline = 'none';
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!storyUploading) setShowLiveCamera(true);
+                    }
+                  }}
+                  aria-label="Take photo"
+                  tabIndex={0}
+                >
+                  {storyUploading ? (
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      border: '2px solid var(--border)',
+                      borderTop: '2px solid var(--primary)',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
+                  ) : (
+                    <Camera size={40} strokeWidth={2} />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); storyInputRef.current?.click(); }}
+                  disabled={storyUploading}
+                  style={{
+                    padding: '16px',
+                    color: 'var(--text)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: storyUploading ? 'not-allowed' : 'pointer',
+                    background: 'transparent',
+                    outline: 'none',
+                    boxShadow: 'none',
+                    transition: 'var(--transition-fast)',
+                    animation: storyUploading ? 'none' : 'subtle-pulse 2s ease-in-out infinite',
+                    opacity: storyUploading ? 0.5 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!storyUploading) {
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!storyUploading) {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = '2px solid var(--primary)';
+                    e.currentTarget.style.outlineOffset = '2px';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.outline = 'none';
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!storyUploading) storyInputRef.current?.click();
+                    }
+                  }}
+                  aria-label="Upload file"
+                  tabIndex={0}
+                >
+                  {storyUploading ? (
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      border: '2px solid var(--border)',
+                      borderTop: '2px solid var(--primary)',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
+                  ) : (
+                    <Upload size={40} strokeWidth={2} />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
           <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} disabled={avatarUploading} />
           <input type="file" accept="image/*,video/*" ref={storyInputRef} style={{ display: 'none' }} onChange={handleStoryChange} />
         </>
@@ -334,7 +528,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
             style={{ background: 'none', border: 'none', padding: 0, cursor: expanded ? 'zoom-out' : 'zoom-in' }}
           >
             <div
-              className={`avatar-wrap ${expanded ? 'avatar-expanded' : ''}`}
+              className={`avatar-wrap ${expanded ? 'avatar-expanded' : ''} ${hasActiveStories ? 'has-stories' : ''}`}
               style={{
                 width: 160,
                 height: 160,
@@ -364,21 +558,80 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
                 priority
                 loading="eager"
                 disableLoadingTransition
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px', filter: expanded ? 'none' : 'none', outline: hasActiveStories ? '4px solid #ff7e39' : 'none', outlineOffset: 4 }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px', filter: expanded ? 'none' : 'none' }}
               />
             </div>
           </button>
         </>
       )}
+      <LiveCameraView
+        isOpen={showLiveCamera}
+        onClose={() => setShowLiveCamera(false)}
+        onCapture={handleLiveCameraCapture}
+        processing={false}
+      />
       {viewerOpen && ownStories.length > 0 && createPortal(
         <div className="story-viewer-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10000, height: '100vh' }} onClick={() => setViewerOpen(false)}>
-          <div style={{ position: 'absolute', top: 12, left: 12 }} onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => setViewerOpen(false)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Close</button>
-          </div>
-          <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => setViewerIdx(v => v === 0 ? ownStories.length - 1 : v - 1)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Prev</button>
-            <button type="button" onClick={() => setViewerIdx(v => (v + 1) % ownStories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Next</button>
-            <button type="button" onClick={() => storyInputRef.current?.click()} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Add Story</button>
+          <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => setViewerIdx(v => v === 0 ? ownStories.length - 1 : v - 1)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px', borderRadius: 8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <button type="button" onClick={() => setViewerIdx(v => (v + 1) % ownStories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px', borderRadius: 8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <button type="button" onClick={async () => {
+              if (!deleteArmed) {
+                setDeleteArmed(true);
+                return;
+              }
+              try {
+                await api.deleteStory(ownStories[viewerIdx].id);
+                const updatedStories = await dedupe(`getActiveStoriesForUser:${user.id}`, () => api.getActiveStoriesForUser(user.id));
+                setOwnStories(updatedStories);
+                setHasActiveStories(updatedStories.length > 0);
+                if (updatedStories.length === 0) {
+                  setViewerOpen(false);
+                } else if (viewerIdx >= updatedStories.length) {
+                  setViewerIdx(updatedStories.length - 1);
+                }
+                setDeleteArmed(false);
+              } catch (e: any) {
+                console.warn('Failed to delete story:', e?.message);
+                setDeleteArmed(false);
+              }
+            }} style={{ background: deleteArmed ? 'rgba(255,0,0,0.3)' : 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px', borderRadius: 8 }}>
+              {deleteArmed ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 6h18" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10 11v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 11v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+            <button type="button" onClick={() => setShowLiveCamera(true)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px', borderRadius: 8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </button>
+            <button type="button" onClick={() => storyInputRef.current?.click()} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px', borderRadius: 8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
           <div style={{ maxWidth: '90vw', maxHeight: '80vh', width: 'min(640px, 90vw)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
             {ownStories[viewerIdx].mediaType === 'video' ? (

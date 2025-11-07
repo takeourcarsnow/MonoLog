@@ -98,7 +98,11 @@ export async function GET(req: Request) {
 
     const hasNewActivity = (threads && threads.length > 0) || hasNewReplies;
 
-    return NextResponse.json({ hasNewThreads: hasNewActivity });
+    return NextResponse.json({ hasNewThreads: hasNewActivity }, {
+      headers: {
+        'Cache-Control': 'private, s-maxage=60, stale-while-revalidate=180',
+      },
+    });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

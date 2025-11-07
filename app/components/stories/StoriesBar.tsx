@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '@/lib/api';
 import type { Story } from '@/lib/types';
@@ -11,24 +11,50 @@ export function StoriesBar() {
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ user: Item['user']; stories: Story[]; idx: number } | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    const fetchStories = async () => {
       try {
         const data = await api.getFollowingStories();
         if (mounted) setItems(data.filter(d => d.stories.length));
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load stories');
       }
-    })();
-    return () => { mounted = false; };
+    };
+    fetchStories();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchStories, 5 * 60 * 1000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const open = (item: Item) => setViewer({ user: item.user, stories: item.stories, idx: 0 });
-  const close = () => setViewer(null);
-  const next = () => setViewer(v => v ? { ...v, idx: Math.min(v.idx + 1, v.stories.length - 1) } : v);
-  const prev = () => setViewer(v => v ? { ...v, idx: Math.max(v.idx - 1, 0) } : v);
+  const close = useCallback(() => {
+    setViewer(null);
+    setProgress(0);
+    setPaused(false);
+  }, []);
+  const next = useCallback(() => {
+    setViewer(v => {
+      if (!v) return v;
+      const newIdx = Math.min(v.idx + 1, v.stories.length - 1);
+      if (newIdx !== v.idx) setProgress(0);
+      return { ...v, idx: newIdx };
+    });
+  }, []);
+  const prev = useCallback(() => {
+    setViewer(v => {
+      if (!v) return v;
+      const newIdx = Math.max(v.idx - 1, 0);
+      if (newIdx !== v.idx) setProgress(0);
+      return { ...v, idx: newIdx };
+    });
+  }, []);
 
   useEffect(() => {
     if (!viewer) return;
@@ -52,16 +78,51 @@ export function StoriesBar() {
     };
   }, [viewer]);
 
-  // Auto advance every 6s for images (shorter for videos based on durationSeconds)
+  // Auto advance with progress
   useEffect(() => {
-    if (!viewer) return;
+    if (!viewer || paused) return;
     const cur = viewer.stories[viewer.idx];
     const dur = cur?.mediaType === 'video' ? Math.min(Math.max(cur.durationSeconds || 6, 3), 15) : 6;
-    const t = setTimeout(() => {
-      setViewer(v => v ? { ...v, idx: v.idx + 1 >= v.stories.length ? v.idx : v.idx + 1 } : v);
-    }, dur * 1000);
-    return () => clearTimeout(t);
-  }, [viewer]);
+    const interval = 100; // update every 100ms
+    const steps = (dur * 1000) / interval;
+    let step = 0;
+    const t = setInterval(() => {
+      step++;
+      setProgress((step / steps) * 100);
+      if (step >= steps) {
+        setViewer(v => {
+          if (!v) return v;
+          const newIdx = v.idx + 1;
+          if (newIdx >= v.stories.length) {
+            close();
+            return null;
+          }
+          setProgress(0);
+          return { ...v, idx: newIdx };
+        });
+      }
+    }, interval);
+    return () => clearInterval(t);
+  }, [viewer, paused, close]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!viewer) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        next();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prev();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [viewer, next, prev, close]);
 
   if (!items.length && !error) return null;
 
@@ -77,6 +138,10 @@ export function StoriesBar() {
       ))}
       {viewer && createPortal(
         <div className="story-viewer-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10000, height: '100vh' }} onClick={close}>
+          {/* Progress bar */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'rgba(255,255,255,0.2)', zIndex: 1 }}>
+            <div style={{ height: '100%', background: '#fff', width: `${progress}%`, transition: 'width 0.1s linear' }} />
+          </div>
           <div style={{ position: 'absolute', top: 12, left: 12 }} onClick={(e) => e.stopPropagation()}>
             <button type="button" onClick={close} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Close</button>
           </div>
@@ -86,13 +151,21 @@ export function StoriesBar() {
           </div>
           <div style={{ maxWidth: '90vw', maxHeight: '80vh', width: 'min(640px, 90vw)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
             {viewer.stories[viewer.idx].mediaType === 'video' ? (
-              <video src={viewer.stories[viewer.idx].mediaUrl} style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} autoPlay controls playsInline />
+              <video
+                src={viewer.stories[viewer.idx].mediaUrl}
+                style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }}
+                autoPlay
+                playsInline
+                onPlay={() => setPaused(false)}
+                onPause={() => setPaused(true)}
+                onEnded={() => next()}
+              />
             ) : (
               <img src={viewer.stories[viewer.idx].mediaUrl} alt="Story" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} />
             )}
           </div>
           <div style={{ position: 'absolute', bottom: 28, fontSize: 14, color: '#fff' }} onClick={(e) => e.stopPropagation()}>
-            {viewer.user.displayName || viewer.user.username} • {viewer.idx + 1}/{viewer.stories.length}
+            {viewer.user.displayName || viewer.user.username} • {viewer.idx + 1}/{viewer.stories.length} • {viewer.stories[viewer.idx].viewCount} views
           </div>
         </div>,
         document.body

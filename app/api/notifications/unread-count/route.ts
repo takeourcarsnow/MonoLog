@@ -17,7 +17,11 @@ export async function GET(req: Request) {
         .neq('read', true);
 
       if (error) return NextResponse.json({ count: 0 });
-      return NextResponse.json({ count: count || 0 });
+      return NextResponse.json({ count: count || 0 }, {
+        headers: {
+          'Cache-Control': 'private, s-maxage=300, stale-while-revalidate=600',
+        },
+      });
     } catch (_) {
       return NextResponse.json({ count: 0 });
     }

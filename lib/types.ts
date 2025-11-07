@@ -176,7 +176,7 @@ export interface Api {
   getExploreFeedPage(opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
   getFollowingFeedPage(opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
   getHashtagFeedPage(tag: string, opts: { limit: number; before?: string }): Promise<HydratedPost[]>;
-  getUserPosts(userId: string): Promise<HydratedPost[]>;
+  getUserPosts(userId: string, limit?: number): Promise<HydratedPost[]>;
   getUser(id: string): Promise<User | null>;
   getUserByUsername?(username: string): Promise<User | null>;
 
@@ -250,6 +250,7 @@ export interface Api {
   getFollowingStories(): Promise<{ user: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>; stories: Story[] }[]>;
   createStory(input: { mediaUrl?: string; thumbnailUrl?: string; dataUrl?: string; mediaType: 'image' | 'video'; durationSeconds?: number }): Promise<Story>;
   markStoryViewed(storyId: string): Promise<void>;
+  deleteStory(storyId: string): Promise<void>;
 }
 
 // Reserved route names that should not be treated as usernames

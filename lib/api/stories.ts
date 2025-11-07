@@ -1,5 +1,10 @@
 import type { Story, User } from '../types';
 import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken } from './client';
+import { dedupe } from '../requestDeduplication';
+
+// Cache for stories per user: userId -> { stories, timestamp }
+const storiesCache = new Map<string, { stories: Story[]; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function mapRowToStory(row: any): Story {
   return {
@@ -54,14 +59,29 @@ export async function createStory(input: { mediaUrl?: string; thumbnailUrl?: str
   const resp = await fetch('/api/stories/create', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
   const json = await resp.json();
   if (!resp.ok) throw new Error(json?.error || 'Failed to create story');
+  // Invalidate cache for the current user
+  const user = await getCachedAuthUser(sb);
+  if (user?.id) {
+    storiesCache.delete(user.id);
+  }
   return mapRowToStory(json.story);
 }
 
 export async function getActiveStoriesForUser(userId: string) {
-  const resp = await fetch(`/api/stories/list?userId=${encodeURIComponent(userId)}`);
-  const json = await resp.json();
-  if (!resp.ok) throw new Error(json?.error || 'Failed to fetch stories');
-  return (json.stories || []).map(mapRowToStory);
+  const now = Date.now();
+  const cached = storiesCache.get(userId);
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    return cached.stories;
+  }
+
+  return dedupe(`getActiveStoriesForUser:${userId}`, async () => {
+    const resp = await fetch(`/api/stories/list?userId=${encodeURIComponent(userId)}`);
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json?.error || 'Failed to fetch stories');
+    const stories = (json.stories || []).map(mapRowToStory);
+    storiesCache.set(userId, { stories, timestamp: now });
+    return stories;
+  });
 }
 
 export async function getFollowingStories() {
@@ -85,4 +105,19 @@ export async function markStoryViewed(storyId: string) {
   const resp = await fetch(`/api/stories/view/${encodeURIComponent(storyId)}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
   // Non-critical; ignore errors
   try { await resp.json(); } catch (_) {}
+}
+
+export async function deleteStory(storyId: string) {
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  if (!token) throw new Error('Not logged in');
+  const resp = await fetch(`/api/stories/delete/${encodeURIComponent(storyId)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json?.error || 'Failed to delete story');
+  // Invalidate cache for the current user
+  const user = await getCachedAuthUser(sb);
+  if (user?.id) {
+    storiesCache.delete(user.id);
+  }
 }

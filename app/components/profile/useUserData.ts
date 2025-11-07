@@ -67,7 +67,7 @@ export function useUserData(userId?: string) {
       }
 
       // Fetch posts with deduplication
-      const userPosts = await dedupe(`getUserPosts:${u.id}`, () => api.getUserPosts(u.id));
+      const userPosts = await dedupe(`getUserPosts:${u.id}`, () => api.getUserPosts(u.id, 50));
       setPosts(userPosts);
 
       // Update cache with fresh data
@@ -179,7 +179,7 @@ export function useUserData(userId?: string) {
       if (!me) return;
       if (userId && userId !== me.id) return;
 
-      const list = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id));
+      const list = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id, 50));
       setUser(prev => prev || me);
       setPosts(list);
       
@@ -219,7 +219,7 @@ export function useUserData(userId?: string) {
       setCurrentUserId(me.id);
       setUser(me);
       try {
-        const userPosts = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id));
+        const userPosts = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id, 50));
         setPosts(userPosts);
         
         // Update cache after auth change

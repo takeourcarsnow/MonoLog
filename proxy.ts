@@ -3,6 +3,9 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { RESERVED_ROUTES } from '@/lib/types';
 
+const userCache = new Map<string, { user: any; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request,
@@ -25,8 +28,19 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired - required for Server Components
-  const { data: { user } } = await supabase.auth.getUser();
+  // Check cache first
+  const cacheKey = request.cookies.get('sb-access-token')?.value || 'no-token';
+  const now = Date.now();
+  const cached = userCache.get(cacheKey);
+  let user = null;
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    user = cached.user;
+  } else {
+    // Refresh session if expired - required for Server Components
+    const { data: { user: freshUser } } = await supabase.auth.getUser();
+    user = freshUser;
+    userCache.set(cacheKey, { user, timestamp: now });
+  }
 
   const pathname = request.nextUrl.pathname;
   const segments = pathname.split('/').filter(Boolean);

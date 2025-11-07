@@ -87,7 +87,7 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 .carousel-track {
   display: flex;
   height: 100%;
-  transition: transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+  /* Transition managed by JS for precise control during drag/release */
   will-change: transform;
   border-radius: 12px;
 }

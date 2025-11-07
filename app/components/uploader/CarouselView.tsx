@@ -146,6 +146,8 @@ export function CarouselView({
       if (isDragging || scale > 1) return;
       e.stopPropagation();
       e.preventDefault();
+      // Cancel any running animation so the track follows the finger instantly
+      try { const el = trackRef.current; if (el) { const a = (el as any).__carouselAnim; if (a) { a.cancel(); (el as any).__carouselAnim = null; } } } catch (_) {}
       // Notify the app that an inner carousel drag is starting so the
       // outer AppShell swiper can temporarily disable touch navigation.
   try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:carousel_drag_start', { detail: { source: 'uploader_carousel' } })); } catch (_) {}
@@ -174,16 +176,38 @@ export function CarouselView({
       if (touchStartX.current == null || containerWidth === 0) return;
       const delta = touchDeltaX.current;
       const threshold = 50;
+      
+      // Prepare for snap animation: cancel any running animation
+      const el = trackRef.current;
+      if (el) {
+        try { const a = (el as any).__carouselAnim; if (a) { a.cancel(); (el as any).__carouselAnim = null; } } catch (_) {}
+      }
+      
       if (Math.abs(delta) > threshold) {
         // Handle swipe
         let target = index;
         if (delta > threshold) target = Math.max(0, index - 1);
         else if (delta < -threshold) target = Math.min(dataUrls.length - 1, index + 1);
+        // Use setIndex; the index effect will animate the track
         setIndex(target);
       } else {
-        // Handle tap
+        // Handle tap - animate snap back to current index smoothly
+        if (el) {
+          try {
+            const from = getComputedStyle(el).transform || 'none';
+            const to = `translateX(-${index * containerWidth}px)`;
+            const anim = el.animate([{ transform: from }, { transform: to }], { duration: 280, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+            (el as any).__carouselAnim = anim;
+            anim.onfinish = () => { el.style.transform = to; try { (el as any).__carouselAnim = null; } catch (_) {} };
+            anim.oncancel = () => { try { (el as any).__carouselAnim = null; } catch (_) {} };
+          } catch (_) {
+            el.style.transition = 'transform 280ms cubic-bezier(0.4, 0, 0.2, 1)';
+            el.style.transform = `translateX(-${index * containerWidth}px)`;
+          }
+        }
         registerTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
       }
+      
       touchStartX.current = null;
       touchDeltaX.current = 0;
     };
@@ -202,7 +226,24 @@ export function CarouselView({
   // Update track transform when index or container width changes
   useEffect(() => {
     if (trackRef.current && containerWidth > 0) {
-      trackRef.current.style.transform = `translateX(-${index * containerWidth}px)`;
+      const el = trackRef.current;
+      // Cancel any running animation
+      try { const a = (el as any).__carouselAnim; if (a) { a.cancel(); (el as any).__carouselAnim = null; } } catch (_) {}
+      const from = getComputedStyle(el).transform || 'none';
+      const to = `translateX(-${index * containerWidth}px)`;
+      if (from === to) {
+        el.style.transform = to;
+        return;
+      }
+      try {
+        const anim = el.animate([{ transform: from }, { transform: to }], { duration: 280, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        (el as any).__carouselAnim = anim;
+        anim.onfinish = () => { el.style.transform = to; try { (el as any).__carouselAnim = null; } catch (_) {} };
+        anim.oncancel = () => { try { (el as any).__carouselAnim = null; } catch (_) {} };
+      } catch (_) {
+        el.style.transition = 'transform 280ms cubic-bezier(0.4, 0, 0.2, 1)';
+        el.style.transform = to;
+      }
     }
   }, [index, containerWidth, trackRef]);
 
@@ -413,7 +454,7 @@ export function CarouselView({
         </div>
       </div>
 
-      {dataUrls.length === 1 && (
+      {dataUrls.length > 1 && (
         <>
           <button
             className="carousel-nav carousel-nav-prev"

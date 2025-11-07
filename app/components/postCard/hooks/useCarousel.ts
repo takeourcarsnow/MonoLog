@@ -34,17 +34,37 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    // use a smooth transition for programmatic changes
-    el.style.transition = 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)';
-    el.style.transform = `translate3d(-${index * 100}%, 0, 0)`;
-    // clean up transition after it finishes
-    const t = setTimeout(() => { if (el) el.style.transition = ''; }, 300);
-    return () => clearTimeout(t);
+    // Cancel any running animation so drags/previous snaps don't interfere
+    try { const a = (el as any).__carouselAnim; if (a) { a.cancel(); (el as any).__carouselAnim = null; } } catch (_) {}
+    const from = getComputedStyle(el).transform || 'none';
+    const to = `translate3d(-${index * 100}%, 0, 0)`;
+    if (from === to) {
+      el.style.transform = to;
+      return;
+    }
+    // Use WAAPI for reliable, interruptible animation
+    try {
+      const anim = el.animate(
+        [{ transform: from }, { transform: to }],
+        { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' }
+      );
+      (el as any).__carouselAnim = anim;
+      anim.onfinish = () => { el.style.transform = to; try { (el as any).__carouselAnim = null; } catch (_) {} };
+      anim.oncancel = () => { try { (el as any).__carouselAnim = null; } catch (_) {} };
+    } catch (_) {
+      // Fallback to CSS transition if WAAPI not available
+      el.style.transition = 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)';
+      el.style.transform = to;
+      const t = setTimeout(() => { if (el) el.style.transition = ''; }, 300);
+      return () => clearTimeout(t);
+    }
   }, [index, trackRef]);
 
   const applyTransform = (x: number) => {
     const el = trackRef.current;
     if (!el) return;
+    // Cancel any running snap animation while dragging
+    try { const a = (el as any).__carouselAnim; if (a) { a.cancel(); (el as any).__carouselAnim = null; } } catch (_) {}
     // clamp x to prevent overscroll beyond first and last images, but allow some drag
     const overscrollLimit = 50; // pixels
     let minX = -Infinity;
@@ -126,12 +146,23 @@ export function useCarousel({ imageUrls, allowCarouselTouch, pathname, onIndexCh
       if (dx > 0) target = Math.max(0, indexRef.current - 1);
       else target = Math.min(imageUrls.length - 1, indexRef.current + 1);
     }
-    // snap to target with transition
+    // snap to target with an animation
     if (el) {
-      el.style.transition = 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)';
-      el.style.transform = `translate3d(-${target * 100}%, 0, 0)`;
-      // cleanup transition after animation
-      setTimeout(() => { if (el) el.style.transition = ''; if (el) el.style.willChange = ''; }, 300);
+      try {
+        const from = getComputedStyle(el).transform || 'none';
+        const to = `translate3d(-${target * 100}%, 0, 0)`;
+        const anim = el.animate(
+          [{ transform: from }, { transform: to }],
+          { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' }
+        );
+        (el as any).__carouselAnim = anim;
+        anim.onfinish = () => { el.style.transform = to; try { (el as any).__carouselAnim = null; } catch (_) {} };
+        anim.oncancel = () => { try { (el as any).__carouselAnim = null; } catch (_) {} };
+      } catch (_) {
+        el.style.transition = 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)';
+        el.style.transform = `translate3d(-${target * 100}%, 0, 0)`;
+        setTimeout(() => { if (el) el.style.transition = ''; if (el) el.style.willChange = ''; }, 300);
+      }
     }
     deltaX.current = 0;
     startX.current = null;

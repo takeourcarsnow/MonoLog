@@ -12,25 +12,22 @@ export async function POST(req: Request) {
     const actorId = authUser.id;
     const sb = getServiceSupabase();
 
-    // Try deleting using common snake_case column names first, then fall back
-    // to alternates to support different schema shapes.
-    try {
-      const res = await sb.from('comments').delete().eq('id', commentId);
-      if (!res.error) return NextResponse.json({ ok: true });
-    } catch (e) {}
+    // First, check if the comment exists and is owned by the user
+    const { data: comment, error: fetchError } = await sb.from('comments').select('id, user_id').eq('id', commentId).single();
+    if (fetchError || !comment) {
+      return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
+    }
+    if (comment.user_id !== actorId) {
+      return NextResponse.json({ error: 'Unauthorized to delete this comment' }, { status: 403 });
+    }
 
-    try {
-      const res2 = await sb.from('comments').delete().eq('comment_id', commentId);
-      if (!res2.error) return NextResponse.json({ ok: true });
-    } catch (e) {}
+    // Now delete the comment
+    const { error: deleteError } = await sb.from('comments').delete().eq('id', commentId);
+    if (deleteError) {
+      return NextResponse.json({ error: 'Failed to delete comment' }, { status: 500 });
+    }
 
-    // final attempt (best-effort)
-    try {
-      const res3 = await sb.from('comments').delete().eq('id', commentId);
-      if (!res3.error) return NextResponse.json({ ok: true });
-    } catch (e) {}
-
-    return NextResponse.json({ error: 'Failed to delete comment' }, { status: 500 });
+    return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

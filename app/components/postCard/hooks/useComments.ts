@@ -36,22 +36,27 @@ export function useComments(postId: string, initialCount: number) {
     if (!el) return;
     // Notify listeners that layout change is starting
     try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: open ? 'opening' : 'closing' } })); } catch(_) {}
+
     if (open) {
-      // For opening, set max-height to 0 first, then to scrollHeight after a tick
-      el.style.maxHeight = '0px';
+      // Simplified open: clear any inline max-height and add the `open`
+      // class so the CSS fallback (.comments.open { max-height: 5000px })
+      // handles the expansion. This avoids measuring scrollHeight on
+      // first open and works even when children render asynchronously.
+      try { el.style.maxHeight = ''; } catch (_) {}
+      // Force a reflow to ensure the class transition runs predictably
+      // in some browsers (read a layout property).
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      el.offsetHeight;
       el.classList.add('open');
-      // Use requestAnimationFrame to set the height after the class is added
-      requestAnimationFrame(() => {
-        el.style.maxHeight = el.scrollHeight + 'px';
-      });
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'opened' } })); } catch(_) {}
     } else {
-      // For closing, set max-height to current scrollHeight, then to 0
-      el.style.maxHeight = el.scrollHeight + 'px';
-      el.classList.remove('open');
-      // After a tick, set to 0
+      // Closing: capture current height, remove `open`, then animate to 0
+      try { el.style.maxHeight = el.scrollHeight + 'px'; } catch (_) {}
       requestAnimationFrame(() => {
-        el.style.maxHeight = '0px';
+        el.classList.remove('open');
+        requestAnimationFrame(() => {
+          try { el.style.maxHeight = '0px'; } catch (_) {}
+        });
       });
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:card_layout_change', { detail: { state: 'closed' } })); } catch(_) {}
     }

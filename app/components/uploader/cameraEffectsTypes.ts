@@ -26,6 +26,7 @@ export interface CameraEffectSettings {
   pixelShape?: 'square' | 'circle';
   pixelSample?: 'average' | 'nearest';
   // Dither settings
+  ditherEnabled?: boolean;
   ditherMethod?: 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes';
   ditherLevels?: number;
   ditherColorMode?: 'bw' | 'color';

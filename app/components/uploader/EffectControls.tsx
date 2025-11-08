@@ -42,10 +42,10 @@ export function EffectControls({ effectType, onEffectChange, disabled, overlayVi
         <Wand2 size={iconSize} />
       </button>
       <button type="button" className={`btn mini ${effectType === 'ascii' ? 'active' : ''}`} onClick={() => onEffectChange('ascii')} title="ASCII" disabled={disabled} style={{ padding: 6 }}>
-        <Type size={iconSize} />
+        <FileText size={iconSize} />
       </button>
       <button type="button" className={`btn mini ${effectType === 'text' ? 'active' : ''}`} onClick={() => onEffectChange('text')} title="Text Overlay" disabled={disabled} style={{ padding: 6 }}>
-        <FileText size={iconSize} />
+        <Type size={iconSize} />
       </button>
       <button type="button" className={`btn mini ${effectType === 'frame' ? 'active' : ''}`} onClick={() => onEffectChange('frame')} title="Frame" disabled={disabled} style={{ padding: 6 }}>
         <Frame size={iconSize} />

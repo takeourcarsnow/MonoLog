@@ -112,40 +112,7 @@ export function applyUnifiedEffects(
       break;
 
     case 'dither':
-      try {
-        const targetLongEdge = settings.targetLongEdge ?? 150;
-        let w = width; let h = height;
-        if (width >= height) { w = Math.max(1, Math.round(targetLongEdge)); h = Math.max(1, Math.round(targetLongEdge * (height / width))); }
-        else { h = Math.max(1, Math.round(targetLongEdge)); w = Math.max(1, Math.round(targetLongEdge * (width / height))); }
-
-        const smallSrc = getTempCanvas(w, h);
-        const ssrc = smallSrc.getContext('2d', { willReadFrequently: true })!;
-        ssrc.drawImage(sourceCtx.canvas, 0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height, 0, 0, w, h);
-
-        const smallOut = getTempCanvas(w, h);
-        const sout = smallOut.getContext('2d')!;
-
-        applyDitherToFrame(ssrc, sout, w, h, settings.ditherLevels || 3, settings.ditherColorMode || 'bw', settings.ditherMethod || 'ordered', settings.ditherPalette || 'auto');
-
-        const prev = (targetCtx as any).imageSmoothingEnabled;
-        (targetCtx as any).imageSmoothingEnabled = false;
-        targetCtx.drawImage(smallOut, 0, 0, w, h, 0, 0, targetCtx.canvas.width, targetCtx.canvas.height);
-        (targetCtx as any).imageSmoothingEnabled = prev;
-
-        releaseTempCanvas(smallSrc);
-        releaseTempCanvas(smallOut);
-      } catch (e) {
-        applyDitherToFrame(
-          sourceCtx,
-          targetCtx,
-          width,
-          height,
-          settings.ditherLevels || 3,
-          settings.ditherColorMode || 'bw',
-          settings.ditherMethod || 'ordered',
-          settings.ditherPalette || 'auto'
-        );
-      }
+      // Dither is now handled below if enabled
       break;
 
     case 'ascii':
@@ -164,29 +131,70 @@ export function applyUnifiedEffects(
       break;
 
     case 'text':
-      if (settings.textEnabled !== false && settings.textContent) { // Default to enabled if text exists
-        applyTextOverlayToFrame(
-          targetCtx,
-          width,
-          height,
-          settings.textContent,
-          settings.textFontSize || 24,
-          settings.textFontFamily || 'Arial',
-          settings.textColor || '#ffffff',
-          settings.textPosition || 'center',
-          settings.textX,
-          settings.textY,
-          settings.textOpacity || 1,
-          settings.textStroke || false,
-          settings.textStrokeColor || '#000000',
-          settings.textStrokeWidth || 2
-        );
-      }
+      // Text is now handled below if enabled
       break;
 
     default:
       // For other types, effects are already applied above
       break;
+  }
+
+  // Apply dithering if enabled (independent of type)
+  if (settings.ditherEnabled) {
+    try {
+      const targetLongEdge = settings.targetLongEdge ?? 150;
+      let w = width; let h = height;
+      if (width >= height) { w = Math.max(1, Math.round(targetLongEdge)); h = Math.max(1, Math.round(targetLongEdge * (height / width))); }
+      else { h = Math.max(1, Math.round(targetLongEdge)); w = Math.max(1, Math.round(targetLongEdge * (width / height))); }
+
+      const smallSrc = getTempCanvas(w, h);
+      const ssrc = smallSrc.getContext('2d', { willReadFrequently: true })!;
+      ssrc.drawImage(sourceCtx.canvas, 0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height, 0, 0, w, h);
+
+      const smallOut = getTempCanvas(w, h);
+      const sout = smallOut.getContext('2d')!;
+
+      applyDitherToFrame(ssrc, sout, w, h, settings.ditherLevels || 3, settings.ditherColorMode || 'bw', settings.ditherMethod || 'ordered', settings.ditherPalette || 'auto');
+
+      const prev = (targetCtx as any).imageSmoothingEnabled;
+      (targetCtx as any).imageSmoothingEnabled = false;
+      targetCtx.drawImage(smallOut, 0, 0, w, h, 0, 0, targetCtx.canvas.width, targetCtx.canvas.height);
+      (targetCtx as any).imageSmoothingEnabled = prev;
+
+      releaseTempCanvas(smallSrc);
+      releaseTempCanvas(smallOut);
+    } catch (e) {
+      applyDitherToFrame(
+        sourceCtx,
+        targetCtx,
+        width,
+        height,
+        settings.ditherLevels || 3,
+        settings.ditherColorMode || 'bw',
+        settings.ditherMethod || 'ordered',
+        settings.ditherPalette || 'auto'
+      );
+    }
+  }
+
+  // Apply text overlay if enabled (independent of type)
+  if (settings.textEnabled !== false && settings.textContent) { // Default to enabled if text exists
+    applyTextOverlayToFrame(
+      targetCtx,
+      width,
+      height,
+      settings.textContent,
+      settings.textFontSize || 24,
+      settings.textFontFamily || 'Arial',
+      settings.textColor || '#ffffff',
+      settings.textPosition || 'center',
+      settings.textX,
+      settings.textY,
+      settings.textOpacity || 1,
+      settings.textStroke || false,
+      settings.textStrokeColor || '#000000',
+      settings.textStrokeWidth || 2
+    );
   }
 
   // 6. Apply overlay

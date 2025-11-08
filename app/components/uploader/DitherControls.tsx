@@ -11,6 +11,7 @@ interface DitherControlsProps {
 }
 
 export function DitherControls({ effectSettings, onSettingsChange, disabled }: DitherControlsProps) {
+  const setDitherEnabled = (v: boolean) => onSettingsChange({ ...effectSettings, ditherEnabled: v });
   const setDitherMethod = (v: DitherMethod) => onSettingsChange({ ...effectSettings, ditherMethod: v === 'none' ? undefined : (v as any) });
   const setDitherColorMode = (v: 'bw' | 'color') => onSettingsChange({ ...effectSettings, ditherColorMode: v });
   const setDitherLevels = (v: number) => onSettingsChange({ ...effectSettings, ditherLevels: v });
@@ -18,18 +19,38 @@ export function DitherControls({ effectSettings, onSettingsChange, disabled }: D
   const setDitherPalette = (v: DitherPalette) => onSettingsChange({ ...effectSettings, ditherPalette: v as any });
 
   return (
-    <SharedDitherControls
-      ditherMethod={effectSettings.ditherMethod as any}
-      setDitherMethod={setDitherMethod}
-      ditherColorMode={effectSettings.ditherColorMode}
-      setDitherColorMode={setDitherColorMode}
-      ditherLevels={effectSettings.ditherLevels || 3}
-      setDitherLevels={setDitherLevels}
-      targetLongEdge={effectSettings.targetLongEdge}
-      setTargetLongEdge={setTargetLongEdge}
-      ditherPalette={effectSettings.ditherPalette as any}
-      setDitherPalette={setDitherPalette}
-      disabled={disabled}
-    />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Enable toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <input
+          type="checkbox"
+          id="dither-enabled"
+          checked={effectSettings.ditherEnabled || false}
+          onChange={(e) => setDitherEnabled(e.target.checked)}
+          disabled={disabled}
+          style={{ margin: 0 }}
+        />
+        <label htmlFor="dither-enabled" style={{ fontSize: 12, opacity: 0.9, cursor: disabled ? 'not-allowed' : 'pointer' }}>
+          Enable Dithering
+        </label>
+      </div>
+
+      {/* Controls */}
+      {effectSettings.ditherEnabled && (
+        <SharedDitherControls
+          ditherMethod={effectSettings.ditherMethod as any}
+          setDitherMethod={setDitherMethod}
+          ditherColorMode={effectSettings.ditherColorMode}
+          setDitherColorMode={setDitherColorMode}
+          ditherLevels={effectSettings.ditherLevels || 3}
+          setDitherLevels={setDitherLevels}
+          targetLongEdge={effectSettings.targetLongEdge}
+          setTargetLongEdge={setTargetLongEdge}
+          ditherPalette={effectSettings.ditherPalette as any}
+          setDitherPalette={setDitherPalette}
+          disabled={disabled}
+        />
+      )}
+    </div>
   );
 }

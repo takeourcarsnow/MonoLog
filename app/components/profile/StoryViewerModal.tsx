@@ -251,7 +251,10 @@ export function StoryViewerModal({
       >
         <button 
           type="button" 
-          onClick={onPrev} 
+          onClick={(e) => {
+            e.stopPropagation();
+            onPrev();
+          }} 
           style={{ 
             background: 'rgba(255,255,255,0.1)', 
             color: '#fff', 
@@ -272,7 +275,10 @@ export function StoryViewerModal({
         
         <button 
           type="button" 
-          onClick={() => setIsPaused(!isPaused)} 
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsPaused(!isPaused);
+          }} 
           style={{ 
             background: 'rgba(255,255,255,0.1)', 
             color: '#fff', 
@@ -300,7 +306,10 @@ export function StoryViewerModal({
 
         <button 
           type="button" 
-          onClick={handleDelete} 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete();
+          }} 
           style={{ 
             background: deleteArmed ? 'rgba(255,0,0,0.3)' : 'rgba(255,255,255,0.1)', 
             color: '#fff', 
@@ -330,7 +339,10 @@ export function StoryViewerModal({
 
         <button 
           type="button" 
-          onClick={onLiveCamera} 
+          onClick={(e) => {
+            e.stopPropagation();
+            onLiveCamera();
+          }} 
           style={{ 
             background: 'rgba(255,255,255,0.1)', 
             color: '#fff', 

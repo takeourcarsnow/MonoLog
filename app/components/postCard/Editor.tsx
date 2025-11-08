@@ -26,9 +26,6 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
   const [spotifyLink, setSpotifyLink] = useState(post.spotifyLink || "");
   const [weatherCondition, setWeatherCondition] = useState(post.weatherCondition || "");
   const [weatherTemperature, setWeatherTemperature] = useState(post.weatherTemperature?.toString() || "");
-  const [weatherLocation, setWeatherLocation] = useState(post.weatherLocation || "");
-  const [locationLatitude, setLocationLatitude] = useState(post.locationLatitude?.toString() || "");
-  const [locationLongitude, setLocationLongitude] = useState(post.locationLongitude?.toString() || "");
   const [locationAddress, setLocationAddress] = useState(post.locationAddress || "");
   const [fetchingLocation, setFetchingLocation] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -78,10 +75,7 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
       false, // not processing
       fetchingLocation,
       setFetchingLocation,
-      (lat) => {}, // not setting lat
-      (lon) => {}, // not setting lon
-      setLocationAddress,
-      (loc) => {} // not setting weatherLocation
+      setLocationAddress
     );
   };
 

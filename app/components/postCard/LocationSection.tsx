@@ -3,16 +3,13 @@ import Link from "next/link";
 
 interface LocationSectionProps {
   showLocation: boolean;
-  locationLatitude?: number;
-  locationLongitude?: number;
   locationAddress?: string;
 }
 
-export const LocationSection = ({ showLocation, locationLatitude, locationLongitude, locationAddress }: LocationSectionProps) => {
+export const LocationSection = ({ showLocation, locationAddress }: LocationSectionProps) => {
   // Only show a small, friendly city/town label when location is toggled on.
-  // Prefer a dedicated short `city` value (weatherLocation) if available on the post
   // otherwise fallback to the first segment of the full address.
-  if (!(locationLatitude !== undefined || locationLongitude !== undefined || locationAddress)) return null;
+  if (!locationAddress) return null;
 
   const city = (() => {
     if (!locationAddress) return undefined;

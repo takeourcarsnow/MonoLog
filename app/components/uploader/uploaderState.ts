@@ -17,9 +17,6 @@ export function useUploaderState() {
   const [filmIso, setFilmIso] = useState("");
   const [weatherCondition, setWeatherCondition] = useState("");
   const [weatherTemperature, setWeatherTemperature] = useState<number | undefined>(undefined);
-  const [weatherLocation, setWeatherLocation] = useState("");
-  const [locationLatitude, setLocationLatitude] = useState<number | undefined>(undefined);
-  const [locationLongitude, setLocationLongitude] = useState<number | undefined>(undefined);
   const [locationAddress, setLocationAddress] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [previewLoaded, setPreviewLoaded] = useState(false);
@@ -31,6 +28,7 @@ export function useUploaderState() {
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [justDiscarded, setJustDiscarded] = useState(false);
+  const [extractedExif, setExtractedExif] = useState<{ camera?: string; lens?: string } | null>(null);
 
   // Provide a stable wrapper for setAlt so draft persistence doesn't get a
   // new function on every render (which would retrigger its effects).
@@ -53,9 +51,6 @@ export function useUploaderState() {
     filmIso,
     weatherCondition,
     weatherTemperature,
-    weatherLocation,
-    locationLatitude,
-    locationLongitude,
     locationAddress,
     visibility,
     previewLoaded,
@@ -67,6 +62,7 @@ export function useUploaderState() {
     compressedSize,
     confirmCancel,
     justDiscarded,
+    extractedExif,
     setOriginalSize,
     setDataUrls,
     setOriginalDataUrls,
@@ -80,9 +76,6 @@ export function useUploaderState() {
     setFilmIso,
     setWeatherCondition,
     setWeatherTemperature,
-    setWeatherLocation,
-    setLocationLatitude,
-    setLocationLongitude,
     setLocationAddress,
     setVisibility,
     setPreviewLoaded,
@@ -94,6 +87,7 @@ export function useUploaderState() {
     setCompressedSize,
     setConfirmCancel,
     setJustDiscarded,
+    setExtractedExif,
     setAltForDraft,
   };
 }

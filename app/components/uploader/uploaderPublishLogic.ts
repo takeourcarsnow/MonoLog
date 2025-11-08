@@ -21,9 +21,6 @@ export function createPublishHandler(
   filmIso: string,
   weatherCondition: string,
   weatherTemperature: number | undefined,
-  weatherLocation: string,
-  locationLatitude: number | undefined,
-  locationLongitude: number | undefined,
   locationAddress: string
 ) {
   async function publish() {
@@ -47,9 +44,6 @@ export function createPublishHandler(
         filmType: (filmType && filmIso) ? `${filmType} ${filmIso}` : (filmType || filmIso) || undefined,
         weatherCondition: weatherCondition || undefined,
         weatherTemperature: weatherTemperature ?? undefined,
-        weatherLocation: weatherLocation || undefined,
-        locationLatitude: locationLatitude ?? undefined,
-        locationLongitude: locationLongitude ?? undefined,
         locationAddress: locationAddress || undefined,
       });
       try {

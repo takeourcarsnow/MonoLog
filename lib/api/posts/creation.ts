@@ -40,7 +40,7 @@ export async function canPostToday() {
   return { allowed: true };
 }
 
-export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType, weatherCondition, weatherTemperature, weatherLocation, locationAddress }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; public?: boolean; spotifyLink?: string; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; weatherLocation?: string; locationAddress?: string }) {
+export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType, weatherCondition, weatherTemperature, locationAddress }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; public?: boolean; spotifyLink?: string; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string }) {
   const cur = await getCurrentUser();
   if (!cur) throw new Error('Not logged in');
 
@@ -87,11 +87,10 @@ export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, 
   };
 
   // Include nested weather/location objects per server API expectations
-  if (weatherCondition !== undefined || weatherTemperature !== undefined || weatherLocation !== undefined) {
+  if (weatherCondition !== undefined || weatherTemperature !== undefined) {
     payload.weather = {
       condition: weatherCondition,
       temperature: weatherTemperature,
-      location: weatherLocation,
     };
   }
   if (locationAddress !== undefined) {

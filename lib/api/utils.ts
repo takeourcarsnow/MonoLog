@@ -106,7 +106,6 @@ export function mapRowToHydratedPost(row: any): HydratedPost {
     filmType: row.film_type || row.filmType || undefined,
     weatherCondition: row.weather_condition || row.weatherCondition || undefined,
     weatherTemperature: row.weather_temperature || row.weatherTemperature || undefined,
-    weatherLocation: row.weather_location || row.weatherLocation || undefined,
     locationAddress: row.location_address || row.locationAddress || undefined,
     user: {
       id: (row.users || row.public_profiles)?.id || row.user_id,

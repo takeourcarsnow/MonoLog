@@ -17,6 +17,7 @@ export function createFileHandlers(
   setAlt: (alt: string | string[]) => void,
   setCamera: (camera: string) => void,
   setLens: (lens: string) => void,
+  setExtractedExif: (exif: { camera?: string; lens?: string } | null) => void,
   fileInputRef: React.RefObject<HTMLInputElement | null>,
   dataUrls: string[],
   alt: string | string[],
@@ -157,8 +158,8 @@ export function createFileHandlers(
           const lensMake = exif.LensMake || '';
           const lensModel = exif.LensModel || '';
           const lens = lensMake && lensModel ? `${lensMake} ${lensModel}` : lensMake || lensModel || '';
-          if (camera) setCamera(camera);
-          if (lens) setLens(lens);
+          // Store extracted EXIF data for user to apply manually
+          setExtractedExif({ camera: camera || undefined, lens: lens || undefined });
         }
       } catch (e) {
         // Ignore EXIF extraction errors

@@ -7,12 +7,6 @@ interface WeatherLocationInputsProps {
   setWeatherCondition?: (condition: string) => void;
   weatherTemperature?: number;
   setWeatherTemperature?: (temperature: number | undefined) => void;
-  weatherLocation?: string;
-  setWeatherLocation?: (location: string) => void;
-  locationLatitude?: number;
-  setLocationLatitude?: (latitude: number | undefined) => void;
-  locationLongitude?: number;
-  setLocationLongitude?: (longitude: number | undefined) => void;
   locationAddress?: string;
   setLocationAddress?: (address: string) => void;
   hasPreview: boolean;
@@ -24,12 +18,6 @@ export function WeatherLocationInputs({
   setWeatherCondition,
   weatherTemperature,
   setWeatherTemperature,
-  weatherLocation,
-  setWeatherLocation,
-  locationLatitude,
-  setLocationLatitude,
-  locationLongitude,
-  setLocationLongitude,
   locationAddress,
   setLocationAddress,
   hasPreview,
@@ -65,12 +53,6 @@ export function WeatherLocationInputs({
         // Show all fields when none is active (Location first, then Weather)
         <>
           <LocationInput
-            weatherLocation={weatherLocation}
-            setWeatherLocation={setWeatherLocation}
-            locationLatitude={locationLatitude}
-            setLocationLatitude={setLocationLatitude}
-            locationLongitude={locationLongitude}
-            setLocationLongitude={setLocationLongitude}
             locationAddress={locationAddress}
             setLocationAddress={setLocationAddress}
             hasPreview={hasPreview}
@@ -111,14 +93,8 @@ export function WeatherLocationInputs({
               inputRef={inputRef}
             />
           )}
-          {activeField === 'weatherLocation' && (
+          {activeField === 'location' && (
             <LocationInput
-              weatherLocation={weatherLocation}
-              setWeatherLocation={setWeatherLocation}
-              locationLatitude={locationLatitude}
-              setLocationLatitude={setLocationLatitude}
-              locationLongitude={locationLongitude}
-              setLocationLongitude={setLocationLongitude}
               locationAddress={locationAddress}
               setLocationAddress={setLocationAddress}
               hasPreview={hasPreview}

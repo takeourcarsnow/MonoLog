@@ -37,9 +37,6 @@ export function useUploader() {
     filmIso,
     weatherCondition,
     weatherTemperature,
-    weatherLocation,
-    locationLatitude,
-    locationLongitude,
     locationAddress,
     visibility,
     previewLoaded,
@@ -51,6 +48,7 @@ export function useUploader() {
     compressedSize,
     confirmCancel,
     justDiscarded,
+    extractedExif,
     setOriginalSize,
     setDataUrls,
     setOriginalDataUrls,
@@ -64,9 +62,6 @@ export function useUploader() {
     setFilmIso,
     setWeatherCondition,
     setWeatherTemperature,
-    setWeatherLocation,
-    setLocationLatitude,
-    setLocationLongitude,
     setLocationAddress,
     setVisibility,
     setPreviewLoaded,
@@ -78,6 +73,7 @@ export function useUploader() {
     setCompressedSize,
     setConfirmCancel,
     setJustDiscarded,
+    setExtractedExif,
     setAltForDraft,
   } = state;
 
@@ -121,9 +117,6 @@ export function useUploader() {
     ,
     weatherCondition, setWeatherCondition,
     weatherTemperature, setWeatherTemperature,
-    weatherLocation, setWeatherLocation,
-    locationLatitude, setLocationLatitude,
-    locationLongitude, setLocationLongitude,
     locationAddress, setLocationAddress
   );
 
@@ -142,6 +135,7 @@ export function useUploader() {
     setAlt,
     setCamera,
     setLens,
+    setExtractedExif,
     fileInputRef,
     dataUrls,
     alt,
@@ -165,10 +159,8 @@ export function useUploader() {
     setFilmIso,
     setWeatherCondition,
     setWeatherTemperature,
-    setWeatherLocation,
-    setLocationLatitude,
-    setLocationLongitude,
     setLocationAddress,
+    setExtractedExif,
     setAlt,
     setVisibility,
     setCompressedSize,
@@ -203,9 +195,6 @@ export function useUploader() {
     filmIso,
     weatherCondition,
     weatherTemperature,
-    weatherLocation,
-    locationLatitude,
-    locationLongitude,
     locationAddress
   );
 
@@ -249,9 +238,6 @@ export function useUploader() {
   filmIso,
   weatherCondition,
   weatherTemperature,
-  weatherLocation,
-  locationLatitude,
-  locationLongitude,
   locationAddress,
     visibility,
     previewLoaded,
@@ -281,6 +267,7 @@ export function useUploader() {
     setConfirmCancel,
     confirmCancelTimerRef,
     justDiscarded,
+    extractedExif,
     hasPreview,
     CAPTION_MAX,
 
@@ -298,9 +285,6 @@ export function useUploader() {
   setFilmIso,
   setWeatherCondition,
   setWeatherTemperature,
-  setWeatherLocation,
-  setLocationLatitude,
-  setLocationLongitude,
   setLocationAddress,
     setVisibility,
     setPreviewLoaded,

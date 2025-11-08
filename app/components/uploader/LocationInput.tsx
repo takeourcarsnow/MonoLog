@@ -3,12 +3,6 @@ import { MapPin, X } from "lucide-react";
 import { fetchLocationForCurrentCoords } from "./locationUtils";
 
 interface LocationInputProps {
-  weatherLocation?: string;
-  setWeatherLocation?: (location: string) => void;
-  locationLatitude?: number;
-  setLocationLatitude?: (latitude: number | undefined) => void;
-  locationLongitude?: number;
-  setLocationLongitude?: (longitude: number | undefined) => void;
   locationAddress?: string;
   setLocationAddress?: (address: string) => void;
   hasPreview: boolean;
@@ -19,12 +13,6 @@ interface LocationInputProps {
 }
 
 export function LocationInput({
-  weatherLocation,
-  setWeatherLocation,
-  locationLatitude,
-  setLocationLatitude,
-  locationLongitude,
-  setLocationLongitude,
   locationAddress,
   setLocationAddress,
   hasPreview,
@@ -35,11 +23,15 @@ export function LocationInput({
 }: LocationInputProps) {
   const [fetchingLocation, setFetchingLocation] = useState(false);
 
-  const handleWeatherLocationChange = (value: string) => {
-    setWeatherLocation?.(value);
+  const handleLocationChange = (value: string) => {
+    setLocationAddress?.(value);
+    if (!value.trim()) {
+      // Clear location data if input is emptied
+      console.log('Clearing location data because input is empty');
+    }
   };
 
-  const handleWeatherLocationBlur = () => {
+  const handleLocationBlur = () => {
     setActiveField(null);
   };
 
@@ -48,25 +40,19 @@ export function LocationInput({
       processing,
       fetchingLocation,
       setFetchingLocation,
-      setLocationLatitude,
-      setLocationLongitude,
-      setLocationAddress,
-      setWeatherLocation
+      setLocationAddress
     );
   };
 
   const handleClear = () => {
-    // Clear location and related metadata
-    setWeatherLocation?.('');
-    setLocationLatitude?.(undefined);
-    setLocationLongitude?.(undefined);
+    // Clear location data
     setLocationAddress?.('');
     // Close any active input
     setActiveField(null);
     try { inputRef?.current?.blur(); } catch (_) {}
   };
 
-  if (activeField === 'weatherLocation') {
+  if (activeField === 'location') {
     return (
       <div style={{ position: 'relative', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
@@ -74,10 +60,10 @@ export function LocationInput({
             ref={inputRef}
             type="text"
             placeholder="Tap to add Location"
-            value={weatherLocation || ''}
-            onChange={(e) => handleWeatherLocationChange(e.target.value)}
+            value={locationAddress || ''}
+            onChange={(e) => handleLocationChange(e.target.value)}
             disabled={!hasPreview || processing}
-            onBlur={handleWeatherLocationBlur}
+            onBlur={handleLocationBlur}
             onFocus={(e) => {}}
             style={{
               flex: 1,
@@ -109,9 +95,9 @@ export function LocationInput({
             cursor: (!hasPreview || processing || fetchingLocation) ? 'not-allowed' : 'pointer'
           }}
         >
-              <MapPin size={14} className={`input-icon ${weatherLocation ? 'input-filled' : ''}`} />
+              <MapPin size={14} className={`input-icon ${locationAddress ? 'input-filled' : ''}`} />
         </button>
-        {weatherLocation && !processing && hasPreview && (
+        {locationAddress && !processing && hasPreview && (
           <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>
             <button
               type="button"
@@ -132,17 +118,17 @@ export function LocationInput({
       <input
         type="text"
         placeholder="Tap to add Location"
-        value={weatherLocation || ''}
-        onChange={(e) => handleWeatherLocationChange(e.target.value)}
+        value={locationAddress || ''}
+        onChange={(e) => handleLocationChange(e.target.value)}
         disabled={!hasPreview || processing}
         onFocus={() => {
-          if (!weatherLocation?.trim()) {
+          if (!locationAddress?.trim()) {
             handleFetchLocation();
           } else {
-            setActiveField('weatherLocation');
+            setActiveField('location');
           }
         }}
-        onBlur={handleWeatherLocationBlur}
+        onBlur={handleLocationBlur}
         style={{
           width: '100%',
           padding: '8px 12px 8px 32px',
@@ -173,9 +159,9 @@ export function LocationInput({
           cursor: (!hasPreview || processing || fetchingLocation) ? 'not-allowed' : 'pointer'
         }}
       >
-            <MapPin size={14} className={`input-icon ${weatherLocation ? 'input-filled' : ''}`} />
+            <MapPin size={14} className={`input-icon ${locationAddress ? 'input-filled' : ''}`} />
       </button>
-      {weatherLocation && !processing && hasPreview && (
+      {locationAddress && !processing && hasPreview && (
         <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>
           <button
             type="button"

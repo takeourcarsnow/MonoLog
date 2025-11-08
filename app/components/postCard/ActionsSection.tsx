@@ -34,9 +34,6 @@ interface ActionsSectionProps {
   filmType?: string;
   weatherCondition?: string;
   weatherTemperature?: number;
-  weatherLocation?: string;
-  locationLatitude?: number;
-  locationLongitude?: number;
   locationAddress?: string;
 }
 
@@ -72,9 +69,6 @@ export const ActionsSection = function ActionsSection({
   filmType,
   weatherCondition,
   weatherTemperature,
-  weatherLocation,
-  locationLatitude,
-  locationLongitude,
   locationAddress,
 }: ActionsSectionProps) {
   const [copied, setCopied] = useState(false);

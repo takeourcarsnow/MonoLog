@@ -5,11 +5,10 @@ interface WeatherSectionProps {
   showWeather: boolean;
   weatherCondition?: string;
   weatherTemperature?: number;
-  weatherLocation?: string;
 }
 
-export const WeatherSection = ({ showWeather, weatherCondition, weatherTemperature, weatherLocation }: WeatherSectionProps) => {
-  // Only show temperature with relevant icon. Do not show weatherLocation here per UX request.
+export const WeatherSection = ({ showWeather, weatherCondition, weatherTemperature }: WeatherSectionProps) => {
+  // Only show temperature with relevant icon.
   if (weatherTemperature === undefined) return null;
 
   return (

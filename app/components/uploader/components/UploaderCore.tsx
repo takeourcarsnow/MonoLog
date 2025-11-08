@@ -38,9 +38,6 @@ export function UploaderCore() {
     filmIso,
     weatherCondition,
     weatherTemperature,
-    weatherLocation,
-    locationLatitude,
-    locationLongitude,
     locationAddress,
     visibility,
     previewLoaded,
@@ -67,6 +64,7 @@ export function UploaderCore() {
     setConfirmCancel,
     confirmCancelTimerRef,
     justDiscarded,
+    extractedExif,
     hasPreview,
     CAPTION_MAX,
 
@@ -80,9 +78,6 @@ export function UploaderCore() {
     setFilmIso,
     setWeatherCondition,
     setWeatherTemperature,
-    setWeatherLocation,
-    setLocationLatitude,
-    setLocationLongitude,
     setLocationAddress,
     setVisibility,
     setPreviewLoaded,
@@ -310,14 +305,9 @@ export function UploaderCore() {
           setWeatherCondition={setWeatherCondition}
           weatherTemperature={weatherTemperature}
           setWeatherTemperature={setWeatherTemperature}
-          weatherLocation={weatherLocation}
-          setWeatherLocation={setWeatherLocation}
-          locationLatitude={locationLatitude}
-          setLocationLatitude={setLocationLatitude}
-          locationLongitude={locationLongitude}
-          setLocationLongitude={setLocationLongitude}
           locationAddress={locationAddress}
           setLocationAddress={setLocationAddress}
+          extractedExif={extractedExif}
           hasPreview={hasPreview}
           processing={processing}
           toast={toast}

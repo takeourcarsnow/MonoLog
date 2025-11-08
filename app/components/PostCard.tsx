@@ -188,9 +188,6 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         filmType={post.filmType}
         weatherCondition={post.weatherCondition}
         weatherTemperature={post.weatherTemperature}
-        weatherLocation={post.weatherLocation}
-        locationLatitude={post.locationLatitude}
-        locationLongitude={post.locationLongitude}
         locationAddress={post.locationAddress}
         openFullscreen={() => {
           const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);

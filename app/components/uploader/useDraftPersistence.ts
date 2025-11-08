@@ -34,12 +34,6 @@ export function useDraftPersistence(
   setWeatherCondition: (condition: string) => void,
   weatherTemperature: number | undefined,
   setWeatherTemperature: (temperature: number | undefined) => void,
-  weatherLocation: string,
-  setWeatherLocation: (location: string) => void,
-  locationLatitude: number | undefined,
-  setLocationLatitude: (latitude: number | undefined) => void,
-  locationLongitude: number | undefined,
-  setLocationLongitude: (longitude: number | undefined) => void,
   locationAddress: string,
   setLocationAddress: (address: string) => void
 ) {
@@ -75,14 +69,11 @@ export function useDraftPersistence(
       if (parsed.filmIso !== undefined) setFilmIso(parsed.filmIso);
       if (parsed.weatherCondition !== undefined) setWeatherCondition(parsed.weatherCondition);
       if (parsed.weatherTemperature !== undefined) setWeatherTemperature(parsed.weatherTemperature);
-      if (parsed.weatherLocation !== undefined) setWeatherLocation(parsed.weatherLocation);
-      if (parsed.locationLatitude !== undefined) setLocationLatitude(parsed.locationLatitude);
-      if (parsed.locationLongitude !== undefined) setLocationLongitude(parsed.locationLongitude);
       if (parsed.locationAddress !== undefined) setLocationAddress(parsed.locationAddress);
     } catch (e) {
       // ignore parse errors
     }
-  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType, setFilmIso, setWeatherCondition, setWeatherTemperature, setWeatherLocation, setLocationLatitude, setLocationLongitude, setLocationAddress]);
+  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType, setFilmIso, setWeatherCondition, setWeatherTemperature, setLocationAddress]);
 
   // Persist draft whenever key pieces of state change (excluding caption for performance)
   useEffect(() => {
@@ -104,9 +95,6 @@ export function useDraftPersistence(
         filmIso: filmIso || undefined,
         weatherCondition: weatherCondition || undefined,
         weatherTemperature: weatherTemperature ?? undefined,
-        weatherLocation: weatherLocation || undefined,
-        locationLatitude: locationLatitude ?? undefined,
-        locationLongitude: locationLongitude ?? undefined,
         locationAddress: locationAddress || undefined,
         savedAt: Date.now(),
       };
@@ -124,9 +112,6 @@ export function useDraftPersistence(
           if (existing.filmIso && !payload.filmIso) payload.filmIso = existing.filmIso;
           if (existing.weatherCondition && !payload.weatherCondition) payload.weatherCondition = existing.weatherCondition;
           if (existing.weatherTemperature !== undefined && payload.weatherTemperature === undefined) payload.weatherTemperature = existing.weatherTemperature;
-          if (existing.weatherLocation && !payload.weatherLocation) payload.weatherLocation = existing.weatherLocation;
-          if (existing.locationLatitude !== undefined && payload.locationLatitude === undefined) payload.locationLatitude = existing.locationLatitude;
-          if (existing.locationLongitude !== undefined && payload.locationLongitude === undefined) payload.locationLongitude = existing.locationLongitude;
           if (existing.locationAddress && !payload.locationAddress) payload.locationAddress = existing.locationAddress;
         }
       } catch (e) {
@@ -137,7 +122,7 @@ export function useDraftPersistence(
     } catch (e) {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [dataUrls, originalDataUrls, editorSettings, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType, filmIso, weatherCondition, weatherTemperature, weatherLocation, locationLatitude, locationLongitude, locationAddress]);
+  }, [dataUrls, originalDataUrls, editorSettings, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType, filmIso, weatherCondition, weatherTemperature, locationAddress]);
 
   // Debounced persistence for caption to avoid lag on mobile typing
   useEffect(() => {

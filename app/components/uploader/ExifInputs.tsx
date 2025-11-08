@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Combobox } from "@/app/components/ui/Combobox";
 import { CameraScopeSelector } from "./CameraScopeSelector";
 import { CAMERA_DIGITAL_PRESETS, LENS_PRESETS, FILM_PRESETS, ISO_PRESETS, getMergedExifPresets, normalizeExifPresets } from "@/lib/exifPresets";
-import { Settings, Image, Gauge } from "lucide-react";
+import { Settings, Image, Gauge, Check } from "lucide-react";
 import type { User } from "@/lib/types";
 import { api } from "@/lib/api";
 
@@ -19,6 +19,7 @@ interface ExifInputsProps {
   processing: boolean;
   user?: User | null;
   setUser?: (user: User) => void;
+  extractedExif?: { camera?: string; lens?: string } | null;
 }
 
 export function ExifInputs({
@@ -33,7 +34,8 @@ export function ExifInputs({
   hasPreview,
   processing,
   user,
-  setUser
+  setUser,
+  extractedExif
 }: ExifInputsProps) {
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -150,7 +152,7 @@ export function ExifInputs({
       {activeExifField === null ? (
         // Show all fields when none is active
         <>
-          <div style={{ minWidth: '120px', flex: 1 }}>
+          <div style={{ minWidth: '120px', flex: 1, position: 'relative' }}>
             <CameraScopeSelector
               camera={camera}
               setCamera={handleCameraChange}
@@ -161,8 +163,33 @@ export function ExifInputs({
               removableOptions={user?.exifPresets?.cameras || []}
               onRemoveOption={(option) => handleRemovePreset('cameras', option)}
             />
+            {extractedExif?.camera && (!camera || camera !== extractedExif.camera) && (
+              <button
+                onClick={() => setCamera?.(extractedExif.camera!)}
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 4,
+                  borderRadius: 4,
+                  color: '#10b981',
+                  fontSize: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2
+                }}
+                title={`Apply extracted camera: ${extractedExif.camera}`}
+              >
+                <Check size={12} />
+                <span style={{ fontSize: 10 }}>EXIF</span>
+              </button>
+            )}
           </div>
-          <div style={{ minWidth: '120px', flex: 1 }}>
+          <div style={{ minWidth: '120px', flex: 1, position: 'relative' }}>
             <Combobox
               value={lens || ''}
               onChange={handleLensChange}
@@ -175,6 +202,31 @@ export function ExifInputs({
               removableOptions={user?.exifPresets?.lenses || []}
               onRemoveOption={(option) => handleRemovePreset('lenses', option)}
             />
+            {extractedExif?.lens && (!lens || lens !== extractedExif.lens) && (
+              <button
+                onClick={() => setLens?.(extractedExif.lens!)}
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 4,
+                  borderRadius: 4,
+                  color: '#10b981',
+                  fontSize: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2
+                }}
+                title={`Apply extracted lens: ${extractedExif.lens}`}
+              >
+                <Check size={12} />
+                <span style={{ fontSize: 10 }}>EXIF</span>
+              </button>
+            )}
           </div>
           {!camera || !CAMERA_DIGITAL_PRESETS.includes(camera) ? (
             <>

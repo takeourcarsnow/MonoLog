@@ -45,9 +45,6 @@ interface PostCardBodyProps {
   filmType?: string;
   weatherCondition?: string;
   weatherTemperature?: number;
-  weatherLocation?: string;
-  locationLatitude?: number;
-  locationLongitude?: number;
   locationAddress?: string;
   openFullscreen: () => void;
   spotifyMeta: any;
@@ -95,9 +92,6 @@ export function PostCardBody({
   filmType,
   weatherCondition,
   weatherTemperature,
-  weatherLocation,
-  locationLatitude,
-  locationLongitude,
   locationAddress,
   openFullscreen,
   spotifyMeta,
@@ -164,9 +158,6 @@ export function PostCardBody({
           filmType={filmType}
           weatherCondition={weatherCondition}
           weatherTemperature={weatherTemperature}
-          weatherLocation={weatherLocation}
-          locationLatitude={locationLatitude}
-          locationLongitude={locationLongitude}
           locationAddress={locationAddress}
           openFullscreen={openFullscreen}
         />

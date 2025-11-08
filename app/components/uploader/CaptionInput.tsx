@@ -21,12 +21,6 @@ interface CaptionInputProps {
   setWeatherCondition?: (condition: string) => void;
   weatherTemperature?: number;
   setWeatherTemperature?: (temperature: number | undefined) => void;
-  weatherLocation?: string;
-  setWeatherLocation?: (location: string) => void;
-  locationLatitude?: number;
-  setLocationLatitude?: (latitude: number | undefined) => void;
-  locationLongitude?: number;
-  setLocationLongitude?: (longitude: number | undefined) => void;
   locationAddress?: string;
   setLocationAddress?: (address: string) => void;
   // typed removed - this component now owns the typing animation internally
@@ -35,6 +29,7 @@ interface CaptionInputProps {
   toast: any; // from useToast
   user?: User | null;
   setUser?: (user: User) => void;
+  extractedExif?: { camera?: string; lens?: string } | null;
 }
 
 export function CaptionInput({
@@ -54,19 +49,14 @@ export function CaptionInput({
   setWeatherCondition,
   weatherTemperature,
   setWeatherTemperature,
-  weatherLocation,
-  setWeatherLocation,
-  locationLatitude,
-  setLocationLatitude,
-  locationLongitude,
-  setLocationLongitude,
   locationAddress,
   setLocationAddress,
   hasPreview,
   processing,
   toast,
   user,
-  setUser
+  setUser,
+  extractedExif
 }: CaptionInputProps) {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexDirection: 'column' }}>
@@ -88,12 +78,6 @@ export function CaptionInput({
         setWeatherCondition={setWeatherCondition}
         weatherTemperature={weatherTemperature}
         setWeatherTemperature={setWeatherTemperature}
-        weatherLocation={weatherLocation}
-        setWeatherLocation={setWeatherLocation}
-        locationLatitude={locationLatitude}
-        setLocationLatitude={setLocationLatitude}
-        locationLongitude={locationLongitude}
-        setLocationLongitude={setLocationLongitude}
         locationAddress={locationAddress}
         setLocationAddress={setLocationAddress}
         hasPreview={hasPreview}
@@ -113,6 +97,7 @@ export function CaptionInput({
         processing={processing}
         user={user}
         setUser={setUser}
+        extractedExif={extractedExif}
       />
     </div>
   );

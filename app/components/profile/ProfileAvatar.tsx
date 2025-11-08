@@ -66,7 +66,13 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
   const onNext = () => setViewerIdx(v => (v + 1) % ownStories.length);
 
   const onPublicPrev = () => setViewerIdx(v => Math.max(v - 1, 0));
-  const onPublicNext = () => setViewerIdx(v => v + 1 >= ownStories.length ? v : v + 1);
+  const onPublicNext = () => {
+    if (viewerIdx + 1 >= ownStories.length) {
+      setViewerOpen(false);
+    } else {
+      setViewerIdx(v => v + 1);
+    }
+  };
 
   return (
     <>

@@ -26,13 +26,14 @@ export async function unfavoritePost(postId: string) {
 }
 
 export async function isFavorite(postId: string) {
-  // Use a lightweight cached lookup of favorite IDs to avoid fetching full
-  // favorite posts repeatedly (many PostCard instances may call isFavorite on
-  // mount). This preserves existing logs but reduces expensive duplicate
-  // requests.
-  const ids = await getFavoriteIds();
-  if (!ids || !ids.length) return false;
-  return ids.includes(postId);
+  try {
+    const resp = await fetch(`/api/posts/is-favorite?postId=${encodeURIComponent(postId)}`);
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json?.error || 'Failed to check favorite status');
+    return json.isFavorite || false;
+  } catch {
+    return false;
+  }
 }
 
 export async function getFavoritePosts() {

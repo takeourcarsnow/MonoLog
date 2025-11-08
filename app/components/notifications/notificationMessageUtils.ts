@@ -5,6 +5,15 @@ import { getUser } from '@/lib/api/users';
 import { getThread } from '@/lib/api/communities/threads';
 import { getActiveStoriesForUser } from '@/lib/api/stories';
 
+async function checkUserHasStory(userId: string): Promise<boolean> {
+  try {
+    const stories = await getActiveStoriesForUser(userId);
+    return stories.length > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function getNotificationMessage(notification: Notification): Promise<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string; actorHasStory?: boolean }> {
   try {
     let actorUsername = 'Someone';
@@ -15,14 +24,7 @@ export async function getNotificationMessage(notification: Notification): Promis
       if (actor && actor.username) {
         actorUsername = '@' + actor.username;
         actorAvatarUrl = actor.avatarUrl;
-        // Check if actor has active stories
-        try {
-          const stories = await getActiveStoriesForUser(notification.actor_id);
-          actorHasStory = stories.length > 0;
-        } catch (e) {
-          // Ignore errors, default to false
-          actorHasStory = false;
-        }
+        actorHasStory = await checkUserHasStory(notification.actor_id);
       }
     }
 

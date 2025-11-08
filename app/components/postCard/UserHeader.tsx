@@ -346,7 +346,13 @@ export const UserHeader = memo(function UserHeader({
           stories={stories}
           currentIndex={storyIdx}
           onPrev={() => setStoryIdx(v => v === 0 ? stories.length - 1 : v - 1)}
-          onNext={() => setStoryIdx(v => (v + 1) % stories.length)}
+          onNext={() => {
+            if (storyIdx + 1 >= stories.length) {
+              setStoryViewerOpen(false);
+            } else {
+              setStoryIdx(v => v + 1);
+            }
+          }}
           user={post.user}
         />
       )}

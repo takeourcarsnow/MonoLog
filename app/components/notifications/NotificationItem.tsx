@@ -1,7 +1,7 @@
 import Link from "next/link";
 import TimeDisplay from "@/app/components/ui/TimeDisplay";
 import { Clock } from 'lucide-react';
-import { OptimizedImage } from "@/app/components/media/OptimizedImage";
+import { StoryAvatar } from "@/app/components/ui/StoryAvatar";
 import type { Notification } from "@/lib/types";
 
 function NotificationItem({
@@ -31,32 +31,17 @@ function NotificationItem({
         {messageData?.actorAvatarUrl && (() => {
           const parts = messageData?.message.split(' ') || [];
           const username = parts[0]?.startsWith('@') ? parts[0].slice(1) : null;
-          return username ? (
+          return (
             <div className="notification-avatar">
-              <Link href={`/${username}`} onClick={handleLinkClick}>
-                <OptimizedImage
-                  src={messageData.actorAvatarUrl}
-                  alt={`${username}'s avatar`}
-                  width={32}
-                  height={32}
-                  className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                  loading="lazy"
-                  sizes="32px"
-                  style={messageData.actorHasStory ? { outline: '3px solid #ff7e39', outlineOffset: 2 } : undefined}
-                />
-              </Link>
-            </div>
-          ) : (
-            <div className="notification-avatar">
-              <OptimizedImage
+              <StoryAvatar
                 src={messageData.actorAvatarUrl}
-                alt="User's avatar"
-                width={32}
-                height={32}
-                className="rounded-full"
-                loading="lazy"
-                sizes="32px"
-                style={messageData.actorHasStory ? { outline: '3px solid #ff7e39', outlineOffset: 2 } : undefined}
+                alt={username ? `${username}'s avatar` : "User's avatar"}
+                username={username}
+                hasStory={messageData.actorHasStory}
+                size={32}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                href={username ? `/${username}` : undefined}
+                onClick={username ? handleLinkClick : undefined}
               />
             </div>
           );

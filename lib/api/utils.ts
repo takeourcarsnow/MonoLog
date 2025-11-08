@@ -57,6 +57,7 @@ export function mapProfileToUser(profile: any) {
     joinedAt: profile.joinedAt || profile.joined_at,
     following: profile.following,
     favorites: profile.favorites,
+    liked_stories: profile.liked_stories,
     usernameChangedAt: profile.username_changed_at || profile.usernameChangedAt,
     exifPresets,
   } as any;

@@ -148,10 +148,14 @@ export async function unlikeStory(storyId: string) {
 
 export async function isLikedStory(storyId: string) {
   try {
-    const user = await getCurrentUser();
-    console.log('isLikedStory: user', user?.id, 'liked_stories', user?.liked_stories, 'checking storyId', storyId, 'includes?', user?.liked_stories?.includes(storyId));
-    if (!user) return false;
-    return (user.liked_stories || []).includes(storyId);
+    const sb = getClient();
+    ensureAuthListener(sb);
+    const token = await getAccessToken(sb);
+    if (!token) return false;
+    const resp = await fetch(`/api/stories/is-liked?storyId=${encodeURIComponent(storyId)}`, { headers: { Authorization: `Bearer ${token}` } });
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json?.error || 'Failed to check like status');
+    return json.isLiked || false;
   } catch {
     return false;
   }

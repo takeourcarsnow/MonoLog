@@ -25,7 +25,7 @@ export function renderMentions(text: string): React.ReactNode {
     parts.push(
       <a
         key={t.start}
-        href={`/profile/${username}`}
+        href={`/${username}`}
         className="mention-link"
         onClick={(e) => { e.stopPropagation(); }}
       >

@@ -41,7 +41,7 @@ export function renderCaption(text: string): React.ReactNode {
         parts.push(
           <a
             key={`${m.type}-${m.start}`}
-            href={`/profile/${m.value}`}
+            href={`/${m.value}`}
             className="mention-link"
             onClick={(e) => {
               e.stopPropagation();

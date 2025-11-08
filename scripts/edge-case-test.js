@@ -58,7 +58,20 @@ class EdgeCaseTester {
       photo: '📷'
     }[type] || '📝';
 
-    console.log(`[${timestamp.split('T')[1].split('.')[0]}] ${emoji} ${message}`);
+    // Sanitize and truncate very long messages to avoid dumping huge page HTML/JS to console
+    try {
+      let msg = typeof message === 'string' ? message : (message === undefined || message === null ? '' : String(message));
+      // Collapse long whitespace/newlines for readability
+      msg = msg.replace(/\s{2,}/g, ' ').trim();
+      const MAX_LOG_LENGTH = 400; // keep logs compact
+      if (msg.length > MAX_LOG_LENGTH) {
+        msg = msg.substring(0, MAX_LOG_LENGTH) + '... [truncated]';
+      }
+      console.log(`[${timestamp.split('T')[1].split('.')[0]}] ${emoji} ${msg}`);
+    } catch (e) {
+      // Fallback to simple logging if sanitization fails
+      console.log(`[${timestamp.split('T')[1].split('.')[0]}] ${emoji} ${message}`);
+    }
   }
 
   async recordTest(name, passed, details = '', category = 'general') {
@@ -134,13 +147,23 @@ class EdgeCaseTester {
       ];
       
       const shouldIgnore = ignorePatterns.some(pattern => text.includes(pattern));
-      
-      if (msg.type() === 'error' && !shouldIgnore) {
-        this.results.errors.push(text);
-        this.log(`Console Error: ${text}`, 'warning');
-      } else if (msg.type() === 'error') {
-        // Still count errors but don't log them
-        this.results.errors.push(text);
+
+      // If the console message is extremely long (page HTML/inline scripts), truncate it
+      const MAX_CONSOLE_LENGTH = 1000;
+      let consoleText = text;
+      if (consoleText && consoleText.length > MAX_CONSOLE_LENGTH) {
+        consoleText = consoleText.replace(/\s{2,}/g, ' ').substring(0, 400) + '... [truncated console message]';
+      }
+
+      if (msg.type() === 'error') {
+        // Store the (possibly truncated) error
+        this.results.errors.push(consoleText);
+        if (!shouldIgnore) {
+          this.log(`Console Error: ${consoleText}`, 'warning');
+        }
+      } else if (!shouldIgnore) {
+        // For non-error console messages we only log when not in ignore list
+        this.log(`Console ${msg.type()}: ${consoleText}`, 'info');
       }
     });
 

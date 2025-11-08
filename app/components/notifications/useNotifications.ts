@@ -6,7 +6,7 @@ import type { Notification } from "@/lib/types";
 import { getNotificationMessage } from "@/app/components/notifications/notificationMessageUtils";
 
 export function useNotifications(pageSize: number = 10, me?: any) {
-  const [loadedNotifications, setLoadedNotifications] = useState<Array<{ notification: Notification; messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string } }>>([]);
+  const [loadedNotifications, setLoadedNotifications] = useState<Array<{ notification: Notification; messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string; actorHasStory?: boolean } }>>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);

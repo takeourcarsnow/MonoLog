@@ -3,16 +3,26 @@ import type { Notification } from "@/lib/types";
 import { getPost } from '@/lib/api/posts/post';
 import { getUser } from '@/lib/api/users';
 import { getThread } from '@/lib/api/communities/threads';
+import { getActiveStoriesForUser } from '@/lib/api/stories';
 
-export async function getNotificationMessage(notification: Notification): Promise<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string }> {
+export async function getNotificationMessage(notification: Notification): Promise<{ message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string; actorHasStory?: boolean }> {
   try {
     let actorUsername = 'Someone';
     let actorAvatarUrl: string | undefined = undefined;
+    let actorHasStory: boolean | undefined = undefined;
     if (notification.actor_id) {
       const actor = await getUser(notification.actor_id);
       if (actor && actor.username) {
         actorUsername = '@' + actor.username;
         actorAvatarUrl = actor.avatarUrl;
+        // Check if actor has active stories
+        try {
+          const stories = await getActiveStoriesForUser(notification.actor_id);
+          actorHasStory = stories.length > 0;
+        } catch (e) {
+          // Ignore errors, default to false
+          actorHasStory = false;
+        }
       }
     }
 
@@ -45,17 +55,19 @@ export async function getNotificationMessage(notification: Notification): Promis
           message: `${actorUsername} commented on ${isOwnPost ? 'your' : 'a'} post${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
           href,
           imageUrl,
-          actorAvatarUrl
+          actorAvatarUrl,
+          actorHasStory
         };
       }
       case 'thread_reply': {
         return {
           message: `${actorUsername} replied to your thread${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
-          actorAvatarUrl
+          actorAvatarUrl,
+          actorHasStory
         };
       }
       case 'follow': {
-        return { message: `${actorUsername} followed you`, actorAvatarUrl };
+        return { message: `${actorUsername} followed you`, actorAvatarUrl, actorHasStory };
       }
       case 'favorite': {
         let href: string | undefined = undefined;
@@ -85,20 +97,23 @@ export async function getNotificationMessage(notification: Notification): Promis
           message: `${actorUsername} favorited ${isOwnPost ? 'your' : 'a'} post`,
           href,
           imageUrl,
-          actorAvatarUrl
+          actorAvatarUrl,
+          actorHasStory
         };
       }
       case 'like': {
         // For story likes
         return {
           message: `${actorUsername} liked your story`,
-          actorAvatarUrl
+          actorAvatarUrl,
+          actorHasStory
         };
       }
       case 'community_created': {
         return {
           message: `${actorUsername} created a new community`,
-          actorAvatarUrl
+          actorAvatarUrl,
+          actorHasStory
         };
       }
       case 'thread_created': {
@@ -116,7 +131,8 @@ export async function getNotificationMessage(notification: Notification): Promis
         return {
           message: `${actorUsername} created a new thread: ${notification.text?.replace('Created a new thread: ', '') || 'New thread'}`,
           href,
-          actorAvatarUrl
+          actorAvatarUrl,
+          actorHasStory
         };
       }
       case 'mention': {
@@ -142,7 +158,8 @@ export async function getNotificationMessage(notification: Notification): Promis
           message: `${actorUsername} mentioned you in a post`,
           href,
           imageUrl,
-          actorAvatarUrl
+          actorAvatarUrl,
+          actorHasStory
         };
       }
       case 'post_after_break': {
@@ -168,11 +185,12 @@ export async function getNotificationMessage(notification: Notification): Promis
           message: `${actorUsername} resumed posting after a break`,
           href,
           imageUrl,
-          actorAvatarUrl
+          actorAvatarUrl,
+          actorHasStory
         };
       }
       default: {
-        return { message: `You have a new ${notification.type} notification`, actorAvatarUrl };
+        return { message: `You have a new ${notification.type} notification`, actorAvatarUrl, actorHasStory };
       }
     }
   } catch (e) {

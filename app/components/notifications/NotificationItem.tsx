@@ -10,7 +10,7 @@ function NotificationItem({
   onClose
 }: {
   notification: Notification;
-  messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string };
+  messageData: { message: string; href?: string; imageUrl?: string; actorAvatarUrl?: string; actorHasStory?: boolean };
   onClose: () => void;
 }) {
   const handleLinkClick = () => {
@@ -42,6 +42,7 @@ function NotificationItem({
                   className="rounded-full cursor-pointer hover:opacity-80 transition-opacity"
                   loading="lazy"
                   sizes="32px"
+                  style={messageData.actorHasStory ? { outline: '3px solid #ff7e39', outlineOffset: 2 } : undefined}
                 />
               </Link>
             </div>
@@ -55,6 +56,7 @@ function NotificationItem({
                 className="rounded-full"
                 loading="lazy"
                 sizes="32px"
+                style={messageData.actorHasStory ? { outline: '3px solid #ff7e39', outlineOffset: 2 } : undefined}
               />
             </div>
           );

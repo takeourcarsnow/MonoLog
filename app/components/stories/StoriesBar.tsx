@@ -61,7 +61,7 @@ export function StoriesBar() {
   if (!items.length && !error) return null;
 
   return (
-    <div className="stories-bar" style={{ display: 'flex', gap: 12, padding: '8px 4px', overflowX: 'auto' }}>
+    <div className="stories-bar" style={{ display: 'flex', gap: 12, padding: '8px 16px', overflowX: 'auto' }}>
       {items.map(item => (
         <button key={item.user.id} type="button" onClick={() => open(item)} className="story-avatar" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }} aria-label={`View ${item.user.displayName || item.user.username}'s stories`}>
           <div style={{ width: 56, height: 56, position: 'relative' }}>

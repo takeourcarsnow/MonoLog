@@ -18,6 +18,7 @@ interface ProfileActionsProps {
   setFollowing: (following: boolean | null) => void;
   isEditingProfile: boolean;
   setIsEditingProfile: (editing: boolean) => void;
+  onEditProfile: () => void;
   // callback when follow is clicked but user is not logged in
   onAuthRequired?: () => void;
   showInvites: boolean;
@@ -31,6 +32,7 @@ export function ProfileActions({
   setFollowing,
   isEditingProfile,
   setIsEditingProfile,
+  onEditProfile,
   onAuthRequired,
   showInvites,
   setShowInvites
@@ -211,7 +213,7 @@ export function ProfileActions({
           <>
             <button
               className="btn icon edit-profile-btn no-effects"
-              onClick={() => setIsEditingProfile(true)}
+              onClick={onEditProfile}
               aria-label="Edit profile"
               title="Edit profile"
               type="button"

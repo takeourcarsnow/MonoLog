@@ -53,6 +53,7 @@ export function ProfileHeader({ user, currentUserId, isOtherParam, following, se
         setFollowing={setFollowing}
         isEditingProfile={isEditingProfile}
         setIsEditingProfile={setIsEditingProfile}
+        onEditProfile={() => editFormRef.current?.toggleEdit()}
         onAuthRequired={onAuthRequired}
         showInvites={showInvites}
         setShowInvites={setShowInvites}

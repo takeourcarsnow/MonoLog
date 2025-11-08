@@ -217,7 +217,7 @@ export const UserHeader = memo(function UserHeader({
             setStoryIdx(0);
           }
         }}>
-          <OptimizedImage className="avatar" src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" style={{ borderRadius: '50%', objectFit: 'cover', outline: hasStories ? '3px solid #ff7e39' : 'none', outlineOffset: hasStories ? 2 : 0, cursor: hasStories ? 'pointer' : 'default' }} />
+          <OptimizedImage className={`avatar ${hasStories ? 'has-stories' : ''}`} src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" style={{ borderRadius: '50%', objectFit: 'cover', cursor: hasStories ? 'pointer' : 'default' }} />
           <span className="username">@{post.user.username}</span>
         </Link>
         {/* render the date outside the link so toggling the full date doesn't

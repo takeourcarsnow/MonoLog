@@ -3,7 +3,7 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { CameraEffectType } from "./cameraEffects";
-import { X, Sparkles, Type, Frame, Layers, Eye, EyeOff } from "lucide-react";
+import { X, Sparkles, Type, Frame, Layers, Eye, EyeOff, Ban } from "lucide-react";
 
 const Grid3x3 = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Grid3x3 })), { ssr: false });
 
@@ -21,7 +21,7 @@ export function EffectControls({ effectType, onEffectChange, disabled, overlayVi
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <button type="button" className={`btn mini ${effectType === 'none' ? 'active' : ''}`} onClick={() => onEffectChange('none')} title="No effect" disabled={disabled} style={{ padding: 6 }}>
-        <X size={iconSize} />
+        <Ban size={iconSize} />
       </button>
       <button type="button" className={`btn mini ${effectType === 'pixelate' ? 'active' : ''}`} onClick={() => onEffectChange('pixelate')} title="Pixelate" disabled={disabled} style={{ padding: 6 }}>
         <Grid3x3 size={iconSize} />

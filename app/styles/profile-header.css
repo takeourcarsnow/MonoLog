@@ -182,6 +182,11 @@
 
 /* profile header specific: (handled above) */
 
+/* Remove border when stories are active to match post avatar styling */
+.avatar-wrap.has-stories .profile-avatar {
+  border: none;
+}
+
 /* Profile stats section */
 .profile-stats {
   display: flex;

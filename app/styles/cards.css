@@ -591,6 +591,18 @@
   display: block;
   flex-shrink: 0;
 }
+/* RGB effect for avatars with stories */
+.avatar.has-stories {
+  /* RGB effect matching profile header story ring */
+  animation:
+    story-ring-pulse 2s ease-in-out infinite,
+    rainbow-rotate 3s linear infinite;
+  border: 3px solid transparent;
+  background: linear-gradient(45deg, #ff0096, #00ccff, #ff7e39, #ffff00, #ff0096) border-box;
+  background-size: 400% 400%;
+  position: relative;
+  will-change: box-shadow, background-position;
+}
 .user-line { 
   display: flex; 
   flex-direction: column;
@@ -1601,6 +1613,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .card-body .caption-wrap .spotify-section .spotify-info { transition: none; max-height: none; opacity: 1; }
+  .card-media {
+    animation: none;
+  }
+  .avatar {
+    animation: none;
+  }
 }
 
 
@@ -1646,6 +1664,35 @@
   100% {
     transform: translateX(-50%);
   }
+}
+
+/* RGB pulse animation for post photos */
+@keyframes post-rgb-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(255, 0, 150, 0.6),
+      0 0 0 0 rgba(0, 204, 255, 0.6),
+      0 0 0 3px rgba(255, 126, 57, 0.4);
+  }
+  33% {
+    box-shadow:
+      0 0 0 6px rgba(255, 0, 150, 0),
+      0 0 0 0 rgba(0, 204, 255, 0.6),
+      0 0 0 3px rgba(255, 126, 57, 0.4);
+  }
+  66% {
+    box-shadow:
+      0 0 0 6px rgba(255, 0, 150, 0),
+      0 0 0 6px rgba(0, 204, 255, 0),
+      0 0 0 3px rgba(255, 126, 57, 0.4);
+  }
+}
+
+/* Rainbow rotation animation for post photos */
+@keyframes post-rainbow-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* Mobile: allow horizontal scrolling instead of stacking */

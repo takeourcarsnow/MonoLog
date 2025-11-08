@@ -25,6 +25,9 @@ import { DitherControls } from "./DitherControls";
 import { AsciiControls } from "./AsciiControls";
 import { FrameSelector } from "./FrameSelector";
 import { OverlaySelector } from "./OverlaySelector";
+import { BasicControls } from "./BasicControls";
+import { FilterControls } from "./FilterControls";
+import { EffectsControls } from "./EffectsControls";
 import { useLiveCameraState } from "./useLiveCameraState";
 import { useCameraHandlers } from "./useCameraHandlers";
 import { useTouchHandlers } from "./useTouchHandlers";
@@ -336,6 +339,30 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
           </div>
 
           {/* Effect-specific controls */}
+          {effectSettings.type === 'basic' && (
+            <BasicControls
+              effectSettings={effectSettings}
+              onSettingsChange={setEffectSettings}
+              disabled={disabled}
+            />
+          )}
+
+          {effectSettings.type === 'filters' && (
+            <FilterControls
+              effectSettings={effectSettings}
+              onSettingsChange={setEffectSettings}
+              disabled={disabled}
+            />
+          )}
+
+          {effectSettings.type === 'effects' && (
+            <EffectsControls
+              effectSettings={effectSettings}
+              onSettingsChange={setEffectSettings}
+              disabled={disabled}
+            />
+          )}
+
           {effectSettings.type === 'pixelate' && (
             <PixelateControls
               effectSettings={effectSettings}

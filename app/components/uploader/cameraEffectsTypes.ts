@@ -4,24 +4,46 @@
  * Shared types and constants for camera effects
  */
 
-export type CameraEffectType = 'none' | 'dither' | 'pixelate' | 'ascii' | 'frame' | 'overlay';
+export type CameraEffectType = 'none' | 'basic' | 'filters' | 'effects' | 'pixelate' | 'dither' | 'ascii' | 'frame' | 'overlay';
 
 export interface CameraEffectSettings {
   type: CameraEffectType;
+  // Basic adjustments
+  exposure?: number;
+  contrast?: number;
+  saturation?: number;
+  temperature?: number;
+  vignette?: number;
+  // Filters
+  selectedFilter?: string;
+  filterStrength?: number;
+  // Effects
+  grain?: number;
+  softFocus?: number;
+  fade?: number;
   // Pixelate settings
   pixelSize?: number;
   pixelShape?: 'square' | 'circle';
+  pixelSample?: 'average' | 'nearest';
   // Dither settings
   ditherMethod?: 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes';
   ditherLevels?: number;
   ditherColorMode?: 'bw' | 'color';
   ditherPalette?: 'auto' | 'gameboy' | 'pico8' | 'nes' | 'zx_spectrum' | 'atari_2600' | 'commodore64' | 'apple_ii';
-  targetLongEdge?: number; // Resolution for dither effect (smaller = chunkier pixels)
+  ditherCustomPalette?: string;
+  targetLongEdge?: number;
   // ASCII settings
+  asciiEnabled?: boolean;
   asciiCellSize?: number;
   asciiCharset?: string;
   asciiInvert?: boolean;
   asciiColor?: boolean;
+  asciiOpacity?: number;
+  asciiBackground?: string;
+  asciiFont?: string;
+  asciiGamma?: number;
+  asciiBold?: boolean;
+  asciiEdge?: 'none' | 'stroke';
   asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters';
   // Frame settings
   frameOverlay?: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null;

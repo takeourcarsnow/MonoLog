@@ -6,15 +6,42 @@ import { CameraEffectSettings } from "./cameraEffects";
 export function useLiveCameraState() {
   const [effectSettings, setEffectSettings] = useState<CameraEffectSettings>({
     type: 'none',
+    // Basic adjustments
+    exposure: 0,
+    contrast: 0,
+    saturation: 0,
+    temperature: 0,
+    vignette: 0,
+    // Filters
+    selectedFilter: 'none',
+    filterStrength: 1,
+    // Effects
+    grain: 0,
+    softFocus: 0,
+    fade: 0,
+    // Pixelate settings
     pixelSize: 8,
     pixelShape: 'square',
+    pixelSample: 'average',
+    // Dither settings
     ditherMethod: 'ordered',
     ditherLevels: 3,
     ditherColorMode: 'bw',
     ditherPalette: 'auto',
+    ditherCustomPalette: '',
+    targetLongEdge: 150,
+    // ASCII settings
+    asciiEnabled: true,
     asciiCellSize: 10,
     asciiCharset: ' .:-=+*#%@',
     asciiInvert: false,
+    asciiColor: true,
+    asciiOpacity: 1,
+    asciiBackground: 'transparent',
+    asciiFont: 'monospace',
+    asciiGamma: 1,
+    asciiBold: false,
+    asciiEdge: 'none',
     asciiCharsetPreset: 'custom',
     frameOverlay: null,
     overlay: null,

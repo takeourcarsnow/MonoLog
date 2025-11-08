@@ -3,9 +3,11 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { CameraEffectType } from "./cameraEffects";
-import { X, Sparkles, Type, Frame, Layers, Eye, EyeOff, Ban } from "lucide-react";
+import { Sliders, Palette, Sparkles, Wand2, ImageIcon, Layers, Ban, Eye, EyeOff } from "lucide-react";
 
 const Grid3x3 = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Grid3x3 })), { ssr: false });
+const Type = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Type })), { ssr: false });
+const Frame = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Frame })), { ssr: false });
 
 interface EffectControlsProps {
   effectType: CameraEffectType;
@@ -23,11 +25,20 @@ export function EffectControls({ effectType, onEffectChange, disabled, overlayVi
       <button type="button" className={`btn mini ${effectType === 'none' ? 'active' : ''}`} onClick={() => onEffectChange('none')} title="No effect" disabled={disabled} style={{ padding: 6 }}>
         <Ban size={iconSize} />
       </button>
+      <button type="button" className={`btn mini ${effectType === 'basic' ? 'active' : ''}`} onClick={() => onEffectChange('basic')} title="Basic Adjustments" disabled={disabled} style={{ padding: 6 }}>
+        <Sliders size={iconSize} />
+      </button>
+      <button type="button" className={`btn mini ${effectType === 'filters' ? 'active' : ''}`} onClick={() => onEffectChange('filters')} title="Filters" disabled={disabled} style={{ padding: 6 }}>
+        <Palette size={iconSize} />
+      </button>
+      <button type="button" className={`btn mini ${effectType === 'effects' ? 'active' : ''}`} onClick={() => onEffectChange('effects')} title="Effects" disabled={disabled} style={{ padding: 6 }}>
+        <Sparkles size={iconSize} />
+      </button>
       <button type="button" className={`btn mini ${effectType === 'pixelate' ? 'active' : ''}`} onClick={() => onEffectChange('pixelate')} title="Pixelate" disabled={disabled} style={{ padding: 6 }}>
         <Grid3x3 size={iconSize} />
       </button>
       <button type="button" className={`btn mini ${effectType === 'dither' ? 'active' : ''}`} onClick={() => onEffectChange('dither')} title="Dither" disabled={disabled} style={{ padding: 6 }}>
-        <Sparkles size={iconSize} />
+        <Wand2 size={iconSize} />
       </button>
       <button type="button" className={`btn mini ${effectType === 'ascii' ? 'active' : ''}`} onClick={() => onEffectChange('ascii')} title="ASCII" disabled={disabled} style={{ padding: 6 }}>
         <Type size={iconSize} />

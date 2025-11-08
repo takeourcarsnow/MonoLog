@@ -1,5 +1,6 @@
 import { SunDim, Scale, Rainbow, Thermometer } from "lucide-react";
 import { rangeBg, announceDirection } from "../utils";
+import { EffectSlider } from "../../shared/EffectSlider";
 
 interface BasicPanelProps {
   exposure: number;
@@ -34,108 +35,97 @@ export default function BasicPanel({
   draw,
   resetControlToDefault,
 }: BasicPanelProps) {
+  const handleChange = (key: string, value: number) => {
+    switch (key) {
+      case 'exposure':
+        announceDirection('exposure', exposureRef.current, value);
+        exposureRef.current = value;
+        setExposure(value);
+        break;
+      case 'contrast':
+        announceDirection('contrast', contrastRef.current, value);
+        contrastRef.current = value;
+        setContrast(value);
+        break;
+      case 'saturation':
+        announceDirection('saturation', saturationRef.current, value);
+        saturationRef.current = value;
+        setSaturation(value);
+        break;
+      case 'temperature':
+        announceDirection('temperature', temperatureRef.current, value);
+        temperatureRef.current = value;
+        setTemperature(value);
+        break;
+    }
+    requestAnimationFrame(() => draw());
+  };
+
   return (
     <section className="imgedit-panel-inner basic-panel" style={{ display: 'grid', width: '100%' }}>
-      <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <SunDim size={18} strokeWidth={2} aria-hidden />
-          <span>Exposure</span>
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-          <input
-            className="imgedit-range"
-            type="range"
-            min={-2}
-            max={2}
-            step={0.1}
-            value={exposure}
-            onInput={(e: any) => {
-              const v = Number(e.target.value);
-              announceDirection('exposure', exposureRef.current, v);
-              exposureRef.current = v;
-              setExposure(v);
-              requestAnimationFrame(() => draw());
-            }}
-            onDoubleClick={() => resetControlToDefault('exposure')}
-            style={{ flex: 1, background: rangeBg(exposure, -2, 2, '#fff6db', '#ffd166') }}
-          />
-        </span>
-      </label>
-      <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Scale size={18} strokeWidth={2} aria-hidden />
-          <span>Contrast</span>
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-          <input
-            className="imgedit-range"
-            type="range"
-            min={-1}
-            max={1}
-            step={0.01}
-            value={contrast}
-            onInput={(e: any) => {
-              const v = Number(e.target.value);
-              announceDirection('contrast', contrastRef.current, v);
-              contrastRef.current = v;
-              setContrast(v);
-              requestAnimationFrame(() => draw());
-            }}
-            onDoubleClick={() => resetControlToDefault('contrast')}
-            style={{ flex: 1, background: rangeBg(contrast, -1, 1, '#fff3e6', '#ff9f43') }}
-          />
-        </span>
-      </label>
-      <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Rainbow size={18} strokeWidth={2} aria-hidden />
-          <span>Saturation</span>
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-          <input
-            className="imgedit-range"
-            type="range"
-            min={-1}
-            max={1}
-            step={0.01}
-            value={saturation}
-            onInput={(e: any) => {
-              const v = Number(e.target.value);
-              announceDirection('saturation', saturationRef.current, v);
-              saturationRef.current = v;
-              setSaturation(v);
-              requestAnimationFrame(() => draw());
-            }}
-            onDoubleClick={() => resetControlToDefault('saturation')}
-            style={{ flex: 1, background: rangeBg(saturation, -1, 1, '#ffe9e9', '#ff6b6b') }}
-          />
-        </span>
-      </label>
-      <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
-          <Thermometer size={18} strokeWidth={2} aria-hidden />
-          <span>Temperature</span>
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
-          <input
-            className="imgedit-range"
-            type="range"
-            min={-100}
-            max={100}
-            step={1}
-            value={temperature}
-            onInput={(e: any) => {
-              const v = Number(e.target.value);
-              announceDirection('temperature', temperatureRef.current, v);
-              temperatureRef.current = v;
-              setTemperature(v);
-              requestAnimationFrame(() => draw());
-            }}
-            onDoubleClick={() => resetControlToDefault('temperature')}
-            style={{ flex: 1, background: rangeBg(temperature, -100, 100, '#66d1ff', '#ffb86b') }}
-          />
-        </span>
-      </label>
+      <EffectSlider
+        label="Exposure"
+        icon={<SunDim size={18} strokeWidth={2} aria-hidden />}
+        value={exposure}
+        min={-2}
+        max={2}
+        step={0.1}
+        onChange={(v) => handleChange('exposure', v)}
+        onDoubleClick={() => resetControlToDefault('exposure')}
+        valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+        colorLeft="#fff6db"
+        colorRight="#ffd166"
+        announce={true}
+        prevValueRef={exposureRef}
+      />
+
+      <EffectSlider
+        label="Contrast"
+        icon={<Scale size={18} strokeWidth={2} aria-hidden />}
+        value={contrast}
+        min={-1}
+        max={1}
+        step={0.01}
+        onChange={(v) => handleChange('contrast', v)}
+        onDoubleClick={() => resetControlToDefault('contrast')}
+        valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+        colorLeft="#fff3e6"
+        colorRight="#ff9f43"
+        announce={true}
+        prevValueRef={contrastRef}
+      />
+
+      <EffectSlider
+        label="Saturation"
+        icon={<Rainbow size={18} strokeWidth={2} aria-hidden />}
+        value={saturation}
+        min={-1}
+        max={1}
+        step={0.01}
+        onChange={(v) => handleChange('saturation', v)}
+        onDoubleClick={() => resetControlToDefault('saturation')}
+        valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+        colorLeft="#ffe9e9"
+        colorRight="#ff6b6b"
+        announce={true}
+        prevValueRef={saturationRef}
+      />
+
+      <EffectSlider
+        label="Temperature"
+        icon={<Thermometer size={18} strokeWidth={2} aria-hidden />}
+        value={temperature}
+        min={-100}
+        max={100}
+        step={1}
+        onChange={(v) => handleChange('temperature', v)}
+        onDoubleClick={() => resetControlToDefault('temperature')}
+        valueFormatter={(v) => (v > 0 ? '+' : '') + v.toFixed(0)}
+        colorLeft="#66d1ff"
+        colorRight="#ffb86b"
+        announce={true}
+        prevValueRef={temperatureRef}
+      />
     </section>
   );
 }

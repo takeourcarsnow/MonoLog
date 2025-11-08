@@ -1,5 +1,6 @@
 import { Aperture, Layers, ZapOff, Film } from "lucide-react";
 import { rangeBg } from "../utils";
+import { EffectSlider } from "../../shared/EffectSlider";
 
 interface EffectsPanelProps {
   vignette: number;
@@ -34,37 +35,89 @@ export default function EffectsPanel({
   draw,
   resetControlToDefault,
 }: EffectsPanelProps) {
+  const handleChange = (key: string, value: number) => {
+    switch (key) {
+      case 'vignette':
+        vignetteRef.current = value;
+        setVignette(value);
+        break;
+      case 'grain':
+        grainRef.current = value;
+        setGrain(value);
+        break;
+      case 'softFocus':
+        softFocusRef.current = value;
+        setSoftFocus(value);
+        break;
+      case 'fade':
+        fadeRef.current = value;
+        setFade(value);
+        break;
+    }
+    requestAnimationFrame(() => draw());
+  };
+
   return (
     <section className="imgedit-panel-inner effects-panel" style={{ display: 'grid', width: '100%', gap: 6 }}>
-      {[
-        { key: 'vignette', icon: <Aperture size={14} strokeWidth={2} aria-hidden />, label: 'Vignette', value: vignette, ref: vignetteRef, set: setVignette, color: ['#001122', '#66d1ff'] },
-        { key: 'grain', icon: <Layers size={14} strokeWidth={2} aria-hidden />, label: 'Grain', value: grain, ref: grainRef, set: setGrain, color: ['#8b7355', '#ff9f43'] },
-        { key: 'softFocus', icon: <ZapOff size={14} strokeWidth={2} aria-hidden />, label: 'Soft', value: softFocus, ref: softFocusRef, set: setSoftFocus, color: ['#f0e6ff', '#c8a2ff'] },
-        { key: 'fade', icon: <Film size={14} strokeWidth={2} aria-hidden />, label: 'Fade', value: fade, ref: fadeRef, set: setFade, color: ['#fff9e6', '#ffdc99'] },
-      ].map((c) => (
-        <label key={c.key} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, fontWeight: 600, minWidth: 72 }}>
-            {c.icon}
-            <span style={{ whiteSpace: 'nowrap' }}>{c.label}</span>
-          </span>
-          <input
-            className="imgedit-range"
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={c.value}
-            onInput={(e: any) => {
-              const v = Number(e.target.value);
-              c.ref.current = v;
-              c.set(v);
-              requestAnimationFrame(() => draw());
-            }}
-            onDoubleClick={() => resetControlToDefault(c.key)}
-            style={{ flex: 1, minWidth: 0, background: rangeBg(c.value, 0, 1, c.color[0], c.color[1]) }}
-          />
-        </label>
-      ))}
+      <EffectSlider
+        label="Vignette"
+        icon={<Aperture size={14} strokeWidth={2} aria-hidden />}
+        value={vignette}
+        min={0}
+        max={1}
+        step={0.01}
+        onChange={(v) => handleChange('vignette', v)}
+        onDoubleClick={() => resetControlToDefault('vignette')}
+        showValue={false}
+        colorLeft="#001122"
+        colorRight="#66d1ff"
+        prevValueRef={vignetteRef}
+      />
+
+      <EffectSlider
+        label="Grain"
+        icon={<Layers size={14} strokeWidth={2} aria-hidden />}
+        value={grain}
+        min={0}
+        max={1}
+        step={0.01}
+        onChange={(v) => handleChange('grain', v)}
+        onDoubleClick={() => resetControlToDefault('grain')}
+        showValue={false}
+        colorLeft="#8b7355"
+        colorRight="#ff9f43"
+        prevValueRef={grainRef}
+      />
+
+      <EffectSlider
+        label="Soft"
+        icon={<ZapOff size={14} strokeWidth={2} aria-hidden />}
+        value={softFocus}
+        min={0}
+        max={1}
+        step={0.01}
+        onChange={(v) => handleChange('softFocus', v)}
+        onDoubleClick={() => resetControlToDefault('softFocus')}
+        showValue={false}
+        colorLeft="#f0e6ff"
+        colorRight="#c8a2ff"
+        prevValueRef={softFocusRef}
+      />
+
+      <EffectSlider
+        label="Fade"
+        icon={<Film size={14} strokeWidth={2} aria-hidden />}
+        value={fade}
+        min={0}
+        max={1}
+        step={0.01}
+        onChange={(v) => handleChange('fade', v)}
+        onDoubleClick={() => resetControlToDefault('fade')}
+        showValue={false}
+        colorLeft="#fff9e6"
+        colorRight="#ffdc99"
+        prevValueRef={fadeRef}
+      />
     </section>
   );
 }

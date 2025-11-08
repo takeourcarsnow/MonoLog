@@ -109,15 +109,7 @@ export function useUploader() {
     compressedSize, setCompressedSize,
     originalSize, setOriginalSize,
     index, setIndex,
-    spotifyLink, setSpotifyLink,
-    camera, setCamera,
-    lens, setLens,
-    filmType, setFilmType,
-    filmIso, setFilmIso
-    ,
-    weatherCondition, setWeatherCondition,
-    weatherTemperature, setWeatherTemperature,
-    locationAddress, setLocationAddress
+    spotifyLink, setSpotifyLink
   );
 
   // File handlers

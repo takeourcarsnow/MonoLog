@@ -75,7 +75,8 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
       false, // not processing
       fetchingLocation,
       setFetchingLocation,
-      setLocationAddress
+      setLocationAddress,
+      undefined
     );
   };
 
@@ -98,9 +99,9 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
     lens, 
     filmType: combinedFilmType, 
     spotifyLink, 
-    weatherCondition, 
+    weatherCondition: weatherCondition.trim() || '', 
     weatherTemperature: weatherTemperature ? parseFloat(weatherTemperature) : undefined, 
-    locationAddress 
+    locationAddress: locationAddress.trim() || '' 
   };
   await onSave(patch);
     } finally {

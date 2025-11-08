@@ -5,6 +5,8 @@ import { fetchLocationForCurrentCoords } from "./locationUtils";
 interface LocationInputProps {
   locationAddress?: string;
   setLocationAddress?: (address: string) => void;
+  setWeatherCondition?: (condition: string) => void;
+  setWeatherTemperature?: (temperature: number | undefined) => void;
   hasPreview: boolean;
   processing: boolean;
   activeField: string | null;
@@ -15,6 +17,8 @@ interface LocationInputProps {
 export function LocationInput({
   locationAddress,
   setLocationAddress,
+  setWeatherCondition,
+  setWeatherTemperature,
   hasPreview,
   processing,
   activeField,
@@ -26,8 +30,9 @@ export function LocationInput({
   const handleLocationChange = (value: string) => {
     setLocationAddress?.(value);
     if (!value.trim()) {
-      // Clear location data if input is emptied
-      console.log('Clearing location data because input is empty');
+      // Clear weather data when location is emptied
+      setWeatherCondition?.('');
+      setWeatherTemperature?.(undefined);
     }
   };
 
@@ -40,13 +45,16 @@ export function LocationInput({
       processing,
       fetchingLocation,
       setFetchingLocation,
-      setLocationAddress
+      setLocationAddress,
+      () => setActiveField('location')
     );
   };
 
   const handleClear = () => {
-    // Clear location data
+    // Clear location and weather data
     setLocationAddress?.('');
+    setWeatherCondition?.('');
+    setWeatherTemperature?.(undefined);
     // Close any active input
     setActiveField(null);
     try { inputRef?.current?.blur(); } catch (_) {}

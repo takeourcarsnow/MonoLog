@@ -228,7 +228,7 @@ export const UserHeader = memo(function UserHeader({
         <div className="user-meta">
           {showMeta && (
             <>
-              {(post.locationAddress || post.weatherTemperature !== undefined) && (
+              {(post.locationAddress?.trim() || post.weatherTemperature !== undefined) && (
                 <ScrollIfTruncated className="meta-combined">
                   {post.locationAddress && (
                     <Link href={`/search?q=${encodeURIComponent(post.locationAddress.split(',')[0]?.trim() || post.locationAddress)}`} className="location-meta" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>

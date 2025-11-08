@@ -72,7 +72,8 @@ export const fetchLocationForCurrentCoords = async (
   processing: boolean,
   fetchingLocation: boolean,
   setFetchingLocation: (fetching: boolean) => void,
-  setLocationAddress?: (address: string) => void
+  setLocationAddress?: (address: string) => void,
+  onSuccess?: () => void
 ) => {
   if (processing || fetchingLocation) return;
   setFetchingLocation(true);
@@ -86,6 +87,7 @@ export const fetchLocationForCurrentCoords = async (
       const city = buildLocationLabel(addr);
       if (city) {
         setLocationAddress?.(city);
+        onSuccess?.();
       }
       try { if (process.env.NODE_ENV !== 'production') console.debug('[uploader] reverse-geocode', { lat, lon, city }); } catch (_) {}
     }

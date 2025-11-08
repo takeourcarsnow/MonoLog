@@ -21,21 +21,7 @@ export function useDraftPersistence(
   index: number,
   setIndex: (index: number) => void,
   spotifyLink: string,
-  setSpotifyLink: (link: string) => void,
-  camera: string,
-  setCamera: (camera: string) => void,
-  lens: string,
-  setLens: (lens: string) => void,
-  filmType: string,
-  setFilmType: (filmType: string) => void,
-  filmIso: string,
-  setFilmIso: (filmIso: string) => void,
-  weatherCondition: string,
-  setWeatherCondition: (condition: string) => void,
-  weatherTemperature: number | undefined,
-  setWeatherTemperature: (temperature: number | undefined) => void,
-  locationAddress: string,
-  setLocationAddress: (address: string) => void
+  setSpotifyLink: (link: string) => void
 ) {
   const captionDebounceRef = useRef<NodeJS.Timeout | null>(null);
   // restore draft on mount
@@ -63,17 +49,11 @@ export function useDraftPersistence(
       if (parsed.originalSize !== undefined) setOriginalSize(parsed.originalSize);
       if (parsed.index !== undefined) setIndex(parsed.index);
       if (parsed.spotifyLink !== undefined) setSpotifyLink(parsed.spotifyLink);
-      if (parsed.camera !== undefined) setCamera(parsed.camera);
-      if (parsed.lens !== undefined) setLens(parsed.lens);
-      if (parsed.filmType !== undefined) setFilmType(parsed.filmType);
-      if (parsed.filmIso !== undefined) setFilmIso(parsed.filmIso);
-      if (parsed.weatherCondition !== undefined) setWeatherCondition(parsed.weatherCondition);
-      if (parsed.weatherTemperature !== undefined) setWeatherTemperature(parsed.weatherTemperature);
-      if (parsed.locationAddress !== undefined) setLocationAddress(parsed.locationAddress);
+      // EXIF info not restored from draft
     } catch (e) {
       // ignore parse errors
     }
-  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink, setCamera, setLens, setFilmType, setFilmIso, setWeatherCondition, setWeatherTemperature, setLocationAddress]);
+  }, [setDataUrls, setOriginalDataUrls, setEditorSettings, setCaption, setAlt, setVisibility, setCompressedSize, setOriginalSize, setIndex, setSpotifyLink]);
 
   // Persist draft whenever key pieces of state change (excluding caption for performance)
   useEffect(() => {
@@ -89,13 +69,7 @@ export function useDraftPersistence(
         originalSize: originalSize ?? undefined,
         spotifyLink: spotifyLink || undefined,
         index,
-        camera: camera || undefined,
-        lens: lens || undefined,
-        filmType: filmType || undefined,
-        filmIso: filmIso || undefined,
-        weatherCondition: weatherCondition || undefined,
-        weatherTemperature: weatherTemperature ?? undefined,
-        locationAddress: locationAddress || undefined,
+        // EXIF info not saved to draft
         savedAt: Date.now(),
       };
 
@@ -104,15 +78,9 @@ export function useDraftPersistence(
         const existingRaw = localStorage.getItem(DRAFT_KEY);
         if (existingRaw) {
           const existing = JSON.parse(existingRaw);
-          if (existing.caption !== undefined && payload.caption === undefined) payload.caption = existing.caption;
-          if (existing.spotifyLink && !payload.spotifyLink) payload.spotifyLink = existing.spotifyLink;
-          if (existing.camera && !payload.camera) payload.camera = existing.camera;
-          if (existing.lens && !payload.lens) payload.lens = existing.lens;
-          if (existing.filmType && !payload.filmType) payload.filmType = existing.filmType;
-          if (existing.filmIso && !payload.filmIso) payload.filmIso = existing.filmIso;
-          if (existing.weatherCondition && !payload.weatherCondition) payload.weatherCondition = existing.weatherCondition;
-          if (existing.weatherTemperature !== undefined && payload.weatherTemperature === undefined) payload.weatherTemperature = existing.weatherTemperature;
-          if (existing.locationAddress && !payload.locationAddress) payload.locationAddress = existing.locationAddress;
+        if (existing.caption !== undefined && payload.caption === undefined) payload.caption = existing.caption;
+        if (existing.spotifyLink && !payload.spotifyLink) payload.spotifyLink = existing.spotifyLink;
+        // EXIF info not preserved from existing draft
         }
       } catch (e) {
         // ignore parse errors and fall back to writing payload as-is
@@ -122,7 +90,7 @@ export function useDraftPersistence(
     } catch (e) {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [dataUrls, originalDataUrls, editorSettings, alt, visibility, compressedSize, originalSize, index, spotifyLink, camera, lens, filmType, filmIso, weatherCondition, weatherTemperature, locationAddress]);
+  }, [dataUrls, originalDataUrls, editorSettings, alt, visibility, compressedSize, originalSize, index, spotifyLink]);
 
   // Debounced persistence for caption to avoid lag on mobile typing
   useEffect(() => {

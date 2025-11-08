@@ -9,6 +9,7 @@ interface WeatherInputProps {
   setWeatherCondition?: (condition: string) => void;
   weatherTemperature?: number;
   setWeatherTemperature?: (temperature: number | undefined) => void;
+  setLocationAddress?: (address: string) => void;
   hasPreview: boolean;
   processing: boolean;
   activeField: string | null;
@@ -23,6 +24,7 @@ export function WeatherInput({
   setWeatherCondition,
   weatherTemperature,
   setWeatherTemperature,
+  setLocationAddress,
   hasPreview,
   processing,
   activeField,
@@ -35,23 +37,23 @@ export function WeatherInput({
 
   const IconComponent = getWeatherIcon(weatherCondition || '');
 
-  useEffect(() => {
-    // Show only the temperature in the input (icon will represent the condition)
-    if (weatherTemperature !== undefined) {
-      setCombinedWeather(`${Math.round(weatherTemperature)}°C`);
-    } else {
-      // Do not display textual conditions in the input; rely on iconography instead
-      setCombinedWeather('');
-    }
-  }, [weatherTemperature, setCombinedWeather]);
-
   const handleCombinedWeatherChange = (value: string) => {
     setCombinedWeather(value);
-    parseCombinedWeather(value, setWeatherCondition, setWeatherTemperature);
+    if (!value.trim()) {
+      // Clear location when weather is emptied
+      setLocationAddress?.('');
+    }
   };
 
   const handleCombinedWeatherBlur = () => {
     setActiveField(null);
+    // Parse and format on blur
+    parseCombinedWeather(combinedWeather, setWeatherCondition, setWeatherTemperature);
+    if (weatherTemperature !== undefined) {
+      setCombinedWeather(`${Math.round(weatherTemperature)}°C`);
+    } else {
+      setCombinedWeather('');
+    }
   };
 
   const handleFetchWeather = () => {
@@ -61,6 +63,7 @@ export function WeatherInput({
       setFetchingWeather,
       setWeatherTemperature,
       setWeatherCondition,
+      setCombinedWeather,
       getCurrentPosition
     );
   };
@@ -68,6 +71,7 @@ export function WeatherInput({
   const handleClear = () => {
     setWeatherCondition?.('');
     setWeatherTemperature?.(undefined);
+    setLocationAddress?.('');
     setCombinedWeather('');
     setActiveField(null);
     try { inputRef?.current?.blur(); } catch (_) {}

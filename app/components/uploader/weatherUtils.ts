@@ -66,6 +66,7 @@ export const fetchWeatherForCurrentLocation = async (
   setFetchingWeather: (fetching: boolean) => void,
   setWeatherTemperature?: (temperature: number | undefined) => void,
   setWeatherCondition?: (condition: string) => void,
+  setCombinedWeather?: (weather: string) => void,
   getCurrentPosition?: () => Promise<{ lat: number; lon: number }>
 ) => {
   if (processing || fetchingWeather) return;
@@ -82,6 +83,7 @@ export const fetchWeatherForCurrentLocation = async (
       const code = typeof cw.weathercode === 'number' ? cw.weathercode : undefined;
       if (temp !== undefined) setWeatherTemperature?.(temp);
       if (code !== undefined) setWeatherCondition?.(WEATHER_CODE_MAP[code] || `Weather ${code}`);
+      if (temp !== undefined) setCombinedWeather?.(`${Math.round(temp)}°C`);
     }
   } catch (e: any) {
     console.warn('Failed to fetch weather', e);

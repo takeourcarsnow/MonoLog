@@ -27,16 +27,6 @@ export function WeatherLocationInputs({
   const inputRef = useRef<HTMLInputElement>(null);
   const [combinedWeather, setCombinedWeather] = useState<string>('');
 
-  // Update combined weather when condition or temperature changes
-  useEffect(() => {
-    // Only display temperature in the combined string; the icon will represent condition
-    if (weatherTemperature !== undefined) {
-      setCombinedWeather(`${Math.round(weatherTemperature)}°C`);
-    } else {
-      setCombinedWeather('');
-    }
-  }, [weatherCondition, weatherTemperature]);
-
   useEffect(() => {
     if (activeField && inputRef.current) {
       inputRef.current.focus();
@@ -55,6 +45,8 @@ export function WeatherLocationInputs({
           <LocationInput
             locationAddress={locationAddress}
             setLocationAddress={setLocationAddress}
+            setWeatherCondition={setWeatherCondition}
+            setWeatherTemperature={setWeatherTemperature}
             hasPreview={hasPreview}
             processing={processing}
             activeField={activeField}
@@ -66,6 +58,7 @@ export function WeatherLocationInputs({
             setWeatherCondition={setWeatherCondition}
             weatherTemperature={weatherTemperature}
             setWeatherTemperature={setWeatherTemperature}
+            setLocationAddress={setLocationAddress}
             hasPreview={hasPreview}
             processing={processing}
             activeField={activeField}
@@ -84,6 +77,7 @@ export function WeatherLocationInputs({
               setWeatherCondition={setWeatherCondition}
               weatherTemperature={weatherTemperature}
               setWeatherTemperature={setWeatherTemperature}
+              setLocationAddress={setLocationAddress}
               hasPreview={hasPreview}
               processing={processing}
               activeField={activeField}
@@ -97,6 +91,8 @@ export function WeatherLocationInputs({
             <LocationInput
               locationAddress={locationAddress}
               setLocationAddress={setLocationAddress}
+              setWeatherCondition={setWeatherCondition}
+              setWeatherTemperature={setWeatherTemperature}
               hasPreview={hasPreview}
               processing={processing}
               activeField={activeField}

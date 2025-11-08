@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import CommunityCardServer from "@/app/components/communities/CommunityCardServer";
 import CommunityCardClient from "@/app/components/communities/CommunityCardClient";
@@ -25,7 +25,7 @@ export default function CommunitiesPage() {
   const [theme, setTheme] = useState<"light" | "dark">(currentTheme());
   const { me } = useAuth();
 
-  const loadCommunities = async () => {
+  const loadCommunities = useCallback(async () => {
     if (!me) return; // Skip loading if not authenticated
 
     try {
@@ -38,11 +38,17 @@ export default function CommunitiesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [me]);
 
   useEffect(() => {
     loadCommunities();
-  }, [me]); // Depend on me to reload when authentication changes
+  }, [loadCommunities]); // Depend on loadCommunities to reload when it changes, but since me is dep, it will reload when me changes
+
+  useEffect(() => {
+    const handleCommunityDeleted = () => loadCommunities();
+    window.addEventListener('communityDeleted', handleCommunityDeleted);
+    return () => window.removeEventListener('communityDeleted', handleCommunityDeleted);
+  }, [loadCommunities]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowMessage(true), 1000);

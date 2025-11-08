@@ -1,6 +1,7 @@
 import { memo, useState } from "react";
 import { MessageCircle, Star as StarIcon, Link as LinkIcon, Maximize as FullscreenIcon, Camera, Check, Eye } from "lucide-react";
 import { ReportButton } from "../ReportButton";
+import { usePostContext } from "./PostContext";
 
 interface ActionsSectionProps {
   postId: string;
@@ -28,13 +29,6 @@ interface ActionsSectionProps {
   setShowWeather?: (value: boolean) => void;
   showLocation?: boolean;
   setShowLocation?: (value: boolean) => void;
-  spotifyLink?: string;
-  camera?: string;
-  lens?: string;
-  filmType?: string;
-  weatherCondition?: string;
-  weatherTemperature?: number;
-  locationAddress?: string;
 }
 
 export const ActionsSection = function ActionsSection({
@@ -63,14 +57,8 @@ export const ActionsSection = function ActionsSection({
   setShowWeather,
   showLocation,
   setShowLocation,
-  spotifyLink,
-  camera,
-  lens,
-  filmType,
-  weatherCondition,
-  weatherTemperature,
-  locationAddress,
 }: ActionsSectionProps) {
+  const { post } = usePostContext();
   const [copied, setCopied] = useState(false);
   const [animatingButton, setAnimatingButton] = useState<string | null>(null);
 
@@ -107,7 +95,7 @@ export const ActionsSection = function ActionsSection({
       </button>
       {setShowExif && (
         <button
-          className={`action exif-info ${camera || lens || filmType ? 'exif-has-data' : ''} ${animatingButton === 'exif' ? 'animating' : ''}`}
+          className={`action exif-info ${post.camera || post.lens || post.filmType ? 'exif-has-data' : ''} ${animatingButton === 'exif' ? 'animating' : ''}`}
           title={`Show EXIF info ${showExif ? "(active)" : ""}`}
           aria-label="Toggle EXIF information"
           aria-pressed={showExif}
@@ -207,7 +195,7 @@ export const ActionsSection = function ActionsSection({
       {/* Weather & Location buttons intentionally removed — info is shown in header */}
       {setShowSpotify && (
         <button
-          className={`action spotify-info ${spotifyLink ? 'spotify-has-link' : ''} ${animatingButton === 'spotify' ? 'animating' : ''}`}
+          className={`action spotify-info ${post.spotifyLink ? 'spotify-has-link' : ''} ${animatingButton === 'spotify' ? 'animating' : ''}`}
           title={`Show Spotify info ${showSpotify ? "(active)" : ""}`}
           aria-label="Toggle Spotify information"
           aria-pressed={showSpotify}

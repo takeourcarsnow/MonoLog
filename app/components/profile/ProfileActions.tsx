@@ -1,10 +1,9 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { SignOutButton } from "@/app/components/auth/SignOut";
 import Link from "next/link";
 import { User } from "lucide-react";
 import { UserPlus, UserCheck } from "lucide-react";
-import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { BarChart3 } from "lucide-react";
 import { Bell } from "lucide-react";
 import { Star } from "lucide-react";
@@ -38,85 +37,6 @@ export function ProfileActions({
   setShowInvites
 }: ProfileActionsProps) {
   const followInFlightRef = useRef(false);
-  const followBtnRef = useRef<HTMLButtonElement | null>(null);
-  const [followAnim, setFollowAnim] = useState<'following-anim' | 'unfollow-anim' | null>(null);
-  const [displayText, setDisplayText] = useState('Unfollowed');
-  const [isAnimating, setIsAnimating] = useState(false);
-  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Typewriter animation effect
-  const animateTextChange = (fromText: string, toText: string) => {
-    if (isAnimating) return;
-    
-    setIsAnimating(true);
-    let currentText = fromText;
-    let currentIndex = fromText.length;
-    const typeSpeed = 40; // ms per character - snappier timing
-    
-    const animate = () => {
-      if (currentIndex > 0) {
-        // Backspace phase
-        currentIndex--;
-        currentText = currentText.slice(0, currentIndex);
-        setDisplayText(currentText);
-        animationTimeoutRef.current = setTimeout(animate, typeSpeed);
-      } else {
-        // Find common prefix
-        let commonLength = 0;
-        while (commonLength < toText.length && commonLength < fromText.length && 
-               toText[commonLength] === fromText[commonLength]) {
-          commonLength++;
-        }
-        
-        // Type new text
-        const remainingText = toText.slice(commonLength);
-        if (remainingText.length > 0) {
-          currentText = toText.slice(0, commonLength + 1);
-          setDisplayText(currentText);
-          if (currentText.length < toText.length) {
-            animationTimeoutRef.current = setTimeout(() => {
-              animateTyping(toText, commonLength + 1);
-            }, typeSpeed);
-          } else {
-            setIsAnimating(false);
-          }
-        } else {
-          setIsAnimating(false);
-        }
-      }
-    };
-    
-    const animateTyping = (targetText: string, startIndex: number) => {
-      if (startIndex < targetText.length) {
-        const newText = targetText.slice(0, startIndex + 1);
-        setDisplayText(newText);
-        animationTimeoutRef.current = setTimeout(() => {
-          animateTyping(targetText, startIndex + 1);
-        }, typeSpeed);
-      } else {
-        setIsAnimating(false);
-      }
-    };
-    
-    animate();
-  };
-
-  // Trigger animation when following state changes
-  useEffect(() => {
-    const targetText = following ? 'Followed' : 'Unfollowed';
-    if (!isAnimating) {
-      animateTextChange(displayText, targetText);
-    }
-  }, [following]);
-
-  // Cleanup animation timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleFollowToggle = async () => {
     const cur = await api.getCurrentUser();
@@ -136,10 +56,6 @@ export function ProfileActions({
     // Optimistic update: flip state immediately so local UI responds fast
     setFollowing(!prev);
 
-    // Add subtle animation
-    const willFollow = !prev;
-    setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
-
     followInFlightRef.current = true;
     try {
       if (!prev) {
@@ -158,8 +74,6 @@ export function ProfileActions({
     }
     finally {
       followInFlightRef.current = false;
-      // Clear animation after a short delay
-      setTimeout(() => setFollowAnim(null), 420);
     }
   };
 
@@ -188,22 +102,31 @@ export function ProfileActions({
           margin-top: -2px;
         }
       `}</style>
-      {/* Follow button moved outside profile-actions div */}
+      {/* Simple follow button */}
       {currentUserId && user?.id !== currentUserId ? (
-        <ToggleActionButton
-          ref={followBtnRef as any}
-          className={`btn follow-btn ${following ? 'following' : 'not-following'} expanded ${followAnim || ''}`}
-          active={!!following}
-          pending={followInFlightRef.current}
-          onClick={handleFollowToggle}
-          activeIcon={<UserCheck size={18} />}
-          inactiveIcon={<UserPlus size={18} />}
-          ariaActiveLabel="Unfollow"
-          ariaInactiveLabel="Follow"
-          titleActive={following ? 'Unfollow' : 'Follow'}
-          titleInactive={following ? 'Unfollow' : 'Follow'}
-          revealLabel={displayText}
-        />
+        <div style={{ margin: '8px 0' }}>
+          <button
+            onClick={handleFollowToggle}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #555',
+              borderRadius: '4px',
+              background: following ? '#333' : '#222',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            aria-label={following ? "Unfollow" : "Follow"}
+            title={following ? "Unfollow" : "Follow"}
+            type="button"
+          >
+            {following ? <UserCheck size={14} /> : <UserPlus size={14} />}
+            <span>{following ? 'Following' : 'Follow'}</span>
+          </button>
+        </div>
       ) : null}
       <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 12 }}>
         {/* Show owner actions when the signed-in user is viewing their own profile.

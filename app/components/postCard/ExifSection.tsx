@@ -1,14 +1,13 @@
 import { Camera, Settings, Image, Gauge } from "lucide-react";
+import { usePostContext } from "./PostContext";
 
 interface ExifSectionProps {
   showExif: boolean;
-  camera?: string;
-  lens?: string;
-  filmType?: string;
 }
 
-export const ExifSection = ({ showExif, camera, lens, filmType }: ExifSectionProps) => {
-  const hasData = !!(camera || lens || filmType);
+export const ExifSection = ({ showExif }: ExifSectionProps) => {
+  const { post } = usePostContext();
+  const hasData = !!(post.camera || post.lens || post.filmType);
   
   if (!hasData) return null;
 
@@ -18,12 +17,12 @@ export const ExifSection = ({ showExif, camera, lens, filmType }: ExifSectionPro
         <div style={{ display: 'flex', gap: '8px 12px', justifyContent: 'center', alignItems: 'center' }}>
           {(() => {
             const parts = [];
-            if (camera) parts.push(<><Camera size={12} style={{ marginRight: 4 }} />{camera}</>);
-            if (lens) parts.push(<><Settings size={12} style={{ marginRight: 4 }} />{lens}</>);
+            if (post.camera) parts.push(<><Camera size={12} style={{ marginRight: 4 }} />{post.camera}</>);
+            if (post.lens) parts.push(<><Settings size={12} style={{ marginRight: 4 }} />{post.lens}</>);
 
             // Parse film type and ISO from combined field
-            if (filmType) {
-              const filmParts = filmType.trim().split(' ');
+            if (post.filmType) {
+              const filmParts = post.filmType.trim().split(' ');
               if (filmParts.length > 1) {
                 const lastPart = filmParts[filmParts.length - 1];
                 // Check if last part looks like ISO (number, number+F, or CT[number])
@@ -34,10 +33,10 @@ export const ExifSection = ({ showExif, camera, lens, filmType }: ExifSectionPro
                   if (filmTypeParsed) parts.push(<><Image size={12} style={{ marginRight: 4 }} />{filmTypeParsed}</>);
                   parts.push(<><Gauge size={12} style={{ marginRight: 4 }} />{iso}</>);
                 } else {
-                  parts.push(<><Image size={12} style={{ marginRight: 4 }} />{filmType}</>);
+                  parts.push(<><Image size={12} style={{ marginRight: 4 }} />{post.filmType}</>);
                 }
               } else {
-                parts.push(<><Image size={12} style={{ marginRight: 4 }} />{filmType}</>);
+                parts.push(<><Image size={12} style={{ marginRight: 4 }} />{post.filmType}</>);
               }
             }
 

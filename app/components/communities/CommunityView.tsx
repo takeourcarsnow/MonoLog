@@ -40,6 +40,7 @@ export function CommunityView() {
       const communityData = await api.getCommunity(slug);
       if (!communityData) {
         setError('Community not found');
+        window.dispatchEvent(new CustomEvent('communityDeleted'));
         setLoading(false);
         return;
       }
@@ -135,6 +136,7 @@ export function CommunityView() {
     try {
       if (deleteTimeoutRef.current) window.clearTimeout(deleteTimeoutRef.current);
       await api.deleteCommunity(community.slug);
+      window.dispatchEvent(new CustomEvent('communityDeleted'));
       router.push('/communities');
     } catch (e: any) {
       setError(e?.message || 'Failed to delete community');

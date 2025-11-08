@@ -52,7 +52,9 @@ export function CommentActions({
           className={`comment-badge ${(confirmingIds instanceof Set && confirmingIds.has(commentId)) ? 'confirming' : ''}`}
           title={(confirmingIds instanceof Set && confirmingIds.has(commentId)) ? 'Confirm delete' : 'Delete comment'}
           onClick={() => {
+            console.log('Delete button clicked, confirmingIds:', confirmingIds, 'commentId:', commentId, 'has commentId:', confirmingIds instanceof Set && confirmingIds.has(commentId));
             if (confirmingIds instanceof Set && confirmingIds.has(commentId)) {
+              console.log('Calling onDelete for commentId:', commentId);
               onDelete();
               setConfirmingIds(prev => {
                 if (prev instanceof Set) {
@@ -64,6 +66,7 @@ export function CommentActions({
                 }
               });
             } else {
+              console.log('Setting confirm mode for commentId:', commentId);
               setConfirmingIds(prev => {
                 if (prev instanceof Set) {
                   return new Set(prev).add(commentId);

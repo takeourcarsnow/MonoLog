@@ -156,7 +156,7 @@ export async function GET(req: Request) {
       // Add brief caching + ETag for the list branch only (no user-dependent values)
       const etag = makeWeakETag({ communities: communitiesWithCounts, page, limit, offset });
       const headers: HeadersInit = { ETag: etag, 'X-Total-Count': String(totalCount) };
-      const cacheSeconds = 20;
+      const cacheSeconds = 0; // Disable caching to ensure deleted communities are removed immediately
       return apiSuccess(communitiesWithCounts, 200, { headers, cacheSeconds });
     }
   } catch (e: any) {

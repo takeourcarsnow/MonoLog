@@ -15,7 +15,10 @@ export function useFavorite(postId: string) {
     },
     eventName: 'monolog:favorite_changed',
     eventDetailKey: 'postId',
-    onError: (e) => console.warn(e?.message || "Failed to toggle favorite")
+    onError: (e) => console.warn(e?.message || "Failed to toggle favorite"),
+    onToggleStart: (newState) => {
+      showFavoriteFeedback(newState ? 'adding' : 'removing');
+    },
   });
 
   const showFavoriteFeedback = (action: 'adding' | 'removing') => {

@@ -15,7 +15,7 @@ type Props = {
   ariaInactiveLabel?: string;
   titleActive?: string;
   titleInactive?: string;
-  // Optional reveal label pattern used across the app (e.g. "Followed" / "Unfollowed")
+  // Optional reveal label pattern used across the app (e.g. "Followed" / "Not Followed")
   revealLabel?: React.ReactNode;
 };
 

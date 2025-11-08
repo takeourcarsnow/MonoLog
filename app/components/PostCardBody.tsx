@@ -7,12 +7,12 @@ import { SpotifySection } from "./postCard/SpotifySection";
 import { ExifSection } from "./postCard/ExifSection";
 import { LocationSection } from "./postCard/LocationSection";
 import { EditorWrap } from "./postCard/EditorWrap";
+import { usePostContext } from "./postCard/PostContext";
 
 // Lazy load heavy components
 const FullscreenViewer = lazy(() => import("@/app/components/media/FullscreenViewer"));
 
 interface PostCardBodyProps {
-  post: HydratedPost;
   editing: boolean;
   editorAnim: 'enter' | 'exit' | null;
   showEditor: boolean;
@@ -39,13 +39,6 @@ interface PostCardBodyProps {
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
   activeSection: 'exif' | 'spotify' | 'weather' | 'location' | null;
   setActiveSection: (section: 'exif' | 'spotify' | 'weather' | 'location' | null) => void;
-  spotifyLink?: string;
-  camera?: string;
-  lens?: string;
-  filmType?: string;
-  weatherCondition?: string;
-  weatherTemperature?: number;
-  locationAddress?: string;
   openFullscreen: () => void;
   spotifyMeta: any;
   fsOpen: boolean;
@@ -59,7 +52,6 @@ interface PostCardBodyProps {
 }
 
 export function PostCardBody({
-  post,
   editing,
   editorAnim,
   showEditor,
@@ -86,13 +78,6 @@ export function PostCardBody({
   showFavoriteFeedback,
   activeSection,
   setActiveSection,
-  spotifyLink,
-  camera,
-  lens,
-  filmType,
-  weatherCondition,
-  weatherTemperature,
-  locationAddress,
   openFullscreen,
   spotifyMeta,
   fsOpen,
@@ -104,6 +89,7 @@ export function PostCardBody({
   isAuthed,
   onSignIn,
 }: PostCardBodyProps) {
+  const { post } = usePostContext();
   const showExif = activeSection === 'exif';
   const showSpotify = activeSection === 'spotify';
   const showWeather = activeSection === 'weather';
@@ -152,26 +138,15 @@ export function PostCardBody({
           setShowLocation={(value: boolean) => {
             setActiveSection(value ? 'location' : null);
           }}
-          spotifyLink={spotifyLink}
-          camera={camera}
-          lens={lens}
-          filmType={filmType}
-          weatherCondition={weatherCondition}
-          weatherTemperature={weatherTemperature}
-          locationAddress={locationAddress}
           openFullscreen={openFullscreen}
         />
 
         <SpotifySection
           showSpotify={showSpotify}
-          spotifyLink={spotifyLink}
           spotifyMeta={spotifyMeta}
         />
         <ExifSection
           showExif={showExif}
-          camera={camera}
-          lens={lens}
-          filmType={filmType}
         />
         {/* Weather and Location are shown in the header (UserHeader);
             keep action buttons but do not render the expanded sections here. */}

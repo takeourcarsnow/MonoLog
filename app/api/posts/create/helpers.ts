@@ -1,34 +1,13 @@
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { uid } from '@/lib/id';
 import { logger } from '@/lib/logger';
-import { parseMentions } from '@/lib/mentions';
-import { parseHashtags } from '@/lib/hashtags';
 import { clearServerCachePrefix } from '@/lib/serverCache';
-import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 import { strictRateLimiter } from '@/lib/rateLimiter';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
 import { z } from 'zod';
 import { checkRateLimitResponse } from '@/lib/api/utils';
-
-const createPostSchema = z.object({
-  imageUrls: z.array(z.string()).optional(),
-  thumbnailUrls: z.array(z.string()).optional(),
-  caption: z.string().max(2000).optional(),
-  alt: z.union([z.string(), z.array(z.string())]).optional(),
-  public: z.boolean().optional().default(true),
-  spotifyLink: z.string().optional(),
-  camera: z.string().optional(),
-  lens: z.string().optional(),
-  filmType: z.string().optional(),
-  weather: z.object({
-    condition: z.string().optional(),
-    temperature: z.number().optional(),
-    location: z.string().optional(),
-  }).optional(),
-  location: z.object({
-    address: z.string().optional(),
-  }).optional(),
-});
+import { processMentions, processHashtags, clearPostCaches, safeInsertPost } from '@/lib/postUtils';
+import { createPostSchema } from '@/lib/validation';
 
 export { createPostSchema };
 
@@ -106,90 +85,6 @@ export async function checkCalendarRule(userId: string, sb: any) {
   return null;
 }
 
-export async function insertPost(sb: any, userId: string, imageUrls: any, thumbnailUrls: any, caption: string, alt: any, isPublic: boolean, spotifyLink: string, camera: string, lens: string, filmType: string, weather?: { condition?: string; temperature?: number; location?: string }, location?: { address?: string }) {
-  const id = uid();
-  const created_at = new Date().toISOString();
-  const insertObj: any = { id, user_id: userId, alt: Array.isArray(alt) ? alt.join('\n') : (alt || ''), caption: caption || '', created_at, public: Boolean(isPublic) };
-  if (spotifyLink) insertObj.spotify_link = spotifyLink;
-  if (camera) insertObj.camera = camera;
-  if (lens) insertObj.lens = lens;
-  if (filmType) insertObj.film_type = filmType;
-  if (weather) {
-    if (weather.condition) insertObj.weather_condition = weather.condition;
-    if (weather.temperature !== undefined) insertObj.weather_temperature = weather.temperature;
-    if (weather.location) insertObj.weather_location = weather.location;
-  }
-  if (location) {
-    if (location.address) insertObj.location_address = location.address;
-  }
-
-  // Parse hashtags from caption
-  const hashtags = parseHashtags(caption || '');
-  if (hashtags.length > 0) {
-    insertObj.hashtags = hashtags;
-  }
-
-  // Handle image URLs - prefer array format when multiple images
-  if (imageUrls && imageUrls.length > 0) {
-    insertObj.image_url = imageUrls[0]; // Always set primary for compatibility
-    if (imageUrls.length > 1) {
-      insertObj.image_urls = imageUrls; // Try array column
-    }
-  }
-
-  // Handle thumbnail URLs
-  if (thumbnailUrls && thumbnailUrls.length > 0) {
-    insertObj.thumbnail_url = thumbnailUrls[0]; // Always set primary thumbnail for compatibility
-    if (thumbnailUrls.length > 1) {
-      insertObj.thumbnail_urls = thumbnailUrls; // Try array column
-    }
-  }
-
-  // Attempt to insert the post
-  let insertData: any = null;
-  try {
-    const res = await sb.from('posts').insert(insertObj).select('*').limit(1).single();
-    if (res.error) {
-      // If the error is about missing columns, try without them
-      if (res.error.message?.toLowerCase().includes('column') ||
-          res.error.message?.toLowerCase().includes('image_urls') ||
-          res.error.message?.toLowerCase().includes('camera') ||
-          res.error.message?.toLowerCase().includes('lens') ||
-          res.error.message?.toLowerCase().includes('film_type') ||
-          res.error.message?.toLowerCase().includes('hashtags')) {
-        const fallbackObj = { ...insertObj };
-        // Remove potentially problematic columns
-        delete fallbackObj.image_urls;
-        delete fallbackObj.thumbnail_urls;
-        if (fallbackObj.spotify_link) delete fallbackObj.spotify_link;
-        if (fallbackObj.camera) delete fallbackObj.camera;
-        if (fallbackObj.lens) delete fallbackObj.lens;
-        if (fallbackObj.film_type) delete fallbackObj.film_type;
-        if (fallbackObj.hashtags) delete fallbackObj.hashtags;
-        if (fallbackObj.weather_condition) delete fallbackObj.weather_condition;
-        if (fallbackObj.weather_temperature) delete fallbackObj.weather_temperature;
-        if (fallbackObj.weather_location) delete fallbackObj.weather_location;
-        if (fallbackObj.location_latitude) delete fallbackObj.location_latitude;
-        if (fallbackObj.location_longitude) delete fallbackObj.location_longitude;
-        if (fallbackObj.location_address) delete fallbackObj.location_address;
-        const fallbackRes = await sb.from('posts').insert(fallbackObj).select('*').limit(1).single();
-        if (fallbackRes.error) {
-          throw new Error(`Database schema error: ${fallbackRes.error.message}`);
-        }
-        insertData = fallbackRes.data;
-      } else {
-        throw new Error(res.error.message || res.error);
-      }
-    } else {
-      insertData = res.data;
-    }
-  } catch (e: any) {
-    throw new Error(`Database error: ${e?.message || String(e)}`);
-  }
-
-  return { id, insertData };
-}
-
 export function normalizeImageUrls(insertData: any) {
   // Normalize image URLs from the inserted data
   let normalizedImageUrls: string[] = [];
@@ -213,59 +108,6 @@ export function normalizeImageUrls(insertData: any) {
     normalizedThumbnailUrls = insertData?.thumbnail_url ? [insertData.thumbnail_url] : [];
   }
   return { normalizedImageUrls, normalizedThumbnailUrls };
-}
-
-export async function processMentions(sb: any, caption: string, id: string, userId: string, created_at: string) {
-  if (caption) {
-    const mentions = parseMentions(caption);
-    if (mentions.length > 0) {
-      (async () => {
-        try {
-          // Get user IDs for mentioned usernames
-          const { data: mentionedUsers, error: usersErr } = await sb
-            .from('users')
-            .select('id, username')
-            .in('username', mentions);
-          if (!usersErr && mentionedUsers) {
-            const mentionedUserIds = mentionedUsers.map((u: any) => u.id);
-            // Batch insert into post_mentions and notifications
-            try {
-              const mentionInserts = mentionedUserIds.map((mentionedId: string) => ({
-                id: uid(),
-                post_id: id,
-                mentioned_user_id: mentionedId,
-                created_at: created_at,
-              }));
-              const notifInserts = mentionedUserIds.map((mentionedId: string) => ({
-                id: uid(),
-                user_id: mentionedId,
-                actor_id: userId,
-                post_id: id,
-                type: 'mention',
-                text: `You were mentioned in a post`,
-                created_at: created_at,
-                read: false,
-              }));
-
-              // Batch insert mentions
-              if (mentionInserts.length > 0) {
-                await sb.from('post_mentions').insert(mentionInserts);
-              }
-
-              // Batch insert notifications
-              if (notifInserts.length > 0) {
-                await sb.from('notifications').insert(notifInserts);
-              }
-            } catch (e) {
-              // Ignore if tables don't exist or other errors
-            }
-          }
-        } catch (e) {
-          // Ignore mention processing errors
-        }
-      })();
-    }
-  }
 }
 
 export async function processPostAfterBreak(sb: any, userId: string, postId: string, created_at: string) {
@@ -314,15 +156,7 @@ export async function processPostAfterBreak(sb: any, userId: string, postId: str
   }
 }
 
-export function clearCaches() {
-  // Invalidate short-lived server caches for feeds so new post surfaces quickly
-  try {
-    clearServerCachePrefix('explore:');
-    clearServerCachePrefix('following:');
-  } catch (_) {}
-}
-
-export async function createPost(req: Request, body: any) {
+export async function createPost(req: Request, body: any, user: any) {
   // Rate limiting: strict limits for post creation
   const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
   const rateLimitRes = checkRateLimitResponse(strictRateLimiter, ip, true);
@@ -333,9 +167,7 @@ export async function createPost(req: Request, body: any) {
     return apiError('Invalid input', 400);
   }
   const { imageUrls, thumbnailUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType, weather: providedWeather, location: providedLocation } = validation.data;
-  const authUser = await getUserFromAuthHeader(req);
-  if (!authUser) return apiError('Unauthorized', 401);
-  const userId = authUser.id;
+  const userId = user.id;
 
   // Debug: log incoming payload so we can verify client is sending multiple images
   try { logger.debug('[posts.create] incoming', { userId, imageUrlsLen: Array.isArray(imageUrls) ? imageUrls.length : (imageUrls ? 1 : 0) }); } catch (e) {}
@@ -364,13 +196,49 @@ export async function createPost(req: Request, body: any) {
     }
   }
 
+  // Build insert object
+  const id = uid();
+  const created_at = new Date().toISOString();
+  const insertObj: any = { id, user_id: userId, alt: Array.isArray(alt) ? alt.join('\n') : (alt || ''), caption: caption || '', created_at, public: Boolean(isPublic) };
+  if (spotifyLink) insertObj.spotify_link = spotifyLink;
+  if (camera) insertObj.camera = camera;
+  if (lens) insertObj.lens = lens;
+  if (filmType) insertObj.film_type = filmType;
+  if (weather) {
+    if (weather.condition) insertObj.weather_condition = weather.condition;
+    if (weather.temperature !== undefined) insertObj.weather_temperature = weather.temperature;
+    if (weather.location) insertObj.weather_location = weather.location;
+  }
+  if (location) {
+    if (location.address) insertObj.location_address = location.address;
+  }
+
+  // Parse hashtags from caption
+  const hashtags = processHashtags(caption || '');
+  if (hashtags.length > 0) {
+    insertObj.hashtags = hashtags;
+  }
+
+  // Handle image URLs - prefer array format when multiple images
+  if (imageUrls && imageUrls.length > 0) {
+    insertObj.image_url = imageUrls[0]; // Always set primary for compatibility
+    if (imageUrls.length > 1) {
+      insertObj.image_urls = imageUrls; // Try array column
+    }
+  }
+
+  // Handle thumbnail URLs
+  if (thumbnailUrls && thumbnailUrls.length > 0) {
+    insertObj.thumbnail_url = thumbnailUrls[0]; // Always set primary thumbnail for compatibility
+    if (thumbnailUrls.length > 1) {
+      insertObj.thumbnail_urls = thumbnailUrls; // Try array column
+    }
+  }
+
   // Insert post
-  let id: string;
   let insertData: any;
   try {
-    const res = await insertPost(sb, userId, imageUrls, thumbnailUrls, caption || '', alt || '', isPublic, spotifyLink || '', camera || '', lens || '', filmType || '', weather, location);
-    id = res.id;
-    insertData = res.insertData;
+    insertData = await safeInsertPost(sb, insertObj);
   } catch (e) {
     try { logger.error('[posts.create] insert failed', { error: String(e), userId }); } catch (logErr) {}
     return apiError('Failed to create post', 500);
@@ -395,7 +263,7 @@ export async function createPost(req: Request, body: any) {
   processPostAfterBreak(sb, userId, id, insertData.created_at);
 
   // Clear caches
-  clearCaches();
+  clearPostCaches();
 
   return apiSuccess({ ok: true, post: insertData, normalizedImageUrls, normalizedThumbnailUrls });
 }

@@ -11,9 +11,9 @@ import { usePathname, useRouter } from "next/navigation";
 import TimeDisplay from "@/app/components/ui/TimeDisplay";
 import { getWeatherIcon } from "@/lib/weatherIcons";
 import { PublicStoryViewerModal } from "../profile/PublicStoryViewerModal";
+import { usePostContext } from "./PostContext";
 
 interface UserHeaderProps {
-  post: HydratedPost;
   isMe: boolean;
   authLoading: boolean;
   isFollowing: boolean;
@@ -42,7 +42,6 @@ interface UserHeaderProps {
 }
 
 export const UserHeader = memo(function UserHeader({
-  post,
   isMe,
   authLoading,
   isFollowing,
@@ -69,6 +68,7 @@ export const UserHeader = memo(function UserHeader({
   editorOpeningRef,
   toast: _toast,
 }: UserHeaderProps) {
+  const { post } = usePostContext();
   const pathname = usePathname();
   const router = useRouter();
   const [showMeta, setShowMeta] = useState(true);
@@ -311,7 +311,7 @@ export const UserHeader = memo(function UserHeader({
                   ariaInactiveLabel="Follow"
                   titleActive="Unfollow"
                   titleInactive="Follow"
-                  revealLabel={isFollowing ? 'Followed' : 'Unfollowed'}
+                  revealLabel={isFollowing ? 'Followed' : 'Not Followed'}
                 />
                 {showAuth ? (
                   <>

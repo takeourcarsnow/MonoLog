@@ -1,33 +1,50 @@
 import { NextResponse } from 'next/server';
+import { withHandler } from '@/lib/api/withHandler';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
-import { parseMentions } from '@/lib/mentions';
-import { parseHashtags } from '@/lib/hashtags';
-import { uid } from '@/lib/id';
-import { clearServerCachePrefix } from '@/lib/serverCache';
+import { processMentions, processHashtags, clearPostCaches } from '@/lib/postUtils';
+import { updatePostSchema } from '@/lib/validation';
 
-export async function POST(req: Request) {
-  try {
-    const { id, patch } = await req.json();
-  if (!id || !patch) return NextResponse.json({ error: 'Missing id or patch' }, { status: 400 });
-  const CAPTION_MAX = 2000;
-  if (patch.caption !== undefined && typeof patch.caption === 'string' && patch.caption.length > CAPTION_MAX) return NextResponse.json({ error: `Caption exceeds ${CAPTION_MAX} characters` }, { status: 400 });
-    const sb = getServiceSupabase();
-    const updates: any = {};
-    if (patch.caption !== undefined) {
-      updates.caption = patch.caption;
-      // Update hashtags when caption changes
-      const hashtags = parseHashtags(patch.caption || '');
-      updates.hashtags = hashtags.length > 0 ? hashtags : null;
+// Config for field mappings: key in patch -> db column -> transform function
+const fieldMappings: Record<string, { dbKey: string; transform?: (value: any) => any }> = {
+  caption: { dbKey: 'caption' },
+  alt: { dbKey: 'alt' },
+  public: { dbKey: 'public' },
+  camera: { dbKey: 'camera' },
+  lens: { dbKey: 'lens' },
+  filmType: { dbKey: 'film_type', transform: (v: string) => v === '' ? null : v },
+  spotifyLink: { dbKey: 'spotify_link', transform: (v: string) => v === '' ? null : v },
+  weatherCondition: { dbKey: 'weather_condition', transform: (v: string) => v === '' ? null : v },
+  weatherTemperature: { dbKey: 'weather_temperature' },
+  locationAddress: { dbKey: 'location_address', transform: (v: string) => v === '' ? null : v },
+};
+
+export const POST = withHandler({ method: 'POST', bodySchema: updatePostSchema, authRequired: true })(async (req, ctx: any) => {
+  const { id, patch } = ctx.body;
+  const userId = ctx.user.id;
+  const sb = getServiceSupabase();
+  const updates: any = {};
+
+  // Dynamically apply field updates
+  for (const [key, config] of Object.entries(fieldMappings)) {
+    if (patch[key] !== undefined) {
+      updates[config.dbKey] = config.transform ? config.transform(patch[key]) : patch[key];
     }
-    if (patch.alt !== undefined) updates.alt = patch.alt;
-    if (patch.public !== undefined) updates.public = patch.public;
-    if (patch.camera !== undefined) updates.camera = patch.camera;
-    if (patch.lens !== undefined) updates.lens = patch.lens;
-  if (patch.filmType !== undefined) updates.film_type = patch.filmType === '' ? null : patch.filmType;
-  if (patch.spotifyLink !== undefined) updates.spotify_link = patch.spotifyLink === '' ? null : patch.spotifyLink;
-  if (patch.weatherCondition !== undefined) updates.weather_condition = patch.weatherCondition === '' ? null : patch.weatherCondition;
-  if (patch.weatherTemperature !== undefined) updates.weather_temperature = patch.weatherTemperature === '' ? null : patch.weatherTemperature;
-  if (patch.locationAddress !== undefined) updates.location_address = patch.locationAddress === '' ? null : patch.locationAddress;
+  }
+
+  // Special handling for imageUrls: update both image_url and image_urls
+  if (patch.imageUrls !== undefined) {
+    if (patch.imageUrls.length > 0) {
+      updates.image_url = patch.imageUrls[0];
+      if (patch.imageUrls.length > 1) {
+        updates.image_urls = patch.imageUrls;
+      } else {
+        updates.image_urls = null; // Clear array if only one image
+      }
+    } else {
+      updates.image_url = null;
+      updates.image_urls = null;
+    }
+  }
   // Return the updated post row along with the related user/profile fields
   // so the client can hydrate the post.user properly (username, avatar).
   const { data: updatedRows, error } = await sb
@@ -39,77 +56,17 @@ export async function POST(req: Request) {
     .single();
   if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
 
-    // Handle mentions if caption was updated
-    if (patch.caption) {
-      (async () => {
-        try {
-          // Get post info
-          const { data: post, error: postErr } = await sb
-            .from('posts')
-            .select('user_id')
-            .eq('id', id)
-            .limit(1)
-            .single();
-          if (postErr || !post) return;
-
-          // Delete existing mentions
-          try {
-            await sb.from('post_mentions').delete().eq('post_id', id);
-          } catch (e) {
-            // Ignore if table doesn't exist
-          }
-
-          const mentions = parseMentions(patch.caption);
-          if (mentions.length > 0) {
-            // Get user IDs for mentioned usernames
-            const { data: mentionedUsers, error: usersErr } = await sb
-              .from('users')
-              .select('id, username')
-              .in('username', mentions);
-            if (!usersErr && mentionedUsers) {
-              const mentionedUserIds = mentionedUsers.map(u => u.id);
-              // Insert into post_mentions
-              try {
-                const mentionInserts = mentionedUserIds.map(mentionedId => ({
-                  id: uid(),
-                  post_id: id,
-                  mentioned_user_id: mentionedId,
-                  created_at: new Date().toISOString(),
-                }));
-                await sb.from('post_mentions').insert(mentionInserts);
-              } catch (e) {
-                // Ignore if table doesn't exist
-              }
-              // Create notifications for mentions
-              try {
-                const notifInserts = mentionedUserIds.map(mentionedId => ({
-                  id: uid(),
-                  user_id: mentionedId,
-                  actor_id: post.user_id,
-                  post_id: id,
-                  type: 'mention',
-                  text: `You were mentioned in a post`,
-                  created_at: new Date().toISOString(),
-                  read: false,
-                }));
-                await sb.from('notifications').insert(notifInserts);
-              } catch (e) {
-                // Ignore notification errors
-              }
-            }
-          }
-        } catch (e) {
-          // Ignore mention processing errors
-        }
-      })();
+  // Handle mentions if caption was updated
+  if (patch.caption) {
+    const { data: postData } = await sb.from('posts').select('user_id').eq('id', id).limit(1).single();
+    if (postData) {
+      processMentions(sb, patch.caption, id, postData.user_id, new Date().toISOString(), true);
     }
+  }
 
   // Invalidate feed caches so updates propagate quickly
-  try { clearServerCachePrefix('explore:'); clearServerCachePrefix('following:'); clearServerCachePrefix('hashtag:'); } catch (_) {}
+  clearPostCaches(['explore:', 'following:', 'hashtag:']);
 
   // Return the updated row to the client to avoid immediate stale reads
   return NextResponse.json({ ok: true, post: updatedRows });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
-  }
-}
+});

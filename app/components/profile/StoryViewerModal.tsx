@@ -235,7 +235,9 @@ export function StoryViewerModal({
         <div style={{
           height: '100%',
           width: `${progress}%`,
-          background: '#fff',
+          background: 'linear-gradient(45deg, #ff0096, #00ccff, #ff7e39, #ffff00, #ff0096)',
+          backgroundSize: '400% 400%',
+          animation: 'story-progress-rainbow 3s linear infinite',
           transition: isPaused ? 'none' : 'width 0.1s linear'
         }} />
       </div>

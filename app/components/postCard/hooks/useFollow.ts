@@ -17,7 +17,19 @@ export function useFollow(userId: string) {
     },
     eventName: 'monolog:follow_changed',
     eventDetailKey: 'userId',
-    onError: (e) => console.warn(e?.message || 'Failed to update follow')
+    onError: (e) => console.warn(e?.message || 'Failed to update follow'),
+    onToggleStart: (newState) => {
+      // expand the button briefly so label shows while we animate
+      setFollowExpanded(true);
+      if (followExpandTimerRef.current) { window.clearTimeout(followExpandTimerRef.current); followExpandTimerRef.current = null; }
+      followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
+      setFollowAnim(newState ? 'following-anim' : 'unfollow-anim');
+    },
+    onToggleEnd: (success, newState) => {
+      if (success) {
+        setTimeout(() => setFollowAnim(null), 520);
+      }
+    },
   });
 
   // Listen for follow changes triggered elsewhere (ProfileView) so this

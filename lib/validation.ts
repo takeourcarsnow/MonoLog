@@ -1,4 +1,46 @@
 import { RESERVED_ROUTES } from "./types";
+import { z } from 'zod';
+
+// Post field schemas
+export const postFieldsSchema = z.object({
+  caption: z.string().max(2000).optional(),
+  alt: z.union([z.string(), z.array(z.string())]).optional(),
+  public: z.boolean().optional(),
+  camera: z.string().optional(),
+  lens: z.string().optional(),
+  filmType: z.string().optional(),
+  spotifyLink: z.string().optional(),
+  weatherCondition: z.string().optional(),
+  weatherTemperature: z.number().optional(),
+  locationAddress: z.string().optional(),
+  imageUrls: z.array(z.string()).optional(),
+});
+
+export const createPostSchema = z.object({
+  thumbnailUrls: z.array(z.string()).optional(),
+  ...postFieldsSchema.shape,
+  weather: z.object({
+    condition: z.string().optional(),
+    temperature: z.number().optional(),
+    location: z.string().optional(),
+  }).optional(),
+  location: z.object({
+    address: z.string().optional(),
+  }).optional(),
+});
+
+export const updatePostSchema = z.object({
+  id: z.string(),
+  patch: postFieldsSchema,
+});
+
+export const favoritePostSchema = z.object({
+  postId: z.string(),
+});
+
+export const isFavoriteQuerySchema = z.object({
+  postId: z.string(),
+});
 
 // Username validation
 export const validateUsername = (username: string): string | null => {

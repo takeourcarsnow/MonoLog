@@ -2,9 +2,9 @@ import { memo } from "react";
 import type { HydratedPost } from "@/lib/types";
 import { Carousel } from "./Carousel";
 import { SingleMedia } from "./SingleMedia";
+import { usePostContext } from "./PostContext";
 
 interface MediaSectionProps {
-  post: HydratedPost;
   isFavorite: boolean;
   toggleFavoriteWithAuth: () => void;
   showFavoriteFeedback: (action: 'adding' | 'removing') => void;
@@ -17,7 +17,6 @@ interface MediaSectionProps {
 }
 
 export const MediaSection = memo(function MediaSection({
-  post,
   isFavorite,
   toggleFavoriteWithAuth,
   showFavoriteFeedback,
@@ -28,6 +27,7 @@ export const MediaSection = memo(function MediaSection({
   disableMediaNavigation,
   index,
 }: MediaSectionProps) {
+  const { post } = usePostContext();
   const imageUrls: string[] = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
   const alts: string[] = Array.isArray(post.alt) ? post.alt : [post.alt || ""];
 

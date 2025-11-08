@@ -1,10 +1,12 @@
 import { apiError } from '@/lib/apiResponse';
 import { z, ZodSchema } from 'zod';
+import { getUserFromAuthHeader } from './serverVerifyAuth';
 
 export type HandlerContext<TBody = unknown, TQuery = unknown, TParams = unknown> = {
   body?: TBody;
   query?: TQuery;
   params?: TParams;
+  user?: any;
 };
 
 export type WithHandlerOptions<TBody, TQuery, TParams> = {
@@ -12,6 +14,7 @@ export type WithHandlerOptions<TBody, TQuery, TParams> = {
   bodySchema?: ZodSchema<TBody>;
   querySchema?: ZodSchema<TQuery>;
   paramsSchema?: ZodSchema<TParams>;
+  authRequired?: boolean;
   // Customize error message/status for validation failures
   validationErrorStatus?: number;
   validationMessage?: string;
@@ -30,6 +33,14 @@ export function withHandler<TBody = unknown, TQuery = unknown, TParams = unknown
         let parsedBody: TBody | undefined = undefined;
         let parsedQuery: TQuery | undefined = undefined;
         let parsedParams: TParams | undefined = undefined;
+        let user: any = undefined;
+
+        if (opts.authRequired) {
+          user = await getUserFromAuthHeader(req);
+          if (!user) {
+            return apiError('Unauthorized', 401);
+          }
+        }
 
         if (opts.bodySchema) {
           let json: unknown = null;
@@ -71,7 +82,7 @@ export function withHandler<TBody = unknown, TQuery = unknown, TParams = unknown
           parsedParams = result.data;
         }
 
-        const ctx: HandlerContext<TBody, TQuery, TParams> = { ...(context || {}), body: parsedBody, query: parsedQuery, params: parsedParams };
+        const ctx: HandlerContext<TBody, TQuery, TParams> = { ...(context || {}), body: parsedBody, query: parsedQuery, params: parsedParams, user };
         return await fn(req, ctx as any);
       } catch (e: any) {
         return apiError(e?.message || String(e), 500);

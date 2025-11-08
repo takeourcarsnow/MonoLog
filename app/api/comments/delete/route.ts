@@ -25,6 +25,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized to delete this comment' }, { status: 403 });
     }
 
+    // Update replies to have no parent (make them top-level comments)
+    const { error: updateError } = await sb.from('comments').update({ parent_id: null }).eq('parent_id', commentId);
+    if (updateError) {
+      return NextResponse.json({ error: 'Failed to update replies', details: String(updateError?.message || updateError) }, { status: 500 });
+    }
+
     // Now delete the comment and return the deleted row for debugging so the
     // client can validate what actually changed. Using `.select()` on delete
     // returns the deleted rows when supported by the client driver.

@@ -13,6 +13,8 @@ interface UseToggleOptions<T> {
   eventValueKey?: string; // optional, defaults to 'favorited' or 'following' based on eventDetailKey
   onSuccess?: (newState: boolean) => void;
   onError?: (error: any) => void;
+  onToggleStart?: (newState: boolean) => void;
+  onToggleEnd?: (success: boolean, newState: boolean) => void;
 }
 
 export function useToggle<T = any>({
@@ -24,7 +26,9 @@ export function useToggle<T = any>({
   eventDetailKey,
   eventValueKey,
   onSuccess,
-  onError
+  onError,
+  onToggleStart,
+  onToggleEnd
 }: UseToggleOptions<T>) {
   // Try to derive initial state synchronously from the cached currentUser
   // (SWR). This avoids a visible flicker when toggles mount after a
@@ -122,7 +126,9 @@ export function useToggle<T = any>({
     if (inFlightRef.current) return false;
 
     const prev = state;
-    setState(!prev); // Optimistic update
+    const newState = !prev;
+    setState(newState); // Optimistic update
+    onToggleStart?.(newState);
 
     inFlightRef.current = true;
     try {
@@ -133,15 +139,17 @@ export function useToggle<T = any>({
       try { mutateCurrentUser?.(); } catch (_) {}
       // Dispatch event
       const valueKey = eventValueKey || (eventName.includes('follow') ? 'following' : 'favorites');
-      const eventDetail = { [eventDetailKey]: id, [valueKey]: !prev };
+      const eventDetail = { [eventDetailKey]: id, [valueKey]: newState };
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(eventName, { detail: eventDetail }));
       }
-      onSuccess?.(!prev);
+      onSuccess?.(newState);
+      onToggleEnd?.(true, newState);
       return true;
     } catch (e: any) {
       setState(prev); // Revert
       onError?.(e);
+      onToggleEnd?.(false, prev);
       return false;
     } finally {
       inFlightRef.current = false;

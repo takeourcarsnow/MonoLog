@@ -21,6 +21,7 @@ import { useIsMe, useAuth } from "@/lib/hooks/useAuth";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { PostCardBody } from "./PostCardBody";
+import { PostProvider } from './postCard/PostContext';
 
 // Lazy load heavy components
 const FullscreenViewer = lazy(() => import("@/app/components/media/FullscreenViewer"));
@@ -106,9 +107,9 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   const toast = { show: (_: unknown) => {} } as const;
 
   return (
-  <article id={`post-${post.id}`} onClick={disableCardNavigation ? undefined : handleCardClick} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
+  <PostProvider post={post} setPost={setPost}>
+    <article id={`post-${post.id}`} onClick={disableCardNavigation ? undefined : handleCardClick} className={`card ${isMultipost ? 'multipost' : ''} ${showEditor ? 'editor-open' : ''} ${opening ? 'editor-opening' : ''}${fsOpen ? ' fs-open' : ''}`}>
       <UserHeader
-        post={post}
         isMe={isMe}
         authLoading={authLoading}
         isFollowing={isFollowing}
@@ -137,7 +138,6 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
       />
 
       <MediaSection
-        post={post}
         isFavorite={isFavorite}
         toggleFavoriteWithAuth={async () => {
           const success = await handleToggleFavoriteWithPost();
@@ -155,7 +155,6 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
       />
 
       <PostCardBody
-        post={post}
         editing={editing}
         editorAnim={editorAnim}
         showEditor={showEditor}
@@ -182,13 +181,6 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         showFavoriteFeedback={showFavoriteFeedback}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
-        spotifyLink={post.spotifyLink}
-        camera={post.camera}
-        lens={post.lens}
-        filmType={post.filmType}
-        weatherCondition={post.weatherCondition}
-        weatherTemperature={post.weatherTemperature}
-        locationAddress={post.locationAddress}
         openFullscreen={() => {
           const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
           const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
@@ -209,6 +201,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         onSignIn={() => setShowAuth(true)}
       />
     </article>
+  </PostProvider>
   );
 }
 

@@ -19,13 +19,17 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
   const replies = context.comments.filter(c => c.parentId === (comment.realId || comment.id));
 
   const handleDelete = async () => {
+    console.log('handleDelete called for comment:', comment.realId || comment.id);
     try {
       const commentId = comment.realId || comment.id;
       const { getClient, getAccessToken } = await import('@/lib/api/client');
       const sb = getClient();
       const token = await getAccessToken(sb);
+      console.log('Making delete API call for commentId:', commentId, 'with token:', !!token);
       const res = await fetch('/api/comments/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ commentId }) });
+      console.log('Delete API response status:', res.status);
       const json = await res.json();
+      console.log('Delete API response:', json);
       if (!res.ok) throw new Error(json?.error || 'Failed');
       await context.load(true);
     } catch (e: any) {

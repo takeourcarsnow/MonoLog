@@ -1,3 +1,5 @@
+'use client';
+
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/lib/types";
 import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeOff, Monitor, Film } from "lucide-react";
@@ -9,11 +11,12 @@ import { useSpotifyMeta } from "./hooks/useSpotifyMeta";
 import { SpotifySection } from "./SpotifySection";
 import { getWeatherIcon } from "@/lib/weatherIcons";
 import { fetchLocationForCurrentCoords } from "@/app/components/uploader/locationUtils";
+import { ThumbnailStrip } from "@/app/components/uploader/ThumbnailStrip";
 
 interface EditorProps {
   post: HydratedPost;
   onCancel: () => void;
-  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string }) => Promise<void>;
+  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string; imageUrls?: string[]; alt?: string | string[] }) => Promise<void>;
 }
 
 export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCancel, onSave }, ref) {
@@ -31,6 +34,14 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
   const [saving, setSaving] = useState(false);
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // Image reordering state
+  const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+  const thumbnailUrls = (post as any).thumbnailUrls || ((post as any).thumbnailUrl ? [(post as any).thumbnailUrl] : []);
+  const [currentImageUrls, setCurrentImageUrls] = useState<string[]>(imageUrls);
+  const [currentThumbnailUrls, setCurrentThumbnailUrls] = useState<string[]>(thumbnailUrls.length === imageUrls.length ? thumbnailUrls : imageUrls);
+  const [currentAlt, setCurrentAlt] = useState<string | string[]>(post.alt || "");
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const spotifyMeta = useSpotifyMeta(spotifyLink);
 
@@ -101,13 +112,15 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
     spotifyLink, 
     weatherCondition: weatherCondition.trim() || '', 
     weatherTemperature: weatherTemperature ? parseFloat(weatherTemperature) : undefined, 
-    locationAddress: locationAddress.trim() || '' 
+    locationAddress: locationAddress.trim() || '',
+    imageUrls: currentImageUrls,
+    alt: currentAlt
   };
   await onSave(patch);
     } finally {
       setSaving(false);
     }
-  }, [caption, camera, lens, filmType, filmIso, isPublic, spotifyLink, weatherCondition, weatherTemperature, locationAddress, onSave, saving]);
+  }, [caption, camera, lens, filmType, filmIso, isPublic, spotifyLink, weatherCondition, weatherTemperature, locationAddress, currentImageUrls, currentAlt, onSave, saving]);
 
   useImperativeHandle(ref, () => ({
     save: doSave,
@@ -302,6 +315,23 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
           </div>
         )}
       </div>
+      {currentImageUrls.length > 1 && (
+        <div style={{ marginTop: 8 }}>
+          <ThumbnailStrip
+            dataUrls={currentThumbnailUrls}
+            alt={currentAlt}
+            index={currentIndex}
+            setIndex={setCurrentIndex}
+            setDataUrls={setCurrentThumbnailUrls}
+            setOriginalDataUrls={() => {}} // Not used for editing
+            editorSettings={[]} // Not used for editing
+            setEditorSettings={() => {}} // Not used for editing
+            setAlt={setCurrentAlt}
+            fullUrls={currentImageUrls}
+            setFullUrls={setCurrentImageUrls}
+          />
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 10 }}>
         <button
           type="button"

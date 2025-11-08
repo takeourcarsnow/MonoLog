@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type { SpotifyMeta } from "./hooks/useSpotifyMeta";
+import { usePostContext } from "./PostContext";
 
 interface SpotifySectionProps {
   showSpotify: boolean;
@@ -8,14 +9,16 @@ interface SpotifySectionProps {
 }
 
 export const SpotifySection = ({ showSpotify, spotifyLink, spotifyMeta }: SpotifySectionProps) => {
-  if (!spotifyLink) return null;
+  const { post } = usePostContext();
+  const link = spotifyLink || post.spotifyLink;
+  if (!link) return null;
 
   return (
     <div className={`spotify-section ${showSpotify ? 'open' : ''}`}>
       <div className="spotify-info" style={{ marginTop: 8, fontSize: 14, color: 'var(--text)', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
         <div className="spotify-preview-content" style={{ position: 'relative', minHeight: 24 }}>
           <a
-            href={spotifyLink}
+            href={link}
             target="_blank"
             rel="noopener noreferrer"
             className={`spotify-preview-link ${spotifyMeta ? 'visible' : ''}`}

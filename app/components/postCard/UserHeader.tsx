@@ -207,17 +207,25 @@ export const UserHeader = memo(function UserHeader({
   return (
     <div className="card-head">
       <div className="user-and-meta">
-        <Link className="user-link" href={`/${post.user.username || post.user.id}`} onClick={(e) => {
-          if (hasStories) {
-            e.preventDefault();
-            e.stopPropagation();
-            setStoryViewerOpen(true);
-            setStoryIdx(0);
-          }
-        }}>
-          <OptimizedImage className={`avatar ${hasStories ? 'has-stories' : ''}`} src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" style={{ borderRadius: '50%', objectFit: 'cover', cursor: hasStories ? 'pointer' : 'default' }} />
-          <span className="username">@{post.user.username}</span>
-        </Link>
+        <div className="user-link">
+          <div
+            className="avatar-container"
+            onClick={() => {
+              if (hasStories) {
+                setStoryViewerOpen(true);
+                setStoryIdx(0);
+              } else {
+                router.push(`/${post.user.username || post.user.id}`);
+              }
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            <OptimizedImage className={`avatar ${hasStories ? 'has-stories' : ''}`} src={(post.user.avatarUrl || "").trim() || "/logo.svg"} alt={post.user.username} width={30} height={30} loading="lazy" sizes="30px" style={{ borderRadius: '50%', objectFit: 'cover' }} />
+          </div>
+          <Link className="username-link" href={`/${post.user.username || post.user.id}`}>
+            <span className="username">@{post.user.username}</span>
+          </Link>
+        </div>
         {/* render the date outside the link so toggling the full date doesn't
             trigger navigation to the user's page. Wrap in .date-wrap so we
             can show a subtle fade when it reaches the username. */}

@@ -209,7 +209,7 @@ export function StoryViewerModal({
         justifyContent: 'center', 
         zIndex: 10000, 
         height: '100vh',
-        cursor: isPaused ? 'default' : 'none'
+        cursor: 'default'
       }} 
       onClick={onClose}
       onTouchStart={onTouchStart}
@@ -466,11 +466,6 @@ export function StoryViewerModal({
               />
             ))}
           </div>
-          {(deleteArmed) && (
-            <div style={{ fontSize: 12, opacity: 0.8 }}>
-              {deleteArmed && 'Tap delete again to confirm'}
-            </div>
-          )}
         </div>
       </div>
 

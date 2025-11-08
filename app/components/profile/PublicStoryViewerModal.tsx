@@ -169,7 +169,7 @@ export function PublicStoryViewerModal({
         justifyContent: 'center', 
         zIndex: 10000, 
         height: '100vh',
-        cursor: isPaused ? 'default' : 'none'
+        cursor: 'default'
       }} 
       onClick={onClose}
       onTouchStart={onTouchStart}
@@ -416,11 +416,6 @@ export function PublicStoryViewerModal({
               />
             ))}
           </div>
-          {isPaused && (
-            <div style={{ fontSize: 12, opacity: 0.8 }}>
-              Paused
-            </div>
-          )}
         </div>
       </div>
 

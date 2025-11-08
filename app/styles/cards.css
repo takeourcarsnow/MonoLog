@@ -304,11 +304,25 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  text-decoration: none;
-  color: inherit;
   min-width: 0;
   /* Keep the avatar + username compact: do not allow it to force a wrap.
      Let the meta area take remaining space. */
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.card-head .avatar-container {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.card-head .username-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
   flex: 0 0 auto;
   overflow: visible;
 }

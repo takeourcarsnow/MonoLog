@@ -21,7 +21,6 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const storyInputRef = useRef<HTMLInputElement | null>(null);
   const avatarContainerRef = useRef<HTMLDivElement | null>(null);
-  const [expanded, setExpanded] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -35,15 +34,6 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
   const { storyUploading, handleStoryChangeFromFile, handleLiveCameraCapture } = useStoryUpload(user.id, setHasActiveStories, setOwnStories);
 
   useStoryViewer(viewerOpen, viewerIdx, ownStories, setViewerIdx, setViewerOpen, setDeleteArmed);
-
-  useEffect(() => {
-    if (!expanded) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setExpanded(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [expanded]);
 
   useEffect(() => {
     if (searchParams.get('changeAvatar') === 'true') {
@@ -126,13 +116,17 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
         <>
           <button
             type="button"
-            aria-label={`Toggle ${(user.displayName ?? user.username)}'s avatar`}
+            aria-label={hasActiveStories ? `View ${user.displayName ?? user.username}'s stories` : `${user.displayName ?? user.username}'s avatar`}
             className="profile-avatar-button"
-            onClick={() => setExpanded((s) => !s)}
-            aria-expanded={expanded}
-            style={{ background: 'none', border: 'none', padding: 0, cursor: expanded ? 'zoom-out' : 'zoom-in' }}
+            onClick={() => {
+              if (hasActiveStories) {
+                setViewerOpen(true);
+                setViewerIdx(0);
+              }
+            }}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: hasActiveStories ? 'pointer' : 'default' }}
           >
-            <AvatarImage user={user} expanded={expanded} hasActiveStories={hasActiveStories} />
+            <AvatarImage user={user} hasActiveStories={hasActiveStories} />
           </button>
         </>
       )}

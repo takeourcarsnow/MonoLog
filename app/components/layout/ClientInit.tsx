@@ -67,8 +67,8 @@ export default function ClientInit({ children }: { children: React.ReactNode }) 
   // Lock screen orientation to portrait on mobile devices
   React.useEffect(() => {
     try {
-      if ('orientation' in screen && 'lock' in screen.orientation) {
-        screen.orientation.lock('portrait').catch(err => console.log('Orientation lock failed:', err));
+      if ('orientation' in screen && 'lock' in screen.orientation && typeof screen.orientation.lock === 'function') {
+        screen.orientation.lock('portrait').catch((err: any) => console.log('Orientation lock failed:', err));
       }
     } catch (e) {
       console.log('Orientation lock not supported:', e);

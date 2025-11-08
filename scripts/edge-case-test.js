@@ -1713,53 +1713,280 @@ class EdgeCaseTester {
     }
   }
 
-  async testPhotoEditorInteractions() {
-    this.log('🎨 Testing Photo Editor Interactions', 'test');
+  async testStoryInteractions() {
+    console.log('🔥 📖 Testing Story Creation & Deletion');
+    console.log('ℹ️ 🔒 SAFETY: Only interacting with stories created by this test script');
 
-    try {
-      // Wait for image to process and editor to be available
-      await this.page.waitForTimeout(2000);
+    let accessToken = null;
+    let storyId = null;
 
-      // Look for edit button
-      const editButton = this.page.locator('button[aria-label*="Edit" i], button:has-text("Edit"), .edit-button').first();
+    // Helper function to get access token (cached)
+    const getAccessToken = async () => {
+      if (accessToken) return accessToken;
       
-      if (await editButton.count() > 0) {
-        await editButton.click();
-        await this.page.waitForTimeout(1500);
-
-        // Verify editor opened
-        const editorCanvas = await this.page.locator('canvas, .image-editor-canvas').count() > 0;
-        await this.recordTest('Photo Editor Opens', editorCanvas, 'Editor canvas visible', 'editor');
-
-        if (editorCanvas) {
-          // Test undo/redo spam (if available)
-          const undoButton = this.page.locator('button[aria-label*="undo" i], button:has-text("Undo")').first();
-          const redoButton = this.page.locator('button[aria-label*="redo" i], button:has-text("Redo")').first();
+      // Get the access token from the browser's Supabase session
+      const sessionData = await this.page.evaluate(() => {
+        try {
+          console.log('Available localStorage keys:', Object.keys(localStorage));
+          console.log('Available cookies:', document.cookie);
           
-          if (await undoButton.count() > 0 && await redoButton.count() > 0) {
-            this.log('Testing undo/redo spam...');
-            for (let i = 0; i < 10; i++) {
-              await undoButton.click({ timeout: 500 }).catch(() => {});
-              await this.page.waitForTimeout(50);
-              await redoButton.click({ timeout: 500 }).catch(() => {});
-              await this.page.waitForTimeout(50);
+          // Try to get session from cookies (Supabase default with PKCE)
+          const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+            const [key, value] = cookie.trim().split('=');
+            acc[key] = value;
+            return acc;
+          }, {});
+          
+          console.log('Cookie keys:', Object.keys(cookies));
+          
+          // Look for the auth cookie
+          const authCookieKey = 'sb-gfvdnpcrscszzyicsycp-auth-token';
+          const authCookie = cookies[authCookieKey];
+          
+          if (authCookie) {
+            console.log('Found auth cookie, length:', authCookie.length);
+            try {
+              // The cookie value is base64 encoded, so decode it first
+              const decoded = decodeURIComponent(authCookie);
+              console.log('Decoded cookie starts with:', decoded.substring(0, 20));
+              
+              // Remove 'base64-' prefix if present
+              const base64Data = decoded.startsWith('base64-') ? decoded.substring(7) : decoded;
+              
+              // Decode from base64
+              const jsonStr = atob(base64Data);
+              const session = JSON.parse(jsonStr);
+              console.log('Session parsed from cookie, has access_token:', !!session?.access_token);
+              return session?.access_token;
+            } catch (e) {
+              console.log('Failed to parse cookie session:', e);
             }
-            await this.recordTest('Photo Editor - Undo/Redo Spam', true, 'Handled undo/redo spam', 'editor');
           }
-
-          // Test closing editor without saving
-          const closeButton = this.page.locator('button[aria-label*="close" i], button:has-text("Close"), button:has-text("Cancel")').first();
-          if (await closeButton.count() > 0) {
-            await closeButton.click();
-            await this.page.waitForTimeout(1000);
-            await this.recordTest('Photo Editor - Close Without Save', true, 'Successfully closed editor', 'editor');
+          
+          // Fallback: try localStorage with the key we calculated
+          const supabaseUrl = window.__MONOLOG_RUNTIME_SUPABASE__?.url;
+          const keyPart = supabaseUrl ? supabaseUrl.split('//')[1]?.split('.')[0] : null;
+          const key = keyPart ? 'sb-' + keyPart + '-auth-token' : null;
+          
+          console.log('Trying localStorage key:', key);
+          
+          if (key) {
+            const sessionStr = localStorage.getItem(key);
+            if (sessionStr) {
+              console.log('Found session in localStorage');
+              const session = JSON.parse(sessionStr);
+              return session?.access_token;
+            }
           }
+          
+          return null;
+        } catch (e) {
+          console.log('Error getting session:', e);
+          return null;
         }
+      });
+      
+      accessToken = sessionData;
+      return accessToken;
+    };
+
+    // TEST 1: Create a story using API directly with authenticated request
+    console.log('🧪 TEST 1: Creating a test story via API...');
+    
+    try {
+      const sessionData = await getAccessToken();
+      
+      if (!sessionData) {
+        await this.recordTest('Create Story', false, 'Could not get access token from browser session', 'story');
+        return;
+      }
+
+      // Read test image as data URL
+      const fs = await import('fs');
+      const imageBuffer = fs.readFileSync(LOGO_PATH);
+      const dataUrl = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
+      
+      // First upload the image to get a public URL
+      const uploadResponse = await this.page.request.post(`${BASE_URL}/api/storage/upload`, {
+        data: { dataUrl },
+        headers: {
+          'Authorization': `Bearer ${sessionData}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (uploadResponse.status() !== 200) {
+        const errorText = await uploadResponse.text();
+        await this.recordTest('Create Story', false, `Image upload failed: ${uploadResponse.status()} - ${errorText}`, 'story');
+        return;
+      }
+      
+      const uploadData = await uploadResponse.json();
+      const mediaUrl = uploadData.publicUrl;
+      
+      // Create story via API with authentication
+      const createResponse = await this.page.request.post(`${BASE_URL}/api/stories/create`, {
+        data: {
+          mediaUrl: mediaUrl,
+          mediaType: 'image'
+        },
+        headers: {
+          'Authorization': `Bearer ${sessionData}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (createResponse.status() === 200) {
+        const createData = await createResponse.json();
+        storyId = createData.story?.id;
+        await this.recordTest('Create Story', true, `Story created successfully with ID: ${storyId}`, 'story');
       } else {
-        await this.recordTest('Photo Editor Opens', false, 'Edit button not found', 'editor');
+        const errorText = await createResponse.text();
+        await this.recordTest('Create Story', false, `API call failed: ${createResponse.status()} - ${errorText}`, 'story');
+        return;
       }
     } catch (error) {
-      await this.recordTest('Photo Editor Interactions', false, error.message, 'editor');
+      await this.recordTest('Create Story', false, `Failed to create story: ${error.message}`, 'story');
+      return;
+    }
+
+    // TEST 2: Verify story appears in user stories
+    console.log('🧪 TEST 2: Verifying story was created...');
+    try {
+      const sessionData = await getAccessToken();
+      
+      if (!sessionData) {
+        await this.recordTest('Verify Story Created', false, 'Could not get access token for verification', 'story');
+      } else {
+        // Get current user ID first
+        const userId = await this.page.evaluate(() => {
+          try {
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+              const [key, value] = cookie.trim().split('=');
+              acc[key] = value;
+              return acc;
+            }, {});
+            
+            const authCookieKey = 'sb-gfvdnpcrscszzyicsycp-auth-token';
+            const authCookie = cookies[authCookieKey];
+            
+            if (authCookie) {
+              const decoded = decodeURIComponent(authCookie);
+              const base64Data = decoded.startsWith('base64-') ? decoded.substring(7) : decoded;
+              const jsonStr = atob(base64Data);
+              const session = JSON.parse(jsonStr);
+              return session?.user?.id;
+            }
+            return null;
+          } catch (e) {
+            return null;
+          }
+        });
+        
+        if (!userId) {
+          await this.recordTest('Verify Story Created', false, 'Could not get user ID from session', 'story');
+        } else {
+          const userStoriesResponse = await this.page.request.get(`${BASE_URL}/api/stories/list?userId=${userId}`, {
+            headers: {
+              'Authorization': `Bearer ${sessionData}`
+            }
+          });
+          
+          if (userStoriesResponse.status() === 200) {
+            const userStories = await userStoriesResponse.json();
+            const storyExists = userStories.stories?.some(story => story.id === storyId);
+            await this.recordTest('Verify Story Created', storyExists, storyExists ? 'Story appears in user stories list' : 'Story not found in user stories', 'story');
+          } else {
+            await this.recordTest('Verify Story Created', false, `Failed to fetch user stories: ${userStoriesResponse.status()}`, 'story');
+          }
+        }
+      }
+    } catch (error) {
+      await this.recordTest('Verify Story Created', false, `Error verifying story: ${error.message}`, 'story');
+    }
+
+    // TEST 3: Delete the story
+    console.log('🧪 TEST 3: Deleting the test story...');
+    if (storyId) {
+      try {
+        const sessionData = await getAccessToken();
+        
+        if (!sessionData) {
+          await this.recordTest('Delete Story', false, 'Could not get access token for deletion', 'story');
+        } else {
+          const deleteResponse = await this.page.request.delete(`${BASE_URL}/api/stories/delete/${storyId}`, {
+            headers: {
+              'Authorization': `Bearer ${sessionData}`
+            }
+          });
+          
+          if (deleteResponse.status() === 200) {
+            await this.recordTest('Delete Story', true, 'Story deleted successfully via API', 'story');
+          } else {
+            const errorText = await deleteResponse.text();
+            await this.recordTest('Delete Story', false, `Delete API call failed: ${deleteResponse.status()} - ${errorText}`, 'story');
+          }
+        }
+      } catch (error) {
+        await this.recordTest('Delete Story', false, `Failed to delete story: ${error.message}`, 'story');
+      }
+    } else {
+      await this.recordTest('Delete Story', false, 'No story ID available to delete', 'story');
+    }
+
+    // TEST 4: Verify story is deleted
+    console.log('🧪 TEST 4: Verifying story is deleted...');
+    try {
+      const sessionData = await getAccessToken();
+      
+      if (!sessionData) {
+        await this.recordTest('Verify Story Deleted', false, 'Could not get access token for verification', 'story');
+      } else {
+        // Get current user ID first
+        const userId = await this.page.evaluate(() => {
+          try {
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+              const [key, value] = cookie.trim().split('=');
+              acc[key] = value;
+              return acc;
+            }, {});
+            
+            const authCookieKey = 'sb-gfvdnpcrscszzyicsycp-auth-token';
+            const authCookie = cookies[authCookieKey];
+            
+            if (authCookie) {
+              const decoded = decodeURIComponent(authCookie);
+              const base64Data = decoded.startsWith('base64-') ? decoded.substring(7) : decoded;
+              const jsonStr = atob(base64Data);
+              const session = JSON.parse(jsonStr);
+              return session?.user?.id;
+            }
+            return null;
+          } catch (e) {
+            return null;
+          }
+        });
+        
+        if (!userId) {
+          await this.recordTest('Verify Story Deleted', false, 'Could not get user ID from session', 'story');
+        } else {
+          const userStoriesResponse = await this.page.request.get(`${BASE_URL}/api/stories/list?userId=${userId}`, {
+            headers: {
+              'Authorization': `Bearer ${sessionData}`
+            }
+          });
+          
+          if (userStoriesResponse.status() === 200) {
+            const userStories = await userStoriesResponse.json();
+            const storyGone = !userStories.stories?.some(story => story.id === storyId);
+            await this.recordTest('Verify Story Deleted', storyGone, storyGone ? 'Story successfully removed from user stories' : 'Story still appears in user stories after deletion', 'story');
+          } else {
+            await this.recordTest('Verify Story Deleted', false, `Failed to verify deletion: ${userStoriesResponse.status()}`, 'story');
+          }
+        }
+      }
+    } catch (error) {
+      await this.recordTest('Verify Story Deleted', false, `Error verifying deletion: ${error.message}`, 'story');
     }
   }
 
@@ -1924,6 +2151,7 @@ ${this.results.errors.length > 0 ?
 
       // Run all test suites with individual error handling
       const testSuites = [
+        { name: 'Story Creation & Deletion', fn: () => this.testStoryInteractions() },
         { name: 'Community & Thread Interactions', fn: () => this.testCommunityAndThreads() },
         { name: 'Post Creation & Interactions', fn: () => this.testPostInteractions() },
         { name: 'Avatar Change', fn: () => this.testAvatarChange() },

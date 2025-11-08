@@ -184,11 +184,7 @@ export function StoryViewerModal({
       const updatedStories = await dedupe(`getActiveStoriesForUser:${user.id}`, () => api.getActiveStoriesForUser(user.id));
       setStories(updatedStories);
       setHasActiveStories(updatedStories.length > 0);
-      if (updatedStories.length === 0) {
-        onClose();
-      } else if (currentIndex >= updatedStories.length) {
-        // Adjust index if needed, but onNext/onPrev handle it
-      }
+      onClose();
       setDeleteArmed(false);
     } catch (e: any) {
       console.warn('Failed to delete story:', e?.message);

@@ -88,6 +88,13 @@ export async function getNotificationMessage(notification: Notification): Promis
           actorAvatarUrl
         };
       }
+      case 'like': {
+        // For story likes
+        return {
+          message: `${actorUsername} liked your story`,
+          actorAvatarUrl
+        };
+      }
       case 'community_created': {
         return {
           message: `${actorUsername} created a new community`,

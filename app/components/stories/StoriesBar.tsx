@@ -13,6 +13,7 @@ export function StoriesBar() {
   const [viewer, setViewer] = useState<{ user: Item['user']; stories: Story[]; idx: number } | null>(null);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [liked, setLiked] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -33,28 +34,60 @@ export function StoriesBar() {
     };
   }, []);
 
-  const open = (item: Item) => setViewer({ user: item.user, stories: item.stories, idx: 0 });
+  const open = async (item: Item) => {
+    setViewer({ user: item.user, stories: item.stories, idx: 0 });
+    // Check if first story is liked
+    try {
+      const isLiked = await api.isLikedStory(item.stories[0].id);
+      setLiked(isLiked);
+    } catch {
+      setLiked(false);
+    }
+  };
   const close = useCallback(() => {
     setViewer(null);
     setProgress(0);
     setPaused(false);
   }, []);
-  const next = useCallback(() => {
+  const next = useCallback(async () => {
     setViewer(v => {
       if (!v) return v;
       const newIdx = Math.min(v.idx + 1, v.stories.length - 1);
-      if (newIdx !== v.idx) setProgress(0);
+      if (newIdx !== v.idx) {
+        setProgress(0);
+        // Check liked for new story
+        api.isLikedStory(v.stories[newIdx].id).then(setLiked).catch(() => setLiked(false));
+      }
       return { ...v, idx: newIdx };
     });
   }, []);
-  const prev = useCallback(() => {
+  const prev = useCallback(async () => {
     setViewer(v => {
       if (!v) return v;
       const newIdx = Math.max(v.idx - 1, 0);
-      if (newIdx !== v.idx) setProgress(0);
+      if (newIdx !== v.idx) {
+        setProgress(0);
+        // Check liked for new story
+        api.isLikedStory(v.stories[newIdx].id).then(setLiked).catch(() => setLiked(false));
+      }
       return { ...v, idx: newIdx };
     });
   }, []);
+  const toggleLike = useCallback(async () => {
+    if (!viewer) return;
+    const storyId = viewer.stories[viewer.idx].id;
+    try {
+      if (liked) {
+        await api.unlikeStory(storyId);
+        setLiked(false);
+      } else {
+        await api.likeStory(storyId);
+        setLiked(true);
+      }
+    } catch (e) {
+      console.error('Failed to toggle like:', e);
+    }
+  }, [viewer, liked]);
 
   useEffect(() => {
     if (!viewer) return;
@@ -164,8 +197,11 @@ export function StoriesBar() {
               <img src={viewer.stories[viewer.idx].mediaUrl} alt="Story" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} />
             )}
           </div>
-          <div style={{ position: 'absolute', bottom: 28, fontSize: 14, color: '#fff' }} onClick={(e) => e.stopPropagation()}>
-            {viewer.user.displayName || viewer.user.username} • {viewer.idx + 1}/{viewer.stories.length} • {viewer.stories[viewer.idx].viewCount} views
+          <div style={{ position: 'absolute', bottom: 28, fontSize: 14, color: '#fff', display: 'flex', alignItems: 'center', gap: 16 }} onClick={(e) => e.stopPropagation()}>
+            <span>{viewer.user.displayName || viewer.user.username} • {viewer.idx + 1}/{viewer.stories.length} • {viewer.stories[viewer.idx].viewCount} views</span>
+            <button type="button" onClick={toggleLike} style={{ background: 'rgba(255,255,255,0.1)', color: liked ? '#ff7e39' : '#fff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>
+              {liked ? '❤️ Liked' : '🤍 Like'}
+            </button>
           </div>
         </div>,
         document.body

@@ -1,6 +1,7 @@
 import type { Story, User } from '../types';
 import { getClient, ensureAuthListener, getCachedAuthUser, getAccessToken } from './client';
 import { dedupe } from '../requestDeduplication';
+import { getCurrentUser } from './users';
 
 // Cache for stories per user: userId -> { stories, timestamp }
 const storiesCache = new Map<string, { stories: Story[]; timestamp: number }>();
@@ -119,5 +120,35 @@ export async function deleteStory(storyId: string) {
   const user = await getCachedAuthUser(sb);
   if (user?.id) {
     storiesCache.delete(user.id);
+  }
+}
+
+export async function likeStory(storyId: string) {
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  if (!token) throw new Error('Not logged in');
+  const resp = await fetch('/api/stories/like', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ storyId }) });
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json?.error || 'Failed to like story');
+}
+
+export async function unlikeStory(storyId: string) {
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  if (!token) throw new Error('Not logged in');
+  const resp = await fetch('/api/stories/unlike', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ storyId }) });
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json?.error || 'Failed to unlike story');
+}
+
+export async function isLikedStory(storyId: string) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return false;
+    return (user.liked_stories || []).includes(storyId);
+  } catch {
+    return false;
   }
 }

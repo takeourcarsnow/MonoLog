@@ -17,6 +17,7 @@ export type User = {
   joinedAt: string;
   following?: string[];
   favorites?: string[];
+  liked_stories?: string[];
   usernameChangedAt?: string; // Tracks last username change for 24-hour cooldown
   exifPresets?: {
     cameras?: string[];
@@ -248,6 +249,9 @@ export interface Api {
   createStory(input: { mediaUrl?: string; thumbnailUrl?: string; dataUrl?: string; mediaType: 'image' | 'video'; durationSeconds?: number }): Promise<Story>;
   markStoryViewed(storyId: string): Promise<void>;
   deleteStory(storyId: string): Promise<void>;
+  likeStory(storyId: string): Promise<void>;
+  unlikeStory(storyId: string): Promise<void>;
+  isLikedStory(storyId: string): Promise<boolean>;
 }
 
 // Reserved route names that should not be treated as usernames

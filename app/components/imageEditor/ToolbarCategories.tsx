@@ -1,5 +1,5 @@
 import { RefreshCw, X, Check, Sliders, Palette, Sparkles, Scissors, ImageIcon, Layers, Wand2 } from "lucide-react";
-import { CATEGORY_COLORS } from './constants';
+import { CATEGORY_COLORS } from './effectsConfig';
 import React from 'react';
 
 interface ToolbarCategoriesProps {

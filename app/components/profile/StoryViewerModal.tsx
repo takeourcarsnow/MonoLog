@@ -452,7 +452,10 @@ export function StoryViewerModal({
           color: '#fff',
           textAlign: 'center',
           opacity: isPaused ? 1 : 0.8,
-          transition: 'opacity 0.2s'
+          transition: 'opacity 0.2s',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
         }} 
         onClick={(e) => e.stopPropagation()}
       >
@@ -467,7 +470,6 @@ export function StoryViewerModal({
               objectFit: 'cover'
             }}
           />
-          <div style={{ fontWeight: '500' }}>Your story</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <div style={{ display: 'flex', gap: 4 }}>

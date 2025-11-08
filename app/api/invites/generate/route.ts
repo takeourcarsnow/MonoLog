@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { SUPABASE } from '@/lib/config';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     const { data: { user }, error: userError } = await sb.auth.getUser();
     if (userError || !user) {
-      console.error('User error:', userError);
+      logger.error('User error:', userError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (todaysError) {
-      console.error('Error checking todays invite:', todaysError);
+      logger.error('Error checking todays invite:', todaysError);
       return NextResponse.json({ error: 'Failed to check todays invite' }, { status: 500 });
     }
 
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
         .eq('code', candidate);
 
       if (checkError) {
-        console.error('Error checking invite:', checkError);
+        logger.error('Error checking invite:', checkError);
         return NextResponse.json({ error: 'Failed to check invite' }, { status: 500 });
       }
 
@@ -85,13 +86,13 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating invite:', error);
+      logger.error('Error creating invite:', error);
       return NextResponse.json({ error: `Failed to create invite: ${error.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ code: data.code });
   } catch (error) {
-    console.error('Invite generation error:', error);
+    logger.error('Invite generation error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

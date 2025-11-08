@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { User } from "@/lib/types";
-import { validateUsername, normalizeDisplayName, normalizeBio, normalizeSocialLinks } from "./profileUtils";
+import { validateUsername, normalizeDisplayName, normalizeBio, normalizeSocialLinks } from "@/lib/validation";
 
 export const useProfileEdit = (
   user: User,

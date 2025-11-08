@@ -1,4 +1,5 @@
-import { FILTER_PRESETS, FILTER_ICONS, FILTER_COLORS } from "../constants";
+import { FILTER_PRESETS, FILTER_COLORS } from "../effectsConfig";
+import { FILTER_ICONS } from "../constants";
 import { rangeBg } from "../utils";
 
 interface ColorPanelProps {

@@ -2,7 +2,7 @@
 // Combines photo editor and camera effects for DRY implementation
 
 import { CameraEffectSettings } from './cameraEffectsTypes';
-import { FILTER_PRESETS } from '../imageEditor/constants';
+import { FILTER_PRESETS } from '../imageEditor/effectsConfig';
 import { mapBasicAdjustments } from '../imageEditor/filterUtils';
 import { applyPixelateToFrame } from './pixelateEffect';
 import { applyDitherToFrame } from './ditherEffect';

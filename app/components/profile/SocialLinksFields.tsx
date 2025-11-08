@@ -1,6 +1,6 @@
 import { Twitter, Instagram, Facebook, Globe } from "lucide-react";
 import { SpotifyIcon } from "../uploader/SpotifyIcon";
-import { looksLikeTwitter, looksLikeInstagram, looksLikeSpotify, looksLikeFacebook, looksLikeWebsite, ensureAt } from "./profileUtils";
+import { looksLikeTwitter, looksLikeInstagram, looksLikeSpotify, looksLikeFacebook, looksLikeWebsite, ensureAt } from "@/lib/validation";
 
 interface SocialLinksFieldsProps {
   editTwitter: string;

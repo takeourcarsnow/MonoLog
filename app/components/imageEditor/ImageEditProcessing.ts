@@ -1,4 +1,4 @@
-import { FILTER_PRESETS } from './constants';
+import { FILTER_PRESETS } from './effectsConfig';
 import { mapBasicAdjustments } from './filterUtils';
 import { applyWebGLAdjustments } from './webglFilters';
 

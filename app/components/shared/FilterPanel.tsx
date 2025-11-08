@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { FILTER_PRESETS, FILTER_ICONS, FILTER_COLORS } from "../imageEditor/constants";
+import { FILTER_PRESETS, FILTER_COLORS } from "../imageEditor/effectsConfig";
+import { FILTER_ICONS } from "../imageEditor/constants";
 import { EffectSlider } from "./EffectSlider";
 import { rangeBg } from "../imageEditor/utils";
 

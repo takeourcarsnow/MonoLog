@@ -1,4 +1,4 @@
-import { FILTER_PRESETS } from "./constants";
+import { FILTER_PRESETS } from "./effectsConfig";
 import { generateNoiseCanvas } from "./utils";
 
 export interface DrawParams {

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FILTER_PRESETS, CATEGORY_COLORS } from "../imageEditor/constants";
+import { FILTER_PRESETS, CATEGORY_COLORS } from "../imageEditor/effectsConfig";
 
 interface FiltersControlsProps {
   effectSettings: any;

@@ -23,10 +23,13 @@ export async function POST(req: Request) {
     try {
       const { data: profile } = await sb.from('users').select('following').eq('id', actorId).limit(1).single();
       const current: string[] = (profile && profile.following) || [];
+      console.log('DEBUG unfollow: actorId', actorId, 'targetId', targetId, 'current following before:', current);
       const updated = current.filter((id: string) => id !== targetId);
       const { error } = await sb.from('users').update({ following: updated }).eq('id', actorId);
+      console.log('DEBUG unfollow: updated following to:', updated, 'error:', error);
       if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
     } catch (e) {
+      console.log('DEBUG unfollow: error updating legacy array:', e);
       // ignore legacy-array update errors
     }
     return NextResponse.json({ ok: true });

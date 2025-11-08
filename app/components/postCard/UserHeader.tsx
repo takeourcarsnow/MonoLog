@@ -290,8 +290,10 @@ export const UserHeader = memo(function UserHeader({
                     followInFlightRef.current = true;
                     try {
                       if (!prev) {
+                        console.log('DEBUG UserHeader: following userId', post.userId);
                         await api.follow(post.userId);
                       } else {
+                        console.log('DEBUG UserHeader: unfollowing userId', post.userId);
                         await api.unfollow(post.userId);
                       }
                       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}

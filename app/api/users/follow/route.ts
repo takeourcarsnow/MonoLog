@@ -41,10 +41,13 @@ export async function POST(req: Request) {
     try {
       const { data: profile } = await sb.from('users').select('following').eq('id', actorId).limit(1).single();
       const current: string[] = (profile && profile.following) || [];
+      console.log('DEBUG follow: actorId', actorId, 'targetId', targetId, 'current following before:', current);
       if (!current.includes(targetId)) current.push(targetId);
       const { error } = await sb.from('users').update({ following: current }).eq('id', actorId);
+      console.log('DEBUG follow: updated following to:', current, 'error:', error);
       if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
     } catch (e) {
+      console.log('DEBUG follow: error updating legacy array:', e);
       // ignore errors updating legacy array
     }
 

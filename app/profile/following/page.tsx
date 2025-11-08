@@ -20,15 +20,25 @@ export default function FollowingPage() {
 
   const loadData = async () => {
     const user = await api.getCurrentUser();
+    console.log('DEBUG following page: currentUser', user?.id, 'following:', user?.following);
     setCurrentUser(user);
     if (user) {
       const followingUsers = await api.getFollowingUsers();
+      console.log('DEBUG following page: followingUsers', followingUsers.length);
       setFollowing(followingUsers);
     }
   };
 
   useEffect(() => {
     loadData().finally(() => setLoading(false));
+
+    // Listen for follow changes to refresh the list
+    const handleFollowChange = () => {
+      console.log('DEBUG following page: follow_changed event, reloading data');
+      loadData();
+    };
+    if (typeof window !== 'undefined') window.addEventListener('monolog:follow_changed', handleFollowChange as any);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('monolog:follow_changed', handleFollowChange as any); };
   }, []);
 
   if (loading) {

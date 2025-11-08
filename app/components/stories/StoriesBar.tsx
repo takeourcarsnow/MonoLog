@@ -181,6 +181,9 @@ export function StoriesBar() {
           <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
             <button type="button" onClick={prev} disabled={viewer.idx === 0} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Prev</button>
             <button type="button" onClick={next} disabled={viewer.idx >= viewer.stories.length - 1} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Next</button>
+            <button type="button" onClick={toggleLike} style={{ background: 'rgba(255,255,255,0.2)', color: liked ? '#ff7e39' : '#fff', border: '1px solid rgba(255,255,255,0.3)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>
+              {liked ? '❤️ Liked' : '🤍 Like'}
+            </button>
           </div>
           <div style={{ maxWidth: '90vw', maxHeight: '80vh', width: 'min(640px, 90vw)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
             {viewer.stories[viewer.idx].mediaType === 'video' ? (
@@ -199,9 +202,6 @@ export function StoriesBar() {
           </div>
           <div style={{ position: 'absolute', bottom: 28, fontSize: 14, color: '#fff', display: 'flex', alignItems: 'center', gap: 16 }} onClick={(e) => e.stopPropagation()}>
             <span>{viewer.user.displayName || viewer.user.username} • {viewer.idx + 1}/{viewer.stories.length} • {viewer.stories[viewer.idx].viewCount} views</span>
-            <button type="button" onClick={toggleLike} style={{ background: 'rgba(255,255,255,0.1)', color: liked ? '#ff7e39' : '#fff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>
-              {liked ? '❤️ Liked' : '🤍 Like'}
-            </button>
           </div>
         </div>,
         document.body

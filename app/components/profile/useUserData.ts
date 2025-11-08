@@ -172,21 +172,18 @@ export function useUserData(userId?: string) {
     return () => { mounted = false; };
   }, [fetchUserData, userId]);
 
-  // Listen for newly created posts (from uploader) - optimized
-  useEventListener('monolog:post_created', async () => {
-    try {
-      const me = await dedupe('getCurrentUser', () => api.getCurrentUser());
-      if (!me) return;
-      if (userId && userId !== me.id) return;
-
-      const list = await dedupe(`getUserPosts:${me.id}`, () => api.getUserPosts(me.id, 50));
-      setUser(prev => prev || me);
-      setPosts(list);
-      
-      // Update cache with new posts
-      setCachedProfile(me.id, me, list);
-    } catch (e) { /* ignore refresh errors */ }
-  }, [userId]);
+  // Listen for follow changes to update following status
+  useEventListener('monolog:follow_changed', async (e: any) => {
+    const changedUserId = e?.detail?.userId;
+    const following = e?.detail?.following;
+    console.log('DEBUG useUserData: follow_changed event', { changedUserId, following, userId });
+    if (!changedUserId || !userId) return;
+    // If viewing another user's profile, check if it's the user we just followed/unfollowed
+    if (userId === changedUserId) {
+      console.log('DEBUG useUserData: updating following to', following);
+      setFollowing(following);
+    }
+  });
 
   // Listen for deleted posts
   useEventListener('monolog:post_deleted', (e: any) => {

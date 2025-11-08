@@ -28,6 +28,7 @@ export async function isFollowing(userId: string) {
   const { data: profile, error } = await sb.from("users").select("following").eq("id", me.id).limit(1).single();
   if (error || !profile) return false;
   const current: string[] = profile.following || [];
+  console.log('DEBUG isFollowing: me.id', me.id, 'userId', userId, 'following:', current, 'result:', current.includes(userId));
   return !!current.includes(userId);
 }
 

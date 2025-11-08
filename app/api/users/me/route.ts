@@ -172,18 +172,18 @@ export const DELETE = withHandler({ method: 'DELETE' })(async (req, ctx) => {
       }
     }
 
+    // Delete all user's comments (delete before posts in case of FK constraints)
+    const { error: commentsError } = await sb.from('comments').delete().eq('user_id', actorId);
+    if (commentsError) {
+      console.error('DELETE /api/users/me: error deleting comments', commentsError);
+      return NextResponse.json({ error: commentsError.message || commentsError }, { status: 500 });
+    }
+
     // Delete all user's posts
     const { error: postsError } = await sb.from('posts').delete().eq('user_id', actorId);
     if (postsError) {
       console.error('DELETE /api/users/me: error deleting posts', postsError);
       return NextResponse.json({ error: postsError.message || postsError }, { status: 500 });
-    }
-
-    // Delete all user's comments
-    const { error: commentsError } = await sb.from('comments').delete().eq('user_id', actorId);
-    if (commentsError) {
-      console.error('DELETE /api/users/me: error deleting comments', commentsError);
-      return NextResponse.json({ error: commentsError.message || commentsError }, { status: 500 });
     }
 
     // Delete all follows (both following and followers)
@@ -208,6 +208,17 @@ export const DELETE = withHandler({ method: 'DELETE' })(async (req, ctx) => {
       console.log('DELETE /api/users/me: follows table may not exist, skipping');
     }
 
+    // Delete all community memberships (delete before communities)
+    try {
+      const { error: membershipsError } = await sb.from('community_members').delete().eq('user_id', actorId);
+      if (membershipsError) {
+        console.error('DELETE /api/users/me: error deleting community memberships', membershipsError);
+        return NextResponse.json({ error: membershipsError.message || membershipsError }, { status: 500 });
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: community_members table may not exist, skipping');
+    }
+
     // Delete all user's communities (this should cascade to threads and replies if FKs are set)
     try {
       const { error: communitiesError } = await sb.from('communities').delete().eq('creator_id', actorId);
@@ -219,15 +230,15 @@ export const DELETE = withHandler({ method: 'DELETE' })(async (req, ctx) => {
       console.log('DELETE /api/users/me: communities table may not exist, skipping');
     }
 
-    // Delete all community memberships
+    // Delete all user's thread replies (delete before threads)
     try {
-      const { error: membershipsError } = await sb.from('community_members').delete().eq('user_id', actorId);
-      if (membershipsError) {
-        console.error('DELETE /api/users/me: error deleting community memberships', membershipsError);
-        return NextResponse.json({ error: membershipsError.message || membershipsError }, { status: 500 });
+      const { error: repliesError } = await sb.from('thread_replies').delete().eq('user_id', actorId);
+      if (repliesError) {
+        console.error('DELETE /api/users/me: error deleting thread replies', repliesError);
+        return NextResponse.json({ error: repliesError.message || repliesError }, { status: 500 });
       }
     } catch (e) {
-      console.log('DELETE /api/users/me: community_members table may not exist, skipping');
+      console.log('DELETE /api/users/me: thread_replies table may not exist, skipping');
     }
 
     // Delete all user's threads
@@ -239,17 +250,6 @@ export const DELETE = withHandler({ method: 'DELETE' })(async (req, ctx) => {
       }
     } catch (e) {
       console.log('DELETE /api/users/me: threads table may not exist, skipping');
-    }
-
-    // Delete all user's thread replies
-    try {
-      const { error: repliesError } = await sb.from('thread_replies').delete().eq('user_id', actorId);
-      if (repliesError) {
-        console.error('DELETE /api/users/me: error deleting thread replies', repliesError);
-        return NextResponse.json({ error: repliesError.message || repliesError }, { status: 500 });
-      }
-    } catch (e) {
-      console.log('DELETE /api/users/me: thread_replies table may not exist, skipping');
     }
 
     // Delete all user's invites
@@ -283,6 +283,17 @@ export const DELETE = withHandler({ method: 'DELETE' })(async (req, ctx) => {
       }
     } catch (e) {
       console.log('DELETE /api/users/me: notifications table may not exist, skipping');
+    }
+
+    // Delete all user's stories (cascade should handle this, but delete explicitly to be safe)
+    try {
+      const { error: storiesError } = await sb.from('stories').delete().eq('user_id', actorId);
+      if (storiesError) {
+        console.error('DELETE /api/users/me: error deleting stories', storiesError);
+        // Don't fail if stories deletion fails, as cascade should handle it
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: stories table may not exist, skipping');
     }
 
     // Note: Favorites are stored as an array in the users table, so they will be deleted with the user profile

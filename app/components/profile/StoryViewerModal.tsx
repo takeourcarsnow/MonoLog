@@ -180,14 +180,24 @@ export function StoryViewerModal({
       return;
     }
     try {
-      await api.deleteStory(stories[currentIndex].id);
-      const updatedStories = await dedupe(`getActiveStoriesForUser:${user.id}`, () => api.getActiveStoriesForUser(user.id));
+      const storyToDelete = stories[currentIndex];
+      await api.deleteStory(storyToDelete.id);
+      
+      // Update local state optimistically by removing the deleted story
+      const updatedStories = stories.filter(story => story.id !== storyToDelete.id);
       setStories(updatedStories);
-      setHasActiveStories(updatedStories.length > 0);
+      
       onClose();
       setDeleteArmed(false);
     } catch (e: any) {
       console.warn('Failed to delete story:', e?.message);
+      // On failure, refresh to correct state
+      try {
+        const refreshedStories = await dedupe(`getActiveStoriesForUser:${user.id}`, () => api.getActiveStoriesForUser(user.id));
+        setStories(refreshedStories);
+      } catch (_) {
+        // ignore
+      }
       setDeleteArmed(false);
     }
   };

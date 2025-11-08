@@ -26,5 +26,10 @@ export function useStories(userId: string) {
     return () => { mounted = false; };
   }, [userId]);
 
+  // Update hasActiveStories when ownStories changes
+  useEffect(() => {
+    setHasActiveStories(ownStories.length > 0);
+  }, [ownStories]);
+
   return { hasActiveStories, setHasActiveStories, ownStories, setOwnStories };
 }

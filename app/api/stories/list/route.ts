@@ -10,11 +10,7 @@ export async function GET(req: Request) {
     const nowIso = new Date().toISOString();
     const { data, error } = await sb.from('stories').select('*').eq('user_id', userId).gt('expires_at', nowIso).order('created_at', { ascending: true });
     if (error) return NextResponse.json({ error: error.message || String(error) }, { status: 500 });
-    return NextResponse.json({ ok: true, stories: data || [] }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1800',
-      },
-    });
+    return NextResponse.json({ ok: true, stories: data || [] });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }

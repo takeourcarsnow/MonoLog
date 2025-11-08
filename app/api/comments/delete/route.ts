@@ -20,10 +20,10 @@ export async function POST(req: Request) {
     if (fetchError || !comment) {
       return NextResponse.json({ error: 'Comment not found', details: String(fetchError?.message || fetchError) }, { status: 404 });
     }
-    // Temporarily allow deleting any comment for debugging purposes
-    // if (String(comment.user_id) !== String(actorId)) {
-    //   return NextResponse.json({ error: 'Unauthorized to delete this comment' }, { status: 403 });
-    // }
+    // Only allow deleting own comments
+    if (String(comment.user_id) !== String(actorId)) {
+      return NextResponse.json({ error: 'Unauthorized to delete this comment' }, { status: 403 });
+    }
 
     // Now delete the comment and return the deleted row for debugging so the
     // client can validate what actually changed. Using `.select()` on delete

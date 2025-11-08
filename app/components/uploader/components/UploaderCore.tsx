@@ -207,6 +207,7 @@ export function UploaderCore() {
         <DropZone
           processing={processing}
           onCameraEffectsSelect={handleAddFromCameraEffects}
+          onFileSelect={() => fileInputRef.current?.click()}
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
           onDragLeave={(e) => { e.preventDefault(); setDrag(false); }}
           onDrop={async (e) => {

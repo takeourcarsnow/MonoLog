@@ -39,6 +39,7 @@ export function StoriesBar() {
     // Check if first story is liked
     try {
       const isLiked = await api.isLikedStory(item.stories[0].id);
+      console.log('StoriesBar open: setting liked to', isLiked, 'for story', item.stories[0].id);
       setLiked(isLiked);
     } catch {
       setLiked(false);
@@ -56,7 +57,10 @@ export function StoriesBar() {
       if (newIdx !== v.idx) {
         setProgress(0);
         // Check liked for new story
-        api.isLikedStory(v.stories[newIdx].id).then(setLiked).catch(() => setLiked(false));
+        api.isLikedStory(v.stories[newIdx].id).then(isLiked => {
+          console.log('StoriesBar next: setting liked to', isLiked, 'for story', v.stories[newIdx].id);
+          setLiked(isLiked);
+        }).catch(() => setLiked(false));
       }
       return { ...v, idx: newIdx };
     });
@@ -68,7 +72,10 @@ export function StoriesBar() {
       if (newIdx !== v.idx) {
         setProgress(0);
         // Check liked for new story
-        api.isLikedStory(v.stories[newIdx].id).then(setLiked).catch(() => setLiked(false));
+        api.isLikedStory(v.stories[newIdx].id).then(isLiked => {
+          console.log('StoriesBar prev: setting liked to', isLiked, 'for story', v.stories[newIdx].id);
+          setLiked(isLiked);
+        }).catch(() => setLiked(false));
       }
       return { ...v, idx: newIdx };
     });

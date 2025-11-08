@@ -7,21 +7,30 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const storyId = body.storyId;
+    console.log('API /stories/like: received storyId', storyId);
     if (!storyId) return NextResponse.json({ error: 'Missing storyId' }, { status: 400 });
     const authUser = await getUserFromAuthHeader(req);
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const actorId = authUser.id;
+    console.log('API /stories/like: actorId', actorId);
     const sb = getServiceSupabase();
 
     // Check if user already liked the story
     const { data: profile } = await sb.from('users').select('liked_stories').eq('id', actorId).limit(1).single();
     let current: string[] = (profile && profile.liked_stories) || [];
-    if (current.includes(storyId)) {
-      return NextResponse.json({ error: 'Already liked' }, { status: 400 });
+    console.log('API /stories/like: current liked_stories before', current);
+    if (!current.includes(storyId)) {
+      current.push(storyId);
+      console.log('API /stories/like: adding storyId, new liked_stories', current);
+      const { error } = await sb.from('users').update({ liked_stories: current }).eq('id', actorId);
+      if (error) {
+        console.log('API /stories/like: update error', error);
+        return NextResponse.json({ error: error.message || error }, { status: 500 });
+      }
+      console.log('API /stories/like: update successful');
+    } else {
+      console.log('API /stories/like: already liked, skipping update');
     }
-    current.push(storyId);
-    const { error } = await sb.from('users').update({ liked_stories: current }).eq('id', actorId);
-    if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
 
     // Create a notification for the story owner. This is best-effort
     // — if the notifications table doesn't exist or the insert fails, we

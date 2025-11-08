@@ -403,7 +403,8 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .drop-zone-camera-button,
-.drop-zone-gallery-button {
+.drop-zone-gallery-button,
+.drop-zone-file-button {
   padding: 0;
   border-radius: 0;
   background: transparent;
@@ -414,7 +415,8 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .drop-zone-camera-button:hover,
-.drop-zone-gallery-button:hover {
+.drop-zone-gallery-button:hover,
+.drop-zone-file-button:hover {
   transform: scale(1.05);
   background: transparent;
   border: none;
@@ -422,12 +424,14 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .drop-zone-camera-button:active,
-.drop-zone-gallery-button:active {
+.drop-zone-gallery-button:active,
+.drop-zone-file-button:active {
   transform: scale(0.95);
 }
 
 .drop-zone-camera-button:disabled,
-.drop-zone-gallery-button:disabled {
+.drop-zone-gallery-button:disabled,
+.drop-zone-file-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
@@ -436,7 +440,8 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .drop-zone-camera-button .drop-zone-icon,
-.drop-zone-gallery-button .drop-zone-icon {
+.drop-zone-gallery-button .drop-zone-icon,
+.drop-zone-file-button .drop-zone-icon {
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -451,18 +456,21 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 
 .drop-zone-camera-button:hover .drop-zone-icon,
-.drop-zone-gallery-button:hover .drop-zone-icon {
+.drop-zone-gallery-button:hover .drop-zone-icon,
+.drop-zone-file-button:hover .drop-zone-icon {
   background: color-mix(in srgb, var(--primary-weak), transparent 80%);
   border-color: var(--primary);
   transform: scale(1.05);
 }
 
-.drop-zone-gallery-button span {
-  display: none;
+.drop-zone-file-button .drop-zone-icon {
+  background: transparent;
+  border: none;
 }
 
-.drop-zone-gallery-button:hover span {
-  display: none;
+.drop-zone-file-button:hover .drop-zone-icon {
+  background: transparent;
+  border: none;
 }
 
 .drop-zone-icon {
@@ -664,7 +672,8 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
   .drop-zone-button,
   .drop-zone-camera-button,
-  .drop-zone-gallery-button {
+  .drop-zone-gallery-button,
+  .drop-zone-file-button {
     padding: 0;
     min-width: auto;
     width: 40px;
@@ -673,14 +682,16 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
   .drop-zone-button .drop-zone-icon,
   .drop-zone-camera-button .drop-zone-icon,
-  .drop-zone-gallery-button .drop-zone-icon {
+  .drop-zone-gallery-button .drop-zone-icon,
+  .drop-zone-file-button .drop-zone-icon {
     width: 40px;
     height: 40px;
   }
 
   .drop-zone-button .drop-zone-icon svg,
   .drop-zone-camera-button .drop-zone-icon svg,
-  .drop-zone-gallery-button .drop-zone-icon svg {
+  .drop-zone-gallery-button .drop-zone-icon svg,
+  .drop-zone-file-button .drop-zone-icon svg {
     width: 16px;
     height: 16px;
   }

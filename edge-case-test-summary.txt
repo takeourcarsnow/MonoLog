@@ -1,0 +1,83 @@
+
+╔════════════════════════════════════════════════════════════════╗
+║           🔥 MONOLOG EDGE CASE TEST REPORT 🔥                 ║
+╚════════════════════════════════════════════════════════════════╝
+
+Generated: 2025-11-08T23:34:11.963Z
+Duration: 12.86s
+Test Account: 2ucmbma6qf@yzcalo.com
+
+╔════════════════════════════════════════════════════════════════╗
+║                         📊 SUMMARY                             ║
+╚════════════════════════════════════════════════════════════════╝
+
+Total Tests: 1
+✅ Passed: 0
+❌ Failed: 1
+⚠️ Console Errors: 1
+📷 Screenshots: 0
+
+Success Rate: 0.0%
+
+╔════════════════════════════════════════════════════════════════╗
+║                    📋 TESTS BY CATEGORY                        ║
+╚════════════════════════════════════════════════════════════════╝
+
+
+AUTH:
+  ✅ Passed: 0/1
+  ❌ Failed: 1/1
+  Success: 0.0%
+
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                       ❌ FAILED TESTS                          ║
+╚════════════════════════════════════════════════════════════════╝
+
+• User Login
+  Category: auth
+  Details: locator.fill: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('input[type="email"], input[name="email"]').first()[22m
+
+
+
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                    ⚠️ CONSOLE ERRORS                           ║
+╚════════════════════════════════════════════════════════════════╝
+
+• FATAL: locator.fill: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('input[type="email"], input[name="email"]').first()[22m
+
+
+
+
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                      📁 REPORT FILES                           ║
+╚════════════════════════════════════════════════════════════════╝
+
+• Full Report: C:\Users\i\Desktop\webdev\MonoLog\edge-case-test-report.json
+• Summary: C:\Users\i\Desktop\webdev\MonoLog\edge-case-test-summary.txt
+
+╔════════════════════════════════════════════════════════════════╗
+║                    💡 RECOMMENDATIONS                          ║
+╚════════════════════════════════════════════════════════════════╝
+
+⚠️  Some edge cases failed. Review the failed tests and consider:
+   • Adding better error handling
+   • Improving input validation
+   • Optimizing performance for edge conditions
+   • Enhancing user feedback for error states
+
+⚠️  Console errors detected. Consider:
+   • Fixing JavaScript errors
+   • Handling missing resources gracefully
+   • Adding proper error boundaries
+
+════════════════════════════════════════════════════════════════

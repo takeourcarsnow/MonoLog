@@ -257,7 +257,7 @@ export interface Api {
 // Reserved route names that should not be treated as usernames
 export const RESERVED_ROUTES = [
   'about', 'api', 'calendar', 'communities', 'explore', 'favorites',
-  'feed', 'post', 'upload', 'admin',
+  'feed', 'post', 'profile', 'upload', 'admin',
   'settings', 'help', 'terms', 'privacy', 'login',
   'register', 'signup', 'signin', 'logout', 'auth',
   'week-review', 'hashtags', 'search', 'reset-password', 'offline', 'styles',

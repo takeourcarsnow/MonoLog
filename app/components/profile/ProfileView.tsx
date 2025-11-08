@@ -82,6 +82,7 @@ export function ProfileView({ userId }: { userId?: string }) {
 
     // while not loading, prefer the upload-style sign-in prompt when the
     // viewer is not signed in and they're looking at their own profile.
+    // Only show the sign-in prompt when there is no authenticated user.
     if (!loading && !isOtherParam && !currentUserId) {
       return (
         <AuthRequired>

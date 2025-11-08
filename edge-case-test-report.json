@@ -1,0 +1,41 @@
+{
+  "passed": 0,
+  "failed": 1,
+  "warnings": 0,
+  "tests": [
+    {
+      "name": "User Login",
+      "passed": false,
+      "details": "locator.fill: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"], input[name=\"email\"]').first()\u001b[22m\n",
+      "category": "auth",
+      "duration": 12853,
+      "timestamp": "2025-11-08T23:34:11.960Z"
+    }
+  ],
+  "errors": [
+    "FATAL: locator.fill: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"], input[name=\"email\"]').first()\u001b[22m\n"
+  ],
+  "screenshots": [],
+  "categories": {
+    "auth": {
+      "passed": 0,
+      "failed": 1,
+      "tests": [
+        {
+          "name": "User Login",
+          "passed": false,
+          "details": "locator.fill: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"], input[name=\"email\"]').first()\u001b[22m\n",
+          "category": "auth",
+          "duration": 12853,
+          "timestamp": "2025-11-08T23:34:11.960Z"
+        }
+      ]
+    }
+  },
+  "duration": 12855,
+  "testDate": "2025-11-08T23:34:11.962Z",
+  "environment": {
+    "baseUrl": "http://localhost:3000",
+    "testEmail": "2ucmbma6qf@yzcalo.com"
+  }
+}

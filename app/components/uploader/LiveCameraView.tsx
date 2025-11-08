@@ -12,7 +12,7 @@
  * Falls back to traditional file input on browsers without getUserMedia support.
  */
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import Portal from "@/app/components/ui/Portal";
 import { getFrameFiles } from "@/app/components/imageEditor/framesPreload";
 import { getOverlayFiles } from "@/app/components/imageEditor/overlaysPreload";
@@ -28,6 +28,7 @@ import { OverlaySelector } from "./OverlaySelector";
 import { BasicControls } from "./BasicControls";
 import { FilterControls } from "./FilterControls";
 import { EffectsControls } from "./EffectsControls";
+import { TextControls } from "./TextControls";
 import { useLiveCameraState } from "./useLiveCameraState";
 import { useCameraHandlers } from "./useCameraHandlers";
 import { useTouchHandlers } from "./useTouchHandlers";
@@ -78,7 +79,15 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     setSelectedOverlay,
     pinchDistance,
     setPinchDistance,
+    isDraggingText,
+    setIsDraggingText,
+    dragStartX,
+    setDragStartX,
+    dragStartY,
+    setDragStartY,
   } = useLiveCameraState();
+
+  const disabled = isCapturing || processing || !cameraReady;
 
   // Handlers
   const {
@@ -116,6 +125,112 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     setPinchDistance,
     setZoom,
   });
+
+  // Text drag handlers with throttling for better performance
+  const dragUpdateRef = useRef<{ x: number; y: number } | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  const updateDragPosition = useCallback(() => {
+    if (dragUpdateRef.current) {
+      const { x, y } = dragUpdateRef.current;
+      setEffectSettings(prev => ({
+        ...prev,
+        textX: x,
+        textY: y,
+      }));
+      dragUpdateRef.current = null;
+    }
+    rafRef.current = null;
+  }, [setEffectSettings]);
+
+  const throttledSetDragPosition = useCallback((x: number, y: number) => {
+    dragUpdateRef.current = { x, y };
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(updateDragPosition);
+    }
+  }, [updateDragPosition]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+
+      setIsDraggingText(true);
+      setDragStartX(x);
+      setDragStartY(y);
+      throttledSetDragPosition(x, y);
+    }
+  }, [effectSettings.type, effectSettings.textContent, disabled, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isDraggingText && effectSettings.type === 'text') {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+
+      throttledSetDragPosition(x, y);
+    }
+  }, [isDraggingText, effectSettings.type, throttledSetDragPosition]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDraggingText(false);
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    // Final update to ensure position is set
+    if (dragUpdateRef.current) {
+      updateDragPosition();
+    }
+  }, [setIsDraggingText, updateDragPosition]);
+
+  // Enhanced touch handlers for text dragging with throttling
+  const handleTouchStartEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    // Handle pinch zoom first
+    handleTouchStart(e);
+
+    // Handle text dragging
+    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled && e.touches.length === 1) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = (touch.clientX - rect.left) / rect.width;
+      const y = (touch.clientY - rect.top) / rect.height;
+
+      setIsDraggingText(true);
+      setDragStartX(x);
+      setDragStartY(y);
+      throttledSetDragPosition(x, y);
+    }
+  }, [effectSettings.type, effectSettings.textContent, disabled, handleTouchStart, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
+
+  const handleTouchMoveEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    // Handle pinch zoom
+    handleTouchMove(e);
+
+    // Handle text dragging
+    if (isDraggingText && effectSettings.type === 'text' && e.touches.length === 1) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+      const y = Math.max(0, Math.min(1, (touch.clientY - rect.top) / rect.height));
+
+      throttledSetDragPosition(x, y);
+    }
+  }, [isDraggingText, effectSettings.type, handleTouchMove, throttledSetDragPosition]);
+
+  const handleTouchEndEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    handleTouchEnd(); // Reset pinch distance
+    setIsDraggingText(false);
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    // Final update to ensure position is set
+    if (dragUpdateRef.current) {
+      updateDragPosition();
+    }
+  }, [handleTouchEnd, setIsDraggingText, updateDragPosition]);
 
   // Capture logic
   const { handleCapture } = useCaptureLogic({
@@ -211,22 +326,20 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     }
   }, [isOpen]);
 
-  // Add modal blur effect
+  // Cleanup on unmount
   useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add('modal-blur');
-    } else {
-      document.body.classList.remove('modal-blur');
-    }
-
     return () => {
-      document.body.classList.remove('modal-blur');
+      // Cancel any pending RAF updates
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      // Clear drag state
+      dragUpdateRef.current = null;
     };
-  }, [isOpen]);
+  }, []);
 
   if (!isOpen) return null;
-
-  const disabled = isCapturing || processing || !cameraReady;
 
   return (
     <Portal>
@@ -287,10 +400,15 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
                 filter: showProcessingOverlay ? 'blur(8px) brightness(0.7)' : 'none',
                 transition: 'filter 0.2s ease',
                 touchAction: 'none', // Prevent default touch behaviors
+                cursor: effectSettings.type === 'text' && effectSettings.textContent && !disabled ? 'move' : 'default',
               }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStartEnhanced}
+              onTouchMove={handleTouchMoveEnhanced}
+              onTouchEnd={handleTouchEndEnhanced}
               aria-label={`Live camera preview with ${effectSettings.type} effect applied`}
               role="img"
             />
@@ -381,6 +499,14 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
           {effectSettings.type === 'ascii' && (
             <AsciiControls
+              effectSettings={effectSettings}
+              onSettingsChange={setEffectSettings}
+              disabled={disabled}
+            />
+          )}
+
+          {effectSettings.type === 'text' && (
+            <TextControls
               effectSettings={effectSettings}
               onSettingsChange={setEffectSettings}
               disabled={disabled}

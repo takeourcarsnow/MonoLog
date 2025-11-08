@@ -7,6 +7,7 @@ import { Sliders, Palette, Sparkles, Wand2, ImageIcon, Layers, Ban, Eye, EyeOff 
 
 const Grid3x3 = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Grid3x3 })), { ssr: false });
 const Type = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Type })), { ssr: false });
+const FileText = dynamic(() => import('lucide-react').then(mod => ({ default: mod.FileText })), { ssr: false });
 const Frame = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Frame })), { ssr: false });
 
 interface EffectControlsProps {
@@ -42,6 +43,9 @@ export function EffectControls({ effectType, onEffectChange, disabled, overlayVi
       </button>
       <button type="button" className={`btn mini ${effectType === 'ascii' ? 'active' : ''}`} onClick={() => onEffectChange('ascii')} title="ASCII" disabled={disabled} style={{ padding: 6 }}>
         <Type size={iconSize} />
+      </button>
+      <button type="button" className={`btn mini ${effectType === 'text' ? 'active' : ''}`} onClick={() => onEffectChange('text')} title="Text Overlay" disabled={disabled} style={{ padding: 6 }}>
+        <FileText size={iconSize} />
       </button>
       <button type="button" className={`btn mini ${effectType === 'frame' ? 'active' : ''}`} onClick={() => onEffectChange('frame')} title="Frame" disabled={disabled} style={{ padding: 6 }}>
         <Frame size={iconSize} />

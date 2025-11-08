@@ -163,6 +163,27 @@ export function applyUnifiedEffects(
       }
       break;
 
+    case 'text':
+      if (settings.textEnabled !== false && settings.textContent) { // Default to enabled if text exists
+        applyTextOverlayToFrame(
+          targetCtx,
+          width,
+          height,
+          settings.textContent,
+          settings.textFontSize || 24,
+          settings.textFontFamily || 'Arial',
+          settings.textColor || '#ffffff',
+          settings.textPosition || 'center',
+          settings.textX,
+          settings.textY,
+          settings.textOpacity || 1,
+          settings.textStroke || false,
+          settings.textStrokeColor || '#000000',
+          settings.textStrokeWidth || 2
+        );
+      }
+      break;
+
     default:
       // For other types, effects are already applied above
       break;
@@ -179,4 +200,281 @@ export function applyUnifiedEffects(
   }
 
   releaseTempCanvas(tempCanvas);
+}
+
+// Text rendering cache for performance optimization
+const textCache = new Map<string, { canvas: HTMLCanvasElement; lastUsed: number }>();
+const CACHE_SIZE = 10;
+const CACHE_TTL = 30000; // 30 seconds
+
+// Export cleanup function for manual cache management
+export function clearTextCache() {
+  textCache.clear();
+}
+
+// Performance optimization: skip text rendering if settings haven't changed
+let lastTextSettings: string = '';
+
+export function shouldSkipTextRender(
+  text: string,
+  fontSize: number,
+  fontFamily: string,
+  color: string,
+  stroke: boolean,
+  strokeColor: string,
+  strokeWidth: number,
+  position: string,
+  textX: number | undefined,
+  textY: number | undefined,
+  opacity: number
+): boolean {
+  const currentSettings = `${text}|${fontSize}|${fontFamily}|${color}|${stroke}|${strokeColor}|${strokeWidth}|${position}|${textX}|${textY}|${opacity}`;
+  if (currentSettings === lastTextSettings) {
+    return true;
+  }
+  lastTextSettings = currentSettings;
+  return false;
+}
+
+// Clean up old cached text canvases
+function cleanupTextCache() {
+  const now = Date.now();
+  const entries = Array.from(textCache.entries());
+
+  // Remove expired entries
+  for (const [key, value] of entries) {
+    if (now - value.lastUsed > CACHE_TTL) {
+      textCache.delete(key);
+    }
+  }
+
+  // If still too many entries, remove oldest
+  if (textCache.size > CACHE_SIZE) {
+    const sortedEntries = entries
+      .filter(([_, value]) => now - value.lastUsed <= CACHE_TTL)
+      .sort((a, b) => a[1].lastUsed - b[1].lastUsed);
+
+    const toRemove = sortedEntries.slice(0, textCache.size - CACHE_SIZE);
+    for (const [key] of toRemove) {
+      textCache.delete(key);
+    }
+  }
+}
+
+// Get cached text canvas or create new one
+function getCachedTextCanvas(
+  text: string,
+  fontSize: number,
+  fontFamily: string,
+  color: string,
+  stroke: boolean,
+  strokeColor: string,
+  strokeWidth: number
+): HTMLCanvasElement {
+  const cacheKey = `${text}|${fontSize}|${fontFamily}|${color}|${stroke}|${strokeColor}|${strokeWidth}`;
+
+  const cached = textCache.get(cacheKey);
+  if (cached) {
+    cached.lastUsed = Date.now();
+    return cached.canvas;
+  }
+
+  // Create new text canvas
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  // Measure text
+  ctx.font = `${fontSize}px ${fontFamily}`;
+  const metrics = ctx.measureText(text);
+  const textWidth = Math.ceil(metrics.width);
+  const textHeight = Math.ceil(fontSize * 1.2); // Rough estimate for line height
+
+  // Set canvas size with padding
+  canvas.width = textWidth + 4;
+  canvas.height = textHeight + 4;
+
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Set font and alignment
+  ctx.font = `${fontSize}px ${fontFamily}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  // Apply stroke if enabled
+  if (stroke) {
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = strokeWidth;
+    ctx.strokeText(text, 2, 2);
+  }
+
+  // Apply fill
+  ctx.fillStyle = color;
+  ctx.fillText(text, 2, 2);
+
+  // Cache the canvas
+  textCache.set(cacheKey, { canvas, lastUsed: Date.now() });
+
+  // Clean up cache periodically
+  if (Math.random() < 0.01) { // 1% chance to clean up
+    cleanupTextCache();
+  }
+
+  return canvas;
+}
+
+// Apply text overlay to frame
+function applyTextOverlayToFrame(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  text: string,
+  fontSize: number,
+  fontFamily: string,
+  color: string,
+  position: string,
+  textX: number | undefined,
+  textY: number | undefined,
+  opacity: number,
+  stroke: boolean,
+  strokeColor: string,
+  strokeWidth: number
+): void {
+  if (!text.trim()) return;
+
+  // Performance optimization: skip if settings haven't changed
+  if (shouldSkipTextRender(text, fontSize, fontFamily, color, stroke, strokeColor, strokeWidth, position, textX, textY, opacity)) {
+    // Use cached text canvas directly without re-checking
+    const cacheKey = `${text}|${fontSize}|${fontFamily}|${color}|${stroke}|${strokeColor}|${strokeWidth}`;
+    const cached = textCache.get(cacheKey);
+    if (cached) {
+      ctx.save();
+      ctx.globalAlpha = opacity;
+
+      // Calculate position
+      let x = width / 2;
+      let y = height / 2;
+
+      // Use manual coordinates if available, otherwise use predefined positions
+      if (textX !== undefined && textY !== undefined) {
+        x = textX * width;
+        y = textY * height;
+      } else {
+        // Fallback to predefined positions
+        switch (position) {
+          case 'top-left':
+            x = 20;
+            y = 20;
+            break;
+          case 'top-center':
+            x = width / 2;
+            y = 20;
+            break;
+          case 'top-right':
+            x = width - 20;
+            y = 20;
+            break;
+          case 'center-left':
+            x = 20;
+            y = height / 2;
+            break;
+          case 'center':
+            x = width / 2;
+            y = height / 2;
+            break;
+          case 'center-right':
+            x = width - 20;
+            y = height / 2;
+            break;
+          case 'bottom-left':
+            x = 20;
+            y = height - 20;
+            break;
+          case 'bottom-center':
+            x = width / 2;
+            y = height - 20;
+            break;
+          case 'bottom-right':
+            x = width - 20;
+            y = height - 20;
+            break;
+        }
+      }
+
+      // Calculate draw position (center the text canvas on the target position)
+      const drawX = x - cached.canvas.width / 2;
+      const drawY = y - cached.canvas.height / 2;
+
+      // Draw the cached text canvas
+      ctx.drawImage(cached.canvas, drawX, drawY);
+      ctx.restore();
+      return;
+    }
+  }
+
+  ctx.save();
+  ctx.globalAlpha = opacity;
+
+  // Calculate position
+  let x = width / 2;
+  let y = height / 2;
+
+  // Use manual coordinates if available, otherwise use predefined positions
+  if (textX !== undefined && textY !== undefined) {
+    x = textX * width;
+    y = textY * height;
+  } else {
+    // Fallback to predefined positions
+    switch (position) {
+      case 'top-left':
+        x = 20;
+        y = 20;
+        break;
+      case 'top-center':
+        x = width / 2;
+        y = 20;
+        break;
+      case 'top-right':
+        x = width - 20;
+        y = 20;
+        break;
+      case 'center-left':
+        x = 20;
+        y = height / 2;
+        break;
+      case 'center':
+        x = width / 2;
+        y = height / 2;
+        break;
+      case 'center-right':
+        x = width - 20;
+        y = height / 2;
+        break;
+      case 'bottom-left':
+        x = 20;
+        y = height - 20;
+        break;
+      case 'bottom-center':
+        x = width / 2;
+        y = height - 20;
+        break;
+      case 'bottom-right':
+        x = width - 20;
+        y = height - 20;
+        break;
+    }
+  }
+
+  // Get cached text canvas
+  const textCanvas = getCachedTextCanvas(text, fontSize, fontFamily, color, stroke, strokeColor, strokeWidth);
+
+  // Calculate draw position (center the text canvas on the target position)
+  const drawX = x - textCanvas.width / 2;
+  const drawY = y - textCanvas.height / 2;
+
+  // Draw the cached text canvas
+  ctx.drawImage(textCanvas, drawX, drawY);
+
+  ctx.restore();
 }

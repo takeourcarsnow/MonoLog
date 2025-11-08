@@ -4,7 +4,7 @@
  * Shared types and constants for camera effects
  */
 
-export type CameraEffectType = 'none' | 'basic' | 'filters' | 'effects' | 'pixelate' | 'dither' | 'ascii' | 'frame' | 'overlay';
+export type CameraEffectType = 'none' | 'basic' | 'filters' | 'effects' | 'pixelate' | 'dither' | 'ascii' | 'text' | 'frame' | 'overlay';
 
 export interface CameraEffectSettings {
   type: CameraEffectType;
@@ -45,6 +45,19 @@ export interface CameraEffectSettings {
   asciiBold?: boolean;
   asciiEdge?: 'none' | 'stroke';
   asciiCharsetPreset?: 'custom' | 'dense' | 'medium' | 'sparse' | 'blocks' | 'dots' | 'lines' | 'numbers' | 'letters';
+  // Text overlay settings
+  textEnabled?: boolean;
+  textContent?: string;
+  textFontSize?: number;
+  textFontFamily?: string;
+  textColor?: string;
+  textPosition?: 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+  textX?: number; // Manual X coordinate (0-1 relative to canvas width)
+  textY?: number; // Manual Y coordinate (0-1 relative to canvas height)
+  textOpacity?: number;
+  textStroke?: boolean;
+  textStrokeColor?: string;
+  textStrokeWidth?: number;
   // Frame settings
   frameOverlay?: { img: HTMLImageElement; opacity: number; bounds?: { minX: number; minY: number; maxX: number; maxY: number } } | null;
   // Overlay settings

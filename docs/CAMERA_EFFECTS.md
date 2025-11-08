@@ -11,6 +11,7 @@ MonoLog now supports real-time camera effects when capturing photos! Users can a
 - **Pixelate**: Retro pixel art effect with adjustable size and shape (square/circle)
 - **Dither**: Classic dithering effect with ordered or Floyd-Steinberg algorithms
 - **ASCII Art**: Convert video to ASCII characters in real-time
+- **Text Overlay**: Add custom text overlays with positioning, fonts, and styling
 
 ### Frames & Overlays
 - **Decorative Frames**: Apply photo frames directly in the camera view
@@ -54,6 +55,19 @@ Each effect has customizable parameters matching the full image editor:
 - **Invert**: Normal or inverted brightness mapping
 - **Color Mode**: Colored characters based on sampled pixel colors
 
+#### Text Overlay
+- **Text Content**: Custom text string to overlay on the image
+- **Font Size**: 12-72px adjustable font size
+- **Font Family**: Choose from Arial, Helvetica, Times New Roman, Georgia, Verdana, Courier New, Impact, Comic Sans MS
+- **Text Color**: Color picker for text fill color
+- **Position**: 9-position grid (top-left, center, bottom-right, etc.) or manual drag positioning
+- **Manual Positioning**: Click and drag text directly on the camera preview to position anywhere
+- **Reset Position**: Button to return to preset positions after manual positioning
+- **Opacity**: 0-100% text transparency
+- **Text Stroke**: Optional outline around text
+- **Stroke Color**: Color picker for stroke color
+- **Stroke Width**: 1-10px stroke thickness
+
 #### Frames
 - **Frame Selection**: Choose from available decorative frames
 - **Toggle On/Off**: Click selected frame to remove it
@@ -94,7 +108,7 @@ Video Stream → Source Canvas → Effect Processing → Overlay/Frame → Displ
 
 ### Rendering Order
 
-1. **Base Effect**: Pixelate, Dither, or ASCII applied to source frame
+1. **Base Effect**: Pixelate, Dither, ASCII, or Text applied to source frame
 2. **Overlay Layer**: Texture/light leak with blend mode (e.g., screen, multiply)
 3. **Frame Layer**: Decorative frame rendered on top with transparency
 
@@ -119,12 +133,13 @@ This order ensures effects are visible through frames and overlays enhance the p
 
 1. Click camera button in upload screen
 2. Grant camera permissions (if needed)
-3. Select desired effect from buttons (None/Pixel/Dither/ASCII)
+3. Select desired effect from buttons (None/Pixel/Dither/ASCII/Text)
 4. Adjust effect parameters using controls
-5. Optionally add a decorative frame from the Frames section
-6. Optionally add texture overlays from the Overlays section (with blend mode and opacity controls)
-7. Click "Capture" to take photo with all effects and overlays applied
-8. Photo is captured with effects, overlays, and frames permanently rendered
+5. For text overlay: Enter text, adjust styling, then click and drag on the camera preview to position text anywhere
+6. Optionally add a decorative frame from the Frames section
+7. Optionally add texture overlays from the Overlays section (with blend mode and opacity controls)
+8. Click "Capture" to take photo with all effects and overlays applied
+9. Photo is captured with effects, overlays, and frames permanently rendered
 
 ### Developer Integration
 

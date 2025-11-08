@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { api } from "@/lib/api";
 import type { Story, User } from "@/lib/types";
 
 interface PublicStoryViewerModalProps {
@@ -27,6 +28,7 @@ export function PublicStoryViewerModal({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
   const [loadedStories, setLoadedStories] = useState<Set<number>>(new Set());
+  const [liked, setLiked] = useState(false);
   const controlsRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLVideoElement | HTMLImageElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -34,6 +36,21 @@ export function PublicStoryViewerModal({
 
   const currentStory = stories[currentIndex];
   const minSwipeDistance = 50;
+
+  const toggleLike = useCallback(async () => {
+    if (!currentStory) return;
+    try {
+      if (liked) {
+        await api.unlikeStory(currentStory.id);
+        setLiked(false);
+      } else {
+        await api.likeStory(currentStory.id);
+        setLiked(true);
+      }
+    } catch (e) {
+      console.error('Failed to toggle like:', e);
+    }
+  }, [currentStory, liked]);
 
   // Handle media loading
   const handleMediaLoad = useCallback(() => {
@@ -152,7 +169,11 @@ export function PublicStoryViewerModal({
       setIsLoading(true);
     }
     setProgress(0);
-  }, [currentIndex, loadedStories]);
+    // Check if story is liked
+    if (currentStory) {
+      api.isLikedStory(currentStory.id).then(setLiked).catch(() => setLiked(false));
+    }
+  }, [currentIndex, loadedStories, currentStory]);
 
   if (!isOpen || stories.length === 0) return null;
 
@@ -256,6 +277,25 @@ export function PublicStoryViewerModal({
               <rect x="14" y="4" width="4" height="16" fill="currentColor"/>
             </svg>
           )}
+        </button>
+
+        <button 
+          type="button" 
+          onClick={toggleLike} 
+          style={{ 
+            background: 'rgba(255,255,255,0.2)', 
+            color: liked ? '#ff7e39' : '#fff', 
+            border: '1px solid rgba(255,255,255,0.3)', 
+            padding: '12px', 
+            borderRadius: 8,
+            cursor: 'pointer',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+          aria-label={liked ? "Unlike story" : "Like story"}
+        >
+          {liked ? '❤️' : '🤍'}
         </button>
 
         <button 

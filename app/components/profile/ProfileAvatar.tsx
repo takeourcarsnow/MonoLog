@@ -10,6 +10,7 @@ import { useStoryViewer } from "./useStoryViewer";
 import { AvatarImage } from "./AvatarImage";
 import { AvatarActions } from "./AvatarActions";
 import { StoryViewerModal } from "./StoryViewerModal";
+import { PublicStoryViewerModal } from "./PublicStoryViewerModal";
 
 interface ProfileAvatarProps {
   user: User;
@@ -66,6 +67,9 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
 
   const onPrev = () => setViewerIdx(v => v === 0 ? ownStories.length - 1 : v - 1);
   const onNext = () => setViewerIdx(v => (v + 1) % ownStories.length);
+
+  const onPublicPrev = () => setViewerIdx(v => Math.max(v - 1, 0));
+  const onPublicNext = () => setViewerIdx(v => v + 1 >= ownStories.length ? v : v + 1);
 
   return (
     <>
@@ -136,20 +140,32 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
         onCapture={handleLiveCameraCapture}
         processing={false}
       />
-      <StoryViewerModal
-        isOpen={viewerOpen}
-        onClose={() => setViewerOpen(false)}
-        stories={ownStories}
-        currentIndex={viewerIdx}
-        onPrev={onPrev}
-        onNext={onNext}
-        deleteArmed={deleteArmed}
-        setDeleteArmed={setDeleteArmed}
-        onLiveCamera={() => setShowLiveCamera(true)}
-        user={user}
-        setStories={setOwnStories}
-        setHasActiveStories={setHasActiveStories}
-      />
+      {currentUserId && user?.id === currentUserId ? (
+        <StoryViewerModal
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          stories={ownStories}
+          currentIndex={viewerIdx}
+          onPrev={onPrev}
+          onNext={onNext}
+          deleteArmed={deleteArmed}
+          setDeleteArmed={setDeleteArmed}
+          onLiveCamera={() => setShowLiveCamera(true)}
+          user={user}
+          setStories={setOwnStories}
+          setHasActiveStories={setHasActiveStories}
+        />
+      ) : (
+        <PublicStoryViewerModal
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          stories={ownStories}
+          currentIndex={viewerIdx}
+          onPrev={onPublicPrev}
+          onNext={onPublicNext}
+          user={user}
+        />
+      )}
     </>
   );
 }

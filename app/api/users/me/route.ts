@@ -179,6 +179,17 @@ export const DELETE = withHandler({ method: 'DELETE' })(async (req, ctx) => {
       return NextResponse.json({ error: commentsError.message || commentsError }, { status: 500 });
     }
 
+    // Delete notifications where the user is the actor (e.g., their comments, mentions)
+    try {
+      const { error: actorNotificationsError } = await sb.from('notifications').delete().eq('actor_id', actorId);
+      if (actorNotificationsError) {
+        console.error('DELETE /api/users/me: error deleting actor notifications', actorNotificationsError);
+        // Don't fail the deletion
+      }
+    } catch (e) {
+      console.log('DELETE /api/users/me: notifications table may not exist, skipping actor notifications');
+    }
+
     // Delete all user's posts
     const { error: postsError } = await sb.from('posts').delete().eq('user_id', actorId);
     if (postsError) {

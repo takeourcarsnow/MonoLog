@@ -47,7 +47,7 @@ export function CommentActions({
           </Suspense>
         </button>
       )}
-      {currentUser && currentUser.id === commentUserId ? (
+      {currentUser ? (
         <button
           className={`comment-badge ${(confirmingIds instanceof Set && confirmingIds.has(commentId)) ? 'confirming' : ''}`}
           title={(confirmingIds instanceof Set && confirmingIds.has(commentId)) ? 'Confirm delete' : 'Delete comment'}

@@ -26,8 +26,32 @@ export async function POST(req: Request) {
       }
 
       const { data, error } = await query;
-      if (error) return NextResponse.json({ notifications: [] });
-      return NextResponse.json({ notifications: data || [] });
+      if (error) {
+        console.log('Notifications query error:', error);
+        return NextResponse.json({ notifications: [] });
+      }
+
+      if (!data || data.length === 0) {
+        return NextResponse.json({ notifications: [] });
+      }
+
+      // Get unique actor_ids
+      const actorIds = Array.from(new Set(data.map(n => n.actor_id).filter(Boolean)));
+
+      // Check which actors still exist
+      const { data: existingUsers, error: usersError } = await sb.from('users').select('id').in('id', actorIds);
+      if (usersError) {
+        console.log('Users query error:', usersError);
+        // If error, return all notifications to avoid breaking
+        return NextResponse.json({ notifications: data });
+      }
+
+      const existingUserIds = new Set(existingUsers?.map(u => u.id) || []);
+
+      // Filter notifications where actor exists
+      const validNotifications = data.filter(n => existingUserIds.has(n.actor_id));
+
+      return NextResponse.json({ notifications: validNotifications });
     } catch (e) {
       return NextResponse.json({ notifications: [] });
     }

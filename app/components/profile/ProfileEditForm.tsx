@@ -13,6 +13,7 @@ interface ProfileEditFormProps {
   setUser: (user: User | null) => void;
   postCount: number;
   currentUserId: string | null;
+  onAvatarChangeClick?: () => void;
 }
 
 export interface ProfileEditFormRef {
@@ -20,7 +21,7 @@ export interface ProfileEditFormRef {
 }
 
 export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormProps>(
-  ({ user, isEditingProfile, setIsEditingProfile, setUser, postCount, currentUserId }, ref) => {
+  ({ user, isEditingProfile, setIsEditingProfile, setUser, postCount, currentUserId, onAvatarChangeClick }, ref) => {
     const [isClosing, setIsClosing] = useState(false);
     const [animateIn, setAnimateIn] = useState(false);
 
@@ -154,6 +155,7 @@ export const ProfileEditForm = forwardRef<ProfileEditFormRef, ProfileEditFormPro
               editWebsite={editWebsite}
               setEditWebsite={setEditWebsite}
               usernameRef={usernameRef}
+              onAvatarChangeClick={onAvatarChangeClick}
             />
             <ProfileEditFormActions
               editProcessing={editProcessing}

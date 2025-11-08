@@ -8,6 +8,7 @@ import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { BarChart3 } from "lucide-react";
 import { Bell } from "lucide-react";
 import { Star } from "lucide-react";
+import { Edit } from "lucide-react";
 import type { User as UserType } from "@/lib/types";
 
 interface ProfileActionsProps {
@@ -16,6 +17,7 @@ interface ProfileActionsProps {
   following: boolean | null;
   setFollowing: (following: boolean | null) => void;
   isEditingProfile: boolean;
+  setIsEditingProfile: (editing: boolean) => void;
   // callback when follow is clicked but user is not logged in
   onAuthRequired?: () => void;
   showInvites: boolean;
@@ -28,6 +30,7 @@ export function ProfileActions({
   following,
   setFollowing,
   isEditingProfile,
+  setIsEditingProfile,
   onAuthRequired,
   showInvites,
   setShowInvites
@@ -206,6 +209,17 @@ export function ProfileActions({
             matches the current user. */}
         {currentUserId && user?.id === currentUserId ? (
           <>
+            <button
+              className="btn icon edit-profile-btn no-effects"
+              onClick={() => setIsEditingProfile(true)}
+              aria-label="Edit profile"
+              title="Edit profile"
+              type="button"
+            >
+              <span className="icon" aria-hidden>
+                <Edit size={18} strokeWidth={2} />
+              </span>
+            </button>
             <Link className="btn icon following-link no-effects" href="/profile/following" aria-label="Following" title="View following list">
               <span className="icon" aria-hidden>
                 <User size={18} strokeWidth={2} />

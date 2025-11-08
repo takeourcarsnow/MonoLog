@@ -22,6 +22,7 @@ interface ProfileEditFieldsProps {
   editWebsite: string;
   setEditWebsite: (value: string) => void;
   usernameRef: React.RefObject<HTMLInputElement | null>;
+  onAvatarChangeClick?: () => void;
 }
 
 export const ProfileEditFields = ({
@@ -43,15 +44,16 @@ export const ProfileEditFields = ({
   editWebsite,
   setEditWebsite,
   usernameRef,
+  onAvatarChangeClick,
 }: ProfileEditFieldsProps) => {
   const displayNameRef = useRef<HTMLInputElement | null>(null);
 
   return (
     <>
       <div style={{ display: 'flex', width: '100%', justifyContent: 'center', marginBottom: 8 }}>
-        <Link href="?changeAvatar=true" className="btn secondary" aria-label="Change avatar">
+        <button type="button" className="btn secondary" aria-label="Change avatar" onClick={onAvatarChangeClick}>
           Change avatar
-        </Link>
+        </button>
       </div>
       <label className="label-group">
         <div className="muted-label sr-only">@Username</div>

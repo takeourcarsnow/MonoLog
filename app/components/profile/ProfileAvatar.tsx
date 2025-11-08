@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { LiveCameraView } from "@/app/components/uploader/LiveCameraView";
 import type { User } from "@/lib/types";
@@ -16,14 +15,14 @@ interface ProfileAvatarProps {
   user: User;
   currentUserId: string | null;
   onAvatarChange: () => void;
+  triggerAvatar: boolean;
+  setTriggerAvatar: (trigger: boolean) => void;
 }
 
-export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAvatarProps) {
+export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvatar, setTriggerAvatar }: ProfileAvatarProps) {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const storyInputRef = useRef<HTMLInputElement | null>(null);
   const avatarContainerRef = useRef<HTMLDivElement | null>(null);
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIdx, setViewerIdx] = useState(0);
   const [showLiveCamera, setShowLiveCamera] = useState(false);
@@ -37,13 +36,11 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
   useStoryViewer(viewerOpen, viewerIdx, ownStories, setViewerIdx, setViewerOpen, setDeleteArmed);
 
   useEffect(() => {
-    if (searchParams.get('changeAvatar') === 'true') {
-      setTimeout(() => {
-        avatarInputRef.current?.click();
-        router.replace('/profile'); // remove the param
-      }, 100);
+    if (triggerAvatar) {
+      avatarInputRef.current?.click();
+      setTriggerAvatar(false);
     }
-  }, [searchParams, router]);
+  }, [triggerAvatar, setTriggerAvatar]);
 
   // Hide action buttons when clicking outside
   useEffect(() => {

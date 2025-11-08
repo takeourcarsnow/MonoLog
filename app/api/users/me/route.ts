@@ -1,32 +1,34 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
+import { withHandler } from '@/lib/api/withHandler';
+import { userUpdateSchema } from '@/lib/api/schemas';
 
-export async function PATCH(req: Request) {
+export const PATCH = withHandler({ method: 'PATCH', bodySchema: userUpdateSchema })(async (req, ctx) => {
+  // server-side user update
+  const authUser = await getUserFromAuthHeader(req);
+  if (!authUser) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    // server-side user update
-    const authUser = await getUserFromAuthHeader(req);
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-  const body = await req.json();
+  const body = ctx?.body;
     // Debug: log incoming body (avoid printing tokens/secrets)
     try {
       const keys = Object.keys(body || {});
-      const sample = JSON.stringify(body ? Object.fromEntries(keys.slice(0,10).map(k => [k, body[k]])) : {});
+      const sample = JSON.stringify(body ? Object.fromEntries(keys.slice(0,10).map(k => [k, (body as any)[k]])) : {});
       console.log('[PATCH /api/users/me] incoming body keys', keys, 'sample', sample);
     } catch (_) {}
     const sb = getServiceSupabase();
     const actorId = authUser.id;
 
     // Normalize incoming body to accept camelCase or snake_case keys
-    const usernameIncoming = body.username ?? body.user_name;
-    const displayNameIncoming = body.displayName ?? body.display_name;
-    const avatarUrlIncoming = body.avatarUrl ?? body.avatar_url;
-    const bioIncoming = body.bio ?? body.bio;
-    const socialLinksIncoming = body.socialLinks ?? body.social_links;
-    const exifPresetsIncoming = body.exifPresets ?? body.exif_presets;
+    const usernameIncoming = body!.username ?? body!.user_name;
+    const displayNameIncoming = body!.displayName ?? body!.display_name;
+    const avatarUrlIncoming = body!.avatarUrl ?? body!.avatar_url;
+    const bioIncoming = body!.bio ?? body!.bio;
+    const socialLinksIncoming = body!.socialLinks ?? body!.social_links;
+    const exifPresetsIncoming = body!.exifPresets ?? body!.exif_presets;
 
     // If username is changing, enforce 24-hour cooldown server-side
     if (usernameIncoming !== undefined) {
@@ -128,14 +130,13 @@ export async function PATCH(req: Request) {
     console.error('PATCH /api/users/me: outer exception', e);
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(req: Request) {
-  try {
-    const authUser = await getUserFromAuthHeader(req);
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const DELETE = withHandler({ method: 'DELETE' })(async (req, ctx) => {
+  const authUser = await getUserFromAuthHeader(req);
+  if (!authUser) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
     const sb = getServiceSupabase();
     const actorId = authUser.id;
@@ -307,8 +308,4 @@ export async function DELETE(req: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (e: any) {
-    console.error('DELETE /api/users/me: outer exception', e);
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
-  }
-}
+  });

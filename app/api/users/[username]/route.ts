@@ -1,61 +1,19 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/lib/api/serverSupabase';
-import { mapProfileToUser } from '@/lib/api/utils';
-import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { apiSuccess } from '@/lib/apiResponse';
+import { withHandler } from '@/lib/api/withHandler';
+import { usernameParamsSchema } from '@/lib/api/schemas';
+import { getUserById, getUserByUsername } from '@/lib/api/queries';
 
 function looksLikeUuid(s: string) {
   return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);
 }
 
-export async function GET(req: Request, context: any) {
-  const params = context?.params && typeof context.params.then === 'function' ? await context.params : context?.params;
-  try {
-    const identifier = params?.username;
-    if (!identifier) {
-      return apiError('Identifier required', 400);
-    }
+export const GET = withHandler({ method: 'GET', paramsSchema: usernameParamsSchema })(async (req, ctx) => {
+  const { username: identifier } = ctx?.params as any;
 
-    const sb = getServiceSupabase();
+  const user = looksLikeUuid(identifier) ? await getUserById(identifier) : await getUserByUsername(identifier);
 
-    if (looksLikeUuid(identifier)) {
-      // Treat as user ID
-      const res = await sb.from('users').select('*').eq('id', identifier).limit(1).maybeSingle();
-      if (res.error || !res.data) {
-        return apiSuccess({ user: null });
-      }
-      const response = apiSuccess({ user: mapProfileToUser(res.data) });
-      response.headers.set('Cache-Control', 'public, max-age=300'); // 5 minutes
-      return response;
-    } else {
-      // Treat as username
-      // Try exact match on username
-      let res = await sb.from('users').select('*').eq('username', identifier).limit(1).maybeSingle();
-      if (res.data) {
-        const response = apiSuccess({ user: mapProfileToUser(res.data) });
-        response.headers.set('Cache-Control', 'public, max-age=300');
-        return response;
-      }
-
-      // Fallback to legacy user_name column
-      res = await sb.from('users').select('*').eq('user_name', identifier).limit(1).maybeSingle();
-      if (res.data) {
-        const response = apiSuccess({ user: mapProfileToUser(res.data) });
-        response.headers.set('Cache-Control', 'public, max-age=300');
-        return response;
-      }
-
-      // Final attempt: case-insensitive match
-      res = await sb.from('users').select('*').ilike('username', identifier).limit(1).maybeSingle();
-      if (res.data) {
-        const response = apiSuccess({ user: mapProfileToUser(res.data) });
-        response.headers.set('Cache-Control', 'public, max-age=300');
-        return response;
-      }
-
-      return apiSuccess({ user: null });
-    }
-  } catch (e: any) {
-    console.error('GET /api/users/[username]: error', e);
-    return apiError(e?.message || String(e), 500);
-  }
-}
+  const response = apiSuccess({ user });
+  response.headers.set('Cache-Control', 'public, max-age=300'); // 5 minutes
+  return response;
+});

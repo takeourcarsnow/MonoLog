@@ -30,6 +30,8 @@ const createPostSchema = z.object({
   }).optional(),
 });
 
+export { createPostSchema };
+
 export async function fetchWeather(ip: string) {
   try {
     // First, get location from IP
@@ -107,7 +109,7 @@ export async function checkCalendarRule(userId: string, sb: any) {
 export async function insertPost(sb: any, userId: string, imageUrls: any, thumbnailUrls: any, caption: string, alt: any, isPublic: boolean, spotifyLink: string, camera: string, lens: string, filmType: string, weather?: { condition?: string; temperature?: number; location?: string }, location?: { address?: string }) {
   const id = uid();
   const created_at = new Date().toISOString();
-  const insertObj: any = { id, user_id: userId, alt: alt || '', caption: caption || '', created_at, public: Boolean(isPublic) };
+  const insertObj: any = { id, user_id: userId, alt: Array.isArray(alt) ? alt.join('\n') : (alt || ''), caption: caption || '', created_at, public: Boolean(isPublic) };
   if (spotifyLink) insertObj.spotify_link = spotifyLink;
   if (camera) insertObj.camera = camera;
   if (lens) insertObj.lens = lens;
@@ -320,13 +322,12 @@ export function clearCaches() {
   } catch (_) {}
 }
 
-export async function createPost(req: Request) {
+export async function createPost(req: Request, body: any) {
   // Rate limiting: strict limits for post creation
   const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
   const rateLimitRes = checkRateLimitResponse(strictRateLimiter, ip, true);
   if (rateLimitRes) return rateLimitRes;
 
-  const body = await req.json();
   const validation = createPostSchema.safeParse(body);
   if (!validation.success) {
     return apiError('Invalid input', 400);
@@ -364,7 +365,16 @@ export async function createPost(req: Request) {
   }
 
   // Insert post
-  const { id, insertData } = await insertPost(sb, userId, imageUrls, thumbnailUrls, caption || '', alt || '', isPublic, spotifyLink || '', camera || '', lens || '', filmType || '', weather, location);
+  let id: string;
+  let insertData: any;
+  try {
+    const res = await insertPost(sb, userId, imageUrls, thumbnailUrls, caption || '', alt || '', isPublic, spotifyLink || '', camera || '', lens || '', filmType || '', weather, location);
+    id = res.id;
+    insertData = res.insertData;
+  } catch (e) {
+    try { logger.error('[posts.create] insert failed', { error: String(e), userId }); } catch (logErr) {}
+    return apiError('Failed to create post', 500);
+  }
 
   // Normalize URLs
   const { normalizedImageUrls, normalizedThumbnailUrls } = normalizeImageUrls(insertData);

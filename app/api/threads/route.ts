@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { slugify } from '@/lib/utils';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { withHandler } from '@/lib/api/withHandler';
+import { threadsQuerySchema } from '@/lib/api/schemas';
 import { makeWeakETag } from '@/lib/api/utils';
 
 async function getReplyCount(sb: any, threadId: string): Promise<number> {
@@ -24,12 +26,12 @@ async function getThreadById(sb: any, id: string) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+    return apiError(error.message, 404);
   }
 
   const replyCount = await getReplyCount(sb, id);
 
-  return NextResponse.json({
+  return apiSuccess({
     ...thread,
     slug: thread.slug || slugify(thread.title),
     replyCount
@@ -48,12 +50,12 @@ async function getThreadBySlug(sb: any, slug: string) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+    return apiError(error.message, 404);
   }
 
   const replyCount = await getReplyCount(sb, thread.id);
 
-  return NextResponse.json({
+  return apiSuccess({
     ...thread,
     slug: thread.slug || slugify(thread.title),
     replyCount
@@ -78,7 +80,7 @@ async function getCommunityThreads(sb: any, communityId: string) {
       .order('created_at', { ascending: false });
 
     if (fallbackError) {
-      return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+      return apiError(fallbackError.message, 500);
     }
 
     // Get reply counts for each thread
@@ -106,24 +108,17 @@ async function getCommunityThreads(sb: any, communityId: string) {
     return apiSuccess(threads, 200, { headers, cacheSeconds });
 }
 
-export async function GET(req: Request) {
-  try {
-    const sb = getServiceSupabase();
-    const url = new URL(req.url);
-    const id = url.searchParams.get('id');
-    const slug = url.searchParams.get('slug');
-    const communityId = url.searchParams.get('communityId');
+export const GET = withHandler({ method: 'GET', querySchema: threadsQuerySchema })(async (req, ctx) => {
+  const sb = getServiceSupabase();
+  const { id, slug, communityId } = ctx?.query as any;
 
-    if (id) {
-      return await getThreadById(sb, id);
-    } else if (slug) {
-      return await getThreadBySlug(sb, slug);
-    } else if (communityId) {
-      return await getCommunityThreads(sb, communityId);
-    } else {
-        return apiError('Either id, slug, or communityId parameter is required', 400);
-    }
-  } catch (e: any) {
-      return apiError(e?.message || String(e), 500);
+  if (id) {
+    return await getThreadById(sb, id);
+  } else if (slug) {
+    return await getThreadBySlug(sb, slug);
+  } else if (communityId) {
+    return await getCommunityThreads(sb, communityId);
+  } else {
+    return apiError('Missing required parameter: id, slug, or communityId', 400);
   }
-}
+});

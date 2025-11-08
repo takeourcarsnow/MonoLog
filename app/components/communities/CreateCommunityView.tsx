@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Button } from "@/app/components/ui/Button";
 import Link from "next/link";
+import { getClient, getAccessToken } from "@/lib/api/client";
 
 export function CreateCommunityView() {
   const router = useRouter();
@@ -43,15 +44,22 @@ export function CreateCommunityView() {
         });
         const dataUrl = reader.result as string;
 
+        // Get auth token
+        const sb = getClient();
+        const token = await getAccessToken(sb);
+
         // Upload to storage
         const uploadRes = await fetch('/api/storage/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({ dataUrl })
         });
         if (!uploadRes.ok) throw new Error('Failed to upload image');
         const uploadData = await uploadRes.json();
-        imageUrl = uploadData.url;
+        imageUrl = uploadData.publicUrl;
       }
 
       const community = await api.createCommunity({
@@ -145,6 +153,14 @@ export function CreateCommunityView() {
             </div>
           )}
         </div>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
 
         {error && (
           <div style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{error}</div>

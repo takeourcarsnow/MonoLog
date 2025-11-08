@@ -1,66 +1,22 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
+import { authRateLimiter } from '@/lib/rateLimiter';
+import { withHandler } from '@/lib/api/withHandler';
+import { signinSchema } from '@/lib/api/schemas';
+import { apiError, apiSuccess } from '@/lib/apiResponse';
 
-// Simple in-memory rate limiter. This is per-server-process and will reset
-// when the process restarts. For production scale use a shared store (Redis).
-type AttemptRecord = { count: number; firstTs: number; blockedUntil?: number };
-const attemptsByIp = new Map<string, AttemptRecord>();
-const attemptsById = new Map<string, AttemptRecord>();
-
-const WINDOW_MS = 60 * 1000; // 1 minute window
-const MAX_ATTEMPTS = 5; // max attempts per window before block
-const BLOCK_MS = 15 * 60 * 1000; // block duration 15 minutes
-
-function now() { return Date.now(); }
-
-function isBlocked(record?: AttemptRecord) {
-  if (!record) return false;
-  if (record.blockedUntil && record.blockedUntil > now()) return true;
-  return false;
-}
-
-function registerFailure(map: Map<string, AttemptRecord>, key: string) {
-  const ts = now();
-  const rec = map.get(key);
-  if (!rec) {
-    map.set(key, { count: 1, firstTs: ts });
-    return;
-  }
-  // reset window if expired
-  if (ts - rec.firstTs > WINDOW_MS) {
-    rec.count = 1;
-    rec.firstTs = ts;
-    rec.blockedUntil = undefined;
-    map.set(key, rec);
-    return;
-  }
-  rec.count += 1;
-  if (rec.count > MAX_ATTEMPTS) {
-    rec.blockedUntil = ts + BLOCK_MS;
-  }
-  map.set(key, rec);
-}
-
-function resetRecord(map: Map<string, AttemptRecord>, key: string) {
-  map.delete(key);
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const identifier = (body?.identifier || '').trim();
-    const password = body?.password || '';
-    if (!identifier || !password) return NextResponse.json({ error: 'Missing identifier or password' }, { status: 400 });
+export const POST = withHandler({ method: 'POST', bodySchema: signinSchema })(async (req, ctx) => {
+  const { identifier, password } = ctx?.body as any;
 
     // identify client IP (best-effort). If behind a proxy, ensure X-Forwarded-For
     const forwarded = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '';
     const ip = forwarded.split(',')[0].trim() || 'unknown';
 
     // Check per-IP and per-identifier blocking
-    const ipRec = attemptsByIp.get(ip);
-    if (isBlocked(ipRec)) return NextResponse.json({ error: 'Too many attempts from this IP. Try later.' }, { status: 429 });
-    const idRec = attemptsById.get(identifier);
-    if (isBlocked(idRec)) return NextResponse.json({ error: 'Too many attempts for this identifier. Try later.' }, { status: 429 });
+    const ipLimit = authRateLimiter.checkLimit(ip);
+    if (!ipLimit.allowed) return apiError('Too many attempts from this IP. Try later.', 429);
+    const idLimit = authRateLimiter.checkLimit(identifier);
+    if (!idLimit.allowed) return apiError('Too many attempts for this identifier. Try later.', 429);
 
     const sb = getServiceSupabase();
 
@@ -110,9 +66,9 @@ export async function POST(req: Request) {
 
     if (!email) {
       // Register failure and return not found
-      registerFailure(attemptsByIp, ip);
-      registerFailure(attemptsById, identifier);
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      authRateLimiter.recordFailure(ip);
+      authRateLimiter.recordFailure(identifier);
+      return apiError('User not found', 404);
     }
 
     // Perform sign-in using the service-role client. This will return a session
@@ -122,17 +78,14 @@ export async function POST(req: Request) {
     const { data, error } = res as any;
     if (error) {
       // register failures for rate limiting
-      registerFailure(attemptsByIp, ip);
-      registerFailure(attemptsById, identifier);
-      return NextResponse.json({ error: error.message || error }, { status: 401 });
+      authRateLimiter.recordFailure(ip);
+      authRateLimiter.recordFailure(identifier);
+      return apiError(error.message || error, 401);
     }
 
     // Success: clear any failure records for this ip/identifier
-    resetRecord(attemptsByIp, ip);
-    resetRecord(attemptsById, identifier);
+    authRateLimiter.recordSuccess(ip);
+    authRateLimiter.recordSuccess(identifier);
 
-    return NextResponse.json({ data }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
-  }
-}
+    return apiSuccess({ data });
+  });

@@ -466,9 +466,8 @@ export function StoryViewerModal({
               />
             ))}
           </div>
-          {(isPaused || deleteArmed) && (
+          {(deleteArmed) && (
             <div style={{ fontSize: 12, opacity: 0.8 }}>
-              {isPaused && 'Paused'}
               {deleteArmed && 'Tap delete again to confirm'}
             </div>
           )}

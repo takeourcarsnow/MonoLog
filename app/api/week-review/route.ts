@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { withHandler } from '@/lib/api/withHandler';
 
-export async function GET(req: Request) {
-  try {
-    const authUser = await getUserFromAuthHeader(req);
-    if (!authUser) {
-      return apiError('Unauthorized', 401);
-    }
+export const GET = withHandler({ method: 'GET' })(async (req, ctx) => {
+  const authUser = await getUserFromAuthHeader(req);
+  if (!authUser) {
+    return apiError('Unauthorized', 401);
+  }
 
     const sb = getServiceSupabase();
     const userId = authUser.id;
@@ -100,8 +100,4 @@ export async function GET(req: Request) {
     };
 
     return apiSuccess(weekReview);
-  } catch (e: any) {
-    console.error('Week review API exception:', e);
-    return apiError(e?.message || String(e), 500);
-  }
-}
+  });

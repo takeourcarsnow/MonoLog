@@ -1,63 +1,37 @@
-import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
-import { mapRowToHydratedPost } from '@/lib/api/utils';
-import { getServerCache, setServerCache, clearServerCachePrefix } from '@/lib/serverCache';
-import { SELECT_POST_WITH_PROFILES } from '@/lib/api/sql';
+import { getServerCache, setServerCache } from '@/lib/serverCache';
+import { withHandler } from '@/lib/api/withHandler';
+import { postsQuerySchema } from '@/lib/api/schemas';
+import { apiSuccess } from '@/lib/apiResponse';
+import { getFollowingPosts } from '@/lib/api/queries';
 
-export async function GET(req: Request) {
-  try {
-    const url = new URL(req.url);
-    const limit = Number(url.searchParams.get('limit') || '10') || 10;
-    const before = url.searchParams.get('before') || undefined;
+export const GET = withHandler({ method: 'GET', querySchema: postsQuerySchema })(async (req, ctx) => {
+  const { limit, before } = ctx?.query as any;
 
-    const sb = getServiceSupabase();
-    const authUser = await getUserFromAuthHeader(req);
-    if (!authUser || !authUser.id) return NextResponse.json({ ok: true, posts: [] });
+  const sb = getServiceSupabase();
+  const authUser = await getUserFromAuthHeader(req);
+  if (!authUser || !authUser.id) return apiSuccess({ ok: true, posts: [] });
 
-    const cacheKey = `following:uid=${authUser.id}:limit=${limit}:before=${before || 'none'}`;
-    const cached = getServerCache(cacheKey);
-    if (cached) {
-      return NextResponse.json({ ok: true, posts: cached });
-    }
+  const cacheKey = `following:uid=${authUser.id}:limit=${limit}:before=${before || 'none'}`;
+  const cached = getServerCache(cacheKey);
+  if (cached) {
+    return apiSuccess({ ok: true, posts: cached });
+  }
 
-    // Get following ids
-    const { data: profile, error: profErr } = await sb.from('users').select('following').eq('id', authUser.id).limit(1).maybeSingle();
-    const followingIds: string[] = (profile && profile.following) || [];
+  // Get following ids
+  const { data: profile, error: profErr } = await sb.from('users').select('following').eq('id', authUser.id).limit(1).maybeSingle();
+  const followingIds: string[] = (profile && profile.following) || [];
 
-    const allUserIds = [...followingIds, authUser.id];
-    let query = sb.from('posts').select(SELECT_POST_WITH_PROFILES).in('user_id', allUserIds).order('created_at', { ascending: false }).limit(limit * 2);
-
-    if (before) query = query.lt('created_at', before);
-
-    const { data: rows, error } = await query;
-    if (error) return NextResponse.json({ error: error.message || error }, { status: 500 });
-
-    // Filter and dedupe similar to server logic: include all own posts, public from followed
-    const filtered = (rows || []).filter((row: any) => {
-      if (row.user_id === authUser.id) return true;
-      return row.public === true;
-    });
-
-    // Simple dedupe and limit preserving order
-    const seen = new Set<string>();
-    const deduped: any[] = [];
-    for (const r of filtered) {
-      if (!seen.has(r.id)) { seen.add(r.id); deduped.push(r); }
-      if (deduped.length >= limit) break;
-    }
-
-  const postRows = deduped.map((r: any) => mapRowToHydratedPost(r));
+  const postRows = await getFollowingPosts(authUser.id, followingIds, { limit, before });
   try { setServerCache(cacheKey, postRows, 30000); } catch (_) {}
-  return NextResponse.json(
+  return apiSuccess(
     { ok: true, posts: postRows },
+    200,
     {
       headers: {
         'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
       },
     }
   );
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
-  }
-}
+});

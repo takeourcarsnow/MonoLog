@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
-import { mapRowToHydratedPost, makeWeakETag } from '@/lib/api/utils';
-import { getServerCache, setServerCache, clearServerCachePrefix } from '@/lib/serverCache';
-import { apiError, apiSuccess } from '@/lib/apiResponse';
+import { makeWeakETag } from '@/lib/api/utils';
+import { getServerCache, setServerCache } from '@/lib/serverCache';
+import { apiSuccess } from '@/lib/apiResponse';
 import { withHandler } from '@/lib/api/withHandler';
 import { z } from 'zod';
-import { SELECT_POST_WITH_PROFILES } from '@/lib/api/sql';
+import { getExplorePosts, getFollowingIds } from '@/lib/api/queries';
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(10),
@@ -15,7 +14,6 @@ const querySchema = z.object({
 
 export const GET = withHandler({ method: 'GET', querySchema })(async (req, ctx) => {
   const { limit, before } = ctx?.query as any;
-  const sb = getServiceSupabase();
 
   // Identify user if provided so we can exclude their posts and follows
   const authUser = await getUserFromAuthHeader(req);
@@ -35,28 +33,14 @@ export const GET = withHandler({ method: 'GET', querySchema })(async (req, ctx) 
     return apiSuccess({ ok: true, posts: cached }, 200, { headers, cacheSeconds });
   }
 
-  let q: any = sb.from('posts').select(SELECT_POST_WITH_PROFILES).eq('public', true).order('created_at', { ascending: false }).limit(limit);
+  const followingIds = authUser ? await getFollowingIds(authUser.id) : [];
+  const posts = await getExplorePosts(authUser?.id, followingIds, { limit, before });
 
-  if (authUser && authUser.id) {
-    const { data: profile } = await sb.from('users').select('following').eq('id', authUser.id).limit(1).maybeSingle();
-    const followingIds: string[] = (profile && profile.following) || [];
-    const excludeIds = [authUser.id, ...followingIds];
-    if (excludeIds.length) q = q.not('user_id', 'in', `(${excludeIds.join(',')})`);
-  }
-
-  if (before) q = q.lt('created_at', before);
-
-  const { data, error } = await q;
-  if (error) {
-    return apiError(error.message || String(error), 500);
-  }
-
-  const rows = (data || []).map((r: any) => mapRowToHydratedPost(r));
   // Cache the result for a longer time to reduce repeated DB/egress hits
-  try { setServerCache(cacheKey, rows, 30000); } catch (_) {}
+  try { setServerCache(cacheKey, posts, 30000); } catch (_) {}
 
-  const etag = makeWeakETag(rows);
+  const etag = makeWeakETag(posts);
   const headers: HeadersInit = { ETag: etag };
   const cacheSeconds = 30;
-  return apiSuccess({ ok: true, posts: rows }, 200, { headers, cacheSeconds });
+  return apiSuccess({ ok: true, posts }, 200, { headers, cacheSeconds });
 });

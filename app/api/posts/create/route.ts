@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
-import { apiError } from '@/lib/apiResponse';
-import { createPost } from './helpers';
+import { withHandler } from '@/lib/api/withHandler';
+import { createPostSchema } from './helpers';
 
-export async function POST(req: Request) {
-  try {
-    return await createPost(req);
-  } catch (e: any) {
-    return apiError(e?.message || String(e), 500);
-  }
-}
+export const POST = withHandler({ method: 'POST', bodySchema: createPostSchema })(async (req, ctx: any) => {
+  const { createPost } = await import('./helpers');
+  return await createPost(req, ctx.body);
+});

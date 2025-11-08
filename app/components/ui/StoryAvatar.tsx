@@ -18,10 +18,7 @@ interface StoryAvatarProps {
   priority?: boolean;
 }
 
-const STORY_INDICATOR_STYLE = {
-  outline: '3px solid #ff7e39',
-  outlineOffset: 2
-};
+const STORY_GRADIENT = 'linear-gradient(45deg, #ff0096, #00ccff, #ff7e39, #ffff00, #ff0096)';
 
 export const StoryAvatar = memo(function StoryAvatar({
   src,
@@ -42,37 +39,59 @@ export const StoryAvatar = memo(function StoryAvatar({
     height: '100%'
   };
 
-  const imageStyle = {
-    ...baseImageStyle,
-    ...(hasStory ? STORY_INDICATOR_STYLE : {})
+  const containerStyle = {
+    width: size,
+    height: size,
+    position: 'relative' as const
+  };
+
+  const wrapperStyle = hasStory ? {
+    borderRadius: '50%',
+    padding: 2,
+    background: STORY_GRADIENT,
+    backgroundSize: '400% 400%',
+    animation: 'story-progress-rainbow 3s linear infinite',
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  } : {};
+
+  const innerStyle = {
+    borderRadius: '50%',
+    overflow: 'hidden',
+    width: hasStory ? 'calc(100% - 4px)' : '100%',
+    height: hasStory ? 'calc(100% - 4px)' : '100%'
   };
 
   const imageElement = (
-    <div style={{ width: size, height: size, position: 'relative' }}>
-      {priority ? (
-        <Image
-          src={src}
-          alt={alt}
-          width={size}
-          height={size}
-          style={imageStyle}
-          priority
-        />
-      ) : (
-        <OptimizedImage
-          src={src}
-          alt={alt}
-          width={size}
-          height={size}
-          className={className}
-          style={{
-            ...baseImageStyle,
-            ...(hasStory ? STORY_INDICATOR_STYLE : {})
-          }}
-          loading="lazy"
-          sizes={`${size}px`}
-        />
-      )}
+    <div style={containerStyle}>
+      <div style={wrapperStyle}>
+        <div style={innerStyle}>
+          {priority ? (
+            <Image
+              src={src}
+              alt={alt}
+              width={size}
+              height={size}
+              style={baseImageStyle}
+              priority
+            />
+          ) : (
+            <OptimizedImage
+              src={src}
+              alt={alt}
+              width={size}
+              height={size}
+              className={className}
+              style={baseImageStyle}
+              loading="lazy"
+              sizes={`${size}px`}
+            />
+          )}
+        </div>
+      </div>
       {showCount && showCount > 1 && (
         <span style={{
           position: 'absolute',

@@ -1,38 +1,26 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { api } from "@/lib/api";
-import { dedupe } from "@/lib/requestDeduplication";
 import type { Story, User } from "@/lib/types";
 
-interface StoryViewerModalProps {
+interface PublicStoryViewerModalProps {
   isOpen: boolean;
   onClose: () => void;
   stories: Story[];
   currentIndex: number;
   onPrev: () => void;
   onNext: () => void;
-  deleteArmed: boolean;
-  setDeleteArmed: (armed: boolean) => void;
-  onLiveCamera: () => void;
   user: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
-  setStories: (stories: Story[]) => void;
-  setHasActiveStories: (has: boolean) => void;
 }
 
-export function StoryViewerModal({
+export function PublicStoryViewerModal({
   isOpen,
   onClose,
   stories,
   currentIndex,
   onPrev,
   onNext,
-  deleteArmed,
-  setDeleteArmed,
-  onLiveCamera,
-  user,
-  setStories,
-  setHasActiveStories
-}: StoryViewerModalProps) {
+  user
+}: PublicStoryViewerModalProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -42,9 +30,10 @@ export function StoryViewerModal({
   const controlsRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLVideoElement | HTMLImageElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const minSwipeDistance = 50;
+  const autoAdvanceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentStory = stories[currentIndex];
+  const minSwipeDistance = 50;
 
   // Handle media loading
   const handleMediaLoad = useCallback(() => {
@@ -117,19 +106,12 @@ export function StoryViewerModal({
           e.preventDefault();
           setIsPaused(prev => !prev);
           break;
-        case 'Delete':
-        case 'Backspace':
-          if (!deleteArmed) {
-            setDeleteArmed(true);
-            setTimeout(() => setDeleteArmed(false), 3000);
-          }
-          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, onPrev, onNext, deleteArmed, setDeleteArmed]);
+  }, [isOpen, onClose, onPrev, onNext]);
 
   // Touch/swipe handling
   const onTouchStart = (e: React.TouchEvent) => {
@@ -155,14 +137,6 @@ export function StoryViewerModal({
     }
   };
 
-  // Reset loading state when story changes
-  useEffect(() => {
-    if (!loadedStories.has(currentIndex)) {
-      setIsLoading(true);
-    }
-    setProgress(0);
-  }, [currentIndex, loadedStories]);
-
   // Reset loaded stories when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -172,29 +146,15 @@ export function StoryViewerModal({
     }
   }, [isOpen]);
 
-  if (!isOpen || stories.length === 0) return null;
+  // Reset loading state when story changes
+  useEffect(() => {
+    if (!loadedStories.has(currentIndex)) {
+      setIsLoading(true);
+    }
+    setProgress(0);
+  }, [currentIndex, loadedStories]);
 
-  const handleDelete = async () => {
-    if (!deleteArmed) {
-      setDeleteArmed(true);
-      return;
-    }
-    try {
-      await api.deleteStory(stories[currentIndex].id);
-      const updatedStories = await dedupe(`getActiveStoriesForUser:${user.id}`, () => api.getActiveStoriesForUser(user.id));
-      setStories(updatedStories);
-      setHasActiveStories(updatedStories.length > 0);
-      if (updatedStories.length === 0) {
-        onClose();
-      } else if (currentIndex >= updatedStories.length) {
-        // Adjust index if needed, but onNext/onPrev handle it
-      }
-      setDeleteArmed(false);
-    } catch (e: any) {
-      console.warn('Failed to delete story:', e?.message);
-      setDeleteArmed(false);
-    }
-  };
+  if (!isOpen || stories.length === 0) return null;
 
   return createPortal(
     <div 
@@ -300,37 +260,7 @@ export function StoryViewerModal({
 
         <button 
           type="button" 
-          onClick={handleDelete} 
-          style={{ 
-            background: deleteArmed ? 'rgba(255,0,0,0.3)' : 'rgba(255,255,255,0.1)', 
-            color: '#fff', 
-            border: 'none', 
-            padding: '12px', 
-            borderRadius: 8,
-            cursor: 'pointer',
-            transition: 'background 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = deleteArmed ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.2)'}
-          onMouseLeave={(e) => e.currentTarget.style.background = deleteArmed ? 'rgba(255,0,0,0.3)' : 'rgba(255,255,255,0.1)'}
-          aria-label={deleteArmed ? "Confirm delete" : "Delete story"}
-        >
-          {deleteArmed ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 6h18" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M10 11v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M14 11v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          )}
-        </button>
-
-        <button 
-          type="button" 
-          onClick={onLiveCamera} 
+          onClick={onClose} 
           style={{ 
             background: 'rgba(255,255,255,0.1)', 
             color: '#fff', 
@@ -342,11 +272,31 @@ export function StoryViewerModal({
           }}
           onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          aria-label="Take live photo"
+          aria-label="Close story viewer"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2"/>
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
+        <button 
+          type="button" 
+          onClick={onNext} 
+          style={{ 
+            background: 'rgba(255,255,255,0.1)', 
+            color: '#fff', 
+            border: 'none', 
+            padding: '12px', 
+            borderRadius: 8,
+            cursor: 'pointer',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          aria-label="Next story"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
       </div>
@@ -412,7 +362,7 @@ export function StoryViewerModal({
           <img 
             ref={mediaRef as React.RefObject<HTMLImageElement>}
             src={currentStory.mediaUrl} 
-            alt="Your story" 
+            alt="Story" 
             style={{ 
               maxWidth: '100%', 
               maxHeight: '80vh', 
@@ -449,7 +399,7 @@ export function StoryViewerModal({
               objectFit: 'cover'
             }}
           />
-          <div style={{ fontWeight: '500' }}>Your story</div>
+          <div style={{ fontWeight: '500' }}>{user.displayName ?? user.username}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <div style={{ display: 'flex', gap: 4 }}>
@@ -466,10 +416,9 @@ export function StoryViewerModal({
               />
             ))}
           </div>
-          {(isPaused || deleteArmed) && (
+          {isPaused && (
             <div style={{ fontSize: 12, opacity: 0.8 }}>
-              {isPaused && 'Paused'}
-              {deleteArmed && 'Tap delete again to confirm'}
+              Paused
             </div>
           )}
         </div>

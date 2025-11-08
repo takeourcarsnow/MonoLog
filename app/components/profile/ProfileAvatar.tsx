@@ -152,8 +152,7 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange }: ProfileAv
         deleteArmed={deleteArmed}
         setDeleteArmed={setDeleteArmed}
         onLiveCamera={() => setShowLiveCamera(true)}
-        onFileUpload={() => storyInputRef.current?.click()}
-        userId={user.id}
+        user={user}
         setStories={setOwnStories}
         setHasActiveStories={setHasActiveStories}
       />

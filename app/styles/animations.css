@@ -423,6 +423,7 @@
 @keyframes simple-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .scrolling-text { animation: none !important; } }
 
-/* Mobile-specific behavior removed: marquee will animate on all viewports.
-   If you prefer to disable animation on small screens again, we can add
-   a small tweak later, but for now the marquee scrolls everywhere. */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

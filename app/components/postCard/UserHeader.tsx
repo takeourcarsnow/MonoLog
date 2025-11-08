@@ -1,7 +1,4 @@
-"use client";
-
 import { memo, useRef, useState, useEffect } from "react";
-import { createPortal } from 'react-dom';
 import { preloadOverlayThumbnails } from "../imageEditor/overlaysPreload";
 import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
@@ -13,6 +10,7 @@ import { AuthForm } from "@/app/components/auth/AuthForm";
 import { usePathname, useRouter } from "next/navigation";
 import TimeDisplay from "@/app/components/ui/TimeDisplay";
 import { getWeatherIcon } from "@/lib/weatherIcons";
+import { PublicStoryViewerModal } from "../profile/PublicStoryViewerModal";
 
 interface UserHeaderProps {
   post: HydratedPost;
@@ -331,27 +329,16 @@ export const UserHeader = memo(function UserHeader({
           </>
         )}
       </div>
-      {storyViewerOpen && stories.length > 0 && createPortal(
-        <div className="story-viewer-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10000, height: '100vh' }} onClick={() => setStoryViewerOpen(false)}>
-          <div style={{ position: 'absolute', top: 12, left: 12 }} onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => setStoryViewerOpen(false)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Close</button>
-          </div>
-          <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => setStoryIdx(v => v === 0 ? stories.length - 1 : v - 1)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Prev</button>
-            <button type="button" onClick={() => setStoryIdx(v => (v + 1) % stories.length)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8 }}>Next</button>
-          </div>
-          <div style={{ maxWidth: '90vw', maxHeight: '80vh', width: 'min(640px, 90vw)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
-            {stories[storyIdx].mediaType === 'video' ? (
-              <video src={stories[storyIdx].mediaUrl} style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} autoPlay controls playsInline />
-            ) : (
-              <img src={stories[storyIdx].mediaUrl} alt="Story" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 16 }} />
-            )}
-          </div>
-          <div style={{ position: 'absolute', bottom: 28, fontSize: 14, color: '#fff' }} onClick={(e) => e.stopPropagation()}>
-            {post.user.username} • {storyIdx + 1}/{stories.length}
-          </div>
-        </div>,
-        document.body
+      {storyViewerOpen && stories.length > 0 && (
+        <PublicStoryViewerModal
+          isOpen={storyViewerOpen}
+          onClose={() => setStoryViewerOpen(false)}
+          stories={stories}
+          currentIndex={storyIdx}
+          onPrev={() => setStoryIdx(v => v === 0 ? stories.length - 1 : v - 1)}
+          onNext={() => setStoryIdx(v => (v + 1) % stories.length)}
+          user={post.user}
+        />
       )}
     </div>
   );

@@ -64,142 +64,81 @@ export default function ClientInit({ children }: { children: React.ReactNode }) 
     })();
   }, []);
 
-  // Prevent/restore iOS viewport zoom behavior: when focusing inputs iOS
-  // Safari may zoom in; toggling the viewport meta on focus/blur forces
-  // the browser to keep or return to the default scale. This is a targeted
-  // workaround only for iOS-ish platforms to avoid affecting desktop browsers.
-  React.useEffect(() => {
-    try {
-      const ua = navigator.userAgent || '';
-      const isIOS = /iP(hone|od|ad)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      if (!isIOS) return;
-
-      const meta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
-      if (!meta) return;
-      const original = meta.getAttribute('content') || '';
-
-      function makePreventZoom(content: string) {
-        let c = content;
-        if (!/maximum-scale\s*=/.test(c)) c = c + (c ? ', ' : '') + 'maximum-scale=1';
-        if (!/user-scalable\s*=/.test(c)) c = c + (c ? ', ' : '') + 'user-scalable=0';
-        return c;
-      }
-
-      const onFocusIn = (e: FocusEvent) => {
-        const target = e.target as HTMLElement | null;
-        if (!target) return;
-        if (target.matches && target.matches('input, textarea, select')) {
-          try {
-            meta.setAttribute('content', makePreventZoom(meta.getAttribute('content') || original));
-          } catch (e) {
-            // ignore
-          }
-        }
-      };
-
-      const onFocusOut = (e: FocusEvent) => {
-        const target = e.target as HTMLElement | null;
-        if (!target) return;
-        if (target.matches && target.matches('input, textarea, select')) {
-          // restore the original viewport after a short delay so Safari has
-          // time to complete any focus/blur transitions and then will zoom out
-          // back to the intended scale.
-          setTimeout(() => {
-            try {
-              meta.setAttribute('content', original);
-            } catch (e) {
-              // ignore
-            }
-          }, 120);
-        }
-      };
-
-      document.addEventListener('focusin', onFocusIn);
-      document.addEventListener('focusout', onFocusOut);
-
-      return () => {
-        document.removeEventListener('focusin', onFocusIn);
-        document.removeEventListener('focusout', onFocusOut);
-        try { meta.setAttribute('content', original); } catch (e) { /* ignore */ }
-      };
-    } catch (e) {
-      // ignore any unexpected errors
-    }
-  // Prevent/restore iOS viewport zoom behavior: when focusing inputs iOS
-  // Safari may zoom in; toggling the viewport meta on focus/blur forces
-  // the browser to keep or return to the default scale. This is a targeted
-  // workaround only for iOS-ish platforms to avoid affecting desktop browsers.
-  React.useEffect(() => {
-    try {
-      const ua = navigator.userAgent || '';
-      const isIOS = /iP(hone|od|ad)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      if (!isIOS) return;
-
-      const meta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
-      if (!meta) return;
-      const original = meta.getAttribute('content') || '';
-
-      function makePreventZoom(content: string) {
-        let c = content;
-        if (!/maximum-scale\s*=/.test(c)) c = c + (c ? ', ' : '') + 'maximum-scale=1';
-        if (!/user-scalable\s*=/.test(c)) c = c + (c ? ', ' : '') + 'user-scalable=0';
-        return c;
-      }
-
-      const onFocusIn = (e: FocusEvent) => {
-        const target = e.target as HTMLElement | null;
-        if (!target) return;
-        if (target.matches && target.matches('input, textarea, select')) {
-          try {
-            meta.setAttribute('content', makePreventZoom(meta.getAttribute('content') || original));
-          } catch (e) {
-            // ignore
-          }
-        }
-      };
-
-      const onFocusOut = (e: FocusEvent) => {
-        const target = e.target as HTMLElement | null;
-        if (!target) return;
-        if (target.matches && target.matches('input, textarea, select')) {
-          // restore the original viewport after a short delay so Safari has
-          // time to complete any focus/blur transitions and then will zoom out
-          // back to the intended scale.
-          setTimeout(() => {
-            try {
-              meta.setAttribute('content', original);
-            } catch (e) {
-              // ignore
-            }
-          }, 120);
-        }
-      };
-
-      document.addEventListener('focusin', onFocusIn);
-      document.addEventListener('focusout', onFocusOut);
-
-      return () => {
-        document.removeEventListener('focusin', onFocusIn);
-        document.removeEventListener('focusout', onFocusOut);
-        try { meta.setAttribute('content', original); } catch (e) { /* ignore */ }
-      };
-    } catch (e) {
-      // ignore any unexpected errors
-    }
-  }, []);
-
-  // Lock screen orientation to portrait-primary for PWA
+  // Lock screen orientation to portrait on mobile devices
   React.useEffect(() => {
     try {
       if ('orientation' in screen && 'lock' in screen.orientation) {
-        screen.orientation.lock('portrait-primary').catch(() => {
-          // Ignore if locking fails (e.g., not supported or already locked)
-        });
+        screen.orientation.lock('portrait').catch(err => console.log('Orientation lock failed:', err));
       }
     } catch (e) {
-      // Ignore errors
+      console.log('Orientation lock not supported:', e);
     }
   }, []);
+
+  // Prevent/restore iOS viewport zoom behavior: when focusing inputs iOS
+  // Safari may zoom in; toggling the viewport meta on focus/blur forces
+  // the browser to keep or return to the default scale. This is a targeted
+  // workaround only for iOS-ish platforms to avoid affecting desktop browsers.
+  React.useEffect(() => {
+    try {
+      const ua = navigator.userAgent || '';
+      const isIOS = /iP(hone|od|ad)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!isIOS) return;
+
+      const meta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+      if (!meta) return;
+      const original = meta.getAttribute('content') || '';
+
+      function makePreventZoom(content: string) {
+        let c = content;
+        if (!/maximum-scale\s*=/.test(c)) c = c + (c ? ', ' : '') + 'maximum-scale=1';
+        if (!/user-scalable\s*=/.test(c)) c = c + (c ? ', ' : '') + 'user-scalable=0';
+        return c;
+      }
+
+      const onFocusIn = (e: FocusEvent) => {
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+        if (target.matches && target.matches('input, textarea, select')) {
+          try {
+            meta.setAttribute('content', makePreventZoom(meta.getAttribute('content') || original));
+          } catch (e) {
+            // ignore
+          }
+        }
+      };
+
+      const onFocusOut = (e: FocusEvent) => {
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+        if (target.matches && target.matches('input, textarea, select')) {
+          // restore the original viewport after a short delay so Safari has
+          // time to complete any focus/blur transitions and then will zoom out
+          // back to the intended scale.
+          setTimeout(() => {
+            try {
+              meta.setAttribute('content', original);
+            } catch (e) {
+              // ignore
+            }
+          }, 120);
+        }
+      };
+
+      document.addEventListener('focusin', onFocusIn);
+      document.addEventListener('focusout', onFocusOut);
+
+      return () => {
+        document.removeEventListener('focusin', onFocusIn);
+        document.removeEventListener('focusout', onFocusOut);
+        try { meta.setAttribute('content', original); } catch (e) { /* ignore */ }
+      };
+    } catch (e) {
+      // ignore any unexpected errors
+    }
+  }, []);
+
+  return (
     <>
       <AppPreloader />
       <div id="app-root">

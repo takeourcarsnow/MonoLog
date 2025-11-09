@@ -86,8 +86,6 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js', '@supabase/ssr'],
     // Enable optimized CSS loading
     optimizeCss: true,
-    // Enable SWC minification
-    swcMinify: true,
   },
   // Production optimizations
   compiler: {

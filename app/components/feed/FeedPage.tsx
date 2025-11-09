@@ -162,6 +162,9 @@ export function FeedPage({
       return <FeedEmptyState title={title} emptyMessage={emptyMessage} viewStorageKey={viewStorageKey} />;
     }
 
+    // Use virtualization for long lists to reduce long tasks
+    const useVirtualization = limitedPosts.length > 10;
+
     return (
       <>
         {view === 'grid' ? (

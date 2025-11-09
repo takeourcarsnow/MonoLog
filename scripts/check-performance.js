@@ -5,8 +5,12 @@
  * Checks that all performance optimizations are properly configured
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const checks = [];
 const warnings = [];
@@ -62,7 +66,7 @@ try {
 
 // Check 3: API cache exists
 try {
-  const cachePath = path.join(__dirname, '..', 'src', 'lib', 'api', 'cache.ts');
+  const cachePath = path.join(__dirname, '..', 'lib', 'api', 'cache.ts');
   if (fs.existsSync(cachePath)) {
     checks.push('✅ API caching layer exists');
   } else {
@@ -74,7 +78,7 @@ try {
 
 // Check 4: Performance monitor exists
 try {
-  const perfMonPath = path.join(__dirname, '..', 'src', 'lib', 'performance-monitor.ts');
+  const perfMonPath = path.join(__dirname, '..', 'lib', 'performance-monitor.ts');
   if (fs.existsSync(perfMonPath)) {
     checks.push('✅ Performance monitoring configured');
   } else {
@@ -106,7 +110,7 @@ try {
 
 // Check 6: OptimizedImage component exists
 try {
-  const optImgPath = path.join(__dirname, '..', 'app', 'components', 'OptimizedImage.tsx');
+  const optImgPath = path.join(__dirname, '..', 'app', 'components', 'media', 'OptimizedImage.tsx');
   if (fs.existsSync(optImgPath)) {
     checks.push('✅ Optimized image component exists');
   } else {
@@ -118,7 +122,7 @@ try {
 
 // Check 7: Image worker exists
 try {
-  const workerPath = path.join(__dirname, '..', 'src', 'lib', 'image-worker.ts');
+  const workerPath = path.join(__dirname, '..', 'lib', 'image-worker.ts');
   if (fs.existsSync(workerPath)) {
     checks.push('✅ Image compression worker exists');
   } else {

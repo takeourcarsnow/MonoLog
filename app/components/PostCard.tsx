@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { memo, useState, useRef, lazy, Suspense } from "react";
+import { memo, useState, useRef, lazy, Suspense, useMemo, useCallback } from "react";
 import type { HydratedPost } from "@/lib/types";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import { UserHeader } from "./postCard/UserHeader";
@@ -30,8 +30,8 @@ const Editor = lazy(() => import("./postCard/Editor").then(mod => ({ default: mo
 // Memoize PostCard to prevent unnecessary re-renders when parent updates
 const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavigation, disableCardNavigation, index }: { post: HydratedPost; allowCarouselTouch?: boolean; disableMediaNavigation?: boolean; disableCardNavigation?: boolean; index?: number }) => {
   const { post, setPost } = usePostState(initial);
-  const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
-  const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+  const postHref = useMemo(() => `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`, [post.user.username, post.userId, post.id]);
+  const imageUrls = useMemo(() => (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []), [post]);
   const isMultipost = imageUrls.length > 1;
   const {
     commentsOpen,
@@ -49,10 +49,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
     toggleFavoriteWithAuth,
     showFavoriteFeedback
   } = useFavorite(post.id);
-  // Wrap the toggle so we can include the full post payload in an event
-  // This lets list views (like Favorites) append the post immediately
-  // without waiting for a full refetch.
-  const handleToggleFavoriteWithPost = async () => {
+  const handleToggleFavoriteWithPost = useCallback(async () => {
     const success = await toggleFavoriteWithAuth();
     if (success && typeof window !== 'undefined') {
       try {
@@ -60,7 +57,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
       } catch (e) {}
     }
     return success;
-  };
+  }, [toggleFavoriteWithAuth, post]);
   const {
     isFollowing,
     setIsFollowing,
@@ -139,12 +136,12 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
 
       <MediaSection
         isFavorite={isFavorite}
-        toggleFavoriteWithAuth={async () => {
+        toggleFavoriteWithAuth={useCallback(async () => {
           const success = await handleToggleFavoriteWithPost();
           if (!success) {
             setShowAuth(true);
           }
-        }}
+        }, [handleToggleFavoriteWithPost])}
         showFavoriteFeedback={showFavoriteFeedback}
         favoriteOverlayState={favoriteOverlayState}
         pathname={pathname}
@@ -181,7 +178,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         showFavoriteFeedback={showFavoriteFeedback}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
-        openFullscreen={() => {
+        openFullscreen={useCallback(() => {
           const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
           const alts = Array.isArray(post.alt) ? post.alt : [post.alt || ''];
           const images = imageUrls.map((src: string, index: number) => ({
@@ -189,7 +186,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
             alt: alts[index] || `Photo ${index + 1}`
           }));
           handleOpenFullscreen(images, currentImageIndex);
-        }}
+        }, [post, currentImageIndex, handleOpenFullscreen])}
         spotifyMeta={spotifyMeta}
         fsOpen={fsOpen}
         fsImages={fsImages}

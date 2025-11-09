@@ -3,6 +3,7 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { CONFIG } from '@/lib/config';
 import { isInAppBrowser } from '@/lib/detectWebview';
+import performanceMonitor from '@/lib/performance-monitor';
 
 const AppShell = dynamic(() => import("@/app/components/layout/AppShell").then(mod => mod.AppShell), { ssr: false, loading: () => null });
 const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ssr: false, loading: () => null });
@@ -16,12 +17,9 @@ export default function ClientInit({ children }: { children: React.ReactNode }) 
   React.useEffect(() => {
     (async () => {
       try {
-        const { onCLS, onINP, onFCP, onLCP, onTTFB } = await import('web-vitals');
-        onCLS(console.log);
-        onINP(console.log);
-        onFCP(console.log);
-        onLCP(console.log);
-        onTTFB(console.log);
+        // Initialize performance monitoring
+        // Just importing it initializes the singleton
+        console.log('Performance monitoring initialized');
 
         if ('serviceWorker' in navigator && CONFIG.enableServiceWorker && process.env.NODE_ENV === 'production' && !isInAppBrowser()) {
           try {

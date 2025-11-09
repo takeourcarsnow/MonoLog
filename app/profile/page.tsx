@@ -1,7 +1,9 @@
 "use client";
-import { ProfileView } from "@/app/components/profile/ProfileView";
+import dynamic from 'next/dynamic';
 
-export const dynamic = 'force-dynamic';
+const ProfileView = dynamic(() => import("@/app/components/profile/ProfileView").then(mod => ({ default: mod.ProfileView })), {
+  loading: () => <main className="p-6"><div>Loading profile...</div></main>
+});
 
 export default function ProfilePage() {
   // Render the client-side ProfileView which will show the AuthForm when

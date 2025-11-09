@@ -74,17 +74,23 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
         }
 
         // Fetch posts for all days with posts (but check module cache first)
-  const statsObj = cacheGetStats(cacheKey) || { counts: {} };
+        const statsObj = cacheGetStats(cacheKey) || { counts: {} };
         const daysWithPosts = Object.keys(statsObj.counts).filter(dk => (statsObj.counts[dk] || 0) > 0);
         if (daysWithPosts.length > 0) {
           const missing = daysWithPosts.filter(dk => !cacheGetPosts(dk));
           if (missing.length > 0) {
-            const postPromises = missing.map(dk => api.getPostsByDate(dk).catch(() => []));
-            const postsArrays = await Promise.all(postPromises);
-            if (cancelled) return;
-            missing.forEach((dk, i) => {
-              cacheSetPosts(dk, postsArrays[i]);
-            });
+            // Batch API calls to avoid overwhelming the network (max 3 concurrent requests)
+            const batchSize = 3;
+            for (let i = 0; i < missing.length; i += batchSize) {
+              if (cancelled) break;
+              const batch = missing.slice(i, i + batchSize);
+              const postPromises = batch.map(dk => api.getPostsByDate(dk).catch(() => []));
+              const postsArrays = await Promise.all(postPromises);
+              if (cancelled) break;
+              batch.forEach((dk, batchIndex) => {
+                cacheSetPosts(dk, postsArrays[batchIndex]);
+              });
+            }
           }
 
           // create a view-local cache object composed from module cache

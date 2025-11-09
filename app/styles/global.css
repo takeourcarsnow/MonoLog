@@ -105,6 +105,25 @@ body {
   contain-intrinsic-size: 0 500px;
 }
 
+/* Additional containment for performance */
+.post-card {
+  contain: layout style;
+}
+
+.comments-section {
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 200px;
+}
+
+.feed-container {
+  contain: layout;
+}
+
+.stories-bar {
+  contain: layout style paint;
+}
+
 /* Ensure the grid container fills the viewport so the 1fr row (main content)
    can expand to occupy remaining space. Using min-height keeps behavior
    compatible with the existing #app-root which already uses 100dvh. */

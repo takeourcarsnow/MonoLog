@@ -10,6 +10,15 @@ import { drawImageWithFilters } from "./CanvasRendererImageDraw";
 import { handleFrameOverlay, applyFrameOverlayMask } from "./CanvasRendererFrameOverlay";
 
 export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOverrides, targetCanvas?: HTMLCanvasElement) {
+  // Use requestAnimationFrame for non-blocking rendering when not targeting a specific canvas
+  if (!targetCanvas) {
+    requestAnimationFrame(() => performDraw(params, info, overrides, targetCanvas));
+  } else {
+    performDraw(params, info, overrides, targetCanvas);
+  }
+}
+
+function performDraw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOverrides, targetCanvas?: HTMLCanvasElement) {
   const setupResult = setupCanvas(params, info, overrides, targetCanvas);
   if (!setupResult) return;
 
@@ -68,6 +77,20 @@ export function draw(params: DrawParams, info?: LayoutInfo, overrides?: DrawOver
   if (filterValues.curGrain > 0.001) {
     applyGrainEffect(ctx, imgLeft, imgTop, imgW, imgH, angleRad, filterValues.curGrain, generateNoiseCanvas);
   }
+
+  // Early return if no special effects are enabled
+  const hasSpecialEffects = (params.pixelSizeRef?.current ?? 1) > 1 ||
+                           (params.ditherMethodRef?.current || 'none') !== 'none' ||
+                           (params.asciiEnabledRef?.current ?? false) ||
+                           params.overlayRef.current ||
+                           params.frameOverlayRef?.current ||
+                           filterValues.curFrameEnabled ||
+                           params.sel;
+
+  if (!hasSpecialEffects) {
+    return; // Skip expensive operations if no effects are applied
+  }
+
   // New: Special Effects category
   const pixelSize = params.pixelSizeRef?.current ?? 1;
   if (pixelSize && pixelSize > 1) {

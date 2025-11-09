@@ -98,6 +98,19 @@ export async function getFollowingStories() {
   }));
 }
 
+export async function getExploreStories() {
+  const sb = getClient();
+  ensureAuthListener(sb);
+  const token = await getAccessToken(sb);
+  const resp = await fetch('/api/stories/explore', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json?.error || 'Failed to fetch explore stories');
+  return (json.items || []).map((item: any) => ({
+    user: item.user as Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>,
+    stories: (item.stories || []).map(mapRowToStory),
+  }));
+}
+
 export async function markStoryViewed(storyId: string) {
   const sb = getClient();
   ensureAuthListener(sb);

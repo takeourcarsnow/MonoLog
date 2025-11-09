@@ -47,8 +47,8 @@ export function useLiveCameraState() {
     overlay: null,
     // Text settings - default to enabled and bold
     textEnabled: true,
-    textContent: 'Your Text Here',
-    textFontSize: 24,
+    textContent: '',
+    textFontSize: 40,
     textFontFamily: 'Roboto',
     textColor: '#ffffff',
     textBold: true,
@@ -60,6 +60,7 @@ export function useLiveCameraState() {
     textOpacity: 1,
     textRotation: 0,
     textScale: 1,
+    textLineHeight: 1.4,
     textStroke: false,
     textStrokeColor: '#000000',
     textStrokeWidth: 2,

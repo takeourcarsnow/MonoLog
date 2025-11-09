@@ -23,6 +23,10 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
     onSettingsChange({ ...effectSettings, textFontSize: value });
   }, [effectSettings, onSettingsChange]);
 
+  const handleLineHeightChange = useCallback((value: number) => {
+    onSettingsChange({ ...effectSettings, textLineHeight: value });
+  }, [effectSettings, onSettingsChange]);
+
   const handleFontFamilyChange = useCallback((value: string) => {
     onSettingsChange({ ...effectSettings, textFontFamily: value });
   }, [effectSettings, onSettingsChange]);
@@ -79,19 +83,34 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
         }}
       />
 
-      {/* Row 1: Size slider + Font select + Bold toggle + Shadow toggle */}
+      {/* Row 1: Size slider + Line height slider + Font select + Shadow toggle */}
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ fontSize: '10px', color: 'var(--text-secondary)', minWidth: '24px' }}>
-            {effectSettings.textFontSize || 24}px
+            {effectSettings.textFontSize || 40}px
           </span>
           <input
             type="range"
             min="12"
             max="72"
             step="2"
-            value={effectSettings.textFontSize || 24}
+            value={effectSettings.textFontSize || 40}
             onChange={(e) => handleFontSizeChange(parseInt(e.target.value))}
+            disabled={disabled}
+            style={{ flex: 1, height: '16px' }}
+          />
+        </div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-secondary)', minWidth: '24px' }}>
+            {(effectSettings.textLineHeight || 1.4).toFixed(1)}x
+          </span>
+          <input
+            type="range"
+            min="0.8"
+            max="3.0"
+            step="0.1"
+            value={effectSettings.textLineHeight || 1.4}
+            onChange={(e) => handleLineHeightChange(parseFloat(e.target.value))}
             disabled={disabled}
             style={{ flex: 1, height: '16px' }}
           />

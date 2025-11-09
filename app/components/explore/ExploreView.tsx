@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { Compass } from "lucide-react";
 import { FeedPage } from "@/app/components/feed/FeedPage";
 import { useAuthChange } from "@/lib/hooks/useAuthChange";
+import { StoriesBar } from '@/app/components/stories/StoriesBar';
 
 export function ExploreView() {
   const fetchExploreFeed = useCallback((opts: { limit: number; before?: string }) => api.getExploreFeedPage(opts), []);
@@ -40,15 +41,18 @@ export function ExploreView() {
     const emptyMessage = "You're already following everyone! This section shows posts from users you're not following yet.";
 
     return (
-      <FeedPage
-        fetchFunction={fetchExploreFeed}
-        title={<Compass size={20} strokeWidth={2} />}
-        subtitle="MonoLogs from people you aren't following yet"
-        viewStorageKey="exploreView"
-        scrollStateKey="explore"
-        // Keep explore posts visible even if the user follows/unfollows while here
-        deferFollowChanges={true}
-        emptyMessage={emptyMessage}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <StoriesBar fetchStories={() => api.getExploreStories()} />
+        <FeedPage
+          fetchFunction={fetchExploreFeed}
+          title={<Compass size={20} strokeWidth={2} />}
+          subtitle="MonoLogs from people you aren't following yet"
+          viewStorageKey="exploreView"
+          scrollStateKey="explore"
+          // Keep explore posts visible even if the user follows/unfollows while here
+          deferFollowChanges={true}
+          emptyMessage={emptyMessage}
+        />
+      </div>
     );
 }

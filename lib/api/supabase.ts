@@ -8,7 +8,7 @@ import { calendarStats } from "./calendar";
 import { weekReviewStats } from "./weekReview";
 import { getCommunities, getCommunity, createCommunity, updateCommunity, joinCommunity, leaveCommunity, deleteCommunity, isCommunityMember, getCommunityThreads, getThread, getThreadBySlug, createThread, updateThread, deleteThread, getThreadReplies, addThreadReply, deleteThreadReply, editThreadReply, hasNewThreads } from "./communities";
 import { search } from "./search";
-import { createStory, getActiveStoriesForUser, getFollowingStories, markStoryViewed, deleteStory, likeStory, unlikeStory, isLikedStory } from './stories';
+import { createStory, getActiveStoriesForUser, getFollowingStories, getExploreStories, markStoryViewed, deleteStory, likeStory, unlikeStory, isLikedStory } from './stories';
 import { getNotifications, markNotificationsRead, getUnreadNotificationsCount, markAllNotificationsRead } from "./notifications";
 import type { Api } from "../types";
 
@@ -81,6 +81,7 @@ export const supabaseApi: Api = {
   // Stories
   getActiveStoriesForUser,
   getFollowingStories,
+  getExploreStories,
   createStory,
   markStoryViewed,
   deleteStory,

@@ -198,7 +198,8 @@ export function applyUnifiedEffects(
       settings.textScale || 1,
       settings.textStroke || false,
       settings.textStrokeColor || '#000000',
-      settings.textStrokeWidth || 2
+      settings.textStrokeWidth || 2,
+      settings.textLineHeight || 1.4
     );
   }
 
@@ -223,41 +224,6 @@ const CACHE_TTL = 30000; // 30 seconds
 // Export cleanup function for manual cache management
 export function clearTextCache() {
   textCache.clear();
-}
-
-// Performance optimization: skip text rendering if settings haven't changed
-let lastTextSettings: string = '';
-let lastFontFamily: string = '';
-
-export function shouldSkipTextRender(
-  text: string,
-  fontSize: number,
-  fontFamily: string,
-  color: string,
-  bold: boolean,
-  shadow: boolean,
-  align: string,
-  stroke: boolean,
-  strokeColor: string,
-  strokeWidth: number,
-  position: string,
-  textX: number | undefined,
-  textY: number | undefined,
-  opacity: number,
-  scale: number
-): boolean {
-  // Don't skip if font family changed (font might not be loaded yet)
-  if (fontFamily !== lastFontFamily) {
-    lastFontFamily = fontFamily;
-    return false;
-  }
-
-  const currentSettings = `${text}|${fontSize}|${fontFamily}|${color}|${bold}|${shadow}|${align}|${stroke}|${strokeColor}|${strokeWidth}|${position}|${textX}|${textY}|${opacity}|${scale}`;
-  if (currentSettings === lastTextSettings) {
-    return true;
-  }
-  lastTextSettings = currentSettings;
-  return false;
 }
 
 // Clean up old cached text canvases
@@ -296,9 +262,10 @@ function getCachedTextCanvas(
   align: string,
   stroke: boolean,
   strokeColor: string,
-  strokeWidth: number
+  strokeWidth: number,
+  lineHeight: number
 ): HTMLCanvasElement {
-  const cacheKey = `${text}|${fontSize}|${fontFamily}|${color}|${bold}|${shadow}|${align}|${stroke}|${strokeColor}|${strokeWidth}`;
+  const cacheKey = `${text}|${fontSize}|${fontFamily}|${color}|${bold}|${shadow}|${align}|${stroke}|${strokeColor}|${strokeWidth}|${lineHeight}`;
 
   const cached = textCache.get(cacheKey);
   if (cached) {
@@ -322,7 +289,7 @@ function getCachedTextCanvas(
   const metrics = ctx.measureText('Ag'); // Use characters with ascenders and descenders
   const fontAscent = metrics.actualBoundingBoxAscent || fontSize * 0.8; // Fallback for browsers without actualBoundingBox
   const fontDescent = metrics.actualBoundingBoxDescent || fontSize * 0.2;
-  const lineHeight = fontAscent + fontDescent + fontSize * 0.2; // Add some extra spacing
+  const actualLineHeight = (fontAscent + fontDescent) * lineHeight;
 
   // Measure all lines to find max width
   let maxWidth = 0;
@@ -332,9 +299,9 @@ function getCachedTextCanvas(
   }
 
   // Set canvas size with padding (extra padding for shadow and font overflow)
-  const padding = shadow ? 16 : 12; // Increased padding for decorative fonts
+  const padding = shadow ? 20 : 16; // Increased padding for decorative fonts
   canvas.width = Math.ceil(maxWidth) + padding * 2;
-  canvas.height = Math.ceil(lines.length * lineHeight) + padding * 2;
+  canvas.height = Math.ceil(lines.length * actualLineHeight) + padding * 2;
 
   // Clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -346,7 +313,7 @@ function getCachedTextCanvas(
 
   // Draw each line
   for (let i = 0; i < lines.length; i++) {
-    const baselineY = padding + fontAscent + i * lineHeight;
+    const baselineY = padding + fontAscent + i * actualLineHeight;
     let x = padding;
 
     // Adjust x position based on alignment
@@ -412,93 +379,10 @@ function applyTextOverlayToFrame(
   scale: number,
   stroke: boolean,
   strokeColor: string,
-  strokeWidth: number
+  strokeWidth: number,
+  lineHeight: number
 ): void {
   if (!text.trim()) return;
-
-  // Performance optimization: skip if settings haven't changed
-  if (shouldSkipTextRender(text, fontSize, fontFamily, color, bold, shadow, align, stroke, strokeColor, strokeWidth, position, textX, textY, opacity, scale)) {
-    // Use cached text canvas directly without re-checking
-    const cacheKey = `${text}|${fontSize}|${fontFamily}|${color}|${bold}|${shadow}|${align}|${stroke}|${strokeColor}|${strokeWidth}`;
-    const cached = textCache.get(cacheKey);
-    if (cached) {
-      ctx.save();
-      ctx.globalAlpha = opacity;
-
-      // Calculate position
-      let x = width / 2;
-      let y = height / 2;
-
-      // Use manual coordinates if available, otherwise use predefined positions
-      if (textX !== undefined && textY !== undefined) {
-        x = textX * width;
-        y = textY * height;
-      } else {
-        // Fallback to predefined positions
-        switch (position) {
-          case 'top-left':
-            x = 20;
-            y = 20;
-            break;
-          case 'top-center':
-            x = width / 2;
-            y = 20;
-            break;
-          case 'top-right':
-            x = width - 20;
-            y = 20;
-            break;
-          case 'center-left':
-            x = 20;
-            y = height / 2;
-            break;
-          case 'center':
-            x = width / 2;
-            y = height / 2;
-            break;
-          case 'center-right':
-            x = width - 20;
-            y = height / 2;
-            break;
-          case 'bottom-left':
-            x = 20;
-            y = height - 20;
-            break;
-          case 'bottom-center':
-            x = width / 2;
-            y = height - 20;
-            break;
-          case 'bottom-right':
-            x = width - 20;
-            y = height - 20;
-            break;
-        }
-      }
-
-      // Apply rotation
-      if (rotation && rotation !== 0) {
-        ctx.translate(x, y);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.translate(-x, -y);
-      }
-
-      // Apply scaling
-      if (scale && scale !== 1) {
-        ctx.translate(x, y);
-        ctx.scale(scale, scale);
-        ctx.translate(-x, -y);
-      }
-
-      // Calculate draw position (center the text canvas on the target position)
-      const drawX = x - cached.canvas.width / 2;
-      const drawY = y - cached.canvas.height / 2;
-
-      // Draw the cached text canvas
-      ctx.drawImage(cached.canvas, drawX, drawY);
-      ctx.restore();
-      return;
-    }
-  }
 
   ctx.save();
   ctx.globalAlpha = opacity;
@@ -567,15 +451,43 @@ function applyTextOverlayToFrame(
     ctx.translate(-x, -y);
   }
 
-  // Get cached text canvas
-  const textCanvas = getCachedTextCanvas(text, fontSize, fontFamily, color, bold, shadow, align, stroke, strokeColor, strokeWidth);
+  // Set font and render directly (no caching)
+  const fontWeight = bold ? 'bold' : 'normal';
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
 
-  // Calculate draw position (center the text canvas on the target position)
-  const drawX = x - textCanvas.width / 2;
-  const drawY = y - textCanvas.height / 2;
+  // Apply shadow if enabled
+  if (shadow) {
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+  } else {
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
 
-  // Draw the cached text canvas
-  ctx.drawImage(textCanvas, drawX, drawY);
+  // Handle multi-line text
+  const lines = text.split('\n');
+  const lineSpacing = fontSize * lineHeight;
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineY = y + (i - (lines.length - 1) / 2) * lineSpacing;
+
+    // Apply stroke if enabled
+    if (stroke) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
+      ctx.strokeText(lines[i], x, lineY);
+    }
+
+    // Apply fill
+    ctx.fillStyle = color;
+    ctx.fillText(lines[i], x, lineY);
+  }
 
   ctx.restore();
 }

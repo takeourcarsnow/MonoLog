@@ -61,6 +61,7 @@ export interface CameraEffectSettings {
   textShadow?: boolean;
   textRotation?: number; // Rotation in degrees
   textScale?: number; // Scale factor (1 = normal size)
+  textLineHeight?: number; // Line height multiplier (1.2 = 120% of font size)
   textStroke?: boolean;
   textStrokeColor?: string;
   textStrokeWidth?: number;

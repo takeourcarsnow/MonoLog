@@ -246,6 +246,7 @@ export interface Api {
   // Stories (ephemeral 24h media attached to a user profile)
   getActiveStoriesForUser(userId: string): Promise<Story[]>;
   getFollowingStories(): Promise<{ user: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>; stories: Story[] }[]>;
+  getExploreStories(): Promise<{ user: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>; stories: Story[] }[]>;
   createStory(input: { mediaUrl?: string; thumbnailUrl?: string; dataUrl?: string; mediaType: 'image' | 'video'; durationSeconds?: number }): Promise<Story>;
   markStoryViewed(storyId: string): Promise<void>;
   deleteStory(storyId: string): Promise<void>;

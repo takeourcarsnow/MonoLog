@@ -90,6 +90,12 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     setIsManipulatingText,
   } = useLiveCameraState();
 
+  const [lastTapTime, setLastTapTime] = React.useState(0);
+  const [tapCount, setTapCount] = React.useState(0);
+  const [isInlineEditing, setIsInlineEditing] = React.useState(false);
+  const [inlineEditText, setInlineEditText] = React.useState('');
+  const inlineEditRef = useRef<HTMLTextAreaElement>(null);
+
   const disabled = isCapturing || processing || !cameraReady;
 
   // Handlers
@@ -192,7 +198,51 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     return Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
   }, []);
 
+  const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+      e.preventDefault();
+      setIsInlineEditing(true);
+      setInlineEditText(effectSettings.textContent);
+      // Focus the textarea after it's rendered
+      setTimeout(() => {
+        if (inlineEditRef.current) {
+          inlineEditRef.current.focus();
+          inlineEditRef.current.select();
+        }
+      }, 0);
+    }
+  }, [effectSettings.type, effectSettings.textContent, disabled]);
+
+  const handleInlineEditChange = useCallback((value: string) => {
+    setInlineEditText(value);
+    setEffectSettings(prev => ({
+      ...prev,
+      textContent: value,
+    }));
+  }, [setEffectSettings]);
+
+  const handleInlineEditBlur = useCallback(() => {
+    setIsInlineEditing(false);
+  }, []);
+
+  const handleInlineEditKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      setIsInlineEditing(false);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      // Revert changes on escape
+      setEffectSettings(prev => ({
+        ...prev,
+        textContent: inlineEditText,
+      }));
+      setIsInlineEditing(false);
+    }
+  }, [inlineEditText, setEffectSettings]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isInlineEditing) return; // Don't handle mouse events during inline editing
+
     if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width;
@@ -211,9 +261,11 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         setDragStartY(e.clientY);
       }
     }
-  }, [effectSettings.type, effectSettings.textContent, effectSettings.textRotation, disabled, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
+  }, [isInlineEditing, effectSettings.type, effectSettings.textContent, effectSettings.textRotation, disabled, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isInlineEditing) return; // Don't handle mouse events during inline editing
+
     if (isDraggingText && effectSettings.type === 'text') {
       if (e.buttons & 1) { // Left button held - drag
         const rect = e.currentTarget.getBoundingClientRect();
@@ -230,7 +282,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         throttledSetRotation(newRotation);
       }
     }
-  }, [isDraggingText, effectSettings.type, dragStartX, dragStartY, throttledSetDragPosition, throttledSetRotation]);
+  }, [isInlineEditing, isDraggingText, effectSettings.type, dragStartX, dragStartY, throttledSetDragPosition, throttledSetRotation]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (e.button === 2) {
@@ -248,6 +300,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
   }, [setIsDraggingText, updateDragPosition]);
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    if (isInlineEditing) return; // Don't handle wheel events during inline editing
+
     if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -2 : 2; // Scale down on scroll down, up on scroll up
@@ -257,10 +311,12 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         textFontSize: newSize,
       }));
     }
-  }, [effectSettings.type, effectSettings.textContent, effectSettings.textFontSize, disabled, setEffectSettings]);
+  }, [isInlineEditing, effectSettings.type, effectSettings.textContent, effectSettings.textFontSize, disabled, setEffectSettings]);
 
   // Enhanced touch handlers for text dragging and rotation with throttling
   const handleTouchStartEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (isInlineEditing) return; // Don't handle touch events during inline editing
+
     // Handle pinch zoom first
     handleTouchStart(e);
 
@@ -307,9 +363,11 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         throttledSetDragPosition(x, y);
       }
     }
-  }, [effectSettings.type, effectSettings.textContent, effectSettings.textRotation, effectSettings.textScale, disabled, handleTouchStart, setEffectSettings, setIsManipulatingText, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition, getAngle]);
+  }, [isInlineEditing, effectSettings.type, effectSettings.textContent, effectSettings.textRotation, effectSettings.textScale, disabled, handleTouchStart, setEffectSettings, setIsManipulatingText, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition, getAngle]);
 
   const handleTouchMoveEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (isInlineEditing) return; // Don't handle touch events during inline editing
+
     // Only handle camera zoom if not manipulating text
     if (!isManipulatingText) {
       handleTouchMove(e);
@@ -361,9 +419,11 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         throttledSetDragPosition(x, y);
       }
     }
-  }, [effectSettings.type, effectSettings.textContent, disabled, handleTouchMove, isDraggingText, isManipulatingText, throttledSetDragPosition, getAngle, throttledSetRotation, throttledSetScale]);
+  }, [isInlineEditing, effectSettings.type, effectSettings.textContent, disabled, handleTouchMove, isDraggingText, isManipulatingText, throttledSetDragPosition, getAngle, throttledSetRotation, throttledSetScale]);
 
   const handleTouchEndEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (isInlineEditing) return; // Don't handle touch events during inline editing
+
     handleTouchEnd(); // Reset pinch distance
     setIsDraggingText(false);
     setIsManipulatingText(false);
@@ -375,7 +435,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     if (dragUpdateRef.current || rotationUpdateRef.current !== undefined || scaleUpdateRef.current !== undefined) {
       updateDragPosition();
     }
-  }, [handleTouchEnd, setIsDraggingText, setIsManipulatingText, updateDragPosition]);
+  }, [isInlineEditing, handleTouchEnd, setIsDraggingText, setIsManipulatingText, updateDragPosition]);
 
   // Capture logic (includes preview/confirm/retake handlers)
   const { handleCapture, previewUrl, isPreviewing, confirmCapture, retakeCapture } = useCaptureLogic({
@@ -561,6 +621,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               onWheel={handleWheel}
+              onDoubleClick={handleDoubleClick}
               onContextMenu={(e) => e.preventDefault()} // Prevent context menu on right click
               onTouchStart={handleTouchStartEnhanced}
               onTouchMove={handleTouchMoveEnhanced}
@@ -577,6 +638,43 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               style={{ display: 'none' }}
               onChange={handleFileChange}
             />
+
+            {/* Inline text editing overlay */}
+            {isInlineEditing && effectSettings.type === 'text' && effectSettings.textContent && (
+              <textarea
+                ref={inlineEditRef}
+                value={inlineEditText}
+                onChange={(e) => handleInlineEditChange(e.target.value)}
+                onBlur={handleInlineEditBlur}
+                onKeyDown={handleInlineEditKeyDown}
+                style={{
+                  position: 'absolute',
+                  left: `${((effectSettings.textX ?? 0.5) * 100)}%`,
+                  top: `${((effectSettings.textY ?? 0.5) * 100)}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: `${Math.max(100, (effectSettings.textFontSize || 40) * 6)}px`,
+                  minHeight: `${Math.max(30, (effectSettings.textFontSize || 40) * 1.2)}px`,
+                  fontSize: `${effectSettings.textFontSize || 40}px`,
+                  fontFamily: effectSettings.textFontFamily || 'Arial',
+                  fontWeight: 'bold',
+                  color: effectSettings.textColor || '#ffffff',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.5)',
+                  borderRadius: '2px',
+                  padding: '2px 4px',
+                  resize: 'none',
+                  outline: 'none',
+                  zIndex: 10,
+                  textAlign: effectSettings.textAlign === 'center' ? 'center' : effectSettings.textAlign === 'right' ? 'right' : 'left',
+                  lineHeight: effectSettings.textLineHeight || 1.4,
+                  whiteSpace: 'pre-wrap',
+                  overflow: 'hidden',
+                  boxShadow: '0 0 0 1px rgba(0,122,204,0.3)',
+                }}
+                rows={inlineEditText.split('\n').length}
+                placeholder="Edit text..."
+              />
+            )}
 
             <CameraControls
               disabled={controlsDisabled}

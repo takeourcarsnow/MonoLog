@@ -11,9 +11,7 @@ import { isInAppBrowser } from '@/lib/detectWebview';
 import { SWRConfig } from 'swr';
 import ClientInit from "@/app/components/layout/ClientInit";
 
-// No custom Google fonts are loaded here to keep the bundle minimal.
-
-// ClientInit is a client-only wrapper that hosts dynamic client components
+// Google Fonts are loaded for text effects in the image editor
 // and client-side effects (web-vitals, SW registration). Keeping the root
 // layout as a Server Component improves performance and allows streaming.
 
@@ -93,6 +91,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#0f0f10" />
+        {/* Google Fonts for text effects */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Pacifico&family=Bangers&family=Space+Mono:wght@400;700&family=Playfair+Display:wght@400;700&family=Oswald:wght@400;700&family=Anton&family=Ubuntu:wght@400;700&display=swap" rel="stylesheet" />
         <script
           id="theme-init"
           dangerouslySetInnerHTML={{ __html: `(function(){try{var k='monolog_theme';var v=null;try{v=localStorage.getItem(k);}catch(e){} if(v==='light'||v==='dark'){document.documentElement.setAttribute('data-theme',v);if(v==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}else{document.documentElement.setAttribute('data-theme','light');document.documentElement.classList.remove('dark');}var c='no-transitions';if(document.documentElement.classList.contains(c)){document.documentElement.classList.remove(c);} document.documentElement.classList.add('preloader-active');}catch(e){} })();` }}

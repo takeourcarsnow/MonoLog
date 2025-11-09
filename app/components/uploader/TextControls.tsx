@@ -101,7 +101,7 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
           />
         </div>
         <select
-          value={effectSettings.textFontFamily || 'Arial'}
+          value={effectSettings.textFontFamily || 'Roboto'}
           onChange={(e) => handleFontFamilyChange(e.target.value)}
           disabled={disabled}
           style={{
@@ -115,14 +115,14 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
             height: '24px',
           }}
         >
-          <option value="Arial">Arial</option>
-          <option value="Helvetica">Helv</option>
-          <option value="Times New Roman">Times</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Verdana">Verdana</option>
-          <option value="Courier New">Courier</option>
-          <option value="Impact">Impact</option>
-          <option value="Comic Sans MS">Comic</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Pacifico">Pacifico</option>
+          <option value="Bangers">Bangers</option>
+          <option value="Space Mono">Space Mono</option>
+          <option value="Playfair Display">Playfair</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Anton">Anton</option>
+          <option value="Ubuntu">Ubuntu</option>
         </select>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <input

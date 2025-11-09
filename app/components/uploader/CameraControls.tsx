@@ -16,6 +16,10 @@ interface CameraControlsProps {
   setZoom: (zoom: (prev: number) => number) => void;
   handleCapture: () => void;
   handleClose: () => void;
+  // preview mode: when true, show Confirm/Retake instead of capture
+  isPreviewing?: boolean;
+  confirmCapture?: () => void;
+  retakeCapture?: () => void;
 }
 
 export function CameraControls({
@@ -30,6 +34,9 @@ export function CameraControls({
   setZoom,
   handleCapture,
   handleClose,
+  isPreviewing,
+  confirmCapture,
+  retakeCapture,
 }: CameraControlsProps) {
   if (!cameraReady || !overlayVisible) return null;
 
@@ -52,7 +59,7 @@ export function CameraControls({
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <button
             onClick={switchCamera}
-            disabled={disabled}
+            disabled={disabled || !!isPreviewing}
             style={{
               width: 30,
               height: 30,
@@ -77,7 +84,7 @@ export function CameraControls({
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <button
           onClick={openFilePicker}
-          disabled={disabled}
+          disabled={disabled || !!isPreviewing}
           style={{
             width: 30,
             height: 30,
@@ -100,80 +107,114 @@ export function CameraControls({
 
       {/* Center group: zoom out, capture, zoom in */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <button
-          onClick={() => setZoom(prev => Math.max(1, prev - 0.5))}
-          disabled={disabled || zoom <= 1}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 14,
-            cursor: 'pointer'
-          }}
-          aria-label="Zoom out"
-          title="Zoom out"
-        >
-          <ZoomOut size={14} />
-        </button>
+        {isPreviewing ? (
+          <>
+            <button
+              onClick={() => { if (retakeCapture) retakeCapture(); }}
+              style={{
+                padding: '6px 10px',
+                borderRadius: 8,
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              Retake
+            </button>
 
-        <button
-          onClick={handleCapture}
-          disabled={!cameraReady || disabled}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 999,
-            background: 'transparent',
-            border: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: !cameraReady || disabled ? 'not-allowed' : 'pointer'
-          }}
-          aria-label="Capture photo"
-          title="Capture"
-        >
-          {isCapturing || processing ? (
-            <LogoLoader size={16} variant="other" />
-          ) : (
-            <CameraIcon size={16} color="#ff3b30" />
-          )}
-        </button>
+            <button
+              onClick={() => { if (confirmCapture) confirmCapture(); }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 8,
+                background: '#0b84ff',
+                border: 'none',
+                color: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              Confirm
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setZoom(prev => Math.max(1, prev - 0.5))}
+              disabled={disabled || zoom <= 1}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 8,
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+                cursor: 'pointer'
+              }}
+              aria-label="Zoom out"
+              title="Zoom out"
+            >
+              <ZoomOut size={14} />
+            </button>
 
-        <button
-          onClick={() => setZoom(prev => Math.min(5, prev + 0.5))}
-          disabled={disabled || zoom >= 5}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 14,
-            cursor: 'pointer'
-          }}
-          aria-label="Zoom in"
-          title="Zoom in"
-        >
-          <ZoomIn size={14} />
-        </button>
+            <button
+              onClick={handleCapture}
+              disabled={!cameraReady || disabled}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 999,
+                background: 'transparent',
+                border: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: !cameraReady || disabled ? 'not-allowed' : 'pointer'
+              }}
+              aria-label="Capture photo"
+              title="Capture"
+            >
+              {isCapturing || processing ? (
+                <LogoLoader size={16} variant="other" />
+              ) : (
+                <CameraIcon size={16} color="#ff3b30" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setZoom(prev => Math.min(5, prev + 0.5))}
+              disabled={disabled || zoom >= 5}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 8,
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+                cursor: 'pointer'
+              }}
+              aria-label="Zoom in"
+              title="Zoom in"
+            >
+              <ZoomIn size={14} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Close (right) */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <button
           onClick={handleClose}
-          disabled={disabled}
+          disabled={disabled || !!isPreviewing}
           style={{
             width: 30,
             height: 30,

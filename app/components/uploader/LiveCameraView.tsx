@@ -232,8 +232,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     }
   }, [handleTouchEnd, setIsDraggingText, updateDragPosition]);
 
-  // Capture logic
-  const { handleCapture } = useCaptureLogic({
+  // Capture logic (includes preview/confirm/retake handlers)
+  const { handleCapture, previewUrl, isPreviewing, confirmCapture, retakeCapture } = useCaptureLogic({
     isCapturing,
     processing,
     onCapture,
@@ -245,6 +245,9 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     performCapture,
     onClose,
   });
+
+  // disable UI controls while previewing
+  const controlsDisabled = disabled || isPreviewing;
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -423,7 +426,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
             />
 
             <CameraControls
-              disabled={disabled}
+              disabled={controlsDisabled}
               cameraReady={cameraReady}
               isCapturing={isCapturing}
               processing={processing}
@@ -434,6 +437,9 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               setZoom={setZoom}
               handleCapture={handleCapture}
               handleClose={handleClose}
+              isPreviewing={isPreviewing}
+              confirmCapture={confirmCapture}
+              retakeCapture={() => { retakeCapture(); startCameraEnhanced(); startRenderLoop(effectSettings, false, videoRef, streamRef, applyZoom); }}
             />
 
             <CameraError error={error} startCameraEnhanced={startCameraEnhanced} onClose={onClose} />
@@ -441,6 +447,11 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
             <CameraLoading cameraReady={cameraReady} error={error} />
 
             <CameraProcessingOverlay showProcessingOverlay={showProcessingOverlay} />
+
+            {/* When previewing, show the captured image on top of the display canvas (no separate overlay bar) */}
+            {isPreviewing && previewUrl && (
+              <img src={previewUrl} alt="Captured preview" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 2, borderRadius: 6 }} />
+            )}
           </div>
 
           {/* Effect selection buttons */}

@@ -5,6 +5,8 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Clock, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Moon } from "lucide-react";
+import { SpinningLogo } from "@/app/components/ui/SpinningLogo";
+import { currentTheme } from "@/lib/theme";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import { usePathname, useRouter } from "next/navigation";
 import TimeDisplay from "@/app/components/ui/TimeDisplay";
@@ -77,6 +79,7 @@ export const UserHeader = memo(function UserHeader({
   const [stories, setStories] = useState<any[]>([]);
   const [storyViewerOpen, setStoryViewerOpen] = useState(false);
   const [storyIdx, setStoryIdx] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -271,44 +274,49 @@ export const UserHeader = memo(function UserHeader({
                 <>
                 <button
                   ref={followBtnRef as any}
-                  className={`btn follow-btn ${isFollowing ? 'following' : 'not-following'}`}
+                  className={`btn btn-no-bg no-effects`}
+                  style={{ padding: '8px', transform: 'none', transition: 'none' }}
                   onClick={async () => {
-                    if (toggleFollow) {
-                      const success = await toggleFollow();
-                      if (!success) {
-                        setShowAuth(true);
-                      }
-                    } else {
-                      const cur = await api.getCurrentUser();
-                      if (!cur) {
-                        try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
-                        setShowAuth(true);
-                        return;
-                      }
-                      // Simplified: optimistically update state and perform the API
-                      // call in the background. No animations or temporary expansion
-                      // state are used here to keep behavior straightforward.
-                      const prev = !!isFollowing;
-                      setIsFollowing(!prev);
-                      try {
-                        if (!prev) {
-                          await api.follow(post.userId);
-                        } else {
-                          await api.unfollow(post.userId);
+                    // Prevent duplicate inflight from other UI
+                    if (followInFlightRef?.current) return;
+                    setLoading(true);
+                    if (followInFlightRef) followInFlightRef.current = true;
+                    try {
+                      if (toggleFollow) {
+                        const success = await toggleFollow();
+                        if (!success) setShowAuth(true);
+                      } else {
+                        const cur = await api.getCurrentUser();
+                        if (!cur) {
+                          try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+                          setShowAuth(true);
+                          return;
                         }
-                        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
-                      } catch (e: any) {
-                        // revert on error
-                        setIsFollowing(prev);
-                        console.warn(e?.message || 'Failed to update follow');
+                        const prev = !!isFollowing;
+                        setIsFollowing(!prev);
+                        try {
+                          if (!prev) await api.follow(post.userId);
+                          else await api.unfollow(post.userId);
+                          try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
+                        } catch (e: any) {
+                          setIsFollowing(prev);
+                          console.warn(e?.message || 'Failed to update follow');
+                        }
                       }
+                    } finally {
+                      setLoading(false);
+                      if (followInFlightRef) followInFlightRef.current = false;
                     }
                   }}
                       aria-label={isFollowing ? 'Unfollow' : 'Follow'}
                       title={isFollowing ? 'Unfollow' : 'Follow'}
                     >
-                      <span className="icon" aria-hidden>
-                        {isFollowing ? <UserCheck size={14} /> : <UserPlus size={14} />}
+                      <span className="icon" aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {loading ? (
+                          <SpinningLogo size={18} noScale={true} className="pull-to-refresh-logo" invertInLight={currentTheme() === 'light'} />
+                        ) : (
+                          (isFollowing ? <UserCheck size={18} /> : <UserPlus size={18} />)
+                        )}
                       </span>
                   </button>
                 </>

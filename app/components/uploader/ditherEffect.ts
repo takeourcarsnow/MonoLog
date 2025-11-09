@@ -17,7 +17,23 @@ export function applyDitherToFrame(
   method: 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes' = 'ordered',
   palette: string = 'auto'
 ): void {
-  const imageData = sourceCtx.getImageData(0, 0, width, height);
+  // Some callers may pass a context that was not created with
+  // { willReadFrequently: true } which makes repeated getImageData calls
+  // slower and triggers a browser warning. To avoid that and ensure
+  // efficient readbacks, copy the source into a temporary canvas whose
+  // 2D context is created with willReadFrequently: true and read from it.
+  const temp = document.createElement('canvas');
+  temp.width = width;
+  temp.height = height;
+  const readCtx = (temp.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | null) || temp.getContext('2d')!;
+  // Draw the source into our temp canvas, scaling if necessary
+  try {
+    readCtx.drawImage((sourceCtx.canvas as HTMLCanvasElement), 0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height, 0, 0, width, height);
+  } catch (e) {
+    // Fallback: if drawImage fails for some reason, attempt direct read
+    try { readCtx.drawImage((sourceCtx as any).canvas || sourceCtx, 0, 0); } catch {}
+  }
+  const imageData = readCtx.getImageData(0, 0, width, height);
   const data = imageData.data;
 
   // Get color palette if using color mode with specific palette

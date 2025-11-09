@@ -198,20 +198,9 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     return Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
   }, []);
 
-  const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
-      e.preventDefault();
-      setIsInlineEditing(true);
-      setInlineEditText(effectSettings.textContent);
-      // Focus the textarea after it's rendered
-      setTimeout(() => {
-        if (inlineEditRef.current) {
-          inlineEditRef.current.focus();
-          inlineEditRef.current.select();
-        }
-      }, 0);
-    }
-  }, [effectSettings.type, effectSettings.textContent, disabled]);
+  // Note: double-click handling is implemented inline on the canvas element below
+  // to avoid potential bundler/name-collision issues that can cause a
+  // ReferenceError if the identifier is shadowed or duplicated in compiled output.
 
   const handleInlineEditChange = useCallback((value: string) => {
     setInlineEditText(value);
@@ -621,7 +610,20 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               onWheel={handleWheel}
-              onDoubleClick={handleDoubleClick}
+              onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
+                if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+                  e.preventDefault();
+                  setIsInlineEditing(true);
+                  setInlineEditText(effectSettings.textContent);
+                  // Focus the textarea after it's rendered
+                  setTimeout(() => {
+                    if (inlineEditRef.current) {
+                      inlineEditRef.current.focus();
+                      inlineEditRef.current.select();
+                    }
+                  }, 0);
+                }
+              }}
               onContextMenu={(e) => e.preventDefault()} // Prevent context menu on right click
               onTouchStart={handleTouchStartEnhanced}
               onTouchMove={handleTouchMoveEnhanced}

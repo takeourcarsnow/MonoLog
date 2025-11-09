@@ -86,6 +86,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     setDragStartX,
     dragStartY,
     setDragStartY,
+    isManipulatingText,
+    setIsManipulatingText,
   } = useLiveCameraState();
 
   const disabled = isCapturing || processing || !cameraReady;
@@ -130,9 +132,12 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
   // Text drag and rotation handlers with throttling for better performance
   const dragUpdateRef = useRef<{ x: number; y: number } | null>(null);
   const rotationUpdateRef = useRef<number | undefined>(undefined);
+  const scaleUpdateRef = useRef<number | undefined>(undefined);
   const rafRef = useRef<number | null>(null);
   const initialRotationRef = useRef<number>(0);
   const initialTouchAngleRef = useRef<number>(0);
+  const initialScaleRef = useRef<number>(1);
+  const initialDistanceRef = useRef<number>(0);
 
   const updateDragPosition = useCallback(() => {
     if (dragUpdateRef.current) {
@@ -151,6 +156,13 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
       }));
       rotationUpdateRef.current = undefined;
     }
+    if (scaleUpdateRef.current !== undefined) {
+      setEffectSettings(prev => ({
+        ...prev,
+        textScale: scaleUpdateRef.current,
+      }));
+      scaleUpdateRef.current = undefined;
+    }
     rafRef.current = null;
   }, [setEffectSettings]);
 
@@ -163,6 +175,13 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
   const throttledSetRotation = useCallback((rotation: number) => {
     rotationUpdateRef.current = rotation;
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(updateDragPosition);
+    }
+  }, [updateDragPosition]);
+
+  const throttledSetScale = useCallback((scale: number) => {
+    scaleUpdateRef.current = scale;
     if (rafRef.current === null) {
       rafRef.current = requestAnimationFrame(updateDragPosition);
     }
@@ -247,6 +266,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
     // Handle text dragging and rotation
     if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+      setIsManipulatingText(true);
       if (e.touches.length === 1) {
         // Single touch - drag
         const rect = e.currentTarget.getBoundingClientRect();
@@ -259,7 +279,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         setDragStartY(y);
         throttledSetDragPosition(x, y);
       } else if (e.touches.length === 2) {
-        // Two touches - rotation
+        // Two touches - rotation and scaling
         const rect = e.currentTarget.getBoundingClientRect();
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
@@ -274,20 +294,29 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
           touch2.clientX - rect.left, touch2.clientY - rect.top
         );
 
+        // Store initial scale and distance
+        initialScaleRef.current = effectSettings.textScale || 1;
+        initialDistanceRef.current = Math.hypot(
+          touch1.clientX - touch2.clientX,
+          touch1.clientY - touch2.clientY
+        );
+
         // Also set position to center of rotation
         const x = (centerX - rect.left) / rect.width;
         const y = (centerY - rect.top) / rect.height;
         throttledSetDragPosition(x, y);
       }
     }
-  }, [effectSettings.type, effectSettings.textContent, effectSettings.textRotation, disabled, handleTouchStart, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition, getAngle]);
+  }, [effectSettings.type, effectSettings.textContent, effectSettings.textRotation, effectSettings.textScale, disabled, handleTouchStart, setEffectSettings, setIsManipulatingText, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition, getAngle]);
 
   const handleTouchMoveEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    // Handle pinch zoom
-    handleTouchMove(e);
+    // Only handle camera zoom if not manipulating text
+    if (!isManipulatingText) {
+      handleTouchMove(e);
+    }
 
-    // Handle text dragging and rotation
-    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+    // Handle text dragging, rotation, and scaling
+    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled && isManipulatingText) {
       if (e.touches.length === 1 && isDraggingText) {
         // Single touch - drag
         const rect = e.currentTarget.getBoundingClientRect();
@@ -297,11 +326,12 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
         throttledSetDragPosition(x, y);
       } else if (e.touches.length === 2) {
-        // Two touches - rotation
+        // Two touches - rotation and scaling
         const rect = e.currentTarget.getBoundingClientRect();
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
 
+        // Handle rotation
         const currentAngle = getAngle(
           touch1.clientX - rect.left, touch1.clientY - rect.top,
           touch2.clientX - rect.left, touch2.clientY - rect.top
@@ -312,7 +342,18 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
         throttledSetRotation(newRotation);
 
-        // Also update position to center of rotation
+        // Handle scaling
+        const currentDistance = Math.hypot(
+          touch1.clientX - touch2.clientX,
+          touch1.clientY - touch2.clientY
+        );
+
+        const scaleDiff = currentDistance / initialDistanceRef.current;
+        const newScale = Math.max(0.1, Math.min(5, initialScaleRef.current * scaleDiff));
+
+        throttledSetScale(newScale);
+
+        // Also update position to center of rotation/scaling
         const centerX = (touch1.clientX + touch2.clientX) / 2;
         const centerY = (touch1.clientY + touch2.clientY) / 2;
         const x = Math.max(0, Math.min(1, (centerX - rect.left) / rect.width));
@@ -320,20 +361,21 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         throttledSetDragPosition(x, y);
       }
     }
-  }, [effectSettings.type, effectSettings.textContent, disabled, handleTouchMove, isDraggingText, throttledSetDragPosition, getAngle, throttledSetRotation]);
+  }, [effectSettings.type, effectSettings.textContent, disabled, handleTouchMove, isDraggingText, isManipulatingText, throttledSetDragPosition, getAngle, throttledSetRotation, throttledSetScale]);
 
   const handleTouchEndEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     handleTouchEnd(); // Reset pinch distance
     setIsDraggingText(false);
+    setIsManipulatingText(false);
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
-    // Final update to ensure position and rotation are set
-    if (dragUpdateRef.current || rotationUpdateRef.current !== undefined) {
+    // Final update to ensure position, rotation, and scale are set
+    if (dragUpdateRef.current || rotationUpdateRef.current !== undefined || scaleUpdateRef.current !== undefined) {
       updateDragPosition();
     }
-  }, [handleTouchEnd, setIsDraggingText, updateDragPosition]);
+  }, [handleTouchEnd, setIsDraggingText, setIsManipulatingText, updateDragPosition]);
 
   // Capture logic (includes preview/confirm/retake handlers)
   const { handleCapture, previewUrl, isPreviewing, confirmCapture, retakeCapture } = useCaptureLogic({
@@ -440,11 +482,14 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
-      // Clear drag and rotation state
+      // Clear drag, rotation, and scale state
       dragUpdateRef.current = null;
       rotationUpdateRef.current = undefined;
+      scaleUpdateRef.current = undefined;
       initialRotationRef.current = 0;
       initialTouchAngleRef.current = 0;
+      initialScaleRef.current = 1;
+      initialDistanceRef.current = 0;
     };
   }, []);
 

@@ -83,7 +83,9 @@ export function useCaptureLogic({
       try { URL.revokeObjectURL(previewUrl); } catch (e) {}
       setPreviewUrl(null);
     }
-  }, [previewBlob, onCapture, previewUrl]);
+    // Close the modal after confirming
+    onClose();
+  }, [previewBlob, onCapture, previewUrl, onClose]);
 
   // Retake: clear preview; parent should restart camera/render
   const retakeCapture = useCallback(() => {

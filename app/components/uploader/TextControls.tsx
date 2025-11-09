@@ -31,10 +31,6 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
     onSettingsChange({ ...effectSettings, textColor: value });
   }, [effectSettings, onSettingsChange]);
 
-  const handleBoldToggle = useCallback((checked: boolean) => {
-    onSettingsChange({ ...effectSettings, textBold: checked });
-  }, [effectSettings, onSettingsChange]);
-
   const handleShadowToggle = useCallback((checked: boolean) => {
     onSettingsChange({ ...effectSettings, textShadow: checked });
   }, [effectSettings, onSettingsChange]);
@@ -124,19 +120,6 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
           <option value="Anton">Anton</option>
           <option value="Ubuntu">Ubuntu</option>
         </select>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <input
-            type="checkbox"
-            id="textBold"
-            checked={!!effectSettings.textBold}
-            onChange={(e) => handleBoldToggle(e.target.checked)}
-            disabled={disabled}
-            style={{ margin: 0, width: '12px', height: '12px' }}
-          />
-          <label htmlFor="textBold" style={{ fontSize: '10px', color: 'var(--text-secondary)', margin: 0 }}>
-            Bold
-          </label>
-        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <input
             type="checkbox"

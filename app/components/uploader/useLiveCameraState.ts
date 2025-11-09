@@ -45,6 +45,24 @@ export function useLiveCameraState() {
     asciiCharsetPreset: 'custom',
     frameOverlay: null,
     overlay: null,
+    // Text settings - default to enabled and bold
+    textEnabled: true,
+    textContent: 'Your Text Here',
+    textFontSize: 24,
+    textFontFamily: 'Roboto',
+    textColor: '#ffffff',
+    textBold: true,
+    textShadow: true,
+    textAlign: 'center',
+    textPosition: 'center',
+    textX: undefined,
+    textY: undefined,
+    textOpacity: 1,
+    textRotation: 0,
+    textScale: 1,
+    textStroke: false,
+    textStrokeColor: '#000000',
+    textStrokeWidth: 2,
   });
 
   const [cameraReady, setCameraReady] = useState(false);
@@ -73,6 +91,9 @@ export function useLiveCameraState() {
   const [isDraggingText, setIsDraggingText] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragStartY, setDragStartY] = useState(0);
+
+  // Text manipulation state (for preventing camera zoom during text interaction)
+  const [isManipulatingText, setIsManipulatingText] = useState(false);
 
   return {
     effectSettings,
@@ -107,5 +128,7 @@ export function useLiveCameraState() {
     setDragStartX,
     dragStartY,
     setDragStartY,
+    isManipulatingText,
+    setIsManipulatingText,
   };
 }

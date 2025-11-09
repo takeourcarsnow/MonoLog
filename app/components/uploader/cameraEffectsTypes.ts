@@ -60,6 +60,7 @@ export interface CameraEffectSettings {
   textOpacity?: number;
   textShadow?: boolean;
   textRotation?: number; // Rotation in degrees
+  textScale?: number; // Scale factor (1 = normal size)
   textStroke?: boolean;
   textStrokeColor?: string;
   textStrokeWidth?: number;

@@ -187,7 +187,7 @@ export function applyUnifiedEffects(
       settings.textFontSize || 24,
       settings.textFontFamily || 'Arial',
       settings.textColor || '#ffffff',
-      settings.textBold || false,
+      true, // Always bold
       settings.textShadow || false,
       settings.textAlign || 'center',
       settings.textPosition || 'center',
@@ -195,6 +195,7 @@ export function applyUnifiedEffects(
       settings.textY,
       settings.textOpacity || 1,
       settings.textRotation || 0,
+      settings.textScale || 1,
       settings.textStroke || false,
       settings.textStrokeColor || '#000000',
       settings.textStrokeWidth || 2
@@ -226,6 +227,7 @@ export function clearTextCache() {
 
 // Performance optimization: skip text rendering if settings haven't changed
 let lastTextSettings: string = '';
+let lastFontFamily: string = '';
 
 export function shouldSkipTextRender(
   text: string,
@@ -241,9 +243,16 @@ export function shouldSkipTextRender(
   position: string,
   textX: number | undefined,
   textY: number | undefined,
-  opacity: number
+  opacity: number,
+  scale: number
 ): boolean {
-  const currentSettings = `${text}|${fontSize}|${fontFamily}|${color}|${bold}|${shadow}|${align}|${stroke}|${strokeColor}|${strokeWidth}|${position}|${textX}|${textY}|${opacity}`;
+  // Don't skip if font family changed (font might not be loaded yet)
+  if (fontFamily !== lastFontFamily) {
+    lastFontFamily = fontFamily;
+    return false;
+  }
+
+  const currentSettings = `${text}|${fontSize}|${fontFamily}|${color}|${bold}|${shadow}|${align}|${stroke}|${strokeColor}|${strokeWidth}|${position}|${textX}|${textY}|${opacity}|${scale}`;
   if (currentSettings === lastTextSettings) {
     return true;
   }
@@ -309,20 +318,23 @@ function getCachedTextCanvas(
   // Set font for measurement
   ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
 
-  // Measure all lines to find max width and total height
-  let maxWidth = 0;
-  const lineHeight = fontSize * 1.2; // Line height
-  const totalHeight = lines.length * lineHeight;
+  // Get font metrics for proper sizing
+  const metrics = ctx.measureText('Ag'); // Use characters with ascenders and descenders
+  const fontAscent = metrics.actualBoundingBoxAscent || fontSize * 0.8; // Fallback for browsers without actualBoundingBox
+  const fontDescent = metrics.actualBoundingBoxDescent || fontSize * 0.2;
+  const lineHeight = fontAscent + fontDescent + fontSize * 0.2; // Add some extra spacing
 
+  // Measure all lines to find max width
+  let maxWidth = 0;
   for (const line of lines) {
-    const metrics = ctx.measureText(line);
-    maxWidth = Math.max(maxWidth, metrics.width);
+    const lineMetrics = ctx.measureText(line);
+    maxWidth = Math.max(maxWidth, lineMetrics.width);
   }
 
-  // Set canvas size with padding (extra padding for shadow)
-  const padding = shadow ? 12 : 8;
-  canvas.width = Math.ceil(maxWidth) + padding;
-  canvas.height = Math.ceil(totalHeight) + padding;
+  // Set canvas size with padding (extra padding for shadow and font overflow)
+  const padding = shadow ? 16 : 12; // Increased padding for decorative fonts
+  canvas.width = Math.ceil(maxWidth) + padding * 2;
+  canvas.height = Math.ceil(lines.length * lineHeight) + padding * 2;
 
   // Clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -330,18 +342,18 @@ function getCachedTextCanvas(
   // Set font and alignment
   ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
   ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
+  ctx.textBaseline = 'alphabetic'; // Better baseline for proper glyph positioning
 
   // Draw each line
   for (let i = 0; i < lines.length; i++) {
-    const y = (shadow ? 6 : 4) + i * lineHeight;
-    let x = shadow ? 6 : 4;
+    const baselineY = padding + fontAscent + i * lineHeight;
+    let x = padding;
 
     // Adjust x position based on alignment
     if (align === 'center') {
       x = (canvas.width - ctx.measureText(lines[i]).width) / 2;
     } else if (align === 'right') {
-      x = canvas.width - ctx.measureText(lines[i]).width - (shadow ? 6 : 4);
+      x = canvas.width - ctx.measureText(lines[i]).width - padding;
     }
 
     // Apply shadow if enabled
@@ -361,12 +373,12 @@ function getCachedTextCanvas(
     if (stroke) {
       ctx.strokeStyle = strokeColor;
       ctx.lineWidth = strokeWidth;
-      ctx.strokeText(lines[i], x, y);
+      ctx.strokeText(lines[i], x, baselineY);
     }
 
     // Apply fill
     ctx.fillStyle = color;
-    ctx.fillText(lines[i], x, y);
+    ctx.fillText(lines[i], x, baselineY);
   }
 
   // Cache the canvas
@@ -397,6 +409,7 @@ function applyTextOverlayToFrame(
   textY: number | undefined,
   opacity: number,
   rotation: number,
+  scale: number,
   stroke: boolean,
   strokeColor: string,
   strokeWidth: number
@@ -404,7 +417,7 @@ function applyTextOverlayToFrame(
   if (!text.trim()) return;
 
   // Performance optimization: skip if settings haven't changed
-  if (shouldSkipTextRender(text, fontSize, fontFamily, color, bold, shadow, align, stroke, strokeColor, strokeWidth, position, textX, textY, opacity)) {
+  if (shouldSkipTextRender(text, fontSize, fontFamily, color, bold, shadow, align, stroke, strokeColor, strokeWidth, position, textX, textY, opacity, scale)) {
     // Use cached text canvas directly without re-checking
     const cacheKey = `${text}|${fontSize}|${fontFamily}|${color}|${bold}|${shadow}|${align}|${stroke}|${strokeColor}|${strokeWidth}`;
     const cached = textCache.get(cacheKey);
@@ -466,6 +479,13 @@ function applyTextOverlayToFrame(
       if (rotation && rotation !== 0) {
         ctx.translate(x, y);
         ctx.rotate((rotation * Math.PI) / 180);
+        ctx.translate(-x, -y);
+      }
+
+      // Apply scaling
+      if (scale && scale !== 1) {
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
         ctx.translate(-x, -y);
       }
 
@@ -537,6 +557,13 @@ function applyTextOverlayToFrame(
   if (rotation && rotation !== 0) {
     ctx.translate(x, y);
     ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-x, -y);
+  }
+
+  // Apply scaling
+  if (scale && scale !== 1) {
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
     ctx.translate(-x, -y);
   }
 

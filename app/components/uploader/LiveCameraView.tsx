@@ -48,7 +48,7 @@ interface LiveCameraViewProps {
 }
 
 export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveCameraViewProps) {
-  const { videoRef, streamRef, facingMode, zoom, setZoom, torchEnabled, startCamera, stopCamera, switchCamera, toggleTorch, applyZoom } = useCamera();
+  const { videoRef, streamRef, facingMode, zoom, setZoom, torchEnabled, isSwitchingCamera, startCamera, stopCamera, switchCamera, toggleTorch, applyZoom } = useCamera();
   const { sourceCanvasRef, displayCanvasRef, startRenderLoop, stopRenderLoop } = useRenderLoop();
   const { handleCapture: performCapture } = useCapture();
 
@@ -683,6 +683,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               processing={processing}
               zoom={zoom}
               overlayVisible={overlayVisible}
+              isSwitchingCamera={isSwitchingCamera}
               switchCamera={switchCamera}
               openFilePicker={openFilePicker}
               setZoom={setZoom}

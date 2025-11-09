@@ -11,10 +11,6 @@ interface TextControlsProps {
 
 export const TextControls = memo<TextControlsProps>(({ effectSettings, onSettingsChange, disabled }) => {
   // Memoized change handlers to prevent unnecessary re-renders
-  const handleTextEnabledChange = useCallback((value: boolean) => {
-    onSettingsChange({ ...effectSettings, textEnabled: value });
-  }, [effectSettings, onSettingsChange]);
-
   const handleTextChange = useCallback((value: string) => {
     onSettingsChange({ ...effectSettings, textContent: value });
   }, [effectSettings, onSettingsChange]);
@@ -45,24 +41,8 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
 
   return (
     <div style={{ padding: '4px 0', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {/* Enable toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <input
-          type="checkbox"
-          id="text-enabled"
-          checked={effectSettings.textEnabled !== false}
-          onChange={(e) => handleTextEnabledChange(e.target.checked)}
-          disabled={disabled}
-          style={{ margin: 0 }}
-        />
-        <label htmlFor="text-enabled" style={{ fontSize: 12, opacity: 0.9, cursor: disabled ? 'not-allowed' : 'pointer' }}>
-          Enable Text Overlay
-        </label>
-      </div>
-
       {/* Controls */}
-      {effectSettings.textEnabled !== false && (
-        <>
+      <>
           {/* Text input - multi-line textarea */}
       <textarea
         value={effectSettings.textContent || ''}
@@ -228,7 +208,6 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
         </div>
       </div>
         </>
-      )}
     </div>
   );
 });

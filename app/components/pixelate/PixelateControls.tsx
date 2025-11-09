@@ -44,12 +44,12 @@ export default function PixelateControlsShared(props: SharedPixelateProps) {
             <input
               className="imgedit-range"
               type="range"
-              min={1}
+              min={10}
               max={100}
               step={1}
               value={props.pixelSize}
               onChange={(e: any) => onSizeChange(Number(e.target.value))}
-              style={{ flex: 1, minWidth: 0, background: rangeBg(props.pixelSize, 1, 100, '#334155', '#38bdf8') }}
+              style={{ flex: 1, minWidth: 0, background: rangeBg(props.pixelSize, 10, 100, '#334155', '#38bdf8') }}
               aria-label="Pixel size"
             />
             <span style={{ minWidth: 32, textAlign: 'right', fontSize: 12 }}>{props.pixelSize}</span>

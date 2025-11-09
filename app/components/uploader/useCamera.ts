@@ -8,6 +8,7 @@ export function useCamera() {
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [zoom, setZoom] = useState(1);
   const [torchEnabled, setTorchEnabled] = useState(false);
+  const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
 
   const startCamera = useCallback(async (preferredFacingMode?: 'user' | 'environment') => {
     try {
@@ -28,9 +29,24 @@ export function useCamera() {
           videoRef.current?.play();
         };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accessing camera:', error);
-      throw error;
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to access camera';
+      if (error.name === 'NotAllowedError') {
+        errorMessage = 'Camera access denied. Please allow camera permissions.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = 'No camera found on this device.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = 'Camera is already in use by another application.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = 'Camera does not support the requested settings.';
+      } else if (error.name === 'SecurityError') {
+        errorMessage = 'Camera access blocked due to security restrictions.';
+      }
+      
+      throw new Error(errorMessage);
     }
   }, [facingMode]);
 
@@ -48,11 +64,20 @@ export function useCamera() {
   }, []);
 
   const switchCamera = useCallback(async () => {
-    // Defensive check: use typeof to avoid ReferenceError if facingMode is missing at runtime
-    const newMode = (typeof facingMode !== 'undefined' && facingMode === 'user') ? 'environment' : 'user';
-    await stopCamera();
-    await startCamera(newMode);
-  }, [facingMode, stopCamera, startCamera]);
+    if (isSwitchingCamera) return; // Prevent multiple simultaneous switches
+    
+    setIsSwitchingCamera(true);
+    try {
+      // Defensive check: use typeof to avoid ReferenceError if facingMode is missing at runtime
+      const newMode = (typeof facingMode !== 'undefined' && facingMode === 'user') ? 'environment' : 'user';
+      await stopCamera();
+      await startCamera(newMode);
+    } catch (error) {
+      console.error('Error switching camera:', error);
+    } finally {
+      setIsSwitchingCamera(false);
+    }
+  }, [facingMode, stopCamera, startCamera, isSwitchingCamera]);
 
   const toggleTorch = useCallback(async () => {
     if (!streamRef.current) return;
@@ -119,6 +144,7 @@ export function useCamera() {
     zoom,
     setZoom,
     torchEnabled,
+    isSwitchingCamera,
     startCamera,
     stopCamera,
     switchCamera,

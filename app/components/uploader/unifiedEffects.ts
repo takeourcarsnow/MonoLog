@@ -178,7 +178,7 @@ export function applyUnifiedEffects(
   }
 
   // Apply text overlay if enabled (independent of type)
-  if (settings.textEnabled !== false && settings.textContent) { // Default to enabled if text exists
+  if (settings.textContent && settings.textContent.trim()) { // Only if there's actual text content
     applyTextOverlayToFrame(
       targetCtx,
       width,
@@ -387,6 +387,14 @@ function applyTextOverlayToFrame(
   ctx.save();
   ctx.globalAlpha = opacity;
 
+  // Set font for measurements
+  const fontWeight = bold ? 'bold' : 'normal';
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+
+  // Wrap text if it's too long
+  const maxWidth = width * 0.8; // Allow text to use 80% of photo width
+  const wrappedText = wrapText(ctx, text, maxWidth);
+
   // Calculate position
   let x = width / 2;
   let y = height / 2;
@@ -451,8 +459,7 @@ function applyTextOverlayToFrame(
     ctx.translate(-x, -y);
   }
 
-  // Set font and render directly (no caching)
-  const fontWeight = bold ? 'bold' : 'normal';
+  // Set font and render
   ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -471,7 +478,7 @@ function applyTextOverlayToFrame(
   }
 
   // Handle multi-line text
-  const lines = text.split('\n');
+  const lines = wrappedText.split('\n');
   const lineSpacing = fontSize * lineHeight;
 
   for (let i = 0; i < lines.length; i++) {
@@ -490,4 +497,70 @@ function applyTextOverlayToFrame(
   }
 
   ctx.restore();
+}
+
+// Function to wrap text based on max width
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+  // If text already has newlines, respect them
+  if (text.includes('\n')) {
+    return text;
+  }
+
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? currentLine + ' ' + word : word;
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && currentLine) {
+      // If adding this word would exceed, check if current line is ok
+      lines.push(currentLine);
+      currentLine = word;
+      // If the word itself is too long, break it
+      if (ctx.measureText(word).width > maxWidth) {
+        currentLine = breakLongWord(ctx, word, maxWidth);
+      }
+    } else {
+      currentLine = testLine;
+      // If the current line is too long (e.g., single long word), break it
+      if (ctx.measureText(currentLine).width > maxWidth) {
+        currentLine = breakLongWord(ctx, currentLine, maxWidth);
+      }
+    }
+  }
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines.join('\n');
+}
+
+// Helper to break a long word into chunks that fit maxWidth
+function breakLongWord(ctx: CanvasRenderingContext2D, word: string, maxWidth: number): string {
+  let result = '';
+  let currentChunk = '';
+
+  for (const char of word) {
+    const testChunk = currentChunk + char;
+    if (ctx.measureText(testChunk).width > maxWidth) {
+      if (currentChunk) {
+        result += currentChunk + '\n';
+        currentChunk = char;
+      } else {
+        // Single char too wide? Add anyway
+        result += char + '\n';
+        currentChunk = '';
+      }
+    } else {
+      currentChunk = testChunk;
+    }
+  }
+
+  if (currentChunk) {
+    result += currentChunk;
+  }
+
+  return result.trimEnd();
 }

@@ -11,6 +11,7 @@ interface CameraControlsProps {
   processing: boolean;
   zoom: number;
   overlayVisible: boolean;
+  isSwitchingCamera?: boolean;
   switchCamera: () => void;
   openFilePicker: () => void;
   setZoom: (zoom: (prev: number) => number) => void;
@@ -29,6 +30,7 @@ export function CameraControls({
   processing,
   zoom,
   overlayVisible,
+  isSwitchingCamera,
   switchCamera,
   openFilePicker,
   setZoom,
@@ -60,7 +62,7 @@ export function CameraControls({
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <button
               onClick={switchCamera}
-              disabled={disabled}
+              disabled={disabled || isSwitchingCamera}
               style={{
                 width: 30,
                 height: 30,
@@ -77,7 +79,7 @@ export function CameraControls({
               aria-label="Switch camera"
               title="Switch between front and back camera"
             >
-              <RefreshCw size={14} />
+              {isSwitchingCamera ? <LogoLoader size={14} variant="other" /> : <RefreshCw size={14} />}
             </button>
         </div>
       )}
@@ -112,8 +114,8 @@ export function CameraControls({
                 width: 30,
                 height: 30,
                 borderRadius: 8,
-                background: '#0b84ff',
-                border: 'none',
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.12)',
                 color: '#fff',
                 display: 'inline-flex',
                 alignItems: 'center',

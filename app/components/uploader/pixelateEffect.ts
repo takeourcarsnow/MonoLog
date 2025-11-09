@@ -10,10 +10,10 @@ export function applyPixelateToFrame(
   targetCtx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  pixelSize: number = 8,
+  pixelSize: number = 10,
   shape: 'square' | 'circle' = 'square'
 ): void {
-  if (pixelSize <= 1) {
+  if (pixelSize < 10) {
     targetCtx.drawImage(sourceCtx.canvas, 0, 0, width, height);
     return;
   }

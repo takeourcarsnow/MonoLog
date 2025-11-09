@@ -20,7 +20,7 @@ export function useLiveCameraState() {
     softFocus: 0,
     fade: 0,
     // Pixelate settings
-    pixelSize: 8,
+    pixelSize: 10,
     pixelShape: 'square',
     pixelSample: 'average',
     // Dither settings

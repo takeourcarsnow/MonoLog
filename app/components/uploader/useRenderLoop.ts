@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { applyCameraEffect, CameraEffectSettings } from "./cameraEffects";
 
 export function useRenderLoop() {
@@ -14,9 +14,25 @@ export function useRenderLoop() {
   const frameInterval = 1000 / TARGET_FPS;
   const lastFrameTimeRef = useRef(0);
 
+  // Visibility change detection
+  const isVisibleRef = useRef(!document.hidden);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isVisibleRef.current = !document.hidden;
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const renderFrame = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>, applyZoom?: (canvas: HTMLCanvasElement) => void) => {
-    // Stop rendering if loop is disabled, capturing, camera stopped, or no video
-    if (!renderLoopRunning.current || isCapturing || !streamRef.current || !videoRef.current) {
+    // Stop rendering if loop is disabled, capturing, camera stopped, page not visible, or no video
+    if (!renderLoopRunning.current || isCapturing || !isVisibleRef.current || !streamRef.current || !videoRef.current) {
+      if (renderLoopRunning.current && !isCapturing) {
+        // If not capturing but loop should run, schedule next frame
+        animationFrameRef.current = requestAnimationFrame(() => renderFrame(effectSettings, isCapturing, videoRef, streamRef, applyZoom));
+      }
       return;
     }
 

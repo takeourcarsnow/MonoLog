@@ -46,24 +46,6 @@ export function ProfileSkeleton() {
           <Skeleton width={80} height={32} borderRadius={16} />
         </div>
       </div>
-
-      {/* Posts section skeleton */}
-      <div style={{ marginTop: 16 }}>
-        {/* View toggle skeleton */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
-          <Skeleton width={20} height={20} />
-          <Skeleton width={120} height={16} />
-        </div>
-
-        {/* Grid posts skeleton */}
-        <div className="feed grid-view" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="tile" style={{ aspectRatio: "1", background: "var(--card-bg)", borderRadius: 8, overflow: "hidden" }}>
-              <Skeleton width="100%" height="100%" borderRadius={0} />
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

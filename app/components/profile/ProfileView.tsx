@@ -72,7 +72,7 @@ export function ProfileView({ userId }: { userId?: string }) {
     router.push('/profile');
   };
 
-  if (!currentUserId) {
+  if (!loading && !currentUserId) {
     return (
       <AuthRequired>
         <AuthForm onClose={async () => {

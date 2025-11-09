@@ -3,11 +3,14 @@ import { api } from "@/lib/api";
 import { SignOutButton } from "@/app/components/auth/SignOut";
 import Link from "next/link";
 import { User } from "lucide-react";
-import { UserPlus, UserCheck } from "lucide-react";
 import { BarChart3 } from "lucide-react";
 import { Bell } from "lucide-react";
 import { Star } from "lucide-react";
 import { Edit } from "lucide-react";
+import { UserPlus } from "lucide-react";
+import { Check } from "lucide-react";
+import { SpinningLogo } from "@/app/components/ui/SpinningLogo";
+import { currentTheme } from "@/lib/theme";
 import type { User as UserType } from "@/lib/types";
 
 interface ProfileActionsProps {
@@ -37,6 +40,7 @@ export function ProfileActions({
   setShowInvites
 }: ProfileActionsProps) {
   const followInFlightRef = useRef(false);
+  const [loading, setLoading] = useState(false);
 
   const handleFollowToggle = async () => {
     const cur = await api.getCurrentUser();
@@ -57,6 +61,7 @@ export function ProfileActions({
     setFollowing(!prev);
 
     followInFlightRef.current = true;
+    setLoading(true);
     try {
       if (!prev) {
         await api.follow(user.id);
@@ -74,6 +79,7 @@ export function ProfileActions({
     }
     finally {
       followInFlightRef.current = false;
+      setLoading(false);
     }
   };
 
@@ -102,30 +108,39 @@ export function ProfileActions({
           margin-top: -2px;
         }
       `}</style>
-      {/* Simple follow button */}
+      {/* Follow / Unfollow button in header */}
       {currentUserId && user?.id !== currentUserId ? (
-        <div style={{ margin: '8px 0' }}>
+        <div style={{ margin: '8px 0', width: '100%', display: 'flex', justifyContent: 'center' }}>
           <button
             onClick={handleFollowToggle}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #555',
-              borderRadius: '4px',
-              background: following ? '#333' : '#222',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
             aria-label={following ? "Unfollow" : "Follow"}
             title={following ? "Unfollow" : "Follow"}
             type="button"
+            disabled={loading}
+            aria-pressed={!!following}
+            aria-busy={loading}
+            className={`btn follow-btn ${following ? 'following' : 'not-following'}`}
           >
-            {following ? <UserCheck size={14} /> : <UserPlus size={14} />}
-            <span>{following ? 'Following' : 'Follow'}</span>
+            <span className="icon" aria-hidden style={{ display: 'inline-flex', alignItems: 'center', marginRight: loading ? 0 : 8 }}>
+              {loading ? <SpinningLogo size={16} noScale={true} className="pull-to-refresh-logo" invertInLight={currentTheme() === 'light'} /> : (following ? <Check size={16} /> : <UserPlus size={16} />)}
+            </span>
+            {/* show visible label only when not loading; include sr-only text for screen readers while loading */}
+            {!loading ? (
+              <span className="label">
+                {following ? 'Following' : 'Follow'}
+              </span>
+            ) : (
+              <span style={{position:'absolute', width:1, height:1, padding:0, margin:-1, overflow:'hidden', clip:'rect(0,0,0,0)', whiteSpace:'nowrap', border:0}}>Updating</span>
+            )}
           </button>
+            <style>{`
+            .follow-btn{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:9999px; font-weight:600; border:1px solid transparent;}
+            .follow-btn.not-following{ background:var(--primary); color:white; }
+            .follow-btn.not-following:hover{ filter:brightness(0.95); }
+            .follow-btn.following{ background:transparent; color:var(--muted); border:1px solid rgba(0,0,0,0.08); }
+            .follow-btn.following:hover{ background:rgba(0,0,0,0.02); color:var(--danger,-#c0392b); }
+            .follow-btn:disabled{ opacity:0.6; cursor:default; }
+          `}</style>
         </div>
       ) : null}
       <div className="profile-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%", flexWrap: "wrap", marginTop: 12 }}>

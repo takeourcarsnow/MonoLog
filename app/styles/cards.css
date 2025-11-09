@@ -284,6 +284,9 @@
   /* prevent the actions block from shrinking and forcing wraps */
   flex: 0 0 auto;
   white-space: nowrap;
+  /* Allow actions to overflow visually (follow label may expand) */
+  overflow: visible !important;
+  z-index: 2; /* keep actions above other header content if necessary */
 }
 
 /* Keep user-and-meta on a single row and vertically centered */
@@ -521,13 +524,38 @@
   margin-left: 2px !important;
 }
 
+/* Header-specific follow label tweaks: allow the label to overflow and
+   remain untruncated inside the header area. We only relax overflow
+   here (not globally) to avoid breaking other icon-reveal behaviors. */
 .card-head .follow-btn .reveal.label {
   margin-left: 4px !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  max-width: none !important;
+}
+
+/* Header-scoped follow animations: ensure a visible label animation even
+   if global transform animations are suppressed. These have higher
+   specificity so they take effect in the header. */
+.card-head .follow-btn.following-anim .reveal.label {
+  animation: followInAlt 420ms cubic-bezier(.2,.9,.2,1) !important;
+}
+.card-head .follow-btn.unfollow-anim .reveal.label {
+  animation: unfollowOutAlt 420ms cubic-bezier(.2,.9,.2,1) !important;
 }
 
 .card-head .follow-btn.expanded {
-  max-width: 120px !important;
+  /* Expanded follow buttons in headers are allowed to grow freely so the
+     reveal label (e.g. "Unfollowed") doesn't get clipped. Keep this
+     header-only to avoid changing follow button behavior elsewhere. */
+  max-width: none !important;
   padding: 2px 8px 2px 10px !important;
+  overflow: visible !important;
+}
+
+.card-head .follow-btn.expanded .reveal.label {
+  max-width: none !important;
+  overflow: visible !important;
 }
 
 @keyframes subtleSpin {

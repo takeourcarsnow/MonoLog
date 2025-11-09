@@ -132,6 +132,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         followInFlightRef={followInFlightRef}
         handleDeleteActivation={handleDeleteActivation}
         toast={toast}
+        toggleFollow={toggleFollow}
       />
 
       <MediaSection

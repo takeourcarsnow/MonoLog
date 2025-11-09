@@ -5,7 +5,6 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Clock, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Moon } from "lucide-react";
-import ToggleActionButton from "@/app/components/ui/ToggleActionButton";
 import { AuthForm } from "@/app/components/auth/AuthForm";
 import { usePathname, useRouter } from "next/navigation";
 import TimeDisplay from "@/app/components/ui/TimeDisplay";
@@ -39,6 +38,7 @@ interface UserHeaderProps {
   editorRef?: React.MutableRefObject<{ save?: () => Promise<void>; cancel?: () => void } | null>;
   editorOpeningRef?: React.MutableRefObject<boolean | null>;
   toast?: unknown; // deprecated
+  toggleFollow?: () => Promise<boolean>;
 }
 
 export const UserHeader = memo(function UserHeader({
@@ -67,6 +67,7 @@ export const UserHeader = memo(function UserHeader({
   editorRef,
   editorOpeningRef,
   toast: _toast,
+  toggleFollow,
 }: UserHeaderProps) {
   const { post } = usePostContext();
   const pathname = usePathname();
@@ -267,52 +268,50 @@ export const UserHeader = memo(function UserHeader({
           <>
             {!isMe ? (
               <>
-                <ToggleActionButton
+                <>
+                <button
                   ref={followBtnRef as any}
-                  className={`btn follow-btn icon-reveal ${isFollowing ? 'following' : 'not-following'} ${followAnim || ''} ${followExpanded ? 'expanded' : ''}`}
-                  active={isFollowing}
-                  pending={!!followInFlightRef.current}
+                  className={`btn follow-btn ${isFollowing ? 'following' : 'not-following'}`}
                   onClick={async () => {
-                    const cur = await api.getCurrentUser();
-                    if (!cur) {
-                      try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
-                      setShowAuth(true);
-                      return;
-                    }
-                    if (followInFlightRef.current) return;
-                    const prev = !!isFollowing;
-                    setIsFollowing(!prev);
-                    setFollowExpanded(true);
-                    if (followExpandTimerRef.current) { window.clearTimeout(followExpandTimerRef.current); followExpandTimerRef.current = null; }
-                    followExpandTimerRef.current = window.setTimeout(() => { setFollowExpanded(false); followExpandTimerRef.current = null; }, 2000);
-                    const willFollow = !prev;
-                    setFollowAnim(willFollow ? 'following-anim' : 'unfollow-anim');
-                    followInFlightRef.current = true;
-                    try {
-                      if (!prev) {
-                        console.log('DEBUG UserHeader: following userId', post.userId);
-                        await api.follow(post.userId);
-                      } else {
-                        console.log('DEBUG UserHeader: unfollowing userId', post.userId);
-                        await api.unfollow(post.userId);
+                    if (toggleFollow) {
+                      const success = await toggleFollow();
+                      if (!success) {
+                        setShowAuth(true);
                       }
-                      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
-                    } catch (e: any) {
-                      setIsFollowing(prev);
-                      console.warn(e?.message || 'Failed to update follow');
-                    } finally {
-                      followInFlightRef.current = false;
-                      setTimeout(() => setFollowAnim(null), 520);
+                    } else {
+                      const cur = await api.getCurrentUser();
+                      if (!cur) {
+                        try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
+                        setShowAuth(true);
+                        return;
+                      }
+                      // Simplified: optimistically update state and perform the API
+                      // call in the background. No animations or temporary expansion
+                      // state are used here to keep behavior straightforward.
+                      const prev = !!isFollowing;
+                      setIsFollowing(!prev);
+                      try {
+                        if (!prev) {
+                          await api.follow(post.userId);
+                        } else {
+                          await api.unfollow(post.userId);
+                        }
+                        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('monolog:follow_changed', { detail: { userId: post.userId, following: !prev } })); } catch (_) {}
+                      } catch (e: any) {
+                        // revert on error
+                        setIsFollowing(prev);
+                        console.warn(e?.message || 'Failed to update follow');
+                      }
                     }
                   }}
-                  activeIcon={<UserCheck size={14} />}
-                  inactiveIcon={<UserPlus size={14} />}
-                  ariaActiveLabel="Unfollow"
-                  ariaInactiveLabel="Follow"
-                  titleActive="Unfollow"
-                  titleInactive="Follow"
-                  revealLabel={isFollowing ? 'Followed' : 'Unfollowed'}
-                />
+                      aria-label={isFollowing ? 'Unfollow' : 'Follow'}
+                      title={isFollowing ? 'Unfollow' : 'Follow'}
+                    >
+                      <span className="icon" aria-hidden>
+                        {isFollowing ? <UserCheck size={14} /> : <UserPlus size={14} />}
+                      </span>
+                  </button>
+                </>
                 {showAuth ? (
                   <>
                     <div className="auth-dialog-backdrop" onClick={() => setShowAuth(false)} />

@@ -67,7 +67,7 @@ html[class*="page-scroll"] {
    defensive rule in case per-list padding isn't applied or the tabbar
    height varies on some devices. */
 .content:has(.communities) {
-  padding-bottom: calc(var(--tabbar-height, 56px) + 2.25rem) !important;
+  padding-bottom: calc(56px + 2.25rem) !important;
 }
 .content:has(.week-review-page) {
   overflow: auto !important;

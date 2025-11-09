@@ -24,7 +24,7 @@
 
   /* Small internal bottom buffer so content doesn't sit flush against the tabbar */
   .swipe-views .swiper-slide > * {
-     padding-bottom: calc(var(--tabbar-height, 72px) + 12px) !important;
+     padding-bottom: calc(56px + 12px) !important;
   }
 
 /* Uniform slide sizing handled via min-height above; no separate fixed-height
@@ -92,7 +92,7 @@
 .debug-guides .content { outline: 1px dashed rgba(255,255,255,0.04); }
 .debug-guides .content > .swipe-views { outline: 1px dashed rgba(0,128,255,0.06); }
 .debug-guides .header-inner { outline: 1px dashed rgba(0,200,255,0.05); }
-.debug-guides .tabbar-inner { outline: 1px dashed rgba(0,255,128,0.04); }
+.debug-guides .tabbar { outline: 1px dashed rgba(0,255,128,0.04); }
 /* Apply by adding class "debug-guides" to the <body> element in the console:
    document.body.classList.add('debug-guides')
  */

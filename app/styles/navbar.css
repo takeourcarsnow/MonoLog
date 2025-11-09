@@ -1,21 +1,11 @@
-/* Static tab item (server-rendered) - will be enhanced by client component */
 .tab-item-static {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 10px 8px;
-  border-radius: 12px;
-  transition: background-color 220ms ease, color 260ms ease;
-  position: relative;
   min-width: 60px;
-  cursor: pointer;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
   color: var(--muted);
-  overflow: hidden;
 }
 
 .tab-item-static.active {
@@ -23,28 +13,18 @@
 }
 
 .tab-item-static .tab-icon {
-  /* Ensure the icon itself is a centered flex container so SVGs of
-     varying viewBox/size align consistently with the label. Match
-     the icon component's size (20px) for predictable layout. */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 20px;
   height: 20px;
   margin-bottom: 6px;
-  transition: color 260ms ease, transform 260ms ease;
-  position: relative;
-  z-index: 1;
 }
 
-.tab-item-static.active .tab-icon {
-  transform: scale(1.2);
-}
-
-/* Ensure SVGs inside the icon container size to the box */
 .tab-item-static .tab-icon svg {
   width: 100%;
   height: 100%;
+  stroke: currentColor;
 }
 
 .tab-item-static .tab-label {
@@ -53,122 +33,32 @@
   text-align: center;
   line-height: 1;
   opacity: 0.7;
-  transition: opacity 220ms ease, color 260ms ease;
-  z-index: 1;
-  position: relative;
 }
 
 .tab-item-static.active .tab-label {
   opacity: 1;
 }
 
-/* Bottom navigation bar styles */
-
 .tabbar {
   position: fixed;
-  /* Use logical inset properties to ensure the bar is flush to the viewport
-     bottom on all writing modes and platforms. */
-  inset-inline: 0;
-  inset-block-end: 0;
-  margin-bottom: 0;
-  /* Respect the device safe-area inset (iOS home indicator) so the visual
-     surface extends under system UI while keeping content readable. */
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  --tabbar-height: 56px;
-    /* Backdrop blur with a translucent backing. Keep color-mix for modern
-      browsers and add an rgba fallback using --bg-elev-rgb so translucency
-      is reliable where color-mix isn't supported. */
-    background: color-mix(in srgb, var(--bg-elev), transparent 15%);
-    /* Use the theme-aware alpha variable so dark theme gets a different translucency. */
-    background-color: rgba(var(--bg-elev-rgb, 247,247,249), var(--tabbar-alpha, 0.78));
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(var(--bg-elev-rgb, 247,247,249), var(--tabbar-alpha, 0.78));
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   z-index: 9999;
-  transform: translateZ(0);
-  transition: opacity 0.15s ease;
-  min-height: var(--tabbar-height);
-  box-sizing: border-box;
-  overflow: visible; /* allow pseudo-element to extend above the bar */
-  /* Explicitly remove any thin separators or shadows above the tabbar
-     (some platforms or components may add a hairline border). */
-  border-top: none !important;
-  box-shadow: none !important;
+  min-height: 56px;
 }
-
-/* The thin mask previously used to hide hairlines has been removed. */
 
 .tabbar-inner {
   display: flex;
+  flex-direction: row;
   justify-content: space-around;
   align-items: center;
   padding: 8px 0;
-  position: relative;
-  max-width: var(--maxw);
-  margin: 0 auto;
-  z-index: 1;
 }
 
-/* Make SVG icons inherit color */
-.tab-icon svg,
-.tab-icon svg * {
-  stroke: currentColor !important;
-  transition: stroke 260ms ease, fill 260ms ease, color 260ms ease;
-}
-
-/* Handle img elements (like the logo icon) for theming */
-.tab-icon img {
-  transition: filter 260ms ease;
-}
-
-:root[data-theme="dark"] .tab-icon img {
-  filter: invert(1);
-}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .tab-item-static,
-  .tab-icon,
-  .tab-label {
-    transition: none;
-  }
-}
-
-/* Mobile adjustments */
-@media (max-width: 480px) {
-  .tabbar-inner {
-    padding: 6px 0;
-  }
-
-  .tab-item-static {
-    padding: 8px 6px;
-    min-width: 50px;
-    min-height: 44px;
-  }
-}
-
-/* Enhanced focus states for accessibility */
-.tab-item-static:focus-visible {
-  outline: 2px solid var(--tab-color);
-  outline-offset: 2px;
-}
-
-/* When the image editor is open, ensure the tabbar and all its children
-   do not receive pointer events or focus. This complements the runtime
-   `inert` attribute and prevents hidden navbar elements from being clicked. */
-.imgedit-open .tabbar,
-.imgedit-open .tabbar * {
-  pointer-events: none !important;
-}
-.imgedit-open .tabbar {
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Force a theme-specific translucent backing for the tabbar with higher
-   specificity so theme switches reliably update the visible bar color. The
-   !important ensures runtime or cascade styles don't accidentally override
-   the intended theme color. */
 :root[data-theme="dark"] .tabbar,
 .dark .tabbar {
   background: none !important;

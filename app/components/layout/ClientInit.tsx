@@ -8,10 +8,10 @@ import performanceMonitor from '@/lib/performance-monitor';
 const AppShell = dynamic(() => import("@/app/components/layout/AppShell").then(mod => mod.AppShell), { ssr: false, loading: () => null });
 const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ssr: false, loading: () => null });
 const Navbar = dynamic(() => import('@/app/components/NavBar').then(mod => mod.Navbar), { ssr: false });
-const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfillClient'), { ssr: false });
-const PWAAnalytics = dynamic(() => import("@/app/components/pwa/PWAAnalytics").then(mod => mod.PWAAnalytics), { ssr: false });
-const PWAHealthCheck = dynamic(() => import("@/app/components/pwa/PWAAnalytics").then(mod => mod.PWAHealthCheck), { ssr: false });
-const RoutePrefetcher = dynamic(() => import("@/app/components/layout/RoutePrefetcher"), { ssr: false });
+const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfillClient').then(mod => mod.default), { ssr: false });
+const PWAAnalytics = dynamic(() => import('@/app/components/pwa/PWAAnalytics').then(mod => mod.PWAAnalytics), { ssr: false });
+const PWAHealthCheck = dynamic(() => import('@/app/components/pwa/PWAAnalytics').then(mod => mod.PWAHealthCheck), { ssr: false });
+const RoutePrefetcher = dynamic(() => import('@/app/components/layout/RoutePrefetcher').then(mod => mod.default), { ssr: false });
 
 export default function ClientInit({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {

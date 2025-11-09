@@ -311,7 +311,7 @@ export const UserHeader = memo(function UserHeader({
                   ariaInactiveLabel="Follow"
                   titleActive="Unfollow"
                   titleInactive="Follow"
-                  revealLabel={isFollowing ? 'Followed' : 'Not Followed'}
+                  revealLabel={isFollowing ? 'Followed' : 'Unfollowed'}
                 />
                 {showAuth ? (
                   <>

@@ -11,7 +11,7 @@ export function useUserHasStory(userId: string | undefined) {
   const [hasStory, setHasStory] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const checkStoryStatus = useCallback(async () => {
+  const checkStoryStatus = useCallback(async (force = false) => {
     if (!userId) {
       setHasStory(false);
       return;
@@ -19,7 +19,7 @@ export function useUserHasStory(userId: string | undefined) {
 
     const now = Date.now();
     const cached = storyStatusCache.get(userId);
-    if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    if (!force && cached && (now - cached.timestamp) < CACHE_TTL) {
       setHasStory(cached.hasStory);
       return;
     }
@@ -42,5 +42,5 @@ export function useUserHasStory(userId: string | undefined) {
     checkStoryStatus();
   }, [checkStoryStatus]);
 
-  return { hasStory, loading, refetch: checkStoryStatus };
+  return { hasStory, loading, refetch: () => checkStoryStatus(true) };
 }

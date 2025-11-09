@@ -46,7 +46,7 @@ export function ExploreView() {
         <FeedPage
           fetchFunction={fetchExploreFeed}
           title={<Compass size={20} strokeWidth={2} />}
-          subtitle="MonoLogs from people you aren't following yet"
+          subtitle="Posts from people you aren't following yet"
           viewStorageKey="exploreView"
           scrollStateKey="explore"
           // Keep explore posts visible even if the user follows/unfollows while here

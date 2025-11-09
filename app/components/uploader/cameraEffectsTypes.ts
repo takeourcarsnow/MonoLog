@@ -52,10 +52,14 @@ export interface CameraEffectSettings {
   textFontSize?: number;
   textFontFamily?: string;
   textColor?: string;
+  textBold?: boolean;
+  textAlign?: 'left' | 'center' | 'right';
   textPosition?: 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
   textX?: number; // Manual X coordinate (0-1 relative to canvas width)
   textY?: number; // Manual Y coordinate (0-1 relative to canvas height)
   textOpacity?: number;
+  textShadow?: boolean;
+  textRotation?: number; // Rotation in degrees
   textStroke?: boolean;
   textStrokeColor?: string;
   textStrokeWidth?: number;

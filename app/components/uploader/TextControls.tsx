@@ -31,28 +31,16 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
     onSettingsChange({ ...effectSettings, textColor: value });
   }, [effectSettings, onSettingsChange]);
 
-  const handlePositionChange = useCallback((value: string) => {
-    onSettingsChange({ ...effectSettings, textPosition: value as any, textX: undefined, textY: undefined });
+  const handleBoldToggle = useCallback((checked: boolean) => {
+    onSettingsChange({ ...effectSettings, textBold: checked });
   }, [effectSettings, onSettingsChange]);
 
-  const handleResetPosition = useCallback(() => {
-    onSettingsChange({ ...effectSettings, textX: undefined, textY: undefined });
+  const handleShadowToggle = useCallback((checked: boolean) => {
+    onSettingsChange({ ...effectSettings, textShadow: checked });
   }, [effectSettings, onSettingsChange]);
 
-  const handleOpacityChange = useCallback((value: number) => {
-    onSettingsChange({ ...effectSettings, textOpacity: value });
-  }, [effectSettings, onSettingsChange]);
-
-  const handleStrokeToggle = useCallback((checked: boolean) => {
-    onSettingsChange({ ...effectSettings, textStroke: checked });
-  }, [effectSettings, onSettingsChange]);
-
-  const handleStrokeColorChange = useCallback((value: string) => {
-    onSettingsChange({ ...effectSettings, textStrokeColor: value });
-  }, [effectSettings, onSettingsChange]);
-
-  const handleStrokeWidthChange = useCallback((value: number) => {
-    onSettingsChange({ ...effectSettings, textStrokeWidth: value });
+  const handleAlignChange = useCallback((align: string) => {
+    onSettingsChange({ ...effectSettings, textAlign: align as any });
   }, [effectSettings, onSettingsChange]);
 
   return (
@@ -75,13 +63,13 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
       {/* Controls */}
       {effectSettings.textEnabled !== false && (
         <>
-          {/* Text input - full width */}
-      <input
-        type="text"
+          {/* Text input - multi-line textarea */}
+      <textarea
         value={effectSettings.textContent || ''}
         onChange={(e) => handleTextChange(e.target.value)}
-        placeholder="Text"
+        placeholder="Text (multi-line supported)"
         disabled={disabled}
+        rows={3}
         style={{
           width: '100%',
           padding: '3px 4px',
@@ -90,10 +78,12 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
           background: 'var(--bg)',
           color: 'var(--text)',
           fontSize: '12px',
+          resize: 'vertical',
+          minHeight: '60px',
         }}
       />
 
-      {/* Row 1: Size slider + Font select */}
+      {/* Row 1: Size slider + Font select + Bold toggle + Shadow toggle */}
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ fontSize: '10px', color: 'var(--text-secondary)', minWidth: '24px' }}>
@@ -134,9 +124,35 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
           <option value="Impact">Impact</option>
           <option value="Comic Sans MS">Comic</option>
         </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <input
+            type="checkbox"
+            id="textBold"
+            checked={!!effectSettings.textBold}
+            onChange={(e) => handleBoldToggle(e.target.checked)}
+            disabled={disabled}
+            style={{ margin: 0, width: '12px', height: '12px' }}
+          />
+          <label htmlFor="textBold" style={{ fontSize: '10px', color: 'var(--text-secondary)', margin: 0 }}>
+            Bold
+          </label>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <input
+            type="checkbox"
+            id="textShadow"
+            checked={!!effectSettings.textShadow}
+            onChange={(e) => handleShadowToggle(e.target.checked)}
+            disabled={disabled}
+            style={{ margin: 0, width: '12px', height: '12px' }}
+          />
+          <label htmlFor="textShadow" style={{ fontSize: '10px', color: 'var(--text-secondary)', margin: 0 }}>
+            Shadow
+          </label>
+        </div>
       </div>
 
-      {/* Row 2: Color picker + Position select */}
+      {/* Row 2: Color picker + Alignment buttons */}
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <input
           type="color"
@@ -152,124 +168,63 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
             flexShrink: 0,
           }}
         />
-        <select
-          value={effectSettings.textPosition || 'center'}
-          onChange={(e) => handlePositionChange(e.target.value)}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            padding: '2px 4px',
-            border: '1px solid var(--border)',
-            borderRadius: 2,
-            background: 'var(--bg)',
-            color: 'var(--text)',
-            fontSize: '11px',
-            height: '24px',
-          }}
-        >
-          <option value="top-left">TL</option>
-          <option value="top-center">TC</option>
-          <option value="top-right">TR</option>
-          <option value="center-left">CL</option>
-          <option value="center">Center</option>
-          <option value="center-right">CR</option>
-          <option value="bottom-left">BL</option>
-          <option value="bottom-center">BC</option>
-          <option value="bottom-right">BR</option>
-        </select>
-        <button
-          type="button"
-          onClick={handleResetPosition}
-          disabled={disabled}
-          style={{
-            padding: '2px 6px',
-            border: '1px solid var(--border)',
-            borderRadius: 2,
-            background: 'var(--bg)',
-            color: 'var(--text)',
-            fontSize: '10px',
-            cursor: 'pointer',
-            height: '24px',
-          }}
-          title="Reset to preset position"
-        >
-          ↺
-        </button>
-      </div>
-
-      {/* Manual position indicator - only show when dragging or has manual position */}
-      {(effectSettings.textX !== undefined && effectSettings.textY !== undefined) && (
-        <div style={{ fontSize: '10px', color: 'var(--text-secondary)', textAlign: 'center' }}>
-          Position: ({Math.round(effectSettings.textX * 100)}%, {Math.round(effectSettings.textY * 100)}%) - Drag to move
-        </div>
-      )}
-
-      {/* Row 3: Opacity slider + Stroke checkbox */}
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontSize: '10px', color: 'var(--text-secondary)', minWidth: '28px' }}>
-            {Math.round((effectSettings.textOpacity || 1) * 100)}%
-          </span>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.1"
-            value={effectSettings.textOpacity || 1}
-            onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
-            disabled={disabled}
-            style={{ flex: 1, height: '16px' }}
-          />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <input
-            type="checkbox"
-            id="textStroke"
-            checked={!!effectSettings.textStroke}
-            onChange={(e) => handleStrokeToggle(e.target.checked)}
-            disabled={disabled}
-            style={{ margin: 0, width: '12px', height: '12px' }}
-          />
-          <label htmlFor="textStroke" style={{ fontSize: '10px', color: 'var(--text-secondary)', margin: 0 }}>
-            Stroke
-          </label>
-        </div>
-      </div>
-
-      {/* Stroke controls - only show when stroke is enabled */}
-      {effectSettings.textStroke && (
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <input
-            type="color"
-            value={effectSettings.textStrokeColor || '#000000'}
-            onChange={(e) => handleStrokeColorChange(e.target.value)}
+        <div style={{ display: 'flex', gap: 2, flex: 1 }}>
+          <button
+            type="button"
+            onClick={() => handleAlignChange('left')}
             disabled={disabled}
             style={{
-              width: '32px',
-              height: '24px',
-              border: '1px solid var(--border)',
+              flex: 1,
+              padding: '2px 4px',
+              border: `1px solid ${effectSettings.textAlign === 'left' ? 'var(--accent)' : 'var(--border)'}`,
               borderRadius: 2,
+              background: effectSettings.textAlign === 'left' ? 'var(--accent)' : 'var(--bg)',
+              color: effectSettings.textAlign === 'left' ? 'white' : 'var(--text)',
+              fontSize: '10px',
               cursor: 'pointer',
-              flexShrink: 0,
+              height: '24px',
             }}
-          />
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', minWidth: '20px' }}>
-              {effectSettings.textStrokeWidth || 2}px
-            </span>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              step="1"
-              value={effectSettings.textStrokeWidth || 2}
-              onChange={(e) => handleStrokeWidthChange(parseInt(e.target.value))}
-              disabled={disabled}
-              style={{ flex: 1, height: '16px' }}
-            />
-          </div>
+          >
+            ⬅️ Left
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAlignChange('center')}
+            disabled={disabled}
+            style={{
+              flex: 1,
+              padding: '2px 4px',
+              border: `1px solid ${effectSettings.textAlign === 'center' ? 'var(--accent)' : 'var(--border)'}`,
+              borderRadius: 2,
+              background: effectSettings.textAlign === 'center' ? 'var(--accent)' : 'var(--bg)',
+              color: effectSettings.textAlign === 'center' ? 'white' : 'var(--text)',
+              fontSize: '10px',
+              cursor: 'pointer',
+              height: '24px',
+            }}
+          >
+            ⬌ Center
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAlignChange('right')}
+            disabled={disabled}
+            style={{
+              flex: 1,
+              padding: '2px 4px',
+              border: `1px solid ${effectSettings.textAlign === 'right' ? 'var(--accent)' : 'var(--border)'}`,
+              borderRadius: 2,
+              background: effectSettings.textAlign === 'right' ? 'var(--accent)' : 'var(--bg)',
+              color: effectSettings.textAlign === 'right' ? 'white' : 'var(--text)',
+              fontSize: '10px',
+              cursor: 'pointer',
+              height: '24px',
+            }}
+          >
+            ➡️ Right
+          </button>
         </div>
-      )}
+      </div>
         </>
       )}
     </div>

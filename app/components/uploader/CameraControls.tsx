@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { RefreshCw, ZoomIn, ZoomOut, X, Camera as CameraIcon, ImagePlus } from 'lucide-react';
+import { RefreshCw, ZoomIn, ZoomOut, X, Camera as CameraIcon, RotateCcw, Check } from 'lucide-react';
 import LogoLoader from "./LogoLoader";
 
 interface CameraControlsProps {
@@ -55,86 +55,75 @@ export function CameraControls({
       padding: '6px 8px',
       borderRadius: 12,
     }}>
-      {/* Switch camera (left) */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <button
-            onClick={switchCamera}
-            disabled={disabled || !!isPreviewing}
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 8,
-              background: 'transparent',
-              border: 'none',
-              color: '#fff',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 14,
-              cursor: 'pointer'
-            }}
-            aria-label="Switch camera"
-            title="Switch between front and back camera"
-          >
-            <RefreshCw size={14} />
-          </button>
-      </div>
+      {/* Switch camera (left) - only show when not previewing */}
+      {!isPreviewing && (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+              onClick={switchCamera}
+              disabled={disabled}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 8,
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+                cursor: 'pointer'
+              }}
+              aria-label="Switch camera"
+              title="Switch between front and back camera"
+            >
+              <RefreshCw size={14} />
+            </button>
+        </div>
+      )}
 
-      {/* Add-from-files button */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <button
-          onClick={openFilePicker}
-          disabled={disabled || !!isPreviewing}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 14,
-            cursor: 'pointer'
-          }}
-          aria-label="Add from files"
-          title="Add image from files"
-        >
-          <ImagePlus size={14} />
-        </button>
-      </div>
-
-      {/* Center group: zoom out, capture, zoom in */}
+      {/* Center group: zoom out, capture, zoom in, or retake/confirm */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         {isPreviewing ? (
           <>
             <button
               onClick={() => { if (retakeCapture) retakeCapture(); }}
               style={{
-                padding: '6px 10px',
+                width: 30,
+                height: 30,
                 borderRadius: 8,
                 background: 'transparent',
                 border: '1px solid rgba(255,255,255,0.12)',
                 color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 cursor: 'pointer'
               }}
+              aria-label="Retake photo"
+              title="Retake"
             >
-              Retake
+              <RotateCcw size={14} />
             </button>
 
             <button
               onClick={() => { if (confirmCapture) confirmCapture(); }}
               style={{
-                padding: '6px 12px',
+                width: 30,
+                height: 30,
                 borderRadius: 8,
                 background: '#0b84ff',
                 border: 'none',
                 color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 cursor: 'pointer'
               }}
+              aria-label="Confirm photo"
+              title="Confirm"
             >
-              Confirm
+              <Check size={14} />
             </button>
           </>
         ) : (
@@ -179,9 +168,9 @@ export function CameraControls({
               title="Capture"
             >
               {isCapturing || processing ? (
-                <LogoLoader size={16} variant="other" />
+                <LogoLoader size={20} variant="other" />
               ) : (
-                <CameraIcon size={16} color="#ff3b30" />
+                <CameraIcon size={20} color="#ff3b30" />
               )}
             </button>
 
@@ -210,30 +199,32 @@ export function CameraControls({
         )}
       </div>
 
-      {/* Close (right) */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <button
-          onClick={handleClose}
-          disabled={disabled || !!isPreviewing}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 14,
-            cursor: 'pointer'
-          }}
-          aria-label="Close camera"
-          title="Close"
-        >
-          <X size={14} />
-        </button>
-      </div>
+      {/* Close (right) - only show when not previewing */}
+      {!isPreviewing && (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            onClick={handleClose}
+            disabled={disabled}
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              background: 'transparent',
+              border: 'none',
+              color: '#fff',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 14,
+              cursor: 'pointer'
+            }}
+            aria-label="Close camera"
+            title="Close"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

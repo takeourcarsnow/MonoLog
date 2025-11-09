@@ -16,6 +16,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import Portal from "@/app/components/ui/Portal";
 import { getFrameFiles } from "@/app/components/imageEditor/framesPreload";
 import { getOverlayFiles } from "@/app/components/imageEditor/overlaysPreload";
+import { ImagePlus } from 'lucide-react';
 import { useCamera } from "./useCamera";
 import { useRenderLoop } from "./useRenderLoop";
 import { useCapture } from "./useCapture";
@@ -126,9 +127,12 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     setZoom,
   });
 
-  // Text drag handlers with throttling for better performance
+  // Text drag and rotation handlers with throttling for better performance
   const dragUpdateRef = useRef<{ x: number; y: number } | null>(null);
+  const rotationUpdateRef = useRef<number | undefined>(undefined);
   const rafRef = useRef<number | null>(null);
+  const initialRotationRef = useRef<number>(0);
+  const initialTouchAngleRef = useRef<number>(0);
 
   const updateDragPosition = useCallback(() => {
     if (dragUpdateRef.current) {
@@ -140,6 +144,13 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
       }));
       dragUpdateRef.current = null;
     }
+    if (rotationUpdateRef.current !== undefined) {
+      setEffectSettings(prev => ({
+        ...prev,
+        textRotation: rotationUpdateRef.current,
+      }));
+      rotationUpdateRef.current = undefined;
+    }
     rafRef.current = null;
   }, [setEffectSettings]);
 
@@ -150,74 +161,166 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     }
   }, [updateDragPosition]);
 
+  const throttledSetRotation = useCallback((rotation: number) => {
+    rotationUpdateRef.current = rotation;
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(updateDragPosition);
+    }
+  }, [updateDragPosition]);
+
+  // Helper function to calculate angle between two points
+  const getAngle = useCallback((x1: number, y1: number, x2: number, y2: number) => {
+    return Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+  }, []);
+
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width;
       const y = (e.clientY - rect.top) / rect.height;
 
-      setIsDraggingText(true);
-      setDragStartX(x);
-      setDragStartY(y);
-      throttledSetDragPosition(x, y);
+      if (e.button === 0) { // Left click - drag
+        setIsDraggingText(true);
+        setDragStartX(x);
+        setDragStartY(y);
+        throttledSetDragPosition(x, y);
+      } else if (e.button === 2) { // Right click - rotate
+        e.preventDefault(); // Prevent context menu
+        initialRotationRef.current = effectSettings.textRotation || 0;
+        setIsDraggingText(true);
+        setDragStartX(e.clientX);
+        setDragStartY(e.clientY);
+      }
     }
-  }, [effectSettings.type, effectSettings.textContent, disabled, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
+  }, [effectSettings.type, effectSettings.textContent, effectSettings.textRotation, disabled, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isDraggingText && effectSettings.type === 'text') {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+      if (e.buttons & 1) { // Left button held - drag
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
 
-      throttledSetDragPosition(x, y);
+        throttledSetDragPosition(x, y);
+      } else if (e.buttons & 2) { // Right button held - rotate
+        const deltaX = e.clientX - dragStartX;
+        const deltaY = e.clientY - dragStartY;
+        const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+        const newRotation = initialRotationRef.current + angle;
+
+        throttledSetRotation(newRotation);
+      }
     }
-  }, [isDraggingText, effectSettings.type, throttledSetDragPosition]);
+  }, [isDraggingText, effectSettings.type, dragStartX, dragStartY, throttledSetDragPosition, throttledSetRotation]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (e.button === 2) {
+      e.preventDefault(); // Prevent context menu on right click release
+    }
     setIsDraggingText(false);
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
-    // Final update to ensure position is set
-    if (dragUpdateRef.current) {
+    // Final update to ensure position and rotation are set
+    if (dragUpdateRef.current || rotationUpdateRef.current !== undefined) {
       updateDragPosition();
     }
   }, [setIsDraggingText, updateDragPosition]);
 
-  // Enhanced touch handlers for text dragging with throttling
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -2 : 2; // Scale down on scroll down, up on scroll up
+      const newSize = Math.max(12, Math.min(72, (effectSettings.textFontSize || 24) + delta));
+      setEffectSettings(prev => ({
+        ...prev,
+        textFontSize: newSize,
+      }));
+    }
+  }, [effectSettings.type, effectSettings.textContent, effectSettings.textFontSize, disabled, setEffectSettings]);
+
+  // Enhanced touch handlers for text dragging and rotation with throttling
   const handleTouchStartEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     // Handle pinch zoom first
     handleTouchStart(e);
 
-    // Handle text dragging
-    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled && e.touches.length === 1) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const touch = e.touches[0];
-      const x = (touch.clientX - rect.left) / rect.width;
-      const y = (touch.clientY - rect.top) / rect.height;
+    // Handle text dragging and rotation
+    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+      if (e.touches.length === 1) {
+        // Single touch - drag
+        const rect = e.currentTarget.getBoundingClientRect();
+        const touch = e.touches[0];
+        const x = (touch.clientX - rect.left) / rect.width;
+        const y = (touch.clientY - rect.top) / rect.height;
 
-      setIsDraggingText(true);
-      setDragStartX(x);
-      setDragStartY(y);
-      throttledSetDragPosition(x, y);
+        setIsDraggingText(true);
+        setDragStartX(x);
+        setDragStartY(y);
+        throttledSetDragPosition(x, y);
+      } else if (e.touches.length === 2) {
+        // Two touches - rotation
+        const rect = e.currentTarget.getBoundingClientRect();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+
+        const centerX = (touch1.clientX + touch2.clientX) / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2;
+
+        // Store initial rotation and touch angle
+        initialRotationRef.current = effectSettings.textRotation || 0;
+        initialTouchAngleRef.current = getAngle(
+          touch1.clientX - rect.left, touch1.clientY - rect.top,
+          touch2.clientX - rect.left, touch2.clientY - rect.top
+        );
+
+        // Also set position to center of rotation
+        const x = (centerX - rect.left) / rect.width;
+        const y = (centerY - rect.top) / rect.height;
+        throttledSetDragPosition(x, y);
+      }
     }
-  }, [effectSettings.type, effectSettings.textContent, disabled, handleTouchStart, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
+  }, [effectSettings.type, effectSettings.textContent, effectSettings.textRotation, disabled, handleTouchStart, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition, getAngle]);
 
   const handleTouchMoveEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     // Handle pinch zoom
     handleTouchMove(e);
 
-    // Handle text dragging
-    if (isDraggingText && effectSettings.type === 'text' && e.touches.length === 1) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const touch = e.touches[0];
-      const x = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
-      const y = Math.max(0, Math.min(1, (touch.clientY - rect.top) / rect.height));
+    // Handle text dragging and rotation
+    if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+      if (e.touches.length === 1 && isDraggingText) {
+        // Single touch - drag
+        const rect = e.currentTarget.getBoundingClientRect();
+        const touch = e.touches[0];
+        const x = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+        const y = Math.max(0, Math.min(1, (touch.clientY - rect.top) / rect.height));
 
-      throttledSetDragPosition(x, y);
+        throttledSetDragPosition(x, y);
+      } else if (e.touches.length === 2) {
+        // Two touches - rotation
+        const rect = e.currentTarget.getBoundingClientRect();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+
+        const currentAngle = getAngle(
+          touch1.clientX - rect.left, touch1.clientY - rect.top,
+          touch2.clientX - rect.left, touch2.clientY - rect.top
+        );
+
+        const angleDiff = currentAngle - initialTouchAngleRef.current;
+        const newRotation = initialRotationRef.current + angleDiff;
+
+        throttledSetRotation(newRotation);
+
+        // Also update position to center of rotation
+        const centerX = (touch1.clientX + touch2.clientX) / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2;
+        const x = Math.max(0, Math.min(1, (centerX - rect.left) / rect.width));
+        const y = Math.max(0, Math.min(1, (centerY - rect.top) / rect.height));
+        throttledSetDragPosition(x, y);
+      }
     }
-  }, [isDraggingText, effectSettings.type, handleTouchMove, throttledSetDragPosition]);
+  }, [effectSettings.type, effectSettings.textContent, disabled, handleTouchMove, isDraggingText, throttledSetDragPosition, getAngle, throttledSetRotation]);
 
   const handleTouchEndEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     handleTouchEnd(); // Reset pinch distance
@@ -226,8 +329,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
-    // Final update to ensure position is set
-    if (dragUpdateRef.current) {
+    // Final update to ensure position and rotation are set
+    if (dragUpdateRef.current || rotationUpdateRef.current !== undefined) {
       updateDragPosition();
     }
   }, [handleTouchEnd, setIsDraggingText, updateDragPosition]);
@@ -337,8 +440,11 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
-      // Clear drag state
+      // Clear drag and rotation state
       dragUpdateRef.current = null;
+      rotationUpdateRef.current = undefined;
+      initialRotationRef.current = 0;
+      initialTouchAngleRef.current = 0;
     };
   }, []);
 
@@ -409,6 +515,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
+              onWheel={handleWheel}
+              onContextMenu={(e) => e.preventDefault()} // Prevent context menu on right click
               onTouchStart={handleTouchStartEnhanced}
               onTouchMove={handleTouchMoveEnhanced}
               onTouchEnd={handleTouchEndEnhanced}
@@ -441,6 +549,32 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
               confirmCapture={confirmCapture}
               retakeCapture={() => { retakeCapture(); startCameraEnhanced(); startRenderLoop(effectSettings, false, videoRef, streamRef, applyZoom); }}
             />
+
+            {/* Add from files button - always visible in left bottom corner */}
+            <button
+              onClick={openFilePicker}
+              disabled={disabled}
+              style={{
+                position: 'absolute',
+                bottom: 8,
+                left: 8,
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                background: 'rgba(0,0,0,0.6)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 4,
+              }}
+              aria-label="Add from files"
+              title="Add image from files"
+            >
+              <ImagePlus size={16} />
+            </button>
 
             <CameraError error={error} startCameraEnhanced={startCameraEnhanced} onClose={onClose} />
 

@@ -72,7 +72,17 @@ export function ProfileView({ userId }: { userId?: string }) {
     router.push('/profile');
   };
 
-  
+  if (!currentUserId) {
+    return (
+      <AuthRequired>
+        <AuthForm onClose={async () => {
+          // refresh authenticated user state after sign-in
+          const me = await api.getCurrentUser();
+          // The useUserData hook will handle the refresh via auth:changed event
+        }} />
+      </AuthRequired>
+    );
+  }
 
   if (!user) {
     // while loading, show skeleton

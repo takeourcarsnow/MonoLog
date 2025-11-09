@@ -92,29 +92,12 @@ class EdgeCaseTester {
     } else {
       this.results.failed++;
       this.log(`${name} - FAILED: ${details}`, 'error');
-      
-      // Take screenshot on failure
-      try {
-        const screenshotName = `error-${Date.now()}-${name.replace(/[^a-z0-9]/gi, '-')}.png`;
-        const screenshotPath = path.join(process.cwd(), 'test-screenshots', screenshotName);
-        await this.page.screenshot({ path: screenshotPath, fullPage: true });
-        this.results.screenshots.push(screenshotPath);
-        this.log(`Screenshot saved: ${screenshotPath}`, 'photo');
-      } catch (err) {
-        // Ignore screenshot errors
-      }
     }
   }
 
   async init() {
     this.log('🚀 Initializing Edge Case Testing Suite');
     
-    // Create screenshots directory
-    const screenshotDir = path.join(process.cwd(), 'test-screenshots');
-    if (!fs.existsSync(screenshotDir)) {
-      fs.mkdirSync(screenshotDir, { recursive: true });
-    }
-
     // Launch browser
     this.browser = await chromium.launch({
       headless: this.headless,
@@ -848,8 +831,7 @@ class EdgeCaseTester {
                     const commentGone = await commentElement.count() === 0;
                     
                     if (!commentGone) {
-                      this.log('Comment deletion failed - taking failure screenshot', 'error');
-                      await this.page.screenshot({ path: 'comment-delete-failed.png', fullPage: true });
+                      this.log('Comment deletion failed', 'error');
                     }
                     
                     // The real test: was the delete API actually called?
@@ -1077,13 +1059,7 @@ class EdgeCaseTester {
             if (currentUrl.includes('/create-thread')) {
               this.log('Successfully navigated to create thread page', 'info');
             } else {
-              this.log('Did not navigate to create thread page, taking screenshot...', 'warning');
-              try {
-                await this.page.screenshot({ path: 'create-thread-navigation-failed.png', fullPage: true });
-                this.log('Screenshot saved: create-thread-navigation-failed.png', 'photo');
-              } catch (err) {
-                this.log('Failed to save navigation screenshot', 'error');
-              }
+              this.log('Did not navigate to create thread page', 'warning');
             }
 
             // Wait for the form to load
@@ -1202,15 +1178,7 @@ class EdgeCaseTester {
               await this.recordTest('Create Thread', false, 'Thread form not found', 'community');
             }
           } else {
-            this.log('Create thread link still not found after membership check, taking debug screenshot...', 'warning');
-            
-            // Take a screenshot to debug what's on the page
-            try {
-              await this.page.screenshot({ path: 'debug-community-page.png', fullPage: true });
-              this.log('Debug screenshot saved: debug-community-page.png', 'photo');
-            } catch (err) {
-              this.log('Failed to save debug screenshot', 'error');
-            }
+            this.log('Create thread link still not found after membership check', 'warning');
             
             // Log some page content for debugging
             const pageText = await this.page.locator('body').textContent();
@@ -1315,15 +1283,7 @@ class EdgeCaseTester {
             this.log(`Community deletion result: ${communityDeleted ? 'successful' : 'failed'}`, communityDeleted ? 'success' : 'error');
             this.log(`Details - API called: ${deleteApiCalled}, Response: ${deleteApiResponse}, Redirected: ${redirectedToCommunities || redirectedAway}, Success msg: ${hasSuccessMsg}`, 'info');
           } else {
-            this.log('Delete community button not found, taking debug screenshot...', 'warning');
-
-            // Take a screenshot to debug why the button isn't found
-            try {
-              await this.page.screenshot({ path: 'community-delete-button-not-found.png', fullPage: true });
-              this.log('Debug screenshot saved: community-delete-button-not-found.png', 'photo');
-            } catch (err) {
-              this.log('Failed to save debug screenshot', 'error');
-            }
+            this.log('Delete community button not found', 'warning');
 
             // Log all buttons on the page for debugging
             const allButtons = await this.page.locator('button').allTextContents();
@@ -1689,14 +1649,8 @@ class EdgeCaseTester {
             'social');
         } else {
           // Take a screenshot to debug why the button isn't found
-          try {
-            await this.page.screenshot({ path: 'second-action-button-not-found.png', fullPage: true });
-            this.log('Screenshot saved: second-action-button-not-found.png', 'photo');
-          } catch (err) {
-            // Ignore screenshot errors
-          }
           
-          await this.recordTest(`${secondAction === 'follow' ? 'Follow' : 'Unfollow'} User`, false, `${secondAction} button not found after first action - check screenshot for debugging`, 'social');
+          await this.recordTest(`${secondAction === 'follow' ? 'Follow' : 'Unfollow'} User`, false, `${secondAction} button not found after first action`, 'social');
         }
 
         // Clean up event listeners
@@ -2015,7 +1969,7 @@ class EdgeCaseTester {
     }
   }
 
-  async generateReport() {
+  async run() {
     const duration = Date.now() - this.startTime;
     const reportPath = path.join(process.cwd(), 'edge-case-test-report.json');
     const summaryPath = path.join(process.cwd(), 'edge-case-test-summary.txt');
@@ -2171,12 +2125,9 @@ ${this.results.errors.length > 0 ?
 
       this.log('✅ All edge case tests completed!', 'success');
 
-      await this.generateReport();
-
     } catch (error) {
       this.log(`💥 Test suite crashed: ${error.message}`, 'error');
       this.results.errors.push(`FATAL: ${error.message}`);
-      await this.generateReport();
     } finally {
       if (this.browser) {
         await this.browser.close();

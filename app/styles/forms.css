@@ -13,7 +13,7 @@
   /* prevent the user from manually resizing the textarea (we control sizing via grid/CSS) */
   resize: none;
   /* allow internal scrolling if content overflows the configured height */
-  overflow: auto;
+  overflow: visible;
 }
 .input-wrapper { position: relative; }
 
@@ -106,9 +106,9 @@
    The caption textarea uses the shared `.input` class but lives inside
    `.uploader` -> `.input-wrapper`, so scope the rule to avoid globally
    disabling resizing for other textareas. */
-.uploader .input-wrapper textarea.input {
+  .uploader .input-wrapper textarea.input {
   resize: none; /* prevents manual corner resize */
-  overflow: auto; /* allow internal scrolling if content overflows */
+  overflow: visible; /* allow caption to expand and use page scrolling */
 }
 
 /* Hide the small drag-resizer in WebKit-based browsers (Chrome, Edge, Safari) */

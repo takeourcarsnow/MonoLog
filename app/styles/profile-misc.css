@@ -256,7 +256,7 @@
 }
 
 /* About card: constrain very long bios so they don't push header/avatar off-screen */
-.about-card .card-body { max-height: 220px; overflow: auto; }
+/* .about-card .card-body { max-height: 220px; overflow: auto; } */
 .about-card .card-body .dim { white-space: pre-wrap; }
 
 /* view toggle */
@@ -365,7 +365,7 @@
   align-items: flex-start;
   justify-content: center;
   padding: 24px; /* breathing room on small screens */
-  overflow: auto; /* allow vertical scrolling when content exceeds viewport */
+  overflow: visible; /* allow vertical scrolling when content exceeds viewport */
   -webkit-overflow-scrolling: touch;
   pointer-events: none; /* allow inner modal to opt into pointer events */
 }
@@ -374,7 +374,7 @@
   pointer-events: auto;
   /* constrain immediate child so it never exceeds viewport and can scroll internally */
   max-height: calc((var(--viewport-height, 1vh) * 100) - 48px);
-  overflow: auto;
+  overflow: visible;
   width: 100%;
 }
 

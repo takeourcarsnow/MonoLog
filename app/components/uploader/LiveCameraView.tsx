@@ -39,6 +39,7 @@ import { CameraControls } from "./CameraControls";
 import { CameraError } from "./CameraError";
 import { CameraLoading } from "./CameraLoading";
 import { CameraProcessingOverlay } from "./CameraProcessingOverlay";
+import { useCameraContext } from "../context/CameraContext";
 
 interface LiveCameraViewProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ interface LiveCameraViewProps {
 }
 
 export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveCameraViewProps) {
+  const { setIsCameraOpen } = useCameraContext();
   const { videoRef, streamRef, facingMode, zoom, setZoom, torchEnabled, isSwitchingCamera, startCamera, stopCamera, switchCamera, toggleTorch, applyZoom } = useCamera();
   const { sourceCanvasRef, displayCanvasRef, startRenderLoop, stopRenderLoop } = useRenderLoop();
   const { handleCapture: performCapture } = useCapture();
@@ -459,6 +461,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
   // Setup camera when modal opens
   useEffect(() => {
+    setIsCameraOpen(isOpen);
     if (isOpen) {
       setIsCapturing(false); // Reset capturing state when modal opens
       setShowProcessingOverlay(false);
@@ -472,10 +475,11 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     }
 
     return () => {
+      setIsCameraOpen(false);
       stopCamera();
       stopRenderLoop();
     };
-  }, [isOpen, startCameraEnhanced, stopCamera, stopRenderLoop]);
+  }, [isOpen, startCameraEnhanced, stopCamera, stopRenderLoop, setIsCameraOpen]);
 
   // Handle processing state changes
   useEffect(() => {
@@ -557,7 +561,6 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
           justifyContent: 'center',
           padding: 12,
           zIndex: 20,
-          background: 'rgba(0,0,0,0.85)',
           overflowY: 'auto',
         }}
         onClick={handleClose}
@@ -565,8 +568,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
         <div
           style={{
             width: '100%',
-            maxWidth: 720,
-            maxHeight: 'calc(100vh - 24px)',
+            height: '100%',
             background: 'var(--bg)',
             borderRadius: 6,
             padding: 8,

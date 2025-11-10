@@ -1,18 +1,22 @@
 .content {
   margin: 0 auto;
   width: 100%;
-  /* Make content scrollable within viewport */
-  /* Use a fallback calculation for browsers that struggle with 100dvh */
-  height: calc(var(--viewport-height, 1vh) * 100);
-  /* Let content scroll on small screens; swiper will handle interactions when ready */
-  overflow: hidden;
-  -webkit-overflow-scrolling: touch;
+    /* Make `.content` the single scroll container inside the app. This
+      prevents double vertical scrollbars by keeping all page scrolling
+      inside this element. We use the JS-updated `--viewport-height` when
+      available so mobile chrome changes don't produce gaps. */
+    height: calc((var(--viewport-height, 1vh) * 100));
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   /* Reserve top space for fixed header and use consistent side padding */
   /* add a 1px buffer to bottom padding to avoid hairline gaps from rounding */
   /* Add a small extra buffer to the bottom padding to avoid content
     being momentarily obscured by the fixed tabbar (covers cases where
     the runtime measurement of --tabbar-height hasn't been applied yet). */
-  padding: var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) var(--page-side-padding) calc(var(--tabbar-height, 64px) + 36px);
+      /* Use the measured header height to reserve space. Keep this simple:
+        content should start directly below the fixed header (no extra fudge)
+        so sticky children can use the same variable for their offset. */
+      padding: var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) var(--page-side-padding) calc(var(--tabbar-height, 56px) + 20px);
 }
 .upload-empty .content { padding-bottom: calc(28px + var(--safe-bottom)); }
 
@@ -54,10 +58,10 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
 @media (min-width: 900px) {
   .content {
     height: auto;
-    overflow: auto;
+    overflow: visible;
     /* Use the JS-driven --viewport-height so mobile browser chrome
        changes don't leave gaps. Fallback to 1vh if the variable isn't set. */
-    min-height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px)) - var(--tabbar-height, 56px));
+    min-height: auto;
     padding-left: var(--page-side-padding);
     padding-right: var(--page-side-padding);
   }
@@ -68,18 +72,29 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
   .content {
     /* Use the JS-updated viewport height so the visible area is used
        (prevents gaps when mobile browser chrome collapses/expands). */
-    height: calc(var(--viewport-height, 1vh) * 100);
-    overflow: hidden;
+    height: auto;
+    overflow: visible;
     -webkit-overflow-scrolling: touch;
     padding-left: var(--page-side-padding-mobile);
     padding-right: var(--page-side-padding-mobile);
    /* Keep a slightly larger bottom gap on mobile so rounded cards and
      other bottom content don't get clipped behind the tabbar. */
-   padding-bottom: var(--about-bottom-gap, calc(var(--tabbar-height, 64px) + 36px));
+   padding-bottom: calc(var(--tabbar-height, 56px) + 20px);
   }
   /* Push the server-rendered about-card above the fixed tabbar on phones.
      Uses --about-bottom-gap set by the About page (falls back to --tabbar-height). */
   .about-card {
-    margin-bottom: var(--about-bottom-gap, calc(var(--tabbar-height, 64px) + 24px));
+    margin-bottom: 20px;
   }
+
+/* Ensure common sticky elements sit below the fixed header by default.
+   We only set `top` here; these rules won't change elements that are not
+   position: sticky/fixed. This keeps the layout simple and consistent. */
+.content .stories-bar,
+.content .calendar-header,
+.view-toggle,
+.content .view-toggle {
+  top: var(--header-height);
+  z-index: 1;
+}
 }

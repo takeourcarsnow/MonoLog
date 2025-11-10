@@ -446,7 +446,7 @@
     max-width: 90vw;
     /* Ensure dialog doesn't get too close to top of screen on small devices */
   height: calc((var(--viewport-height, 1vh) * 100) - 120px);
-    overflow: auto;
+    overflow: visible;
   }
   .auth-form {
     height: 100%;
@@ -530,7 +530,7 @@
     /* Constrain total host height so oversized auth forms scroll internally
        and don't push the document to produce extra vertical scrolling. */
     max-height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height) - var(--tabbar-height) - 40px);
-    overflow: auto;
+    overflow: visible;
     gap: 18px;
     text-align: center;
   }
@@ -654,7 +654,7 @@ body.notifications-popup-open .tabbar {
 
 .notifications-popup-content {
   flex: 1;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 /* Extra top spacing for the empty notifications state to visually separate

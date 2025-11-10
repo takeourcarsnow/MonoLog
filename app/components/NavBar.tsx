@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems, isNavItemActive } from "./nav/navHelpers";
+import { useCameraContext } from "./context/CameraContext";
 
 export function Navbar() {
   const pathname = usePathname() || "/";
+  const { isCameraOpen } = useCameraContext();
+
+  if (isCameraOpen) return null;
 
   return (
     <nav className="tabbar">

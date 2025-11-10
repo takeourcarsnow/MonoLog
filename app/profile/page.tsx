@@ -2,6 +2,7 @@
 import dynamic from 'next/dynamic';
 
 const ProfileView = dynamic(() => import("@/app/components/profile/ProfileView").then(mod => ({ default: mod.ProfileView })), {
+  ssr: false,
   loading: () => <main className="p-6"><div>Loading profile...</div></main>
 });
 

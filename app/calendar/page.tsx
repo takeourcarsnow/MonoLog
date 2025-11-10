@@ -2,6 +2,7 @@
 import dynamic from 'next/dynamic';
 
 const CalendarView = dynamic(() => import("@/app/components/calendar/CalendarView").then(mod => ({ default: mod.CalendarView })), {
+  ssr: false,
   loading: () => <div className="calendar-page"><div className="calendar-header"><h2>Loading calendar...</h2></div></div>
 });
 

@@ -1,11 +1,17 @@
 "use client";
 import React from 'react';
 import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
 import { CONFIG } from '@/lib/config';
 import { isInAppBrowser } from '@/lib/detectWebview';
 import performanceMonitor from '@/lib/performance-monitor';
+import { initTheme } from '@/lib/theme';
+import { api } from '@/lib/api';
+import { useHeaderHeightMeasurement, useTabbarHeightMeasurement } from '@/app/components/layout/AppShellLayout';
+import { CameraProvider } from '@/app/components/context/CameraContext';
 
 const AppShell = dynamic(() => import("@/app/components/layout/AppShell").then(mod => mod.AppShell), { ssr: false, loading: () => null });
+
 const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ssr: false, loading: () => null });
 const Navbar = dynamic(() => import('@/app/components/NavBar').then(mod => mod.Navbar), { ssr: false });
 const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfillClient').then(mod => mod.default), { ssr: false });
@@ -14,9 +20,24 @@ const PWAHealthCheck = dynamic(() => import('@/app/components/pwa/PWAAnalytics')
 const RoutePrefetcher = dynamic(() => import('@/app/components/layout/RoutePrefetcher').then(mod => mod.default), { ssr: false });
 
 export default function ClientInit({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  useHeaderHeightMeasurement(true, pathname);
+  useTabbarHeightMeasurement(true);
   React.useEffect(() => {
     (async () => {
       try {
+        // Initialize theme
+        initTheme();
+        // Initialize API
+        await api.init();
+        // Mark app as ready
+        try {
+          if (typeof window !== 'undefined') {
+            (window as any).__MONOLOG_APP_READY__ = true;
+            try { window.dispatchEvent(new Event('monolog-ready')); } catch (e) {}
+          }
+        } catch (e) {}
         // Initialize performance monitoring
         // Just importing it initializes the singleton
         console.log('Performance monitoring initialized');
@@ -62,91 +83,27 @@ export default function ClientInit({ children }: { children: React.ReactNode }) 
     })();
   }, []);
 
-  // Lock screen orientation to portrait on mobile devices
+  // Simplified viewport handling: rely on CSS dynamic viewport units (dvh)
+  // for modern browsers. As a very small safeguard, set the CSS custom
+  // property to 1dvh so existing styles using var(--viewport-height)
+  // continue to work without JS listeners.
   React.useEffect(() => {
     try {
-      if ('orientation' in screen && 'lock' in screen.orientation && typeof screen.orientation.lock === 'function') {
-        screen.orientation.lock('portrait').catch((err: any) => console.log('Orientation lock failed:', err));
+      if (typeof window !== 'undefined') {
+        document.documentElement.style.setProperty('--viewport-height', '1dvh');
       }
-    } catch (e) {
-      console.log('Orientation lock not supported:', e);
-    }
-  }, []);
-
-  // Prevent/restore iOS viewport zoom behavior: when focusing inputs iOS
-  // Safari may zoom in; toggling the viewport meta on focus/blur forces
-  // the browser to keep or return to the default scale. This is a targeted
-  // workaround only for iOS-ish platforms to avoid affecting desktop browsers.
-  React.useEffect(() => {
-    try {
-      const ua = navigator.userAgent || '';
-      const isIOS = /iP(hone|od|ad)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      if (!isIOS) return;
-
-      const meta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
-      if (!meta) return;
-      const original = meta.getAttribute('content') || '';
-
-      function makePreventZoom(content: string) {
-        let c = content;
-        if (!/maximum-scale\s*=/.test(c)) c = c + (c ? ', ' : '') + 'maximum-scale=1';
-        if (!/user-scalable\s*=/.test(c)) c = c + (c ? ', ' : '') + 'user-scalable=0';
-        return c;
-      }
-
-      const onFocusIn = (e: FocusEvent) => {
-        const target = e.target as HTMLElement | null;
-        if (!target) return;
-        if (target.matches && target.matches('input, textarea, select')) {
-          try {
-            meta.setAttribute('content', makePreventZoom(meta.getAttribute('content') || original));
-          } catch (e) {
-            // ignore
-          }
-        }
-      };
-
-      const onFocusOut = (e: FocusEvent) => {
-        const target = e.target as HTMLElement | null;
-        if (!target) return;
-        if (target.matches && target.matches('input, textarea, select')) {
-          // restore the original viewport after a short delay so Safari has
-          // time to complete any focus/blur transitions and then will zoom out
-          // back to the intended scale.
-          setTimeout(() => {
-            try {
-              meta.setAttribute('content', original);
-            } catch (e) {
-              // ignore
-            }
-          }, 120);
-        }
-      };
-
-      document.addEventListener('focusin', onFocusIn);
-      document.addEventListener('focusout', onFocusOut);
-
-      return () => {
-        document.removeEventListener('focusin', onFocusIn);
-        document.removeEventListener('focusout', onFocusOut);
-        try { meta.setAttribute('content', original); } catch (e) { /* ignore */ }
-      };
-    } catch (e) {
-      // ignore any unexpected errors
-    }
+    } catch (_) {}
   }, []);
 
   return (
-    <>
+    <CameraProvider>
       <AppPreloader />
-      <div id="app-root">
-        <AppShell>{children}</AppShell>
-      </div>
+      <AppShell>{children}</AppShell>
       <Navbar />
       <InertPolyfillClient />
       <PWAAnalytics />
       <PWAHealthCheck />
       <RoutePrefetcher />
-    </>
+    </CameraProvider>
   );
 }

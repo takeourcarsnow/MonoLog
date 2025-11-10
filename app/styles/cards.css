@@ -8,14 +8,11 @@
   /* keep a small horizontal padding so full-bleed slides don't touch the edges */
   padding: calc(4px + var(--safe-top, 0px)) var(--page-side-padding) 12px var(--page-side-padding); /* much smaller top padding */
   flex: 1;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  /* Reserve space for the vertical scrollbar to avoid layout shifts when
-     content changes and the browser shows/hides the scrollbar (prevents
-     the grid from "shaking" as images load). Modern browsers support
-     `scrollbar-gutter`. Keep overflow:auto as the interactive scrolling
-     container. */
-  scrollbar-gutter: stable both-edges;
+    overflow: visible;
+    -webkit-overflow-scrolling: touch;
+    /* Simplified: let the page-level scrollbar handle vertical scrolling.
+      Removing internal feed scrolling avoids nested scrollbars and layout
+      complexity. */
   /* Center grid items (cards in list view) */
   justify-items: center;
 }

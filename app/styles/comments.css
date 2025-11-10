@@ -30,20 +30,6 @@
 }
 
 .comment-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-.input {
-  width: 100%; border: 1px solid var(--border); background: var(--bg);
-  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
-}
-.input:focus { outline: 2px solid color-mix(in srgb, var(--primary), transparent 60%); border-color: var(--primary); }
-.bio-editor {
-  width: 100%; border: 1px solid var(--border); background: var(--bg);
-  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
-  /* prevent the user from manually resizing the textarea (we control sizing via grid/CSS) */
-  resize: none;
-  /* allow internal scrolling if content overflows the configured height */
-  overflow: auto;
-}
-.input-wrapper { position: relative; }
 .input-ghost-placeholder {
   position: absolute;
   left: 12px; right: 12px; top: 50%; transform: translateY(-50%);
@@ -73,8 +59,6 @@
 .comment-list { display: grid; gap: 6px; }
 .comment-item { font-size: 14px; }
 .comment-item .author { font-weight: 700; margin-right: 6px; }
-
-.comment-list { display: grid; gap: 10px; }
 .comment-item { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 10px; background: transparent; border: 1px solid var(--border); }
 .comment-row { display: flex; gap: 4px; align-items: center; }
 .comment-avatar { position: relative; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex: 0 0 30px; }

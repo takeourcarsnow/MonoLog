@@ -94,27 +94,6 @@
   animation: editActiveIn 260ms cubic-bezier(.2,.9,.28,1) both;
 }
 
-/* Strong override: Edit button should only show its label when explicitly
-   expanded (JS) or when editing (active). Ignore hover entirely so the
-   label doesn't toggle on pointer moves. This block must come after the
-   generic icon-reveal rules to win the cascade. */
-.edit-btn .reveal.label {
-  opacity: 0 !important;
-  transform: translateX(6px) scale(.98) !important;
-  max-width: 0 !important;
-  pointer-events: none !important;
-  transition: opacity 220ms cubic-bezier(.2,.85,.2,1), transform 220ms cubic-bezier(.2,.85,.2,1), max-width 220ms cubic-bezier(.2,.85,.2,1) !important;
-}
-
-/* Prevent hover/focus from revealing the label for edit buttons */
-.edit-btn:hover .reveal.label,
-.edit-btn:focus .reveal.label,
-.edit-btn:focus-visible .reveal.label {
-  opacity: 0 !important;
-  transform: translateX(6px) scale(.98) !important;
-  max-width: 0 !important;
-}
-
 /* Reveal label only when explicitly expanded or when editing */
 .edit-btn.expanded .reveal.label,
 .edit-btn.active .reveal.label {

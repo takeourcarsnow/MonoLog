@@ -13,7 +13,7 @@
   transition: opacity 200ms var(--transition-fast), transform 200ms var(--transition-fast);
   animation: popIn 220ms var(--transition-mid) both;
   max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
-  overflow: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -100,7 +100,7 @@
    width: min(94vw, 420px);
    /* Increase max-height so taller phones can show more content before scrolling */
   max-height: calc((var(--viewport-height, 1vh) * 100) - 120px);
-   overflow: auto;
+   overflow: visible;
    border: 1px solid var(--border);
    padding: 12px;
    border-radius: 12px;
@@ -118,7 +118,7 @@
   /* make the content area scroll if needed, keep actions visible */
   .edit-panel > :not(.edit-actions) {
     flex: 1 1 auto;
-    overflow: auto;
+    overflow: visible;
   }
 
   .edit-panel .edit-actions {

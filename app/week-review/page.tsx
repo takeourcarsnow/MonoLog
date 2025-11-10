@@ -46,18 +46,6 @@ export default function WeekReviewPage() {
     fetchStats();
   }, []);
 
-  useEffect(() => {
-    // Allow body scrolling on week-review page
-    document.body.classList.add('week-review-page-scroll');
-    document.documentElement.classList.add('week-review-page-scroll');
-
-    return () => {
-      // Clean up when component unmounts
-      document.body.classList.remove('week-review-page-scroll');
-      document.documentElement.classList.remove('week-review-page-scroll');
-    };
-  }, []);
-
   if (loading) {
     return <WeekReviewSkeleton />;
   }

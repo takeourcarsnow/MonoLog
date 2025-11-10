@@ -11,18 +11,6 @@ export default function AboutPage() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    // Allow body scrolling on about page
-    document.body.classList.add('about-page-scroll');
-    document.documentElement.classList.add('about-page-scroll');
-
-    return () => {
-      // Clean up when component unmounts
-      document.body.classList.remove('about-page-scroll');
-      document.documentElement.classList.remove('about-page-scroll');
-    };
-  }, []);
-
-  useEffect(() => {
     // Scroll reveal with IntersectionObserver + CSS-driven stagger
     if (typeof window === 'undefined') return;
 

@@ -27,102 +27,16 @@
 
 /* Prevent body scrolling to avoid unwanted scrollbars */
 html, body {
+  /* Use a single scroll container (.content) to avoid double scrollbars.
+     Prevent native page scrolling and let `.content` handle scroll. */
   overflow: hidden;
   height: 100%;
   background: var(--bg);
 }
 
-/* Allow body scrolling on pages that need it */
-body[class*="page-scroll"],
-html[class*="page-scroll"] {
-  overflow: auto !important;
-}
 
-/* If the app uses an internal scrolling container (.content) we must also
-   allow that container to scroll when on certain pages. The .content
-   rules in layout.css set overflow: hidden for most routes; this selector
-   overrides that so the pages can scroll normally. */
-/* Prefer a strictly local selector using :has() — when the content area
-   contains the page wrapper, allow scrolling. This keeps the override
-   strictly scoped. */
-.content:has(.about-wrapper),
-.content:has(.favorites),
-.content:has(.communities),
-.content:has(.community),
-.content:has(.thread),
-.content:has(.create-thread),
-.content:has(.feed),
-.content:has(.search-page),
-.content:has(.notifications),
-.content:has(.post-view-wrap) {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  padding-top: var(--header-height) !important;
-  -webkit-overflow-scrolling: touch;
-}
 
-/* Ensure pages with a communities list reserve extra bottom padding so
-   the final card isn't visually obscured by the fixed tabbar. This is a
-   defensive rule in case per-list padding isn't applied or the tabbar
-   height varies on some devices. */
-.content:has(.communities) {
-  padding-bottom: calc(56px + 2.25rem) !important;
-}
-.content:has(.week-review-page) {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
 
-/* Fallback: older browsers that don't support :has can rely on the
-   body/html class added by the page JS. */
-body[class*="page-scroll"] .content,
-html[class*="page-scroll"] .content,
-body[class*="week-review-page-scroll"] .content,
-html[class*="week-review-page-scroll"] .content {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  padding-top: 0 !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Scoped fallback for hashtag pages when :has() isn't available. We keep
-   the header padding so elements like the view toggle aren't obscured. */
-body[class*="hashtag-page-scroll"] .content,
-html[class*="hashtag-page-scroll"] .content {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  padding-top: var(--header-height) !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Specific fallback for create-thread pages */
-body[class*="create-thread-page-scroll"] .content,
-html[class*="create-thread-page-scroll"] .content,
-body[class*="thread-page-scroll"] .content,
-html[class*="thread-page-scroll"] .content,
-body[class*="community-page-scroll"] .content,
-html[class*="community-page-scroll"] .content,
-body[class*="following-page-scroll"] .content,
-html[class*="following-page-scroll"] .content,
-body[class*="search-page-scroll"] .content,
-html[class*="search-page-scroll"] .content,
-body[class*="communities-page-scroll"] .content,
-html[class*="communities-page-scroll"] .content,
-body[class*="notifications-page-scroll"] .content,
-html[class*="notifications-page-scroll"] .content,
-body[class*="post-page-scroll"] .content,
-html[class*="post-page-scroll"] .content {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: auto !important;
-  padding-top: var(--header-height) !important;
-  -webkit-overflow-scrolling: touch;
-}
 :root {
   color-scheme: light dark;
 
@@ -155,12 +69,16 @@ html[class*="post-page-scroll"] .content {
 
   --transition-fast: 160ms ease;
   --transition-mid: 260ms cubic-bezier(.2,.7,.2,1);
-  /* Responsive maximum content width: grows on larger screens but caps for readability */
-  --maxw: clamp(640px, 90vw, 1100px);
+    /* Responsive maximum content width: grows on larger screens but caps for readability.
+      Use a small minimum so narrow mobile viewports don't force a larger layout that
+      produces horizontal clipping. Previous min (640px) caused layout overflow on
+      small devices. */
+    --maxw: clamp(280px, 92vw, 1100px);
   /* Page side padding (use for header, content, and feed) and mobile variant.
-    Increased so page content doesn't sit flush against the viewport edges. */
+     Keep small padding on mobile so content isn't flush against edges but
+     avoid large gutters that make the app look clipped on narrow screens. */
   --page-side-padding: 20px;
-  --page-side-padding-mobile: 20px;
+  --page-side-padding-mobile: 12px;
 
   /* color used for active tab / navbar indicators */
   --tab-color: var(--primary);
@@ -317,6 +235,9 @@ html[class*="post-page-scroll"] .content {
 *::-webkit-scrollbar {
   width: thin;
 }
+
+/* NOTE: Removed global scrollbar-hiding because it merely hid symptoms.
+   We now use a single scroll container (`.content`) instead. */
 
 /* Override swiper scrollbar for Safari */
 .swiper-css-mode > .swiper-wrapper::-webkit-scrollbar {

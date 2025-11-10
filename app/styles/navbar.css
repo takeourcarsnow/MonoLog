@@ -44,11 +44,20 @@
   left: 0;
   right: 0;
   bottom: 0;
+  /* Use the themed translucent background and ensure the tabbar extends
+     into the device safe-area (home indicator) so no underlying system UI
+     shows through as a hairline. The runtime variable --tabbar-height is
+     computed to include safe-area inset; use it as the min-height and also
+     reserve the safe bottom area by adding padding-bottom. */
   background-color: rgba(var(--bg-elev-rgb, 247,247,249), var(--tabbar-alpha, 0.78));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   z-index: 9999;
-  min-height: 56px;
+  /* Make visual height include the safe-area inset so the tabbar sits
+     flush with the bottom edge of the viewport on devices with a
+     home-indicator / bottom inset. */
+  min-height: var(--tabbar-height, 56px);
+  padding-bottom: var(--safe-bottom, env(safe-area-inset-bottom));
 }
 
 .tabbar-inner {

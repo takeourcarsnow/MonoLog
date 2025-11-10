@@ -1,4 +1,5 @@
 import React from 'react';
+import { Palette, Contrast } from 'lucide-react';
 import { CameraEffectSettings } from '../uploader/cameraEffects';
 
 export type DitherMethod = 'none' | 'floyd-steinberg' | 'ordered' | 'atkinson' | 'burkes';
@@ -34,11 +35,11 @@ export default function DitherControlsShared({
   scheduleDraw,
 }: SharedDitherProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', boxSizing: 'border-box' }}>
       {/* Two small sliders on one row */}
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center', width: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
-          <span style={{ opacity: 0.9, fontSize: 11, whiteSpace: 'nowrap' }}>Res</span>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
+          <span style={{ opacity: 0.9, fontSize: 10, whiteSpace: 'nowrap' }}>Res</span>
           <input
             type="range"
             min={50}
@@ -54,13 +55,13 @@ export default function DitherControlsShared({
             disabled={disabled}
             aria-label="Dither resolution"
           />
-          <span style={{ opacity: 0.7, fontSize: 11, whiteSpace: 'nowrap' }}>{targetLongEdge || 150}</span>
+          <span style={{ opacity: 0.7, fontSize: 10, whiteSpace: 'nowrap' }}>{targetLongEdge || 150}</span>
         </div>
 
-        <div style={{ width: 12 }} />
+        <div style={{ width: 8 }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
-          <span style={{ opacity: 0.9, fontSize: 11, whiteSpace: 'nowrap' }}>Lvl</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
+          <span style={{ opacity: 0.9, fontSize: 10, whiteSpace: 'nowrap' }}>Lvl</span>
           <input
             type="range"
             min={ditherMethod === 'ordered' ? 2 : 3}
@@ -76,12 +77,12 @@ export default function DitherControlsShared({
             disabled={disabled}
             aria-label="Dither levels"
           />
-          <span style={{ opacity: 0.7, fontSize: 11, whiteSpace: 'nowrap' }}>{ditherLevels}</span>
+          <span style={{ opacity: 0.7, fontSize: 10, whiteSpace: 'nowrap' }}>{ditherLevels}</span>
         </div>
       </div>
 
       {/* Compact control row: color toggle, method, optional palette */}
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
         <button
           type="button"
           onClick={() => {
@@ -90,58 +91,102 @@ export default function DitherControlsShared({
             scheduleDraw && scheduleDraw();
           }}
           disabled={disabled}
-          style={{ padding: '4px 6px', fontSize: 11, whiteSpace: 'nowrap' }}
-          aria-label="Toggle color mode"
+          style={{
+            padding: '2px 4px',
+            fontSize: 10,
+            whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 28,
+            background: 'transparent',
+            border: '1px solid var(--border)',
+            color: 'var(--text)',
+            cursor: 'pointer'
+          }}
+          aria-label={`Toggle color mode: ${ditherColorMode === 'color' ? 'Color' : 'Black & White'}`}
         >
-          {ditherColorMode === 'color' ? 'Color' : 'B&W'}
+          {ditherColorMode === 'color' ? <Palette size={12} /> : <Contrast size={12} />}
         </button>
 
         {setDitherMethod && (
-          <select
-            value={ditherMethod}
-            onChange={(e) => {
-              const m = e.target.value as DitherMethod;
-              setDitherMethod && setDitherMethod(m);
-              if ((m === 'floyd-steinberg' || m === 'atkinson' || m === 'burkes') && ditherLevels < 3) {
-                setDitherLevels && setDitherLevels(3);
-              }
-              scheduleDraw && scheduleDraw();
-            }}
-            disabled={disabled}
-            style={{ padding: '4px', fontSize: 11, minWidth: 0, flex: 1 }}
-            aria-label="Dither method"
-          >
-            <option value="floyd-steinberg">Floyd</option>
-            <option value="ordered">Ordered</option>
-            <option value="atkinson">Atkinson</option>
-            <option value="burkes">Burkes</option>
-          </select>
+          <div style={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {[
+              { value: 'floyd-steinberg', label: 'Floyd' },
+              { value: 'ordered', label: 'Ordered' },
+              { value: 'atkinson', label: 'Atkinson' },
+              { value: 'burkes', label: 'Burkes' }
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  const m = value as DitherMethod;
+                  setDitherMethod && setDitherMethod(m);
+                  if ((m === 'floyd-steinberg' || m === 'atkinson' || m === 'burkes') && ditherLevels < 3) {
+                    setDitherLevels && setDitherLevels(3);
+                  }
+                  scheduleDraw && scheduleDraw();
+                }}
+                disabled={disabled}
+                style={{
+                  padding: '2px 4px',
+                  fontSize: 9,
+                  borderRadius: 3,
+                  background: ditherMethod === value ? 'var(--primary)' : 'transparent',
+                  border: `1px solid ${ditherMethod === value ? 'var(--primary)' : 'var(--border)'}`,
+                  color: ditherMethod === value ? 'white' : 'var(--text)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+                aria-label={`Dither method: ${label}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         )}
 
         {ditherColorMode === 'color' && setDitherPalette && (
-          <select
-            value={ditherPalette}
-            onChange={(e) => {
-              const p = e.target.value as DitherPalette;
-              setDitherPalette && setDitherPalette(p);
-              if (p === 'gameboy' && ditherMethod !== 'ordered' && setDitherMethod) {
-                setDitherMethod('ordered');
-              }
-              scheduleDraw && scheduleDraw();
-            }}
-            disabled={disabled}
-            style={{ padding: '4px', fontSize: 11, minWidth: 0, flex: 1 }}
-            aria-label="Dither palette"
-          >
-            <option value="auto">Auto</option>
-            <option value="gameboy">Game Boy</option>
-            <option value="pico8">PICO-8</option>
-            <option value="nes">NES</option>
-            <option value="zx_spectrum">ZX</option>
-            <option value="atari_2600">Atari</option>
-            <option value="commodore64">C64</option>
-            <option value="apple_ii">Apple II</option>
-          </select>
+          <div style={{ display: 'flex', gap: 1, flexWrap: 'wrap', marginTop: 2 }}>
+            {[
+              { value: 'auto', label: 'Auto' },
+              { value: 'gameboy', label: 'GB' },
+              { value: 'pico8', label: 'P8' },
+              { value: 'nes', label: 'NES' },
+              { value: 'zx_spectrum', label: 'ZX' },
+              { value: 'atari_2600', label: 'Atari' },
+              { value: 'commodore64', label: 'C64' },
+              { value: 'apple_ii', label: 'Apple' }
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  const p = value as DitherPalette;
+                  setDitherPalette && setDitherPalette(p);
+                  if (p === 'gameboy' && ditherMethod !== 'ordered' && setDitherMethod) {
+                    setDitherMethod('ordered');
+                  }
+                  scheduleDraw && scheduleDraw();
+                }}
+                disabled={disabled}
+                style={{
+                  padding: '2px 3px',
+                  fontSize: 8,
+                  borderRadius: 3,
+                  background: ditherPalette === value ? 'var(--primary)' : 'transparent',
+                  border: `1px solid ${ditherPalette === value ? 'var(--primary)' : 'var(--border)'}`,
+                  color: ditherPalette === value ? 'white' : 'var(--text)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+                aria-label={`Dither palette: ${label}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </div>

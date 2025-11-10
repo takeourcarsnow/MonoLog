@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
+import { Square, Circle } from 'lucide-react';
 import { rangeBg } from '../imageEditor/utils';
 import { throttle } from '@/lib/utils';
 
@@ -37,10 +38,10 @@ export default function PixelateControlsShared(props: SharedPixelateProps) {
   };
 
   return (
-    <div style={{ display: 'grid', gap: 6, width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ display: 'grid', gap: 2, width: '100%', boxSizing: 'border-box' }}>
       {props.enabled && (
         <>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               className="imgedit-range"
               type="range"
@@ -52,16 +53,27 @@ export default function PixelateControlsShared(props: SharedPixelateProps) {
               style={{ flex: 1, minWidth: 0, background: rangeBg(props.pixelSize, 10, 100, '#334155', '#38bdf8') }}
               aria-label="Pixel size"
             />
-            <span style={{ minWidth: 32, textAlign: 'right', fontSize: 12 }}>{props.pixelSize}</span>
-            <select
-              value={props.pixelShape ?? 'square'}
-              onChange={(e) => onShapeChange(e.target.value as 'square' | 'circle')}
-              style={{ padding: '4px 6px', fontSize: 12, borderRadius: 6, minWidth: 92 }}
-              aria-label="Pixel shape"
+            <span style={{ minWidth: 24, textAlign: 'right', fontSize: 10 }}>{props.pixelSize}</span>
+            <button
+              type="button"
+              onClick={() => onShapeChange(props.pixelShape === 'square' ? 'circle' : 'square')}
+              style={{
+                padding: '2px 4px',
+                fontSize: 10,
+                borderRadius: 4,
+                minWidth: 32,
+                background: 'transparent',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              aria-label={`Pixel shape: ${props.pixelShape === 'square' ? 'Square' : 'Circle'}`}
             >
-              <option value="square">Square</option>
-              <option value="circle">Circle</option>
-            </select>
+              {props.pixelShape === 'square' ? <Square size={14} /> : <Circle size={14} />}
+            </button>
           </div>
         </>
       )}

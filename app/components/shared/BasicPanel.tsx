@@ -9,16 +9,13 @@ interface BasicPanelProps {
   contrast: number;
   saturation: number;
   temperature: number;
-  vignette?: number;
   onChange: (key: string, value: number) => void;
   onReset?: (key: string) => void;
   disabled?: boolean;
-  showVignette?: boolean;
   exposureRef?: React.MutableRefObject<number>;
   contrastRef?: React.MutableRefObject<number>;
   saturationRef?: React.MutableRefObject<number>;
   temperatureRef?: React.MutableRefObject<number>;
-  vignetteRef?: React.MutableRefObject<number>;
   announce?: boolean;
 }
 
@@ -27,16 +24,13 @@ export function BasicPanel({
   contrast,
   saturation,
   temperature,
-  vignette = 0,
   onChange,
   onReset,
   disabled = false,
-  showVignette = false,
   exposureRef,
   contrastRef,
   saturationRef,
   temperatureRef,
-  vignetteRef,
   announce = false,
 }: BasicPanelProps) {
   const sliders = getBasicPanelSliders(
@@ -44,16 +38,15 @@ export function BasicPanel({
     contrast,
     saturation,
     temperature,
-    showVignette ? vignette : undefined,
+    undefined,
     exposureRef,
     contrastRef,
     saturationRef,
-    temperatureRef,
-    vignetteRef
+    temperatureRef
   );
 
   return (
-    <section className="imgedit-panel-inner basic-panel" style={{ display: 'grid', width: '100%' }}>
+    <section className="imgedit-panel-inner basic-panel" style={{ display: 'grid', width: '100%', gap: 2 }}>
       {sliders.map((slider, index) => (
         <EffectSlider
           key={slider.label}
@@ -66,7 +59,7 @@ export function BasicPanel({
           onChange={(v) => onChange(slider.label.toLowerCase(), v)}
           onDoubleClick={onReset ? () => onReset(slider.label.toLowerCase()) : undefined}
           disabled={disabled}
-          valueFormatter={slider.valueFormatter}
+          showValue={false}
           colorLeft={slider.colorLeft}
           colorRight={slider.colorRight}
           announce={announce}

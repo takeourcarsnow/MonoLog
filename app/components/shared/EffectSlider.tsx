@@ -52,12 +52,11 @@ export function EffectSlider({
   const background = rangeBg(value, min, max, colorLeft, colorRight);
 
   return (
-    <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-      <span style={{ width: 80, display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 2, alignItems: 'center' }}>
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>
         {icon}
-        <span>{label}</span>
       </span>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
         <input
           type="range"
           min={min}
@@ -68,14 +67,14 @@ export function EffectSlider({
           onDoubleClick={onDoubleClick}
           disabled={disabled}
           aria-label={ariaLabel || label}
-          style={{ flex: 1, background }}
+          style={{ flex: 1, background, minWidth: 60 }}
         />
         {showValue && (
-          <span style={{ fontSize: 12, fontWeight: 500, minWidth: 35, textAlign: 'right' }}>
+          <span style={{ fontSize: 9, fontWeight: 500, minWidth: 20, textAlign: 'right' }}>
             {valueFormatter(value)}
           </span>
         )}
       </span>
-    </label>
+    </div>
   );
 }

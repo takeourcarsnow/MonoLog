@@ -96,47 +96,29 @@ export function applyUnifiedEffects(
     applyVignetteEffect(targetCtx, targetCanvas, 0, 0, width, height, settings.vignette);
   }
 
-  // 5. Apply special effects based on type
-  switch (settings.type) {
-    case 'pixelate':
-      if (settings.pixelSize && settings.pixelSize > 1) {
-        applyPixelateToFrame(
-          sourceCtx,
-          targetCtx,
-          width,
-          height,
-          settings.pixelSize,
-          settings.pixelShape || 'square'
-        );
-      }
-      break;
+  // 5. Apply special effects based on enable flags (independent of type)
+  if (settings.pixelateEnabled && settings.pixelSize && settings.pixelSize > 1) {
+    applyPixelateToFrame(
+      sourceCtx,
+      targetCtx,
+      width,
+      height,
+      settings.pixelSize,
+      settings.pixelShape || 'square'
+    );
+  }
 
-    case 'dither':
-      // Dither is now handled below if enabled
-      break;
-
-    case 'ascii':
-      if (settings.asciiEnabled !== false) { // Default to enabled
-        applyAsciiToFrame(
-          sourceCtx,
-          targetCtx,
-          width,
-          height,
-          settings.asciiCellSize || 8,
-          settings.asciiCharset || "@%#*+=-:. ",
-          settings.asciiInvert || false,
-          settings.asciiColor !== false
-        );
-      }
-      break;
-
-    case 'text':
-      // Text is now handled below if enabled
-      break;
-
-    default:
-      // For other types, effects are already applied above
-      break;
+  if (settings.asciiEnabled !== false) { // Default to enabled
+    applyAsciiToFrame(
+      sourceCtx,
+      targetCtx,
+      width,
+      height,
+      settings.asciiCellSize || 8,
+      settings.asciiCharset || "@%#*+=-:. ",
+      settings.asciiInvert || false,
+      settings.asciiColor !== false
+    );
   }
 
   // Apply dithering if enabled (independent of type)

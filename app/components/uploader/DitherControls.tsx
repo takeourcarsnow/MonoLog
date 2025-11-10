@@ -11,7 +11,12 @@ interface DitherControlsProps {
 }
 
 export function DitherControls({ effectSettings, onSettingsChange, disabled }: DitherControlsProps) {
-  const setDitherEnabled = (v: boolean) => onSettingsChange({ ...effectSettings, ditherEnabled: v });
+  const setDitherEnabled = (v: boolean) => onSettingsChange({ 
+    ...effectSettings, 
+    ditherEnabled: v,
+    // Disable other conflicting effects when enabling dithering
+    ...(v && { pixelateEnabled: false, asciiEnabled: false })
+  });
   const setDitherMethod = (v: DitherMethod) => onSettingsChange({ ...effectSettings, ditherMethod: v === 'none' ? undefined : (v as any) });
   const setDitherColorMode = (v: 'bw' | 'color') => onSettingsChange({ ...effectSettings, ditherColorMode: v });
   const setDitherLevels = (v: number) => onSettingsChange({ ...effectSettings, ditherLevels: v });
@@ -19,9 +24,9 @@ export function DitherControls({ effectSettings, onSettingsChange, disabled }: D
   const setDitherPalette = (v: DitherPalette) => onSettingsChange({ ...effectSettings, ditherPalette: v as any });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {/* Enable toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <input
           type="checkbox"
           id="dither-enabled"
@@ -30,7 +35,7 @@ export function DitherControls({ effectSettings, onSettingsChange, disabled }: D
           disabled={disabled}
           style={{ margin: 0 }}
         />
-        <label htmlFor="dither-enabled" style={{ fontSize: 12, opacity: 0.9, cursor: disabled ? 'not-allowed' : 'pointer' }}>
+        <label htmlFor="dither-enabled" style={{ fontSize: 10, opacity: 0.9, cursor: disabled ? 'not-allowed' : 'pointer' }}>
           Enable Dithering
         </label>
       </div>

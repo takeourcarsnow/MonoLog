@@ -738,7 +738,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
           {/* Effect selection buttons */}
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ padding: 4, borderRadius: 8, background: 'rgba(0,0,0,0.14)', display: 'flex', gap: 6, alignItems: 'center' }}>
+            <div style={{ padding: 4, borderRadius: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
               <EffectControls
                 effectType={effectSettings.type}
                 onEffectChange={(type) => setEffectSettings({ ...effectSettings, type })}

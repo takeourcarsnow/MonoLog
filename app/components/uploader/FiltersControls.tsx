@@ -18,17 +18,17 @@ export function FiltersControls({ effectSettings, onSettingsChange, disabled }: 
   const filterStrength = effectSettings.filterStrength || 1;
 
   return (
-    <div style={{ display: 'grid', gap: 12, width: '100%' }}>
+    <div style={{ display: 'grid', gap: 4, width: '100%' }}>
       {/* Filter selection */}
       <div>
-        <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>
           Filter
         </label>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
-          gap: 8,
-          maxHeight: 120,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))',
+          gap: 2,
+          maxHeight: 80,
           overflowY: 'auto'
         }}>
           {Object.entries(FILTER_PRESETS).map(([key, value]) => (
@@ -38,12 +38,12 @@ export function FiltersControls({ effectSettings, onSettingsChange, disabled }: 
               onClick={() => updateSetting('selectedFilter', key)}
               disabled={disabled}
               style={{
-                padding: '8px 4px',
-                borderRadius: 6,
+                padding: '4px 2px',
+                borderRadius: 4,
                 background: selectedFilter === key ? `color-mix(in srgb, ${CATEGORY_COLORS.color} 20%, transparent)` : 'transparent',
                 border: selectedFilter === key ? `1px solid ${CATEGORY_COLORS.color}` : '1px solid transparent',
                 color: 'var(--text)',
-                fontSize: 12,
+                fontSize: 10,
                 fontWeight: selectedFilter === key ? 600 : 500,
                 cursor: 'pointer',
                 textAlign: 'center',
@@ -60,11 +60,11 @@ export function FiltersControls({ effectSettings, onSettingsChange, disabled }: 
 
       {/* Filter strength */}
       {selectedFilter !== 'none' && (
-        <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ width: 80, fontSize: 14, fontWeight: 600 }}>
+        <label style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <span style={{ width: 50, fontSize: 11, fontWeight: 600 }}>
             Strength
           </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flex: 1 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flex: 1 }}>
             <input
               type="range"
               min={0}
@@ -78,7 +78,7 @@ export function FiltersControls({ effectSettings, onSettingsChange, disabled }: 
                 background: `linear-gradient(to right, var(--bg) 0%, var(--primary) ${filterStrength * 100}%, var(--bg) 100%)`,
               }}
             />
-            <span style={{ fontSize: 12, fontWeight: 500, minWidth: 35, textAlign: 'right' }}>
+            <span style={{ fontSize: 10, fontWeight: 500, minWidth: 24, textAlign: 'right' }}>
               {(filterStrength * 100).toFixed(0)}%
             </span>
           </span>

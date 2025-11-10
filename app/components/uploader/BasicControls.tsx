@@ -20,10 +20,8 @@ export function BasicControls({ effectSettings, onSettingsChange, disabled }: Ba
       contrast={effectSettings.contrast || 0}
       saturation={effectSettings.saturation || 0}
       temperature={effectSettings.temperature || 0}
-      vignette={effectSettings.vignette || 0}
       onChange={handleChange}
       disabled={disabled}
-      showVignette={true}
     />
   );
 }

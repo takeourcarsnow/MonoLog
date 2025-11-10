@@ -73,7 +73,7 @@ export function EffectsPanel({
   ];
 
   return (
-    <section className="imgedit-panel-inner effects-panel" style={{ display: 'grid', width: '100%', gap: 6 }}>
+    <section className="imgedit-panel-inner effects-panel" style={{ display: 'grid', width: '100%', gap: 2 }}>
       {effects.map((effect) => (
         <EffectSlider
           key={effect.key}

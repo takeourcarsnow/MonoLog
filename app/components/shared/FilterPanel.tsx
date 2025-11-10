@@ -42,7 +42,7 @@ export function FilterPanel({
 
   const renderFilterGroup = (filters: string[], flexWrap: 'wrap' | 'nowrap' | 'wrap-reverse' = 'wrap') => (
     <div style={{ marginBottom: 2 }}>
-      <div className="filter-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap }}>
+      <div className="filter-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap, gap: 2 }}>
         {filters.map(f => {
           const Icon = FILTER_ICONS[f] || FILTER_ICONS.default;
           return (
@@ -52,15 +52,10 @@ export function FilterPanel({
               type="button"
               className="filter-btn"
               onClick={() => handleFilterSelect(f)}
-              onMouseDownCapture={(e) => (e.currentTarget.style.transform = 'scale(0.96)')}
-              onMouseUpCapture={(e) => (e.currentTarget.style.transform = '')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = '')}
-              onFocus={(e) => (e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)')}
-              onBlur={(e) => (e.currentTarget.style.boxShadow = '')}
               aria-pressed={selectedFilter === f}
               disabled={disabled}
             >
-              <Icon size={14} strokeWidth={2} aria-hidden style={{ color: selectedFilter === f ? FILTER_COLORS[f] ?? undefined : undefined }} />
+              <Icon size={12} strokeWidth={2} aria-hidden style={{ color: selectedFilter === f ? FILTER_COLORS[f] ?? undefined : undefined }} />
               <span>{f}</span>
             </button>
           );
@@ -86,12 +81,24 @@ export function FilterPanel({
           boxShadow: 'none',
           border: '1px solid color-mix(in srgb, var(--text) 6%, transparent)'
         }} />
-        {renderFilterGroup(colorFilters, 'wrap')}
-        {renderFilterGroup(bwFilters, 'wrap')}
-        {renderFilterGroup(otherFilters)}
+        
+        {/* Color Filters */}
+        <div style={{ marginBottom: 4, padding: 4, border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 6 }}>
+          {renderFilterGroup(colorFilters, 'wrap')}
+        </div>
+        
+        {/* B&W Filters */}
+        <div style={{ marginBottom: 4, padding: 4, border: '1px solid color-mix(in srgb, var(--text) 20%, transparent)', borderRadius: 6 }}>
+          {renderFilterGroup(bwFilters, 'wrap')}
+        </div>
+        
+        {/* Other Filters */}
+        <div style={{ marginBottom: 2 }}>
+          {renderFilterGroup(otherFilters)}
+        </div>
       </nav>
 
-      <div style={{ marginTop: 2, flexShrink: 0 }}>
+      <div style={{ marginTop: 1, flexShrink: 0 }}>
         <EffectSlider
           label="Strength"
           value={filterStrength}

@@ -22,39 +22,39 @@ interface EffectControlsProps {
 export function EffectControls({ effectType, onEffectChange, disabled, overlayVisible, toggleOverlay }: EffectControlsProps) {
   const iconSize = 14;
   return (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-      <button type="button" className={`btn mini ${effectType === 'none' ? 'active' : ''}`} onClick={() => onEffectChange('none')} title="No effect" disabled={disabled} style={{ padding: 6 }}>
+    <div className="effect-controls" style={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <button type="button" className={`btn mini ${effectType === 'none' ? 'active' : ''}`} onClick={() => onEffectChange('none')} title="No effect" disabled={disabled}>
         <Ban size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'basic' ? 'active' : ''}`} onClick={() => onEffectChange('basic')} title="Basic Adjustments" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'basic' ? 'active' : ''}`} onClick={() => onEffectChange('basic')} title="Basic Adjustments" disabled={disabled}>
         <Sliders size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'filters' ? 'active' : ''}`} onClick={() => onEffectChange('filters')} title="Filters" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'filters' ? 'active' : ''}`} onClick={() => onEffectChange('filters')} title="Filters" disabled={disabled}>
         <Palette size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'effects' ? 'active' : ''}`} onClick={() => onEffectChange('effects')} title="Effects" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'effects' ? 'active' : ''}`} onClick={() => onEffectChange('effects')} title="Effects" disabled={disabled}>
         <Sparkles size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'pixelate' ? 'active' : ''}`} onClick={() => onEffectChange('pixelate')} title="Pixelate" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'pixelate' ? 'active' : ''}`} onClick={() => onEffectChange('pixelate')} title="Pixelate" disabled={disabled}>
         <Grid3x3 size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'dither' ? 'active' : ''}`} onClick={() => onEffectChange('dither')} title="Dither" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'dither' ? 'active' : ''}`} onClick={() => onEffectChange('dither')} title="Dither" disabled={disabled}>
         <Wand2 size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'ascii' ? 'active' : ''}`} onClick={() => onEffectChange('ascii')} title="ASCII" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'ascii' ? 'active' : ''}`} onClick={() => onEffectChange('ascii')} title="ASCII" disabled={disabled}>
         <FileText size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'text' ? 'active' : ''}`} onClick={() => onEffectChange('text')} title="Text Overlay" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'text' ? 'active' : ''}`} onClick={() => onEffectChange('text')} title="Text Overlay" disabled={disabled}>
         <Type size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'frame' ? 'active' : ''}`} onClick={() => onEffectChange('frame')} title="Frame" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'frame' ? 'active' : ''}`} onClick={() => onEffectChange('frame')} title="Frame" disabled={disabled}>
         <Frame size={iconSize} />
       </button>
-      <button type="button" className={`btn mini ${effectType === 'overlay' ? 'active' : ''}`} onClick={() => onEffectChange('overlay')} title="Overlay" disabled={disabled} style={{ padding: 6 }}>
+      <button type="button" className={`btn mini ${effectType === 'overlay' ? 'active' : ''}`} onClick={() => onEffectChange('overlay')} title="Overlay" disabled={disabled}>
         <Layers size={iconSize} />
       </button>
       {typeof toggleOverlay === 'function' && (
-        <button type="button" className="btn mini" onClick={toggleOverlay} title={overlayVisible ? 'Hide controls' : 'Show controls'} disabled={disabled} style={{ padding: 6 }}>
+        <button type="button" className="btn mini" onClick={toggleOverlay} title={overlayVisible ? 'Hide controls' : 'Show controls'} disabled={disabled}>
           {overlayVisible ? <EyeOff size={iconSize} /> : <Eye size={iconSize} />}
         </button>
       )}

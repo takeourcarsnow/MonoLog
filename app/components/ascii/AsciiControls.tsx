@@ -34,11 +34,11 @@ export default function AsciiControlsShared(props: SharedAsciiProps) {
   };
 
   return (
-    <div style={{ display: 'grid', gap: 6, width: '100%', boxSizing: 'border-box' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
-        <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, fontWeight: 600 }}>
-          <Type size={16} strokeWidth={2} aria-hidden />
-          <span>ASCII Art</span>
+    <div style={{ display: 'grid', gap: 2, width: '100%', boxSizing: 'border-box' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'space-between' }}>
+        <span style={{ display: 'flex', gap: 4, alignItems: 'center', fontSize: 11, fontWeight: 600 }}>
+          <Type size={14} strokeWidth={2} aria-hidden />
+          <span>ASCII</span>
         </span>
         {props.setAsciiEnabled ? (
           <input type="checkbox" checked={!!props.asciiEnabled} onChange={(e) => { props.setAsciiEnabled!(e.target.checked); scheduleDraw && scheduleDraw(); }} aria-label="Enable ASCII art" />
@@ -47,7 +47,7 @@ export default function AsciiControlsShared(props: SharedAsciiProps) {
 
       {props.asciiEnabled && (
         <>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             <input
               className="imgedit-range"
               type="range"
@@ -59,14 +59,14 @@ export default function AsciiControlsShared(props: SharedAsciiProps) {
               style={{ flex: 1, minWidth: 0, background: rangeBg(props.asciiCellSize, 2, 36, '#1f2937', '#f59e0b') }}
               aria-label="ASCII cell size"
             />
-            <span style={{ minWidth: 32, textAlign: 'right', fontSize: 12 }}>{props.asciiCellSize}</span>
+            <span style={{ minWidth: 24, textAlign: 'right', fontSize: 10 }}>{props.asciiCellSize}</span>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <select
               value={props.asciiCharsetPreset ?? 'custom'}
               onChange={(e) => applyPreset(e.target.value as CharsetPreset)}
-              style={{ padding: '4px 6px', fontSize: 12, borderRadius: 6, flex: 1 }}
+              style={{ padding: '2px 4px', fontSize: 10, borderRadius: 4, flex: 1, minWidth: 60 }}
               aria-label="ASCII preset"
             >
               <option value="custom">Custom</option>
@@ -82,16 +82,16 @@ export default function AsciiControlsShared(props: SharedAsciiProps) {
             <select
               value={props.asciiInvert ? 'inverted' : 'normal'}
               onChange={(e) => { const v = e.target.value === 'inverted'; props.setAsciiInvert && props.setAsciiInvert(v); scheduleDraw && scheduleDraw(); }}
-              style={{ padding: '4px 6px', fontSize: 12, borderRadius: 6 }}
+              style={{ padding: '2px 4px', fontSize: 10, borderRadius: 4, minWidth: 50 }}
               aria-label="ASCII invert"
             >
               <option value="normal">Normal</option>
               <option value="inverted">Inverted</option>
             </select>
 
-            <label style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <label style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <input type="checkbox" checked={!!props.asciiColor} onChange={(e) => { props.setAsciiColor && props.setAsciiColor(e.target.checked); scheduleDraw && scheduleDraw(); }} aria-label="ASCII color" />
-              <span style={{ fontSize: 12 }}>Color</span>
+              <span style={{ fontSize: 10 }}>Color</span>
             </label>
           </div>
         </>

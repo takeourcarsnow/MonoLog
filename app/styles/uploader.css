@@ -889,23 +889,10 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 }
 #camera-root > * { pointer-events: auto; width: 100%; max-width: clamp(300px, 90vw, 720px); }
 
-/* Full-screen editor mode */
-.upload-editor-fullscreen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: calc(var(--viewport-height, 1vh) * 100);
-  z-index: 1000;
-  background: var(--bg);
-}
-
-.upload-editor-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
+@media (max-width: 640px) {
+  #camera-root {
+    padding: 8px;
+  }
 }
 
 /* Image action buttons (edit/change) - icon-only with animations */
@@ -1316,4 +1303,100 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   cursor: default;
   transform: none;
   background: transparent !important; /* ensure disabled state has no background */
+}
+
+/* Effect controls responsive styles */
+.effect-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.effect-controls button {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--text);
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.effect-controls button:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.effect-controls button:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.effect-controls button.active {
+  background: transparent !important;
+  border: 1px solid var(--primary) !important;
+  color: var(--primary);
+}
+
+.effect-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .effect-controls {
+    gap: 4px;
+  }
+  .effect-controls button {
+    padding: 4px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+  .effect-controls button svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+}
+
+/* Filter buttons styling */
+.filter-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--text);
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-size: 10px;
+  font-weight: 500;
+  min-width: 40px;
+}
+
+.filter-btn:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.filter-btn[aria-pressed="true"] {
+  background: transparent !important;
+  border: 1px solid var(--primary) !important;
+  color: var(--primary);
+}
+
+.filter-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

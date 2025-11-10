@@ -34,31 +34,6 @@ html, body {
   background: var(--bg);
 }
 
-/* Ensure the app root and Next.js container inherit the same background so
-   there is no visual seam at the bottom on mobile when the tabbar is
-   translucent. Also add a safe-area filler that sits under the tabbar to
-   cover any device chrome or rounding gaps that can show as a hairline. */
-#app-root, #__next, main {
-  background: var(--bg);
-  min-height: 100%;
-}
-
-/* Fixed safe-area filler: fills the device bottom inset with the page
-   background color. This prevents a 1px/half-pixel gap between the
-   translucent tabbar and the system nav area on some devices. It's
-   non-interactive and sits just under the tabbar. */
-body::after {
-  content: '';
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: env(safe-area-inset-bottom, 0px);
-  background: var(--bg);
-  z-index: 9998; /* just beneath the tabbar (tabbar uses 9999) */
-  pointer-events: none;
-}
-
 /* Allow scrolling on about page */
 .about-page {
   overflow: auto !important;

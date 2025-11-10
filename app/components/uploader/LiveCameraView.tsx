@@ -35,6 +35,7 @@ import { useCameraHandlers } from "./useCameraHandlers";
 import { useTouchHandlers } from "./useTouchHandlers";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { useCaptureLogic } from "./useCaptureLogic";
+import { applyCameraEffect } from "./cameraEffects";
 import { CameraControls } from "./CameraControls";
 import { CameraError } from "./CameraError";
 import { CameraLoading } from "./CameraLoading";
@@ -100,6 +101,20 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
   const disabled = isCapturing || processing || !cameraReady;
 
+  // Capture logic (includes preview/confirm/retake handlers)
+  const { handleCapture, previewUrl, isPreviewing, confirmCapture, retakeCapture, setPreviewFromBlob } = useCaptureLogic({
+    isCapturing,
+    processing,
+    onCapture,
+    effectSettings,
+    sourceCanvasRef: sourceCanvasRef as React.RefObject<HTMLCanvasElement>,
+    displayCanvasRef: displayCanvasRef as React.RefObject<HTMLCanvasElement>,
+    stopCamera,
+    stopRenderLoop,
+    performCapture,
+    onClose,
+  });
+
   // Handlers
   const {
     fileInputRef,
@@ -128,6 +143,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     effectSettings,
     videoRef: videoRef as React.RefObject<HTMLVideoElement>,
     startCamera,
+    setPreviewFromBlob,
   });
 
   // Touch handlers
@@ -428,20 +444,6 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     }
   }, [isInlineEditing, handleTouchEnd, setIsDraggingText, setIsManipulatingText, updateDragPosition]);
 
-  // Capture logic (includes preview/confirm/retake handlers)
-  const { handleCapture, previewUrl, isPreviewing, confirmCapture, retakeCapture } = useCaptureLogic({
-    isCapturing,
-    processing,
-    onCapture,
-    effectSettings,
-    sourceCanvasRef: sourceCanvasRef as React.RefObject<HTMLCanvasElement>,
-    displayCanvasRef: displayCanvasRef as React.RefObject<HTMLCanvasElement>,
-    stopCamera,
-    stopRenderLoop,
-    performCapture,
-    onClose,
-  });
-
   // disable UI controls while previewing
   const controlsDisabled = disabled || isPreviewing;
 
@@ -513,6 +515,54 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
       stopRenderLoop();
     };
   }, [cameraReady, isCapturing, effectSettings, startRenderLoop, stopRenderLoop, videoRef, streamRef, applyZoom]);
+
+  // When previewing a captured blob or imported file, draw it into the
+  // source/display canvases and re-apply effects whenever settings change.
+  useEffect(() => {
+    if (!isPreviewing || !previewUrl) return;
+
+    let mounted = true;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = previewUrl;
+
+    const doRender = () => {
+      const src = sourceCanvasRef.current;
+      const disp = displayCanvasRef.current;
+      if (!src || !disp) return;
+
+      // Size canvases to match image
+      const w = img.naturalWidth || img.width || 1;
+      const h = img.naturalHeight || img.height || 1;
+      src.width = w;
+      src.height = h;
+      disp.width = w;
+      disp.height = h;
+
+      const sctx = src.getContext('2d', { willReadFrequently: true });
+      if (!sctx) return;
+      sctx.clearRect(0, 0, w, h);
+      sctx.drawImage(img, 0, 0, w, h);
+
+      try {
+        applyCameraEffect(src, disp, effectSettings);
+      } catch (e) {
+        // If apply fails, still show raw image
+        const dctx = disp.getContext('2d');
+        dctx?.clearRect(0, 0, w, h);
+        dctx?.drawImage(img, 0, 0, w, h);
+      }
+    };
+
+    if (img.complete && img.naturalWidth) {
+      if (mounted) doRender();
+    } else {
+      img.onload = () => { if (!mounted) return; doRender(); };
+      img.onerror = () => { /* ignore load errors */ };
+    }
+
+    return () => { mounted = false; };
+  }, [isPreviewing, previewUrl, effectSettings, sourceCanvasRef, displayCanvasRef]);
 
   // Progressive loading of effects
   useEffect(() => {
@@ -730,10 +780,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
             <CameraProcessingOverlay showProcessingOverlay={showProcessingOverlay} />
 
-            {/* When previewing, show the captured image on top of the display canvas (no separate overlay bar) */}
-            {isPreviewing && previewUrl && (
-              <img src={previewUrl} alt="Captured preview" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 2, borderRadius: 6 }} />
-            )}
+            {/* Preview is rendered into the display canvas so effects can be applied live. */}
           </div>
 
           {/* Effect selection buttons */}

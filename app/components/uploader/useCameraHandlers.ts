@@ -24,6 +24,9 @@ interface UseCameraHandlersProps {
   effectSettings: CameraEffectSettings;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   startCamera: () => Promise<void>;
+  // Optional callback to set a preview directly (used when selecting a file from disk
+  // so the app can present the same preview/confirm UI as a captured photo)
+  setPreviewFromBlob?: (blob: Blob | null) => void;
 }
 
 export function useCameraHandlers({
@@ -45,6 +48,7 @@ export function useCameraHandlers({
   effectSettings,
   videoRef,
   startCamera,
+  setPreviewFromBlob,
 }: UseCameraHandlersProps) {
   // File input ref for adding image from files
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -63,12 +67,26 @@ export function useCameraHandlers({
       return;
     }
 
-    // Stop camera and render loop, show processing overlay similar to capture
-    setShowProcessingOverlay(true);
+    // Stop camera and render loop so the view is frozen for editing/preview
     stopCamera();
     stopRenderLoop();
 
-    // Pass the file (File extends Blob) to onCapture and close
+    // If the caller provided a preview setter, use that to show the
+    // confirm/retake UI (do NOT upload immediately). Otherwise fall
+    // back to the old behavior of passing the file to onCapture.
+    if (setPreviewFromBlob) {
+      try {
+        setPreviewFromBlob(f);
+      } catch (err) {
+        console.error('Error setting preview from file:', err);
+        // Fallback to immediate capture if previewing fails
+        try { onCapture(f); onClose(); } catch (e) { console.error(e); }
+      }
+      return;
+    }
+
+    // No preview path available — behave like before and upload immediately
+    setShowProcessingOverlay(true);
     try {
       onCapture(f);
     } catch (err) {

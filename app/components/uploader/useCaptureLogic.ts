@@ -104,5 +104,16 @@ export function useCaptureLogic({
     isPreviewing,
     confirmCapture,
     retakeCapture,
+    // Allow external callers to set a preview directly from a Blob (e.g. file input)
+    setPreviewFromBlob: (blob: Blob | null) => {
+      if (!blob) return;
+      setPreviewBlob(blob);
+      try {
+        setPreviewUrl(URL.createObjectURL(blob));
+      } catch (e) {
+        setPreviewUrl(null);
+      }
+      setIsPreviewing(true);
+    },
   };
 }

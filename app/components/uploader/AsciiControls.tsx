@@ -41,7 +41,7 @@ export function AsciiControls({ effectSettings, onSettingsChange, disabled }: As
         <input
           type="checkbox"
           id="ascii-enabled"
-          checked={effectSettings.asciiEnabled !== false}
+          checked={effectSettings.asciiEnabled === true}
           onChange={(e) => setAsciiEnabled(e.target.checked)}
           disabled={disabled}
           style={{ margin: 0 }}
@@ -52,7 +52,7 @@ export function AsciiControls({ effectSettings, onSettingsChange, disabled }: As
       </div>
 
       {/* Controls */}
-      {effectSettings.asciiEnabled !== false && (
+      {effectSettings.asciiEnabled === true && (
         <AsciiControlsShared
           asciiEnabled={true}
           asciiCellSize={effectSettings.asciiCellSize || 10}

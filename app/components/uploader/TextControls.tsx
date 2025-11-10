@@ -72,7 +72,7 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
 
         {/* Font family - compact */}
         <select
-          value={effectSettings.textFontFamily || 'Arial'}
+          value={effectSettings.textFontFamily || 'Roboto'}
           onChange={(e) => handleFontFamilyChange(e.target.value)}
           disabled={disabled}
           style={{
@@ -86,10 +86,14 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
             minWidth: '65px',
           }}
         >
-          <option value="Arial">Arial</option>
-          <option value="Helvetica">Sans</option>
-          <option value="Times">Serif</option>
-          <option value="Courier">Mono</option>
+          <option value="Roboto" style={{ fontFamily: 'Roboto, sans-serif' }}>Roboto</option>
+          <option value="Pacifico" style={{ fontFamily: 'Pacifico, cursive' }}>Pacifico</option>
+          <option value="Bangers" style={{ fontFamily: 'Bangers, cursive' }}>Bangers</option>
+          <option value="Space Mono" style={{ fontFamily: 'Space Mono, monospace' }}>Space Mono</option>
+          <option value="Playfair Display" style={{ fontFamily: 'Playfair Display, serif' }}>Playfair</option>
+          <option value="Oswald" style={{ fontFamily: 'Oswald, sans-serif' }}>Oswald</option>
+          <option value="Anton" style={{ fontFamily: 'Anton, sans-serif' }}>Anton</option>
+          <option value="Ubuntu" style={{ fontFamily: 'Ubuntu, sans-serif' }}>Ubuntu</option>
         </select>
 
         {/* Color picker */}

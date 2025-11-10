@@ -108,7 +108,7 @@ export function applyUnifiedEffects(
     );
   }
 
-  if (settings.asciiEnabled !== false) { // Default to enabled
+  if (settings.asciiEnabled) { // Only apply if explicitly enabled
     applyAsciiToFrame(
       sourceCtx,
       targetCtx,

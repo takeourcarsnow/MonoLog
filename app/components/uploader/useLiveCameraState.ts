@@ -31,7 +31,7 @@ export function useLiveCameraState() {
     ditherCustomPalette: '',
     targetLongEdge: 150,
     // ASCII settings
-    asciiEnabled: true,
+    asciiEnabled: false,
     asciiCellSize: 10,
     asciiCharset: ' .:-=+*#%@',
     asciiInvert: false,

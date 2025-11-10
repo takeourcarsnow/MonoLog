@@ -25,7 +25,7 @@ export function PixelateControls({ effectSettings, onSettingsChange, disabled }:
         <input
           type="checkbox"
           id="pixelate-enabled"
-          checked={effectSettings.pixelateEnabled !== false}
+          checked={effectSettings.pixelateEnabled === true}
           onChange={(e) => setPixelateEnabled(e.target.checked)}
           disabled={disabled}
           style={{ margin: 0 }}

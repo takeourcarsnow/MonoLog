@@ -18,6 +18,12 @@ export default function FollowingPage() {
 
   usePageScroll('following-page-scroll');
 
+  // Allow body scrolling for following page
+  useEffect(() => {
+    document.body.classList.add('following-page');
+    return () => document.body.classList.remove('following-page');
+  }, []);
+
   const loadData = async () => {
     const user = await api.getCurrentUser();
     console.log('DEBUG following page: currentUser', user?.id, 'following:', user?.following);

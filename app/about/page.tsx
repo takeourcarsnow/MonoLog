@@ -11,6 +11,9 @@ export default function AboutPage() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   useEffect(() => {
+    // Allow body scrolling for about page
+    document.body.classList.add('about-page');
+
     // Scroll reveal with IntersectionObserver + CSS-driven stagger
     if (typeof window === 'undefined') return;
 
@@ -37,7 +40,10 @@ export default function AboutPage() {
     }, { threshold: 0.12 });
 
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    return () => {
+      document.body.classList.remove('about-page');
+      io.disconnect();
+    };
   }, []);
 
   const faqs = [

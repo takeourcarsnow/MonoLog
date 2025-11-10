@@ -34,6 +34,56 @@ html, body {
   background: var(--bg);
 }
 
+/* Allow scrolling on about page */
+.about-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on communities page */
+.communities-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on search page */
+.search-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on community page */
+.community-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on thread page */
+.thread-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on create community page */
+.create-community-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on edit community page */
+.edit-community-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on create thread page */
+.create-thread-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on favorites page */
+.favorites-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on following page */
+.following-page {
+  overflow: auto !important;
+}
+
 
 
 

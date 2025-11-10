@@ -40,7 +40,7 @@ const ToggleActionButton = React.forwardRef<HTMLButtonElement, Props>(
     return (
       <Button
         ref={ref}
-        variant={active ? "ghost" : "default"}
+        variant="ghost"
         size={size}
         className={className}
         onClick={onClick}

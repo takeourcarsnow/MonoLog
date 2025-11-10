@@ -30,7 +30,7 @@ import { BasicControls } from "./BasicControls";
 import { FilterControls } from "./FilterControls";
 import { EffectsControls } from "./EffectsControls";
 import { TextControls } from "./TextControls";
-import { useLiveCameraState } from "./useLiveCameraState";
+import { useLiveCameraState, DEFAULT_EFFECT_SETTINGS } from "./useLiveCameraState";
 import { useCameraHandlers } from "./useCameraHandlers";
 import { useTouchHandlers } from "./useTouchHandlers";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
@@ -503,9 +503,12 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     }
   }, [isOpen, processing, startCameraEnhanced, stopCamera, stopRenderLoop]);
 
-  // Start render loop when camera is ready and not capturing
+  // Start render loop when camera is ready and not capturing or previewing
+  // If we're previewing an imported image (isPreviewing) we must NOT run the
+  // live render loop otherwise the camera stream may restart and overwrite
+  // the preview canvas. Respect isPreviewing to avoid that.
   useEffect(() => {
-    if (cameraReady && !isCapturing) {
+    if (cameraReady && !isCapturing && !isPreviewing) {
       startRenderLoop(effectSettings, isCapturing, videoRef, streamRef, applyZoom);
     } else {
       stopRenderLoop();
@@ -514,7 +517,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     return () => {
       stopRenderLoop();
     };
-  }, [cameraReady, isCapturing, effectSettings, startRenderLoop, stopRenderLoop, videoRef, streamRef, applyZoom]);
+  }, [cameraReady, isCapturing, isPreviewing, effectSettings, startRenderLoop, stopRenderLoop, videoRef, streamRef, applyZoom]);
 
   // When previewing a captured blob or imported file, draw it into the
   // source/display canvases and re-apply effects whenever settings change.
@@ -531,26 +534,59 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
       const disp = displayCanvasRef.current;
       if (!src || !disp) return;
 
-      // Size canvases to match image
-      const w = img.naturalWidth || img.width || 1;
-      const h = img.naturalHeight || img.height || 1;
-      src.width = w;
-      src.height = h;
-      disp.width = w;
-      disp.height = h;
+      // Fit image into available display area (contain) — never crop.
+      // Compute target CSS size from display canvas container (the element
+      // that holds the canvas is sized responsively). We'll size the canvas
+      // backing store to the CSS size * devicePixelRatio for crisp rendering.
+      const container = disp.parentElement || disp;
+      const containerRect = container.getBoundingClientRect();
+      const containerW = Math.max(1, Math.round(containerRect.width));
+      // Use container width and compute height to preserve image aspect ratio
+      const imgW = img.naturalWidth || img.width || 1;
+      const imgH = img.naturalHeight || img.height || 1;
+      const imgAspect = imgW / imgH;
+
+      // Fit by width then adjust height to preserve aspect ratio; if the
+      // container's height is less than computed height, scale down to fit height.
+      let cssW = containerW;
+      let cssH = Math.round(cssW / imgAspect);
+      const containerH = Math.max(1, Math.round(containerRect.height));
+      if (cssH > containerH) {
+        cssH = containerH;
+        cssW = Math.round(cssH * imgAspect);
+      }
+
+      const dpr = window.devicePixelRatio || 1;
+      const backingW = Math.max(1, Math.round(cssW * dpr));
+      const backingH = Math.max(1, Math.round(cssH * dpr));
+
+      src.width = backingW;
+      src.height = backingH;
+      disp.width = backingW;
+      disp.height = backingH;
+
+      // Keep canvas element CSS sized to the computed cssW/cssH so it fits
+      // in the UI without cropping
+      disp.style.width = `${cssW}px`;
+      disp.style.height = `${cssH}px`;
 
       const sctx = src.getContext('2d', { willReadFrequently: true });
-      if (!sctx) return;
-      sctx.clearRect(0, 0, w, h);
-      sctx.drawImage(img, 0, 0, w, h);
+      const dctx = disp.getContext('2d');
+      if (!sctx || !dctx) return;
+
+      // Clear and draw the image scaled to backing size (contain)
+      sctx.clearRect(0, 0, backingW, backingH);
+      // use drawImage with computed destination to preserve aspect in backing pixels
+      sctx.drawImage(img, 0, 0, backingW, backingH);
 
       try {
+        // applyCameraEffect expects source/display canvases; they are now sized
+        // to the CSS container and will receive effects correctly.
         applyCameraEffect(src, disp, effectSettings);
       } catch (e) {
-        // If apply fails, still show raw image
-        const dctx = disp.getContext('2d');
-        dctx?.clearRect(0, 0, w, h);
-        dctx?.drawImage(img, 0, 0, w, h);
+        // Fallback: blit the source into display
+        dctx.clearRect(0, 0, backingW, backingH);
+        dctx.drawImage(src, 0, 0, backingW, backingH);
       }
     };
 
@@ -631,7 +667,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
           onClick={(e) => e.stopPropagation()}
         >
           {/* Video and canvas container */}
-          <div style={{ position: 'relative', width: '100%', borderRadius: 6, overflow: 'hidden', background: '#000' }}>
+          <div style={{ position: 'relative', width: '100%', borderRadius: 6, overflow: 'hidden', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {/* Hidden video element */}
             <video
               ref={videoRef}
@@ -788,7 +824,17 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
             <div style={{ padding: 4, borderRadius: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
               <EffectControls
                 effectType={effectSettings.type}
-                onEffectChange={(type) => setEffectSettings({ ...effectSettings, type })}
+                onEffectChange={(type) => {
+                  if (type === 'none') {
+                    // Reset all settings to defaults when 'No effect' is chosen
+                    setEffectSettings(DEFAULT_EFFECT_SETTINGS);
+                    // Clear selected frame/overlay as part of reset
+                    setSelectedFrame(null);
+                    setSelectedOverlay(null);
+                  } else {
+                    setEffectSettings(prev => ({ ...prev, type }));
+                  }
+                }}
                 disabled={disabled}
                 overlayVisible={overlayVisible}
                 toggleOverlay={toggleOverlay}

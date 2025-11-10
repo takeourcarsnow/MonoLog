@@ -33,6 +33,20 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
 
   return (
     <div style={{ padding: '4px 0', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {/* Add font preview styles */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .font-preview option[value="Roboto"] { font-family: 'Roboto', sans-serif; }
+          .font-preview option[value="Pacifico"] { font-family: 'Pacifico', cursive; }
+          .font-preview option[value="Bangers"] { font-family: 'Bangers', cursive; }
+          .font-preview option[value="Space Mono"] { font-family: 'Space Mono', monospace; }
+          .font-preview option[value="Playfair Display"] { font-family: 'Playfair Display', serif; }
+          .font-preview option[value="Oswald"] { font-family: 'Oswald', sans-serif; }
+          .font-preview option[value="Anton"] { font-family: 'Anton', sans-serif; }
+          .font-preview option[value="Ubuntu"] { font-family: 'Ubuntu', sans-serif; }
+        `
+      }} />
+
       {/* Text input - compact single line */}
       <input
         type="text"
@@ -72,6 +86,7 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
 
         {/* Font family - compact */}
         <select
+          className="font-preview"
           value={effectSettings.textFontFamily || 'Roboto'}
           onChange={(e) => handleFontFamilyChange(e.target.value)}
           disabled={disabled}
@@ -86,14 +101,14 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
             minWidth: '65px',
           }}
         >
-          <option value="Roboto" style={{ fontFamily: 'Roboto, sans-serif' }}>Roboto</option>
-          <option value="Pacifico" style={{ fontFamily: 'Pacifico, cursive' }}>Pacifico</option>
-          <option value="Bangers" style={{ fontFamily: 'Bangers, cursive' }}>Bangers</option>
-          <option value="Space Mono" style={{ fontFamily: 'Space Mono, monospace' }}>Space Mono</option>
-          <option value="Playfair Display" style={{ fontFamily: 'Playfair Display, serif' }}>Playfair</option>
-          <option value="Oswald" style={{ fontFamily: 'Oswald, sans-serif' }}>Oswald</option>
-          <option value="Anton" style={{ fontFamily: 'Anton, sans-serif' }}>Anton</option>
-          <option value="Ubuntu" style={{ fontFamily: 'Ubuntu, sans-serif' }}>Ubuntu</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Pacifico">Pacifico</option>
+          <option value="Bangers">Bangers</option>
+          <option value="Space Mono">Space Mono</option>
+          <option value="Playfair Display">Playfair</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Anton">Anton</option>
+          <option value="Ubuntu">Ubuntu</option>
         </select>
 
         {/* Color picker */}

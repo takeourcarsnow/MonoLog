@@ -15,7 +15,11 @@ export function useStoryViewerEffects(
     const cur = ownStories[viewerIdx];
     const dur = cur?.mediaType === 'video' ? Math.min(Math.max(cur.durationSeconds || 6, 3), 15) : 6;
     const t = setTimeout(() => {
-      setViewerIdx(v => (v + 1) >= ownStories.length ? 0 : v + 1); // loop for own stories
+      if (viewerIdx + 1 >= ownStories.length) {
+        setViewerOpen(false);
+      } else {
+        setViewerIdx(v => v + 1);
+      }
     }, dur * 1000);
     return () => clearTimeout(t);
   }, [viewerOpen, viewerIdx, ownStories]);
@@ -25,7 +29,13 @@ export function useStoryViewerEffects(
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setViewerOpen(false);
       else if (e.key === 'ArrowLeft') setViewerIdx(v => v === 0 ? ownStories.length - 1 : v - 1);
-      else if (e.key === 'ArrowRight') setViewerIdx(v => (v + 1) % ownStories.length);
+      else if (e.key === 'ArrowRight') {
+        if (viewerIdx + 1 >= ownStories.length) {
+          setViewerOpen(false);
+        } else {
+          setViewerIdx(v => v + 1);
+        }
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

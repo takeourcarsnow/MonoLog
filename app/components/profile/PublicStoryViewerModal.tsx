@@ -29,6 +29,7 @@ export function PublicStoryViewerModal({
   const [progress, setProgress] = useState(0);
   const [loadedStories, setLoadedStories] = useState<Set<number>>(new Set());
   const [liked, setLiked] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const controlsRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLVideoElement | HTMLImageElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -162,6 +163,14 @@ export function PublicStoryViewerModal({
       setProgress(0);
     }
   }, [isOpen]);
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Reset loading state when story changes
   useEffect(() => {
@@ -355,7 +364,10 @@ export function PublicStoryViewerModal({
           justifyContent: 'center',
           position: 'relative'
         }} 
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onNext();
+        }}
       >
         {isLoading && (
           <div style={{
@@ -464,36 +476,40 @@ export function PublicStoryViewerModal({
       </div>
 
       {/* Invisible side areas for easier navigation on desktop */}
-      <div 
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: '20%',
-          cursor: 'pointer'
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onPrev();
-        }}
-        aria-label="Previous story"
-      />
-      <div 
-        style={{
-          position: 'absolute',
-          right: 0,
-          top: 0,
-          bottom: 0,
-          width: '20%',
-          cursor: 'pointer'
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onNext();
-        }}
-        aria-label="Next story"
-      />
+      {!isMobile && (
+        <>
+          <div 
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: '20%',
+              cursor: 'pointer'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrev();
+            }}
+            aria-label="Previous story"
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: '20%',
+              cursor: 'pointer'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext();
+            }}
+            aria-label="Next story"
+          />
+        </>
+      )}
     </div>,
     document.body
   );

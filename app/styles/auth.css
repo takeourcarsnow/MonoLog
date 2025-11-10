@@ -654,7 +654,10 @@ body.notifications-popup-open .tabbar {
 
 .notifications-popup-content {
   flex: 1;
-  overflow: visible;
+  /* Make the notifications list scrollable inside the popup so large
+     images or long content don't overflow the modal and break layout. */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Extra top spacing for the empty notifications state to visually separate
@@ -671,6 +674,9 @@ body.notifications-popup-open .tabbar {
 
 .notifications-popup-list {
   padding: 0;
+  /* Ensure the list can scroll independently and doesn't force the
+     popup to grow beyond its configured height. */
+  overflow: auto;
 }
 
 .notification-item {

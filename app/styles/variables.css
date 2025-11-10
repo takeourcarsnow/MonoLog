@@ -30,6 +30,11 @@
   --transition-mid: 260ms cubic-bezier(.2,.7,.2,1);
   --maxw: 800px;
 
+  /* stacking context tokens - use these instead of magic z-index numbers */
+  --z-header: 1000;
+  --z-tabbar: 900;
+  --z-modal: 1100;
+
   /* toggle indicator color (light default) */
   --auth-toggle-indicator: rgba(0,0,0,0.06);
 

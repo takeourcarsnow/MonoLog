@@ -61,7 +61,7 @@
   background-color: rgba(var(--bg-elev-rgb, 247,247,249), var(--tabbar-alpha, 0.78));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  z-index: 9999;
+  z-index: var(--z-tabbar, 900);
   min-height: 56px;
 }
 

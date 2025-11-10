@@ -4,7 +4,7 @@ import type { HydratedPost } from "@/lib/types";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
-import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Clock, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Moon } from "lucide-react";
+import { UserPlus, UserCheck, Edit, Pencil, Trash, X, MapPin, Clock, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Moon, EyeClosed } from "lucide-react";
 import { SpinningLogo } from "@/app/components/ui/SpinningLogo";
 import { currentTheme } from "@/lib/theme";
 import { AuthForm } from "@/app/components/auth/AuthForm";
@@ -229,6 +229,7 @@ export const UserHeader = memo(function UserHeader({
           <Link className="username-link" href={`/${post.user.username || post.user.id}`}>
             <span className="username">@{post.user.username}</span>
           </Link>
+          {!post.public && <EyeClosed size={12} className="dim" style={{ marginLeft: '4px', marginRight: '4px' }} />}
         </div>
         {/* render the date outside the link so toggling the full date doesn't
             trigger navigation to the user's page. Wrap in .date-wrap so we

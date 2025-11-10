@@ -5,7 +5,7 @@
       prevents double vertical scrollbars by keeping all page scrolling
       inside this element. We use the JS-updated `--viewport-height` when
       available so mobile chrome changes don't produce gaps. */
-    height: calc((var(--viewport-height, 1vh) * 100));
+    height: calc(var(--viewport-height, 1vh) * 100);
     overflow: auto;
     -webkit-overflow-scrolling: touch;
   /* Reserve top space for fixed header and use consistent side padding */

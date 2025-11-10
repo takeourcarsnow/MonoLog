@@ -268,15 +268,15 @@
   align-items:center;
   gap:12px;
   width:100%;
-  max-width: var(--maxw);
+  max-width: calc(100% - 40px);
   margin: 6px auto 12px; /* increased bottom margin for more space between header and content */
-  padding: 4px 12px; /* slightly reduced vertical padding */
+  padding: 4px 16px; /* slightly reduced vertical padding */
   box-sizing: border-box;
   background: transparent;
 }
 @media (min-width: 900px) {
   .view-toggle {
-    max-width: 80vw;
+    max-width: calc(100% - 40px);
   }
 }
 .view-toggle.tight {

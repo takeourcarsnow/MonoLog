@@ -7,6 +7,7 @@ import { CONFIG } from "@/lib/config";
 export function createPublishHandler(
   toast: { show: (msg: unknown) => void } | undefined,
   setProcessing: (processing: boolean) => void,
+  setPublishing: (publishing: boolean) => void,
   resetDraft: () => void,
   router: ReturnType<typeof useRouter>,
   dataUrls: string[],
@@ -32,6 +33,7 @@ export function createPublishHandler(
       return;
     }
     setProcessing(true);
+    setPublishing(true);
     try {
       await api.createOrReplaceToday({
         imageUrls: images.slice(0, 5),
@@ -60,6 +62,7 @@ export function createPublishHandler(
         console.warn(e?.message || "Failed to publish");
       }
       setProcessing(false);
+      setPublishing(false);
     }
   }
 

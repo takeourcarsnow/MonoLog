@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import './PublishButton.css';
 import { MESSAGES, getWaitIcons, selectTimeIcon } from '@/app/components/publish/publishHelpers';
 import { LogoIcon } from '@/app/components/nav/LogoIcon';
+import { SpinningLogo } from '@/app/components/ui/SpinningLogo';
+import { currentTheme } from '@/lib/theme';
 
 interface PublishButtonProps {
   canPost: boolean;
@@ -11,6 +13,7 @@ interface PublishButtonProps {
   remainingMs: number | null;
   countdownTotalMs: number | null;
   processing: boolean;
+  publishing: boolean;
   disabled?: boolean;
   onPublish: () => void;
 }
@@ -21,6 +24,7 @@ export function PublishButton({
   remainingMs,
   countdownTotalMs,
   processing,
+  publishing,
   disabled = false,
   onPublish
 }: PublishButtonProps) {
@@ -105,7 +109,11 @@ export function PublishButton({
         </span>
       )}
       <span className="publish-content">
-        {canPost ? (
+        {publishing ? (
+          <span className="publish-text publishing-text">
+            <SpinningLogo size={20} noScale={true} invertInLight={currentTheme() === 'light'} />
+          </span>
+        ) : canPost ? (
           <span className="publish-text ready-text">
             <LogoIcon size={20} strokeWidth={2} />
             Publish

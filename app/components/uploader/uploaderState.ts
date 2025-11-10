@@ -25,6 +25,7 @@ export function useUploaderState() {
   const [editingAlt, setEditingAlt] = useState<string>("");
   const [index, setIndex] = useState<number>(0);
   const [processing, setProcessing] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [justDiscarded, setJustDiscarded] = useState(false);
@@ -59,6 +60,7 @@ export function useUploaderState() {
     editingAlt,
     index,
     processing,
+    publishing,
     compressedSize,
     confirmCancel,
     justDiscarded,
@@ -84,6 +86,7 @@ export function useUploaderState() {
     setEditingAlt,
     setIndex,
     setProcessing,
+    setPublishing,
     setCompressedSize,
     setConfirmCancel,
     setJustDiscarded,

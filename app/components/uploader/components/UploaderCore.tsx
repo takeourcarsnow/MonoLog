@@ -46,6 +46,7 @@ export function UploaderCore() {
     editingAlt,
     index,
     processing,
+    publishing,
     compressedSize,
     canPost,
     remaining,
@@ -194,6 +195,7 @@ export function UploaderCore() {
         remainingMs={remainingMs}
         countdownTotalMs={countdownTotalMs}
         processing={processing}
+        publishing={publishing}
         compressedSize={compressedSize}
         CONFIG={CONFIG}
         onPublish={() => publish()}
@@ -254,6 +256,7 @@ export function UploaderCore() {
           setEditing={setEditing}
           setEditingIndex={setEditingIndex}
           processing={processing}
+          publishing={publishing}
           previewLoaded={previewLoaded}
           index={index}
           setIndex={setIndex}

@@ -1,5 +1,6 @@
 import { PublishButton } from "@/app/components/publish/PublishButton";
 import { Trash } from "lucide-react";
+import { Eye, EyeClosed } from "lucide-react";
 
 interface PublishControlsProps {
   hasPreview: boolean;
@@ -11,6 +12,7 @@ interface PublishControlsProps {
   remainingMs: number | null;
   countdownTotalMs: number | null;
   processing: boolean;
+  publishing: boolean;
   compressedSize: number | null;
   CONFIG: any;
   onPublish: () => void;
@@ -30,6 +32,7 @@ export function PublishControls({
   remainingMs,
   countdownTotalMs,
   processing,
+  publishing,
   compressedSize,
   CONFIG,
   onPublish,
@@ -58,14 +61,11 @@ export function PublishControls({
           title={visibility === 'private' ? 'Make post public' : 'Make post private'}
         >
           <span className="vis-icon" aria-hidden>
-            <svg className="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" />
-              <circle cx="12" cy="12" r="3" stroke="currentColor" />
-            </svg>
-            <svg className="eye-closed" viewBox="0 0 24 24" width="18" height="18" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19C5 19 1 12 1 12a20.16 20.16 0 0 1 5.06-5.94" stroke="currentColor" />
-              <path d="M1 1l22 22" stroke="currentColor" />
-            </svg>
+            {visibility === 'private' ? (
+              <EyeClosed size={18} />
+            ) : (
+              <Eye size={18} />
+            )}
           </span>
           <span>{visibility === 'private' ? 'Private' : 'Public'}</span>
         </button>
@@ -78,6 +78,7 @@ export function PublishControls({
       remainingMs={remainingMs}
       countdownTotalMs={countdownTotalMs}
       processing={processing}
+      publishing={publishing}
       disabled={compressedSize !== null && compressedSize > CONFIG.imageMaxSizeMB * 1024 * 1024}
       onPublish={onPublish}
     />

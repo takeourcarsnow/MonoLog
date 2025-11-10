@@ -75,7 +75,7 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
           <input
             type="range"
             min="12"
-            max="48"
+            max="120"
             step="2"
             value={effectSettings.textFontSize || 24}
             onChange={(e) => handleFontSizeChange(parseInt(e.target.value))}

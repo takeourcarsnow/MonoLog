@@ -19,6 +19,7 @@ export interface PreviewSectionProps {
   setProcessing: React.Dispatch<React.SetStateAction<boolean>>;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
   processing: boolean;
+  publishing: boolean;
   previewLoaded: boolean;
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;

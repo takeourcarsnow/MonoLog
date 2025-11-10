@@ -296,7 +296,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
     if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -2 : 2; // Scale down on scroll down, up on scroll up
-      const newSize = Math.max(12, Math.min(72, (effectSettings.textFontSize || 24) + delta));
+      const newSize = Math.max(12, Math.min(120, (effectSettings.textFontSize || 24) + delta));
       setEffectSettings(prev => ({
         ...prev,
         textFontSize: newSize,

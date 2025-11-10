@@ -20,6 +20,7 @@ interface CarouselViewProps {
   toast: any;
   setPreviewLoaded: React.Dispatch<React.SetStateAction<boolean>>;
   processing: boolean;
+  publishing: boolean;
   previewLoaded: boolean;
   editing: boolean;
 }
@@ -39,6 +40,7 @@ export function CarouselView({
   toast,
   setPreviewLoaded,
   processing,
+  publishing,
   previewLoaded,
   editing
 }: CarouselViewProps) {
@@ -409,7 +411,7 @@ export function CarouselView({
       onKeyDown={onKeyDown}
     >
       <div className="carousel-viewport">
-        <LoadingBadge processing={processing} previewLoaded={previewLoaded} />
+        <LoadingBadge processing={processing} publishing={publishing} previewLoaded={previewLoaded} />
         <div
           className="carousel-track"
           ref={trackRef}

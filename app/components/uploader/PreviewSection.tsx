@@ -25,6 +25,7 @@ export function PreviewSection({
   setProcessing,
   setEditing,
   processing,
+  publishing,
   previewLoaded,
   index,
   setIndex,
@@ -113,6 +114,7 @@ export function PreviewSection({
             toast={toast}
             setPreviewLoaded={setPreviewLoaded}
             processing={processing}
+            publishing={publishing}
             previewLoaded={previewLoaded}
             editing={editing}
           />

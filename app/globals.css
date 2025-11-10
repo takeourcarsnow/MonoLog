@@ -34,55 +34,20 @@ html, body {
   background: var(--bg);
 }
 
-/* Allow scrolling on about page */
-.about-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on communities page */
-.communities-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on search page */
-.search-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on community page */
-.community-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on thread page */
-.thread-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on create community page */
-.create-community-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on edit community page */
-.edit-community-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on create thread page */
-.create-thread-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on favorites page */
-.favorites-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on following page */
-.following-page {
-  overflow: auto !important;
-}
+/* Allow scrolling on specific pages by enabling the internal .content
+   container to scroll rather than re-enabling body scrolling. This
+   prevents the body and the content container from both getting scrollbars
+   (which can produce two vertical scrollbars when zooming). */
+body.about-page .content { overflow: auto !important; }
+body.communities-page .content { overflow: auto !important; }
+body.search-page .content { overflow: auto !important; }
+body.community-page .content { overflow: auto !important; }
+body.thread-page .content { overflow: auto !important; }
+body.create-community-page .content { overflow: auto !important; }
+body.edit-community-page .content { overflow: auto !important; }
+body.create-thread-page .content { overflow: auto !important; }
+body.favorites-page .content { overflow: auto !important; }
+body.following-page .content { overflow: auto !important; }
 
 
 
@@ -410,65 +375,9 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
   animation: none !important;
 }
 
-/* Allow scrolling on about page */
-.about-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on communities page */
-.communities-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on search page */
-.search-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on community page */
-.community-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on thread page */
-.thread-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on create community page */
-.create-community-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on edit community page */
-.edit-community-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on create thread page */
-.create-thread-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on favorites page */
-.favorites-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on following page */
-.following-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on week review page */
-.week-review-page {
-  overflow: auto !important;
-}
-
-/* Allow scrolling on post view page */
-.post-view-page {
-  overflow: auto !important;
-}
+/* Page-specific overrides for other pages - same pattern as above */
+body.week-review-page .content { overflow: auto !important; }
+body.post-view-page .content { overflow: auto !important; }
 
 .search-form {
   display: flex;

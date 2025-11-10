@@ -3,13 +3,29 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 8px;
+  /* increase padding and min-height for comfortable touch targets */
+  padding: 12px 10px;
   min-width: 60px;
+  min-height: 44px; /* recommended touch target size */
   color: var(--muted);
+  position: relative; /* allow pseudo-elements if needed */
 }
 
 .tab-item-static.active {
   color: var(--tab-color);
+  /* subtle lift for active item */
+  transform: translateY(-2px);
+}
+
+/* Active item visual enhancements */
+.tab-item-static.active .tab-icon {
+  transform: scale(1.12);
+}
+
+.tab-item-static.active .tab-label {
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 1;
 }
 
 .tab-item-static .tab-icon {
@@ -19,6 +35,7 @@
   width: 20px;
   height: 20px;
   margin-bottom: 6px;
+  transition: transform 160ms var(--transition-fast);
 }
 
 .tab-item-static .tab-icon svg {
@@ -33,10 +50,7 @@
   text-align: center;
   line-height: 1;
   opacity: 0.7;
-}
-
-.tab-item-static.active .tab-label {
-  opacity: 1;
+  transition: font-size 160ms var(--transition-fast), font-weight 160ms var(--transition-fast), opacity 140ms var(--transition-fast);
 }
 
 .tabbar {
@@ -57,6 +71,30 @@
   justify-content: space-around;
   align-items: center;
   padding: 8px 0;
+}
+
+/* Keyboard focus / touch feedback improvements */
+.tab-item-static:focus {
+  outline: none;
+}
+
+.tab-item-static:focus-visible {
+  /* High-contrast ring for keyboard users */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tab-color), rgba(255,255,255,0.85) 25%);
+  border-radius: 8px;
+}
+
+/* Removed click (active) visual effect per request: keep selected state and focus-visible only. */
+
+/* Smooth but respectful transitions */
+.tab-item-static, .tab-item-static .tab-icon, .tab-item-static .tab-label {
+  transition: color 160ms var(--transition-fast), transform 120ms var(--transition-fast), opacity 140ms var(--transition-fast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-item-static, .tab-item-static .tab-icon, .tab-item-static .tab-label {
+    transition: none !important;
+  }
 }
 
 :root[data-theme="dark"] .tabbar,

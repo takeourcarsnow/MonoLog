@@ -16,6 +16,12 @@ export default function WeekReviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedCaptions, setExpandedCaptions] = useState<Set<string>>(new Set());
 
+  // Allow body scrolling for week review page
+  useEffect(() => {
+    document.body.classList.add('week-review-page');
+    return () => document.body.classList.remove('week-review-page');
+  }, []);
+
   const toggleCaptionExpansion = (postId: string) => {
     setExpandedCaptions(prev => {
       const newSet = new Set(prev);

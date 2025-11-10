@@ -410,9 +410,64 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
   animation: none !important;
 }
 
-/* Search page styles */
+/* Allow scrolling on about page */
+.about-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on communities page */
+.communities-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on search page */
 .search-page {
-  padding: 20px;
+  overflow: auto !important;
+}
+
+/* Allow scrolling on community page */
+.community-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on thread page */
+.thread-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on create community page */
+.create-community-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on edit community page */
+.edit-community-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on create thread page */
+.create-thread-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on favorites page */
+.favorites-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on following page */
+.following-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on week review page */
+.week-review-page {
+  overflow: auto !important;
+}
+
+/* Allow scrolling on post view page */
+.post-view-page {
+  overflow: auto !important;
 }
 
 .search-form {

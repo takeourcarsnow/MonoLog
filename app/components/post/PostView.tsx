@@ -17,6 +17,12 @@ export function PostView({ id, initialPost }: { id: string; initialPost?: Hydrat
   // Enable page scrolling for the post view
   usePageScroll('post-page-scroll');
 
+  // Allow body scrolling for post view
+  useEffect(() => {
+    document.body.classList.add('post-view-page');
+    return () => document.body.classList.remove('post-view-page');
+  }, []);
+
   useEffect(() => {
     // If we already have initialPost, skip fetching
     if (initialPost) return;

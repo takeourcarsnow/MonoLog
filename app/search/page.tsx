@@ -6,7 +6,6 @@ import Image from 'next/image';
 import TimeDisplay from "@/app/components/ui/TimeDisplay";
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import Link from 'next/link';
 
 interface SearchResult {
   posts: any[];
@@ -43,7 +42,6 @@ export default async function SearchPage({ searchParams }: { searchParams: any }
               </div>
               <h2 style={{ margin: '6px 0 0 0', fontSize: '1.15rem' }}>Discover Content</h2>
               <p style={{ margin: 0, color: 'var(--text-secondary)', maxWidth: 420 }}>Sign in to search for posts, users, and communities. Find people with similar interests and explore trending content.</p>
-              <Link href="/explore" className="btn" style={{ marginTop: 8 }}>Explore posts</Link>
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { CameraEffectType } from "./cameraEffects";
-import { Sliders, Palette, Sparkles, Wand2, ImageIcon, Layers, Ban, Eye, EyeClosed } from "lucide-react";
+import { Sliders, Palette, Sparkles, Wand2, ImageIcon, Layers, Ban, Eye, EyeOff } from "lucide-react";
 
 const Grid3x3 = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Grid3x3 })), { ssr: false });
 const Type = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Type })), { ssr: false });
@@ -55,7 +55,7 @@ export function EffectControls({ effectType, onEffectChange, disabled, overlayVi
       </button>
       {typeof toggleOverlay === 'function' && (
         <button type="button" className="btn mini" onClick={toggleOverlay} title={overlayVisible ? 'Hide controls' : 'Show controls'} disabled={disabled}>
-          {overlayVisible ? <Eye size={iconSize} /> : <EyeClosed size={iconSize} />}
+          {overlayVisible ? <Eye size={iconSize} /> : <EyeOff size={iconSize} />}
         </button>
       )}
     </div>

@@ -26,7 +26,9 @@ export function useAvatarUpload(currentUserId: string | null, onAvatarChange: ()
       let n = bstr.length;
       const u8arr = new Uint8Array(n);
       while (n--) u8arr[n] = bstr.charCodeAt(n);
-      const processedFile = new File([u8arr], `${uid()}.jpg`, { type: mime });
+      // choose extension based on the mime returned by compressImage
+      const ext = mime === 'image/webp' ? 'webp' : mime === 'image/png' ? 'png' : 'jpg';
+      const processedFile = new File([u8arr], `${uid()}.${ext}`, { type: mime });
 
       const sb = getSupabaseClient();
       const userObj = await api.getCurrentUser();

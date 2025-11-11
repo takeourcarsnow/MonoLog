@@ -9,14 +9,23 @@ A modern, performant daily photo journal built with Next.js. Create a single pos
 ## ✨ Features
 
 - **Daily habit**: One post per day helps you focus on what matters and build a consistent archive.
-- **Multiple Images**: Attach up to multiple images to each post
-- **Social Features**: Follow users, favorite posts, leave comments
-- **Progressive Web App**: Installable, works offline with service worker
-- **Performance Optimized**: Fast loading with advanced optimizations
-- **Responsive Design**: Beautiful on all devices
-- **Dark/Light Theme**: Automatic theme switching
-- **Spotify Integration**: Link songs to your posts
-- **Accessibility**: WCAG compliant with proper ARIA labels
+- **Multiple Images**: Attach up to multiple images to each post with advanced editing (filters, cropping, rotation)
+- **Social Features**: Follow users, favorite posts, leave comments, create communities and threads
+- **Communities & Threads**: Join or create communities, participate in threaded discussions
+- **Stories**: Share temporary stories with friends
+- **Calendar View**: Browse your posts by date with an interactive calendar
+- **Week Review**: Reflect on your week with summary views
+- **Hashtags & Search**: Tag posts and search across content, users, and hashtags
+- **Notifications**: Real-time notifications for social interactions
+- **Spotify Integration**: Link songs to your posts via Spotify API
+- **Offline Support**: Works offline with service worker caching
+- **Progressive Web App**: Installable on mobile and desktop
+- **Performance Optimized**: Fast loading with advanced optimizations, image compression, and lazy loading
+- **Responsive Design**: Beautiful on all devices with adaptive layouts
+- **Dark/Light Theme**: Automatic theme switching based on system preferences
+- **Accessibility**: WCAG compliant with proper ARIA labels and keyboard navigation
+- **Image Processing**: Client-side image editing with filters, cropping, and optimization using Sharp
+- **Security**: Rate limiting, content moderation, secure authentication
 
 ## 🚀 Tech Stack
 
@@ -27,10 +36,14 @@ A modern, performant daily photo journal built with Next.js. Create a single pos
 - **Backend**: Supabase (PostgreSQL + Storage)
 - **State Management**: SWR 2.3.6 for server state
 - **Icons**: Lucide React 0.552.0
-- **Image Processing**: Sharp 0.34.4 for optimization
+- **Image Processing**: Sharp 0.34.4 for optimization, EXIFR 7.1.3 for metadata
 - **PWA**: Service Worker with Workbox
 - **Testing**: Jest 30.2.0, Playwright 1.56.1
 - **Linting**: ESLint 9.39.0 with TypeScript rules
+- **Form Validation**: Zod 4.1.12
+- **Carousel/Swiper**: Swiper 12.0.3 for touch interfaces
+- **Inert Polyfill**: WICG Inert 3.1.3 for accessibility
+- **Performance**: Web Vitals 5.1.0 for monitoring
 
 ## 📦 Installation
 
@@ -93,12 +106,57 @@ npm start
 
 # Analyze bundle size
 npm run analyze
+
+# Analyze bundle with detailed report
+npm run analyze-bundle
+```
+
+### Testing
+```bash
+# Run Jest tests
+npm test
+
+# Run automated tests
+npm run test:auto
+
+# Run cross-browser tests
+npm run test:cross-browser
+
+# Run device-specific tests
+npm run test:devices
+
+# Run edge case tests
+npm run test:edge-cases
 ```
 
 ### Performance Checks
 ```bash
 # Run performance verification
 npm run check-perf
+
+# Check bundle size
+npm run check-bundle
+
+# Check environment setup
+npm run check-env
+```
+
+### Utility Scripts
+```bash
+# Migrate library folders
+npm run migrate:lib
+
+# Lint code
+npm run lint
+
+# Remove unused images
+npm run remove-unused-images
+
+# Generate icons
+npm run generate-icons
+
+# Convert images to WebP
+npm run convert-posts-to-webp
 ```
 
 ### Deployment
@@ -137,50 +195,73 @@ MonoLog is a fully-featured PWA that can be installed on mobile devices and desk
 - **Max file size**: 8MB per image
 - **Max dimension**: 1600px (auto-resized)
 - **Formats**: WebP, AVIF, JPEG, PNG support
+- **Processing**: Client-side cropping, filters, rotation with Sharp optimization
 
 ### Posting Limits
 - **Daily limit**: 1 post per user per day (keep it intentional — add as many photos as you need)
 - **Images per post**: Multiple images supported
+- **Stories**: Ephemeral content with 24-hour expiration
 
 ### Performance Optimizations
 - SWC minification
-- Image optimization with Next.js
+- Image optimization with Next.js Image component
 - Package import optimization
-- CSS containment
+- CSS containment and viewport units
 - React.memo for components
 - Web Vitals monitoring
+- Request deduplication
+- Comment and slide state caching
+
+### Environment Variables
+- `NEXT_PUBLIC_MODE`: `local` or `supabase`
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key
 
 ## 🗂️ Project Structure
 
 ```
 ├── app/                    # Next.js App Router
-│   ├── api/               # API routes (auth, comments, communities, etc.)
-│   ├── components/        # React components
-│   ├── [username]/        # Dynamic user pages
+│   ├── api/               # API routes (auth, comments, communities, posts, etc.)
+│   ├── components/        # React components (shared UI elements)
+│   ├── [username]/        # Dynamic user profile pages
 │   ├── about/             # About page
-│   ├── calendar/          # Calendar view
-│   ├── communities/       # Communities pages
-│   ├── explore/           # Explore page
-│   ├── favorites/         # Favorites page
-│   ├── feed/              # Feed page
-│   ├── hashtags/          # Hashtags page
-│   ├── offline/           # Offline page
-│   ├── post/              # Post pages
-│   ├── profile/           # Profile pages
-│   ├── reset-password/    # Password reset
-│   ├── search/            # Search page
-│   ├── styles/            # CSS stylesheets
-│   ├── upload/            # Upload page
-│   ├── week-review/       # Week review page
+│   ├── achievements/      # User achievements page
+│   ├── calendar/          # Calendar view for browsing posts
+│   ├── communities/       # Communities and threads pages
+│   ├── explore/           # Explore feed page
+│   ├── favorites/         # User's favorite posts
+│   ├── feed/              # Main social feed
+│   ├── hashtags/          # Hashtag search and browsing
+│   ├── notifications/     # Notifications page
+│   ├── offline/           # Offline fallback page
+│   ├── post/              # Individual post pages
+│   ├── profile/           # User profile management
+│   ├── reset-password/    # Password reset flow
+│   ├── search/            # Global search page
+│   ├── spotify/           # Spotify integration pages
+│   ├── styles/            # Additional CSS stylesheets
+│   ├── upload/            # Image upload and editing
+│   ├── vertical-demo/     # Demo pages
+│   ├── week-review/       # Weekly reflection pages
 │   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
+│   ├── layout.tsx         # Root layout component
+│   ├── manifest.ts        # Web app manifest
+│   ├── not-found.tsx      # 404 page
 │   ├── page.tsx           # Home page
-│   └── ...
-├── lib/                   # Core utilities and types
-├── public/                # Static assets
-├── scripts/               # Build and utility scripts
-└── src/
-    └── lib/               # Additional utilities
+│   └── sitemap.ts         # Sitemap generation
+├── docs/                  # Documentation files
+├── lib/                   # Core utilities, types, and configurations
+├── public/                # Static assets (images, icons, service worker)
+├── scripts/               # Build, test, and utility scripts
+├── __tests__/             # Test files
+├── eslint.config.js       # ESLint configuration
+├── next.config.mjs        # Next.js configuration
+├── package.json           # Dependencies and scripts
+├── postcss.config.cjs     # PostCSS configuration
+├── tailwind.config.ts     # Tailwind CSS configuration
+├── tsconfig.json          # TypeScript configuration
+└── README.md              # This file
 ```
 
 ## 🏗️ Architecture Highlights
@@ -191,23 +272,33 @@ MonoLog is a fully-featured PWA that can be installed on mobile devices and desk
 - **CalendarView**: Interactive calendar for browsing posts by date
 - **CommunitiesView**: Social features for user communities and threads
 - **FeedView**: Main feed with infinite scrolling and post interactions
+- **PostCard**: Reusable post display component with image gallery
+- **Uploader**: Image upload with editing capabilities (crop, filter, rotate)
+- **NavBar**: Bottom navigation with swipe gestures
 
 ### Key Features Implementation
-- **PWA Support**: Service worker for offline functionality, install prompts
-- **Image Processing**: Client-side image editing with filters, cropping, and optimization
-- **Spotify Integration**: Link songs to posts via Spotify API
+- **PWA Support**: Service worker for offline functionality, install prompts, background sync
+- **Image Processing**: Client-side image editing with filters, cropping, rotation, and optimization
+- **Spotify Integration**: Link songs to posts via Spotify Web API with token management
 - **Real-time Notifications**: WebSocket-based notifications for social interactions
-- **Advanced Search**: Full-text search across posts, users, and hashtags
-- **Security**: Rate limiting, content moderation, secure token handling
+- **Advanced Search**: Full-text search across posts, users, hashtags, and communities
+- **Communities & Threads**: Nested discussion threads with replies and mentions
+- **Stories**: Ephemeral content sharing with automatic expiration
+- **Week Review**: Automated weekly summaries and reflections
+- **Security**: Rate limiting, content moderation, secure token handling, input validation with Zod
 
 ### API Routes
-- **Authentication**: Sign up, sign in, password reset
-- **Posts**: CRUD operations, favorites, hashtags, explore feed
-- **Users**: Profiles, following/followers, avatar management
-- **Communities**: Creation, joining, thread discussions
-- **Comments & Threads**: Nested discussions and replies
-- **Storage**: Image upload and optimization
-- **Spotify**: Metadata fetching and token management
+- **Authentication**: Sign up, sign in, password reset, session management
+- **Posts**: CRUD operations, favorites, hashtags, explore feed, image uploads
+- **Users**: Profiles, following/followers, avatar management, achievements
+- **Communities**: Creation, joining, thread discussions, moderation
+- **Comments & Threads**: Nested discussions, replies, mentions, notifications
+- **Stories**: Creation, viewing, expiration handling
+- **Storage**: Image upload, optimization, cleanup utilities
+- **Spotify**: Metadata fetching, token refresh, track linking
+- **Notifications**: Real-time updates, push notifications
+- **Search**: Global search across all content types
+- **Reports**: Content moderation and reporting system
 
 ## 🧪 Testing
 
@@ -273,6 +364,17 @@ Existing styles keep using `var(--viewport-height)` so no runtime listeners are 
 ## 📄 License
 
 This project is private and proprietary.
+
+## 📚 Documentation
+
+For detailed guides and documentation, see the `docs/` folder:
+
+- [API Guide](docs/API_GUIDE.md) - Comprehensive API documentation
+- [Backup Guide](docs/BACKUP_GUIDE.md) - Data backup and restoration
+- [Camera Effects](docs/CAMERA_EFFECTS.md) - Image processing and effects
+- [Edge Case Testing](docs/EDGE_CASE_TESTING.md) - Testing edge cases
+- [Migration Library](docs/MIGRATION_LIB.md) - Database migrations
+- [Roadmap](docs/ROADMAP.md) - Future development plans
 
 ## 🙏 Acknowledgments
 

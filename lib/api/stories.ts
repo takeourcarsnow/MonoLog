@@ -64,6 +64,12 @@ export async function createStory(input: { mediaUrl?: string; thumbnailUrl?: str
   const user = await getCachedAuthUser(sb);
   if (user?.id) {
     storiesCache.delete(user.id);
+    // Notify any client-side listeners that this user's stories have changed
+    try {
+      if (typeof window !== 'undefined' && (window as any).dispatchEvent) {
+        (window as any).dispatchEvent(new CustomEvent('stories:updated', { detail: { userId: user.id } }));
+      }
+    } catch (_) {}
   }
   return mapRowToStory(json.story);
 }
@@ -133,6 +139,12 @@ export async function deleteStory(storyId: string) {
   const user = await getCachedAuthUser(sb);
   if (user?.id) {
     storiesCache.delete(user.id);
+    // Notify any client-side listeners that this user's stories have changed
+    try {
+      if (typeof window !== 'undefined' && (window as any).dispatchEvent) {
+        (window as any).dispatchEvent(new CustomEvent('stories:updated', { detail: { userId: user.id } }));
+      }
+    } catch (_) {}
   }
 }
 

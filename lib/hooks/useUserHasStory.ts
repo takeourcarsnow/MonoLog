@@ -42,5 +42,27 @@ export function useUserHasStory(userId: string | undefined) {
     checkStoryStatus();
   }, [checkStoryStatus]);
 
+  // Listen for global story updates to keep UI in sync when stories are created/deleted
+  useEffect(() => {
+    function onStoriesUpdated(e: any) {
+      try {
+        const updatedUserId = e?.detail?.userId;
+        if (updatedUserId && updatedUserId === userId) {
+          checkStoryStatus(true);
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+    if (typeof window !== 'undefined' && (window as any).addEventListener) {
+      (window as any).addEventListener('stories:updated', onStoriesUpdated);
+    }
+    return () => {
+      if (typeof window !== 'undefined' && (window as any).removeEventListener) {
+        (window as any).removeEventListener('stories:updated', onStoriesUpdated);
+      }
+    };
+  }, [userId, checkStoryStatus]);
+
   return { hasStory, loading, refetch: () => checkStoryStatus(true) };
 }

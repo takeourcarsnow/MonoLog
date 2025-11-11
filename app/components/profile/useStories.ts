@@ -26,6 +26,31 @@ export function useStories(userId: string) {
     return () => { mounted = false; };
   }, [userId]);
 
+  // Listen for global story updates so this hook stays in sync when stories
+  // are created/deleted from other parts of the app.
+  useEffect(() => {
+    async function onStoriesUpdated(e: any) {
+      try {
+        const updatedUserId = e?.detail?.userId;
+        if (!updatedUserId || updatedUserId !== userId) return;
+        const stories = await dedupe(`getActiveStoriesForUser:${userId}`, () => api.getActiveStoriesForUser(userId));
+        setHasActiveStories(stories.length > 0);
+        setOwnStories(stories);
+      } catch (err) {
+        // ignore
+      }
+    }
+
+    if (typeof window !== 'undefined' && (window as any).addEventListener) {
+      (window as any).addEventListener('stories:updated', onStoriesUpdated);
+    }
+    return () => {
+      if (typeof window !== 'undefined' && (window as any).removeEventListener) {
+        (window as any).removeEventListener('stories:updated', onStoriesUpdated);
+      }
+    };
+  }, [userId]);
+
   // Update hasActiveStories when ownStories changes
   useEffect(() => {
     setHasActiveStories(ownStories.length > 0);

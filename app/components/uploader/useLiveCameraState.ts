@@ -90,14 +90,6 @@ export function useLiveCameraState() {
   // Mobile touch handling
   const [pinchDistance, setPinchDistance] = useState(0);
 
-  // Text dragging state
-  const [isDraggingText, setIsDraggingText] = useState(false);
-  const [dragStartX, setDragStartX] = useState(0);
-  const [dragStartY, setDragStartY] = useState(0);
-
-  // Text manipulation state (for preventing camera zoom during text interaction)
-  const [isManipulatingText, setIsManipulatingText] = useState(false);
-
   return {
     effectSettings,
     setEffectSettings,
@@ -125,13 +117,5 @@ export function useLiveCameraState() {
     setSelectedOverlay,
     pinchDistance,
     setPinchDistance,
-    isDraggingText,
-    setIsDraggingText,
-    dragStartX,
-    setDragStartX,
-    dragStartY,
-    setDragStartY,
-    isManipulatingText,
-    setIsManipulatingText,
   };
 }

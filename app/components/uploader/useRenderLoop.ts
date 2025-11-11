@@ -26,7 +26,7 @@ export function useRenderLoop() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  const renderFrame = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>, applyZoom?: (canvas: HTMLCanvasElement) => void) => {
+  const renderFrame = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: any, streamRef: any, applyZoom?: (canvas: HTMLCanvasElement) => void) => {
     // Stop rendering if loop is disabled, capturing, camera stopped, page not visible, or no video
     if (!renderLoopRunning.current || isCapturing || !isVisibleRef.current || !streamRef.current || !videoRef.current) {
       if (renderLoopRunning.current && !isCapturing) {
@@ -86,7 +86,7 @@ export function useRenderLoop() {
     }
   }, []);
 
-  const startRenderLoop = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: React.RefObject<HTMLVideoElement | null>, streamRef: React.RefObject<MediaStream | null>, applyZoom?: (canvas: HTMLCanvasElement) => void) => {
+  const startRenderLoop = useCallback((effectSettings: CameraEffectSettings, isCapturing: boolean, videoRef: any, streamRef: any, applyZoom?: (canvas: HTMLCanvasElement) => void) => {
     renderLoopRunning.current = true;
     renderFrame(effectSettings, isCapturing, videoRef, streamRef, applyZoom);
   }, [renderFrame]);

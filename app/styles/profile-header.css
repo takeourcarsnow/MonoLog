@@ -264,3 +264,30 @@
 
 /* Slightly larger primary action (upload) for emphasis */
 .profile-actions .btn.primary { width: 48px; height: 48px; border-radius: 12px; }
+
+/* Avatar actions caption (shown beneath the camera icon in the avatar overlay) */
+.avatar-actions .avatar-actions-inner { display: flex; flex-direction: column; align-items: center; }
+.avatar-actions .avatar-action-caption {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1;
+  margin-top: 6px;
+  pointer-events: none; /* caption should not intercept clicks */
+}
+
+/* Blur avatar image when the camera overlay is visible */
+.avatar-wrap.camera-visible .profile-avatar {
+  filter: blur(4px);
+  opacity: 0.92;
+  transition: filter 180ms ease, opacity 180ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .avatar-wrap.camera-visible .profile-avatar { transition: none; }
+}
+
+/* Stronger rule to override other avatar rules when necessary */
+.avatar-wrap.camera-visible .profile-avatar.camera-blur {
+  filter: blur(4px) !important;
+  opacity: 0.92 !important;
+}

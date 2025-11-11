@@ -97,8 +97,20 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
                 aria-busy={avatarUploading}
                 type="button"
               >
-                <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''} ${hasActiveStories ? 'has-stories' : ''}`} style={{ width: 160, height: 160, outline: 'none', outlineOffset: 4, borderRadius: 9999, position: 'relative' }}>
-                  <OptimizedImage key={user.avatarUrl} className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} priority loading="eager" disableLoadingTransition style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px' }} />
+                <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''} ${hasActiveStories ? 'has-stories' : ''} ${(showActionButtons && !hasActiveStories) ? 'camera-visible' : ''}`} style={{ width: 160, height: 160, outline: 'none', outlineOffset: 4, borderRadius: 9999, position: 'relative' }}>
+                  {(() => {
+                    const isCameraVisible = showActionButtons && !hasActiveStories;
+                    const avatarStyle: React.CSSProperties = {
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '9999px',
+                      ...(isCameraVisible ? { filter: 'blur(4px)', opacity: 0.92, transition: 'filter 180ms ease, opacity 180ms ease' } : {}),
+                    };
+                    return (
+                      <OptimizedImage key={user.avatarUrl} className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''} ${isCameraVisible ? 'camera-blur' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} priority loading="eager" disableLoadingTransition style={avatarStyle} />
+                    );
+                  })()}
                   {!hasActiveStories && !showActionButtons && (
                     <div className="camera-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                       <Camera size={28} strokeWidth={2} />
@@ -114,7 +126,6 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
                   setCaptureCallback(() => handleLiveCameraCapture);
                   setIsCameraOpen(true);
                 }}
-                onFileUpload={() => storyInputRef.current?.click()}
               />
             )}
           </div>

@@ -8,9 +8,10 @@ import performanceMonitor from '@/lib/performance-monitor';
 import { initTheme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useHeaderHeightMeasurement, useTabbarHeightMeasurement } from '@/app/components/layout/AppShellLayout';
-import { CameraProvider } from '@/app/components/context/CameraContext';
+import { CameraProvider, useCameraContext } from '@/app/components/context/CameraContext';
 
 const AppShell = dynamic(() => import("@/app/components/layout/AppShell").then(mod => mod.AppShell), { ssr: false, loading: () => null });
+const Header = dynamic(() => import('@/app/components/layout/Header').then(mod => mod.Header), { ssr: false, loading: () => null });
 
 const AppPreloader = dynamic(() => import('@/app/components/AppPreloader'), { ssr: false, loading: () => null });
 const Navbar = dynamic(() => import('@/app/components/NavBar').then(mod => mod.Navbar), { ssr: false });
@@ -18,6 +19,32 @@ const InertPolyfillClient = dynamic(() => import('@/app/components/InertPolyfill
 const PWAAnalytics = dynamic(() => import('@/app/components/pwa/PWAAnalytics').then(mod => mod.PWAAnalytics), { ssr: false });
 const PWAHealthCheck = dynamic(() => import('@/app/components/pwa/PWAAnalytics').then(mod => mod.PWAHealthCheck), { ssr: false });
 const RoutePrefetcher = dynamic(() => import('@/app/components/layout/RoutePrefetcher').then(mod => mod.default), { ssr: false });
+
+function GlobalCamera() {
+  const { isCameraOpen, captureCallback, setIsCameraOpen, setCaptureCallback } = useCameraContext();
+  const LiveCameraView = dynamic(() => import('@/app/components/uploader/LiveCameraView').then(mod => mod.LiveCameraView), { ssr: false });
+
+  if (!isCameraOpen) return null;
+
+  return (
+    <LiveCameraView
+      isOpen={true}
+      onClose={() => {
+        setIsCameraOpen(false);
+        setCaptureCallback(null);
+      }}
+      onCapture={(blob) => {
+        if (captureCallback) {
+          captureCallback(blob);
+        }
+        setIsCameraOpen(false);
+        setCaptureCallback(null);
+      }}
+      processing={false}
+      isModal={false}
+    />
+  );
+}
 
 export default function ClientInit({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -97,13 +124,46 @@ export default function ClientInit({ children }: { children: React.ReactNode }) 
 
   return (
     <CameraProvider>
+      <AppContent>{children}</AppContent>
+    </CameraProvider>
+  );
+}
+
+function HeaderShell() {
+  const { isCameraOpen } = useCameraContext();
+  // Only render Header when camera is not open — this removes it from the DOM
+  // while the camera UI is active (user requested DOM removal, not merely hiding).
+  if (isCameraOpen) return null;
+  return <Header />;
+}
+
+function AppContent({ children }: { children: React.ReactNode }) {
+  const { isCameraOpen } = useCameraContext();
+
+  // When camera is open, remove everything from DOM except the global camera
+  // component. This ensures the camera UI is the only visible/mounted part
+  // of the page (user requested DOM removal, not just hiding).
+  if (isCameraOpen) {
+    return (
+      <>
+        <GlobalCamera />
+      </>
+    );
+  }
+
+  // Normal rendering when camera is not open
+  return (
+    <>
       <AppPreloader />
+      {/* Header rendered client-side so it can be unmounted when camera opens */}
+      <HeaderShell />
       <AppShell>{children}</AppShell>
       <Navbar />
+      <GlobalCamera />
       <InertPolyfillClient />
       <PWAAnalytics />
       <PWAHealthCheck />
       <RoutePrefetcher />
-    </CameraProvider>
+    </>
   );
 }

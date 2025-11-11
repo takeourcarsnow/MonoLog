@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 // Patrick Hand font removed per request
 import React from "react";
 import dynamic from "next/dynamic";
-import { Header } from "@/app/components/layout/Header";
+// Header is rendered client-side inside ClientInit so it can be unmounted
+// when the live camera UI is active.
 import { CONFIG } from '@/lib/config';
 import ClientErrorBoundary from "@/app/components/layout/ClientErrorBoundary";
 import { isInAppBrowser } from '@/lib/detectWebview';
@@ -143,7 +144,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           errorRetryInterval: 5000,
         }}>
             <a href="#view" className="skip-link">Skip to content</a>
-            <Header />
             <ClientErrorBoundary>
               <ClientInit>
                 {children}

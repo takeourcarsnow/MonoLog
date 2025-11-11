@@ -504,3 +504,6 @@ body.post-view-page .content { overflow: auto !important; }
      specificity. */
 }
 
+/* NOTE: header is now rendered client-side so it can be removed from the DOM
+   when the live camera UI is active. */
+

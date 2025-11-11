@@ -10,6 +10,7 @@ import { LoadingIndicator } from '../ui/LoadingIndicator';
 import { LiveCameraView } from '../uploader/LiveCameraView';
 import { StoryViewerModal } from '../profile/StoryViewerModal';
 import { PublicStoryViewerModal } from '../profile/PublicStoryViewerModal';
+import { useCameraContext } from '../context/CameraContext';
 
 interface Item { user: { id: string; username: string; displayName?: string; avatarUrl: string }; stories: Story[] }
 
@@ -25,9 +26,9 @@ export function StoriesBar({ fetchStories }: StoriesBarProps = {}) {
   const [viewer, setViewer] = useState<{ user: Item['user']; stories: Story[]; idx: number; isOwn: boolean } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [liveCameraOpen, setLiveCameraOpen] = useState(false);
   const [deleteArmed, setDeleteArmed] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const { setIsCameraOpen, setCaptureCallback } = useCameraContext();
 
   useEffect(() => {
     let mounted = true;
@@ -140,7 +141,6 @@ export function StoriesBar({ fetchStories }: StoriesBarProps = {}) {
       const data = fetchStories ? await fetchStories() : await api.getFollowingStories();
       setItems(data.filter(d => d.stories.length));
       refetchUserStory();
-      setLiveCameraOpen(false);
     } catch (e: any) {
       setUploadError(e?.message || 'Failed to upload');
     } finally {
@@ -150,7 +150,8 @@ export function StoriesBar({ fetchStories }: StoriesBarProps = {}) {
 
   const addStory = () => {
     if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
-      setLiveCameraOpen(true);
+      setCaptureCallback(() => handleCameraCapture);
+      setIsCameraOpen(true);
     } else {
       // Fallback to file input
       fileRef.current?.click();
@@ -279,7 +280,10 @@ export function StoriesBar({ fetchStories }: StoriesBarProps = {}) {
             onNext={next}
             deleteArmed={deleteArmed}
             setDeleteArmed={setDeleteArmed}
-            onLiveCamera={() => setLiveCameraOpen(true)}
+            onLiveCamera={() => {
+              setCaptureCallback(() => handleCameraCapture);
+              setIsCameraOpen(true);
+            }}
             user={viewer.user}
             setStories={handleStoriesUpdate}
             setHasActiveStories={handleHasActiveStoriesUpdate}
@@ -296,12 +300,6 @@ export function StoriesBar({ fetchStories }: StoriesBarProps = {}) {
           />
         )
       )}
-      <LiveCameraView
-        isOpen={liveCameraOpen}
-        onClose={() => setLiveCameraOpen(false)}
-        onCapture={handleCameraCapture}
-        processing={uploading}
-      />
       {(error || uploadError) && <div className="text-red-500 text-sm" role="alert">{error || uploadError}</div>}
     </div>
   );

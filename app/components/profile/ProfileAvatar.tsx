@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
-import { LiveCameraView } from "@/app/components/uploader/LiveCameraView";
 import type { User } from "@/lib/types";
 import { useAvatarUpload } from "./useAvatarUpload";
 import { useStoryUpload } from "./useStoryUpload";
@@ -8,8 +7,10 @@ import { useStories } from "./useStories";
 import { useStoryViewer } from "./useStoryViewer";
 import { AvatarImage } from "./AvatarImage";
 import { AvatarActions } from "./AvatarActions";
+import { Camera } from 'lucide-react';
 import { StoryViewerModal } from "./StoryViewerModal";
 import { PublicStoryViewerModal } from "./PublicStoryViewerModal";
+import { useCameraContext } from "@/app/components/context/CameraContext";
 
 interface ProfileAvatarProps {
   user: User;
@@ -25,9 +26,10 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
   const avatarContainerRef = useRef<HTMLDivElement | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIdx, setViewerIdx] = useState(0);
-  const [showLiveCamera, setShowLiveCamera] = useState(false);
   const [showActionButtons, setShowActionButtons] = useState(false);
   const [deleteArmed, setDeleteArmed] = useState(false);
+
+  const { setIsCameraOpen, setCaptureCallback } = useCameraContext();
 
   const { hasActiveStories, setHasActiveStories, ownStories, setOwnStories } = useStories(user.id);
   const { avatarUploading, handleAvatarChange } = useAvatarUpload(currentUserId, onAvatarChange);
@@ -98,8 +100,8 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
                 <div className={`avatar-wrap ${avatarUploading ? 'avatar-uploading' : ''} ${hasActiveStories ? 'has-stories' : ''}`} style={{ width: 160, height: 160, outline: 'none', outlineOffset: 4, borderRadius: 9999, position: 'relative' }}>
                   <OptimizedImage key={user.avatarUrl} className={`profile-avatar avatar ${(user.avatarUrl || "/logo.svg") === "/logo.svg" ? 'default-avatar' : ''}`} src={user.avatarUrl || "/logo.svg"} alt={user.displayName ?? user.username} width={160} height={160} priority loading="eager" disableLoadingTransition style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '9999px' }} />
                   {!hasActiveStories && !showActionButtons && (
-                    <div className="camera-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 24, fontWeight: 'bold' }}>
-                      📷
+                    <div className="camera-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                      <Camera size={28} strokeWidth={2} />
                     </div>
                   )}
                 </div>
@@ -108,7 +110,10 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
             {showActionButtons && !hasActiveStories && (
               <AvatarActions
                 storyUploading={storyUploading}
-                onLiveCamera={() => setShowLiveCamera(true)}
+                onLiveCamera={() => {
+                  setCaptureCallback(() => handleLiveCameraCapture);
+                  setIsCameraOpen(true);
+                }}
                 onFileUpload={() => storyInputRef.current?.click()}
               />
             )}
@@ -137,12 +142,6 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
           </button>
         </>
       )}
-      <LiveCameraView
-        isOpen={showLiveCamera}
-        onClose={() => setShowLiveCamera(false)}
-        onCapture={handleLiveCameraCapture}
-        processing={false}
-      />
       {currentUserId && user?.id === currentUserId ? (
         <StoryViewerModal
           isOpen={viewerOpen}
@@ -153,7 +152,10 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
           onNext={onNext}
           deleteArmed={deleteArmed}
           setDeleteArmed={setDeleteArmed}
-          onLiveCamera={() => setShowLiveCamera(true)}
+          onLiveCamera={() => {
+            setCaptureCallback(() => handleLiveCameraCapture);
+            setIsCameraOpen(true);
+          }}
           user={user}
           setStories={setOwnStories}
           setHasActiveStories={setHasActiveStories}

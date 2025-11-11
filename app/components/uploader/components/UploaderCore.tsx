@@ -18,11 +18,13 @@ import { LiveCameraView } from "../LiveCameraView";
 import { usePhotoMovement } from "../hooks/usePhotoMovement";
 import { useAddPhoto } from "../hooks/useAddPhoto";
 import { AddPhotoMenu } from "./AddPhotoMenu";
+import { useCameraContext } from "@/app/components/context/CameraContext";
 
 export function UploaderCore() {
   // Dev helper to trace focus events; no-op in production
   initFocusDebug();
   const { me, setMe } = useAuth();
+  const { setIsCameraOpen, setCaptureCallback } = useCameraContext();
 
   const {
     // State
@@ -102,7 +104,7 @@ export function UploaderCore() {
   } = useUploader();
 
   // State for live camera with effects
-  const [liveCameraOpen, setLiveCameraOpen] = useState(false);
+  // const [liveCameraOpen, setLiveCameraOpen] = useState(false);
 
   const { handleMoveLeft, handleMoveRight } = usePhotoMovement({
     dataUrls,
@@ -131,7 +133,8 @@ export function UploaderCore() {
     fileActionRef,
     fileInputRef,
     cameraInputRef,
-    setLiveCameraOpen,
+    setIsCameraOpen,
+    setCaptureCallback,
     handleFile,
   });
 
@@ -144,12 +147,12 @@ export function UploaderCore() {
   return (
     <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''} ${justDiscarded ? 'just-discarded' : ''} ${processing ? 'processing' : ''}`}>
       {/* Live camera with effects */}
-      <LiveCameraView
+      {/* <LiveCameraView
         isOpen={liveCameraOpen}
         onClose={() => setLiveCameraOpen(false)}
         onCapture={handleCameraCapture}
         processing={processing}
-      />
+      /> */}
 
       {/* Add photo source selection */}
       <AddPhotoMenu

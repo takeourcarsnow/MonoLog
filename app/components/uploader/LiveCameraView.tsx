@@ -47,9 +47,10 @@ interface LiveCameraViewProps {
   onClose: () => void;
   onCapture: (blob: Blob) => void;
   processing: boolean;
+  isModal?: boolean;
 }
 
-export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveCameraViewProps) {
+export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal = true }: LiveCameraViewProps) {
   const { setIsCameraOpen } = useCameraContext();
   const { videoRef, streamRef, facingMode, zoom, setZoom, torchEnabled, isSwitchingCamera, startCamera, stopCamera, switchCamera, toggleTorch, applyZoom } = useCamera();
   const { sourceCanvasRef, displayCanvasRef, startRenderLoop, stopRenderLoop } = useRenderLoop();
@@ -471,17 +472,29 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
       // Load frames and overlays
       getFrameFiles().then(setFrameFiles).catch(() => setFrameFiles([]));
       getOverlayFiles().then(setOverlayFiles).catch(() => setOverlayFiles([]));
+      // Prevent body scrolling when in full-screen mode
+      if (!isModal && typeof document !== 'undefined') {
+        document.body.style.overflow = 'hidden';
+      }
     } else {
       stopCamera();
       stopRenderLoop();
+      // Restore body scrolling
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = '';
+      }
     }
 
     return () => {
       setIsCameraOpen(false);
       stopCamera();
       stopRenderLoop();
+      // Restore body scrolling on unmount
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = '';
+      }
     };
-  }, [isOpen, startCameraEnhanced, stopCamera, stopRenderLoop, setIsCameraOpen]);
+  }, [isOpen, startCameraEnhanced, stopCamera, stopRenderLoop, setIsCameraOpen, isModal]);
 
   // Handle processing state changes
   useEffect(() => {
@@ -634,295 +647,345 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing }: LiveC
 
   if (!isOpen) return null;
 
-  return (
-    <Portal>
+  const content = (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        background: 'var(--bg)',
+        borderRadius: isModal ? 6 : 0,
+        padding: isModal ? 8 : 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        margin: isModal ? 'auto' : 0,
+        overflow: isModal ? 'auto' : 'hidden',
+      }}
+      onClick={isModal ? (e) => e.stopPropagation() : undefined}
+    >
+      {/* Video and canvas container */}
+      <div style={{ position: 'relative', width: '100%', borderRadius: isModal ? 6 : 0, overflow: 'hidden', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+        {/* Hidden video element */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{ display: 'none' }}
+        />
+
+        {/* Hidden source canvas (for capturing raw frames) */}
+        <canvas ref={sourceCanvasRef} style={{ display: 'none' }} />
+
+        {/* Display canvas (shows effects) */}
+        <canvas
+          ref={displayCanvasRef}
+          style={{
+            width: '100%',
+            height: 'auto',
+            display: 'block',
+            borderRadius: isModal ? 6 : 0,
+            filter: showProcessingOverlay ? 'blur(8px) brightness(0.7)' : 'none',
+            transition: 'filter 0.2s ease',
+            touchAction: 'none', // Prevent default touch behaviors
+            cursor: effectSettings.type === 'text' && effectSettings.textContent && !disabled ? 'move' : 'default',
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+          onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
+            if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+              e.preventDefault();
+              setIsInlineEditing(true);
+              setInlineEditText(effectSettings.textContent);
+              // Focus the textarea after it's rendered
+              setTimeout(() => {
+                if (inlineEditRef.current) {
+                  inlineEditRef.current.focus();
+                  inlineEditRef.current.select();
+                }
+              }, 0);
+            }
+          }}
+          onContextMenu={(e) => e.preventDefault()} // Prevent context menu on right click
+          onTouchStart={handleTouchStartEnhanced}
+          onTouchMove={handleTouchMoveEnhanced}
+          onTouchEnd={handleTouchEndEnhanced}
+          aria-label={`Live camera preview with ${effectSettings.type} effect applied`}
+          role="img"
+        />
+
+        {/* Hidden file input for adding image from files */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
+
+        {/* Inline text editing overlay */}
+        {isInlineEditing && effectSettings.type === 'text' && effectSettings.textContent && (
+          <textarea
+            ref={inlineEditRef}
+            value={inlineEditText}
+            onChange={(e) => handleInlineEditChange(e.target.value)}
+            onBlur={handleInlineEditBlur}
+            onKeyDown={handleInlineEditKeyDown}
+            style={{
+              position: 'absolute',
+              left: `${((effectSettings.textX ?? 0.5) * 100)}%`,
+              top: `${((effectSettings.textY ?? 0.5) * 100)}%`,
+              transform: 'translate(-50%, -50%)',
+              width: `${Math.max(100, (effectSettings.textFontSize || 40) * 6)}px`,
+              minHeight: `${Math.max(30, (effectSettings.textFontSize || 40) * 1.2)}px`,
+              fontSize: `${effectSettings.textFontSize || 40}px`,
+              fontFamily: effectSettings.textFontFamily || 'Arial',
+              fontWeight: 'bold',
+              color: effectSettings.textColor || '#ffffff',
+              background: 'transparent',
+              border: '1px solid rgba(255,255,255,0.5)',
+              borderRadius: '2px',
+              padding: '2px 4px',
+              resize: 'none',
+              outline: 'none',
+              zIndex: 10,
+              textAlign: effectSettings.textAlign === 'center' ? 'center' : effectSettings.textAlign === 'right' ? 'right' : 'left',
+              lineHeight: effectSettings.textLineHeight || 1.4,
+              whiteSpace: 'pre-wrap',
+              overflow: 'hidden',
+              boxShadow: '0 0 0 1px rgba(0,122,204,0.3)',
+            }}
+            rows={inlineEditText.split('\n').length}
+            placeholder="Edit text..."
+          />
+        )}
+
+        <CameraControls
+          disabled={controlsDisabled}
+          cameraReady={cameraReady}
+          isCapturing={isCapturing}
+          processing={processing}
+          zoom={zoom}
+          overlayVisible={overlayVisible}
+          isSwitchingCamera={isSwitchingCamera}
+          switchCamera={switchCamera}
+          openFilePicker={openFilePicker}
+          setZoom={setZoom}
+          handleCapture={handleCapture}
+          handleClose={handleClose}
+          isPreviewing={isPreviewing}
+          confirmCapture={confirmCapture}
+          retakeCapture={() => {
+            // Clear preview state
+            retakeCapture();
+
+            // Reset any inline CSS sizing applied to the canvases when previewing
+            // (preview code sets explicit disp.style.width/height). Clearing
+            // these ensures the live render loop can size the canvas to the
+            // camera feed and restore correct aspect ratio.
+            try {
+              const disp = displayCanvasRef.current;
+              const src = sourceCanvasRef.current;
+              if (disp) {
+                // Restore to default responsive sizing used initially
+                disp.style.width = '100%';
+                disp.style.height = 'auto';
+                disp.style.display = 'block';
+              }
+              if (src) {
+                src.style.width = '';
+                src.style.height = '';
+              }
+            } catch (e) {
+              // ignore
+            }
+
+            // Restart camera and render loop
+            startCameraEnhanced();
+            startRenderLoop(effectSettings, false, videoRef, streamRef, applyZoom);
+          }}
+        />
+
+        {/* Add from files button - always visible in left bottom corner */}
+        <button
+          onClick={openFilePicker}
+          disabled={disabled}
+          style={{
+            position: 'absolute',
+            bottom: 8,
+            left: 8,
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            background: 'rgba(0,0,0,0.6)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            color: '#fff',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 4,
+          }}
+          aria-label="Add from files"
+          title="Add image from files"
+        >
+          <ImagePlus size={16} />
+        </button>
+
+        <CameraError error={error} startCameraEnhanced={startCameraEnhanced} onClose={onClose} />
+
+        <CameraLoading cameraReady={cameraReady} error={error} />
+
+        <CameraProcessingOverlay showProcessingOverlay={showProcessingOverlay} />
+
+        {/* Preview is rendered into the display canvas so effects can be applied live. */}
+      </div>
+
+      {/* Effect selection buttons */}
+      <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ padding: 4, borderRadius: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
+          <EffectControls
+            effectType={effectSettings.type}
+            onEffectChange={(type) => {
+              if (type === 'none') {
+                // Reset all settings to defaults when 'No effect' is chosen
+                setEffectSettings(DEFAULT_EFFECT_SETTINGS);
+                // Clear selected frame/overlay as part of reset
+                setSelectedFrame(null);
+                setSelectedOverlay(null);
+              } else {
+                setEffectSettings(prev => ({ ...prev, type }));
+              }
+            }}
+            disabled={disabled}
+            overlayVisible={overlayVisible}
+            toggleOverlay={toggleOverlay}
+          />
+        </div>
+      </div>
+
+      {/* Effect-specific controls */}
+      {effectSettings.type === 'basic' && (
+        <BasicControls
+          effectSettings={effectSettings}
+          onSettingsChange={setEffectSettings}
+          disabled={disabled}
+        />
+      )}
+
+      {effectSettings.type === 'filters' && (
+        <FilterControls
+          effectSettings={effectSettings}
+          onSettingsChange={setEffectSettings}
+          disabled={disabled}
+        />
+      )}
+
+      {effectSettings.type === 'effects' && (
+        <EffectsControls
+          effectSettings={effectSettings}
+          onSettingsChange={setEffectSettings}
+          disabled={disabled}
+        />
+      )}
+
+      {effectSettings.type === 'pixelate' && (
+        <PixelateControls
+          effectSettings={effectSettings}
+          onSettingsChange={setEffectSettings}
+          disabled={disabled}
+        />
+      )}
+
+      {effectSettings.type === 'dither' && (
+        <DitherControls
+          effectSettings={effectSettings}
+          onSettingsChange={setEffectSettings}
+          disabled={disabled}
+        />
+      )}
+
+      {effectSettings.type === 'ascii' && (
+        <AsciiControls
+          effectSettings={effectSettings}
+          onSettingsChange={setEffectSettings}
+          disabled={disabled}
+        />
+      )}
+
+      {effectSettings.type === 'text' && (
+        <TextControls
+          effectSettings={effectSettings}
+          onSettingsChange={setEffectSettings}
+          disabled={disabled}
+        />
+      )}
+
+      {/* Frame selection panel */}
+      {effectSettings.type === 'frame' && (
+        <FrameSelector
+          frameFiles={frameFiles}
+          selectedFrame={selectedFrame}
+          onSelectFrame={handleSelectFrame}
+          disabled={disabled}
+        />
+      )}
+
+      {/* Overlay selection panel */}
+      {effectSettings.type === 'overlay' && (
+        <OverlaySelector
+          overlayFiles={overlayFiles}
+          selectedOverlay={selectedOverlay}
+          effectSettings={effectSettings}
+          onSelectOverlay={handleSelectOverlay}
+          onSettingsChange={setEffectSettings}
+          disabled={disabled}
+        />
+      )}
+
+    </div>
+  );
+
+  if (isModal) {
+    return (
+      <Portal>
+        <div
+          role="dialog"
+          aria-modal={true}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 12,
+            zIndex: 20,
+            overflowY: 'auto',
+          }}
+          onClick={handleClose}
+        >
+          {content}
+        </div>
+      </Portal>
+    );
+  } else {
+    return (
       <div
-        role="dialog"
-        aria-modal={true}
         style={{
           position: 'fixed',
           inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 12,
           zIndex: 20,
-          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          touchAction: 'none',
         }}
-        onClick={handleClose}
       >
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            background: 'var(--bg)',
-            borderRadius: 6,
-            padding: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-            margin: 'auto',
-            overflowY: 'auto',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Video and canvas container */}
-          <div style={{ position: 'relative', width: '100%', borderRadius: 6, overflow: 'hidden', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {/* Hidden video element */}
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{ display: 'none' }}
-            />
-
-            {/* Hidden source canvas (for capturing raw frames) */}
-            <canvas ref={sourceCanvasRef} style={{ display: 'none' }} />
-
-            {/* Display canvas (shows effects) */}
-            <canvas
-              ref={displayCanvasRef}
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                borderRadius: 6,
-                filter: showProcessingOverlay ? 'blur(8px) brightness(0.7)' : 'none',
-                transition: 'filter 0.2s ease',
-                touchAction: 'none', // Prevent default touch behaviors
-                cursor: effectSettings.type === 'text' && effectSettings.textContent && !disabled ? 'move' : 'default',
-              }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onWheel={handleWheel}
-              onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
-                if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
-                  e.preventDefault();
-                  setIsInlineEditing(true);
-                  setInlineEditText(effectSettings.textContent);
-                  // Focus the textarea after it's rendered
-                  setTimeout(() => {
-                    if (inlineEditRef.current) {
-                      inlineEditRef.current.focus();
-                      inlineEditRef.current.select();
-                    }
-                  }, 0);
-                }
-              }}
-              onContextMenu={(e) => e.preventDefault()} // Prevent context menu on right click
-              onTouchStart={handleTouchStartEnhanced}
-              onTouchMove={handleTouchMoveEnhanced}
-              onTouchEnd={handleTouchEndEnhanced}
-              aria-label={`Live camera preview with ${effectSettings.type} effect applied`}
-              role="img"
-            />
-
-            {/* Hidden file input for adding image from files */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-
-            {/* Inline text editing overlay */}
-            {isInlineEditing && effectSettings.type === 'text' && effectSettings.textContent && (
-              <textarea
-                ref={inlineEditRef}
-                value={inlineEditText}
-                onChange={(e) => handleInlineEditChange(e.target.value)}
-                onBlur={handleInlineEditBlur}
-                onKeyDown={handleInlineEditKeyDown}
-                style={{
-                  position: 'absolute',
-                  left: `${((effectSettings.textX ?? 0.5) * 100)}%`,
-                  top: `${((effectSettings.textY ?? 0.5) * 100)}%`,
-                  transform: 'translate(-50%, -50%)',
-                  width: `${Math.max(100, (effectSettings.textFontSize || 40) * 6)}px`,
-                  minHeight: `${Math.max(30, (effectSettings.textFontSize || 40) * 1.2)}px`,
-                  fontSize: `${effectSettings.textFontSize || 40}px`,
-                  fontFamily: effectSettings.textFontFamily || 'Arial',
-                  fontWeight: 'bold',
-                  color: effectSettings.textColor || '#ffffff',
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.5)',
-                  borderRadius: '2px',
-                  padding: '2px 4px',
-                  resize: 'none',
-                  outline: 'none',
-                  zIndex: 10,
-                  textAlign: effectSettings.textAlign === 'center' ? 'center' : effectSettings.textAlign === 'right' ? 'right' : 'left',
-                  lineHeight: effectSettings.textLineHeight || 1.4,
-                  whiteSpace: 'pre-wrap',
-                  overflow: 'hidden',
-                  boxShadow: '0 0 0 1px rgba(0,122,204,0.3)',
-                }}
-                rows={inlineEditText.split('\n').length}
-                placeholder="Edit text..."
-              />
-            )}
-
-            <CameraControls
-              disabled={controlsDisabled}
-              cameraReady={cameraReady}
-              isCapturing={isCapturing}
-              processing={processing}
-              zoom={zoom}
-              overlayVisible={overlayVisible}
-              isSwitchingCamera={isSwitchingCamera}
-              switchCamera={switchCamera}
-              openFilePicker={openFilePicker}
-              setZoom={setZoom}
-              handleCapture={handleCapture}
-              handleClose={handleClose}
-              isPreviewing={isPreviewing}
-              confirmCapture={confirmCapture}
-              retakeCapture={() => { retakeCapture(); startCameraEnhanced(); startRenderLoop(effectSettings, false, videoRef, streamRef, applyZoom); }}
-            />
-
-            {/* Add from files button - always visible in left bottom corner */}
-            <button
-              onClick={openFilePicker}
-              disabled={disabled}
-              style={{
-                position: 'absolute',
-                bottom: 8,
-                left: 8,
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                background: 'rgba(0,0,0,0.6)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 4,
-              }}
-              aria-label="Add from files"
-              title="Add image from files"
-            >
-              <ImagePlus size={16} />
-            </button>
-
-            <CameraError error={error} startCameraEnhanced={startCameraEnhanced} onClose={onClose} />
-
-            <CameraLoading cameraReady={cameraReady} error={error} />
-
-            <CameraProcessingOverlay showProcessingOverlay={showProcessingOverlay} />
-
-            {/* Preview is rendered into the display canvas so effects can be applied live. */}
-          </div>
-
-          {/* Effect selection buttons */}
-          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ padding: 4, borderRadius: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
-              <EffectControls
-                effectType={effectSettings.type}
-                onEffectChange={(type) => {
-                  if (type === 'none') {
-                    // Reset all settings to defaults when 'No effect' is chosen
-                    setEffectSettings(DEFAULT_EFFECT_SETTINGS);
-                    // Clear selected frame/overlay as part of reset
-                    setSelectedFrame(null);
-                    setSelectedOverlay(null);
-                  } else {
-                    setEffectSettings(prev => ({ ...prev, type }));
-                  }
-                }}
-                disabled={disabled}
-                overlayVisible={overlayVisible}
-                toggleOverlay={toggleOverlay}
-              />
-            </div>
-          </div>
-
-          {/* Effect-specific controls */}
-          {effectSettings.type === 'basic' && (
-            <BasicControls
-              effectSettings={effectSettings}
-              onSettingsChange={setEffectSettings}
-              disabled={disabled}
-            />
-          )}
-
-          {effectSettings.type === 'filters' && (
-            <FilterControls
-              effectSettings={effectSettings}
-              onSettingsChange={setEffectSettings}
-              disabled={disabled}
-            />
-          )}
-
-          {effectSettings.type === 'effects' && (
-            <EffectsControls
-              effectSettings={effectSettings}
-              onSettingsChange={setEffectSettings}
-              disabled={disabled}
-            />
-          )}
-
-          {effectSettings.type === 'pixelate' && (
-            <PixelateControls
-              effectSettings={effectSettings}
-              onSettingsChange={setEffectSettings}
-              disabled={disabled}
-            />
-          )}
-
-          {effectSettings.type === 'dither' && (
-            <DitherControls
-              effectSettings={effectSettings}
-              onSettingsChange={setEffectSettings}
-              disabled={disabled}
-            />
-          )}
-
-          {effectSettings.type === 'ascii' && (
-            <AsciiControls
-              effectSettings={effectSettings}
-              onSettingsChange={setEffectSettings}
-              disabled={disabled}
-            />
-          )}
-
-          {effectSettings.type === 'text' && (
-            <TextControls
-              effectSettings={effectSettings}
-              onSettingsChange={setEffectSettings}
-              disabled={disabled}
-            />
-          )}
-
-          {/* Frame selection panel */}
-          {effectSettings.type === 'frame' && (
-            <FrameSelector
-              frameFiles={frameFiles}
-              selectedFrame={selectedFrame}
-              onSelectFrame={handleSelectFrame}
-              disabled={disabled}
-            />
-          )}
-
-          {/* Overlay selection panel */}
-          {effectSettings.type === 'overlay' && (
-            <OverlaySelector
-              overlayFiles={overlayFiles}
-              selectedOverlay={selectedOverlay}
-              effectSettings={effectSettings}
-              onSelectOverlay={handleSelectOverlay}
-              onSettingsChange={setEffectSettings}
-              disabled={disabled}
-            />
-          )}
-
-        </div>
+        {content}
       </div>
-    </Portal>
-  );
+    );
+  }
 }

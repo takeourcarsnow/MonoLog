@@ -14,6 +14,7 @@ import { RESERVED_ROUTES } from "@/lib/types";
 import { getUsernameFromRoute } from "@/lib/routeUtils";
 import { SlideWrapper } from "@/app/components/ui/SlideWrapper";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useCameraContext } from "@/app/components/context/CameraContext";
 
 const NotificationListener = dynamic(() => import("@/app/components/notifications/NotificationListener").then(mod => mod.NotificationListener), { ssr: false });
 const InstallPrompt = dynamic(() => import("@/app/components/pwa/InstallPrompt").then(mod => mod.InstallPrompt), { ssr: false });
@@ -28,6 +29,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { currentIndex, activeIndex, setActiveIndex, isMainView } = useAppShellViews();
   const { swiperRef, handleSlideChange } = useAppShellNavigation(currentIndex, activeIndex, setActiveIndex, isTouchDevice);
   const { me } = useAuth();
+  const { isCameraOpen } = useCameraContext();
+
+  if (isCameraOpen) return null;
 
   useEffect(() => {
     const handleViewportChanged = () => {

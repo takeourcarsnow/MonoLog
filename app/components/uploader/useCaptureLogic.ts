@@ -75,16 +75,46 @@ export function useCaptureLogic({
   // Confirm the preview: call onCapture with the selected blob
   const confirmCapture = useCallback(() => {
     if (!previewBlob) return;
-    onCapture(previewBlob);
-    // clear preview
-    setIsPreviewing(false);
-    setPreviewBlob(null);
-    if (previewUrl) {
-      try { URL.revokeObjectURL(previewUrl); } catch (e) {}
-      setPreviewUrl(null);
-    }
-    // Close the modal after confirming
-    onClose();
+
+    // If we have a display canvas available, the user may have applied
+    // effects to the previewed image. In that case, export the display
+    // canvas to a new Blob so the uploaded/saved image includes the
+    // effects. Fall back to the original preview blob if export fails.
+    const exportFromCanvas = async () => {
+      try {
+        const disp = displayCanvasRef?.current;
+        if (disp && typeof disp.toBlob === 'function') {
+          const mime = previewBlob.type || 'image/jpeg';
+          const blob: Blob | null = await new Promise((resolve) => disp.toBlob(resolve, mime, 0.92));
+          if (blob) {
+            onCapture(blob);
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore and fall back
+      }
+
+      // Fallback: use original blob
+      try {
+        onCapture(previewBlob);
+      } catch (e) {
+        console.error('Error during confirm capture:', e);
+      }
+    };
+
+    // Run export and then clear preview and close
+    exportFromCanvas().finally(() => {
+      // clear preview
+      setIsPreviewing(false);
+      setPreviewBlob(null);
+      if (previewUrl) {
+        try { URL.revokeObjectURL(previewUrl); } catch (e) {}
+        setPreviewUrl(null);
+      }
+      // Close the modal after confirming
+      onClose();
+    });
   }, [previewBlob, onCapture, previewUrl, onClose]);
 
   // Retake: clear preview; parent should restart camera/render

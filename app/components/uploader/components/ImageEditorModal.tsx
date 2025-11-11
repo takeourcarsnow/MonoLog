@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import Portal from "@/app/components/ui/Portal";
 
@@ -42,6 +42,20 @@ export function ImageEditorModal({
   setOriginalSize,
   setProcessing,
 }: ImageEditorModalProps) {
+  useEffect(() => {
+    if (editing) {
+      document.body.classList.add('fs-open');
+      document.documentElement.classList.add('fs-open');
+    } else {
+      document.body.classList.remove('fs-open');
+      document.documentElement.classList.remove('fs-open');
+    }
+    return () => {
+      document.body.classList.remove('fs-open');
+      document.documentElement.classList.remove('fs-open');
+    };
+  }, [editing]);
+
   if (!editing || (!dataUrls[editingIndex] && !dataUrls[0])) {
     return null;
   }

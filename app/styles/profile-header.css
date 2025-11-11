@@ -9,8 +9,9 @@
   overflow: visible;
   z-index: 60; /* sit above nearby cards but below modals/overlays */
   /* keep a small gutter on mobile and center the panel */
-  width: calc(100% - 24px);
-  max-width: 600px;
+  width: 100%;
+  /* align profile header width with the app's main max width so it lines up with feed panels */
+  max-width: var(--maxw);
   box-sizing: border-box;
   background: var(--bg-elev);
   border: 1px solid var(--border);
@@ -24,9 +25,11 @@
    the app's main content max width. */
 @media (min-width: 900px) {
   .profile-header {
-    max-width: 600px;
+    /* Use the global max width on wider screens as well */
+    max-width: var(--maxw);
     /* keep a vertical gutter so header and profile content are visually separated */
     margin: 12px auto 12px;
+    /* preserve some inner padding while aligning with global side padding */
     padding-left: 12px;
     padding-right: 12px;
   }

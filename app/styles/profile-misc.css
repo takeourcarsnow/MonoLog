@@ -268,15 +268,16 @@
   align-items:center;
   gap:12px;
   width:100%;
-  max-width: calc(100% - 40px);
+  /* align with feed panels by using the global max width and page side padding */
+  max-width: var(--maxw);
   margin: 6px auto 12px; /* increased bottom margin for more space between header and content */
-  padding: 4px 16px; /* slightly reduced vertical padding */
+  padding: 4px var(--page-side-padding); /* match the app side padding so content lines up */
   box-sizing: border-box;
   background: transparent;
 }
 @media (min-width: 900px) {
   .view-toggle {
-    max-width: calc(100% - 40px);
+    max-width: var(--maxw);
   }
 }
 .view-toggle.tight {

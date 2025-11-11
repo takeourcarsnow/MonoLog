@@ -1492,6 +1492,8 @@
      mobile. Uses the global --maxw which defaults to clamp(640px, 90vw, 1100px). */
   margin: 0 auto;
   width: 100%;
+  /* Constrain feed panel width for better readability on wide viewports */
+  max-width: var(--maxw);
 }
 
 /* Target the inner div that actually contains the posts */
@@ -1502,6 +1504,7 @@
      and other centered content across the app */
   margin: 0 auto;
   width: 100%;
+  max-width: var(--maxw);
   justify-items: center;
 }
 

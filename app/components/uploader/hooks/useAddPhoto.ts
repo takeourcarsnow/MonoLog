@@ -30,6 +30,8 @@ export function useAddPhoto({
 
     await handleFile(file);
 
+    // intentionally no debug logs here
+
     // Close modal after processing is complete - handled by global
   }, [handleFile]);
 

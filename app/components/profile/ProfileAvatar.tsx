@@ -120,13 +120,13 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
               </button>
             </div>
             {showActionButtons && !hasActiveStories && (
-              <AvatarActions
-                storyUploading={storyUploading}
-                onLiveCamera={() => {
-                  setCaptureCallback(() => handleLiveCameraCapture);
-                  setIsCameraOpen(true);
-                }}
-              />
+                <AvatarActions
+                  storyUploading={storyUploading}
+                  onLiveCamera={() => {
+                    setCaptureCallback(() => handleLiveCameraCapture);
+                    setIsCameraOpen(true);
+                  }}
+                />
             )}
           </div>
           <input type="file" accept="image/*" ref={avatarInputRef} style={{ display: 'none' }} onChange={(e) => {
@@ -154,23 +154,23 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
         </>
       )}
       {currentUserId && user?.id === currentUserId ? (
-        <StoryViewerModal
-          isOpen={viewerOpen}
-          onClose={() => setViewerOpen(false)}
-          stories={ownStories}
-          currentIndex={viewerIdx}
-          onPrev={onPrev}
-          onNext={onNext}
-          deleteArmed={deleteArmed}
-          setDeleteArmed={setDeleteArmed}
-          onLiveCamera={() => {
-            setCaptureCallback(() => handleLiveCameraCapture);
-            setIsCameraOpen(true);
-          }}
-          user={user}
-          setStories={setOwnStories}
-          setHasActiveStories={setHasActiveStories}
-        />
+          <StoryViewerModal
+            isOpen={viewerOpen}
+            onClose={() => setViewerOpen(false)}
+            stories={ownStories}
+            currentIndex={viewerIdx}
+            onPrev={onPrev}
+            onNext={onNext}
+            deleteArmed={deleteArmed}
+            setDeleteArmed={setDeleteArmed}
+            onLiveCamera={() => {
+              setCaptureCallback(() => handleLiveCameraCapture);
+              setIsCameraOpen(true);
+            }}
+            user={user}
+            setStories={setOwnStories}
+            setHasActiveStories={setHasActiveStories}
+          />
       ) : (
         <PublicStoryViewerModal
           isOpen={viewerOpen}

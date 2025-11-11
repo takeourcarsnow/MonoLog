@@ -5,6 +5,7 @@
  */
 
 import { DEFAULT_ASCII_CHARSET } from './cameraEffectsTypes';
+import { getTempCanvas, releaseTempCanvas } from '../shared/canvasUtils';
 
 // Apply ASCII art effect to video frame
 export function applyAsciiToFrame(
@@ -26,52 +27,46 @@ export function applyAsciiToFrame(
   targetCtx.textAlign = 'center';
   targetCtx.textBaseline = 'middle';
 
-  const imageData = sourceCtx.getImageData(0, 0, width, height);
-  const data = imageData.data;
+  // Downscale source into a small temporary canvas matching the cell grid
+  // This reduces per-frame pixel sampling significantly for large frames
+  const sampleCanvas = getTempCanvas(cols, rows);
+  try {
+    const sctx = sampleCanvas.getContext('2d', { willReadFrequently: true })!;
+    // Draw scaled-down version of sourceCanvas into sampleCanvas
+    sctx.drawImage(sourceCtx.canvas, 0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height, 0, 0, cols, rows);
 
-  const chars = charset.split('');
-  const charRange = chars.length - 1;
+    const imageData = sctx.getImageData(0, 0, cols, rows);
+    const data = imageData.data;
 
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      // Sample average color of cell
-      let totalR = 0, totalG = 0, totalB = 0;
-      let samples = 0;
+    const chars = charset.split('');
+    const charRange = chars.length - 1;
 
-      for (let dy = 0; dy < cellSize; dy++) {
-        for (let dx = 0; dx < cellSize; dx++) {
-          const x = col * cellSize + dx;
-          const y = row * cellSize + dy;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const idx = (row * cols + col) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const avgBrightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+        const adjustedBrightness = invert ? 1 - avgBrightness : avgBrightness;
+        const charIndex = Math.floor(adjustedBrightness * charRange);
+        const char = chars[charIndex];
 
-          if (x < width && y < height) {
-            const idx = (y * width + x) * 4;
-            totalR += data[idx];
-            totalG += data[idx + 1];
-            totalB += data[idx + 2];
-            samples++;
-          }
+        if (useColor) {
+          targetCtx.fillStyle = `rgb(${r},${g},${b})`;
+        } else {
+          const grayValue = Math.round(avgBrightness * 255);
+          targetCtx.fillStyle = `rgb(${grayValue},${grayValue},${grayValue})`;
         }
-      }
 
-      const avgR = Math.round(totalR / samples);
-      const avgG = Math.round(totalG / samples);
-      const avgB = Math.round(totalB / samples);
-      const avgBrightness = (avgR * 0.299 + avgG * 0.587 + avgB * 0.114) / 255;
-      const adjustedBrightness = invert ? 1 - avgBrightness : avgBrightness;
-      const charIndex = Math.floor(adjustedBrightness * charRange);
-      const char = chars[charIndex];
-
-      if (useColor) {
-        targetCtx.fillStyle = `rgb(${avgR},${avgG},${avgB})`;
-      } else {
-        const grayValue = Math.round(avgBrightness * 255);
-        targetCtx.fillStyle = `rgb(${grayValue},${grayValue},${grayValue})`;
+        targetCtx.fillText(
+          char,
+          col * cellSize + cellSize / 2,
+          row * cellSize + cellSize / 2
+        );
       }
-      targetCtx.fillText(
-        char,
-        col * cellSize + cellSize / 2,
-        row * cellSize + cellSize / 2
-      );
     }
+  } finally {
+    try { releaseTempCanvas(sampleCanvas); } catch (e) {}
   }
 }

@@ -5,6 +5,7 @@
  */
 
 import { COLOR_PALETTES } from './cameraEffectsTypes';
+import { getTempCanvas, releaseTempCanvas } from '../shared/canvasUtils';
 
 // Apply dithering with various algorithms
 export function applyDitherToFrame(
@@ -20,11 +21,9 @@ export function applyDitherToFrame(
   // Some callers may pass a context that was not created with
   // { willReadFrequently: true } which makes repeated getImageData calls
   // slower and triggers a browser warning. To avoid that and ensure
-  // efficient readbacks, copy the source into a temporary canvas whose
-  // 2D context is created with willReadFrequently: true and read from it.
-  const temp = document.createElement('canvas');
-  temp.width = width;
-  temp.height = height;
+  // efficient readbacks, copy the source into a temporary pooled canvas
+  // whose 2D context is created with willReadFrequently: true and read from it.
+  const temp = getTempCanvas(width, height);
   const readCtx = (temp.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | null) || temp.getContext('2d')!;
   // Draw the source into our temp canvas, scaling if necessary
   try {
@@ -430,4 +429,7 @@ export function applyDitherToFrame(
   }
 
   targetCtx.putImageData(imageData, 0, 0);
+
+  // Release pooled temp canvas to reduce GC pressure
+  try { releaseTempCanvas(temp); } catch (e) {}
 }

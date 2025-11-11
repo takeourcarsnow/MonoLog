@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "./useAuth";
 import { useDraftPersistence } from "./useDraftPersistence";
@@ -138,6 +138,37 @@ export function useUploader() {
     replaceIndexRef,
     index
   );
+
+  // Consume any captured blobs that were queued while the camera UI was
+  // open. We process them on mount so the uploader (which may have been
+  // unmounted while the camera was open) can receive the captured images.
+  React.useEffect(() => {
+    const q = (window as any).__MONOLOG_CAPTURE_QUEUE__;
+    if (!q || !q.length) return;
+
+    let mounted = true;
+
+    (async () => {
+      try {
+        // Drain the queue synchronously to avoid duplicate processing
+        (window as any).__MONOLOG_CAPTURE_QUEUE__ = [];
+        for (const blob of q) {
+          if (!mounted) break;
+          try {
+            const file = new File([blob], 'camera-capture.jpg', { type: (blob as Blob).type || 'image/jpeg' });
+            // Reuse the same handleFile logic to process and add to uploader
+            await handleFile(file);
+          } catch (e) {
+            console.error('Failed to process queued captured blob', e);
+          }
+        }
+      } catch (e) {
+        console.error('Error draining camera capture queue', e);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [handleFile]);
 
   // Draft handlers
   const { resetDraft, removePhoto } = createDraftHandlers(

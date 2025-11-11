@@ -57,6 +57,18 @@ export function useRenderLoop() {
     const sourceCanvas = sourceCanvasRef.current;
     const displayCanvas = displayCanvasRef.current;
 
+    // Cache 2D contexts to avoid repeated getContext calls per-frame (expensive on some browsers)
+    // store them on the canvas element so they persist across frames
+    if (sourceCanvas && !(sourceCanvas as any).__ctx) {
+      (sourceCanvas as any).__ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+    }
+    if (displayCanvas && !(displayCanvas as any).__ctx) {
+      (displayCanvas as any).__ctx = displayCanvas.getContext('2d');
+    }
+
+    const sourceCtx = sourceCanvas ? (sourceCanvas as any).__ctx as CanvasRenderingContext2D | null : null;
+    const displayCtx = displayCanvas ? (displayCanvas as any).__ctx as CanvasRenderingContext2D | null : null;
+
     if (video.readyState === video.HAVE_ENOUGH_DATA) {
       // Set canvas dimensions to match video
       if (sourceCanvas.width !== video.videoWidth || sourceCanvas.height !== video.videoHeight) {
@@ -67,7 +79,6 @@ export function useRenderLoop() {
       }
 
       // Draw current video frame to source canvas
-      const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
       if (sourceCtx) {
         sourceCtx.drawImage(video, 0, 0, sourceCanvas.width, sourceCanvas.height);
       }

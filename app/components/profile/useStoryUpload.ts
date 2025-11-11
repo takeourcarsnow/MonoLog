@@ -20,7 +20,9 @@ export function useStoryUpload(userId: string, setHasActiveStories: (has: boolea
       let n = bstr.length;
       const u8arr = new Uint8Array(n);
       while (n--) u8arr[n] = bstr.charCodeAt(n);
-      const processedFile = new File([u8arr], `${uid()}.jpg`, { type: mime });
+      // Use an extension that matches the encoded mime type (prefer WebP when available)
+      const ext = mime === 'image/webp' ? '.webp' : mime === 'image/png' ? '.png' : '.jpg';
+      const processedFile = new File([u8arr], `${uid()}${ext}`, { type: mime });
 
       const sb = getSupabaseClient();
       const userObj = await api.getCurrentUser();
@@ -57,6 +59,7 @@ export function useStoryUpload(userId: string, setHasActiveStories: (has: boolea
   const handleLiveCameraCapture = async (blob: Blob) => {
     setStoryUploading(true);
     try {
+      // Wrap camera blob in a File; compressImage will determine best output format (WebP when supported)
       const file = new File([blob], `story-${Date.now()}.jpg`, { type: 'image/jpeg' });
       await handleStoryChangeFromFile(file);
     } catch (e: any) {

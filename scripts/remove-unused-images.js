@@ -36,6 +36,15 @@ const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
 const verbose = args.includes('--verbose') || dryRun;
 
+// Helper function to format bytes
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('❌ Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local');
   process.exit(1);
@@ -49,7 +58,10 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
 });
 
 async function getUsedImagePaths() {
-  const usedPaths = new Set();
+  const usedPostsPaths = new Set();
+  const usedAvatarPaths = new Set();
+  const usedCommunityPaths = new Set();
+  const usedStoryPaths = new Set();
   const baseUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/`;
 
   // Helper to extract path from URL
@@ -64,13 +76,13 @@ async function getUsedImagePaths() {
     return null;
   };
 
-  // Helper to add paths from URL or array of URLs
-  const addPaths = (urls) => {
+  // Helper to add paths from URL or array of URLs to a set
+  const addPathsToSet = (urls, set) => {
     if (!urls) return;
     const urlArray = Array.isArray(urls) ? urls : [urls];
     urlArray.forEach(url => {
       const path = extractPath(url);
-      if (path) usedPaths.add(path);
+      if (path) set.add(path);
     });
   };
 
@@ -85,10 +97,10 @@ async function getUsedImagePaths() {
     if (postsError) throw postsError;
 
     posts.forEach(post => {
-      addPaths(post.image_urls);
-      addPaths(post.image_url);
-      addPaths(post.thumbnail_urls);
-      addPaths(post.thumbnail_url);
+      addPathsToSet(post.image_urls, usedPostsPaths);
+      addPathsToSet(post.image_url, usedPostsPaths);
+      addPathsToSet(post.thumbnail_urls, usedPostsPaths);
+      addPathsToSet(post.thumbnail_url, usedPostsPaths);
     });
 
     // Get user avatars
@@ -99,7 +111,7 @@ async function getUsedImagePaths() {
     if (usersError) throw usersError;
 
     users.forEach(user => {
-      addPaths(user.avatar_url);
+      addPathsToSet(user.avatar_url, usedAvatarPaths);
     });
 
     // Get community images
@@ -110,12 +122,37 @@ async function getUsedImagePaths() {
     if (communitiesError) throw communitiesError;
 
     communities.forEach(community => {
-      addPaths(community.image_url);
+      addPathsToSet(community.image_url, usedCommunityPaths);
     });
+
+    // Get stories images
+    const { data: allStories, error: storiesError } = await supabase
+      .from('stories')
+      .select('media_url, thumbnail_url, expires_at');
+
+    if (storiesError) throw storiesError;
+
+    const now = new Date().toISOString();
+    const stories = allStories.filter(story => story.expires_at > now);
+
+    console.log(`Found ${allStories.length} total stories`);
+    if (allStories.length > 0) {
+      console.log('Sample story expires_at:', allStories[0].expires_at);
+      console.log('Current time ISO:', now);
+    }
+    console.log(`Found ${stories.length} non-expired stories`);
+
+    stories.forEach(story => {
+      addPathsToSet(story.media_url, usedStoryPaths);
+      addPathsToSet(story.thumbnail_url, usedStoryPaths);
+    });
+
+    // Combine all used paths
+    const usedPaths = new Set([...usedPostsPaths, ...usedAvatarPaths, ...usedCommunityPaths, ...usedStoryPaths]);
 
     if (verbose) console.log(`✅ Found ${usedPaths.size} unique image paths in use`);
 
-    return usedPaths;
+    return { usedPaths, usedPostsPaths, usedAvatarPaths, usedCommunityPaths, usedStoryPaths };
   } catch (error) {
     console.error('❌ Error collecting used image paths:', error.message);
     throw error;
@@ -149,7 +186,7 @@ async function getBucketFiles() {
           await getAllFiles(fullPath);
         } else {
           // It's a file
-          allFiles.push(fullPath);
+          allFiles.push({ path: fullPath, size: item.metadata.size || 0 });
         }
       }
     };
@@ -166,7 +203,7 @@ async function getBucketFiles() {
 }
 
 async function checkMissingImages(usedPaths, bucketFiles) {
-  const bucketPaths = new Set(bucketFiles);
+  const bucketPaths = new Set(bucketFiles.map(f => f.path));
   const missingPaths = [];
 
   for (const path of usedPaths) {
@@ -241,27 +278,60 @@ async function restoreMissingAvatars(missingPaths) {
   }
 }
 
-async function deleteUnusedImages(usedPaths, bucketFiles) {
-  let unusedFiles = bucketFiles.filter(file => !usedPaths.has(file));
+async function deleteUnusedImages(usedPaths, bucketFiles, usedPostsPaths, usedAvatarPaths, usedCommunityPaths, usedStoryPaths) {
+  let unusedFiles = bucketFiles.filter(file => !usedPaths.has(file.path));
 
-  // NEVER delete avatar files, even if they're not referenced
-  unusedFiles = unusedFiles.filter(file => !file.startsWith('avatars/'));
+  // Categorize files
+  const totalPostsImages = bucketFiles.filter(f => !f.path.startsWith('avatars/') && !f.path.startsWith('stories/')).length;
+  const totalAvatars = bucketFiles.filter(f => f.path.startsWith('avatars/')).length;
+  const totalStoryImages = bucketFiles.filter(f => f.path.startsWith('stories/')).length;
 
-  if (verbose) {
-    console.log(`\n📊 Summary:`);
-    console.log(`   Used images: ${usedPaths.size}`);
-    console.log(`   Total files in bucket: ${bucketFiles.length}`);
-    console.log(`   Unused files (excluding avatars): ${unusedFiles.length}`);
-  }
+  const unusedPostsImages = unusedFiles.filter(f => !f.path.startsWith('avatars/') && !f.path.startsWith('stories/')).length;
+  const unusedAvatars = unusedFiles.filter(f => f.path.startsWith('avatars/')).length;
+  const unusedStoryImages = unusedFiles.filter(f => f.path.startsWith('stories/')).length;
+
+  // Calculate total unused size
+  const totalUnusedSize = unusedFiles.reduce((sum, file) => sum + file.size, 0);
+
+  // Calculate sizes
+  const totalSize = bucketFiles.reduce((sum, file) => sum + file.size, 0);
+  const usedSize = bucketFiles.filter(file => usedPaths.has(file.path)).reduce((sum, file) => sum + file.size, 0);
+
+  // Category sizes
+  const postsFiles = bucketFiles.filter(f => !f.path.startsWith('avatars/') && !f.path.startsWith('stories/'));
+  const postsUsedSize = postsFiles.filter(f => usedPaths.has(f.path)).reduce((sum, f) => sum + f.size, 0);
+  const postsUnusedSize = postsFiles.filter(f => !usedPaths.has(f.path)).reduce((sum, f) => sum + f.size, 0);
+  const postsTotalSize = postsFiles.reduce((sum, f) => sum + f.size, 0);
+
+  const avatarFiles = bucketFiles.filter(f => f.path.startsWith('avatars/'));
+  const avatarUsedSize = avatarFiles.filter(f => usedPaths.has(f.path)).reduce((sum, f) => sum + f.size, 0);
+  const avatarUnusedSize = avatarFiles.filter(f => !usedPaths.has(f.path)).reduce((sum, f) => sum + f.size, 0);
+  const avatarTotalSize = avatarFiles.reduce((sum, f) => sum + f.size, 0);
+
+  const storyFiles = bucketFiles.filter(f => f.path.startsWith('stories/'));
+  const storyUsedSize = storyFiles.filter(f => usedPaths.has(f.path)).reduce((sum, f) => sum + f.size, 0);
+  const storyUnusedSize = storyFiles.filter(f => !usedPaths.has(f.path)).reduce((sum, f) => sum + f.size, 0);
+  const storyTotalSize = storyFiles.reduce((sum, f) => sum + f.size, 0);
+
+  const communityUsedSize = bucketFiles.filter(f => usedCommunityPaths.has(f.path)).reduce((sum, f) => sum + f.size, 0);
+
+  // Always show detailed summary
+  console.log(`\n📊 Detailed Summary:`);
+  console.log(`   Overall - Total files: ${bucketFiles.length}, Total size: ${formatBytes(totalSize)}, Used: ${usedPaths.size}, Used size: ${formatBytes(usedSize)}, Unused: ${unusedFiles.length}, Unused size: ${formatBytes(totalUnusedSize)}`);
+  console.log(``);
+  console.log(`   Posts images - Total: ${totalPostsImages}, Total size: ${formatBytes(postsTotalSize)}, Used: ${usedPostsPaths.size}, Used size: ${formatBytes(postsUsedSize)}, Unused: ${unusedPostsImages}, Unused size: ${formatBytes(postsUnusedSize)}, Kept: ${usedPostsPaths.size}`);
+  console.log(`   Avatars - Total: ${totalAvatars}, Total size: ${formatBytes(avatarTotalSize)}, Used: ${usedAvatarPaths.size}, Used size: ${formatBytes(avatarUsedSize)}, Unused: ${unusedAvatars}, Unused size: ${formatBytes(avatarUnusedSize)}, Kept: ${usedAvatarPaths.size}`);
+  console.log(`   Community images - Used: ${usedCommunityPaths.size}, Used size: ${formatBytes(communityUsedSize)}, Kept: ${usedCommunityPaths.size}`);
+  console.log(`   Story images - Total: ${totalStoryImages}, Total size: ${formatBytes(storyTotalSize)}, Used: ${usedStoryPaths.size}, Used size: ${formatBytes(storyUsedSize)}, Unused: ${unusedStoryImages}, Unused size: ${formatBytes(storyUnusedSize)}, Kept: ${usedStoryPaths.size}`);
 
   if (unusedFiles.length === 0) {
-    console.log('🎉 No unused images found!');
+    console.log('\n🎉 No unused images found!');
     return;
   }
 
   if (dryRun) {
     console.log('\n🔍 Dry run - would delete the following files:');
-    unusedFiles.forEach(file => console.log(`   ${file}`));
+    unusedFiles.forEach(file => console.log(`   ${file.path}`));
     return;
   }
 
@@ -273,7 +343,7 @@ async function deleteUnusedImages(usedPaths, bucketFiles) {
   let errors = 0;
 
   for (let i = 0; i < unusedFiles.length; i += batchSize) {
-    const batch = unusedFiles.slice(i, i + batchSize);
+    const batch = unusedFiles.slice(i, i + batchSize).map(file => file.path);
 
     try {
       const { error } = await supabase.storage
@@ -305,10 +375,8 @@ async function main() {
     console.log('🧹 Starting unused image cleanup...');
     if (dryRun) console.log('🔍 Running in dry-run mode (no files will be deleted)');
 
-    const [usedPaths, bucketFiles] = await Promise.all([
-      getUsedImagePaths(),
-      getBucketFiles()
-    ]);
+    const { usedPaths, usedPostsPaths, usedAvatarPaths, usedCommunityPaths, usedStoryPaths } = await getUsedImagePaths();
+    const bucketFiles = await getBucketFiles();
 
     const missingPaths = await checkMissingImages(usedPaths, bucketFiles);
 
@@ -316,7 +384,7 @@ async function main() {
       await restoreMissingAvatars(missingPaths);
     }
 
-    await deleteUnusedImages(usedPaths, bucketFiles);
+    await deleteUnusedImages(usedPaths, bucketFiles, usedPostsPaths, usedAvatarPaths, usedCommunityPaths, usedStoryPaths);
 
     console.log('\n✅ Cleanup completed successfully!');
   } catch (error) {

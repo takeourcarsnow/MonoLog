@@ -21,7 +21,7 @@ const PWAHealthCheck = dynamic(() => import('@/app/components/pwa/PWAAnalytics')
 const RoutePrefetcher = dynamic(() => import('@/app/components/layout/RoutePrefetcher').then(mod => mod.default), { ssr: false });
 
 function GlobalCamera() {
-  const { isCameraOpen, captureCallback, setIsCameraOpen, setCaptureCallback } = useCameraContext();
+  const { isCameraOpen, captureCallback, setIsCameraOpen, setCaptureCallback, initialDataUrl, setInitialDataUrl, editCallback, setEditCallback } = useCameraContext();
   const LiveCameraView = dynamic(() => import('@/app/components/uploader/LiveCameraView').then(mod => mod.LiveCameraView), { ssr: false });
 
   if (!isCameraOpen) return null;
@@ -32,12 +32,22 @@ function GlobalCamera() {
       onClose={() => {
         setIsCameraOpen(false);
         setCaptureCallback(null);
+        try { setInitialDataUrl(null); setEditCallback(null); } catch (_) {}
       }}
       onCapture={(blob) => {
-        // Push blob into a global in-memory queue so the uploader (which is
-        // unmounted while the camera is open) can pick it up when it
-        // remounts. This avoids races where the stored callback references
-        // an unmounted component instance.
+        // If there is an editCallback set (editing flow) invoke it directly
+        // and clear the editing state. Otherwise queue the blob for the
+        // uploader to pick up when it remounts.
+        try {
+          if (editCallback) {
+            try { editCallback(blob); } catch (e) { console.error('Edit callback failed', e); }
+            setIsCameraOpen(false);
+            setEditCallback(null);
+            setInitialDataUrl(null);
+            return;
+          }
+        } catch (e) {}
+
         try {
           (window as any).__MONOLOG_CAPTURE_QUEUE__ = (window as any).__MONOLOG_CAPTURE_QUEUE__ || [];
           (window as any).__MONOLOG_CAPTURE_QUEUE__.push(blob);
@@ -45,13 +55,12 @@ function GlobalCamera() {
           console.error('Failed to queue captured blob', e);
         }
 
-        // Close camera UI and clear callback; uploader will drain the queued
-        // blob on mount. This avoids invoking potentially stale callbacks.
         setIsCameraOpen(false);
         setCaptureCallback(null);
       }}
       processing={false}
       isModal={false}
+      initialDataUrl={initialDataUrl ?? undefined}
     />
   );
 }

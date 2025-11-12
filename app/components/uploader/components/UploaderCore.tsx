@@ -24,7 +24,7 @@ export function UploaderCore() {
   // Dev helper to trace focus events; no-op in production
   initFocusDebug();
   const { me, setMe } = useAuth();
-  const { setIsCameraOpen, setCaptureCallback } = useCameraContext();
+  const { setIsCameraOpen, setCaptureCallback, setInitialDataUrl, setIsEditing, setEditCallback } = useCameraContext();
 
   const {
     // State
@@ -143,7 +143,54 @@ export function UploaderCore() {
   const handleEditPhoto = async () => {
     setEditingIndex(index);
     try { await preloadOverlayThumbnails(); } catch {}
-    setEditing(true);
+
+    // Use the global camera flow but provide an initialDataUrl so the
+    // LiveCameraView loads the existing image into preview mode instead
+    // of opening the live camera stream. We also provide an editCallback
+    // which will receive the edited blob and apply it back into the
+    // uploader state.
+    try {
+      setInitialDataUrl(dataUrls[index] ?? null);
+      setIsEditing(true);
+      setEditCallback((blob: Blob) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          setDataUrls(d => {
+            const at = editingIndex ?? index;
+            if (d.length && at >= 0 && at < d.length) {
+              const copy = [...d];
+              copy[at] = result;
+              return copy;
+            }
+            return [...d, result].slice(0,5);
+          });
+          setOriginalDataUrls(d => {
+            const at = editingIndex ?? index;
+            if (d.length && at >= 0 && at < d.length) {
+              const copy = [...d];
+              copy[at] = result;
+              return copy;
+            }
+            return [...d, result].slice(0,5);
+          });
+          setEditorSettings(s => {
+            const at = editingIndex ?? index;
+            if (s.length && at >= 0 && at < s.length) {
+              const copy = [...s];
+              copy[at] = {};
+              return copy;
+            }
+            return [...s, {}].slice(0,5);
+          });
+          setEditingInCamera(false);
+          try { setIsCameraOpen(false); setInitialDataUrl(null); setIsEditing(false); setEditCallback(null); } catch (_) {}
+          setEditing(false);
+        };
+        try { reader.readAsDataURL(blob); } catch (_) {}
+      });
+      setIsCameraOpen(true);
+    } catch (_) {}
   };
 
   return (
@@ -221,7 +268,7 @@ export function UploaderCore() {
         isModal={false}
         onClose={() => {
           // Ensure CameraContext is informed so global UI is restored
-          try { setIsCameraOpen(false); } catch (_) {}
+          try { setIsCameraOpen(false); setInitialDataUrl(null); setIsEditing(false); setEditCallback(null); } catch (_) {}
           setEditingInCamera(false);
           setEditing(false);
         }}
@@ -257,7 +304,7 @@ export function UploaderCore() {
               return [...s, {}].slice(0,5);
             });
             setEditingInCamera(false);
-            try { setIsCameraOpen(false); } catch (_) {}
+            try { setIsCameraOpen(false); setInitialDataUrl(null); setIsEditing(false); setEditCallback(null); } catch (_) {}
             setEditing(false);
           };
           try { reader.readAsDataURL(blob); } catch {}

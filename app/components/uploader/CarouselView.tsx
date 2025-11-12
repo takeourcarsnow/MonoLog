@@ -439,7 +439,7 @@ export function CarouselView({
                 // (some browsers may default object-position differently)
                 style={{ objectFit: 'contain', objectPosition: 'center center', imageRendering: 'pixelated' }}
                 priority={true}
-                onLoadingComplete={() => setPreviewLoaded(true)}
+                onLoad={() => setPreviewLoaded(true)}
                 onError={() => setPreviewLoaded(true)}
                 onClick={idx === index ? (e) => {
                   e.preventDefault();

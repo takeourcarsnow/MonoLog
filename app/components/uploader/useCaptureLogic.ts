@@ -135,7 +135,9 @@ export function useCaptureLogic({
     confirmCapture,
     retakeCapture,
     // Allow external callers to set a preview directly from a Blob (e.g. file input)
-    setPreviewFromBlob: (blob: Blob | null) => {
+    // Stable callback to avoid creating a new function each render (prevents
+    // useEffect dependency loops in components that consume this hook).
+    setPreviewFromBlob: useCallback((blob: Blob | null) => {
       if (!blob) return;
       setPreviewBlob(blob);
       try {
@@ -144,6 +146,6 @@ export function useCaptureLogic({
         setPreviewUrl(null);
       }
       setIsPreviewing(true);
-    },
+    }, []),
   };
 }

@@ -6,10 +6,11 @@ import LogoLoader from "./LogoLoader";
 interface CameraLoadingProps {
   cameraReady: boolean;
   error: string | null;
+  isPreviewing?: boolean;
 }
 
-export function CameraLoading({ cameraReady, error }: CameraLoadingProps) {
-  if (cameraReady || error) return null;
+export function CameraLoading({ cameraReady, error, isPreviewing }: CameraLoadingProps) {
+  if (cameraReady || error || isPreviewing) return null;
 
   return (
     <div

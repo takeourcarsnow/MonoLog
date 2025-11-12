@@ -274,9 +274,12 @@ export function LiveCameraCanvas({
 
       <CameraError error={error} startCameraEnhanced={startCameraEnhanced} onClose={onClose} />
 
-      <CameraLoading cameraReady={cameraReady} error={error} />
+          {/* If we're previewing a static image (isPreviewing) we should not show
+            the camera loading spinner or the processing overlay — those are
+            intended for live camera activity. */}
+          <CameraLoading cameraReady={cameraReady} error={error} isPreviewing={isPreviewing} />
 
-      <CameraProcessingOverlay showProcessingOverlay={showProcessingOverlay} />
+          <CameraProcessingOverlay showProcessingOverlay={showProcessingOverlay && !isPreviewing} />
 
       {/* Preview is rendered into the display canvas so effects can be applied live. */}
     </div>

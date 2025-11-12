@@ -138,10 +138,16 @@ export function UploaderCore() {
     handleFile,
   });
 
+  // When editing we will now reuse LiveCameraView with initialDataUrl instead of ImageEditorModal
+  const [editingInCamera, setEditingInCamera] = useState(false);
   const handleEditPhoto = async () => {
     setEditingIndex(index);
     try { await preloadOverlayThumbnails(); } catch {}
-    setEditing(true);
+    // Switch to live camera view editing with effects instead of legacy editor modal
+    // Ensure uploader is not in a processing state so the live camera can start
+    try { setProcessing(false); } catch (_) {}
+    try { setPreviewLoaded(false); } catch (_) {}
+    setEditingInCamera(true);
   };
 
   return (
@@ -164,29 +170,32 @@ export function UploaderCore() {
         processing={processing}
       />
 
-      <ImageEditorModal
-        editing={editing}
-        editingIndex={editingIndex}
-        dataUrls={dataUrls}
-        originalDataUrls={originalDataUrls}
-        editorSettings={editorSettings}
-        editingAlt={editingAlt}
-        onCancel={() => {
-          setEditing(false);
-          sessionStorage.removeItem('monolog:upload_editor_open');
-        }}
-        onApply={() => {
-          setEditing(false);
-          sessionStorage.removeItem('monolog:upload_editor_open');
-        }}
-        setAlt={setAlt}
-        setEditorSettings={setEditorSettings}
-        setDataUrls={setDataUrls}
-        setPreviewLoaded={setPreviewLoaded}
-        setCompressedSize={setCompressedSize}
-        setOriginalSize={setOriginalSize}
-        setProcessing={setProcessing}
-      />
+      {/* Legacy ImageEditorModal removed when using integrated LiveCameraView editing */}
+      {!editingInCamera && (
+        <ImageEditorModal
+          editing={editing}
+          editingIndex={editingIndex}
+          dataUrls={dataUrls}
+          originalDataUrls={originalDataUrls}
+          editorSettings={editorSettings}
+          editingAlt={editingAlt}
+          onCancel={() => {
+            setEditing(false);
+            sessionStorage.removeItem('monolog:upload_editor_open');
+          }}
+          onApply={() => {
+            setEditing(false);
+            sessionStorage.removeItem('monolog:upload_editor_open');
+          }}
+          setAlt={setAlt}
+          setEditorSettings={setEditorSettings}
+          setDataUrls={setDataUrls}
+          setPreviewLoaded={setPreviewLoaded}
+          setCompressedSize={setCompressedSize}
+          setOriginalSize={setOriginalSize}
+          setProcessing={setProcessing}
+        />
+      )}
 
       <PublishControls
         hasPreview={hasPreview}
@@ -208,7 +217,54 @@ export function UploaderCore() {
         resetDraft={resetDraft}
       />
 
-      {!dataUrls.length && (
+      {/* Live camera view for adding new photos or editing existing (effects). */}
+      <LiveCameraView
+        isOpen={editingInCamera}
+        onClose={() => {
+          setEditingInCamera(false);
+          setEditing(false);
+        }}
+        onCapture={(blob) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            setDataUrls(d => {
+              const at = editingIndex ?? index;
+              if (d.length && at >= 0 && at < d.length) {
+                const copy = [...d];
+                copy[at] = result;
+                return copy;
+              }
+              return [...d, result].slice(0,5);
+            });
+            setOriginalDataUrls(d => {
+              const at = editingIndex ?? index;
+              if (d.length && at >= 0 && at < d.length) {
+                const copy = [...d];
+                copy[at] = result;
+                return copy;
+              }
+              return [...d, result].slice(0,5);
+            });
+            setEditorSettings(s => {
+              const at = editingIndex ?? index;
+              if (s.length && at >= 0 && at < s.length) {
+                const copy = [...s];
+                copy[at] = {};
+                return copy;
+              }
+              return [...s, {}].slice(0,5);
+            });
+            setEditingInCamera(false);
+            setEditing(false);
+          };
+          try { reader.readAsDataURL(blob); } catch {}
+        }}
+        processing={processing}
+        initialDataUrl={dataUrls[editingIndex ?? index]}
+      />
+
+      {!dataUrls.length && !editingInCamera && (
         <DropZone
           processing={processing}
           onCameraEffectsSelect={handleAddFromCameraEffects}
@@ -225,7 +281,7 @@ export function UploaderCore() {
         />
       )}
 
-      {!editing && (
+      {!editing && !editingInCamera && (
         <FileInputs
           fileInputRef={fileInputRef}
           cameraInputRef={cameraInputRef}
@@ -239,7 +295,7 @@ export function UploaderCore() {
         />
       )}
 
-      {!editing && (
+      {!editing && !editingInCamera && (
         <PreviewSection
           dataUrls={dataUrls}
           originalDataUrls={originalDataUrls}
@@ -277,7 +333,7 @@ export function UploaderCore() {
 
       <PhotoActionRow
         hasPreview={hasPreview}
-        editing={editing}
+        editing={editing || editingInCamera}
         processing={processing}
         dataUrls={dataUrls}
         originalDataUrls={originalDataUrls}
@@ -294,7 +350,7 @@ export function UploaderCore() {
 
       <SizeWarning compressedSize={compressedSize} />
 
-      {!editing && (
+      {!editing && !editingInCamera && (
         <CaptionInput
           caption={caption}
           setCaption={setCaption}

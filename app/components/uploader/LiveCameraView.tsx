@@ -37,9 +37,15 @@ interface LiveCameraViewProps {
   onCapture: (blob: Blob) => void;
   processing: boolean;
   isModal?: boolean;
+  /**
+   * Optional initial data URL of an existing photo to edit (e.g. when user chooses
+   * "Edit photo" from the uploader). When provided we bypass the live camera stream
+   * and immediately load the image into the preview canvases with current effect settings.
+   */
+  initialDataUrl?: string;
 }
 
-export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal = true }: LiveCameraViewProps) {
+export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal = true, initialDataUrl }: LiveCameraViewProps) {
   const { setIsCameraOpen } = useCameraContext();
   const { videoRef, streamRef, facingMode, zoom, setZoom, torchEnabled, isSwitchingCamera, startCamera, stopCamera, switchCamera, toggleTorch, applyZoom } = useCamera();
   const { sourceCanvasRef, displayCanvasRef, startRenderLoop, stopRenderLoop } = useRenderLoop();
@@ -78,8 +84,10 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
   const [lastTapTime, setLastTapTime] = React.useState(0);
   const [tapCount, setTapCount] = React.useState(0);
 
-  const disabled = isCapturing || processing || !cameraReady;
-
+  // When previewing a static image (isPreviewing) we should still allow
+  // the user to interact with effect controls and add files. Only disable
+  // controls when capturing, processing, or when the camera is not ready
+  // and we're not previewing an imported image.
   // Capture logic (includes preview/confirm/retake handlers)
   const { handleCapture, previewUrl, isPreviewing, confirmCapture, retakeCapture, setPreviewFromBlob } = useCaptureLogic({
     isCapturing,
@@ -93,6 +101,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
     performCapture,
     onClose,
   });
+
+  const disabled = isCapturing || processing || (!cameraReady && !isPreviewing);
 
   // Handlers
   const {
@@ -159,8 +169,9 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
     setInlineEditText,
   } = useInlineEditing(setEffectSettings);
 
-  // disable UI controls while previewing
-  const controlsDisabled = disabled || isPreviewing;
+  // Controls should only be disabled while actively capturing or processing.
+  // Allow controls while previewing so the user can edit the imported image.
+  const controlsDisabled = isCapturing || processing;
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -178,11 +189,13 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
 
   // Setup camera when modal opens
   useEffect(() => {
-    setIsCameraOpen(isOpen);
     if (isOpen) {
       setIsCapturing(false); // Reset capturing state when modal opens
       setShowProcessingOverlay(false);
-      startCameraEnhanced();
+      // Only start camera if we are NOT editing an existing photo
+      if (!initialDataUrl) {
+        startCameraEnhanced();
+      }
       // Load frames and overlays
       getFrameFiles().then(setFrameFiles).catch(() => setFrameFiles([]));
       getOverlayFiles().then(setOverlayFiles).catch(() => setOverlayFiles([]));
@@ -200,7 +213,6 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
     }
 
     return () => {
-      setIsCameraOpen(false);
       stopCamera();
       stopRenderLoop();
       // Restore body scrolling on unmount
@@ -222,13 +234,14 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
 
   // Control camera stream based on processing state
   useEffect(() => {
+    if (initialDataUrl) return; // editing existing photo: don't manage camera automatically
     if (isOpen && !processing) {
       startCameraEnhanced();
     } else {
       stopCamera();
       stopRenderLoop();
     }
-  }, [isOpen, processing, startCameraEnhanced, stopCamera, stopRenderLoop]);
+  }, [isOpen, processing, startCameraEnhanced, stopCamera, stopRenderLoop, initialDataUrl]);
 
   // Start render loop when camera is ready and not capturing or previewing
   // If we're previewing an imported image (isPreviewing) we must NOT run the
@@ -245,6 +258,40 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
       stopRenderLoop();
     };
   }, [cameraReady, isCapturing, isPreviewing, effectSettings, startRenderLoop, stopRenderLoop, videoRef, streamRef, applyZoom]);
+
+  // If an initialDataUrl was provided (editing existing photo) load it into preview once.
+  useEffect(() => {
+    if (!isOpen || !initialDataUrl) return;
+    // Convert data URL to blob then set preview.
+    // If preview already active, do nothing (prevents double-set)
+    if (isPreviewing || previewUrl) return;
+    let canceled = false;
+    (async () => {
+      try {
+        const blob = dataURLToBlob(initialDataUrl);
+        if (!canceled) {
+          setPreviewFromBlob(blob);
+          // Ensure camera is stopped so it doesn't overwrite the preview
+          stopCamera();
+          stopRenderLoop();
+        }
+      } catch (e) {
+        console.warn('Failed to load initial data url into LiveCameraView', e);
+      }
+    })();
+    return () => { canceled = true; };
+  }, [isOpen, initialDataUrl, setPreviewFromBlob, stopCamera, stopRenderLoop]);
+
+  function dataURLToBlob(dataUrl: string): Blob {
+    const [header, base64] = dataUrl.split(',');
+    const mimeMatch = header.match(/data:(.*);base64/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const binary = typeof atob === 'function' ? atob(base64) : Buffer.from(base64, 'base64').toString('binary');
+    const len = binary.length;
+    const arr = new Uint8Array(len);
+    for (let i = 0; i < len; i++) arr[i] = binary.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
 
   // When previewing a captured blob or imported file, draw it into the
   // source/display canvases and re-apply effects whenever settings change.
@@ -416,7 +463,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
       <LiveCameraControlsPanel
         effectSettings={effectSettings}
         setEffectSettings={setEffectSettings}
-        disabled={disabled}
+        disabled={controlsDisabled}
         overlayVisible={overlayVisible}
         toggleOverlay={toggleOverlay}
         frameFiles={frameFiles}

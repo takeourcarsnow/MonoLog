@@ -1,11 +1,10 @@
 "use client";
 
-import { lazy, Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { compressImage, approxDataUrlBytes } from "@/lib/image";
 import Portal from "@/app/components/ui/Portal";
 
-// Lazy load the heavy ImageEditor component
-const ImageEditor = lazy(() => import("@/app/components/media/ImageEditor"));
+// ImageEditor removed as editing is now done in live camera
 
 interface ImageEditorModalProps {
   editing: boolean;
@@ -112,14 +111,8 @@ export function ImageEditorModal({
 
   return (
     <Portal className="upload-editor-fullscreen">
-      <Suspense fallback={null}>
-        <ImageEditor
-          initialDataUrl={currentDataUrl}
-          initialSettings={currentSettings}
-          onCancel={onCancel}
-          onApply={handleApply}
-        />
-      </Suspense>
+      {/* ImageEditor removed as editing is now done in live camera */}
+      <div>Editing is now handled in the live camera view.</div>
     </Portal>
   );
 }

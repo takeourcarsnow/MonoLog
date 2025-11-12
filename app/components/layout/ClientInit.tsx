@@ -49,6 +49,16 @@ function GlobalCamera() {
           }
         } catch (e) {}
 
+        // If there is a captureCallback set (e.g., for story upload), invoke it directly
+        try {
+          if (captureCallback) {
+            try { captureCallback(blob); } catch (e) { console.error('Capture callback failed', e); }
+            setIsCameraOpen(false);
+            setCaptureCallback(null);
+            return;
+          }
+        } catch (e) {}
+
         // If a pending-edit marker exists (set by uploader when opening an
         // edit session) annotate the queued blob with the target index so
         // the uploader can process it as an edit when it remounts. Do not

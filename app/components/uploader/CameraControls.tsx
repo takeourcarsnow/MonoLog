@@ -40,7 +40,11 @@ export function CameraControls({
   confirmCapture,
   retakeCapture,
 }: CameraControlsProps) {
-  if (!cameraReady || !overlayVisible) return null;
+  // When previewing a static image we may not have a live camera stream
+  // (cameraReady === false). Still show the controls (confirm/retake etc.)
+  // as long as overlays are visible. Only hide the whole controls panel
+  // when overlays are explicitly disabled.
+  if (!overlayVisible) return null;
 
   return (
     <div style={{

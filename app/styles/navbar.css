@@ -9,6 +9,7 @@
   min-height: 44px; /* recommended touch target size */
   color: var(--muted);
   position: relative; /* allow pseudo-elements if needed */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .tab-item-static.active {

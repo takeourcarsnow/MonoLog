@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -26,6 +26,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [showAuth, setShowAuth] = useState(false);
 
   const { ready, isTouchDevice, forceTouch } = useAppShellInit();
+  const isMouseDevice = useMemo(() => {
+    try {
+      return typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches;
+    } catch {
+      return false;
+    }
+  }, []);
+  const isMobile = useMemo(() => {
+    try {
+      return typeof window !== 'undefined' && /Mobile|Android|iP(hone|od|ad)/.test(navigator.userAgent);
+    } catch {
+      return false;
+    }
+  }, []);
   const { currentIndex, activeIndex, setActiveIndex, isMainView } = useAppShellViews();
   const { swiperRef, handleSlideChange } = useAppShellNavigation(currentIndex, activeIndex, setActiveIndex, isTouchDevice);
   const { me } = useAuth();
@@ -42,6 +56,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.addEventListener('monolog-viewport-changed', handleViewportChanged);
     return () => window.removeEventListener('monolog-viewport-changed', handleViewportChanged);
   }, []);
+
+  useEffect(() => {
+    if (swiperRef.current) {
+      swiperRef.current.enabled = isMobile;
+      swiperRef.current.update();
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     const handleAuthOpen = () => setShowAuth(true);
@@ -67,9 +88,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             slidesPerView={1}
             initialSlide={pathname === "/" && !me ? 1 : currentIndex}
             onSlideChange={handleSlideChange}
+            enabled={isMobile}
             // Basic touch support
-            simulateTouch={true}
-            allowTouchMove={true}
+            simulateTouch={false}
+            allowTouchMove={isTouchDevice}
             touchRatio={1.3}
             touchAngle={30}
             longSwipesRatio={0.22}

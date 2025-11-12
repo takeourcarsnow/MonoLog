@@ -143,14 +143,7 @@ export function UploaderCore() {
   const handleEditPhoto = async () => {
     setEditingIndex(index);
     try { await preloadOverlayThumbnails(); } catch {}
-    // Switch to live camera view editing with effects instead of legacy editor modal
-    // Ensure uploader is not in a processing state so the live camera can start
-    try { setProcessing(false); } catch (_) {}
-    try { setPreviewLoaded(false); } catch (_) {}
-    // Mark camera as open in the CameraContext so global UI (tabbar/header)
-    // is hidden the same way as when opening the realtime camera elsewhere.
-    try { setIsCameraOpen(true); } catch (_) {}
-    setEditingInCamera(true);
+    setEditing(true);
   };
 
   return (

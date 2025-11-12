@@ -54,7 +54,9 @@ export async function getUserSupabase(token: string) {
       },
     },
   });
-  // Set the session to ensure auth.uid() is available in RLS
-  await supabase.auth.setSession({ access_token: token, refresh_token: '' });
+  // We deliberately do NOT call `setSession` here with an empty refresh token.
+  // Passing an empty refresh_token causes auth-js to throw "AuthSessionMissingError"
+  // or trigger a refresh attempt that results in "Invalid Refresh Token: Refresh Token Not Found".
+  // Instead, we rely on the Authorization header above so RLS sees the provided access token.
   return supabase;
 }

@@ -45,12 +45,18 @@ export default function ResetPasswordPage() {
     };
 
     // If we already have tokens from query use them; otherwise try fragment
-    if (accessToken || refreshToken) {
-      const sb = getSupabaseClient();
-      sb.auth.setSession({ access_token: accessToken || '', refresh_token: refreshToken || '' });
-    } else {
-      tryParseFragment();
-    }
+    // Only call setSession when we have both access and refresh tokens — passing
+    // empty strings to setSession causes auth-js to throw an error or attempt
+    // a refresh with an invalid token.
+    const init = async () => {
+      if (accessToken && refreshToken) {
+        const sb = getSupabaseClient();
+        await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      } else {
+        tryParseFragment();
+      }
+    };
+    void init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, refreshToken]);
 

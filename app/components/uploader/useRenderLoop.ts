@@ -78,6 +78,34 @@ export function useRenderLoop() {
         displayCanvas.height = video.videoHeight;
       }
 
+      // Ensure the display canvas CSS is sized so the full camera frame is
+      // visible within the container (contain behavior) instead of being
+      // cropped by the parent. Pick width:100%/height:auto or height:100%/
+      // width:auto depending on which best fits the container while
+      // preserving aspect ratio.
+      try {
+        const container = displayCanvas.parentElement || displayCanvas;
+        const rect = container.getBoundingClientRect();
+        const containerW = Math.max(1, Math.round(rect.width));
+        const containerH = Math.max(1, Math.round(rect.height));
+        const videoAspect = video.videoWidth / (video.videoHeight || 1);
+        const containerAspect = containerW / containerH;
+
+        // If container is wider than video, fit by height (use full height)
+        // otherwise fit by width (use full width). This results in a
+        // letterbox/pillarbox effect but never crops the sensor.
+        if (containerAspect > videoAspect) {
+          displayCanvas.style.width = 'auto';
+          displayCanvas.style.height = '100%';
+        } else {
+          displayCanvas.style.width = '100%';
+          displayCanvas.style.height = 'auto';
+        }
+        displayCanvas.style.display = 'block';
+      } catch (e) {
+        // ignore layout errors
+      }
+
       // Draw current video frame to source canvas
       if (sourceCtx) {
         sourceCtx.drawImage(video, 0, 0, sourceCanvas.width, sourceCanvas.height);

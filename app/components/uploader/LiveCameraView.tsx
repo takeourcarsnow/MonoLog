@@ -49,7 +49,8 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
   const { setIsCameraOpen } = useCameraContext();
   const { videoRef, streamRef, facingMode, zoom, setZoom, torchEnabled, isSwitchingCamera, startCamera, stopCamera, switchCamera, toggleTorch, applyZoom } = useCamera();
   const { sourceCanvasRef, displayCanvasRef, startRenderLoop, stopRenderLoop } = useRenderLoop();
-  const { handleCapture: performCapture } = useCapture();
+  // Pass streamRef into useCapture so it can attempt ImageCapture.takePhoto
+  const { handleCapture: performCapture } = useCapture(streamRef);
 
   // State management
   const {
@@ -89,7 +90,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
   // controls when capturing, processing, or when the camera is not ready
   // and we're not previewing an imported image.
   // Capture logic (includes preview/confirm/retake handlers)
-  const { handleCapture, previewUrl, isPreviewing, confirmCapture, retakeCapture, setPreviewFromBlob } = useCaptureLogic({
+  const { handleCapture, previewBlob, previewUrl, isPreviewing, confirmCapture, retakeCapture, setPreviewFromBlob } = useCaptureLogic({
     isCapturing,
     processing,
     onCapture,
@@ -331,8 +332,32 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
       }
 
       const dpr = window.devicePixelRatio || 1;
-      const backingW = Math.max(1, Math.round(cssW * dpr));
-      const backingH = Math.max(1, Math.round(cssH * dpr));
+
+      // If we're previewing an imported file blob, prefer using the
+      // image's natural resolution for the backing store so that when the
+      // user confirms the photo we export at (close to) the original
+      // resolution instead of the smaller UI-sized canvas. Clamp to a
+      // reasonable maximum to avoid very large canvases that OOM.
+      const MAX_BACKING = 4096; // pixels on the largest side
+      let backingW: number;
+      let backingH: number;
+      if (previewBlob && img.naturalWidth && img.naturalHeight) {
+        const imgW = img.naturalWidth || img.width || 1;
+        const imgH = img.naturalHeight || img.height || 1;
+        // Scale down only if an axis exceeds MAX_BACKING
+        if (imgW > imgH) {
+          const scale = Math.min(1, MAX_BACKING / imgW);
+          backingW = Math.max(1, Math.round(imgW * scale));
+          backingH = Math.max(1, Math.round(imgH * scale));
+        } else {
+          const scale = Math.min(1, MAX_BACKING / imgH);
+          backingH = Math.max(1, Math.round(imgH * scale));
+          backingW = Math.max(1, Math.round(imgW * scale));
+        }
+      } else {
+        backingW = Math.max(1, Math.round(cssW * dpr));
+        backingH = Math.max(1, Math.round(cssH * dpr));
+      }
 
       src.width = backingW;
       src.height = backingH;

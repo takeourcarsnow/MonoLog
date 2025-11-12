@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { CameraEffectSettings } from "./cameraEffects";
 
-export function useCapture() {
-  const handleCapture = useCallback((
+export function useCapture(streamRef?: React.RefObject<MediaStream | null>) {
+  const handleCapture = useCallback(async (
     isCapturing: boolean,
     processing: boolean,
     onCapture: (blob: Blob) => void,
@@ -22,6 +22,33 @@ export function useCapture() {
 
     // Set capturing state FIRST to stop render loop immediately
     // Note: This will be handled by the parent component
+
+    // Try to obtain a full-resolution photo from the camera track using
+    // the ImageCapture API where available. This usually produces a
+    // higher-resolution Blob than the canvas/video frame and matches the
+    // behaviour of selecting an image file from the device.
+    try {
+      const stream = streamRef?.current;
+      const track = stream?.getVideoTracks && stream.getVideoTracks()[0];
+      if (track && (window as any).ImageCapture) {
+        try {
+          const ImageCaptureCtor = (window as any).ImageCapture;
+          const ic = new ImageCaptureCtor(track);
+          // takePhoto returns a Promise<Blob> when supported
+          const photoBlob: Blob = await ic.takePhoto();
+          if (photoBlob) {
+            onCapture(photoBlob);
+            return;
+          }
+        } catch (e) {
+          // Not fatal — fall back to canvas-based capture below
+          // Some browsers throw for takePhoto even when ImageCapture exists.
+          console.warn('[useCapture] ImageCapture.takePhoto failed, falling back to canvas capture', e);
+        }
+      }
+    } catch (e) {
+      // ignore and continue with canvas capture
+    }
 
     // Stop the camera stream immediately to freeze the view
     stopCamera();
@@ -154,7 +181,7 @@ export function useCapture() {
         }
       }
     }, 'image/jpeg', 0.95);
-  }, []);
+  }, [streamRef]);
 
   return { handleCapture };
 }

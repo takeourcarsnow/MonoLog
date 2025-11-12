@@ -147,6 +147,9 @@ export function UploaderCore() {
     // Ensure uploader is not in a processing state so the live camera can start
     try { setProcessing(false); } catch (_) {}
     try { setPreviewLoaded(false); } catch (_) {}
+    // Mark camera as open in the CameraContext so global UI (tabbar/header)
+    // is hidden the same way as when opening the realtime camera elsewhere.
+    try { setIsCameraOpen(true); } catch (_) {}
     setEditingInCamera(true);
   };
 
@@ -220,7 +223,12 @@ export function UploaderCore() {
       {/* Live camera view for adding new photos or editing existing (effects). */}
       <LiveCameraView
         isOpen={editingInCamera}
+        // Open as a non-modal fullscreen view so the tabbar/header is
+        // removed like the realtime camera experience.
+        isModal={false}
         onClose={() => {
+          // Ensure CameraContext is informed so global UI is restored
+          try { setIsCameraOpen(false); } catch (_) {}
           setEditingInCamera(false);
           setEditing(false);
         }}
@@ -256,6 +264,7 @@ export function UploaderCore() {
               return [...s, {}].slice(0,5);
             });
             setEditingInCamera(false);
+            try { setIsCameraOpen(false); } catch (_) {}
             setEditing(false);
           };
           try { reader.readAsDataURL(blob); } catch {}

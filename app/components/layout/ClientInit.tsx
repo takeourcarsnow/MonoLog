@@ -35,6 +35,7 @@ function GlobalCamera() {
         try { setInitialDataUrl(null); setEditCallback(null); } catch (_) {}
       }}
       onCapture={(blob) => {
+        try { console.debug('[GlobalCamera] onCapture - editCallback?', Boolean(editCallback), 'captureCallback?', Boolean(captureCallback)); } catch (_) {}
         // If there is an editCallback set (editing flow) invoke it directly
         // and clear the editing state. Otherwise queue the blob for the
         // uploader to pick up when it remounts.
@@ -48,9 +49,23 @@ function GlobalCamera() {
           }
         } catch (e) {}
 
+        // If a pending-edit marker exists (set by uploader when opening an
+        // edit session) annotate the queued blob with the target index so
+        // the uploader can process it as an edit when it remounts. Do not
+        // attempt to call any handler here because the uploader may be
+        // unmounted (calling its closure would be unsafe).
+        let pendingTarget: number | null = null;
+        try {
+          const pending = (window as any).__MONOLOG_PENDING_EDIT__;
+          if (pending && typeof pending.target === 'number') {
+            pendingTarget = pending.target;
+          }
+        } catch (_) {}
+
         try {
           (window as any).__MONOLOG_CAPTURE_QUEUE__ = (window as any).__MONOLOG_CAPTURE_QUEUE__ || [];
-          (window as any).__MONOLOG_CAPTURE_QUEUE__.push(blob);
+          try { console.debug('[GlobalCamera] queuing captured blob', pendingTarget); } catch (_) {}
+          (window as any).__MONOLOG_CAPTURE_QUEUE__.push({ blob, pendingTarget });
         } catch (e) {
           console.error('Failed to queue captured blob', e);
         }

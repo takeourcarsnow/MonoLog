@@ -2,7 +2,9 @@
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "./useAuth";
+import { useCameraContext } from "@/app/components/context/CameraContext";
 import { useDraftPersistence } from "./useDraftPersistence";
+import { compressImage, approxDataUrlBytes } from '@/lib/image';
 import { useCountdown } from "./useCountdown";
 import { useFileHandling } from "./useFileHandling";
 import { EDITING_SESSION_KEY, DRAFT_KEY } from "./constants";
@@ -94,6 +96,10 @@ export function useUploader() {
     attemptedEditorRestoreRef,
   } = refs;
 
+  // Camera context callbacks — used to route queued blobs to edit/capture
+  // handlers if the uploader opened the camera for editing.
+  const { editCallback, captureCallback } = useCameraContext();
+
   // Countdown
   const { canPost, nextAllowedAt, remaining, remainingMs, countdownTotalMs } = useCountdown();
 
@@ -151,10 +157,134 @@ export function useUploader() {
     (async () => {
       try {
         // Drain the queue synchronously to avoid duplicate processing
+        try { console.debug('[useUploader] draining capture queue length', q.length); } catch (_) {}
         (window as any).__MONOLOG_CAPTURE_QUEUE__ = [];
-        for (const blob of q) {
+        for (const item of q) {
           if (!mounted) break;
           try {
+            let blob: Blob = item as Blob;
+            let pendingTarget: number | null = null;
+            // support queued items that may include pendingTarget metadata
+            if (item && typeof item === 'object' && ('blob' in item)) {
+              // @ts-ignore
+              blob = item.blob as Blob;
+              // @ts-ignore
+              pendingTarget = item.pendingTarget ?? null;
+            }
+            try { console.debug('[useUploader] processing queued blob', { pendingTarget, blob }); } catch (_) {}
+            // If an edit or capture callback is currently set on the global
+            // CameraContext, prefer invoking it so the blob is treated as an
+            // edit (replace) rather than being appended as a new photo.
+            // If an edit/capture callback is currently present on the
+            // camera context (set when the uploader opened the camera for
+            // editing) prefer invoking it so the queued blob is treated as
+            // an edit (replace) instead of being appended as a new photo.
+            const cb = editCallback || captureCallback;
+            if (cb) {
+              try { console.debug('[useUploader] routing queued blob to camera callback'); } catch (_) {}
+              try { cb(blob as Blob); } catch (e) { console.error('Camera callback failed', e); }
+              continue; // move to next queued blob
+            }
+
+            // If a pending-edit marker exists on window (set as a fallback
+            // when the uploader opened the camera for editing), invoke its
+            // handler and clear the marker so the blob is treated as an
+            // edit rather than a new upload.
+            try {
+              const pending = (window as any).__MONOLOG_PENDING_EDIT__;
+              if (pending && typeof pending.handler === 'function') {
+                try { console.debug('[useUploader] routing queued blob to pending-edit handler'); } catch (_) {}
+                try { pending.handler(blob as Blob); } catch (e) { console.error('Pending edit handler failed', e); }
+                try { (window as any).__MONOLOG_PENDING_EDIT__ = null; } catch (_) {}
+                continue;
+              }
+            } catch (_) {}
+
+            // If this queued item is marked as a pending edit, apply it as a
+            // replacement at the requested index rather than appending.
+            if (typeof pendingTarget === 'number') {
+              try {
+                const file = new File([blob], 'camera-capture.jpg', { type: (blob as Blob).type || 'image/jpeg' });
+                try {
+                  const url = await compressImage(file);
+                  try { setCompressedSize(approxDataUrlBytes(url)); } catch (_) {}
+                  setDataUrls(d => {
+                    if (d.length) {
+                      const safeReplaceAt = Math.min(pendingTarget as number, d.length - 1);
+                      const copy = [...d];
+                      copy[safeReplaceAt] = url;
+                      if (safeReplaceAt === 0) { try { setPreviewLoaded(false); } catch (_) {} }
+                      return copy;
+                    }
+                    try { setPreviewLoaded(false); } catch (_) {}
+                    return [url];
+                  });
+                  setOriginalDataUrls(d => {
+                    if (d.length) {
+                      const safeReplaceAt = Math.min(pendingTarget as number, d.length - 1);
+                      const copy = [...d];
+                      copy[safeReplaceAt] = url;
+                      return copy;
+                    }
+                    return [url];
+                  });
+                  setEditorSettings(s => {
+                    if (s.length) {
+                      const safeReplaceAt = Math.min(pendingTarget as number, s.length - 1);
+                      const copy = [...s];
+                      copy[safeReplaceAt] = {};
+                      return copy;
+                    }
+                    return [{}];
+                  });
+                  try { setOriginalSize(file.size); } catch (_) {}
+                } catch (e) {
+                  console.error('Failed to compress queued edit blob, falling back', e);
+                  // Fallback: create object URL and set as replacement
+                  try {
+                    const url = URL.createObjectURL(blob as Blob);
+                    setDataUrls(d => {
+                      if (d.length) {
+                        const safeReplaceAt = Math.min(pendingTarget as number, d.length - 1);
+                        const copy = [...d];
+                        copy[safeReplaceAt] = url as unknown as string;
+                        if (safeReplaceAt === 0) { try { setPreviewLoaded(false); } catch (_) {} }
+                        return copy;
+                      }
+                      try { setPreviewLoaded(false); } catch (_) {}
+                      return [url as unknown as string];
+                    });
+                    setOriginalDataUrls(d => {
+                      if (d.length) {
+                        const safeReplaceAt = Math.min(pendingTarget as number, d.length - 1);
+                        const copy = [...d];
+                        copy[safeReplaceAt] = url as unknown as string;
+                        return copy;
+                      }
+                      return [url as unknown as string];
+                    });
+                    setEditorSettings(s => {
+                      if (s.length) {
+                        const safeReplaceAt = Math.min(pendingTarget as number, s.length - 1);
+                        const copy = [...s];
+                        copy[safeReplaceAt] = {};
+                        return copy;
+                      }
+                      return [{}];
+                    });
+                    try { setOriginalSize((blob as Blob).size); } catch (_) {}
+                  } catch (e2) {
+                    console.error('Fallback replacement failed', e2);
+                  }
+                }
+                // Clear any pending marker
+                try { (window as any).__MONOLOG_PENDING_EDIT__ = null; } catch (_) {}
+                continue;
+              } catch (e) {
+                console.error('Failed to apply queued edit', e);
+              }
+            }
+
             const file = new File([blob], 'camera-capture.jpg', { type: (blob as Blob).type || 'image/jpeg' });
             // Reuse the same handleFile logic to process and add to uploader
             await handleFile(file);
@@ -168,7 +298,7 @@ export function useUploader() {
     })();
 
     return () => { mounted = false; };
-  }, [handleFile]);
+  }, [handleFile, editCallback, captureCallback]);
 
   // Draft handlers
   const { resetDraft, removePhoto } = createDraftHandlers(

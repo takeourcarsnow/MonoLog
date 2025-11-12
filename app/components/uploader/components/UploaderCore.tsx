@@ -141,7 +141,12 @@ export function UploaderCore() {
   // When editing we will now reuse LiveCameraView with initialDataUrl instead of ImageEditorModal
   const [editingInCamera, setEditingInCamera] = useState(false);
   const handleEditPhoto = async () => {
-    setEditingIndex(index);
+    // Capture the current index immediately to avoid relying on
+    // state values that may not update synchronously. Use `target`
+    // inside callbacks so the edited image always replaces the
+    // intended photo instead of appending a new one.
+    const target = index;
+    setEditingIndex(target);
     try { await preloadOverlayThumbnails(); } catch {}
 
     // Use the global camera flow but provide an initialDataUrl so the
@@ -150,45 +155,57 @@ export function UploaderCore() {
     // which will receive the edited blob and apply it back into the
     // uploader state.
     try {
-      setInitialDataUrl(dataUrls[index] ?? null);
+      setInitialDataUrl(dataUrls[target] ?? null);
       setIsEditing(true);
-      setEditCallback((blob: Blob) => {
+      const applyEdit = (blob: Blob) => {
         const reader = new FileReader();
         reader.onload = () => {
           const result = reader.result as string;
+          try { console.debug('[UploaderCore] applyEdit invoked for target', target, 'current dataUrls length', dataUrls.length); } catch (_) {}
           setDataUrls(d => {
-            const at = editingIndex ?? index;
-            if (d.length && at >= 0 && at < d.length) {
+            if (d.length > 0) {
               const copy = [...d];
-              copy[at] = result;
+              const safeAt = Math.max(0, Math.min(target, d.length - 1));
+              copy[safeAt] = result;
               return copy;
             }
-            return [...d, result].slice(0,5);
+            return [result];
           });
           setOriginalDataUrls(d => {
-            const at = editingIndex ?? index;
-            if (d.length && at >= 0 && at < d.length) {
+            if (d.length > 0) {
               const copy = [...d];
-              copy[at] = result;
+              const safeAt = Math.max(0, Math.min(target, d.length - 1));
+              copy[safeAt] = result;
               return copy;
             }
-            return [...d, result].slice(0,5);
+            return [result];
           });
           setEditorSettings(s => {
-            const at = editingIndex ?? index;
-            if (s.length && at >= 0 && at < s.length) {
+            if (s.length > 0) {
               const copy = [...s];
-              copy[at] = {};
+              const safeAt = Math.max(0, Math.min(target, s.length - 1));
+              copy[safeAt] = {};
               return copy;
             }
-            return [...s, {}].slice(0,5);
+            return [{}];
           });
           setEditingInCamera(false);
-          try { setIsCameraOpen(false); setInitialDataUrl(null); setIsEditing(false); setEditCallback(null); } catch (_) {}
+          try { setIsCameraOpen(false); setInitialDataUrl(null); setIsEditing(false); setEditCallback(null); setCaptureCallback(null); } catch (_) {}
           setEditing(false);
+          try { (window as any).__MONOLOG_PENDING_EDIT__ = null; } catch (_) {}
         };
         try { reader.readAsDataURL(blob); } catch (_) {}
-      });
+      };
+
+      try { console.debug('[UploaderCore] setting edit/capture callbacks for target', target); } catch (_) {}
+      setEditCallback(applyEdit);
+      // Also set the capture callback so any code that uses the capture
+      // callback (instead of editCallback) will still route the blob to
+      // the uploader edit handler and avoid being queued/added as a new
+      // photo.
+      setCaptureCallback(applyEdit);
+      try { (window as any).__MONOLOG_PENDING_EDIT__ = { target, ts: Date.now() }; } catch (_) {}
+      
       setIsCameraOpen(true);
     } catch (_) {}
   };
@@ -277,31 +294,37 @@ export function UploaderCore() {
           reader.onload = () => {
             const result = reader.result as string;
             setDataUrls(d => {
-              const at = editingIndex ?? index;
-              if (d.length && at >= 0 && at < d.length) {
+              if (d.length > 0) {
                 const copy = [...d];
-                copy[at] = result;
+                const at = editingIndex ?? index;
+                const safeAt = Math.max(0, Math.min(at, d.length - 1));
+                copy[safeAt] = result;
                 return copy;
+              } else {
+                return [result];
               }
-              return [...d, result].slice(0,5);
             });
             setOriginalDataUrls(d => {
-              const at = editingIndex ?? index;
-              if (d.length && at >= 0 && at < d.length) {
+              if (d.length > 0) {
                 const copy = [...d];
-                copy[at] = result;
+                const at = editingIndex ?? index;
+                const safeAt = Math.max(0, Math.min(at, d.length - 1));
+                copy[safeAt] = result;
                 return copy;
+              } else {
+                return [result];
               }
-              return [...d, result].slice(0,5);
             });
             setEditorSettings(s => {
-              const at = editingIndex ?? index;
-              if (s.length && at >= 0 && at < s.length) {
+              if (s.length > 0) {
                 const copy = [...s];
-                copy[at] = {};
+                const at = editingIndex ?? index;
+                const safeAt = Math.max(0, Math.min(at, s.length - 1));
+                copy[safeAt] = {};
                 return copy;
+              } else {
+                return [{}];
               }
-              return [...s, {}].slice(0,5);
             });
             setEditingInCamera(false);
             try { setIsCameraOpen(false); setInitialDataUrl(null); setIsEditing(false); setEditCallback(null); } catch (_) {}

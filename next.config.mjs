@@ -80,7 +80,7 @@ const nextConfig = {
   // Turbopack configuration placeholder. Having an explicit `turbopack` key
   // silences the build-time error when a custom webpack config is present.
   // If you need Turbopack-specific configuration, add it here.
-  turbopack: {},
+  turbopack: true,
   // Optimize fonts
   experimental: {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js', '@supabase/ssr'],

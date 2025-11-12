@@ -3,58 +3,21 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* increase padding and min-height for comfortable touch targets */
-  padding: 12px 10px;
-  min-width: 60px;
-  min-height: 44px; /* recommended touch target size */
+  padding: 8px;
   color: var(--muted);
-  position: relative; /* allow pseudo-elements if needed */
-  -webkit-tap-highlight-color: transparent;
+  flex: 0 0 auto; /* prevent items from stretching to full width */
+  text-align: center;
+  position: relative; /* allow pseudo-element indicator */
 }
 
 .tab-item-static.active {
   color: var(--tab-color);
-  /* subtle lift for active item */
-  transform: translateY(-2px);
-}
-
-/* Active item visual enhancements */
-.tab-item-static.active .tab-icon {
-  transform: scale(1.25);
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-}
-
-.tab-item-static.active .tab-label {
-  font-size: 12px;
-  font-weight: 800;
-  opacity: 1;
 }
 
 .tab-item-static .tab-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 20px;
   height: 20px;
-  margin-bottom: 6px;
-  transition: transform 160ms var(--transition-fast);
-}
-
-.tab-item-static .tab-icon svg {
-  width: 100%;
-  height: 100%;
-  stroke: currentColor;
-}
-
-.tab-item-static .tab-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1;
-  opacity: 0.7;
-  transition: font-size 160ms var(--transition-fast), font-weight 160ms var(--transition-fast), opacity 140ms var(--transition-fast);
+  margin-bottom: 4px;
 }
 
 .tabbar {
@@ -62,52 +25,95 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(var(--bg-elev-rgb, 247,247,249), var(--tabbar-alpha, 0.78));
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  z-index: var(--z-tabbar, 900);
-  min-height: 56px;
-}
-
-.tabbar-inner {
+  background-color: var(--bg-elev);
   display: flex;
-  flex-direction: row;
-  justify-content: space-around;
+  flex-direction: row; /* explicit horizontal layout */
   align-items: center;
-  padding: 8px 0;
+  justify-content: center; /* center items inside the viewport */
+  gap: 28px; /* spacing between items */
+  padding: 8px var(--page-side-padding, 20px);
 }
 
-/* Keyboard focus / touch feedback improvements */
-.tab-item-static:focus {
-  outline: none;
-}
+/* Force horizontal layout on desktop and avoid accidental overrides from other
+   styles. Use !important sparingly here because other files in the project
+   (global styles, overlays) sometimes set tabbar/tab-item properties. */
+@media (min-width: 640px) {
+  .tabbar {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
 
-.tab-item-static:focus-visible {
-  /* High-contrast ring for keyboard users */
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tab-color), rgba(255,255,255,0.85) 25%);
-  border-radius: 8px;
-}
-
-/* Removed click (active) visual effect per request: keep selected state and focus-visible only. */
-
-/* Smooth but respectful transitions */
-.tab-item-static, .tab-item-static .tab-icon, .tab-item-static .tab-label {
-  transition: color 160ms var(--transition-fast), transform 120ms var(--transition-fast), opacity 140ms var(--transition-fast);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tab-item-static, .tab-item-static .tab-icon, .tab-item-static .tab-label {
-    transition: none !important;
+  .tab-item-static {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
   }
 }
 
-:root[data-theme="dark"] .tabbar,
-.dark .tabbar {
-  background: none !important;
-  background-color: rgba(var(--bg-elev-rgb, 20,20,24), var(--tabbar-alpha, 0.48)) !important;
+/* Strong overrides to ensure the tabbar is always horizontal unless explicitly
+   hidden by overlays. These use high specificity and !important because
+   several global styles and generated CSS rules target `.tabbar` in this
+   project and may unintentionally force a column layout. */
+.tabbar {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-:root[data-theme="light"] .tabbar {
-  background: none !important;
-  background-color: rgba(var(--bg-elev-rgb, 247,247,249), var(--tabbar-alpha, 0.78)) !important;
+.tabbar > .tab-item-static {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+}
+
+/* Extra guard: force children to stay inline and prevent wrapping/stretches */
+.tabbar {
+  white-space: nowrap !important;
+}
+
+.tabbar > * {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-basis: auto !important;
+  width: auto !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+
+.tab-item-static {
+  flex-basis: auto !important;
+}
+
+/* Increase size of the selected tab's icon and label while keeping layout stable */
+.tabbar > .tab-item-static .tab-icon {
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform 220ms cubic-bezier(.2,.8,.2,1);
+}
+
+.tabbar > .tab-item-static .tab-label {
+  transition: color var(--transition-fast), font-size var(--transition-fast), font-weight var(--transition-fast);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.tabbar > .tab-item-static.active .tab-icon {
+  transform: scale(1.28);
+}
+
+.tabbar > .tab-item-static.active .tab-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabbar > .tab-item-static .tab-icon,
+  .tabbar > .tab-item-static .tab-label {
+    transition: none !important;
+    transform: none !important;
+  }
 }

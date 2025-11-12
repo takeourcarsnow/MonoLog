@@ -54,7 +54,7 @@ export function Navbar() {
 
   return (
     <nav className="tabbar" role="navigation" aria-label="Primary">
-      <div className="tabbar-inner">{items}</div>
+      {items}
     </nav>
   );
 }

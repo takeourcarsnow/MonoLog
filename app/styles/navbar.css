@@ -20,7 +20,10 @@
 
 /* Active item visual enhancements */
 .tab-item-static.active .tab-icon {
-  transform: scale(1.12);
+  transform: scale(1.25);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
 }
 
 .tab-item-static.active .tab-label {

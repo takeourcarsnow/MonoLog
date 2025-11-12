@@ -25,6 +25,11 @@
 /* Make sizing predictable across components */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Remove tap highlight color from all interactive elements */
+a, button, input, textarea, select, [role="button"], [role="link"], [tabindex]:not([tabindex="-1"]) {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Prevent body scrolling to avoid unwanted scrollbars */
 html, body {
   /* Use a single scroll container (.content) to avoid double scrollbars.

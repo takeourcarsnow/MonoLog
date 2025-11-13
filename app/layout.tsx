@@ -11,6 +11,7 @@ import ClientErrorBoundary from "@/app/components/layout/ClientErrorBoundary";
 import { isInAppBrowser } from '@/lib/detectWebview';
 import { SWRConfig } from 'swr';
 import ClientInit from "@/app/components/layout/ClientInit";
+import ReduxProvider from "@/app/components/ReduxProvider";
 
 // Google Fonts are loaded for text effects in the image editor
 // and client-side effects (web-vitals, SW registration). Keeping the root
@@ -135,21 +136,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <SWRConfig value={{
-          revalidateOnFocus: false,
-          revalidateOnReconnect: true,
-          revalidateOnMount: true,
-          dedupingInterval: 5000,
-          focusThrottleInterval: 10000,
-          errorRetryInterval: 5000,
-        }}>
-            <a href="#view" className="skip-link">Skip to content</a>
-            <ClientErrorBoundary>
-              <ClientInit>
-                {children}
-              </ClientInit>
-            </ClientErrorBoundary>
-        </SWRConfig>
+        <ReduxProvider>
+          <SWRConfig value={{
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            revalidateOnMount: true,
+            dedupingInterval: 5000,
+            focusThrottleInterval: 10000,
+            errorRetryInterval: 5000,
+          }}>
+              <a href="#view" className="skip-link">Skip to content</a>
+              <ClientErrorBoundary>
+                <ClientInit>
+                  {children}
+                </ClientInit>
+              </ClientErrorBoundary>
+          </SWRConfig>
+        </ReduxProvider>
   <noscript>MonoLog — Your day in pictures. Requires JavaScript. Please enable it to continue.</noscript>
         {/* Defer web vitals collection until after hydration */}
       </body>

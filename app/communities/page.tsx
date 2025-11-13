@@ -143,7 +143,7 @@ export default function CommunitiesPage() {
 
         <div className="content-actions mt-6 mb-10 flex justify-center w-full">
           <Link href="/communities/create">
-            <Button title="Create a Community" variant="ghost" className="btn-no-bg keep-border">Create a Community</Button>
+            <Button title="Create a Community" variant="ghost" className="btn-no-bg keep-border no-effects">Create a Community</Button>
           </Link>
         </div>
 

@@ -114,7 +114,7 @@ export function CreateThreadView() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <Button type="submit" variant="ghost" disabled={!title.trim() || !content.trim() || loading} loading={loading}>
+          <Button type="submit" variant="ghost" disabled={!title.trim() || !content.trim() || loading} loading={loading} useSpinningLogo={true}>
             Create Thread
           </Button>
           <Link href={`/communities/${communitySlug}`}>

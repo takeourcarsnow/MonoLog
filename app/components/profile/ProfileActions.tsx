@@ -135,10 +135,8 @@ export function ProfileActions({
           </button>
             <style>{`
             .follow-btn{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:9999px; font-weight:600; border:1px solid transparent;}
-            .follow-btn.not-following{ background:var(--primary); color:white; }
-            .follow-btn.not-following:hover{ filter:brightness(0.95); }
-            .follow-btn.following{ background:transparent; color:var(--muted); border:1px solid rgba(0,0,0,0.08); }
-            .follow-btn.following:hover{ background:rgba(0,0,0,0.02); color:var(--danger,-#c0392b); }
+            .follow-btn.not-following{ background:transparent !important; color:var(--text) !important; }
+            .follow-btn.following{ background:transparent !important; color:var(--text) !important; border:1px solid transparent !important; }
             .follow-btn:disabled{ opacity:0.6; cursor:default; }
           `}</style>
         </div>

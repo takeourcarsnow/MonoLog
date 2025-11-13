@@ -220,7 +220,7 @@ export function CommunityView() {
       {community?.isMember && (
         <div style={{ marginTop: '1.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'center', width: '100%' }}>
           <Link href={`/communities/${community.slug}/create-thread`}>
-            <Button title="Create a Thread" variant="ghost" className="btn-no-bg keep-border">Create a Thread</Button>
+            <Button title="Create a Thread" variant="ghost" className="btn-no-bg keep-border no-effects">Create a Thread</Button>
           </Link>
         </div>
       )}
@@ -239,14 +239,14 @@ export function CommunityView() {
         {currentUser && community.creator.id === currentUser.id && (
           <div className="absolute left-3 top-3 flex gap-2">
             <Link href={`/communities/${community.slug}/edit`}>
-              <Button variant="ghost" size="sm" className="small-min" aria-label="Edit community">
+              <Button variant="ghost" size="sm" className="small-min no-effects" aria-label="Edit community">
                 <Pencil size={16} />
               </Button>
             </Link>
             <Button
               variant="ghost"
               size="sm"
-              className={`small-min ${deleteArmed ? 'confirm' : ''}`}
+              className={`small-min no-effects ${deleteArmed ? 'confirm' : ''}`}
               onClick={handleDelete}
               aria-label={deleteArmed ? 'Confirm delete community' : 'Delete community'}
             >
@@ -269,6 +269,7 @@ export function CommunityView() {
               ariaInactiveLabel="Join community"
               titleActive="Leave community"
               titleInactive="Join community"
+              useSpinningLogo={true}
             />
           </div>
         )}

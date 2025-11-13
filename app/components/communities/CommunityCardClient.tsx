@@ -67,13 +67,14 @@ export default function CommunityCardClient({ communityId, initialIsMember = fal
         active={isMember}
         pending={pending}
         onClick={handleJoinLeave}
-        className="small-min"
+        className="small-min no-effects"
         activeIcon={<UserMinus size={16} />}
         inactiveIcon={<UserPlus size={16} />}
         ariaActiveLabel="Leave community"
         ariaInactiveLabel="Join community"
         titleActive="Leave community"
         titleInactive="Join community"
+        useSpinningLogo={true}
       />
     </div>
   );

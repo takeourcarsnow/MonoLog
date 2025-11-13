@@ -202,11 +202,11 @@ export function EditCommunityView() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <Button type="submit" variant="ghost" disabled={!name.trim() || !description.trim() || loading} loading={loading}>
+          <Button type="submit" variant="ghost" disabled={!name.trim() || !description.trim() || loading} loading={loading} useSpinningLogo={true}>
             Update Community
           </Button>
           <Link href={`/communities/${community.slug}`}>
-            <Button variant="ghost">Cancel</Button>
+            <Button variant="ghost" className="no-effects">Cancel</Button>
           </Link>
         </div>
       </form>

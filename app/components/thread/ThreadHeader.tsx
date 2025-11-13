@@ -36,7 +36,7 @@ export function ThreadHeader({ thread, communitySlug, currentUserId, onDelete, d
             <Button
               variant="ghost"
               size="sm"
-              className={`small-min ${deleteArmed ? 'confirm' : ''}`}
+              className={`small-min no-effects ${deleteArmed ? 'confirm' : ''}`}
               onClick={onDelete}
               aria-label={deleteArmed ? 'Confirm delete thread' : 'Delete thread'}
             >

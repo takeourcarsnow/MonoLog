@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { SpinningLogo } from "@/app/components/ui/SpinningLogo";
+import { currentTheme } from "@/lib/theme";
 
 export type ButtonVariant = "default" | "danger" | "ghost" | "icon-reveal" | "icon" | "ghost-icon";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -10,11 +12,12 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  useSpinningLogo?: boolean;
   className?: string;
 }
 
 export const Button = React.forwardRef<HTMLElement, ButtonProps>(function Button(
-  { as: Tag = "button", variant = "default", size = "md", loading = false, className = "", children, ...rest },
+  { as: Tag = "button", variant = "default", size = "md", loading = false, useSpinningLogo = false, className = "", children, ...rest },
   ref
 ) {
   const classes = ["btn"];
@@ -38,11 +41,15 @@ export const Button = React.forwardRef<HTMLElement, ButtonProps>(function Button
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - polymorphic element
     <Tag ref={ref} {...props}>
-      {children}
+      {loading ? null : children}
       {loading ? (
-        <span className="btn-spinner" aria-hidden>
-          <span />
-        </span>
+        useSpinningLogo ? (
+          <SpinningLogo size={16} className="pull-to-refresh-logo" invertInLight={currentTheme() === 'light'} noScale={true} />
+        ) : (
+          <span className="btn-spinner" aria-hidden>
+            <span />
+          </span>
+        )
       ) : null}
     </Tag>
   );

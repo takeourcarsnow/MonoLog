@@ -73,7 +73,7 @@ export function ReplyItem({ reply, currentUserId, onUpdate, onDelete }: ReplyIte
               <Button
                 variant="ghost"
                 size="sm"
-                className="small-min"
+                className="small-min no-effects"
                 onClick={handleEdit}
                 disabled={editing}
                 aria-label="Edit reply"
@@ -83,7 +83,7 @@ export function ReplyItem({ reply, currentUserId, onUpdate, onDelete }: ReplyIte
               <Button
                 variant="ghost"
                 size="sm"
-                className="small-min"
+                className="small-min no-effects"
                 onClick={() => onDelete(reply.id)}
                 aria-label="Delete reply"
               >
@@ -112,6 +112,7 @@ export function ReplyItem({ reply, currentUserId, onUpdate, onDelete }: ReplyIte
                   size="sm"
                   onClick={handleCancel}
                   disabled={saving}
+                  className="no-effects"
                 >
                   <X size={14} className="mr-1" />
                   Cancel
@@ -121,6 +122,7 @@ export function ReplyItem({ reply, currentUserId, onUpdate, onDelete }: ReplyIte
                   onClick={handleSave}
                   disabled={!editingContent.trim() || saving}
                   loading={saving}
+                  className="no-effects"
                 >
                   <Check size={14} className="mr-1" />
                   Save

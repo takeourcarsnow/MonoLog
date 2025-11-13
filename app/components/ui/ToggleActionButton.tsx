@@ -17,6 +17,7 @@ type Props = {
   titleInactive?: string;
   // Optional reveal label pattern used across the app (e.g. "Followed" / "Not Followed")
   revealLabel?: React.ReactNode;
+  useSpinningLogo?: boolean;
 };
 
 const ToggleActionButton = React.forwardRef<HTMLButtonElement, Props>(
@@ -34,6 +35,7 @@ const ToggleActionButton = React.forwardRef<HTMLButtonElement, Props>(
       titleActive,
       titleInactive,
       revealLabel,
+      useSpinningLogo = false,
     },
     ref
   ) => {
@@ -45,6 +47,8 @@ const ToggleActionButton = React.forwardRef<HTMLButtonElement, Props>(
         className={className}
         onClick={onClick}
         disabled={!!pending}
+        loading={!!pending}
+        useSpinningLogo={useSpinningLogo}
         aria-label={active ? ariaActiveLabel : ariaInactiveLabel}
         title={active ? titleActive : titleInactive}
       >

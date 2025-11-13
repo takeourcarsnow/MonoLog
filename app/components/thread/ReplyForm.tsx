@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/app/components/ui/Button";
+import { Send } from "lucide-react";
 
 interface ReplyFormProps {
   threadId: string;
@@ -68,8 +69,12 @@ export function ReplyForm({ threadId, onReplyAdded, onReplyCountUpdate }: ReplyF
               variant="ghost"
               disabled={!newReply.trim() || submitting}
               loading={submitting}
+              useSpinningLogo={true}
+              className="no-effects"
+              aria-label={submitting ? "Sending reply" : "Send reply"}
+              title={submitting ? "Sending reply…" : "Send reply"}
             >
-              Reply
+              <Send size={16} />
             </Button>
           </div>
         </div>

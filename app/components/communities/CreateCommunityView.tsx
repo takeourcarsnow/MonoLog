@@ -167,11 +167,11 @@ export function CreateCommunityView() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <Button type="submit" variant="ghost" disabled={!name.trim() || !description.trim() || loading} loading={loading}>
+          <Button type="submit" variant="ghost" disabled={!name.trim() || !description.trim() || loading} loading={loading} useSpinningLogo={true}>
             Create Community
           </Button>
           <Link href="/communities">
-            <Button variant="ghost">Cancel</Button>
+            <Button variant="ghost" className="no-effects">Cancel</Button>
           </Link>
         </div>
       </form>

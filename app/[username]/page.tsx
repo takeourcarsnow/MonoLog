@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { ProfileView } from "@/app/components/profile/ProfileView";
 import { supabaseApi } from "@/lib/api/supabase";
 import { notFound } from "next/navigation";
@@ -13,7 +14,9 @@ function looksLikeUuid(s: string) {
   return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(s);
 }
 
-export default function UsernamePage({ params }: { params: { username: string } }) {
+export default function UsernamePage() {
+  const params = useParams();
+  const username = params.username as string;
   const [resolvedId, setResolvedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,8 +24,7 @@ export default function UsernamePage({ params }: { params: { username: string } 
     let mounted = true;
     
     async function resolve() {
-      const username = params.username;
-  // params resolved
+      // params resolved
       
       // Check if this is a reserved route name
       if (RESERVED_ROUTES.includes(username.toLowerCase())) {
@@ -63,7 +65,7 @@ export default function UsernamePage({ params }: { params: { username: string } 
 
     resolve();
     return () => { mounted = false; };
-  }, [params.username]);
+  }, [username]);
 
   if (loading) {
     return <ProfileSkeleton />;

@@ -52,7 +52,7 @@ export function ThreadView() {
           <div className="card">
             <p className="text-red-500">{threadError || 'Thread not found'}</p>
             <Link href={`/communities/${communitySlug}`}>
-              <Button>Back to Community</Button>
+              <Button className="no-effects">Back to Community</Button>
             </Link>
           </div>
         </div>

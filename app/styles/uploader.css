@@ -1315,25 +1315,26 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 /* Effect controls responsive styles */
 .effect-controls {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
+  margin-bottom: 8px;
 }
 
 .effect-controls button {
   background: transparent !important;
   border: 1px solid transparent !important;
   color: var(--text);
-  padding: 6px;
-  border-radius: 6px;
+  padding: 8px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .effect-controls button:active {
@@ -1361,16 +1362,17 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
 
 @media (max-width: 640px) {
   .effect-controls {
-    gap: 4px;
+    gap: 6px;
+    margin-bottom: 6px;
   }
   .effect-controls button {
-    padding: 4px;
-    min-width: 28px;
-    min-height: 28px;
+    padding: 6px;
+    min-width: 32px;
+    min-height: 32px;
   }
   .effect-controls button svg {
-    width: 12px !important;
-    height: 12px !important;
+    width: 14px !important;
+    height: 14px !important;
   }
 }
 

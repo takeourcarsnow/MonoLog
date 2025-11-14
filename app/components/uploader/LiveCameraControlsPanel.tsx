@@ -47,8 +47,8 @@ export function LiveCameraControlsPanel({
   return (
     <>
       {/* Effect selection buttons */}
-      <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ padding: 4, borderRadius: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
+      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ padding: 8, borderRadius: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
           <EffectControls
             effectType={effectSettings.type}
             onEffectChange={(type) => {

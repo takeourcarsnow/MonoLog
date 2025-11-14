@@ -437,7 +437,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
         padding: isModal ? 8 : 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: 12,
         margin: isModal ? 'auto' : 0,
         overflow: isModal ? 'auto' : 'hidden',
       }}

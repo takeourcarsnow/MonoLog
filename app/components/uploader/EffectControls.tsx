@@ -20,7 +20,7 @@ interface EffectControlsProps {
 }
 
 export function EffectControls({ effectType, onEffectChange, disabled, overlayVisible, toggleOverlay }: EffectControlsProps) {
-  const iconSize = 14;
+  const iconSize = 16;
   return (
     <div className="effect-controls" style={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
       <button type="button" className={`btn mini ${effectType === 'none' ? 'active' : ''}`} onClick={() => onEffectChange('none')} title="No effect" disabled={disabled}>

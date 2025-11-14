@@ -518,8 +518,7 @@ export function PublicStoryViewerModal({
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#fff', fontSize: 14, fontWeight: 'bold' }}>Comments</span>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
             <button 
               onClick={() => setShowComments(false)}
               style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}

@@ -1188,6 +1188,13 @@ body.debug-uploader-outline .tabbar { outline: 3px dashed rgba(0,0,255,0.95); }
   z-index: 1;
 }
 
+/* For textarea inputs (multiline captions), align the icon to the top-left */
+.input-container textarea.input ~ .input-icon,
+.input-container textarea.input + .input-icon {
+  top: 12px; /* align with top padding of textarea */
+  transform: none;
+}
+
 .input-icon.right {
   left: auto;
   right: 16px;

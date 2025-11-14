@@ -44,12 +44,13 @@
 .photo-action-row .btn.small-min { margin: 0; }
 .input-ghost-placeholder {
   position: absolute;
-  left: 12px; right: 12px; top: 50%; transform: translateY(-50%);
+  left: 35px; right: 12px; top: 50%; transform: translateY(-50%);
   pointer-events: none; color: var(--muted);
   font-size: 12px; line-height: 1; overflow: hidden; white-space: nowrap;
 }
 .input-ghost-placeholder.multiline {
   top: 12px; transform: none; display: block; white-space: normal; max-width: 100%;
+  left: 44px; /* align placeholder text with text area content/padding */
 }
 .input-ghost-placeholder { display: flex; align-items: center; gap: 6px; }
 .input-ghost-placeholder .typewriter {

@@ -8,6 +8,7 @@ interface CaptionInputFieldProps {
   setCaption?: (caption: string) => void;
   hasPreview: boolean;
   processing: boolean;
+  phrases?: string[];
 }
 
 export function CaptionInputField({
@@ -15,6 +16,7 @@ export function CaptionInputField({
   setCaption,
   hasPreview,
   processing,
+  phrases = PHRASES,
 }: CaptionInputFieldProps) {
   // Local buffered states to avoid tight parent re-render loops when typing fast.
   // We propagate changes to parent with a small debounce and always flush on blur.
@@ -30,7 +32,7 @@ export function CaptionInputField({
 
   const [captionFocused, setCaptionFocused] = useState(false);
   // Caption typing animation
-  const { placeholder: captionPlaceholder, startIndex: captionStartIndex, setPlaceholder: setCaptionPlaceholder } = useTypingAnimation(localCaption, !hasPreview && !captionFocused, PHRASES);
+  const { placeholder: captionPlaceholder, startIndex: captionStartIndex, setPlaceholder: setCaptionPlaceholder } = useTypingAnimation(localCaption, !hasPreview && !captionFocused, phrases);
   const [captionLocalIndex, setCaptionLocalIndex] = useState<number>(captionStartIndex >= 0 ? captionStartIndex : 0);
 
   // Rotate Caption placeholders
@@ -40,13 +42,13 @@ export function CaptionInputField({
     const duration = 5500;
     const timer = setTimeout(() => {
       setCaptionLocalIndex((s) => {
-        const next = (s + 1) % PHRASES.length;
-        try { setCaptionPlaceholder(PHRASES[next]); } catch (_) {}
+        const next = (s + 1) % phrases.length;
+        try { setCaptionPlaceholder(phrases[next]); } catch (_) {}
         return next;
       });
     }, duration + 100);
     return () => clearTimeout(timer);
-  }, [localCaption, captionFocused, processing, captionPlaceholder, setCaptionPlaceholder]);
+  }, [localCaption, captionFocused, processing, captionPlaceholder, setCaptionPlaceholder, phrases]);
 
   const captionRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -95,7 +97,12 @@ export function CaptionInputField({
       const el = captionRef.current;
       if (!el) return;
       el.style.height = 'auto';
-      const newHeight = Math.min(Math.max(el.scrollHeight, 40), 320);
+      // When the caption is empty we want the textarea to start compact.
+      // Use a consistent default min height so it doesn't expand more than necessary
+      // on mount due to scrollHeight quirks.
+      const DEFAULT_MIN_HEIGHT = 40;
+      const empty = !localCaption || localCaption.trim() === '';
+      const newHeight = empty ? DEFAULT_MIN_HEIGHT : Math.min(Math.max(el.scrollHeight, DEFAULT_MIN_HEIGHT), 320);
       el.style.height = `${newHeight}px`;
     } catch (_) {}
   }, [localCaption]);
@@ -120,7 +127,9 @@ export function CaptionInputField({
               const el = captionRef.current;
               if (el) {
                 el.style.height = 'auto';
-                const newHeight = Math.min(Math.max(el.scrollHeight, 40), 320);
+                const DEFAULT_MIN_HEIGHT = 40;
+                const empty = !e.target.value || e.target.value.trim() === '';
+                const newHeight = empty ? DEFAULT_MIN_HEIGHT : Math.min(Math.max(el.scrollHeight, DEFAULT_MIN_HEIGHT), 320);
                 el.style.height = `${newHeight}px`;
               }
             } catch (_) {}
@@ -145,7 +154,7 @@ export function CaptionInputField({
             try { setCaption?.(localCaption); } finally { isTypingCaptionRef.current = false; }
             setCaptionFocused(false);
           }}
-          style={{ width: '100%', paddingRight: 32, paddingLeft: 35, paddingTop: 8, paddingBottom: 8, minHeight: 40, maxHeight: 320, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)', resize: 'vertical' }}
+          style={{ width: '100%', paddingRight: 32, paddingLeft: 44, paddingTop: 8, paddingBottom: 8, minHeight: 40, maxHeight: 320, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)', resize: 'vertical' }}
         />
         <Pen size={16} className="input-icon" />
       </div>

@@ -8,6 +8,7 @@ interface SpotifyInputProps {
   setSpotifyLink?: (link: string) => void;
   hasPreview: boolean;
   processing: boolean;
+  phrases?: string[];
 }
 
 export function SpotifyInput({
@@ -15,6 +16,7 @@ export function SpotifyInput({
   setSpotifyLink,
   hasPreview,
   processing,
+  phrases = PHRASES_SPOTIFY,
 }: SpotifyInputProps) {
   // Local buffered states to avoid tight parent re-render loops when typing fast.
   // We propagate changes to parent with a small debounce and always flush on blur.
@@ -30,7 +32,7 @@ export function SpotifyInput({
 
   const [spotifyFocused, setSpotifyFocused] = useState(false);
   // Spotify typing animation
-  const { placeholder: spotifyPlaceholder, startIndex: spotifyStartIndex, setPlaceholder: setSpotifyPlaceholder } = useTypingAnimation(localSpotify, !hasPreview && !spotifyFocused, PHRASES_SPOTIFY);
+  const { placeholder: spotifyPlaceholder, startIndex: spotifyStartIndex, setPlaceholder: setSpotifyPlaceholder } = useTypingAnimation(localSpotify, !hasPreview && !spotifyFocused, phrases);
   const [spotifyLocalIndex, setSpotifyLocalIndex] = useState<number>(spotifyStartIndex >= 0 ? spotifyStartIndex : 0);
 
   // Rotate Spotify placeholders
@@ -40,13 +42,13 @@ export function SpotifyInput({
     const duration = 5500;
     const timer = setTimeout(() => {
       setSpotifyLocalIndex((s) => {
-        const next = (s + 1) % PHRASES_SPOTIFY.length;
-        try { setSpotifyPlaceholder(PHRASES_SPOTIFY[next]); } catch (_) {}
+        const next = (s + 1) % phrases.length;
+        try { setSpotifyPlaceholder(phrases[next]); } catch (_) {}
         return next;
       });
     }, duration + 100);
     return () => clearTimeout(timer);
-  }, [localSpotify, spotifyFocused, processing, spotifyPlaceholder, setSpotifyPlaceholder]);
+  }, [localSpotify, spotifyFocused, processing, spotifyPlaceholder, setSpotifyPlaceholder, phrases]);
 
   const spotifyRef = useRef<HTMLInputElement | null>(null);
 
@@ -140,7 +142,7 @@ export function SpotifyInput({
             try { setSpotifyLink?.(localSpotify); } finally { isTypingSpotifyRef.current = false; }
             setSpotifyFocused(false);
           }}
-          style={{ width: '100%', paddingRight: 32, paddingLeft: 35, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)' }}
+          style={{ width: '100%', paddingRight: 32, paddingLeft: 44, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)' }}
         />
         <SpotifyIcon size={16} className={`input-icon ${localSpotify?.trim() && (localSpotify.includes('spotify.com') || localSpotify.includes('open.spotify.com')) ? 'spotify-filled' : ''}`} />
       </div>

@@ -5,12 +5,14 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { renderCaption } from "@/lib/hashtags";
-import { Calendar, Image, MessageCircle, ChevronDown, ChartBar, ChevronLeft, ChevronRight, Users, MessageSquare, Camera, Clock } from "lucide-react";
+import { Calendar, Image, MessageCircle, ChevronDown, ChartBar, ChevronLeft, ChevronRight, Users, MessageSquare, Camera, Clock, X, Check } from "lucide-react";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import type { WeekReviewStats, MonthReviewStats } from "@/lib/types";
 import { WeekReviewSkeleton } from "@/app/components/week-review/WeekReviewSkeleton";
 import { CaptionInputField } from "@/app/components/uploader/CaptionInputField";
 import { SpotifyInput } from "@/app/components/uploader/SpotifyInput";
+import { PHRASES_MONTH_REVIEW } from "@/app/components/uploader/constants";
+import { PHRASES_SPOTIFY_MONTH_REVIEW } from "@/app/components/uploader/constants";
 import { StatCard } from "@/app/components/ui/StatCard";
 
 type ReviewType = 'week' | 'month';
@@ -34,6 +36,16 @@ export default function ReviewPage() {
     document.body.classList.add('review-page');
     return () => document.body.classList.remove('review-page');
   }, []);
+
+  // Hide content behind modal
+  useEffect(() => {
+    if (albumOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [albumOpen]);
 
   const toggleCaptionExpansion = (postId: string) => {
     setExpandedCaptions(prev => {
@@ -265,13 +277,22 @@ export default function ReviewPage() {
       )}
 
       {albumOpen && (monthStats as any).monthImages && (
-        <div className="modal-overlay">
-          <div className="modal" role="dialog" aria-label="Top of the Month album selector">
-            <div className="modal-form" style={{ display: 'flex', gap: 12, marginTop: 8, flexDirection: 'column' }}>
-              <CaptionInputField caption={caption} setCaption={setCaption} hasPreview={true} processing={false} />
-              <SpotifyInput spotifyLink={spotifyLink} setSpotifyLink={setSpotifyLink} hasPreview={true} processing={false} />
+        <div className="modal-overlay" onClick={() => setAlbumOpen(false)}>
+          <div className="modal" role="dialog" aria-label="Top of the Month album selector" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto', width: '90vw', maxWidth: '800px' }}>
+            <div className="modal-actions modal-actions-top">
+              <button className="btn" onClick={() => setAlbumOpen(false)} aria-label="Cancel">
+                <X size={20} />
+              </button>
+              <button className="btn btn-primary" onClick={publishAlbum} disabled={selectedImages.length === 0} aria-label={`Publish Album (${selectedImages.length})`}>
+                <Check size={20} />
+                <span style={{ marginLeft: 4, fontSize: '14px' }}>{selectedImages.length}</span>
+              </button>
             </div>
-            <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
+            <div className="modal-form" style={{ display: 'flex', gap: 12, marginTop: 8, flexDirection: 'column' }}>
+              <CaptionInputField caption={caption} setCaption={setCaption} hasPreview={true} processing={false} phrases={reviewType === 'month' ? PHRASES_MONTH_REVIEW : undefined} />
+              <SpotifyInput spotifyLink={spotifyLink} setSpotifyLink={setSpotifyLink} hasPreview={true} processing={false} phrases={reviewType === 'month' ? PHRASES_SPOTIFY_MONTH_REVIEW : undefined} />
+            </div>
+            <div style={{ padding: '18px' }}>
               <div className="image-grid">
                 {((monthStats as any).monthImages as any[]).map(img => (
                   <div key={img.id} className={`image-tile ${selectedImages.includes(img.imageUrl) ? 'selected' : ''}`} onClick={() => toggleSelectImage(img.imageUrl)} tabIndex={0} role="button" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelectImage(img.imageUrl); } }}>
@@ -281,10 +302,7 @@ export default function ReviewPage() {
                 ))}
               </div>
             </div>
-            <div className="modal-actions">
-              <button className="btn" onClick={() => setAlbumOpen(false)}>Cancel</button>
-              <button className="btn btn-primary" onClick={publishAlbum} disabled={selectedImages.length === 0}>Publish Album ({selectedImages.length})</button>
-            </div>
+            {/* actions moved to top of the modal */}
           </div>
         </div>
       )}

@@ -363,27 +363,72 @@
 }
 .modal-overlay {
   position: fixed;
-  inset: 0; /* top:0; right:0; bottom:0; left:0 */
-  display: grid;
-  place-items: center;
-  background: rgba(0,0,0,0.48);
-  z-index: 1000500; /* above most UI but below full-screen viewer/toasts */
-  padding: 20px;
-  box-sizing: border-box;
+  inset: 0;
+  background: transparent;
+  z-index: 1000500;
   pointer-events: auto;
   animation: modalFadeIn 160ms var(--transition-fast) both;
 }
 
-.modal {
+.modal { 
+  position: absolute;
+  top: var(--header-height, 64px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  color: var(--text);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Floating 'window' for non-modal overlays (e.g., Top of the Month album picker)
+   This appears above content but does not block interaction with the page like a modal.
+   Behaves like a panel anchored to the top-right on larger screens and falls back to
+   the existing modal presentation on small screens for better mobile UX. */
+.floating-window {
+  position: fixed;
+  top: calc(var(--header-height, 64px) + 8px);
+  right: 16px;
+  z-index: 1000500;
   background: color-mix(in srgb, var(--bg-elev), transparent 6%);
   color: var(--text);
-  border-radius: 14px;
-  box-shadow: 0 18px 48px rgba(2,6,23,0.36);
-  padding: 18px;
-  max-width: clamp(300px, 90vw, 720px);
-  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.14);
+  padding: 12px;
+  width: clamp(280px, 80vw, 820px);
+  max-width: 95vw;
+  max-height: calc(100vh - var(--header-height, 64px) - 32px);
+  overflow-y: auto;
   box-sizing: border-box;
   border: 1px solid var(--border);
+}
+
+.floating-window .modal-form { margin-bottom: 12px; }
+.floating-window .modal-actions-top { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 8px; }
+.floating-window .image-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); align-items: stretch; }
+.floating-window .image-tile { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; transition: none; box-shadow: none; }
+.floating-window .image-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.floating-window .image-tile.selected { outline: none; box-shadow: none; }
+.floating-window .tile-overlay { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.6); background: transparent; transition: opacity 120ms var(--transition-fast); opacity: 0; }
+.floating-window .image-tile.selected .tile-overlay { opacity: 1; }
+.floating-window .tile-overlay::after { content: '\2713'; font-size: 16px; line-height: 1; }
+
+@media (max-width: 520px) {
+  .floating-window {
+    /* On narrow screens show as full-width modal for better UX */
+    position: fixed;
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    top: 0 !important;
+    border-radius: 12px 12px 0 0;
+    padding: 14px;
+    height: calc(100vh - var(--header-height, 64px));
+  }
 }
 
 /* Top 10 modal image grid */
@@ -399,8 +444,9 @@
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 160ms var(--transition-fast), box-shadow 160ms var(--transition-fast), outline 160ms var(--transition-fast);
-  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+  /* Avoid transform transitions and elevation effects to keep tiles visually stable */
+  transition: none;
+  box-shadow: none;
 }
 
 .modal .image-tile img { 
@@ -413,14 +459,15 @@
 
 
 .modal .image-tile:focus {
-  outline: 2px solid color-mix(in srgb, var(--primary), black 10%);
-  outline-offset: 2px;
-  transform: translateY(-4px);
+  outline: none;
+  box-shadow: none;
+  transform: none;
 }
 
 .modal .image-tile.selected {
-  outline: 2px solid var(--primary);
-  box-shadow: 0 12px 30px rgba(2,6,23,0.12);
+  /* For selection visual, only show the checkmark overlay; no elevation nor outlines */
+  outline: none;
+  box-shadow: none;
 }
 
 .modal .tile-overlay {
@@ -429,33 +476,60 @@
   right: 8px;
   width: 28px;
   height: 28px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   color: white;
-  background: rgba(0,0,0,0.45);
-  transition: background 160ms var(--transition-fast), transform 160ms var(--transition-fast), opacity 160ms var(--transition-fast);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  background: transparent; /* no background - only show checkmark glyph */
+  transition: opacity 120ms var(--transition-fast);
   opacity: 0;
 }
 .modal .modal-form { margin-bottom: 16px; }
+.modal .btn {
+  padding: 8px;
+  min-width: auto;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal .btn:hover {
+  background: var(--bg-hover);
+}
+
+.modal .btn:active {
+  background: var(--bg-active);
+}
+.modal .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Align icons and inputs inside modal so they don't overlap */
+.modal .input-container .input-icon { left: 12px; z-index: 2; }
+.modal .input { padding-left: 44px; }
+.modal textarea.input { padding-left: 44px; padding-top: 10px; padding-bottom: 10px; min-height: 40px; resize: vertical; }
 
 
 .modal .image-tile.selected .tile-overlay {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--primary), black 8%), var(--primary));
   opacity: 1;
-  transform: scale(1.02);
 }
 
 .modal .tile-overlay::after {
   content: '\2713'; /* checkmark */
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
 }
 
 /* Remove hover styles to keep images visually stable on hover */
 .modal .image-tile:hover { transform: none; }
+
+/* Ensure selected image tile does not change layout or position */
+.modal .image-tile.selected { transform: none; }
 
 
 .delete-confirm-modal { max-width: clamp(250px, 85vw, 560px); text-align: center; display: flex; flex-direction: column; align-items: center; }
@@ -597,4 +671,8 @@ body.story-modal-open .header {
     filter: none !important;
     transition: none !important;
   }
+}
+
+body.modal-open .review-page > :not(.modal-overlay) {
+  display: none;
 }

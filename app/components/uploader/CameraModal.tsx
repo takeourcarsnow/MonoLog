@@ -1,5 +1,4 @@
 import React from "react";
-import { addModalBlur, removeModalBlur } from '@/lib/overlayUtils';
 import { Button } from "@/app/components/ui/Button";
 import Portal from "@/app/components/ui/Portal";
 import LogoLoader from "./LogoLoader";
@@ -24,13 +23,6 @@ export function CameraModal({
   onCapture
   , openCamera
 }: CameraModalProps) {
-  // Add modal-blur class when camera is open
-  React.useEffect(() => {
-    if (cameraOpen) addModalBlur();
-    else removeModalBlur();
-    return () => { removeModalBlur(); };
-  }, [cameraOpen]);
-
   // When the modal is open, ensure the video element is attached to the
   // active MediaStream (streamRef). Sometimes getUserMedia is acquired
   // before the modal mounts and the videoRef isn't ready yet; this effect

@@ -35,12 +35,11 @@ function GlobalCamera() {
         try { setInitialDataUrl(null); setEditCallback(null); } catch (_) {}
       }}
       onCapture={(blob) => {
+        if (!blob) return;
         try { console.debug('[GlobalCamera] onCapture - editCallback?', Boolean(editCallback), 'captureCallback?', Boolean(captureCallback)); } catch (_) {}
-        // If there is an editCallback set (editing flow) invoke it directly
-        // and clear the editing state. Otherwise queue the blob for the
-        // uploader to pick up when it remounts.
         try {
-          if (editCallback) {
+          if (editCallback && typeof editCallback === 'function') {
+            if (!blob) return;
             try { editCallback(blob); } catch (e) { console.error('Edit callback failed', e); }
             setIsCameraOpen(false);
             setEditCallback(null);
@@ -51,10 +50,11 @@ function GlobalCamera() {
 
         // If there is a captureCallback set (e.g., for story upload), invoke it directly
         try {
-          if (captureCallback) {
+          if (captureCallback && typeof captureCallback === 'function') {
+            if (!blob) return;
             try { captureCallback(blob); } catch (e) { console.error('Capture callback failed', e); }
-            setIsCameraOpen(false);
-            setCaptureCallback(null);
+            // For adding photos, don't close, let the camera stay open for multiple captures
+            // The camera will be closed when the user explicitly closes it
             return;
           }
         } catch (e) {}
@@ -86,6 +86,7 @@ function GlobalCamera() {
       processing={false}
       isModal={false}
       initialDataUrl={initialDataUrl ?? undefined}
+      closeAfterCapture={!captureCallback} // Close after capture only if not adding photos
     />
   );
 }

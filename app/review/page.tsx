@@ -37,14 +37,22 @@ export default function ReviewPage() {
     return () => document.body.classList.remove('review-page');
   }, []);
 
-  // Hide content behind modal
+  // Hide content behind modal for review pages. Use `modal-open` to hide
+  // the page's main content while modal is visible. Also add `review-modal-open`
+  // to hide the tabbar specifically for this modal without interfering with
+  // the global `modal-blur` class used by other components.
   useEffect(() => {
     if (albumOpen) {
       document.body.classList.add('modal-open');
+      document.body.classList.add('review-modal-open');
     } else {
       document.body.classList.remove('modal-open');
+      document.body.classList.remove('review-modal-open');
     }
-    return () => document.body.classList.remove('modal-open');
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.classList.remove('review-modal-open');
+    };
   }, [albumOpen]);
 
   const toggleCaptionExpansion = (postId: string) => {
@@ -323,9 +331,9 @@ export default function ReviewPage() {
 
       {albumOpen && (monthStats as any).monthImages && (
         <div className="modal-overlay" onClick={() => setAlbumOpen(false)}>
-          <div className="modal" role="dialog" aria-label="Top of the Month album selector" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto', width: '90vw', maxWidth: '800px' }}>
+          <div className="modal" role="dialog" aria-label="Top of the Month album selector" onClick={(e) => e.stopPropagation()} style={{ width: '90vw', maxWidth: '800px' }}>
             <div className="modal-header">
-              <h3 className="modal-title">Tell your month story</h3>
+              <h3 className="modal-title">Tell your month's story</h3>
               <div className="modal-actions">
                 <button className="btn" onClick={() => setAlbumOpen(false)} aria-label="Cancel">
                   <X size={20} />
@@ -340,7 +348,7 @@ export default function ReviewPage() {
               <CaptionInputField caption={caption} setCaption={setCaption} hasPreview={true} processing={false} phrases={reviewType === 'month' ? PHRASES_MONTH_REVIEW : undefined} />
               <SpotifyInput spotifyLink={spotifyLink} setSpotifyLink={setSpotifyLink} hasPreview={true} processing={false} phrases={reviewType === 'month' ? PHRASES_SPOTIFY_MONTH_REVIEW : undefined} />
             </div>
-            <div style={{ padding: '18px' }}>
+            <div style={{ padding: '18px 18px 36px 18px' }}>
               <div className="image-grid">
                 {((monthStats as any).monthImages as any[]).map(img => (
                   <div key={img.id} className={`image-tile ${selectedImages.includes(img.imageUrl) ? 'selected' : ''}`} onClick={() => toggleSelectImage(img.imageUrl)} tabIndex={0} role="button" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelectImage(img.imageUrl); } }}>

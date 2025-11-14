@@ -216,8 +216,25 @@ export function createFileHandlers(
     }
   }
 
+  async function handleMultipleFiles(files: File[]) {
+    if (!files.length) return;
+    setProcessing(true);
+    setPreviewLoaded(false);
+    try {
+      const newUrls = await processFilesToUrls(files);
+      if (newUrls.length) {
+        setStateForMultipleAppend(newUrls, files);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   return {
     handleFile,
     handleFileInputChange,
+    handleMultipleFiles,
   };
 }

@@ -121,7 +121,7 @@ export function useUploader() {
   );
 
   // File handlers
-  const { handleFile, handleFileInputChange } = createFileHandlers(
+  const { handleFile, handleFileInputChange, handleMultipleFiles } = createFileHandlers(
     toast,
     setProcessing,
     setPreviewLoaded,
@@ -457,6 +457,7 @@ export function useUploader() {
     resetDraft,
     removePhoto,
     handleFile,
+    handleMultipleFiles,
     publish,
     handleFileInputChange,
   };

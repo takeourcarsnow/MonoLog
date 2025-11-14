@@ -13,6 +13,7 @@ interface UseCaptureLogicProps {
   stopRenderLoop: () => void;
   performCapture: (isCapturing: boolean, processing: boolean, callback: (blob: Blob) => void, effectSettings: any, sourceCanvasRef: React.RefObject<HTMLCanvasElement>, displayCanvasRef: React.RefObject<HTMLCanvasElement>, stopCamera: () => void) => void;
   onClose: () => void;
+  closeAfterCapture?: boolean;
 }
 
 export function useCaptureLogic({
@@ -26,6 +27,7 @@ export function useCaptureLogic({
   stopRenderLoop,
   performCapture,
   onClose,
+  closeAfterCapture = true,
 }: UseCaptureLogicProps) {
   // Preview state for confirm/retake flow
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
@@ -112,8 +114,12 @@ export function useCaptureLogic({
         try { URL.revokeObjectURL(previewUrl); } catch (e) {}
         setPreviewUrl(null);
       }
-      // Close the modal after confirming
-      onClose();
+      // Close the modal after confirming or retake for another capture
+      if (closeAfterCapture) {
+        onClose();
+      } else {
+        retakeCapture();
+      }
     });
   }, [previewBlob, onCapture, previewUrl, onClose]);
 

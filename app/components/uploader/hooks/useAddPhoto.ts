@@ -24,6 +24,7 @@ export function useAddPhoto({
   const [showAddPhotoMenu, setShowAddPhotoMenu] = useState(false);
 
   const handleCameraCapture = useCallback(async (blob: Blob) => {
+    if (!blob) return;
     // Keep modal open during processing - it will show loading state
     // Directly create File from Blob (no fetch of data URLs)
     const file = new File([blob], 'camera-capture.jpg', { type: blob.type || 'image/jpeg' });
@@ -42,7 +43,7 @@ export function useAddPhoto({
     // Open live camera immediately when user taps "Add Photos" when possible.
     if (navigator.mediaDevices) {
       setShowAddPhotoMenu(false);
-      setCaptureCallback(() => handleCameraCapture);
+      setCaptureCallback(handleCameraCapture);
       setIsCameraOpen(true);
     } else {
       // Fallback to file picker when getUserMedia is not available
@@ -70,7 +71,7 @@ export function useAddPhoto({
   const handleAddFromCameraEffects = useCallback(() => {
     setShowAddPhotoMenu(false);
     if (navigator.mediaDevices) {
-      setCaptureCallback(() => handleCameraCapture);
+      setCaptureCallback(handleCameraCapture);
       setIsCameraOpen(true);
     } else {
       // Fallback to file input if getUserMedia not available

@@ -43,9 +43,14 @@ interface LiveCameraViewProps {
    * and immediately load the image into the preview canvases with current effect settings.
    */
   initialDataUrl?: string;
+  /**
+   * Whether to close the camera after capturing and confirming a photo.
+   * For editing, true; for adding multiple photos, false.
+   */
+  closeAfterCapture?: boolean;
 }
 
-export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal = true, initialDataUrl }: LiveCameraViewProps) {
+export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal = true, initialDataUrl, closeAfterCapture = true }: LiveCameraViewProps) {
   const { setIsCameraOpen } = useCameraContext();
   const { videoRef, streamRef, facingMode, zoom, setZoom, torchEnabled, isSwitchingCamera, startCamera, stopCamera, switchCamera, toggleTorch, applyZoom } = useCamera();
   const { sourceCanvasRef, displayCanvasRef, startRenderLoop, stopRenderLoop } = useRenderLoop();
@@ -101,6 +106,7 @@ export function LiveCameraView({ isOpen, onClose, onCapture, processing, isModal
     stopRenderLoop,
     performCapture,
     onClose,
+    closeAfterCapture,
   });
 
   const disabled = isCapturing || processing || (!cameraReady && !isPreviewing);

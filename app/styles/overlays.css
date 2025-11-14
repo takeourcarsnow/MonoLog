@@ -367,19 +367,23 @@
   background: transparent;
   z-index: 1000500;
   pointer-events: auto;
+  overflow-y: auto;
   animation: modalFadeIn 160ms var(--transition-fast) both;
 }
 
 .modal { 
-  position: absolute;
-  top: var(--header-height, 64px);
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
+  margin-top: var(--header-height, 64px);
+  height: auto;
+  max-height: none;
   background: var(--bg);
   color: var(--text);
   overflow-y: auto;
   box-sizing: border-box;
+  width: 90vw;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
   /* Hide scrollbar while maintaining scroll functionality */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -718,5 +722,10 @@ body.story-modal-open .header {
 }
 
 body.modal-open .review-page > :not(.modal-overlay) {
+  display: none;
+}
+
+/* Hide navbar when review modal is open */
+body.review-modal-open .tabbar {
   display: none;
 }

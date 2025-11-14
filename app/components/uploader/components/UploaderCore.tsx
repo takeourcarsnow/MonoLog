@@ -99,6 +99,7 @@ export function UploaderCore() {
     resetDraft,
     removePhoto,
     handleFile,
+    handleMultipleFiles,
     publish,
     handleFileInputChange,
   } = useUploader();
@@ -346,8 +347,8 @@ export function UploaderCore() {
           onDrop={async (e) => {
             e.preventDefault(); setDrag(false);
             if (processing) return;
-            const file = e.dataTransfer.files?.[0];
-            if (file) await handleFile(file);
+            const files = Array.from(e.dataTransfer.files || []);
+            if (files.length) await handleMultipleFiles(files);
           }}
           dropRef={dropRef}
         />

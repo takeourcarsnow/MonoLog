@@ -9,6 +9,8 @@ import { Calendar, Image, MessageCircle, ChevronDown, ChartBar, ChevronLeft, Che
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import type { WeekReviewStats, MonthReviewStats } from "@/lib/types";
 import { WeekReviewSkeleton } from "@/app/components/week-review/WeekReviewSkeleton";
+import { CaptionInputField } from "@/app/components/uploader/CaptionInputField";
+import { SpotifyInput } from "@/app/components/uploader/SpotifyInput";
 import { StatCard } from "@/app/components/ui/StatCard";
 
 type ReviewType = 'week' | 'month';
@@ -24,6 +26,8 @@ export default function ReviewPage() {
   const [expandedCaptions, setExpandedCaptions] = useState<Set<string>>(new Set());
   const [albumOpen, setAlbumOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [caption, setCaption] = useState<string>("");
+  const [spotifyLink, setSpotifyLink] = useState<string>("");
 
   // Allow body scrolling for review page
   useEffect(() => {
@@ -54,8 +58,6 @@ export default function ReviewPage() {
           setStats(weekStats);
         } else {
           const monthStats = await api.monthReviewStats();
-          // Sort recent posts by creation date ascending for timeline view
-          monthStats.recentPosts.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
           setStats(monthStats);
         }
       } catch (err) {
@@ -93,11 +95,10 @@ export default function ReviewPage() {
 
   const openTop10Picker = () => {
     if (!monthStats || !(monthStats as any).monthImages) return;
-    const imgs = (monthStats as any).monthImages as Array<any>;
-    // Default select top 10 by score then recent
-    const sorted = imgs.slice().sort((a, b) => (b.score - a.score) || (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    const defaults = sorted.slice(0, 10).map(i => i.imageUrl).filter(Boolean);
-    setSelectedImages(defaults);
+    // Do not preselect images; allow the user to pick their own
+    setSelectedImages([]);
+    setCaption("");
+    setSpotifyLink("");
     setAlbumOpen(true);
   };
 
@@ -119,7 +120,8 @@ export default function ReviewPage() {
       // Use existing createOrReplaceToday API but allow up to 10 images via maxImages
       await api.createOrReplaceToday({
         imageUrls: selectedImages,
-        caption: `Top ${selectedImages.length} photos from the last month`,
+        caption: caption || `Top ${selectedImages.length} photos from the last month`,
+        spotifyLink: spotifyLink || undefined,
         public: true,
         maxImages: 10,
       });
@@ -242,14 +244,20 @@ export default function ReviewPage() {
                 </div>
               </div>
             )}
-            <div className="insight-card">
+            <div
+              className="insight-card"
+              onClick={() => { openTop10Picker(); }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTop10Picker(); } }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="insight-icon">
                 <Image size={24} />
               </div>
               <div className="insight-content">
-                <h3>Top 10 Album</h3>
-                <p>Pick your favorite photos from the last month and post a 10-photo album.</p>
-                <button className="btn btn-primary" onClick={openTop10Picker}>Create Top 10 Album</button>
+                <h3>Top of the Month</h3>
+                <p>Post your favorite photos and share your thoughts on the last month in a special monthly review album.</p>
               </div>
             </div>
           </div>
@@ -258,14 +266,17 @@ export default function ReviewPage() {
 
       {albumOpen && (monthStats as any).monthImages && (
         <div className="modal-overlay">
-          <div className="modal">
-            <h3>Select up to 10 photos</h3>
+          <div className="modal" role="dialog" aria-label="Top of the Month album selector">
+            <div className="modal-form" style={{ display: 'flex', gap: 12, marginTop: 8, flexDirection: 'column' }}>
+              <CaptionInputField caption={caption} setCaption={setCaption} hasPreview={true} processing={false} />
+              <SpotifyInput spotifyLink={spotifyLink} setSpotifyLink={setSpotifyLink} hasPreview={true} processing={false} />
+            </div>
             <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
               <div className="image-grid">
                 {((monthStats as any).monthImages as any[]).map(img => (
-                  <div key={img.id} className={`image-tile ${selectedImages.includes(img.imageUrl) ? 'selected' : ''}`} onClick={() => toggleSelectImage(img.imageUrl)}>
+                  <div key={img.id} className={`image-tile ${selectedImages.includes(img.imageUrl) ? 'selected' : ''}`} onClick={() => toggleSelectImage(img.imageUrl)} tabIndex={0} role="button" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelectImage(img.imageUrl); } }}>
                     <img src={img.thumbnailUrl || img.imageUrl} alt="" />
-                    <div className="tile-overlay">{selectedImages.includes(img.imageUrl) ? '✓' : ''}</div>
+                    <div className="tile-overlay" aria-hidden="true"></div>
                   </div>
                 ))}
               </div>

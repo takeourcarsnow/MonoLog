@@ -385,6 +385,9 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
 body.review-page .content { overflow: auto !important; }
 body.month-review-page .content { overflow: auto !important; }
 body.post-view-page .content { overflow: auto !important; }
+body.review-page .content { height: calc(var(--viewport-height, 1vh) * 100) !important; overflow: auto !important; }
+body.month-review-page .content { height: calc(var(--viewport-height, 1vh) * 100) !important; overflow: auto !important; }
+body.post-view-page .content { height: calc(var(--viewport-height, 1vh) * 100) !important; overflow: auto !important; }
 
 /* Mobile-specific overrides for scrollable pages */
 @media (max-width: 768px) {

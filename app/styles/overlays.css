@@ -386,6 +386,78 @@
   border: 1px solid var(--border);
 }
 
+/* Top 10 modal image grid */
+.modal .image-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  align-items: stretch;
+}
+
+.modal .image-tile {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 160ms var(--transition-fast), box-shadow 160ms var(--transition-fast), outline 160ms var(--transition-fast);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+}
+
+.modal .image-tile img { 
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+
+
+.modal .image-tile:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary), black 10%);
+  outline-offset: 2px;
+  transform: translateY(-4px);
+}
+
+.modal .image-tile.selected {
+  outline: 2px solid var(--primary);
+  box-shadow: 0 12px 30px rgba(2,6,23,0.12);
+}
+
+.modal .tile-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  background: rgba(0,0,0,0.45);
+  transition: background 160ms var(--transition-fast), transform 160ms var(--transition-fast), opacity 160ms var(--transition-fast);
+  opacity: 0;
+}
+.modal .modal-form { margin-bottom: 16px; }
+
+
+.modal .image-tile.selected .tile-overlay {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary), black 8%), var(--primary));
+  opacity: 1;
+  transform: scale(1.02);
+}
+
+.modal .tile-overlay::after {
+  content: '\2713'; /* checkmark */
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Remove hover styles to keep images visually stable on hover */
+.modal .image-tile:hover { transform: none; }
+
+
 .delete-confirm-modal { max-width: clamp(250px, 85vw, 560px); text-align: center; display: flex; flex-direction: column; align-items: center; }
 
 .modal h2 { margin: 0 0 8px 0; font-size: 18px; }

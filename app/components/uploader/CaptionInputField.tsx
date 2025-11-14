@@ -48,7 +48,7 @@ export function CaptionInputField({
     return () => clearTimeout(timer);
   }, [localCaption, captionFocused, processing, captionPlaceholder, setCaptionPlaceholder]);
 
-  const captionRef = useRef<HTMLInputElement | null>(null);
+  const captionRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Prevent ancestor touch/pointer handlers from stealing focus while
   // the user interacts with this input on mobile. Stop propagation
@@ -89,43 +89,53 @@ export function CaptionInputField({
     };
   }, [localCaption, setCaption]);
 
+  // Ensure height matches current caption on mount / changes
+  useEffect(() => {
+    try {
+      const el = captionRef.current;
+      if (!el) return;
+      el.style.height = 'auto';
+      const newHeight = Math.min(Math.max(el.scrollHeight, 40), 320);
+      el.style.height = `${newHeight}px`;
+    } catch (_) {}
+  }, [localCaption]);
+
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginTop: 8 }}>
       <div className="input-container" style={{ position: 'relative', width: '100%' }}>
         {(!localCaption && captionPlaceholder && !captionFocused) ? (
-          <span
-            className="input-ghost-placeholder"
-            aria-hidden="true"
-          >
+          <span className="input-ghost-placeholder multiline" aria-hidden="true">
             <span key={captionLocalIndex} className="typewriter">{captionPlaceholder}</span>
           </span>
         ) : null}
-        <input
+        <textarea
           className="input"
-          type="text"
-          inputMode="text"
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={true}
-          autoCapitalize="sentences"
           aria-label="Caption"
           placeholder={localCaption ? undefined : ''}
           value={localCaption}
-          onChange={e => { isTypingCaptionRef.current = true; setLocalCaption(e.target.value); }}
+          onChange={e => {
+            isTypingCaptionRef.current = true;
+            setLocalCaption(e.target.value);
+            try {
+              const el = captionRef.current;
+              if (el) {
+                el.style.height = 'auto';
+                const newHeight = Math.min(Math.max(el.scrollHeight, 40), 320);
+                el.style.height = `${newHeight}px`;
+              }
+            } catch (_) {}
+          }}
           readOnly={!hasPreview || processing}
           tabIndex={hasPreview ? 0 : -1}
           ref={captionRef}
           onMouseDown={(e) => { if (!hasPreview || processing) e.preventDefault(); }}
-            // Prevent parent touch/pointer handlers from stealing focus while
-            // the user interacts with this input on mobile. Stop propagation
-            // only so vertical scrolling still works as expected.
-            onTouchStart={(e:any) => { e.stopPropagation(); }}
-            onTouchMove={(e:any) => { e.stopPropagation(); }}
-            onPointerDown={(e:any) => { e.stopPropagation(); }}
-            onPointerMove={(e:any) => { e.stopPropagation(); }}
+          onTouchStart={(e:any) => { e.stopPropagation(); }}
+          onTouchMove={(e:any) => { e.stopPropagation(); }}
+          onPointerDown={(e:any) => { e.stopPropagation(); }}
+          onPointerMove={(e:any) => { e.stopPropagation(); }}
           onFocus={(e) => {
             if (!hasPreview || processing) {
-              e.target.blur();
+              (e.target as HTMLTextAreaElement).blur();
               return;
             }
             setCaptionFocused(true);
@@ -135,7 +145,7 @@ export function CaptionInputField({
             try { setCaption?.(localCaption); } finally { isTypingCaptionRef.current = false; }
             setCaptionFocused(false);
           }}
-          style={{ width: '100%', paddingRight: 32, paddingLeft: 35, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)' }}
+          style={{ width: '100%', paddingRight: 32, paddingLeft: 35, paddingTop: 8, paddingBottom: 8, minHeight: 40, maxHeight: 320, cursor: (!hasPreview || processing) ? 'not-allowed' : 'text', color: 'var(--text)', background: 'var(--bg)', resize: 'vertical' }}
         />
         <Pen size={16} className="input-icon" />
       </div>

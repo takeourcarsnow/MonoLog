@@ -48,6 +48,9 @@
   pointer-events: none; color: var(--muted);
   font-size: 12px; line-height: 1; overflow: hidden; white-space: nowrap;
 }
+.input-ghost-placeholder.multiline {
+  top: 12px; transform: none; display: block; white-space: normal; max-width: 100%;
+}
 .input-ghost-placeholder { display: flex; align-items: center; gap: 6px; }
 .input-ghost-placeholder .typewriter {
   display: inline-block; max-width: 100%; overflow: hidden; text-overflow: clip;

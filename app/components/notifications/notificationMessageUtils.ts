@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { getClient } from "@/lib/api/client";
 import type { Notification } from "@/lib/types";
 import { getPost } from '@/lib/api/posts/post';
 import { getUser } from '@/lib/api/users';
@@ -33,6 +34,7 @@ export async function getNotificationMessage(notification: Notification): Promis
         let href: string | undefined = undefined;
         let imageUrl: string | undefined = undefined;
         let isOwnPost = false;
+        let isOwnStory = false;
         if (notification.post_id) {
           try {
             const p = await getPost(notification.post_id);
@@ -52,9 +54,29 @@ export async function getNotificationMessage(notification: Notification): Promis
           } catch (e) {
             href = `/post/${notification.post_id}`;
           }
+        } else if (notification.story_id) {
+          // For story comments, link to the user's profile where stories are shown
+          isOwnStory = true; // Notifications are sent to story owner
+          try {
+            const sb = getClient();
+            const { data: story } = await sb.from('stories').select('media_url').eq('id', notification.story_id).single();
+            if (story && story.media_url) {
+              imageUrl = story.media_url;
+            }
+            const actor = notification.actor_id ? await getUser(notification.actor_id) : null;
+            if (actor && actor.username) {
+              href = `/${actor.username}`;
+            }
+            // Stories don't have images in notifications - but now we set it
+            const currentUser = await api.getCurrentUser();
+          } catch (e) {
+            // No href or image for story comments if can't determine
+          }
         }
+        const contentType = notification.post_id ? 'post' : 'story';
+        const ownership = (notification.post_id && isOwnPost) || (notification.story_id && isOwnStory) ? 'your' : 'a';
         return {
-          message: `${actorUsername} commented on ${isOwnPost ? 'your' : 'a'} post${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
+          message: `${actorUsername} commented on ${ownership} ${contentType}${notification.text ? `:\n\n${notification.text.slice(0, 100)}${notification.text.length > 100 ? '...' : ''}` : ''}`,
           href,
           imageUrl,
           actorAvatarUrl,

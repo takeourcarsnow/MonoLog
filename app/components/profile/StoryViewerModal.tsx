@@ -61,7 +61,7 @@ export function StoryViewerModal({
 
   // Progress tracking for auto-advance
   useEffect(() => {
-    if (!isOpen || !currentStory || isPaused) return;
+    if (!isOpen || !currentStory || isPaused || showComments || isLoading) return;
 
     const duration = currentStory.mediaType === 'video' ? 
       Math.min(Math.max(currentStory.durationSeconds || 6, 3), 15) : 6;
@@ -82,7 +82,7 @@ export function StoryViewerModal({
         clearInterval(progressIntervalRef.current);
       }
     };
-  }, [isOpen, currentStory, currentIndex, isPaused, onNext]);
+  }, [isOpen, currentStory, currentIndex, isPaused, showComments, isLoading, onNext]);
 
   // Pause on hover
   useEffect(() => {

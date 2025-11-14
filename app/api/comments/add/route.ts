@@ -102,11 +102,15 @@ export async function POST(req: Request) {
     console.log('Insert result:', res);
     if (res.error) {
       console.log('Insert error:', res.error);
+      console.log('Error message:', res.error.message);
+      console.log('Error details:', res.error.details);
+      console.log('Error hint:', res.error.hint);
       return apiError(String(res.error.message || res.error), 500);
     }
     // Try to create a notification for the post owner and all previous commenters. This is best-effort
     // — if the notifications table doesn't exist or the insert fails, we
     // shouldn't block comment creation.
+    console.log('[addComment] Starting notification creation for comment:', id, 'postId:', postId, 'storyId:', storyId);
     (async () => {
       try {
         let ownerId: string | null = null;
@@ -122,12 +126,16 @@ export async function POST(req: Request) {
           // lookup story owner
           const { data: story, error: storyErr } = await sb.from('stories').select('id, user_id').eq('id', storyId).limit(1).single();
           if (!story || storyErr) {
-            console.log('[addComment] Story lookup failed:', storyErr);
+            console.log('[addComment] Story lookup failed:', storyErr, 'for storyId:', storyId);
             return;
           }
           ownerId = story.user_id;
+          console.log('[addComment] Story owner found:', ownerId, 'for storyId:', storyId);
         }
-        if (!ownerId) return;
+        if (!ownerId) {
+          console.log('[addComment] No ownerId found, skipping notifications');
+          return;
+        }
 
         // get all previous commenters except actor
         const whereClause = postId ? { post_id: postId } : { story_id: storyId };

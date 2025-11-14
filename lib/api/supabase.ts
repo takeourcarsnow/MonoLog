@@ -6,6 +6,7 @@ import { favoritePost, unfavoritePost, isFavorite, getFavoritePosts } from "./fa
 import { getComments, addComment } from "./comments";
 import { calendarStats } from "./calendar";
 import { weekReviewStats } from "./weekReview";
+import { monthReviewStats } from "./monthReview";
 import { getCommunities, getCommunity, createCommunity, updateCommunity, joinCommunity, leaveCommunity, deleteCommunity, isCommunityMember, getCommunityThreads, getThread, getThreadBySlug, createThread, updateThread, deleteThread, getThreadReplies, addThreadReply, deleteThreadReply, editThreadReply, hasNewThreads } from "./communities";
 import { search } from "./search";
 import { createStory, getActiveStoriesForUser, getFollowingStories, getExploreStories, markStoryViewed, deleteStory, likeStory, unlikeStory, isLikedStory } from './stories';
@@ -54,6 +55,7 @@ export const supabaseApi: Api = {
   deleteCurrentUser,
   calendarStats,
   weekReviewStats,
+  monthReviewStats,
   getCommunities,
   getCommunity,
   createCommunity,

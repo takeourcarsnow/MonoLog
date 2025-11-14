@@ -1,5 +1,5 @@
-/* Week Review styles */
-.week-review-page {
+/* Month Review styles */
+.month-review-page {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
@@ -7,19 +7,19 @@
   box-sizing: border-box;
 }
 
-.review-header {
+.month-header {
   text-align: center;
   margin-bottom: 32px;
 }
 
-.review-header h1 {
+.month-header h1 {
   font-size: 28px;
   font-weight: 700;
   color: var(--text);
   margin: 0 0 8px 0;
 }
 
-.review-header p {
+.month-header p {
   font-size: 16px;
   color: var(--muted);
   margin: 0 0 20px 0;
@@ -59,7 +59,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .stat-card {
@@ -98,9 +98,57 @@
   color: var(--text);
 }
 
-.stat-subtitle {
-  font-size: 12px;
-  color: var(--muted);
+/* Insights Section */
+.insights-section {
+  margin-bottom: 32px;
+}
+
+.insights-section h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 16px 0;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.insight-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.insight-icon {
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius);
+  background: var(--primary-weak);
+  flex-shrink: 0;
+}
+
+.insight-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px 0;
+}
+
+.insight-content p {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
 }
 
 /* Highlight Sections */
@@ -111,32 +159,21 @@
   margin-bottom: 20px;
 }
 
-.highlight-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.highlight-header h2 {
+.highlight-section h2 {
   font-size: 18px;
   font-weight: 600;
   color: var(--text);
-  margin: 0;
+  margin: 0 0 16px 0;
 }
 
-.highlight-header svg {
-  color: var(--primary);
-}
-
-/* Top Posts */
-.top-posts {
+/* Recent Posts */
+.recent-posts {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.top-post-item {
+.recent-post-item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -145,26 +182,12 @@
   border-radius: var(--radius-sm);
 }
 
-.weekday-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-width: 24px;
-}
-
-.post-rank {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  text-align: center;
-}
-
 .post-date {
-  font-size: 12px;
-  color: var(--muted);
-  text-align: center;
-  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 80px;
+  text-align: left;
 }
 
 .post-thumbnail {
@@ -215,7 +238,7 @@
 }
 
 .caption-content.expanded {
-  /* Ensure expanded captions in week review are never clipped. Use a very
+  /* Ensure expanded captions in month review are never clipped. Use a very
      large max-height to keep the transition while effectively removing the
      cap for real content sizes. */
   max-height: 9999px;

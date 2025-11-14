@@ -137,6 +137,30 @@ export type WeekReviewStats = {
   weekEnd: string;
 };
 
+export type MonthReviewStats = {
+  totalPosts: number;
+  totalImages: number;
+  commentsMade: number;
+  spotifyLinks: number;
+  communitiesJoined: number;
+  threadsCreated: number;
+  storiesCreated: number;
+  averagePostsPerDay: number;
+  mostActiveDay: string;
+  recentPosts: Array<{
+    id: string;
+    created_at: string;
+    caption: string;
+    image_urls?: string[];
+    image_url?: string;
+    thumbnail_urls?: string[];
+    thumbnail_url?: string;
+  }>;
+  postsByWeek: Record<string, number>;
+  monthStart: string;
+  monthEnd: string;
+};
+
 export type Notification = {
   id: string;
   user_id: string;
@@ -234,6 +258,9 @@ export interface Api {
   // Week review statistics
   weekReviewStats(): Promise<WeekReviewStats>;
 
+  // Month review statistics
+  monthReviewStats(): Promise<MonthReviewStats>;
+
   // Notifications
   getNotifications(options?: { limit?: number; before?: string }): Promise<Notification[]>;
   markNotificationsRead(notificationIds: string[]): Promise<void>;
@@ -261,7 +288,7 @@ export const RESERVED_ROUTES = [
   'feed', 'post', 'profile', 'upload', 'admin',
   'settings', 'help', 'terms', 'privacy', 'login',
   'register', 'signup', 'signin', 'logout', 'auth',
-  'week-review', 'hashtags', 'search', 'reset-password', 'offline', 'styles',
+  'review', 'week-review', 'hashtags', 'search', 'reset-password', 'offline', 'styles',
   'notifications',
   '_next', '_vercel', 'favicon.ico', 'robots.txt', 'sitemap.xml'
 ];

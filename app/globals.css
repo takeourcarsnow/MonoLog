@@ -6,7 +6,8 @@
 @import './styles/layout.css';
 @import './styles/cards.css';
 @import './styles/calendar.css';
-@import './styles/week-review.css';
+@import './styles/review.css';
+@import './styles/month-review.css';
 @import './styles/carousel.css';
 @import './styles/comments.css';
 @import './styles/uploader.css';
@@ -381,8 +382,25 @@ body.debug-layout-outline .header { outline: 2px dashed rgba(255,180,0,0.9); }
 }
 
 /* Page-specific overrides for other pages - same pattern as above */
-body.week-review-page .content { overflow: auto !important; }
+body.review-page .content { overflow: auto !important; }
+body.month-review-page .content { overflow: auto !important; }
 body.post-view-page .content { overflow: auto !important; }
+
+/* Mobile-specific overrides for scrollable pages */
+@media (max-width: 768px) {
+  body.review-page .content {
+    height: calc(var(--viewport-height, 1vh) * 100) !important;
+    overflow: auto !important;
+  }
+  body.month-review-page .content {
+    height: calc(var(--viewport-height, 1vh) * 100) !important;
+    overflow: auto !important;
+  }
+  body.post-view-page .content {
+    height: calc(var(--viewport-height, 1vh) * 100) !important;
+    overflow: auto !important;
+  }
+}
 
 .search-form {
   display: flex;

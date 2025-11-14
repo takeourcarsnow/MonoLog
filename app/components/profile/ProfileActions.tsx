@@ -163,7 +163,7 @@ export function ProfileActions({
                 <User size={18} strokeWidth={2} />
               </span>
             </Link>
-            <Link className="btn icon week-review-link no-effects" href="/week-review" aria-label="Week in Review" title="View week in review">
+            <Link className="btn icon week-review-link no-effects" href="/review" aria-label="Activity Review" title="View activity review">
               <span className="icon" aria-hidden>
                 <BarChart3 size={18} strokeWidth={2} />
               </span>

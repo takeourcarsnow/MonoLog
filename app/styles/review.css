@@ -1,9 +1,13 @@
-/* Week Review styles */
-.week-review-page {
+/* Review styles */
+.review-page {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: calc(var(--header-height) + 24px) 12px 20px;
+  /* The page content is already offset by the global `.content` padding
+     which includes the header height. Avoid duplicating that space here —
+     use a small top padding so the review header sits close to the site
+     header while preserving a touch of separation for visual clarity. */
+  padding: 8px 12px 20px;
   box-sizing: border-box;
 }
 

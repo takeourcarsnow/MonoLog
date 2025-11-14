@@ -279,14 +279,17 @@ export default function ReviewPage() {
       {albumOpen && (monthStats as any).monthImages && (
         <div className="modal-overlay" onClick={() => setAlbumOpen(false)}>
           <div className="modal" role="dialog" aria-label="Top of the Month album selector" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto', width: '90vw', maxWidth: '800px' }}>
-            <div className="modal-actions modal-actions-top">
-              <button className="btn" onClick={() => setAlbumOpen(false)} aria-label="Cancel">
-                <X size={20} />
-              </button>
-              <button className="btn btn-primary" onClick={publishAlbum} disabled={selectedImages.length === 0} aria-label={`Publish Album (${selectedImages.length})`}>
-                <Check size={20} />
-                <span style={{ marginLeft: 4, fontSize: '14px' }}>{selectedImages.length}</span>
-              </button>
+            <div className="modal-header">
+              <h3 className="modal-title">Tell your month story</h3>
+              <div className="modal-actions">
+                <button className="btn" onClick={() => setAlbumOpen(false)} aria-label="Cancel">
+                  <X size={20} />
+                </button>
+                <button className="btn btn-primary" onClick={publishAlbum} disabled={selectedImages.length === 0} aria-label={`Publish Album (${selectedImages.length})`}>
+                  <Check size={20} />
+                  <span style={{ marginLeft: 4, fontSize: '14px' }}>{selectedImages.length}</span>
+                </button>
+              </div>
             </div>
             <div className="modal-form" style={{ display: 'flex', gap: 12, marginTop: 8, flexDirection: 'column' }}>
               <CaptionInputField caption={caption} setCaption={setCaption} hasPreview={true} processing={false} phrases={reviewType === 'month' ? PHRASES_MONTH_REVIEW : undefined} />

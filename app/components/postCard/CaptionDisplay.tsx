@@ -16,7 +16,7 @@ export function CaptionDisplay({ caption, maxLength = 50, isAuthed = true, onSig
 
   if (!caption) return null;
 
-  const effectiveMaxLength = isAuthed ? maxLength : Math.min(maxLength, 30);
+  const effectiveMaxLength = maxLength;
   const shouldTruncate = caption.length > effectiveMaxLength;
 
   // Always render the full caption content. Use CSS to visually clamp when
@@ -27,7 +27,7 @@ export function CaptionDisplay({ caption, maxLength = 50, isAuthed = true, onSig
     <div 
       className="caption" 
       aria-live="polite"
-      onClick={() => shouldTruncate && (isAuthed ? setIsExpanded(!isExpanded) : onSignIn?.())}
+      onClick={() => shouldTruncate && setIsExpanded(!isExpanded)}
       style={{ cursor: shouldTruncate ? 'pointer' : 'default' }}
     >
       <div className={`caption-content ${isExpanded ? 'expanded' : 'collapsed'}`}>
@@ -41,16 +41,12 @@ export function CaptionDisplay({ caption, maxLength = 50, isAuthed = true, onSig
           className="caption-read-more"
           onClick={(e) => {
             e.stopPropagation();
-            if (isAuthed) {
-              setIsExpanded(!isExpanded);
-            } else {
-              onSignIn?.();
-            }
+            setIsExpanded(!isExpanded);
           }}
-          aria-expanded={isAuthed ? isExpanded : undefined}
-          aria-label={isAuthed ? (isExpanded ? "Show less" : "Read more") : "Sign in to read more"}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? "Show less" : "Read more"}
         >
-          {isAuthed ? (isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />) : <ChevronDown size={16} />}
+          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       )}
     </div>

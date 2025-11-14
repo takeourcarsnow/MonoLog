@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { renderCaption } from "@/lib/hashtags";
-import { Calendar, Image, MessageCircle, ChevronDown, ChartBar, ChevronLeft, ChevronRight, Users, MessageSquare, Camera, Clock, X, Check } from "lucide-react";
+import { Calendar, Image, MessageCircle, ChevronDown, ChartBar, ChevronLeft, ChevronRight, Users, MessageSquare, Camera, Clock, X, Check, Target, Zap } from "lucide-react";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import type { WeekReviewStats, MonthReviewStats } from "@/lib/types";
 import { WeekReviewSkeleton } from "@/app/components/week-review/WeekReviewSkeleton";
@@ -103,6 +103,44 @@ export default function ReviewPage() {
   const isWeekReview = reviewType === 'week';
   const weekStats = stats as WeekReviewStats;
   const monthStats = stats as MonthReviewStats;
+
+  // Calculate additional month insights
+  const postingConsistency = !isWeekReview ? (() => {
+    const totalDays = 30;
+    const uniqueDaysPosted = new Set(
+      monthStats.recentPosts.map(post => new Date(post.created_at).toDateString())
+    ).size;
+    return Math.round((uniqueDaysPosted / totalDays) * 100);
+  })() : 0;
+
+  const longestStreak = !isWeekReview ? (() => {
+    if (monthStats.recentPosts.length === 0) return 0;
+    
+    const sortedDates = [...new Set(
+      monthStats.recentPosts
+        .map(post => new Date(post.created_at).toDateString())
+        .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+    )];
+    
+    let maxStreak = 1;
+    let currentStreak = 1;
+    
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prevDate = new Date(sortedDates[i - 1]);
+      const currDate = new Date(sortedDates[i]);
+      const diffTime = currDate.getTime() - prevDate.getTime();
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      
+      if (diffDays === 1) {
+        currentStreak++;
+        maxStreak = Math.max(maxStreak, currentStreak);
+      } else {
+        currentStreak = 1;
+      }
+    }
+    
+    return maxStreak;
+  })() : 0;
 
 
   const openTop10Picker = () => {
@@ -222,12 +260,6 @@ export default function ReviewPage() {
               title="Stories Created"
               value={monthStats.storiesCreated}
             />
-
-            <StatCard
-              icon={<ChartBar size={20} />}
-              title="Avg Posts/Day"
-              value={monthStats.averagePostsPerDay}
-            />
           </>
         )}
       </div>
@@ -236,15 +268,6 @@ export default function ReviewPage() {
         <div className="insights-section">
           <h2>Insights</h2>
           <div className="insights-grid">
-            <div className="insight-card">
-              <div className="insight-icon">
-                <Calendar size={24} />
-              </div>
-              <div className="insight-content">
-                <h3>Most Active Day</h3>
-                <p>{monthStats.mostActiveDay}</p>
-              </div>
-            </div>
             {monthStats.averagePostTime && (
               <div className="insight-card">
                 <div className="insight-icon">
@@ -253,6 +276,28 @@ export default function ReviewPage() {
                 <div className="insight-content">
                   <h3>Average Post Time</h3>
                   <p>{monthStats.averagePostTime}</p>
+                </div>
+              </div>
+            )}
+            {postingConsistency > 0 && (
+              <div className="insight-card">
+                <div className="insight-icon">
+                  <Target size={24} />
+                </div>
+                <div className="insight-content">
+                  <h3>Posting Consistency</h3>
+                  <p>{postingConsistency}% of days active</p>
+                </div>
+              </div>
+            )}
+            {longestStreak > 1 && (
+              <div className="insight-card">
+                <div className="insight-icon">
+                  <Zap size={24} />
+                </div>
+                <div className="insight-content">
+                  <h3>Longest Streak</h3>
+                  <p>{longestStreak} consecutive days</p>
                 </div>
               </div>
             )}
@@ -269,7 +314,7 @@ export default function ReviewPage() {
               </div>
               <div className="insight-content">
                 <h3>Top of the Month</h3>
-                <p>Post your favorite photos and share your thoughts on the last month in a special monthly review album.</p>
+                <p>Which 10 pictures tells the story?</p>
               </div>
             </div>
           </div>

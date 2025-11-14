@@ -159,6 +159,9 @@ export type MonthReviewStats = {
   postsByWeek: Record<string, number>;
   monthStart: string;
   monthEnd: string;
+  // Average time of day (human friendly) and minutes since midnight (UTC-based average)
+  averagePostTime?: string | null;
+  averagePostTimeMinutes?: number | null;
 };
 
 export type Notification = {
@@ -214,8 +217,9 @@ export interface Api {
   // and the `lastPostedAt` timestamp so clients can show a progress/countdown
   // from the last post until when the next calendar day begins.
   canPostToday(): Promise<{ allowed: boolean; reason?: string; nextAllowedAt?: number; lastPostedAt?: number }>;
-  // Accept either a single `imageUrl` (legacy) or `imageUrls` (array up to 5 urls).
-  createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; spotifyLink?: string; public?: boolean; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string }): Promise<HydratedPost>;
+  // Accept either a single `imageUrl` (legacy) or `imageUrls` (array up to a max).
+  // `maxImages` is optional and defaults to the client/server configured limit (typically 5).
+  createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; spotifyLink?: string; public?: boolean; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string; maxImages?: number }): Promise<HydratedPost>;
 
   updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }): Promise<HydratedPost>;
   deletePost(id: string): Promise<boolean>;

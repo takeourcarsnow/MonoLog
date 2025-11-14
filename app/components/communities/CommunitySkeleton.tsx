@@ -48,36 +48,34 @@ export function CommunitySkeleton() {
         </div>
       </div>
 
-      {/* Threads List */}
+      {/* Threads List (simplified) */}
       <div className="content-body space-y-6 pt-6">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="card block thread-card relative">
             <div className="flex items-center justify-center">
               <div className="flex-1 min-w-0 text-center">
                 {/* Thread title */}
                 <div style={{ marginBottom: 8 }}>
-                  <Skeleton width={300} height={24} />
+                  <Skeleton width={260} height={20} />
                 </div>
 
                 {/* Thread content */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center", width: "100%" }}>
-                  <Skeleton width="100%" height={14} />
-                  <Skeleton width="90%" height={14} />
+                  <Skeleton width="92%" height={14} />
                 </div>
 
-                {/* Thread stats */}
+                {/* Thread stats (reduced) */}
                 <div className="flex flex-col items-center gap-2 mt-2 text-sm">
                   <div className="flex items-center gap-4 justify-center">
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <Skeleton width={14} height={14} borderRadius="50%" />
-                      <Skeleton width={25} height={14} />
+                      <Skeleton width={22} height={14} />
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <Skeleton width={14} height={14} borderRadius="50%" />
-                      <Skeleton width={60} height={14} />
+                      <Skeleton width={48} height={14} />
                     </div>
                   </div>
-                  <Skeleton width={80} height={14} />
                 </div>
               </div>
             </div>

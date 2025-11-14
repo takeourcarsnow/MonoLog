@@ -4,13 +4,14 @@ import { Skeleton } from "@/app/components/ui/Skeleton";
 
 export function ProfileSkeleton() {
   return (
-    <div className="view-fade">
+    // Use `profile-page` wrapper so global page spacing/scroll rules apply
+    <div className="profile-page view-fade">
       <div className="profile-header toolbar">
         <div className="profile-left" style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center", width: "100%" }}>
           {/* Avatar skeleton */}
           <Skeleton
-            width={160}
-            height={160}
+            width={140}
+            height={140}
             borderRadius="50%"
             className="flex-shrink-0"
           />

@@ -6,9 +6,9 @@ export function FeedSkeleton({ view }: { view: "list" | "grid" }) {
   return (
     <div className={`feed ${view === 'grid' ? 'grid-view' : ''}`}>
         {view === 'grid' ? (
-          // Grid view skeleton
+          // Grid view skeleton (simplified)
           <div className="grid">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <article key={i} className="tile" style={{ position: 'relative' }}>
                 <div className="post-header">
                   <Skeleton width={40} height={40} borderRadius="50%" />
@@ -33,9 +33,9 @@ export function FeedSkeleton({ view }: { view: "list" | "grid" }) {
             ))}
           </div>
         ) : (
-          // List view skeleton
+          // List view skeleton (reduced items for faster paint)
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <article key={i} className="post-card">
                 {/* User Header */}
                 <div className="user-header">
@@ -59,20 +59,17 @@ export function FeedSkeleton({ view }: { view: "list" | "grid" }) {
                   <Skeleton width="100%" height={300} borderRadius={8} />
                 </div>
 
-                {/* Caption */}
+                {/* Caption: reduced lines to match typical post preview */}
                 <div className="caption-display" style={{ marginTop: 12 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <Skeleton width="100%" height={16} />
-                    <Skeleton width="95%" height={16} />
                     <Skeleton width="85%" height={16} />
-                    <Skeleton width="70%" height={16} />
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="actions-section" style={{ marginTop: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <Skeleton width={60} height={32} borderRadius={16} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <Skeleton width={60} height={32} borderRadius={16} />
                     <Skeleton width={60} height={32} borderRadius={16} />
                     <div style={{ marginLeft: "auto" }}>

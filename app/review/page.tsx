@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { renderCaption } from "@/lib/hashtags";
-import { Calendar, Image, MessageCircle, ChevronDown, ChartBar, ChevronLeft, ChevronRight, Users, MessageSquare, Camera } from "lucide-react";
+import { Calendar, Image, MessageCircle, ChevronDown, ChartBar, ChevronLeft, ChevronRight, Users, MessageSquare, Camera, Clock } from "lucide-react";
 import { OptimizedImage } from "@/app/components/media/OptimizedImage";
 import type { WeekReviewStats, MonthReviewStats } from "@/lib/types";
 import { WeekReviewSkeleton } from "@/app/components/week-review/WeekReviewSkeleton";
@@ -22,6 +22,8 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedCaptions, setExpandedCaptions] = useState<Set<string>>(new Set());
+  const [albumOpen, setAlbumOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
   // Allow body scrolling for review page
   useEffect(() => {
@@ -87,6 +89,48 @@ export default function ReviewPage() {
   const isWeekReview = reviewType === 'week';
   const weekStats = stats as WeekReviewStats;
   const monthStats = stats as MonthReviewStats;
+
+
+  const openTop10Picker = () => {
+    if (!monthStats || !(monthStats as any).monthImages) return;
+    const imgs = (monthStats as any).monthImages as Array<any>;
+    // Default select top 10 by score then recent
+    const sorted = imgs.slice().sort((a, b) => (b.score - a.score) || (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    const defaults = sorted.slice(0, 10).map(i => i.imageUrl).filter(Boolean);
+    setSelectedImages(defaults);
+    setAlbumOpen(true);
+  };
+
+  const toggleSelectImage = (url: string) => {
+    setSelectedImages(prev => {
+      const s = new Set(prev);
+      if (s.has(url)) s.delete(url);
+      else {
+        if (s.size >= 10) return Array.from(s); // ignore additional selections
+        s.add(url);
+      }
+      return Array.from(s);
+    });
+  };
+
+  const publishAlbum = async () => {
+    if (selectedImages.length === 0) return;
+    try {
+      // Use existing createOrReplaceToday API but allow up to 10 images via maxImages
+      await api.createOrReplaceToday({
+        imageUrls: selectedImages,
+        caption: `Top ${selectedImages.length} photos from the last month`,
+        public: true,
+        maxImages: 10,
+      });
+      setAlbumOpen(false);
+      // navigate home so user sees the new post
+      router.push('/');
+    } catch (e: any) {
+      console.warn('Failed to publish album', e?.message || e);
+      alert('Failed to publish album');
+    }
+  };
 
   return (
     <div className="review-page">
@@ -186,6 +230,49 @@ export default function ReviewPage() {
                 <h3>Most Active Day</h3>
                 <p>{monthStats.mostActiveDay}</p>
               </div>
+            </div>
+            {monthStats.averagePostTime && (
+              <div className="insight-card">
+                <div className="insight-icon">
+                  <Clock size={24} />
+                </div>
+                <div className="insight-content">
+                  <h3>Average Post Time</h3>
+                  <p>{monthStats.averagePostTime}</p>
+                </div>
+              </div>
+            )}
+            <div className="insight-card">
+              <div className="insight-icon">
+                <Image size={24} />
+              </div>
+              <div className="insight-content">
+                <h3>Top 10 Album</h3>
+                <p>Pick your favorite photos from the last month and post a 10-photo album.</p>
+                <button className="btn btn-primary" onClick={openTop10Picker}>Create Top 10 Album</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {albumOpen && (monthStats as any).monthImages && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Select up to 10 photos</h3>
+            <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
+              <div className="image-grid">
+                {((monthStats as any).monthImages as any[]).map(img => (
+                  <div key={img.id} className={`image-tile ${selectedImages.includes(img.imageUrl) ? 'selected' : ''}`} onClick={() => toggleSelectImage(img.imageUrl)}>
+                    <img src={img.thumbnailUrl || img.imageUrl} alt="" />
+                    <div className="tile-overlay">{selectedImages.includes(img.imageUrl) ? '✓' : ''}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn" onClick={() => setAlbumOpen(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={publishAlbum} disabled={selectedImages.length === 0}>Publish Album ({selectedImages.length})</button>
             </div>
           </div>
         </div>

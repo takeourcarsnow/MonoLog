@@ -106,6 +106,26 @@ export const GET = withHandler({ method: 'GET' })(async (req, ctx) => {
   const threadsCreated = threads?.length || 0;
   const storiesCreated = stories?.length || 0;
 
+  // Debug output: helpful when investigating mismatched counts. Log lengths
+  // and a few example ids for each resource so we can verify whether deleted
+  // items are being counted unintentionally.
+  try {
+    console.debug('[month-review] counts', {
+      totalPosts: posts?.length || 0,
+      samplePostIds: (posts || []).slice(0, 5).map((p: any) => p.id),
+      commentsMade: userComments?.length || 0,
+      sampleCommentIds: (userComments || []).slice(0, 5).map((c: any) => c.id),
+      communitiesJoined: communityMemberships?.length || 0,
+      sampleCommunityMemberIds: (communityMemberships || []).slice(0, 5).map((m: any) => m.id),
+      threadsCreated: threads?.length || 0,
+      sampleThreadIds: (threads || []).slice(0, 5).map((t: any) => t.id),
+      storiesCreated: stories?.length || 0,
+      sampleStoryIds: (stories || []).slice(0, 5).map((s: any) => s.id),
+    });
+  } catch (e) {
+    // ignore logging errors
+  }
+
   // Calculate average posts per day
   const daysInMonth = 30;
   const averagePostsPerDay = totalPosts / daysInMonth;
@@ -135,6 +155,47 @@ export const GET = withHandler({ method: 'GET' })(async (req, ctx) => {
   // Get recent posts - take the most recent 10
   const recentPosts = posts?.slice(0, 10) || [];
 
+  // Flatten all images from posts in the month into a single list so the
+  // client can offer a "Top 10" album picker. Each entry includes the
+  // parent post id, the image url, thumbnail (if available), created_at
+  // and a simple engagement score (number of comments) for basic ranking.
+  const monthImages = (posts || []).flatMap((post: any) => {
+    const images: string[] = Array.isArray(post.image_urls) ? post.image_urls : (post.image_url ? [post.image_url] : []);
+    const thumbs: string[] = Array.isArray(post.thumbnail_urls) ? post.thumbnail_urls : (post.thumbnail_url ? [post.thumbnail_url] : []);
+    const score = Array.isArray(post.comments) ? post.comments.length : 0;
+    return images.map((img: string, idx: number) => ({
+      id: `${post.id}:${idx}`,
+      postId: post.id,
+      imageUrl: img,
+      thumbnailUrl: thumbs[idx] || thumbs[0] || null,
+      created_at: post.created_at,
+      score,
+    }));
+  });
+
+  // Calculate average time of day (UTC-based) across posts in minutes since midnight
+  let averagePostTimeMinutes: number | null = null;
+  let averagePostTime: string | null = null;
+  if (posts && posts.length > 0) {
+    const minutesArray = posts.map(p => {
+      const d = new Date(p.created_at);
+      // use UTC hours/minutes to avoid server-local timezone confusion
+      return d.getUTCHours() * 60 + d.getUTCMinutes();
+    });
+    const sum = minutesArray.reduce((a, b) => a + b, 0);
+    const avg = Math.round(sum / minutesArray.length) % (24 * 60);
+    averagePostTimeMinutes = avg;
+
+    // Format into human-friendly 12-hour string (UTC-based)
+    const hour = Math.floor(avg / 60);
+    const minute = avg % 60;
+    const suffix = hour >= 12 ? 'PM' : 'AM';
+    let hour12 = hour % 12;
+    if (hour12 === 0) hour12 = 12;
+    const minuteStr = minute.toString().padStart(2, '0');
+    averagePostTime = `${hour12}:${minuteStr} ${suffix}`;
+  }
+
   const monthReview = {
     totalPosts,
     totalImages,
@@ -149,6 +210,10 @@ export const GET = withHandler({ method: 'GET' })(async (req, ctx) => {
     postsByWeek,
     monthStart: startDate,
     monthEnd: new Date().toISOString()
+    ,
+    averagePostTime,
+    averagePostTimeMinutes,
+    monthImages
   };
 
   return apiSuccess(monthReview);

@@ -27,40 +27,37 @@ export function ThreadSkeleton() {
         </div>
       </div>
 
-      {/* Replies Section */}
-      <div className="content-body mt-8">
-        {/* Reply Form */}
-        <div className="card mb-6">
-          <Skeleton width="100%" height={80} borderRadius={6} />
-          <div className="flex justify-end mt-3">
-            <Skeleton width={80} height={36} borderRadius={6} />
-          </div>
-        </div>
-
-        {/* Replies List */}
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="card mb-4">
-            <div className="flex items-start gap-3">
-              <Skeleton width={40} height={40} borderRadius="50%" />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Skeleton width={100} height={16} />
-                  <Skeleton width={60} height={14} />
-                </div>
-                <div className="space-y-1">
-                  <Skeleton width="100%" height={16} />
-                  <Skeleton width="85%" height={16} />
-                  <Skeleton width="70%" height={16} />
-                </div>
-                <div className="flex items-center gap-2 mt-3">
-                  <Skeleton width={50} height={24} borderRadius={4} />
-                  <Skeleton width={50} height={24} borderRadius={4} />
-                </div>
+          {/* Replies Section */}
+          <div className="content-body mt-8">
+            {/* Reply Form (simplified) */}
+            <div className="card mb-6">
+              <Skeleton width="100%" height={72} borderRadius={6} />
+              <div className="flex justify-end mt-3">
+                <Skeleton width={72} height={36} borderRadius={6} />
               </div>
             </div>
+
+            {/* Replies List (reduced) */}
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="card mb-4">
+                <div className="flex items-start gap-3">
+                  <Skeleton width={40} height={40} borderRadius="50%" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Skeleton width={140} height={16} />
+                    </div>
+                    <div className="space-y-1">
+                      <Skeleton width="100%" height={16} />
+                      <Skeleton width="80%" height={16} />
+                    </div>
+                    <div className="flex items-center gap-2 mt-3">
+                      <Skeleton width={50} height={24} borderRadius={4} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
     </div>
   );
 }

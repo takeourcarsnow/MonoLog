@@ -40,12 +40,13 @@ export async function canPostToday() {
   return { allowed: true };
 }
 
-export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType, weatherCondition, weatherTemperature, locationAddress }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; public?: boolean; spotifyLink?: string; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string }) {
+export async function createOrReplaceToday({ imageUrl, imageUrls, caption, alt, public: isPublic = true, spotifyLink, camera, lens, filmType, weatherCondition, weatherTemperature, locationAddress, maxImages }: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string; public?: boolean; spotifyLink?: string; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string; maxImages?: number }) {
   const cur = await getCurrentUser();
   if (!cur) throw new Error('Not logged in');
 
   // For uploads, convert any data URLs via the server storage endpoint so the server can store via service role
-  const inputs: string[] = imageUrls?.length ? imageUrls.slice(0, 5) : imageUrl ? [imageUrl] : [];
+  const limit = typeof maxImages === 'number' && maxImages > 0 ? Math.min(maxImages, 20) : 5; // safe upper bound of 20
+  const inputs: string[] = imageUrls?.length ? imageUrls.slice(0, limit) : imageUrl ? [imageUrl] : [];
   const finalUrls: string[] = [];
   const finalThumbUrls: string[] = [];
   for (const img of inputs) {

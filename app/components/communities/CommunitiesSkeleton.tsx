@@ -19,19 +19,19 @@ export function CommunitiesSkeleton() {
       </div>
 
       <div className="content-body space-y-6">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="card relative">
             <div className="flex flex-col items-center text-center gap-3 py-4">
               {/* Community image */}
               <Skeleton width={80} height={80} borderRadius="50%" />
 
               {/* Community name */}
-              <Skeleton width={200} height={24} />
+              <Skeleton width={180} height={20} />
 
               {/* Description */}
               <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center", width: "100%", maxWidth: "40ch" }}>
-                <Skeleton width="100%" height={14} />
-                <Skeleton width="80%" height={14} />
+                <Skeleton width="92%" height={14} />
+                <Skeleton width="72%" height={14} />
               </div>
 
               {/* Stats */}

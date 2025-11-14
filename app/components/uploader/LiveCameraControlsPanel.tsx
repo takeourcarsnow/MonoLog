@@ -45,7 +45,7 @@ export function LiveCameraControlsPanel({
   setSelectedOverlay,
 }: LiveCameraControlsPanelProps) {
   return (
-    <>
+    <div style={{ padding: '16px 20px 24px 20px' }}>
       {/* Effect selection buttons */}
       <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ padding: 8, borderRadius: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -147,6 +147,6 @@ export function LiveCameraControlsPanel({
           disabled={disabled}
         />
       )}
-    </>
+    </div>
   );
 }

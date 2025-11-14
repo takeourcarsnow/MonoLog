@@ -27,10 +27,6 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
     onSettingsChange({ ...effectSettings, textColor: value });
   }, [effectSettings, onSettingsChange]);
 
-  const handleAlignChange = useCallback((align: string) => {
-    onSettingsChange({ ...effectSettings, textAlign: align as any });
-  }, [effectSettings, onSettingsChange]);
-
   return (
     <div style={{ padding: '4px 0', display: 'flex', flexDirection: 'column', gap: 4 }}>
       {/* Add font preview styles */}
@@ -66,21 +62,21 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
       />
 
       {/* Compact controls row */}
-      <div style={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ width: '100%', display: 'flex', gap: 8, alignItems: 'center' }}>
         {/* Font size */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
           <span style={{ fontSize: '9px', color: 'var(--muted)', minWidth: '16px' }}>
             {effectSettings.textFontSize || 24}
           </span>
           <input
             type="range"
             min="12"
-            max="120"
+            max="300"
             step="2"
             value={effectSettings.textFontSize || 24}
             onChange={(e) => handleFontSizeChange(parseInt(e.target.value))}
             disabled={disabled}
-            style={{ width: '50px', height: '10px' }}
+            style={{ width: '100%', height: '10px' }}
           />
         </div>
 
@@ -98,7 +94,7 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
             color: 'var(--text)',
             fontSize: '9px',
             height: '18px',
-            minWidth: '65px',
+            flex: 1,
           }}
         >
           <option value="Roboto">Roboto</option>
@@ -118,80 +114,14 @@ export const TextControls = memo<TextControlsProps>(({ effectSettings, onSetting
           onChange={(e) => handleColorChange(e.target.value)}
           disabled={disabled}
           style={{
-            width: '20px',
+            width: '40px',
             height: '18px',
             border: '1px solid var(--border)',
             borderRadius: 2,
             cursor: 'pointer',
+            flexShrink: 0,
           }}
         />
-
-        {/* Alignment - simplified icons only */}
-        <div style={{ display: 'flex', gap: 1 }}>
-          <button
-            type="button"
-            onClick={() => handleAlignChange('left')}
-            disabled={disabled}
-            style={{
-              padding: '1px',
-              border: `1px solid ${effectSettings.textAlign === 'left' ? 'var(--primary)' : 'transparent'}`,
-              borderRadius: 2,
-              background: 'transparent',
-              color: 'var(--text)',
-              fontSize: '9px',
-              cursor: 'pointer',
-              width: '18px',
-              height: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ⬅️
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAlignChange('center')}
-            disabled={disabled}
-            style={{
-              padding: '1px',
-              border: `1px solid ${effectSettings.textAlign === 'center' ? 'var(--primary)' : 'transparent'}`,
-              borderRadius: 2,
-              background: 'transparent',
-              color: 'var(--text)',
-              fontSize: '9px',
-              cursor: 'pointer',
-              width: '18px',
-              height: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ⬌
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAlignChange('right')}
-            disabled={disabled}
-            style={{
-              padding: '1px',
-              border: `1px solid ${effectSettings.textAlign === 'right' ? 'var(--primary)' : 'transparent'}`,
-              borderRadius: 2,
-              background: 'transparent',
-              color: 'var(--text)',
-              fontSize: '9px',
-              cursor: 'pointer',
-              width: '18px',
-              height: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ➡️
-          </button>
-        </div>
       </div>
     </div>
   );

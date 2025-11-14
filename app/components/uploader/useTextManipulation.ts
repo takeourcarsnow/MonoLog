@@ -74,14 +74,34 @@ export function useTextManipulation(setEffectSettings: React.Dispatch<React.SetS
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
       const rect = e.currentTarget.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
+      const clickX = (e.clientX - rect.left) / rect.width;
+      const clickY = (e.clientY - rect.top) / rect.height;
+
+      // Calculate text bounds (normalized coordinates)
+      const textX = effectSettings.textX ?? 0.5;
+      const textY = effectSettings.textY ?? 0.5;
+      const fontSize = effectSettings.textFontSize || 40;
+      const textWidth = Math.max(100, fontSize * 6) / rect.width; // normalized width
+      const textHeight = Math.max(30, fontSize * 1.2) / rect.height; // normalized height
+
+      // Check if click is within text bounds
+      const textLeft = textX - textWidth / 2;
+      const textRight = textX + textWidth / 2;
+      const textTop = textY - textHeight / 2;
+      const textBottom = textY + textHeight / 2;
+
+      const isClickOnText = clickX >= textLeft && clickX <= textRight &&
+                           clickY >= textTop && clickY <= textBottom;
+
+      if (!isClickOnText) {
+        return; // Don't start dragging if click is not on text
+      }
 
       if (e.button === 0) { // Left click - drag
         setIsDraggingText(true);
-        setDragStartX(x);
-        setDragStartY(y);
-        throttledSetDragPosition(x, y);
+        setDragStartX(clickX);
+        setDragStartY(clickY);
+        throttledSetDragPosition(clickX, clickY);
       } else if (e.button === 2) { // Right click - rotate
         e.preventDefault(); // Prevent context menu
         initialRotationRef.current = effectSettings.textRotation || 0;
@@ -90,7 +110,7 @@ export function useTextManipulation(setEffectSettings: React.Dispatch<React.SetS
         setDragStartY(e.clientY);
       }
     }
-  }, [effectSettings.type, effectSettings.textContent, effectSettings.textRotation, disabled, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
+  }, [effectSettings.type, effectSettings.textContent, effectSettings.textX, effectSettings.textY, effectSettings.textFontSize, effectSettings.textRotation, disabled, setEffectSettings, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isDraggingText && effectSettings.type === 'text') {
@@ -142,21 +162,40 @@ export function useTextManipulation(setEffectSettings: React.Dispatch<React.SetS
   const handleTouchStartEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     // Handle text dragging and rotation
     if (effectSettings.type === 'text' && effectSettings.textContent && !disabled) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const touch = e.touches[0];
+      const touchX = (touch.clientX - rect.left) / rect.width;
+      const touchY = (touch.clientY - rect.top) / rect.height;
+
+      // Calculate text bounds (normalized coordinates)
+      const textX = effectSettings.textX ?? 0.5;
+      const textY = effectSettings.textY ?? 0.5;
+      const fontSize = effectSettings.textFontSize || 40;
+      const textWidth = Math.max(100, fontSize * 6) / rect.width; // normalized width
+      const textHeight = Math.max(30, fontSize * 1.2) / rect.height; // normalized height
+
+      // Check if touch is within text bounds
+      const textLeft = textX - textWidth / 2;
+      const textRight = textX + textWidth / 2;
+      const textTop = textY - textHeight / 2;
+      const textBottom = textY + textHeight / 2;
+
+      const isTouchOnText = touchX >= textLeft && touchX <= textRight &&
+                           touchY >= textTop && touchY <= textBottom;
+
+      if (!isTouchOnText) {
+        return; // Don't start manipulating if touch is not on text
+      }
+
       setIsManipulatingText(true);
       if (e.touches.length === 1) {
         // Single touch - drag
-        const rect = e.currentTarget.getBoundingClientRect();
-        const touch = e.touches[0];
-        const x = (touch.clientX - rect.left) / rect.width;
-        const y = (touch.clientY - rect.top) / rect.height;
-
         setIsDraggingText(true);
-        setDragStartX(x);
-        setDragStartY(y);
-        throttledSetDragPosition(x, y);
+        setDragStartX(touchX);
+        setDragStartY(touchY);
+        throttledSetDragPosition(touchX, touchY);
       } else if (e.touches.length === 2) {
         // Two touches - rotation and scaling
-        const rect = e.currentTarget.getBoundingClientRect();
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
 
@@ -183,7 +222,7 @@ export function useTextManipulation(setEffectSettings: React.Dispatch<React.SetS
         throttledSetDragPosition(x, y);
       }
     }
-  }, [effectSettings.type, effectSettings.textContent, effectSettings.textRotation, effectSettings.textScale, disabled, setEffectSettings, setIsManipulatingText, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition, getAngle]);
+  }, [effectSettings.type, effectSettings.textContent, effectSettings.textX, effectSettings.textY, effectSettings.textFontSize, effectSettings.textRotation, effectSettings.textScale, disabled, setEffectSettings, setIsManipulatingText, setIsDraggingText, setDragStartX, setDragStartY, throttledSetDragPosition, getAngle]);
 
   const handleTouchMoveEnhanced = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     // Handle text dragging, rotation, and scaling

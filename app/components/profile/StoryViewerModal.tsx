@@ -34,17 +34,14 @@ export function StoryViewerModal({
   setStories,
   setHasActiveStories
 }: StoryViewerModalProps) {
-  const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [progress, setProgress] = useState(0);
   const [loadedStories, setLoadedStories] = useState<Set<number>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const controlsRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLVideoElement | HTMLImageElement>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const minSwipeDistance = 50;
 
   const currentStory = stories[currentIndex];
@@ -57,48 +54,6 @@ export function StoryViewerModal({
 
   const handleMediaError = useCallback(() => {
     setIsLoading(false);
-  }, []);
-
-  // Progress tracking for auto-advance
-  useEffect(() => {
-    if (!isOpen || !currentStory || isPaused || showComments || isLoading) return;
-
-    const duration = currentStory.mediaType === 'video' ? 
-      Math.min(Math.max(currentStory.durationSeconds || 6, 3), 15) : 6;
-
-    const startTime = Date.now();
-    progressIntervalRef.current = setInterval(() => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const newProgress = Math.min((elapsed / duration) * 100, 100);
-      setProgress(newProgress);
-
-      if (newProgress >= 100) {
-        onNext();
-      }
-    }, 100);
-
-    return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-    };
-  }, [isOpen, currentStory, currentIndex, isPaused, showComments, isLoading, onNext]);
-
-  // Pause on hover
-  useEffect(() => {
-    const controls = controlsRef.current;
-    if (!controls) return;
-
-    const handleMouseEnter = () => setIsPaused(true);
-    const handleMouseLeave = () => setIsPaused(false);
-
-    controls.addEventListener('mouseenter', handleMouseEnter);
-    controls.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      controls.removeEventListener('mouseenter', handleMouseEnter);
-      controls.removeEventListener('mouseleave', handleMouseLeave);
-    };
   }, []);
 
   // Keyboard shortcuts
@@ -115,10 +70,6 @@ export function StoryViewerModal({
           break;
         case 'ArrowRight':
           onNext();
-          break;
-        case ' ':
-          e.preventDefault();
-          setIsPaused(prev => !prev);
           break;
         case 'Delete':
         case 'Backspace':
@@ -163,7 +114,6 @@ export function StoryViewerModal({
     if (!loadedStories.has(currentIndex)) {
       setIsLoading(true);
     }
-    setProgress(0);
   }, [currentIndex, loadedStories]);
 
   // Reset loaded stories when modal closes
@@ -171,7 +121,6 @@ export function StoryViewerModal({
     if (!isOpen) {
       setLoadedStories(new Set());
       setIsLoading(false);
-      setProgress(0);
     }
   }, [isOpen]);
 
@@ -233,26 +182,6 @@ export function StoryViewerModal({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
-      {/* Progress bar */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        height: 3, 
-        background: 'rgba(255,255,255,0.2)',
-        zIndex: 10001
-      }}>
-        <div style={{
-          height: '100%',
-          width: `${progress}%`,
-          background: 'linear-gradient(45deg, #ff0096, #00ccff, #ff7e39, #ffff00, #ff0096)',
-          backgroundSize: '400% 400%',
-          animation: 'story-progress-rainbow 3s linear infinite',
-          transition: isPaused ? 'none' : 'width 0.1s linear'
-        }} />
-      </div>
-
       {/* Controls */}
       <div 
         ref={controlsRef}
@@ -263,7 +192,7 @@ export function StoryViewerModal({
           transform: 'translateX(-50%)', 
           display: 'flex', 
           gap: 8,
-          opacity: isPaused ? 1 : 0.7,
+          opacity: 0.7,
           transition: 'opacity 0.2s'
         }} 
         onClick={(e) => e.stopPropagation()}
@@ -292,37 +221,6 @@ export function StoryViewerModal({
           </svg>
         </button>
         
-        <button 
-          type="button" 
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsPaused(!isPaused);
-          }} 
-          style={{ 
-            background: 'rgba(255,255,255,0.1)', 
-            color: '#fff', 
-            border: 'none', 
-            padding: '12px', 
-            borderRadius: 8,
-            cursor: 'pointer',
-            transition: 'background 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          aria-label={isPaused ? "Play" : "Pause"}
-        >
-          {isPaused ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <polygon points="5,3 19,12 5,21" fill="currentColor"/>
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="6" y="4" width="4" height="16" fill="currentColor"/>
-              <rect x="14" y="4" width="4" height="16" fill="currentColor"/>
-            </svg>
-          )}
-        </button>
-
         <button 
           type="button" 
           onClick={(e) => {
@@ -434,12 +332,14 @@ export function StoryViewerModal({
               borderRadius: 16,
               display: isLoading ? 'none' : 'block'
             }} 
-            autoPlay={!isPaused} 
             controls={false} 
             playsInline 
             muted
             onLoadedData={handleMediaLoad}
             onError={handleMediaError}
+            onEnded={() => {
+              // Prevent any default behavior when video ends
+            }}
           />
         ) : (
           <img 
@@ -462,11 +362,13 @@ export function StoryViewerModal({
       <div 
         style={{ 
           position: 'absolute', 
-          bottom: showComments ? 200 : 28, 
+           /* When comments panel is open, push story info up by the panel
+             height plus a small gap so the indicator doesn't sit flush to it. */
+           bottom: showComments ? `calc(200px + 12px)` : 28, 
           fontSize: 14, 
           color: '#fff',
           textAlign: 'center',
-          opacity: isPaused ? 1 : 0.8,
+          opacity: 0.8,
           transition: 'opacity 0.2s, bottom 0.3s',
           display: 'flex',
           flexDirection: 'column',
@@ -521,58 +423,13 @@ export function StoryViewerModal({
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <span style={{ color: '#fff', fontSize: 14, fontWeight: 'bold' }}>Comments</span>
-            <button 
-              onClick={() => setShowComments(false)}
-              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}
-              aria-label="Close comments"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
           </div>
           <div style={{ flex: 1, overflow: 'auto', padding: '8px 16px' }}>
             <StoryComments storyId={currentStory.id} />
           </div>
         </div>
-      )}
-
-      {/* Invisible side areas for easier navigation on desktop */}
-      {!isMobile && (
-        <>
-          <div 
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '20%',
-              cursor: 'pointer'
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onPrev();
-            }}
-            aria-label="Previous story"
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: '20%',
-              cursor: 'pointer'
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onNext();
-            }}
-            aria-label="Next story"
-          />
-        </>
       )}
     </div>,
     document.body

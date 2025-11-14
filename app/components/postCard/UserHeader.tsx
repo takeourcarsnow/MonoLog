@@ -356,7 +356,8 @@ export const UserHeader = memo(function UserHeader({
           onPrev={() => setStoryIdx(v => v === 0 ? stories.length - 1 : v - 1)}
           onNext={() => {
             if (storyIdx + 1 >= stories.length) {
-              setStoryViewerOpen(false);
+              // Don't close on last story - just stay on it
+              return;
             } else {
               setStoryIdx(v => v + 1);
             }

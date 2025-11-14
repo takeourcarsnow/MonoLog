@@ -133,7 +133,7 @@ export function StoryComments({ storyId, onCountChange }: StoryCommentsProps) {
 
   return (
     <>
-      <div className="comment-list">
+      <div className="comment-list" onClick={(e) => e.stopPropagation()}>
         {loading && comments.length === 0 ? (
           <div className="dim">
             <div className="flex items-center justify-center">
@@ -198,7 +198,7 @@ export function StoryComments({ storyId, onCountChange }: StoryCommentsProps) {
         COMMENT_MAX={STORY_COMMENT_MAX}
       />
       {commentError && (
-        <div className="text-red-500 text-sm mt-1 px-3">
+        <div className="text-red-500 text-sm mt-1 px-3" onClick={(e) => e.stopPropagation()}>
           {commentError}
         </div>
       )}

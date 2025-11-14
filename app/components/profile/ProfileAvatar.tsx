@@ -65,9 +65,15 @@ export function ProfileAvatar({ user, currentUserId, onAvatarChange, triggerAvat
   };
 
   const onPrev = () => setViewerIdx(v => v === 0 ? ownStories.length - 1 : v - 1);
-  const onNext = () => setViewerIdx(v => (v + 1) % ownStories.length);
+  const onNext = () => {
+    if (viewerIdx + 1 >= ownStories.length) {
+      setViewerOpen(false);
+    } else {
+      setViewerIdx(v => v + 1);
+    }
+  };
 
-  const onPublicPrev = () => setViewerIdx(v => Math.max(v - 1, 0));
+  const onPublicPrev = () => setViewerIdx(v => v === 0 ? ownStories.length - 1 : v - 1);
   const onPublicNext = () => {
     if (viewerIdx + 1 >= ownStories.length) {
       setViewerOpen(false);

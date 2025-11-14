@@ -1,29 +1,13 @@
 import { useEffect } from "react";
-import type { Story } from "@/lib/types";
 
 export function useStoryViewerEffects(
   viewerOpen: boolean,
   viewerIdx: number,
-  ownStories: Story[],
+  ownStories: any[],
   setViewerIdx: React.Dispatch<React.SetStateAction<number>>,
   setViewerOpen: (open: boolean) => void,
   setDeleteArmed: (armed: boolean) => void
 ) {
-  // Auto advance stories
-  useEffect(() => {
-    if (!viewerOpen || !ownStories.length) return;
-    const cur = ownStories[viewerIdx];
-    const dur = cur?.mediaType === 'video' ? Math.min(Math.max(cur.durationSeconds || 6, 3), 15) : 6;
-    const t = setTimeout(() => {
-      if (viewerIdx + 1 >= ownStories.length) {
-        setViewerOpen(false);
-      } else {
-        setViewerIdx(v => v + 1);
-      }
-    }, dur * 1000);
-    return () => clearTimeout(t);
-  }, [viewerOpen, viewerIdx, ownStories]);
-
   useEffect(() => {
     if (!viewerOpen) return;
     const onKey = (e: KeyboardEvent) => {

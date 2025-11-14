@@ -22,6 +22,14 @@ export function CommentItem({ comment, isReply, context }: CommentItemProps) {
     console.log('handleDelete called for comment:', comment.realId || comment.id);
     try {
       const commentId = comment.realId || comment.id;
+      // Avoid attempting to delete an optimistic (local-only) comment id which
+      // is represented as `optimistic-<ts>`. These will never exist server-side
+      // and result in a 404. If the comment is still optimistic, advise the
+      // user to wait for the network request to finish.
+      if (typeof commentId === 'string' && commentId.startsWith('optimistic-')) {
+        console.warn('Attempted to delete optimistic (unsynced) comment. Please wait a moment and try again.');
+        return;
+      }
       const { getClient, getAccessToken } = await import('@/lib/api/client');
       const sb = getClient();
       const token = await getAccessToken(sb);

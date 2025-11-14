@@ -29,8 +29,8 @@
   display: flex;
   flex-direction: row; /* explicit horizontal layout */
   align-items: center;
-  justify-content: center; /* center items inside the viewport */
-  gap: 28px; /* spacing between items */
+  justify-content: space-around; /* space items evenly across the display */
+  gap: 0; /* remove gap since space-around handles spacing */
   padding: 8px var(--page-side-padding, 20px);
 }
 
@@ -41,7 +41,7 @@
   .tabbar {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    justify-content: center !important;
+    justify-content: space-around !important;
     align-items: center !important;
   }
 
@@ -60,7 +60,7 @@
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: space-around !important;
 }
 
 .tabbar > .tab-item-static {

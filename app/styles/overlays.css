@@ -380,6 +380,13 @@
   color: var(--text);
   overflow-y: auto;
   box-sizing: border-box;
+  /* Hide scrollbar while maintaining scroll functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.modal::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
 }
 
 /* Floating 'window' for non-modal overlays (e.g., Top of the Month album picker)

@@ -222,34 +222,14 @@ body.following-page .content { overflow: auto !important; }
   animation: dice-spin-360 600ms cubic-bezier(.2,.8,.2,1) both;
 }
 
-/* Custom scrollbar styling - minimalistic and modern */
+/* Hide scrollbars everywhere while maintaining scroll functionality */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  display: none; /* Chrome, Safari, and Opera */
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--border), transparent 50%);
-  border-radius: 3px;
-  transition: background-color 0.2s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--border), transparent 30%);
-}
-
-::-webkit-scrollbar-thumb:active {
-  background: color-mix(in srgb, var(--border), transparent 20%);
-}
-
-/* Firefox scrollbar styling */
 * {
-  /* scrollbar-width: thin; */
-  scrollbar-color: color-mix(in srgb, var(--border), transparent 40%) transparent;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 /* Safari scrollbar styling */

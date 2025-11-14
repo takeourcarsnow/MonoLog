@@ -190,6 +190,7 @@ body.following-page .content { overflow: auto !important; }
   --shadow: 0 8px 30px rgba(0,0,0,.35);
   /* darker theme toggle indicator */
   --auth-toggle-indicator: rgba(255,255,255,0.04);
+  --selection-border: rgba(255, 255, 255, 0.8);
 }
 :root.theme-light {
   --bg: #ffffff;
@@ -205,6 +206,7 @@ body.following-page .content { overflow: auto !important; }
   --border: #e5e7eb;
   --shadow: 0 8px 28px rgba(0,0,0,.08);
   --auth-toggle-indicator: rgba(0,0,0,0.06);
+  --selection-border: rgba(0, 0, 0, 0.6);
 }
 
 /* support projects that toggle dark mode by adding a dark class to the html element */

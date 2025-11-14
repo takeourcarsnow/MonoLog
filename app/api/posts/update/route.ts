@@ -45,6 +45,21 @@ export const POST = withHandler({ method: 'POST', bodySchema: updatePostSchema, 
       updates.image_urls = null;
     }
   }
+
+  // Special handling for thumbnailUrls: update both thumbnail_url and thumbnail_urls
+  if (patch.thumbnailUrls !== undefined) {
+    if (patch.thumbnailUrls.length > 0) {
+      updates.thumbnail_url = patch.thumbnailUrls[0];
+      if (patch.thumbnailUrls.length > 1) {
+        updates.thumbnail_urls = patch.thumbnailUrls;
+      } else {
+        updates.thumbnail_urls = null; // Clear array if only one thumbnail
+      }
+    } else {
+      updates.thumbnail_url = null;
+      updates.thumbnail_urls = null;
+    }
+  }
   // Return the updated post row along with the related user/profile fields
   // so the client can hydrate the post.user properly (username, avatar).
   const { data: updatedRows, error } = await sb

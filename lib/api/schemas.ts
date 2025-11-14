@@ -25,7 +25,10 @@ export const postsQuerySchema = z.object({
 });
 
 export const commentsQuerySchema = z.object({
-  postId: z.string().trim().min(1),
+  postId: z.string().trim().min(1).optional(),
+  storyId: z.string().trim().min(1).optional(),
+}).refine(data => data.postId || data.storyId, {
+  message: 'Either postId or storyId parameter is required',
 });
 
 export const threadsQuerySchema = z.object({

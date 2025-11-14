@@ -3,7 +3,7 @@ import { getSupabaseClient, getSupabaseClientRaw } from "./client";
 import { getUsers, getCurrentUser, loginAs, getUser, getUserByUsername, updateUser, updateCurrentUser, signOut, deleteCurrentUser } from "./users";
 import { follow, unfollow, isFollowing, getFollowingUsers } from "./follows";
 import { favoritePost, unfavoritePost, isFavorite, getFavoritePosts } from "./favorites";
-import { getComments, addComment } from "./comments";
+import { getComments, addComment, getStoryComments, addStoryComment } from "./comments";
 import { calendarStats } from "./calendar";
 import { weekReviewStats } from "./weekReview";
 import { monthReviewStats } from "./monthReview";
@@ -51,6 +51,8 @@ export const supabaseApi: Api = {
   deletePost,
   getComments,
   addComment,
+  getStoryComments,
+  addStoryComment,
   signOut,
   deleteCurrentUser,
   calendarStats,

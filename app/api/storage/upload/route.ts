@@ -3,6 +3,14 @@ import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 import sharp from 'sharp';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 async function generateThumbnail(imageBuffer: Buffer, mime: string): Promise<Buffer> {
   try {
     // Generate thumbnail with max 700px edge (reduced by 30% from 1000px), maintaining aspect ratio

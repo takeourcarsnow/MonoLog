@@ -22,9 +22,10 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const postId = body.postId;
+    const storyId = body.storyId;
     const text = body.text;
     const parentId = body.parentId;
-    if (!postId || !text) return apiError('Missing postId or text', 400);
+    if ((!postId && !storyId) || !text) return apiError('Missing postId/storyId or text', 400);
     const authUser = await getUserFromAuthHeader(req);
     if (!authUser) return apiError('Unauthorized', 401);
     const actorId = authUser.id;
@@ -91,7 +92,9 @@ export async function POST(req: Request) {
     }
 
     // Insert using the correct snake_case column names that match the database schema
-    let insertData: { id: string; post_id: string; user_id: string; text: string; created_at: string; parent_id?: string } = { id, post_id: postId, user_id: actorId, text: text.trim(), created_at };
+    let insertData: { id: string; post_id?: string; story_id?: string; user_id: string; text: string; created_at: string; parent_id?: string } = { id, user_id: actorId, text: text.trim(), created_at };
+    if (postId) insertData.post_id = postId;
+    if (storyId) insertData.story_id = storyId;
     if (parentId) insertData.parent_id = parentId;
     
     console.log('Inserting comment:', insertData);
@@ -106,16 +109,31 @@ export async function POST(req: Request) {
     // shouldn't block comment creation.
     (async () => {
       try {
-        // lookup post owner
-        const { data: post, error: postErr } = await sb.from('posts').select('id, user_id').eq('id', postId).limit(1).single();
-        if (!post || postErr) {
-          console.log('[addComment] Post lookup failed:', postErr);
-          return;
+        let ownerId: string | null = null;
+        if (postId) {
+          // lookup post owner
+          const { data: post, error: postErr } = await sb.from('posts').select('id, user_id').eq('id', postId).limit(1).single();
+          if (!post || postErr) {
+            console.log('[addComment] Post lookup failed:', postErr);
+            return;
+          }
+          ownerId = post.user_id;
+        } else if (storyId) {
+          // lookup story owner
+          const { data: story, error: storyErr } = await sb.from('stories').select('id, user_id').eq('id', storyId).limit(1).single();
+          if (!story || storyErr) {
+            console.log('[addComment] Story lookup failed:', storyErr);
+            return;
+          }
+          ownerId = story.user_id;
         }
+        if (!ownerId) return;
+
         // get all previous commenters except actor
-        const { data: prevComments, error: commErr } = await sb.from('comments').select('user_id').eq('post_id', postId).neq('user_id', actorId);
+        const whereClause = postId ? { post_id: postId } : { story_id: storyId };
+        const { data: prevComments, error: commErr } = await sb.from('comments').select('user_id').eq(Object.keys(whereClause)[0], Object.values(whereClause)[0]).neq('user_id', actorId);
         const notifyUsers = new Set<string>();
-        notifyUsers.add(post.user_id); // always notify post owner
+        notifyUsers.add(ownerId); // always notify owner
         if (!commErr && prevComments) {
           for (const c of prevComments) {
             notifyUsers.add(c.user_id);
@@ -123,14 +141,15 @@ export async function POST(req: Request) {
         }
         // remove actor if somehow included
         notifyUsers.delete(actorId);
-        console.log('[addComment] Notifying users:', Array.from(notifyUsers), 'for post:', postId, 'actor:', actorId);
+        console.log('[addComment] Notifying users:', Array.from(notifyUsers), 'for', postId ? 'post' : 'story', postId || storyId, 'actor:', actorId);
         for (const userId of notifyUsers) {
           const notifId = uid();
           const notif = {
             id: notifId,
             user_id: userId,
             actor_id: actorId,
-            post_id: postId,
+            post_id: postId || null,
+            story_id: storyId || null,
             comment_id: id,
             type: 'comment',
             text: text.trim().slice(0, 240),
@@ -168,7 +187,8 @@ export async function POST(req: Request) {
               id: uid(),
               user_id: mentionedId,
               actor_id: actorId,
-              post_id: postId,
+              post_id: postId || null,
+              story_id: storyId || null,
               comment_id: id,
               type: 'mention',
               text: `You were mentioned in a comment`,

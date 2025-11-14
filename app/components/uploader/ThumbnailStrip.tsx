@@ -16,7 +16,7 @@ interface ThumbnailStripProps {
 }
 
 export function ThumbnailStrip({ dataUrls, alt, index, setIndex, setDataUrls, setOriginalDataUrls, editorSettings, setEditorSettings, setAlt, fullUrls, setFullUrls }: ThumbnailStripProps) {
-  if (dataUrls.length <= 1) return null;
+  if (dataUrls.length === 0) return null;
 
   const moveItem = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0 || toIndex >= dataUrls.length) return;
@@ -126,27 +126,29 @@ export function ThumbnailStrip({ dataUrls, alt, index, setIndex, setDataUrls, se
     <div className="thumbs" style={{ background: 'transparent' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            type="button"
-            onClick={() => moveItem(index, index - 1)}
-            disabled={index === 0}
-            style={{ 
-              padding: '6px 12px', 
-              border: '1px solid var(--border)', 
-              background: 'var(--bg)', 
-              cursor: index === 0 ? 'not-allowed' : 'pointer', 
-              borderRadius: '4px',
-              color: 'var(--text)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: index === 0 ? 0.5 : 1,
-              fontSize: '14px'
-            }}
-            title="Move selected photo left"
-          >
-            <ChevronLeft size={18} />
-          </button>
+          {dataUrls.length > 1 && (
+            <button
+              type="button"
+              onClick={() => moveItem(index, index - 1)}
+              disabled={index === 0}
+              style={{ 
+                padding: '6px 12px', 
+                border: '1px solid var(--border)', 
+                background: 'var(--bg)', 
+                cursor: index === 0 ? 'not-allowed' : 'pointer', 
+                borderRadius: '4px',
+                color: 'var(--text)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: index === 0 ? 0.5 : 1,
+                fontSize: '14px'
+              }}
+              title="Move selected photo left"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          )}
           
           <div style={{ display: 'flex', gap: '8px' }}>
             {dataUrls.map((u, idx) => (
@@ -156,10 +158,10 @@ export function ThumbnailStrip({ dataUrls, alt, index, setIndex, setDataUrls, se
                 onClick={() => { setIndex(idx); }}
                 aria-pressed={index === idx}
                 style={{ border: 'none', padding: 0, background: 'transparent' }}
-                draggable
-                onDragStart={(e) => handleDragStart(e, idx)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, idx)}
+                draggable={dataUrls.length > 1}
+                onDragStart={dataUrls.length > 1 ? (e) => handleDragStart(e, idx) : undefined}
+                onDragOver={dataUrls.length > 1 ? handleDragOver : undefined}
+                onDrop={dataUrls.length > 1 ? (e) => handleDrop(e, idx) : undefined}
               >
                 <div style={{ border: index === idx ? '2px solid var(--primary)' : '1px solid var(--border)', padding: index === idx ? '1px' : '2px' }}>
                   <img
@@ -172,27 +174,29 @@ export function ThumbnailStrip({ dataUrls, alt, index, setIndex, setDataUrls, se
             ))}
           </div>
           
-          <button
-            type="button"
-            onClick={() => moveItem(index, index + 1)}
-            disabled={index === dataUrls.length - 1}
-            style={{ 
-              padding: '6px 12px', 
-              border: '1px solid var(--border)', 
-              background: 'var(--bg)', 
-              cursor: index === dataUrls.length - 1 ? 'not-allowed' : 'pointer', 
-              borderRadius: '4px',
-              color: 'var(--text)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: index === dataUrls.length - 1 ? 0.5 : 1,
-              fontSize: '14px'
-            }}
-            title="Move selected photo right"
-          >
-            <ChevronRight size={18} />
-          </button>
+          {dataUrls.length > 1 && (
+            <button
+              type="button"
+              onClick={() => moveItem(index, index + 1)}
+              disabled={index === dataUrls.length - 1}
+              style={{ 
+                padding: '6px 12px', 
+                border: '1px solid var(--border)', 
+                background: 'var(--bg)', 
+                cursor: index === dataUrls.length - 1 ? 'not-allowed' : 'pointer', 
+                borderRadius: '4px',
+                color: 'var(--text)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: index === dataUrls.length - 1 ? 0.5 : 1,
+                fontSize: '14px'
+              }}
+              title="Move selected photo right"
+            >
+              <ChevronRight size={18} />
+            </button>
+          )}
         </div>
       </div>
     </div>

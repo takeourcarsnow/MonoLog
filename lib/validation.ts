@@ -14,10 +14,10 @@ export const postFieldsSchema = z.object({
   weatherTemperature: z.number().optional(),
   locationAddress: z.string().optional(),
   imageUrls: z.array(z.string()).optional(),
+  thumbnailUrls: z.array(z.string()).optional(),
 });
 
 export const createPostSchema = z.object({
-  thumbnailUrls: z.array(z.string()).optional(),
   ...postFieldsSchema.shape,
   weather: z.object({
     condition: z.string().optional(),

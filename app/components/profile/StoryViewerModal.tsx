@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from "@/lib/api";
 import { dedupe } from "@/lib/requestDeduplication";
 import type { Story, User } from "@/lib/types";
+import { StoryComments } from '../comments/StoryComments';
 
 interface StoryViewerModalProps {
   isOpen: boolean;
@@ -40,6 +41,7 @@ export function StoryViewerModal({
   const [progress, setProgress] = useState(0);
   const [loadedStories, setLoadedStories] = useState<Set<number>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const controlsRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLVideoElement | HTMLImageElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -358,10 +360,10 @@ export function StoryViewerModal({
           type="button" 
           onClick={(e) => {
             e.stopPropagation();
-            onLiveCamera();
+            setShowComments(!showComments);
           }} 
           style={{ 
-            background: 'rgba(255,255,255,0.1)', 
+            background: showComments ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)', 
             color: '#fff', 
             border: 'none', 
             padding: '12px', 
@@ -369,13 +371,12 @@ export function StoryViewerModal({
             cursor: 'pointer',
             transition: 'background 0.2s'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          aria-label="Take live photo"
+          onMouseEnter={(e) => e.currentTarget.style.background = showComments ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = showComments ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'}
+          aria-label="Toggle comments"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2"/>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
       </div>
@@ -461,12 +462,12 @@ export function StoryViewerModal({
       <div 
         style={{ 
           position: 'absolute', 
-          bottom: 28, 
+          bottom: showComments ? 200 : 28, 
           fontSize: 14, 
           color: '#fff',
           textAlign: 'center',
           opacity: isPaused ? 1 : 0.8,
-          transition: 'opacity 0.2s',
+          transition: 'opacity 0.2s, bottom 0.3s',
           display: 'flex',
           flexDirection: 'column',
           gap: '12px'
@@ -502,6 +503,41 @@ export function StoryViewerModal({
           </div>
         </div>
       </div>
+
+      {/* Comments section */}
+      {showComments && (
+        <div 
+          style={{ 
+            position: 'absolute', 
+            bottom: 0, 
+            left: 0, 
+            right: 0, 
+            height: 200, 
+            background: 'rgba(0,0,0,0.8)', 
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#fff', fontSize: 14, fontWeight: 'bold' }}>Comments</span>
+            <button 
+              onClick={() => setShowComments(false)}
+              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}
+              aria-label="Close comments"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div style={{ flex: 1, overflow: 'auto', padding: '8px 16px' }}>
+            <StoryComments storyId={currentStory.id} />
+          </div>
+        </div>
+      )}
 
       {/* Invisible side areas for easier navigation on desktop */}
       {!isMobile && (

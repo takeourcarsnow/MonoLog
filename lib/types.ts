@@ -62,7 +62,8 @@ export type HydratedPost = Post & {
 
 export type Comment = {
   id: string;
-  postId: string;
+  postId?: string;
+  storyId?: string;
   userId: string;
   text: string;
   createdAt: string;
@@ -169,6 +170,7 @@ export type Notification = {
   user_id: string;
   actor_id?: string;
   post_id?: string;
+  story_id?: string;
   thread_id?: string;
   type: string;
   text?: string;
@@ -221,11 +223,14 @@ export interface Api {
   // `maxImages` is optional and defaults to the client/server configured limit (typically 5).
   createOrReplaceToday(input: { imageUrl?: string; imageUrls?: string[]; caption?: string; alt?: string | string[]; spotifyLink?: string; public?: boolean; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string; maxImages?: number }): Promise<HydratedPost>;
 
-  updatePost(id: string, patch: { caption?: string; alt?: string; public?: boolean }): Promise<HydratedPost>;
+  updatePost(id: string, patch: { caption?: string; alt?: string | string[]; public?: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string; imageUrls?: string[]; thumbnailUrls?: string[] }): Promise<HydratedPost>;
   deletePost(id: string): Promise<boolean>;
 
   getComments(postId: string): Promise<(Comment & { user: User | {} })[]>;
   addComment(postId: string, text: string, parentId?: string): Promise<Comment & { user: User }>;
+
+  getStoryComments(storyId: string): Promise<(Comment & { user: User | {} })[]>;
+  addStoryComment(storyId: string, text: string, parentId?: string): Promise<Comment & { user: User }>;
 
   // Communities
   getCommunities(): Promise<HydratedCommunity[]>;

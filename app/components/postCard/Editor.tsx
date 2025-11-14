@@ -2,7 +2,7 @@
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HydratedPost } from "@/lib/types";
-import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeClosed, Monitor, Film } from "lucide-react";
+import { Check, X, Camera, Settings, Image, Gauge, Eye, EyeClosed, Monitor, Film, Plus } from "lucide-react";
 import { MapPin } from "lucide-react";
 import { Cloud, Sun, CloudRain } from "lucide-react";
 import { Combobox } from "@/app/components/ui/Combobox";
@@ -12,11 +12,13 @@ import { SpotifySection } from "./SpotifySection";
 import { getWeatherIcon } from "@/lib/weatherIcons";
 import { fetchLocationForCurrentCoords } from "@/app/components/uploader/locationUtils";
 import { ThumbnailStrip } from "@/app/components/uploader/ThumbnailStrip";
+import { compressImage } from "@/lib/image";
+import { getClient, ensureAuthListener, getAccessToken } from "@/lib/api/client";
 
 interface EditorProps {
   post: HydratedPost;
   onCancel: () => void;
-  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string; imageUrls?: string[]; alt?: string | string[] }) => Promise<void>;
+  onSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string; imageUrls?: string[]; thumbnailUrls?: string[]; alt?: string | string[] }) => Promise<void>;
 }
 
 export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCancel, onSave }, ref) {
@@ -33,7 +35,9 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
   const [fetchingLocation, setFetchingLocation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeExifField, setActiveExifField] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Image reordering state
   const imageUrls = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
@@ -95,6 +99,48 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
     setLocationAddress('');
   };
 
+  const handleAddImages = async (files: FileList) => {
+    if (uploading || currentImageUrls.length >= 5) return;
+    setUploading(true);
+    try {
+      const sb = getClient();
+      ensureAuthListener(sb);
+      const token = await getAccessToken(sb);
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith('image/')) continue;
+        const dataUrl = await compressImage(file);
+        const response = await fetch('/api/storage/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ dataUrl }),
+        });
+        const result = await response.json();
+        if (result.ok) {
+          setCurrentImageUrls(prev => [...prev, result.publicUrl]);
+          setCurrentThumbnailUrls(prev => [...prev, result.thumbnailUrl]);
+          setCurrentAlt(prev => Array.isArray(prev) ? [...prev, ''] : [prev || '', '']);
+        } else {
+          console.error('Upload failed:', result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to add images:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      handleAddImages(files);
+    }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const doSave = useCallback(async () => {
     if (saving) return;
     setSaving(true);
@@ -114,6 +160,7 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
     weatherTemperature: weatherTemperature ? parseFloat(weatherTemperature) : undefined, 
     locationAddress: locationAddress.trim() || '',
     imageUrls: currentImageUrls,
+    thumbnailUrls: currentThumbnailUrls,
     alt: currentAlt
   };
   await onSave(patch);
@@ -315,7 +362,7 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
           </div>
         )}
       </div>
-      {currentImageUrls.length > 1 && (
+      {currentImageUrls.length >= 1 && (
         <div style={{ marginTop: 8 }}>
           <ThumbnailStrip
             dataUrls={currentThumbnailUrls}
@@ -329,6 +376,28 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
             setAlt={setCurrentAlt}
             fullUrls={currentImageUrls}
             setFullUrls={setCurrentImageUrls}
+          />
+        </div>
+      )}
+      {currentImageUrls.length < 5 && (
+        <div style={{ marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            <Plus size={16} />
+            {uploading ? 'Adding...' : 'Add more images'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileInputChange}
+            style={{ display: 'none' }}
           />
         </div>
       )}

@@ -11,7 +11,7 @@ interface EditorWrapProps {
   editorRef: RefObject<any>;
   post: HydratedPost;
   handleCancel: () => void;
-  handleSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string }) => Promise<void>;
+  handleSave: (patch: { caption: string; public: boolean; camera?: string; lens?: string; filmType?: string; spotifyLink?: string; weatherCondition?: string; weatherTemperature?: number; locationAddress?: string; imageUrls?: string[]; thumbnailUrls?: string[]; alt?: string | string[] }) => Promise<void>;
 }
 
 export const EditorWrap = ({

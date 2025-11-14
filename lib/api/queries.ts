@@ -159,7 +159,50 @@ export async function getCommentsForPost(postId: string) {
     const urow = c.users || userMap[c.user_id] || null;
     return {
       id: c.id,
-      postId: c.post_id,
+      postId: c.post_id || undefined,
+      storyId: c.story_id || undefined,
+      userId: c.user_id,
+      text: c.text,
+      createdAt: c.created_at,
+      parentId: c.parent_id || undefined,
+      user: {
+        id: urow?.id || c.user_id,
+        username: urow?.username || urow?.user_name || '',
+        displayName: urow?.display_name || urow?.displayName || urow?.username || urow?.user_name || '',
+        avatarUrl: urow?.avatar_url || urow?.avatarUrl || '/logo.svg',
+      }
+    };
+  });
+}
+
+/**
+ * Get comments for a story
+ */
+export async function getCommentsForStory(storyId: string) {
+  const sb = getServiceSupabase();
+
+  const { data, error } = await sb.from('comments').select('*, users!left(*)').eq('story_id', storyId).order('created_at', { ascending: true });
+  if (error) throw error;
+
+  const comments = data || [];
+
+  // If the related users join returned null, fetch user rows by id
+  const missingUsers = comments.filter(c => !c.users).map(c => c.user_id).filter(Boolean);
+  let userMap: Record<string, any> = {};
+  if (missingUsers.length) {
+    const uniq = Array.from(new Set(missingUsers));
+    const { data: usersData, error: usersErr } = await sb.from('users').select('*').in('id', uniq);
+    if (!usersErr && usersData) {
+      for (const u of usersData) userMap[u.id] = u;
+    }
+  }
+
+  return comments.map((c: any) => {
+    const urow = c.users || userMap[c.user_id] || null;
+    return {
+      id: c.id,
+      postId: c.post_id || undefined,
+      storyId: c.story_id || undefined,
       userId: c.user_id,
       text: c.text,
       createdAt: c.created_at,

@@ -4,14 +4,21 @@ import { apiError, apiSuccess } from '@/lib/apiResponse';
 import { withHandler } from '@/lib/api/withHandler';
 import { commentsQuerySchema } from '@/lib/api/schemas';
 import { getClientIp, makeWeakETag } from '@/lib/api/utils';
-import { getCommentsForPost } from '@/lib/api/queries';
+import { getCommentsForPost, getCommentsForStory } from '@/lib/api/queries';
 
 export const GET = withHandler({ method: 'GET', querySchema: commentsQuerySchema })(async (req, ctx) => {
-  const { postId } = ctx?.query as any;
+  const { postId, storyId } = ctx?.query as any;
   // light per-IP caching header only; comments are public
   const ip = getClientIp(req);
 
-  const result = await getCommentsForPost(postId);
+  let result;
+  if (postId) {
+    result = await getCommentsForPost(postId);
+  } else if (storyId) {
+    result = await getCommentsForStory(storyId);
+  } else {
+    return apiError('Missing postId or storyId', 400);
+  }
 
   // Prepare caching headers and ETag to help clients avoid re-downloading unchanged lists briefly
   const etag = makeWeakETag(result);

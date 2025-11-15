@@ -405,15 +405,41 @@ export function StoryViewerModal({
             onError={handleMediaError}
           />
         )}
+
+        {/* Comments section */}
+        {showComments && (
+          <div 
+            className="story-comments-pane"
+            style={{ 
+              position: 'absolute', 
+              bottom: 0, 
+              left: 0, 
+              right: 0, 
+              height: isMobile ? 200 : 250, 
+              background: 'rgba(0,0,0,0.8)', 
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              borderRadius: '0 0 16px 16px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <span style={{ color: '#fff', fontSize: 14, fontWeight: 'bold' }}>Comments</span>
+            </div>
+            <div style={{ flex: 1, overflow: 'auto', padding: '8px 16px' }}>
+              <StoryComments storyId={currentStory.id} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Story info */}
       <div 
         style={{ 
           position: 'absolute', 
-           /* When comments panel is open, push story info up by the panel
-             height plus a small gap so the indicator doesn't sit flush to it. */
-           bottom: showComments ? `calc(${isMobile ? 200 : 250}px + 12px)` : 28, 
+          bottom: 28, 
           fontSize: 14, 
           color: '#fff',
           textAlign: 'center',
@@ -455,32 +481,6 @@ export function StoryViewerModal({
         </div>
       </div>
 
-      {/* Comments section */}
-      {showComments && (
-        <div 
-          className="story-comments-pane"
-          style={{ 
-            position: 'absolute', 
-            bottom: 0, 
-            left: 0, 
-            right: 0, 
-            height: isMobile ? 200 : 250, 
-            background: 'rgba(0,0,0,0.8)', 
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <span style={{ color: '#fff', fontSize: 14, fontWeight: 'bold' }}>Comments</span>
-          </div>
-          <div style={{ flex: 1, overflow: 'auto', padding: '8px 16px' }}>
-            <StoryComments storyId={currentStory.id} />
-          </div>
-        </div>
-      )}
     </div>,
     document.body
   );

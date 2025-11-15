@@ -407,6 +407,7 @@ export function PublicStoryViewerModal({
       {/* Comments section */}
       {showComments && (
         <div 
+          className="story-comments-pane"
           style={{ 
             position: 'absolute', 
             bottom: 0, 

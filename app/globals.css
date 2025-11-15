@@ -515,3 +515,14 @@ body.post-view-page .content { height: calc(var(--viewport-height, 1vh) * 100) !
 /* NOTE: header is now rendered client-side so it can be removed from the DOM
    when the live camera UI is active. */
 
+/* Story comments pane overrides for dark background - placed after Tailwind to override utilities */
+.story-comments-pane .comment-text { color: #fff !important; }
+.story-comments-pane .author { color: #fff !important; }
+.story-comments-pane .dim { color: rgba(255,255,255,0.6) !important; }
+.story-comments-pane .comment-author-link { color: #fff !important; }
+.story-comments-pane .comment-author-link:hover .author { color: #fff !important; }
+.story-comments-pane .comment-item { border-color: rgba(255,255,255,0.1) !important; }
+.story-comments-pane .empty { color: rgba(255,255,255,0.6) !important; }
+.story-comments-pane textarea { background: rgba(255,255,255,0.1) !important; border-color: rgba(255,255,255,0.2) !important; color: #fff !important; }
+.story-comments-pane textarea::placeholder { color: rgba(255,255,255,0.5) !important; }
+

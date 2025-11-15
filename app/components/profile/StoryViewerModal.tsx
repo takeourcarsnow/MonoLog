@@ -409,6 +409,7 @@ export function StoryViewerModal({
       {/* Comments section */}
       {showComments && (
         <div 
+          className="story-comments-pane"
           style={{ 
             position: 'absolute', 
             bottom: 0, 

@@ -667,7 +667,7 @@
 
 /* Force content area to allow scrolling on about page */
 .content {
-  overflow: visible !important;
+  overflow: auto !important;
   height: auto !important;
   min-height: calc(var(--viewport-height, 1vh) * 100) !important;
 }

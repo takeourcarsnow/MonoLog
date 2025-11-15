@@ -1431,7 +1431,7 @@
 @media (max-width: 768px) {
   .feed {
     gap: 24px;
-    padding: calc(4px + var(--safe-top, 0px)) var(--page-side-padding-mobile) var(--page-side-padding-mobile) var(--page-side-padding-mobile);
+    padding: calc(4px + var(--safe-top, 0px)) var(--page-side-padding-mobile) var(--page-side-padding-mobile) 0;
   }
   .feed.grid-view {
     padding: calc(6px + var(--safe-top, 0px)) 16px 4px 16px;

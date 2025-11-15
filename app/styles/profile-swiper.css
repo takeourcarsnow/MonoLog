@@ -54,6 +54,15 @@
    height: calc((var(--viewport-height, 1vh) * 100) - var(--header-height, calc(48px + var(--safe-top, 0px) + 12px + 8px))) !important;
 }
 
+/* On mobile, don't make swiper full-bleed to match header padding */
+@media (max-width: 768px) {
+  .content > .swipe-views {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
 /* Ensure full-bleed swipe views account for the sticky header height.
    Some pages render slides that break out of the normal .content padding
    and may end up underneath the header. Apply a safe top padding using

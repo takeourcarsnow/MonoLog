@@ -44,6 +44,7 @@ html, body {
    container to scroll rather than re-enabling body scrolling. This
    prevents the body and the content container from both getting scrollbars
    (which can produce two vertical scrollbars when zooming). */
+body.about-page { overflow: auto !important; }
 body.about-page .content { overflow: auto !important; }
 body.communities-page .content { overflow: auto !important; }
 body.search-page .content { overflow: auto !important; }

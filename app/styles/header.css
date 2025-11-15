@@ -20,6 +20,14 @@
   width: 100%;
   box-sizing: border-box;
 }
+
+/* On mobile, use the same side padding as content for consistency */
+@media (max-width: 768px) {
+  .header-inner {
+    padding-left: var(--page-side-padding-mobile);
+    padding-right: var(--page-side-padding-mobile);
+  }
+}
 .brand {
   display: flex;
   align-items: center;

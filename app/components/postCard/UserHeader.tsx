@@ -285,12 +285,12 @@ export const UserHeader = memo(function UserHeader({
                     try {
                       if (toggleFollow) {
                         const success = await toggleFollow();
-                        if (!success) setShowAuth(true);
+                        if (!success) router.push('/profile');
                       } else {
                         const cur = await api.getCurrentUser();
                         if (!cur) {
                           try { (document.activeElement as HTMLElement | null)?.blur?.(); } catch (_) {}
-                          setShowAuth(true);
+                          router.push('/profile');
                           return;
                         }
                         const prev = !!isFollowing;

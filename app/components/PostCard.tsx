@@ -97,6 +97,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
   const [showAuth, setShowAuth] = useState(false);
   const [activeSection, setActiveSection] = useState<'exif' | 'spotify' | 'weather' | 'location' | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
   const { isMe, isLoading: authLoading } = useIsMe(post.userId);
   const { me } = useAuth();
   const followBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -140,9 +141,9 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         toggleFavoriteWithAuth={useCallback(async () => {
           const success = await handleToggleFavoriteWithPost();
           if (!success) {
-            setShowAuth(true);
+            router.push('/profile');
           }
-        }, [handleToggleFavoriteWithPost])}
+        }, [handleToggleFavoriteWithPost, router])}
         showFavoriteFeedback={showFavoriteFeedback}
         favoriteOverlayState={favoriteOverlayState}
         pathname={pathname}
@@ -196,7 +197,7 @@ const PostCardComponent = ({ post: initial, allowCarouselTouch, disableMediaNavi
         handleNextImage={handleNextImage}
         handlePrevImage={handlePrevImage}
         isAuthed={!!me}
-        onSignIn={() => setShowAuth(true)}
+        onSignIn={() => router.push('/profile')}
       />
     </article>
   </PostProvider>

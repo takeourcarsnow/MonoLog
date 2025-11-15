@@ -261,7 +261,7 @@ export function CalendarView({ isActive = true }: CalendarViewProps) {
           </div>
         </div>
       ) : (
-      <div className="calendar-page">
+      <div className="calendar-page page-content-padding">
         <div className="calendar-header">
           <button onClick={goToPrevMonth} className="calendar-nav-btn" aria-label="Previous month">
             ‹

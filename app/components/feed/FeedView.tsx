@@ -11,7 +11,7 @@ export const FeedView = memo(function FeedView() {
   const fetchFollowingFeed = useCallback((opts: { limit: number; before?: string }) => api.getFollowingFeedPage(opts), []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }} className="page-content-padding">
       <StoriesBar />
       <FeedPage
         fetchFunction={fetchFollowingFeed}

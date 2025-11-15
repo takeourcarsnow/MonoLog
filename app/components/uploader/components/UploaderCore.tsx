@@ -212,7 +212,7 @@ export function UploaderCore() {
   };
 
   return (
-    <div className={`uploader view-fade ${hasPreview ? 'has-preview' : ''} ${justDiscarded ? 'just-discarded' : ''} ${processing ? 'processing' : ''}`}>
+    <div className={`uploader view-fade page-content-padding ${hasPreview ? 'has-preview' : ''} ${justDiscarded ? 'just-discarded' : ''} ${processing ? 'processing' : ''}`}>
       {/* Live camera with effects */}
       {/* <LiveCameraView
         isOpen={liveCameraOpen}

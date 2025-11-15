@@ -85,8 +85,8 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
     height: auto;
     overflow: visible;
     -webkit-overflow-scrolling: touch;
-    padding-left: var(--page-side-padding-mobile);
-    padding-right: var(--page-side-padding-mobile);
+    padding-left: 0;
+    padding-right: 0;
    /* Keep a slightly larger bottom gap on mobile so rounded cards and
      other bottom content don't get clipped behind the tabbar. */
    padding-bottom: calc(var(--tabbar-height, 56px) + 20px);

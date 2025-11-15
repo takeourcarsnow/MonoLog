@@ -123,7 +123,7 @@ export function ProfileView({ userId }: { userId?: string }) {
   }
 
   return (
-    <div className="view-fade">
+    <div className="view-fade page-content-padding">
       <ProfileHeader
         user={user}
         currentUserId={currentUserId}

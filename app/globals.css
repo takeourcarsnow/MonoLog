@@ -95,7 +95,7 @@ body.following-page .content { overflow: auto !important; }
       Use a small minimum so narrow mobile viewports don't force a larger layout that
       produces horizontal clipping. Previous min (640px) caused layout overflow on
       small devices. */
-    --maxw: clamp(280px, 92vw, 1100px);
+    --maxw: clamp(280px, 100vw, 1100px);
   /* Page side padding (use for header, content, and feed) and mobile variant.
      Keep small padding on mobile so content isn't flush against edges but
      avoid large gutters that make the app look clipped on narrow screens. */
@@ -207,8 +207,23 @@ body.following-page .content { overflow: auto !important; }
   --border: #e5e7eb;
   --shadow: 0 8px 28px rgba(0,0,0,.08);
   --auth-toggle-indicator: rgba(0,0,0,0.06);
-  --selection-border: rgba(0, 0, 0, 0.6);
+    --selection-border: rgba(0, 0, 0, 0.6);
 }
+
+/* Page content padding class for consistent side padding on page components */
+.page-content-padding {
+  padding-left: var(--page-side-padding);
+  padding-right: var(--page-side-padding);
+}
+
+@media (max-width: 768px) {
+  .page-content-padding {
+    padding-left: var(--page-side-padding-mobile);
+    padding-right: var(--page-side-padding-mobile);
+  }
+}
+
+/* Dark theme active indicator */
 
 /* support projects that toggle dark mode by adding a dark class to the html element */
 .dark {

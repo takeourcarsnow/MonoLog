@@ -41,7 +41,7 @@ export function ExploreView() {
     const emptyMessage = "You're already following everyone! This section shows posts from users you're not following yet.";
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }} className="page-content-padding">
         <StoriesBar fetchStories={() => api.getExploreStories()} />
         <FeedPage
           fetchFunction={fetchExploreFeed}

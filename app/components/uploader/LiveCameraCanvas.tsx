@@ -254,8 +254,8 @@ export function LiveCameraCanvas({
           position: 'absolute',
           bottom: 8,
           left: 8,
-          width: 36,
-          height: 36,
+          width: 44,
+          height: 44,
           borderRadius: 8,
           background: 'rgba(0,0,0,0.6)',
           border: '1px solid rgba(255,255,255,0.2)',
@@ -269,7 +269,7 @@ export function LiveCameraCanvas({
         aria-label="Add from files"
         title="Add image from files"
       >
-        <ImagePlus size={16} />
+        <ImagePlus size={18} />
       </button>
 
       <CameraError error={error} startCameraEnhanced={startCameraEnhanced} onClose={onClose} />

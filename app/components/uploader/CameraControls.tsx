@@ -55,10 +55,10 @@ export function CameraControls({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
+      gap: 12,
       zIndex: 3,
       background: 'rgba(0,0,0,0.18)',
-      padding: '6px 8px',
+      padding: '8px 12px',
       borderRadius: 12,
     }}>
       {/* Switch camera (left) - only show when not previewing */}
@@ -68,8 +68,8 @@ export function CameraControls({
               onClick={switchCamera}
               disabled={disabled || isSwitchingCamera}
               style={{
-                width: 30,
-                height: 30,
+                width: 40,
+                height: 40,
                 borderRadius: 8,
                 background: 'transparent',
                 border: 'none',
@@ -83,23 +83,23 @@ export function CameraControls({
               aria-label="Switch camera"
               title="Switch between front and back camera"
             >
-              {isSwitchingCamera ? <LogoLoader size={14} variant="other" /> : <RefreshCw size={14} />}
+              {isSwitchingCamera ? <LogoLoader size={16} variant="other" /> : <RefreshCw size={16} />}
             </button>
         </div>
       )}
 
       {/* Center group: zoom out, capture, zoom in, or retake/confirm */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {isPreviewing ? (
           <>
             <button
               onClick={() => { if (retakeCapture) retakeCapture(); }}
               style={{
-                width: 30,
-                height: 30,
+                width: 40,
+                height: 40,
                 borderRadius: 8,
-                background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(0,0,0,0.6)',
+                border: '1px solid rgba(255,255,255,0.2)',
                 color: '#fff',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -109,17 +109,17 @@ export function CameraControls({
               aria-label="Retake photo"
               title="Retake"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={16} />
             </button>
 
             <button
               onClick={() => { if (confirmCapture) confirmCapture(); }}
               style={{
-                width: 30,
-                height: 30,
+                width: 40,
+                height: 40,
                 borderRadius: 8,
-                background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(0,0,0,0.6)',
+                border: '1px solid rgba(255,255,255,0.2)',
                 color: '#fff',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -129,7 +129,7 @@ export function CameraControls({
               aria-label="Confirm photo"
               title="Confirm"
             >
-              <Check size={14} />
+              <Check size={16} />
             </button>
           </>
         ) : (
@@ -138,8 +138,8 @@ export function CameraControls({
               onClick={() => setZoom(prev => Math.max(1, prev - 0.5))}
               disabled={disabled || zoom <= 1}
               style={{
-                width: 30,
-                height: 30,
+                width: 40,
+                height: 40,
                 borderRadius: 8,
                 background: 'transparent',
                 border: 'none',
@@ -153,15 +153,15 @@ export function CameraControls({
               aria-label="Zoom out"
               title="Zoom out"
             >
-              <ZoomOut size={14} />
+              <ZoomOut size={16} />
             </button>
 
             <button
               onClick={handleCapture}
               disabled={!cameraReady || disabled}
               style={{
-                width: 36,
-                height: 36,
+                width: 48,
+                height: 48,
                 borderRadius: 999,
                 background: 'transparent',
                 border: 'none',
@@ -174,9 +174,9 @@ export function CameraControls({
               title="Capture"
             >
               {isCapturing || processing ? (
-                <LogoLoader size={20} variant="other" />
+                <LogoLoader size={24} variant="other" />
               ) : (
-                <CameraIcon size={20} color="#ff3b30" />
+                <CameraIcon size={24} color="#ff3b30" />
               )}
             </button>
 
@@ -184,8 +184,8 @@ export function CameraControls({
               onClick={() => setZoom(prev => Math.min(5, prev + 0.5))}
               disabled={disabled || zoom >= 5}
               style={{
-                width: 30,
-                height: 30,
+                width: 40,
+                height: 40,
                 borderRadius: 8,
                 background: 'transparent',
                 border: 'none',
@@ -199,7 +199,7 @@ export function CameraControls({
               aria-label="Zoom in"
               title="Zoom in"
             >
-              <ZoomIn size={14} />
+              <ZoomIn size={16} />
             </button>
           </>
         )}
@@ -212,8 +212,8 @@ export function CameraControls({
             onClick={handleClose}
             disabled={disabled}
             style={{
-              width: 30,
-              height: 30,
+              width: 40,
+              height: 40,
               borderRadius: 8,
               background: 'transparent',
               border: 'none',
@@ -227,7 +227,7 @@ export function CameraControls({
             aria-label="Close camera"
             title="Close"
           >
-            <X size={14} />
+            <X size={16} />
           </button>
         </div>
       )}

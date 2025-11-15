@@ -362,7 +362,7 @@ export function PublicStoryViewerModal({
         style={{ 
           position: 'absolute', 
           /* Leave a small gap so story indicator doesn't touch the comments panel */
-          bottom: showComments ? `calc(200px + 12px)` : 28, 
+          bottom: showComments ? `calc(${isMobile ? 200 : 250}px + 12px)` : 28, 
           fontSize: 14, 
           color: '#fff',
           textAlign: 'center',
@@ -413,7 +413,7 @@ export function PublicStoryViewerModal({
             bottom: 0, 
             left: 0, 
             right: 0, 
-            height: 200, 
+            height: isMobile ? 200 : 250, 
             background: 'rgba(0,0,0,0.8)', 
             borderTop: '1px solid rgba(255,255,255,0.1)',
             overflow: 'hidden',

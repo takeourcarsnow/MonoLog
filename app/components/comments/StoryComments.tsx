@@ -132,8 +132,8 @@ export function StoryComments({ storyId, onCountChange }: StoryCommentsProps) {
   };
 
   return (
-    <>
-      <div className="comment-list" onClick={(e) => e.stopPropagation()}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="comment-list" style={{ flex: 1, overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
         {loading && comments.length === 0 ? (
           <div className="dim">
             <div className="flex items-center justify-center">
@@ -202,6 +202,6 @@ export function StoryComments({ storyId, onCountChange }: StoryCommentsProps) {
           {commentError}
         </div>
       )}
-    </>
+    </div>
   );
 }

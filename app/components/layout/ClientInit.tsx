@@ -51,10 +51,12 @@ function GlobalCamera() {
         // If there is a captureCallback set (e.g., for story upload), invoke it directly
         try {
           if (captureCallback && typeof captureCallback === 'function') {
+            console.log('[GlobalCamera] calling captureCallback with blob size:', blob.size, 'type:', blob.type);
             if (!blob) return;
             try { captureCallback(blob); } catch (e) { console.error('Capture callback failed', e); }
-            // For adding photos, don't close, let the camera stay open for multiple captures
-            // The camera will be closed when the user explicitly closes it
+            // Close the camera after capture for single-shot captures like stories
+            setIsCameraOpen(false);
+            setCaptureCallback(null);
             return;
           }
         } catch (e) {}

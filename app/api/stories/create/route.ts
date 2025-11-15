@@ -3,6 +3,14 @@ export const dynamic = 'force-dynamic';
 import { getServiceSupabase } from '@/lib/api/serverSupabase';
 import { getUserFromAuthHeader } from '@/lib/api/serverVerifyAuth';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 function mapRow(row: any) {
   if (!row) return null;
   return {

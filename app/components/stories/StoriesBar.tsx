@@ -127,6 +127,7 @@ export function StoriesBar({ fetchStories }: StoriesBarProps = {}) {
   };
 
   const handleCameraCapture = async (blob: Blob) => {
+    console.log('[StoriesBar] handleCameraCapture called with blob:', blob?.size, blob?.type);
     setUploadError(null);
     setUploading(true);
     try {
@@ -136,12 +137,15 @@ export function StoriesBar({ fetchStories }: StoriesBarProps = {}) {
         r.onload = () => res(String(r.result));
         r.readAsDataURL(blob);
       });
+      console.log('[StoriesBar] dataUrl created, length:', dataUrl.length);
       await api.createStory({ dataUrl, mediaType: 'image' });
+      console.log('[StoriesBar] api.createStory succeeded');
       // Refresh stories after upload
       const data = fetchStories ? await fetchStories() : await api.getFollowingStories();
       setItems(data.filter(d => d.stories.length));
       refetchUserStory();
     } catch (e: any) {
+      console.error('[StoriesBar] handleCameraCapture error:', e);
       setUploadError(e?.message || 'Failed to upload');
     } finally {
       setUploading(false);

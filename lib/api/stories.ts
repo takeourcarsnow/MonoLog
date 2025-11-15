@@ -23,6 +23,7 @@ function mapRowToStory(row: any): Story {
 }
 
 export async function createStory(input: { mediaUrl?: string; thumbnailUrl?: string; dataUrl?: string; mediaType: 'image' | 'video'; durationSeconds?: number }) {
+  console.log('[createStory] called with input:', { hasDataUrl: !!input.dataUrl, mediaType: input.mediaType });
   const sb = getClient();
   ensureAuthListener(sb);
   const token = await getAccessToken(sb);
@@ -33,9 +34,11 @@ export async function createStory(input: { mediaUrl?: string; thumbnailUrl?: str
 
   // Allow passing a dataUrl directly; upload via storage endpoints first.
   if (input.dataUrl) {
+    console.log('[createStory] uploading dataUrl, length:', input.dataUrl.length);
     if (input.mediaType === 'image') {
       const res = await fetch('/api/storage/upload', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ dataUrl: input.dataUrl }) });
       const json = await res.json();
+      console.log('[createStory] upload response:', res.status, json);
       if (!res.ok) throw new Error(json?.error || 'Image upload failed');
       finalMediaUrl = json.publicUrl;
       finalThumbUrl = json.thumbnailUrl;
@@ -56,9 +59,11 @@ export async function createStory(input: { mediaUrl?: string; thumbnailUrl?: str
     mediaType: input.mediaType,
     durationSeconds: input.durationSeconds,
   };
+  console.log('[createStory] creating story with body:', body);
 
   const resp = await fetch('/api/stories/create', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
   const json = await resp.json();
+  console.log('[createStory] create response:', resp.status, json);
   if (!resp.ok) throw new Error(json?.error || 'Failed to create story');
   // Invalidate cache for the current user
   const user = await getCachedAuthUser(sb);

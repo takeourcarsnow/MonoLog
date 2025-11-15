@@ -76,6 +76,7 @@ export function useCaptureLogic({
 
   // Confirm the preview: call onCapture with the selected blob
   const confirmCapture = useCallback(() => {
+    console.log('[confirmCapture] called, previewBlob:', !!previewBlob, previewBlob?.size, previewBlob?.type);
     if (!previewBlob) return;
 
     // If we have a display canvas available, the user may have applied
@@ -87,18 +88,21 @@ export function useCaptureLogic({
         const disp = displayCanvasRef?.current;
         if (disp && typeof disp.toBlob === 'function') {
           const mime = previewBlob.type || 'image/jpeg';
-          const blob: Blob | null = await new Promise((resolve) => disp.toBlob(resolve, mime, 0.92));
+          const blob: Blob | null = await new Promise((resolve) => disp.toBlob(resolve, mime, 0.8));
+          console.log('[confirmCapture] exported blob from canvas:', !!blob, blob?.size);
           if (blob) {
             onCapture(blob);
             return;
           }
         }
       } catch (e) {
+        console.error('[confirmCapture] export from canvas failed:', e);
         // ignore and fall back
       }
 
       // Fallback: use original blob
       try {
+        console.log('[confirmCapture] using fallback blob');
         onCapture(previewBlob);
       } catch (e) {
         console.error('Error during confirm capture:', e);

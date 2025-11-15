@@ -164,7 +164,7 @@ export function useCapture(streamRef?: React.RefObject<MediaStream | null>) {
       } else {
         // Fallback: use dataURL conversion if toBlob returned null
         try {
-          const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.95);
+          const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.8);
           // Convert dataURL to Blob without fetch
           const arr = dataUrl.split(',');
           const mimeMatch = arr[0].match(/:(.*?);/);
@@ -180,7 +180,7 @@ export function useCapture(streamRef?: React.RefObject<MediaStream | null>) {
           console.error('Capture fallback failed', e);
         }
       }
-    }, 'image/jpeg', 0.95);
+    }, 'image/jpeg', 0.8);
   }, [streamRef]);
 
   return { handleCapture };

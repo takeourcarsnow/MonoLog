@@ -22,9 +22,10 @@
 
 .tabbar {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
   bottom: 0;
+  transform: translateX(-50%);
   background-color: var(--bg-elev);
   display: flex;
   flex-direction: row; /* explicit horizontal layout */
@@ -32,6 +33,8 @@
   justify-content: space-around; /* space items evenly across the display */
   gap: 0; /* remove gap since space-around handles spacing */
   padding: 8px var(--page-side-padding, 20px);
+  max-width: var(--maxw);
+  width: 100%;
 }
 
 /* Force horizontal layout on desktop and avoid accidental overrides from other

@@ -1,6 +1,7 @@
 .content {
   margin: 0 auto;
   width: 100%;
+  max-width: var(--maxw);
     /* Make `.content` the single scroll container inside the app. This
       prevents double vertical scrollbars by keeping all page scrolling
       inside this element. We use the JS-updated `--viewport-height` when
@@ -54,6 +55,13 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
   .content > .page-slide { transition: opacity 120ms linear; transform: none !important; }
 }
 
+/* Center the swipe views */
+.swipe-views {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  width: 100%;
+}
+
 /* On desktop, allow content to scroll internally since body cannot scroll */
 @media (min-width: 900px) {
   .content {
@@ -64,6 +72,8 @@ body.debug-uploader-outline .uploader { outline: 3px dashed rgba(0,200,0,0.95); 
     min-height: auto;
     padding-left: var(--page-side-padding);
     padding-right: var(--page-side-padding);
+    max-width: var(--maxw);
+    margin: 0 auto;
   }
 }
 

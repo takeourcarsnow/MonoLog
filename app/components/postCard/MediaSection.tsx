@@ -29,6 +29,11 @@ export const MediaSection = memo(function MediaSection({
 }: MediaSectionProps) {
   const { post } = usePostContext();
   const imageUrls: string[] = (post as any).imageUrls || ((post as any).imageUrl ? [(post as any).imageUrl] : []);
+  const thumbnailUrls: string[] = (post as any).thumbnailUrls || ((post as any).thumbnailUrl ? [(post as any).thumbnailUrl] : []);
+  
+  // Use full-size images, but fall back to thumbnails if full-size is missing
+  const effectiveImageUrls = imageUrls.length > 0 ? imageUrls : thumbnailUrls;
+  
   const alts: string[] = Array.isArray(post.alt) ? post.alt : [post.alt || ""];
 
   const postHref = `/post/${post.user.username || post.userId}-${post.id.slice(0,8)}`;
@@ -43,9 +48,10 @@ export const MediaSection = memo(function MediaSection({
           ★
         </div>
       )}
-      {imageUrls.length > 1 ? (
+      {effectiveImageUrls.length > 1 ? (
         <Carousel
-          imageUrls={imageUrls}
+          imageUrls={effectiveImageUrls}
+          thumbnailUrls={thumbnailUrls}
           alts={alts}
           postHref={postHref}
           isFavorite={isFavorite}
@@ -59,7 +65,8 @@ export const MediaSection = memo(function MediaSection({
         />
       ) : (
         <SingleMedia
-          imageUrl={imageUrls[0]}
+          imageUrl={effectiveImageUrls[0]}
+          thumbnailUrl={thumbnailUrls[0]}
           alt={alts[0] || "Photo"}
           postHref={postHref}
           isFavorite={isFavorite}

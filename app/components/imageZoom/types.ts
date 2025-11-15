@@ -1,5 +1,6 @@
 type Props = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
   src?: string;
+  fallbackSrc?: string;
   maxScale?: number;
   isActive?: boolean;
   isFullscreen?: boolean;

@@ -4,6 +4,7 @@ import { useMediaClick } from "./hooks/useMediaClick";
 
 interface SingleMediaProps {
   imageUrl: string;
+  thumbnailUrl?: string;
   alt: string;
   postHref: string;
   isFavorite: boolean;
@@ -17,6 +18,7 @@ interface SingleMediaProps {
 
 export const SingleMedia = memo(function SingleMedia({
   imageUrl,
+  thumbnailUrl,
   alt,
   postHref,
   isFavorite,
@@ -48,6 +50,7 @@ export const SingleMedia = memo(function SingleMedia({
     >
       <ImageZoom
         src={imageUrl}
+        fallbackSrc={thumbnailUrl}
         alt={alt || "Photo"}
         lazy={lazy}
         onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => (e.currentTarget.classList.add("loaded"))}

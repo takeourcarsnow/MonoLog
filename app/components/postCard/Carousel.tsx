@@ -5,6 +5,7 @@ import { useMediaClick } from "./hooks/useMediaClick";
 
 interface CarouselProps {
   imageUrls: string[];
+  thumbnailUrls?: string[];
   alts: string[];
   postHref: string;
   isFavorite: boolean;
@@ -20,6 +21,7 @@ interface CarouselProps {
 
 export const Carousel = memo(function Carousel({
   imageUrls,
+  thumbnailUrls,
   alts,
   postHref,
   isFavorite,
@@ -161,6 +163,7 @@ export const Carousel = memo(function Carousel({
             >
               <ImageZoom
                 src={u}
+                fallbackSrc={thumbnailUrls?.[idx]}
                 alt={alts[idx] || `Photo ${idx + 1}`}
                 isActive={idx === index}
                 lazy={lazy}

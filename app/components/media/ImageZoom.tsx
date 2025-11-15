@@ -7,9 +7,10 @@ import { useZoomState } from "@/app/components/imageZoom/hooks/useZoomState";
 import { useZoomEvents } from "@/app/components/imageZoom/hooks/useZoomEvents";
 import { useImageSizing } from "@/app/components/imageZoom/hooks/useImageSizing";
 
-export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive = true, isFullscreen = false, instanceId, lazy = false, rootMargin = "50px", onDimensionsChange, ...rest }: Props) {
+export function ImageZoom({ src, fallbackSrc, alt, className, style, maxScale = 2, isActive = true, isFullscreen = false, instanceId, lazy = false, rootMargin = "50px", onDimensionsChange, ...rest }: Props) {
   const [isVisible, setIsVisible] = useState(!lazy);
   const [hasError, setHasError] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
   const state = useZoomState();
   const { handlePointerDown, handlePointerMove, handlePointerUp, registerTap } = useZoomEvents({
     ...state,
@@ -41,7 +42,11 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
     return () => observer.disconnect();
   }, [lazy, isVisible, rootMargin, state.containerRef]);
 
-  // Ensure loaded class is added even if onLoad doesn't fire (e.g., cached images)
+  // Reset fallback state when src changes
+  useEffect(() => {
+    setUseFallback(false);
+    setHasError(false);
+  }, [src]);
   useEffect(() => {
     const img = state.imgRef.current;
     if (!img) return;
@@ -136,7 +141,7 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
         <img
           {...rest}
           ref={state.imgRef}
-          src={src}
+          src={useFallback && fallbackSrc ? fallbackSrc : src}
           alt={alt}
           // Honor the component's lazy prop but explicitly set the
           // native loading attribute so browsers start fetching images
@@ -172,24 +177,37 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
             imageRendering: "auto",
           }}
           onLoad={(e) => {
-            e.currentTarget.classList.add("loaded");
-            // Try to provide fresh container dimensions to the parent.
-            // Prefer the cached containerRectRef, but fall back to measuring
-            // the container element directly because the ResizeObserver that
-            // populates containerRectRef may not have run yet on first load
-            // (this caused the carousel panel to not resize until navigating
-            // to the next image).
-            try {
-              let rect = state.containerRectRef.current;
-              if ((!rect || !rect.width || !rect.height) && state.containerRef.current) {
-                const r = state.containerRef.current.getBoundingClientRect();
-                rect = { width: Math.round(r.width), height: Math.round(r.height) };
+            const img = e.currentTarget;
+            if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+              // Image loaded but is broken (e.g., 0x0 or invalid)
+              if (fallbackSrc && !useFallback) {
+                setUseFallback(true);
+                setHasError(false);
+              } else {
+                setHasError(true);
               }
-              if (onDimensionsChange && rect) {
-                onDimensionsChange(rect);
+            } else {
+              // Normal successful load
+              img.classList.add("loaded");
+              setHasError(false);
+              // Try to provide fresh container dimensions to the parent.
+              // Prefer the cached containerRectRef, but fall back to measuring
+              // the container element directly because the ResizeObserver that
+              // populates containerRectRef may not have run yet on first load
+              // (this caused the carousel panel to not resize until navigating
+              // to the next image).
+              try {
+                let rect = state.containerRectRef.current;
+                if ((!rect || !rect.width || !rect.height) && state.containerRef.current) {
+                  const r = state.containerRef.current.getBoundingClientRect();
+                  rect = { width: Math.round(r.width), height: Math.round(r.height) };
+                }
+                if (onDimensionsChange && rect) {
+                  onDimensionsChange(rect);
+                }
+              } catch (_) {
+                // ignore measurement errors
               }
-            } catch (_) {
-              // ignore measurement errors
             }
             // Call the passed onLoad prop if provided
             if (rest.onLoad) {
@@ -197,8 +215,13 @@ export function ImageZoom({ src, alt, className, style, maxScale = 2, isActive =
             }
           }}
           onError={(e) => {
-            e.currentTarget.classList.add("loaded");
-            setHasError(true);
+            if (fallbackSrc && !useFallback) {
+              setUseFallback(true);
+              setHasError(false);
+            } else {
+              e.currentTarget.classList.add("loaded");
+              setHasError(true);
+            }
           }}
           onClick={(e) => {
             e.preventDefault();

@@ -4,6 +4,7 @@ import { PreviewSectionProps } from "./types";
 import { LoadingBadge } from "./LoadingBadge";
 import { CarouselView } from "./CarouselView";
 import { compressImage, approxDataUrlBytes } from "@/lib/image";
+import { ThumbnailStrip } from "./ThumbnailStrip";
 
 
 export function PreviewSection({
@@ -150,6 +151,21 @@ export function PreviewSection({
       )}
 
       {/* Thumbnails removed per request */}
+      {dataUrls.length > 0 && (
+        <ThumbnailStrip
+          dataUrls={dataUrls}
+          alt={alt}
+          index={index}
+          setIndex={setIndex}
+          setDataUrls={setDataUrls}
+          setOriginalDataUrls={setOriginalDataUrls}
+          editorSettings={editorSettings}
+          setEditorSettings={setEditorSettings}
+          setAlt={setAlt}
+          fullUrls={dataUrls}
+          setFullUrls={setDataUrls}
+        />
+      )}
     </div>
   );
 }

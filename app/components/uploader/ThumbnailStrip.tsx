@@ -16,7 +16,11 @@ interface ThumbnailStripProps {
 }
 
 export function ThumbnailStrip({ dataUrls, alt, index, setIndex, setDataUrls, setOriginalDataUrls, editorSettings, setEditorSettings, setAlt, fullUrls, setFullUrls }: ThumbnailStripProps) {
-  if (dataUrls.length === 0) return null;
+  if (dataUrls.length === 0) return (
+    <div className="thumbs" style={{ background: 'transparent', padding: '8px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
+      Add images to reorder them
+    </div>
+  );
 
   const moveItem = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0 || toIndex >= dataUrls.length) return;

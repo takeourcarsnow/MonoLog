@@ -99,32 +99,59 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
     setLocationAddress('');
   };
 
-  const handleAddImages = async (files: FileList) => {
-    if (uploading || currentImageUrls.length >= 5) return;
+  const handleAddImages = async (files: File[]) => {
+    console.log('handleAddImages called with', files.length, 'files');
+    if (uploading || currentImageUrls.length >= 5) {
+      console.log('Skipping: uploading=', uploading, 'currentImageUrls.length=', currentImageUrls.length);
+      return;
+    }
     setUploading(true);
     try {
       const sb = getClient();
       ensureAuthListener(sb);
       const token = await getAccessToken(sb);
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith('image/')) continue;
-        const dataUrl = await compressImage(file);
-        const response = await fetch('/api/storage/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({ dataUrl }),
-        });
-        const result = await response.json();
-        if (result.ok) {
-          setCurrentImageUrls(prev => [...prev, result.publicUrl]);
-          setCurrentThumbnailUrls(prev => [...prev, result.thumbnailUrl]);
-          setCurrentAlt(prev => Array.isArray(prev) ? [...prev, ''] : [prev || '', '']);
-        } else {
-          console.error('Upload failed:', result.error);
+      console.log('Token obtained:', !!token);
+      let added = false;
+      for (const file of files) {
+        console.log('Processing file:', file.name, file.size, file.type);
+        if (!file.type.startsWith('image/')) {
+          console.log('Skipping non-image file');
+          continue;
+        }
+        try {
+          console.log('Compressing image...');
+          const dataUrl = await compressImage(file);
+          console.log('Compressed to dataUrl length:', dataUrl.length);
+          console.log('Sending to /api/storage/upload');
+          const response = await fetch('/api/storage/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+            body: JSON.stringify({ dataUrl }),
+          });
+          const result = await response.json();
+          console.log('Response:', result);
+          if (result.ok) {
+            console.log('Upload successful, adding to state');
+            setCurrentImageUrls(prev => [...prev, result.publicUrl]);
+            setCurrentThumbnailUrls(prev => [...prev, result.thumbnailUrl]);
+            setCurrentAlt(prev => Array.isArray(prev) ? [...prev, ''] : [prev || '', '']);
+            added = true;
+          } else {
+            console.log('Upload failed:', result.error);
+            alert('Upload failed: ' + result.error);
+          }
+        } catch (error) {
+          console.log('Failed to process image:', error);
+          alert('Failed to process image: ' + (error as Error).message);
         }
       }
+      if (!added && files.length > 0) {
+        console.log('No images were added');
+        alert('No images were added. Please check the file type and try again.');
+      }
     } catch (error) {
-      console.error('Failed to add images:', error);
+      console.log('Failed to add images:', error);
+      alert('Failed to add images: ' + (error as Error).message);
     } finally {
       setUploading(false);
     }
@@ -132,8 +159,9 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
+    console.log('handleFileInputChange called with', files?.length, 'files');
     if (files) {
-      handleAddImages(files);
+      handleAddImages(Array.from(files));
     }
     // Reset input
     if (fileInputRef.current) {
@@ -362,23 +390,21 @@ export const Editor = forwardRef<any, EditorProps>(function Editor({ post, onCan
           </div>
         )}
       </div>
-      {currentImageUrls.length >= 1 && (
-        <div style={{ marginTop: 8 }}>
-          <ThumbnailStrip
-            dataUrls={currentThumbnailUrls}
-            alt={currentAlt}
-            index={currentIndex}
-            setIndex={setCurrentIndex}
-            setDataUrls={setCurrentThumbnailUrls}
-            setOriginalDataUrls={() => {}} // Not used for editing
-            editorSettings={[]} // Not used for editing
-            setEditorSettings={() => {}} // Not used for editing
-            setAlt={setCurrentAlt}
-            fullUrls={currentImageUrls}
-            setFullUrls={setCurrentImageUrls}
-          />
-        </div>
-      )}
+      <div style={{ marginTop: 8 }}>
+        <ThumbnailStrip
+          dataUrls={currentThumbnailUrls}
+          alt={currentAlt}
+          index={currentIndex}
+          setIndex={setCurrentIndex}
+          setDataUrls={setCurrentThumbnailUrls}
+          setOriginalDataUrls={() => {}} // Not used for editing
+          editorSettings={[]} // Not used for editing
+          setEditorSettings={() => {}} // Not used for editing
+          setAlt={setCurrentAlt}
+          fullUrls={currentImageUrls}
+          setFullUrls={setCurrentImageUrls}
+        />
+      </div>
       {currentImageUrls.length < 5 && (
         <div style={{ marginTop: 8 }}>
           <button

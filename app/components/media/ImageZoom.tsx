@@ -141,7 +141,7 @@ export function ImageZoom({ src, fallbackSrc, alt, className, style, maxScale = 
         <img
           {...rest}
           ref={state.imgRef}
-          src={useFallback && fallbackSrc ? fallbackSrc : src}
+          src={useFallback && fallbackSrc ? fallbackSrc : (src || null)}
           alt={alt}
           // Honor the component's lazy prop but explicitly set the
           // native loading attribute so browsers start fetching images
